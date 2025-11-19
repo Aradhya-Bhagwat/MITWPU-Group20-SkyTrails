@@ -27,10 +27,10 @@ SkyTrails is a student project created by:
 
 | Name | Contact |
 | :--- | :--- |
-| **[Aradhya Bhagwat]** | `aradhya.bhagwat@mitwpu.edu.in` |
-| **[Disha Jain]** | `disha.jain@mitwpu.edu.in` |
-| **[Tanmay Dani]** | `tanmay.dani@mitwpu.edu.in` |
-| **[Soumyadeep Guria]** | `soumyadeep.guria@mitwpu.edu.in` |
+| **Aradhya Bhagwat** | `aradhya.bhagwat@mitwpu.edu.in` |
+| **Disha Jain** | `disha.jain@mitwpu.edu.in` |
+| **Tanmay Dani** | `tanmay.dani@mitwpu.edu.in` |
+| **Soumyadeep Guria** | `soumyadeep.guria@mitwpu.edu.in` |
 
 -----
 
@@ -47,7 +47,7 @@ To get a local copy of the project up and running, follow these steps.
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/YourUsername/SkyTrails-iOS.git
+    git clone https://github.com/aradhya0507/SkyTrails.git
     ```
 2.  **Navigate to the Project Directory:**
     ```bash
@@ -74,6 +74,3 @@ To ensure smooth collaboration:
 Distributed under the **MIT License**. See `LICENSE.md` for more information.
 
 -----
------
-
-Would you like me to help draft the content for your project's `LICENSE.md` file, or help structure some initial tasks for your GitHub Issues list?
