@@ -1,0 +1,4 @@
+# Ignore all Xcode user UI state
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdatad
