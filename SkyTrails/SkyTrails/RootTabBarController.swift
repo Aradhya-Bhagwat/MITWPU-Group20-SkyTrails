@@ -47,7 +47,7 @@ class RootTabBarController: UITabBarController {
 			image: UIImage(systemName: systemImage),
 			selectedImage: nil
 		)
-		
+        nav.navigationBar.prefersLargeTitles = true
 		return nav
 	}
 }
