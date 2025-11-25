@@ -1,4 +1,86 @@
-# Ignore all Xcode user UI state
+## Xcode
 *.xcuserstate
-project.xcworkspace/xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+DerivedData/
+build/
+
+## User data
+xcuserdata/
 *.xcuserdatad
+
+## Compatibility with Apple Generic Versioning
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+## Obj-C/Swift specific
+*.hmap
+
+## Swift Package Manager
+# Keep Package.resolved! It ensures everyone uses the same versions.
+.build/
+.swiftpm/
+
+## CocoaPods
+# Keep Podfile.lock! It ensures everyone uses the same versions.
+Pods/
+
+## Carthage
+Carthage/Build/
+
+## Accio
+Dependencies/
+.accio/
+
+## fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/readme.md
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+## Device & provisioning
+*.mobileprovision
+*.provisionprofile
+
+## Archives
+*.xcarchive
+
+## Doxygen
+docs/html
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## Thumbnails
+._*
+
+## Dropbox
+.dropbox*
+
+## Files that might appear in the root of a volume
+.Spotlight-V100
+.Trashes
+
+## Application logs
+*.log
+
+## vim / emacs / editors
+*~
+*.swp
+*.swo
+.idea/
+.vscode/
+
+## Credentials & Keys (Safety)
+.netrc
+local.properties
