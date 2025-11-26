@@ -7,14 +7,14 @@
 import Foundation
 struct History{
     var imageView : String
-    var timeSymbol : String
     var specieName : String
-    var time : Date
+    var date : Date
 }
 
 
+
 struct FieldMarkType{
-    var symbols : [String]
+    var symbols : String
     var fieldMarkName : String
     var isSelected: Bool = false
 }
