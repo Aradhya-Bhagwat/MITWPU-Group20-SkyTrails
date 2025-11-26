@@ -20,26 +20,34 @@ class Identification1ViewController: UIViewController {
         birdSlider.minimumValue = 0
         birdSlider.maximumValue = 4
         birdSlider.isContinuous = true
+        birdSlider.isContinuous = true
 
         updateBirdDisplay(for: 0) // initial
     }
     
     @IBAction func sliderChanged(_ sender: UISlider) {
-        let steppedValue = Int(round(sender.value))  // snap to 0–4
-        sender.value = Float(steppedValue)
-        
+        let steppedValue = Int(round(sender.value)) // 0–4
         updateBirdDisplay(for: steppedValue)
     }
     
     private func updateBirdDisplay(for index: Int) {
-        if index == 0 { birdLabel.text = "Less than 6 inches" }
-        else if index == 1 { birdLabel.text = "6–14 inches" }
-        else if index == 2 { birdLabel.text = "14–25 inches" }
-        else if index == 3 { birdLabel.text = "25–59 inches" }
-        else if index == 4 { birdLabel.text = "59 inches and over" }
-        
-        let imageName = "bird\(index)"
-        birdImage.image = UIImage(named: imageName)
-    }
+        switch index {
+                case 0:
+                    birdLabel.text = "Less than 6 inches"
+                case 1:
+                    birdLabel.text = "6–14 inches"
+                case 2:
+                    birdLabel.text = "14–25 inches"
+                case 3:
+                    birdLabel.text = "25–59 inches"
+                case 4:
+                    birdLabel.text = "59 inches and over"
+                default:
+                    birdLabel.text = ""
+                }
+                
+                let imageName = "bird\(index)"
+                birdImage.image = UIImage(named: imageName)
+            }
 }
 
