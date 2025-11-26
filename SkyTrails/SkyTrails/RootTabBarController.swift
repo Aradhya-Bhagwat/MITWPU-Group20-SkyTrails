@@ -27,7 +27,7 @@ class RootTabBarController: UITabBarController {
 		
 			loadFeature(storyboard: "Identification",
 						id: "Identification",
-						title: "ID",
+						title: "Identification",
 						systemImage: "sparkle.magnifyingglass")
 			]
 
