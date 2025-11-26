@@ -25,7 +25,7 @@ class RootTabBarController: UITabBarController {
 						title: "Watchlist",
 						systemImage: "list.number"),
 		
-			loadFeature(storyboard: "Identification",
+			loadFeature(storyboard: "Identify1",
 						id: "Identification",
 						title: "ID",
 						systemImage: "sparkle.magnifyingglass")
