@@ -23,7 +23,7 @@ class RootTabBarController: UITabBarController {
 			loadFeature(storyboard: "Watchlist",
 						id: "Watchlist",
 						title: "Watchlist",
-						systemImage: "list.number"),
+						   systemImage: "list.number"),
 		
 			loadFeature(storyboard: "Identification",
 						id: "Identification",
@@ -33,6 +33,7 @@ class RootTabBarController: UITabBarController {
 
 	}
 	
+
 	private func loadFeature(storyboard: String,
 							 id: String,
 							 title: String,
@@ -47,7 +48,7 @@ class RootTabBarController: UITabBarController {
 			image: UIImage(systemName: systemImage),
 			selectedImage: nil
 		)
-		
+		nav.navigationBar.prefersLargeTitles = true
 		return nav
 	}
 }
