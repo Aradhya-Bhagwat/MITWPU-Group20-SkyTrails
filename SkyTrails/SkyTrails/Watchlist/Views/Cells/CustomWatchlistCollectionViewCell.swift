@@ -37,6 +37,10 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		setupUI()
+		
+			// Disable clipping on the cell itself and its content view to allow shadows to show
+		self.clipsToBounds = false
+		self.contentView.clipsToBounds = false
 	}
 	
 	private func setupUI() {

@@ -27,6 +27,9 @@ class WatchlistHomeViewController: UIViewController {
 		SummaryCardCollectionView.dataSource = self
 		SummaryCardCollectionView.delegate = self
 		
+			// Disable clipping for the collection view to allow shadows to show
+
+		
 			// 3. Register Cells
 		registerCells()
 	}
@@ -58,7 +61,7 @@ class WatchlistHomeViewController: UIViewController {
 					let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
 					let item = NSCollectionLayoutItem(layoutSize: itemSize)
 					
-					let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(180)) // Matches your XIB height
+					let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(180))
 					let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 					
 					let section = NSCollectionLayoutSection(group: group)
@@ -89,8 +92,8 @@ class WatchlistHomeViewController: UIViewController {
 					let item = NSCollectionLayoutItem(layoutSize: itemSize)
 					item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 12, trailing: 0)
 					
-						// Using a list-style group
-					let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(100))
+						// --- UPDATE: Increased height from 100 to 140 to fit new cell content ---
+					let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(140))
 					let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 					
 					let section = NSCollectionLayoutSection(group: group)
@@ -111,7 +114,6 @@ class WatchlistHomeViewController: UIViewController {
 	
 		// --- Cell Registration ---
 	private func registerCells() {
-			// ... (Registration logic provided by user) ...
 		let headerNib = UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil)
 		SummaryCardCollectionView.register(
 			headerNib,
@@ -128,16 +130,17 @@ class WatchlistHomeViewController: UIViewController {
 		let customWatchlistNib = UINib(nibName: "CustomWatchlistCollectionViewCell", bundle: nil)
 		SummaryCardCollectionView.register(customWatchlistNib, forCellWithReuseIdentifier: CustomWatchlistCollectionViewCell.identifier)
 		
+			// --- UPDATE: Registering the new SharedWatchlistCell ---
+		let sharedWatchlistNib = UINib(nibName: SharedWatchlistCollectionViewCell.identifier, bundle: nil)
+		SummaryCardCollectionView.register(sharedWatchlistNib, forCellWithReuseIdentifier: SharedWatchlistCollectionViewCell.identifier)
+		
 		SummaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
 	}
 }
 
 // --- Step 2: Protocol Conformance Extension ---
-// This is what was missing, causing the protocol error.
 
 extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionViewDelegate {
-	
-		// In WatchlistHomeViewController.swift inside 'extension ... UICollectionViewDataSource'
 	
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		
@@ -147,7 +150,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		
 		switch indexPath.section {
 			case 0:
-					// ... (Summary Card Logic remains the same) ...
+					// ... (Summary Card Logic) ...
 				let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SummaryCardCollectionViewCell", for: indexPath) as! SummaryCardCollectionViewCell
 				let data = [(vm.totalSpeciesCount, "Watchlist", UIColor.systemGreen),
 							(vm.totalObservedCount, "Observed", UIColor.systemBlue),
@@ -157,53 +160,74 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				return cell
 				
 			case 1:
-					// --- SECTION 1: MY WATCHLIST ---
+					// ... (My Watchlist Logic) ...
 				let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyWatchlistCollectionViewCell", for: indexPath) as! MyWatchlistCollectionViewCell
 				
-					// Get the first watchlist (simulating the "Main" one)
 				if let watchlist = vm.watchlists.first {
 					let observedCount = watchlist.birds.filter { $0.isObserved }.count
 					let totalCount = watchlist.birds.count
 					
-						// IMAGE LOGIC:
-						// 1. Try to get the first bird in the list
-						// 2. Try to get the first image name from that bird
-						// 3. Load the UIImage
 					var coverImage: UIImage? = nil
-					
 					if let firstBird = watchlist.birds.first,
 					   let imageName = firstBird.images.first {
 						coverImage = UIImage(named: imageName)
 					}
 					
-						// Configure the cell with the real image
 					cell.configure(
 						discoveredText: "\(observedCount) species",
 						upcomingText: "\(totalCount - observedCount) species",
 						dateText: "This Month",
 						observedCount: observedCount,
 						watchlistCount: totalCount,
-						image: coverImage // <-- Passing the real image here
+						image: coverImage
 					)
 				}
 				return cell
 				
 			case 2:
-					// --- SECTION 2: CUSTOM WATCHLIST ---
+					// ... (Custom Watchlist Logic) ...
 				let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath) as! CustomWatchlistCollectionViewCell
 				
-					// Assuming the custom watchlists are from the second item onwards
 				if indexPath.item + 1 < vm.watchlists.count {
 					let watchlist = vm.watchlists[indexPath.item + 1]
 					cell.configure(with: watchlist)
 				}
 				return cell
 				
+			case 3:
+					// --- SECTION 3: SHARED WATCHLIST (UPDATED WITH REAL ASSETS) ---
+				let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SharedWatchlistCollectionViewCell.identifier, for: indexPath) as! SharedWatchlistCollectionViewCell
+				
+					// Helper to get dummy avatars (System images)
+				let person1 = UIImage(systemName: "person.crop.circle.fill")!.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
+				let person2 = UIImage(systemName: "person.crop.circle")!.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
+				let person3 = UIImage(systemName: "person.circle.fill")!.withTintColor(.darkGray, renderingMode: .alwaysOriginal)
+				
+				if indexPath.item == 0 {
+						// Card 1: Canopy Wanderers
+					cell.configure(
+						title: "Canopy Wanderers",
+						location: "Vetal tekdi",
+						dateRange: "8th Oct - 7th Nov",
+						mainImage: UIImage(named: "AsianFairyBluebird"), // <-- Real Asset Name
+						stats: (18, 7),
+						userImages: [person1, person2, person3, person1, person2]
+					)
+				} else {
+						// Card 2: Feather Trail
+					cell.configure(
+						title: "Feather Trail",
+						location: "Singhad Valley",
+						dateRange: "12th Oct - 15th Nov",
+						mainImage: UIImage(named: "HimalayanMonal"), // <-- Real Asset Name
+						stats: (10, 2),
+						userImages: [person3, person2, person1, person2]
+					)
+				}
+				
+				return cell
 			default:
-					// ... (Placeholders remain the same) ...
 				let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PlaceholderCell", for: indexPath)
-				cell.contentView.backgroundColor = indexPath.section == 2 ? .systemIndigo.withAlphaComponent(0.2) : .systemGreen.withAlphaComponent(0.2)
-				cell.contentView.layer.cornerRadius = 12
 				return cell
 		}
 	}
@@ -216,15 +240,13 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		guard let vm = viewModel else { return 0 }
 		
 		switch section {
-			case 0: return 3 // Summary stats
-			case 1: return 1 // "My Watchlist" card
-			case 2: return min(6, max(0, vm.watchlists.count - 1)) // Custom lists (max 6)
-			case 3: return 2 // Placeholder: 2 shared lists (Vertical List)
+			case 0: return 3
+			case 1: return 1
+			case 2: return min(6, max(0, vm.watchlists.count - 1))
+			case 3: return 2 // Hardcoded 2 items for Shared demo
 			default: return 0
 		}
 	}
-	
-
 	
 	func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
 		guard kind == UICollectionView.elementKindSectionHeader else { return UICollectionReusableView() }
@@ -235,20 +257,17 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 			for: indexPath
 		) as! SectionHeaderCollectionReusableView
 		
-			// Titles based on Screenshot
 		switch indexPath.section {
 			case 0: header.configure(title: "Summary")
 			case 2: header.configure(title: "Custom Watchlist")
 			case 3: header.configure(title: "Shared Watchlist")
-			default: header.configure(title: "") // Section 1 ("My Watchlist") uses an internal title label, no header needed.
+			default: header.configure(title: "")
 		}
 		
 		return header
 	}
 	
-		// Add didSelectItemAt to make cells tappable, even placeholders
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		print("Tapped cell in Section \(indexPath.section), Item \(indexPath.item)")
-			// Navigation logic goes here
 	}
 }

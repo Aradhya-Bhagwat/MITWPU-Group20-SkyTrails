@@ -56,14 +56,14 @@
                                                 <color key="textColor" systemColor="secondaryLabelColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <stackView opaque="NO" contentMode="left" distribution="equalCentering" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="hsA-Ym-HpW" userLabel="Badges horizontal stack">
+                                            <stackView opaque="NO" contentMode="left" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="hsA-Ym-HpW" userLabel="Badges horizontal stack">
                                                 <rect key="frame" x="0.0" y="125.66666666666669" width="224" height="40"/>
                                                 <subviews>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="LKb-KA-5Nf">
-                                                        <rect key="frame" x="0.0" y="0.0" width="100" height="40"/>
+                                                    <view contentMode="scaleToFill" horizontalHuggingPriority="252" translatesAutoresizingMaskIntoConstraints="NO" id="LKb-KA-5Nf">
+                                                        <rect key="frame" x="0.0" y="0.0" width="49.333333333333336" height="40"/>
                                                         <subviews>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mzi-Ey-nfK">
-                                                                <rect key="frame" x="4" y="4" width="92" height="32"/>
+                                                                <rect key="frame" x="4" y="4" width="41.333333333333336" height="32"/>
                                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                                 <color key="textColor" red="0.0" green="0.23921568630000001" blue="0.72156862749999995" alpha="1" colorSpace="calibratedRGB"/>
                                                                 <nil key="highlightedColor"/>
@@ -79,11 +79,11 @@
                                                             <constraint firstItem="Mzi-Ey-nfK" firstAttribute="top" secondItem="LKb-KA-5Nf" secondAttribute="top" constant="4" id="ylN-9a-9zd"/>
                                                         </constraints>
                                                     </view>
-                                                    <view opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bfC-l0-RUa" userLabel="View11">
-                                                        <rect key="frame" x="124" y="0.0" width="100" height="40"/>
+                                                    <view opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="bfC-l0-RUa" userLabel="View11">
+                                                        <rect key="frame" x="57.333333333333329" y="0.0" width="40.333333333333329" height="40"/>
                                                         <subviews>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Test" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="B2w-Mt-sPh" userLabel="watchlistSpeciesCountLabel">
-                                                                <rect key="frame" x="4" y="4" width="92" height="32"/>
+                                                                <rect key="frame" x="4" y="4" width="32.333333333333336" height="32"/>
                                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                                 <color key="textColor" red="0.1647058824" green="0.64313725489999995" blue="0.26274509800000001" alpha="1" colorSpace="calibratedRGB"/>
                                                                 <nil key="highlightedColor"/>
@@ -98,6 +98,10 @@
                                                             <constraint firstAttribute="height" relation="lessThanOrEqual" constant="40" id="bSd-qb-5aF"/>
                                                             <constraint firstItem="B2w-Mt-sPh" firstAttribute="leading" secondItem="bfC-l0-RUa" secondAttribute="leading" constant="4" id="fEh-gI-L6A"/>
                                                         </constraints>
+                                                    </view>
+                                                    <view contentMode="scaleToFill" horizontalHuggingPriority="50" translatesAutoresizingMaskIntoConstraints="NO" id="BWi-Gu-xs8">
+                                                        <rect key="frame" x="105.66666666666669" y="0.0" width="118.33333333333331" height="40"/>
+                                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                     </view>
                                                 </subviews>
                                             </stackView>
