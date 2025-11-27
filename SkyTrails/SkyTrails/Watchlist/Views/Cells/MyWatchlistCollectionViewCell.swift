@@ -20,6 +20,9 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	@IBOutlet weak var observedSpeicesCountLabel: UILabel!
 	
 	@IBOutlet weak var watchlistSpeciesCountLabel: UILabel!
+	
+	
+	static let identifier = "MyWatchlistCollectionViewCell"
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		
