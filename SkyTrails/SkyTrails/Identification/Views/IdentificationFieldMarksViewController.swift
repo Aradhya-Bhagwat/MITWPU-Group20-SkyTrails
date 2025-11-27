@@ -1,19 +1,19 @@
 //
-//  ShapeViewController.swift
+//  FieldMarksViewController.swift
 //  SkyTrails
 //
-//  Created by Disha Jain on 27/11/25.
+//  Created by SDC-USER on 27/11/25.
 //
 
 import UIKit
 
-class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
-    
+class IdentificationFieldMarksViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+
     
     @IBOutlet weak var tableContainerView: UIView!
-    @IBOutlet weak var shapeTableView: UITableView!
+    
+    @IBOutlet weak var fieldMarkTableView: UITableView!
     var viewModel: ViewModel = ViewModel()
-
     func styleTableContainer() {
         tableContainerView.backgroundColor = .white
         tableContainerView.layer.cornerRadius = 12
@@ -26,7 +26,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewModel.birdShapes.count
+        viewModel.fieldMarks.count
     }
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -37,9 +37,13 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
             image.draw(in: CGRect(origin: .zero, size: size))
         }
     }
+    @objc func switchChanged(_ sender: UISwitch) {
+        print("Row \(sender.tag), isOn = \(sender.isOn)")
+    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "shape_cell", for: indexPath)
-        let item = viewModel.birdShapes[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
+        let item = viewModel.fieldMarks[indexPath.row]
         cell.textLabel?.text = item.name
         if let img = UIImage(named: item.imageView) {
     
@@ -51,19 +55,23 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         } else {
             cell.imageView?.image = nil
         }
-        cell.accessoryType = .disclosureIndicator
+        let toggle = UISwitch()
+        toggle.isOn = true
+        toggle.tag = indexPath.row
+        toggle.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
+        cell.accessoryView = toggle
+        cell.selectionStyle = .none
         return cell
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         styleTableContainer()
-        shapeTableView.delegate = self
-        shapeTableView.dataSource = self
+        fieldMarkTableView.delegate = self
+        fieldMarkTableView.dataSource = self
 
     }
     
-
    
 
 }

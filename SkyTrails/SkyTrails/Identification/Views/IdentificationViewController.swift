@@ -94,6 +94,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             image.draw(in: CGRect(origin: .zero, size: size))
         }
     }
+ 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
        
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
@@ -111,7 +112,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             cell.imageView?.image = nil
         }
         
-        cell.accessoryType = item.isSelected ? .checkmark: .none
+       
         return cell
     }
     
