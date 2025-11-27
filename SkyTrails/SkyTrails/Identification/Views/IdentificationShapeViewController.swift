@@ -11,18 +11,9 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     
     
     @IBOutlet weak var tableContainerView: UIView!
-    @IBOutlet weak var shapetableview: UITableView!
-    var viewmodel: ViewModel = ViewModel()
-//    func applyCardShadow(to view: UIView) {
-//        // Shadow and corner radius
-//        view.layer.cornerRadius = 12
-//        view.layer.shadowColor = UIColor.black.cgColor
-//        view.layer.shadowOpacity = 0.1
-//        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-//        view.layer.shadowRadius = 8
-//        view.layer.masksToBounds = true
-//        view.layer.backgroundColor = UIColor.white.cgColor
-//    }
+    @IBOutlet weak var shapeTableView: UITableView!
+    var viewModel: ViewModel = ViewModel()
+
     func styleTableContainer() {
         tableContainerView.backgroundColor = .white
         tableContainerView.layer.cornerRadius = 12
@@ -31,10 +22,11 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
         tableContainerView.layer.shadowRadius = 8
         tableContainerView.layer.masksToBounds = false
+        
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewmodel.birdShapes.count
+        viewModel.birdShapes.count
     }
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -47,7 +39,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "shape_cell", for: indexPath)
-        let item = viewmodel.birdShapes[indexPath.row]
+        let item = viewModel.birdShapes[indexPath.row]
         cell.textLabel?.text = item.Name
         if let img = UIImage(named: item.ImageView) {
     
@@ -66,10 +58,9 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     override func viewDidLoad() {
         super.viewDidLoad()
         styleTableContainer()
-        shapetableview.delegate = self
-        shapetableview.dataSource = self
-//        applyCardShadow(to: shapetableview)
-        // Do any additional setup after loading the view.
+        shapeTableView.delegate = self
+        shapeTableView.dataSource = self
+
     }
     
 

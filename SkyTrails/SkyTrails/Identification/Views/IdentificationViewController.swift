@@ -10,10 +10,10 @@ import UIKit
 class IdentificationViewController: UIViewController, UITableViewDelegate,UITableViewDataSource,UICollectionViewDataSource,UICollectionViewDelegate{
  
     @IBOutlet weak var startButton: UIButton!
-    @IBOutlet weak var tableview: UITableView!
-    @IBOutlet weak var collectionview: UICollectionView!
+    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var collectionView: UICollectionView!
     
-    var viewmodel: ViewModel = ViewModel()
+    var viewModel: ViewModel = ViewModel()
     var history: [History] = []
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -50,33 +50,29 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-       
-        self.title = "Identification"
-        self.navigationItem.largeTitleDisplayMode = .always
+
+        tableView.delegate = self
+        tableView.dataSource = self
         
-        tableview.delegate = self
-        tableview.dataSource = self
-        
-        // Set button visual appearance early to avoid blue flash
+     
         startButton.backgroundColor = .white
         startButton.setTitleColor(.black, for: .normal)
         startButton.tintColor = .white
         startButton.adjustsImageWhenHighlighted = false
         
-        // Optional: set a consistent row height to fit your image
-        tableview.rowHeight = 56
+       
+        tableView.rowHeight = 56
     
-        applyCardShadow(to: tableview)
+        applyCardShadow(to: tableView)
 
         let layout = generateLayout()
-        collectionview.setCollectionViewLayout(layout, animated: true)
-        collectionview.dataSource = self
-        collectionview.delegate = self
-        history = viewmodel.migrationHistory
-        collectionview.reloadData()
+        collectionView.setCollectionViewLayout(layout, animated: true)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        history = viewModel.migrationHistory
+        collectionView.reloadData()
     }
     func applyCardShadow(to view: UIView) {
-        // Shadow and corner radius
         view.layer.cornerRadius = 12
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.1
@@ -86,7 +82,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         view.layer.backgroundColor = UIColor.white.cgColor
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewmodel.fieldMarkOptions.count
+        return viewModel.fieldMarkOptions.count
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -101,7 +97,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
        
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        let item = viewmodel.fieldMarkOptions[indexPath.row]
+        let item = viewModel.fieldMarkOptions[indexPath.row]
         cell.textLabel?.text = item.fieldMarkName
         
         if let img = UIImage(named: item.symbols) {
@@ -120,7 +116,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        viewmodel.fieldMarkOptions[indexPath.row].isSelected.toggle()
+        viewModel.fieldMarkOptions[indexPath.row].isSelected.toggle()
         tableView.reloadRows(at: [indexPath], with: .none)
     }
     
