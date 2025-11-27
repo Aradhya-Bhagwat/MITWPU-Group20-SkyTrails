@@ -26,6 +26,7 @@ class RootTabBarController: UITabBarController {
 		]
 	}
 	
+	var fakechange = "haha"
 	private func loadFeature(storyboard: String,
 							 title: String,
 							 systemImage: String) -> UIViewController {
