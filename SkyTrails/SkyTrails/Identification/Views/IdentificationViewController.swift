@@ -24,7 +24,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "history_cell", for: indexPath)
         
-        guard let historyCell = cell as? historyCollectionViewCell else {
+        guard let historyCell = cell as? IdentificationHistoryCollectionViewCell else {
             return cell
         }
         let historyItems = history[indexPath.row]

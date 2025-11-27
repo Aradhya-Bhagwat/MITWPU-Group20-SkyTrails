@@ -7,7 +7,7 @@
 
 import UIKit
 
-class Identification1ViewController: UIViewController {
+class IdentificationSizeViewController: UIViewController {
 
     @IBOutlet weak var birdImage: UIImageView!
     @IBOutlet weak var birdSlider: UISlider!
