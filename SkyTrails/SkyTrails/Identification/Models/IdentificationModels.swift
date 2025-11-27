@@ -19,7 +19,7 @@ struct FieldMarkType{
     var isSelected: Bool = false
 }
 struct BirdShape{
-    var ImageView : [String]
+    var ImageView : String
     var Name : String
 }
 struct ChooseFieldMark{

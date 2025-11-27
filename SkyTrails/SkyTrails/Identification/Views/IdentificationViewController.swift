@@ -19,6 +19,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return history.count
     }
+
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "history_cell", for: indexPath)
@@ -40,15 +41,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         return historyCell
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        // No color changes here to avoid flash on tab switch
-    }
+//
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // Apply shadow after the button has its final frame for correct corner radius
         applyCardShadow(to: startButton)
-        // Optional: provide a shadowPath to prevent shadow layout changes
         startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
     }
     override func viewDidLoad() {
@@ -56,14 +53,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
        
         self.title = "Identification"
         self.navigationItem.largeTitleDisplayMode = .always
-      
+        
         tableview.delegate = self
         tableview.dataSource = self
         
         // Set button visual appearance early to avoid blue flash
         startButton.backgroundColor = .white
         startButton.setTitleColor(.black, for: .normal)
-        startButton.tintColor = .white // prevents default blue tint on system button images/text
+        startButton.tintColor = .white
         startButton.adjustsImageWhenHighlighted = false
         
         // Optional: set a consistent row height to fit your image
@@ -86,7 +83,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         view.layer.shadowOffset = CGSize(width: 0, height: 2)
         view.layer.shadowRadius = 8
         view.layer.masksToBounds = false
-        // Background color
         view.layer.backgroundColor = UIColor.white.cgColor
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -113,7 +109,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             let targetSize = CGSize(width: 28, height: 28)
             let resized = resize(img, to: targetSize)
             cell.imageView?.image = resized
-            cell.imageView?.contentMode = .scaleAspectFit
+            cell.imageView?.contentMode = .scaleAspectFill
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
         } else {
             cell.imageView?.image = nil
@@ -146,4 +142,5 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         let layout = UICollectionViewCompositionalLayout(section: section)
         return layout
     }
+
 }
