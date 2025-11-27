@@ -21,7 +21,7 @@ class historyCollectionViewCell: UICollectionViewCell {
         
         func formatDate(_ date: Date) -> String {
             let formatter = DateFormatter()
-            formatter.dateFormat = "d MMM"   // Example: 23 Oct
+            formatter.dateFormat = "d MMM"
             return formatter.string(from: date)
         }
         DateLabel.text = formatDate(historyItem.date)
