@@ -14,15 +14,23 @@
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kme-xc-v50">
-                    <rect key="frame" x="8" y="8" width="43.333333333333336" height="21"/>
+                    <rect key="frame" x="8" y="8" width="43.333333333333336" height="34.333333333333336"/>
                     <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fsk-oM-nsO">
+                    <rect key="frame" x="327.33333333333331" y="8" width="39.666666666666686" height="34.333333333333336"/>
+                    <state key="normal" title="Button"/>
+                    <buttonConfiguration key="configuration" style="plain" image="chevron.right" catalog="system"/>
+                </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="VXr-Tz-HHm"/>
             <constraints>
+                <constraint firstItem="fsk-oM-nsO" firstAttribute="height" secondItem="Kme-xc-v50" secondAttribute="height" id="CPY-Vv-FR3"/>
                 <constraint firstItem="Kme-xc-v50" firstAttribute="top" secondItem="U6b-Vx-4bR" secondAttribute="top" constant="8" id="DwX-Ox-GSe"/>
+                <constraint firstItem="VXr-Tz-HHm" firstAttribute="trailing" secondItem="fsk-oM-nsO" secondAttribute="trailing" constant="8" id="IFm-5N-TmH"/>
+                <constraint firstItem="fsk-oM-nsO" firstAttribute="top" secondItem="U6b-Vx-4bR" secondAttribute="top" constant="8" id="UzP-yf-GtO"/>
                 <constraint firstItem="Kme-xc-v50" firstAttribute="leading" secondItem="VXr-Tz-HHm" secondAttribute="leading" constant="8" id="xVU-9K-eWP"/>
             </constraints>
             <connections>
@@ -31,4 +39,7 @@
             <point key="canvasLocation" x="18" y="123"/>
         </collectionReusableView>
     </objects>
+    <resources>
+        <image name="chevron.right" catalog="system" width="97" height="128"/>
+    </resources>
 </document>

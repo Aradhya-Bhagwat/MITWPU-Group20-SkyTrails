@@ -49,3 +49,12 @@ struct Watchlist {
 		return birds.filter { $0.isObserved }.count
 	}
 }
+
+struct SharedWatchlist {
+    let title: String
+    let location: String
+    let dateRange: String
+    let mainImageName: String
+    let stats: (Int, Int)
+    let userImages: [String] // Using SF Symbol names or asset names
+}
