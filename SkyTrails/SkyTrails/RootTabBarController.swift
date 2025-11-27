@@ -33,6 +33,7 @@ class RootTabBarController: UITabBarController {
 
 	}
 	
+	var fakechange = "haha"
 	private func loadFeature(storyboard: String,
 							 id: String,
 							 title: String,
