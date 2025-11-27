@@ -291,7 +291,11 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select the size of the bird" largeTitleDisplayMode="never" id="bI2-pk-hLZ">
-                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="Qhp-7o-QPD"/>
+                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="Qhp-7o-QPD">
+                            <connections>
+                                <segue destination="qmL-5v-0nM" kind="show" id="nRC-yM-3sE"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="birdImage" destination="Tyw-Jv-ciW" id="DPL-TK-9SS"/>
@@ -303,16 +307,63 @@
             </objects>
             <point key="canvasLocation" x="3797" y="-242"/>
         </scene>
-        <!--View Controller-->
+        <!--Select 5 field marks to use-->
         <scene sceneID="xCJ-NJ-tg9">
             <objects>
-                <viewController id="qmL-5v-0nM" sceneMemberID="viewController">
+                <viewController id="qmL-5v-0nM" customClass="IdentificationFieldMarksViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="edF-f2-COB">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="9Wj-ji-0gq">
+                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                            </progressView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fGn-Sr-Rr8">
+                                <rect key="frame" x="16" y="202" width="370" height="604"/>
+                                <subviews>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="OAI-gE-SYf">
+                                        <rect key="frame" x="0.0" y="0.0" width="354" height="580"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <prototypes>
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="fieldmark_cell" id="im8-hd-cdr">
+                                                <rect key="frame" x="0.0" y="50" width="354" height="51"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="im8-hd-cdr" id="1Ia-oW-JeB">
+                                                    <rect key="frame" x="0.0" y="0.0" width="354" height="51"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                </tableViewCellContentView>
+                                            </tableViewCell>
+                                        </prototypes>
+                                    </tableView>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="OAI-gE-SYf" secondAttribute="bottom" constant="16" id="KpO-z2-Z8u"/>
+                                    <constraint firstItem="OAI-gE-SYf" firstAttribute="top" secondItem="fGn-Sr-Rr8" secondAttribute="top" constant="8" id="Xmg-Kj-SzV"/>
+                                    <constraint firstItem="OAI-gE-SYf" firstAttribute="leading" secondItem="fGn-Sr-Rr8" secondAttribute="leading" constant="8" id="hNX-s5-JiD"/>
+                                    <constraint firstAttribute="trailing" secondItem="OAI-gE-SYf" secondAttribute="trailing" constant="8" id="s3q-3S-N4F"/>
+                                </constraints>
+                            </view>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="eSi-zt-0K5"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="9Wj-ji-0gq" firstAttribute="top" secondItem="eSi-zt-0K5" secondAttribute="top" id="8iW-hr-Ywe"/>
+                            <constraint firstItem="eSi-zt-0K5" firstAttribute="trailing" secondItem="fGn-Sr-Rr8" secondAttribute="trailing" constant="16" id="LFR-Z2-QMU"/>
+                            <constraint firstAttribute="trailing" secondItem="9Wj-ji-0gq" secondAttribute="trailing" constant="8" id="S5F-If-ffj"/>
+                            <constraint firstItem="eSi-zt-0K5" firstAttribute="bottom" secondItem="fGn-Sr-Rr8" secondAttribute="bottom" id="U1y-79-9Aa"/>
+                            <constraint firstItem="fGn-Sr-Rr8" firstAttribute="leading" secondItem="eSi-zt-0K5" secondAttribute="leading" constant="16" id="UhN-Jz-t2B"/>
+                            <constraint firstItem="fGn-Sr-Rr8" firstAttribute="top" secondItem="9Wj-ji-0gq" secondAttribute="bottom" constant="20" id="VWe-EG-GsW"/>
+                            <constraint firstItem="9Wj-ji-0gq" firstAttribute="leading" secondItem="edF-f2-COB" secondAttribute="leading" constant="8" id="nMv-jk-8zK"/>
+                        </constraints>
                     </view>
+                    <navigationItem key="navigationItem" title="Select 5 field marks to use" id="JGR-Vv-OcD">
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf"/>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="fieldMarkTableView" destination="OAI-gE-SYf" id="y1j-5J-Vxy"/>
+                        <outlet property="tableContainerView" destination="fGn-Sr-Rr8" id="EPq-rn-g7q"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mdG-YC-tQn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -333,6 +384,52 @@
                     </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="beX-9p-TlB" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <view contentMode="scaleToFill" id="aN8-JO-YeR">
+                    <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <subviews>
+                        <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="jQz-4G-fDQ">
+                            <rect key="frame" x="8" y="124" width="386" height="4"/>
+                        </progressView>
+                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="tld-4H-qHf">
+                            <rect key="frame" x="16" y="148" width="370" height="726"/>
+                            <subviews>
+                                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="ZBZ-8V-hyu">
+                                    <rect key="frame" x="8" y="8" width="354" height="702"/>
+                                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                    <prototypes>
+                                        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="shape_cell" id="EBa-jM-SJv">
+                                            <rect key="frame" x="0.0" y="50" width="354" height="51"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="EBa-jM-SJv" id="oX6-84-lnv">
+                                                <rect key="frame" x="0.0" y="0.0" width="354" height="51"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </tableViewCellContentView>
+                                        </tableViewCell>
+                                    </prototypes>
+                                </tableView>
+                            </subviews>
+                            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            <constraints>
+                                <constraint firstItem="ZBZ-8V-hyu" firstAttribute="leading" secondItem="tld-4H-qHf" secondAttribute="leading" constant="8" id="DXh-qY-MLD"/>
+                                <constraint firstAttribute="trailing" secondItem="ZBZ-8V-hyu" secondAttribute="trailing" constant="8" id="QDw-DA-TFf"/>
+                                <constraint firstItem="ZBZ-8V-hyu" firstAttribute="top" secondItem="tld-4H-qHf" secondAttribute="top" constant="8" id="d5b-sN-uUh"/>
+                                <constraint firstAttribute="bottom" secondItem="ZBZ-8V-hyu" secondAttribute="bottom" constant="16" id="e15-pB-HCT"/>
+                            </constraints>
+                        </view>
+                    </subviews>
+                    <viewLayoutGuide key="safeArea" id="ob6-M2-jDC"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <constraints>
+                        <constraint firstAttribute="bottom" secondItem="tld-4H-qHf" secondAttribute="bottom" id="0U5-ow-h2M"/>
+                        <constraint firstItem="ob6-M2-jDC" firstAttribute="trailing" secondItem="jQz-4G-fDQ" secondAttribute="trailing" constant="8" id="FoP-pq-Hvl"/>
+                        <constraint firstItem="ob6-M2-jDC" firstAttribute="trailing" secondItem="tld-4H-qHf" secondAttribute="trailing" constant="16" id="P6H-nx-VC1"/>
+                        <constraint firstItem="tld-4H-qHf" firstAttribute="leading" secondItem="ob6-M2-jDC" secondAttribute="leading" constant="16" id="cPW-r9-Zyt"/>
+                        <constraint firstItem="tld-4H-qHf" firstAttribute="top" secondItem="jQz-4G-fDQ" secondAttribute="bottom" constant="20" id="e0s-tS-bNH"/>
+                        <constraint firstItem="jQz-4G-fDQ" firstAttribute="leading" secondItem="ob6-M2-jDC" secondAttribute="leading" constant="8" id="eOg-hR-45a"/>
+                        <constraint firstItem="jQz-4G-fDQ" firstAttribute="top" secondItem="ob6-M2-jDC" secondAttribute="top" id="i6C-9m-tSZ"/>
+                    </constraints>
+                </view>
             </objects>
             <point key="canvasLocation" x="1250.7462686567164" y="-242.33409610983981"/>
         </scene>

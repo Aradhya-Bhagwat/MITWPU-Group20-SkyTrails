@@ -17,7 +17,6 @@ class ViewModel {
     ]
 
       
-        //var historyItems: [History] = []
         
     let migrationHistory: [History] = [
         History(
@@ -41,22 +40,35 @@ class ViewModel {
         )
     ]
     
-  //  var birdShape: [BirdShape] = []
+ 
     let birdShapes: [BirdShape] = [
-        BirdShape(ImageView: "bird_auks_shape", Name: "Auks"),
-        BirdShape(ImageView: "bird_chickadees_shape", Name: "Chickadees"),
-        BirdShape(ImageView: "bird_owls_shape", Name: "Owls"),
-        BirdShape(ImageView: "bird_ducks_shape", Name: "Ducks"),
-        BirdShape(ImageView: "bird_hummingbird_shape", Name: "Hummingbird"),
-        BirdShape(ImageView: "bird_heron_shape", Name: "Heron"),
-        BirdShape(ImageView: "bird_shorebird_shape", Name: "Shorebird"),
-        BirdShape(ImageView: "bird_game_bird_shape", Name: "Game Bird"),
-        BirdShape(ImageView: "bird_finch_shape", Name: "Finch"),
-        BirdShape(ImageView: "bird_doves_shape", Name: "Doves"),
-        BirdShape(ImageView: "bird_wrens_shape", Name: "Wrens"),
-        BirdShape(ImageView: "bird_hawks_and_falcons_shape", Name: "Hawks & Falcons")
+        BirdShape(imageView: "bird_auks_shape", name: "Auks"),
+        BirdShape(imageView: "bird_chickadees_shape", name: "Chickadees"),
+        BirdShape(imageView: "bird_owls_shape", name: "Owls"),
+        BirdShape(imageView: "bird_ducks_shape", name: "Ducks"),
+        BirdShape(imageView: "bird_hummingbird_shape", name: "Hummingbird"),
+        BirdShape(imageView: "bird_heron_shape", name: "Heron"),
+        BirdShape(imageView: "bird_shorebird_shape", name: "Shorebird"),
+        BirdShape(imageView: "bird_game_bird_shape", name: "Game Bird"),
+        BirdShape(imageView: "bird_finch_shape", name: "Finch"),
+        BirdShape(imageView: "bird_doves_shape", name: "Doves"),
+        BirdShape(imageView: "bird_wrens_shape", name: "Wrens"),
+        BirdShape(imageView: "bird_hawks_and_falcons_shape", name: "Hawks & Falcons")
     ]
     
-    
+    let fieldMarks: [ChooseFieldMark] = [
+        ChooseFieldMark(imageView: "bird_back", name: "Back"),
+        ChooseFieldMark(imageView: "bird_beak", name: "Beak"),
+        ChooseFieldMark(imageView: "bird_belly", name: "Belly"),
+        ChooseFieldMark(imageView: "bird_crown", name: "Crown"),
+        ChooseFieldMark(imageView: "bird_eye", name: "Eye"),
+        ChooseFieldMark(imageView: "bird_leg", name: "Leg"),
+        ChooseFieldMark(imageView: "bird_nape", name: "Nape"),
+        ChooseFieldMark(imageView: "bird_tail", name: "Tail"),
+        ChooseFieldMark(imageView: "bird_thigh", name: "Thigh"),
+        ChooseFieldMark(imageView: "bird_throat", name: "Throat"),
+        ChooseFieldMark(imageView: "bird_wings", name: "Wings")
+    ]
+
 }
 
