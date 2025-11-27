@@ -21,7 +21,7 @@ class ViewModel {
         
     let migrationHistory: [History] = [
         History(
-            imageView: "bird_common_kingfisher",
+            imageView: "Bird_Common_kingfisher",
             specieName: "Common Kingfisher",
             date: Date()         ),
         History(
@@ -30,7 +30,7 @@ class ViewModel {
             date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!
         ),
         History(
-            imageView: "bird_blue_throated_barbet",
+            imageView: "Bird_blue_throated_barbet",
             specieName: "Blue-Throated Barbaret",
             date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!
         ),
