@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ShapeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
     
     
     @IBOutlet weak var tableContainerView: UIView!

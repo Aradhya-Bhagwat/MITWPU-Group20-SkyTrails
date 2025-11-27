@@ -7,7 +7,7 @@
 
 import UIKit
 
-class historyCollectionViewCell: UICollectionViewCell {
+class IdentificationHistoryCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var historyimageView: UIImageView!
     @IBOutlet weak var SpecieNameLabel: UILabel!
