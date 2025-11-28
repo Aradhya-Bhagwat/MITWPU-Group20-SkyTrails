@@ -27,11 +27,10 @@ struct Bird {
 	
 	var rarity : [Rarity]
 	
-	var location: [CLLocation]
+	var location: [String] // Changed from [CLLocation] to [String]
 	var date : [Date]
 	
-	
-	var isObserved: Bool // Determines which tab it belongs to
+    // Removed isObserved as it's now context-dependent
 }
 
 
@@ -42,11 +41,17 @@ struct Watchlist {
 	var location: String
 	var startDate: Date
 	var endDate: Date
-	var birds: [Bird]
+    
+    var observedBirds: [Bird]
+    var toObserveBirds: [Bird]
+    
+    var birds: [Bird] {
+        return observedBirds + toObserveBirds
+    }
 	
 		// Helper to get counts for the UI
 	var observedCount: Int {
-		return birds.filter { $0.isObserved }.count
+		return observedBirds.count
 	}
 }
 
@@ -57,4 +62,11 @@ struct SharedWatchlist {
     let mainImageName: String
     let stats: (Int, Int)
     let userImages: [String] // Using SF Symbol names or asset names
+    
+    var observedBirds: [Bird] = []
+    var toObserveBirds: [Bird] = []
+    
+    var birds: [Bird] {
+        return observedBirds + toObserveBirds
+    }
 }

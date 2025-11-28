@@ -12,6 +12,15 @@ class WatchlistViewModel {
 	
 	init() {
 		self.watchlists = createMockWatchlists()
+        
+        // Helper to get some random birds from mock watchlists
+        // Ensure we have enough birds for distinct lists
+        let allBirds = self.watchlists.flatMap { $0.birds }
+        
+        // Split birds to ensure distinct observed and toObserve lists for shared watchlists
+        let firstHalf = Array(allBirds.prefix(allBirds.count / 2)) // First half
+        let secondHalf = Array(allBirds.suffix(allBirds.count - firstHalf.count)) // Second half
+        
         self.sharedWatchlists = [
             SharedWatchlist(
                 title: "Canopy Wanderers",
@@ -19,7 +28,9 @@ class WatchlistViewModel {
                 dateRange: "8th Oct - 7th Nov",
                 mainImageName: "AsianFairyBluebird",
                 stats: (18, 7),
-                userImages: ["person.crop.circle.fill", "person.crop.circle", "person.circle.fill", "person.crop.circle.fill", "person.crop.circle"]
+                userImages: ["person.crop.circle.fill", "person.crop.circle", "person.circle.fill", "person.crop.circle.fill", "person.crop.circle"],
+                observedBirds: Array(firstHalf.prefix(max(1, firstHalf.count / 2))), // At least one bird observed
+                toObserveBirds: Array(firstHalf.suffix(max(1, firstHalf.count - firstHalf.count / 2))) // At least one bird to observe
             ),
             SharedWatchlist(
                 title: "Feather Trail",
@@ -27,7 +38,9 @@ class WatchlistViewModel {
                 dateRange: "12th Oct - 15th Nov",
                 mainImageName: "HimalayanMonal",
                 stats: (10, 2),
-                userImages: ["person.circle.fill", "person.crop.circle", "person.crop.circle.fill", "person.crop.circle"]
+                userImages: ["person.circle.fill", "person.crop.circle", "person.crop.circle.fill", "person.crop.circle"],
+                observedBirds: Array(secondHalf.prefix(max(1, secondHalf.count / 2))), // At least one bird observed
+                toObserveBirds: Array(secondHalf.suffix(max(1, secondHalf.count - secondHalf.count / 2))) // At least one bird to observe
             )
         ]
 	}

@@ -228,7 +228,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyWatchlistCollectionViewCell", for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = vm.watchlists.first {
-			let observedCount = watchlist.birds.filter { $0.isObserved }.count
+			let observedCount = watchlist.observedCount
 			let totalCount = watchlist.birds.count
 			
 			var coverImage: UIImage? = nil
@@ -282,7 +282,32 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	}
 	
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-		print("Tapped cell in Section \(indexPath.section), Item \(indexPath.item)")
+        guard let vm = viewModel else { return }
+        guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return }
+        
+        switch sectionType {
+        case .myWatchlist:
+            // Assuming the first watchlist is "My Watchlist"
+            if let watchlist = vm.watchlists.first {
+                performSegue(withIdentifier: "ShowSmartWatchlist", sender: watchlist)
+            }
+            
+        case .customWatchlist:
+            // Custom Watchlists start from index 1 (index 0 is My Watchlist)
+            let watchlistIndex = indexPath.item + 1
+            if watchlistIndex < vm.watchlists.count {
+                let watchlist = vm.watchlists[watchlistIndex]
+                performSegue(withIdentifier: "ShowSmartWatchlist", sender: watchlist)
+            }
+            
+        case .sharedWatchlist:
+            if let sharedWatchlist = vm.sharedWatchlists[safe: indexPath.item] {
+                performSegue(withIdentifier: "ShowSmartWatchlist", sender: sharedWatchlist)
+            }
+            
+        default:
+            break
+        }
 	}
 }
 
@@ -324,7 +349,19 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 			if let destinationVC = segue.destination as? CustomWatchlistViewController {
 					destinationVC.viewModel = self.viewModel
 			}
-		}
+		} else if segue.identifier == "ShowSmartWatchlist" {
+            guard let destVC = segue.destination as? SmartWatchlistViewController else { return }
+            
+            if let watchlist = sender as? Watchlist {
+                destVC.watchlistTitle = watchlist.title
+                destVC.observedBirds = watchlist.observedBirds
+                destVC.toObserveBirds = watchlist.toObserveBirds
+            } else if let sharedWatchlist = sender as? SharedWatchlist {
+                destVC.watchlistTitle = sharedWatchlist.title
+                destVC.observedBirds = sharedWatchlist.observedBirds
+                destVC.toObserveBirds = sharedWatchlist.toObserveBirds
+            }
+        }
 	}
 }
 
