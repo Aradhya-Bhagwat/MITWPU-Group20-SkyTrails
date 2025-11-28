@@ -55,6 +55,7 @@
                     <connections>
                         <outlet property="SummaryCardCollectionView" destination="TzJ-jT-Fht" id="4f8-93-wH5"/>
                         <segue destination="bUc-Cy-MGb" kind="show" identifier="ShowCustomWatchlistGrid" id="V3h-Ro-DQ2"/>
+                        <segue destination="zap-jy-tCo" kind="show" identifier="ShowSmartWatchlist" id="78Y-oW-Tc8"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wge-VU-nXA" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -155,6 +156,174 @@
             </objects>
             <point key="canvasLocation" x="4741" y="-45"/>
         </scene>
+        <!--Watchlist-->
+        <scene sceneID="epi-3b-LKT">
+            <objects>
+                <viewController id="zap-jy-tCo" customClass="SmartWatchlistViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="jiF-2J-rF5">
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZaP-mE-nYF" userLabel="HeaderView">
+                                <rect key="frame" x="0.0" y="178" width="402" height="111"/>
+                                <subviews>
+                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="8qu-DE-Keg">
+                                        <rect key="frame" x="16" y="10" width="370" height="32"/>
+                                        <segments>
+                                            <segment title="Observed"/>
+                                            <segment title="To Observe"/>
+                                        </segments>
+                                        <connections>
+                                            <action selector="segmentChanged:" destination="zap-jy-tCo" eventType="valueChanged" id="seg-action-id"/>
+                                        </connections>
+                                    </segmentedControl>
+                                    <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="E4j-Cd-9gw">
+                                        <rect key="frame" x="16" y="51" width="370" height="50"/>
+                                        <subviews>
+                                            <searchBar contentMode="redraw" searchBarStyle="minimal" translatesAutoresizingMaskIntoConstraints="NO" id="htl-r6-KZI">
+                                                <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
+                                                <textInputTraits key="textInputTraits"/>
+                                                <connections>
+                                                    <outlet property="delegate" destination="zap-jy-tCo" id="RWR-7Z-Msg"/>
+                                                </connections>
+                                            </searchBar>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="s4R-8L-xH9" userLabel="FilterButton">
+                                                <rect key="frame" x="320" y="0.0" width="50" height="50"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="50" id="CP3-ho-EOt"/>
+                                                    <constraint firstAttribute="height" constant="50" id="Pya-iR-E2v"/>
+                                                </constraints>
+                                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="filled" image="line.3.horizontal.decrease" catalog="system" cornerStyle="capsule">
+                                                    <backgroundConfiguration key="background">
+                                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                    </backgroundConfiguration>
+                                                    <color key="baseForegroundColor" systemColor="labelColor"/>
+                                                    <color key="baseBackgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                </buttonConfiguration>
+                                                <userDefinedRuntimeAttributes>
+                                                    <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
+                                                </userDefinedRuntimeAttributes>
+                                                <connections>
+                                                    <action selector="filterButtonTapped:" destination="zap-jy-tCo" eventType="touchUpInside" id="QeF-et-cDb"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="50" id="WD1-H8-K2g"/>
+                                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="50" id="hhH-d4-ltb"/>
+                                        </constraints>
+                                    </stackView>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstItem="E4j-Cd-9gw" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="6An-v1-aSP"/>
+                                    <constraint firstItem="8qu-DE-Keg" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="top" constant="10" id="8Vw-Vk-hYo"/>
+                                    <constraint firstAttribute="bottom" secondItem="E4j-Cd-9gw" secondAttribute="bottom" constant="10" id="CYc-wf-M4Z"/>
+                                    <constraint firstItem="E4j-Cd-9gw" firstAttribute="top" secondItem="8qu-DE-Keg" secondAttribute="bottom" constant="10" id="IfM-rD-Id3"/>
+                                    <constraint firstAttribute="trailing" secondItem="E4j-Cd-9gw" secondAttribute="trailing" constant="16" id="UkN-9S-BPG"/>
+                                    <constraint firstItem="8qu-DE-Keg" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="aEC-Md-Mh1"/>
+                                    <constraint firstAttribute="trailing" secondItem="8qu-DE-Keg" secondAttribute="trailing" constant="16" id="eQx-Iy-yvI"/>
+                                </constraints>
+                            </view>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="yez-to-lUt">
+                                <rect key="frame" x="0.0" y="289" width="402" height="585"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="BirdSmartCell" rowHeight="116" id="4jF-6g-ae5" customClass="BirdSmartCell" customModule="SkyTrails" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="50" width="402" height="116"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="4jF-6g-ae5" id="b5a-8e-TTd">
+                                            <rect key="frame" x="0.0" y="0.0" width="402" height="116"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cnt-Vi-ew1" userLabel="Container View">
+                                                    <rect key="frame" x="16" y="8" width="370" height="100"/>
+                                                    <subviews>
+                                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Img-Vi-ew2">
+                                                            <rect key="frame" x="8" y="10" width="80" height="80"/>
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="80" id="Img-Wd-80"/>
+                                                                <constraint firstAttribute="height" constant="80" id="Img-Ht-80"/>
+                                                            </constraints>
+                                                        </imageView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="Stk-Vi-ew3">
+                                                            <rect key="frame" x="96" y="20.666666666666668" width="266" height="58.666666666666657"/>
+                                                            <subviews>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Ti-tle">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="266" height="21.666666666666668"/>
+                                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
+                                                                    <nil key="textColor"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Da-te">
+                                                                    <rect key="frame" x="0.0" y="25.666666666666661" width="266" height="14.333333333333332"/>
+                                                                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                                                                    <color key="textColor" systemColor="secondaryLabelColor"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Lo-cat">
+                                                                    <rect key="frame" x="0.0" y="44" width="266" height="14.666666666666664"/>
+                                                                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                                                                    <color key="textColor" systemColor="secondaryLabelColor"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                            </subviews>
+                                                        </stackView>
+                                                    </subviews>
+                                                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                    <constraints>
+                                                        <constraint firstItem="Img-Vi-ew2" firstAttribute="leading" secondItem="Cnt-Vi-ew1" secondAttribute="leading" constant="8" id="Cns-Im-Lea"/>
+                                                        <constraint firstItem="Stk-Vi-ew3" firstAttribute="centerY" secondItem="Cnt-Vi-ew1" secondAttribute="centerY" id="Cns-Stk-Cen"/>
+                                                        <constraint firstAttribute="trailing" secondItem="Stk-Vi-ew3" secondAttribute="trailing" constant="8" id="Cns-Img-Tr"/>
+                                                        <constraint firstItem="Stk-Vi-ew3" firstAttribute="leading" secondItem="Img-Vi-ew2" secondAttribute="trailing" constant="8" id="Cns-Stk-Ld"/>
+                                                        <constraint firstItem="Img-Vi-ew2" firstAttribute="centerY" secondItem="Cnt-Vi-ew1" secondAttribute="centerY" id="Cns-Img-Cen"/>
+                                                    </constraints>
+                                                </view>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="Cnt-Vi-ew1" firstAttribute="top" secondItem="b5a-8e-TTd" secondAttribute="top" constant="8" id="Cns-Cnt-Tp"/>
+                                                <constraint firstAttribute="bottom" secondItem="Cnt-Vi-ew1" secondAttribute="bottom" constant="8" id="Cns-Cnt-Bt"/>
+                                                <constraint firstAttribute="trailing" secondItem="Cnt-Vi-ew1" secondAttribute="trailing" constant="16" id="Cns-Cnt-Tr"/>
+                                                <constraint firstItem="Cnt-Vi-ew1" firstAttribute="leading" secondItem="b5a-8e-TTd" secondAttribute="leading" constant="16" id="Cns-Cnt-Ld"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="birdImageView" destination="Img-Vi-ew2" id="Out-Img-View"/>
+                                            <outlet property="containerView" destination="Cnt-Vi-ew1" id="Out-Cnt-View"/>
+                                            <outlet property="dateLabel" destination="Lbl-Da-te" id="Out-Dat-Lbl"/>
+                                            <outlet property="locationLabel" destination="Lbl-Lo-cat" id="Out-Loc-Lbl"/>
+                                            <outlet property="titleLabel" destination="Lbl-Ti-tle" id="Out-Tit-Lbl"/>
+                                        </connections>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="0NY-hU-HEx"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="ZaP-mE-nYF" firstAttribute="trailing" secondItem="0NY-hU-HEx" secondAttribute="trailing" id="4Rk-cH-UdW"/>
+                            <constraint firstItem="ZaP-mE-nYF" firstAttribute="top" secondItem="0NY-hU-HEx" secondAttribute="top" id="4Sl-zh-wfU"/>
+                            <constraint firstAttribute="bottom" secondItem="yez-to-lUt" secondAttribute="bottom" id="4uw-kq-QLm"/>
+                            <constraint firstItem="ZaP-mE-nYF" firstAttribute="leading" secondItem="0NY-hU-HEx" secondAttribute="leading" id="P3t-Oi-4rx"/>
+                            <constraint firstItem="yez-to-lUt" firstAttribute="leading" secondItem="0NY-hU-HEx" secondAttribute="leading" id="her-rV-M7B"/>
+                            <constraint firstItem="yez-to-lUt" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="bottom" id="nDU-At-ZuL"/>
+                            <constraint firstItem="0NY-hU-HEx" firstAttribute="trailing" secondItem="yez-to-lUt" secondAttribute="trailing" id="pLQ-39-bkk"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Watchlist" id="eWu-qa-gFF"/>
+                    <connections>
+                        <outlet property="headerView" destination="ZaP-mE-nYF" id="bP7-M0-MJ4"/>
+                        <outlet property="searchBar" destination="htl-r6-KZI" id="dX7-rx-sLI"/>
+                        <outlet property="segmentedControl" destination="8qu-DE-Keg" id="3ak-rq-Tjb"/>
+                        <outlet property="tableView" destination="yez-to-lUt" id="YKE-Nn-i0H"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="OXF-Hz-DyX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4970" y="1071"/>
+        </scene>
         <!--Navigation Controller-->
         <scene sceneID="Uh5-pg-t6m">
             <objects>
@@ -178,6 +347,12 @@
         <image name="line.3.horizontal.decrease" catalog="system" width="128" height="73"/>
         <systemColor name="labelColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="secondaryLabelColor">
+            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="secondarySystemGroupedBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
