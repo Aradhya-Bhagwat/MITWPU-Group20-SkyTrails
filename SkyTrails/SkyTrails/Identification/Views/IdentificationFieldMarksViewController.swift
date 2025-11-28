@@ -56,7 +56,7 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
             cell.imageView?.image = nil
         }
         let toggle = UISwitch()
-        toggle.isOn = true
+        toggle.isOn = false
         toggle.tag = indexPath.row
         toggle.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
         cell.accessoryView = toggle
