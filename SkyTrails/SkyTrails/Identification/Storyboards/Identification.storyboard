@@ -319,7 +319,7 @@
                                 <rect key="frame" x="8" y="178" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fGn-Sr-Rr8">
-                                <rect key="frame" x="16" y="202" width="370" height="604"/>
+                                <rect key="frame" x="16" y="202" width="370" height="672"/>
                                 <subviews>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="OAI-gE-SYf">
                                         <rect key="frame" x="0.0" y="0.0" width="354" height="580"/>
@@ -351,14 +351,18 @@
                             <constraint firstItem="9Wj-ji-0gq" firstAttribute="top" secondItem="eSi-zt-0K5" secondAttribute="top" id="8iW-hr-Ywe"/>
                             <constraint firstItem="eSi-zt-0K5" firstAttribute="trailing" secondItem="fGn-Sr-Rr8" secondAttribute="trailing" constant="16" id="LFR-Z2-QMU"/>
                             <constraint firstAttribute="trailing" secondItem="9Wj-ji-0gq" secondAttribute="trailing" constant="8" id="S5F-If-ffj"/>
-                            <constraint firstItem="eSi-zt-0K5" firstAttribute="bottom" secondItem="fGn-Sr-Rr8" secondAttribute="bottom" id="U1y-79-9Aa"/>
+                            <constraint firstAttribute="bottom" secondItem="fGn-Sr-Rr8" secondAttribute="bottom" id="U1y-79-9Aa"/>
                             <constraint firstItem="fGn-Sr-Rr8" firstAttribute="leading" secondItem="eSi-zt-0K5" secondAttribute="leading" constant="16" id="UhN-Jz-t2B"/>
                             <constraint firstItem="fGn-Sr-Rr8" firstAttribute="top" secondItem="9Wj-ji-0gq" secondAttribute="bottom" constant="20" id="VWe-EG-GsW"/>
                             <constraint firstItem="9Wj-ji-0gq" firstAttribute="leading" secondItem="edF-f2-COB" secondAttribute="leading" constant="8" id="nMv-jk-8zK"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select 5 field marks to use" id="JGR-Vv-OcD">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf"/>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf">
+                            <connections>
+                                <segue destination="sFd-Fo-NuK" kind="show" id="qqf-Zf-0wk"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="fieldMarkTableView" destination="OAI-gE-SYf" id="y1j-5J-Vxy"/>
@@ -368,6 +372,102 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mdG-YC-tQn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="4694" y="-243"/>
+        </scene>
+        <!--Enter Date and Location-->
+        <scene sceneID="isO-04-E9U">
+            <objects>
+                <viewController id="sFd-Fo-NuK" customClass="DateandLocationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="GoC-4g-qND">
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Ocq-bk-U3B">
+                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                            </progressView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DRg-5F-1xg">
+                                <rect key="frame" x="8" y="202" width="386" height="672"/>
+                                <subviews>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" estimatedSectionHeaderHeight="-1" sectionFooterHeight="28" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="pqE-CW-yjS">
+                                        <rect key="frame" x="8" y="8" width="370" height="648"/>
+                                        <prototypes>
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" id="aR2-Fr-N3O" customClass="DateInputCell" customModule="SkyTrails" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="50" width="370" height="51"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="aR2-Fr-N3O" id="eFQ-Ig-BQD">
+                                                    <rect key="frame" x="0.0" y="0.0" width="370" height="51"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                </tableViewCellContentView>
+                                            </tableViewCell>
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SearchCell" id="1vB-hK-Iu7" customClass="SearchCell" customModule="SkyTrails" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="101" width="370" height="81"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="1vB-hK-Iu7" id="tlL-q3-K8W">
+                                                    <rect key="frame" x="0.0" y="0.0" width="370" height="81"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <subviews>
+                                                        <searchBar contentMode="redraw" searchBarStyle="minimal" text="" translatesAutoresizingMaskIntoConstraints="NO" id="7jd-tZ-cbY">
+                                                            <rect key="frame" x="8" y="8" width="354" height="65"/>
+                                                            <textInputTraits key="textInputTraits"/>
+                                                        </searchBar>
+                                                    </subviews>
+                                                    <constraints>
+                                                        <constraint firstItem="7jd-tZ-cbY" firstAttribute="top" secondItem="tlL-q3-K8W" secondAttribute="top" constant="8" id="5xl-Nr-TkN"/>
+                                                        <constraint firstAttribute="trailing" secondItem="7jd-tZ-cbY" secondAttribute="trailing" constant="8" id="NA6-ht-3Vz"/>
+                                                        <constraint firstAttribute="bottom" secondItem="7jd-tZ-cbY" secondAttribute="bottom" constant="8" id="h5n-2G-aGD"/>
+                                                        <constraint firstItem="7jd-tZ-cbY" firstAttribute="leading" secondItem="tlL-q3-K8W" secondAttribute="leading" constant="8" id="kGs-Aj-nJq"/>
+                                                    </constraints>
+                                                </tableViewCellContentView>
+                                                <connections>
+                                                    <outlet property="searchBar" destination="7jd-tZ-cbY" id="ulB-iC-xuN"/>
+                                                </connections>
+                                            </tableViewCell>
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="location_cell" id="Dh7-C6-U3T">
+                                                <rect key="frame" x="0.0" y="182" width="370" height="51"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Dh7-C6-U3T" id="4M9-zP-RiB">
+                                                    <rect key="frame" x="0.0" y="0.0" width="370" height="51"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                </tableViewCellContentView>
+                                            </tableViewCell>
+                                        </prototypes>
+                                    </tableView>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="pqE-CW-yjS" secondAttribute="bottom" constant="16" id="4hx-Jp-M10"/>
+                                    <constraint firstItem="pqE-CW-yjS" firstAttribute="top" secondItem="DRg-5F-1xg" secondAttribute="top" constant="8" id="6XK-Te-sMu"/>
+                                    <constraint firstAttribute="trailing" secondItem="pqE-CW-yjS" secondAttribute="trailing" constant="8" id="Gbz-0r-BCq"/>
+                                    <constraint firstItem="pqE-CW-yjS" firstAttribute="leading" secondItem="DRg-5F-1xg" secondAttribute="leading" constant="8" id="gq0-CQ-gmf"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="F0A-t2-UOF"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="F0A-t2-UOF" firstAttribute="trailing" secondItem="DRg-5F-1xg" secondAttribute="trailing" constant="8" id="14H-Xt-Ayt"/>
+                            <constraint firstItem="DRg-5F-1xg" firstAttribute="top" secondItem="Ocq-bk-U3B" secondAttribute="bottom" constant="20" id="5Z3-ar-XEH"/>
+                            <constraint firstItem="F0A-t2-UOF" firstAttribute="trailing" secondItem="Ocq-bk-U3B" secondAttribute="trailing" constant="8" id="7gQ-IY-T13"/>
+                            <constraint firstItem="Ocq-bk-U3B" firstAttribute="top" secondItem="F0A-t2-UOF" secondAttribute="top" id="GwY-xd-2nC"/>
+                            <constraint firstAttribute="bottom" secondItem="DRg-5F-1xg" secondAttribute="bottom" id="fTY-Rb-ZeR"/>
+                            <constraint firstItem="DRg-5F-1xg" firstAttribute="leading" secondItem="F0A-t2-UOF" secondAttribute="leading" constant="8" id="hpC-0A-JMe"/>
+                            <constraint firstItem="Ocq-bk-U3B" firstAttribute="leading" secondItem="F0A-t2-UOF" secondAttribute="leading" constant="8" id="joI-tb-di2"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Enter Date and Location" id="v4m-cf-cKV">
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="39r-KO-tOE">
+                            <connections>
+                                <segue destination="OBK-yW-fvY" kind="show" id="FKW-f4-5ih"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="dateandlocationTableView" destination="pqE-CW-yjS" id="9KS-oM-i4z"/>
+                        <outlet property="tableContainerView" destination="DRg-5F-1xg" id="AF9-DG-8NG"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="4h8-k7-c9a" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="5473" y="-243"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="QPf-rO-dc1">
@@ -432,6 +532,68 @@
                 </view>
             </objects>
             <point key="canvasLocation" x="1250.7462686567164" y="-242.33409610983981"/>
+        </scene>
+        <!--Result-->
+        <scene sceneID="Hev-bs-wb0">
+            <objects>
+                <viewController id="OBK-yW-fvY" customClass="ResultViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="rcS-FG-Zbl">
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="iof-A5-gQh">
+                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                            </progressView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gUF-JE-6ut">
+                                <rect key="frame" x="16" y="202" width="370" height="672"/>
+                                <subviews>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="W7g-kI-yxE">
+                                        <rect key="frame" x="0.0" y="0.0" width="354" height="580"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <prototypes>
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="result_cell" id="c4j-Ke-OuE">
+                                                <rect key="frame" x="0.0" y="50" width="354" height="51"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="c4j-Ke-OuE" id="bPJ-UK-Nok">
+                                                    <rect key="frame" x="0.0" y="0.0" width="354" height="51"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                </tableViewCellContentView>
+                                            </tableViewCell>
+                                        </prototypes>
+                                    </tableView>
+                                </subviews>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="W7g-kI-yxE" secondAttribute="bottom" constant="16" id="TQa-Rf-XHh"/>
+                                    <constraint firstAttribute="trailing" secondItem="W7g-kI-yxE" secondAttribute="trailing" constant="8" id="TS6-gA-HWa"/>
+                                    <constraint firstItem="W7g-kI-yxE" firstAttribute="leading" secondItem="gUF-JE-6ut" secondAttribute="leading" constant="8" id="iO6-YC-t2Y"/>
+                                    <constraint firstItem="W7g-kI-yxE" firstAttribute="top" secondItem="gUF-JE-6ut" secondAttribute="top" constant="8" id="ttb-ID-uyU"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="UhC-jo-JcS"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="iof-A5-gQh" secondAttribute="trailing" constant="8" id="Hqf-64-VWB"/>
+                            <constraint firstItem="gUF-JE-6ut" firstAttribute="leading" secondItem="UhC-jo-JcS" secondAttribute="leading" constant="16" id="KSx-Fe-1w9"/>
+                            <constraint firstItem="UhC-jo-JcS" firstAttribute="trailing" secondItem="gUF-JE-6ut" secondAttribute="trailing" constant="16" id="Qbx-at-TCo"/>
+                            <constraint firstItem="gUF-JE-6ut" firstAttribute="top" secondItem="iof-A5-gQh" secondAttribute="bottom" constant="20" id="cqR-dR-Ond"/>
+                            <constraint firstItem="iof-A5-gQh" firstAttribute="leading" secondItem="rcS-FG-Zbl" secondAttribute="leading" constant="8" id="ikR-64-2ms"/>
+                            <constraint firstAttribute="bottom" secondItem="gUF-JE-6ut" secondAttribute="bottom" id="tgE-Jg-nhr"/>
+                            <constraint firstItem="iof-A5-gQh" firstAttribute="top" secondItem="UhC-jo-JcS" secondAttribute="top" id="xaK-Gy-t4t"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Result" id="Xf1-Qj-PXh">
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="Il5-6w-bMv"/>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="resultTableView" destination="W7g-kI-yxE" id="SdI-VF-Hcz"/>
+                        <outlet property="tableContainerView" destination="gUF-JE-6ut" id="opC-OI-4W1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iQR-h3-YGl" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="6296" y="-250"/>
         </scene>
     </scenes>
     <resources>

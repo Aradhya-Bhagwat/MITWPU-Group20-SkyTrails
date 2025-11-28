@@ -20,7 +20,7 @@ class ViewModel {
         
     let migrationHistory: [History] = [
         History(
-            imageView: "Bird_Common_kingfisher",
+            imageView: "bird_Common_kingfisher",
             specieName: "Common Kingfisher",
             date: Date()         ),
         History(
@@ -29,7 +29,7 @@ class ViewModel {
             date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!
         ),
         History(
-            imageView: "Bird_blue_throated_barbet",
+            imageView: "bird_blue_throated_barbet",
             specieName: "Blue-Throated Barbaret",
             date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!
         ),
@@ -68,6 +68,12 @@ class ViewModel {
         ChooseFieldMark(imageView: "bird_thigh", name: "Thigh"),
         ChooseFieldMark(imageView: "bird_throat", name: "Throat"),
         ChooseFieldMark(imageView: "bird_wings", name: "Wings")
+    ]
+    let birdResults: [BirdResult] = [
+        BirdResult(name: "Asian Fairy Bluebird", percentage: 85, imageView: "bird_asian_fairy_bluebird"),
+        BirdResult(name: "Indigo Bunting", percentage: 80, imageView: "bird_indigo_bunting"),
+        BirdResult(name: "Blue Grosbeak", percentage: 51, imageView: "bird_blue_grosbeak"),
+        BirdResult(name: "Mountain Bluebird", percentage: 40, imageView: "bird_mountain_bluebird")
     ]
 
 }

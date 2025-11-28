@@ -31,6 +31,9 @@ struct result{
     var imageView : String
     
 }
-struct DateAndTime{
-    
+struct BirdResult {
+    let name: String
+    let percentage: Int
+    let imageView: String
 }
+
