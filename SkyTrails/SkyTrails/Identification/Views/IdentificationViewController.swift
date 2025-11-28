@@ -112,7 +112,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             cell.imageView?.image = nil
         }
         
-       
+        cell.accessoryType = item.isSelected ? .checkmark : .none
         return cell
     }
     
