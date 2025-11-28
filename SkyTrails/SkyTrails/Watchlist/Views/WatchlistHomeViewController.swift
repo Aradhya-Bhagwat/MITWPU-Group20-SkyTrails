@@ -287,10 +287,10 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
         
         switch sectionType {
         case .myWatchlist:
-            // Assuming the first watchlist is "My Watchlist"
-            if let watchlist = vm.watchlists.first {
-                performSegue(withIdentifier: "ShowSmartWatchlist", sender: watchlist)
-            }
+            // Pass filtered "My Watchlist" type logic
+            // We want to pass ALL watchlists so the detail view can section them
+            // sender will be the whole array of watchlists
+            performSegue(withIdentifier: "ShowSmartWatchlist", sender: vm.watchlists)
             
         case .customWatchlist:
             // Custom Watchlists start from index 1 (index 0 is My Watchlist)
@@ -319,10 +319,15 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 	
 	func didTapSeeAll(in section: Int) {
 		guard let sectionType = WatchlistSection(rawValue: section) else { return }
-			// Section 2 is "Custom Watchlist"
-		if sectionType == .customWatchlist {
-			performSegue(withIdentifier: "ShowCustomWatchlistGrid", sender: self)
-		}
+        
+        switch sectionType {
+        case .customWatchlist:
+            performSegue(withIdentifier: "ShowCustomWatchlistGrid", sender: self)
+        case .sharedWatchlist:
+            performSegue(withIdentifier: "ShowSharedWatchlistGrid", sender: self)
+        default:
+            break
+        }
 	}
 	
 		// 2. Update viewForSupplementaryElementOfKind to assign the delegate
@@ -338,7 +343,9 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return header }
 		
 		// UPDATED CALL: Pass sectionIndex and self (as delegate)
-		header.configure(title: sectionType.title, sectionIndex: indexPath.section, delegate: self)
+        // Hide chevron for Summary (section 0), show for others (or specifically Custom Watchlist)
+        let showChevron = (sectionType != .summary)
+		header.configure(title: sectionType.title, sectionIndex: indexPath.section, showSeeAll: showChevron, delegate: self)
 		
 		return header
 	}
@@ -349,14 +356,29 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 			if let destinationVC = segue.destination as? CustomWatchlistViewController {
 					destinationVC.viewModel = self.viewModel
 			}
+        } else if segue.identifier == "ShowSharedWatchlistGrid" {
+            if let destinationVC = segue.destination as? SharedWatchlistsViewController {
+                destinationVC.viewModel = self.viewModel
+            }
 		} else if segue.identifier == "ShowSmartWatchlist" {
             guard let destVC = segue.destination as? SmartWatchlistViewController else { return }
             
-            if let watchlist = sender as? Watchlist {
+            if let watchlists = sender as? [Watchlist] {
+                // Case 1: My Watchlist (All aggregated)
+                destVC.watchlistType = .myWatchlist
+                destVC.watchlistTitle = "My Watchlist"
+                destVC.allWatchlists = watchlists
+                
+            } else if let watchlist = sender as? Watchlist {
+                // Case 2: Single Custom Watchlist
+                destVC.watchlistType = .custom
                 destVC.watchlistTitle = watchlist.title
                 destVC.observedBirds = watchlist.observedBirds
                 destVC.toObserveBirds = watchlist.toObserveBirds
+                
             } else if let sharedWatchlist = sender as? SharedWatchlist {
+                // Case 3: Shared Watchlist
+                destVC.watchlistType = .shared
                 destVC.watchlistTitle = sharedWatchlist.title
                 destVC.observedBirds = sharedWatchlist.observedBirds
                 destVC.toObserveBirds = sharedWatchlist.toObserveBirds

@@ -35,6 +35,7 @@
             </constraints>
             <connections>
                 <outlet property="sectionTitle" destination="Kme-xc-v50" id="FSQ-TP-lqD"/>
+                <outlet property="seeAllButton" destination="fsk-oM-nsO" id="NEW-ID-XYZ"/>
             </connections>
             <point key="canvasLocation" x="18" y="123"/>
         </collectionReusableView>
