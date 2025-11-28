@@ -63,8 +63,10 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
 			// 3. The Content Overlap View (viewOverImage)
 			// CRITICAL: Set its background color in XIB to match the card color (white).
 		coverOverImageView.layer.cornerRadius = 16
-			// Apply radius ONLY to the top two corners to create the curved overlap effect
-		coverOverImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+			// We want ALL corners to be rounded:
+			// - Top corners: To create the curved overlap effect over the image.
+			// - Bottom corners: To match the container's rounded bottom corners.
+			// So we do NOT limit maskedCorners.
 		
 			// 4. Badge Styling
 			// Green Badge (Left) -> Watchlist Total

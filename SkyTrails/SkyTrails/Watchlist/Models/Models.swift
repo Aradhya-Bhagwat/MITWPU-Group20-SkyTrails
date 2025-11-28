@@ -29,6 +29,8 @@ struct Bird {
 	
 	var location: [String] // Changed from [CLLocation] to [String]
 	var date : [Date]
+    
+    var observedBy: [String]? // List of user image names/SF symbols who observed this bird
 	
     // Removed isObserved as it's now context-dependent
 }

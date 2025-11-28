@@ -10,6 +10,7 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
 	static var identifier: String = "SectionHeaderCollectionReusableView"
 	
 	@IBOutlet weak var sectionTitle: UILabel!
+	@IBOutlet weak var seeAllButton: UIButton!
 	
 		// 2. Add properties to hold the delegate and index
 	weak var delegate: SectionHeaderDelegate?
@@ -24,6 +25,8 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
 	private func setupStyle() {
 		sectionTitle.font = UIFont.preferredFont(forTextStyle: .headline)
 		sectionTitle.textColor = .label
+        // Ensure button handles tap if not using the whole view gesture
+        seeAllButton.isUserInteractionEnabled = false // Let the view gesture handle it, or true if we want specific target
 	}
 	
 		// 3. Add gesture recognizer
@@ -36,10 +39,11 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
 	}
 	
 		// 4. Update configure to accept the delegate and index
-	func configure(title: String, sectionIndex: Int, delegate: SectionHeaderDelegate?) {
+    func configure(title: String, sectionIndex: Int, showSeeAll: Bool = true, delegate: SectionHeaderDelegate?) {
 		sectionTitle.text = title
 		self.sectionIndex = sectionIndex
 		self.delegate = delegate
+        self.seeAllButton.isHidden = !showSeeAll
 	}
 	
 		// 5. Handle the tap

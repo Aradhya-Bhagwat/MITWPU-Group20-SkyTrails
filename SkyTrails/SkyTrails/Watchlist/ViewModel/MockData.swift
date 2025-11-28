@@ -24,16 +24,16 @@ func createMockWatchlists() -> [Watchlist] {
     }
 
     // Creating base birds - we will clone/reuse them
-    let bird1 = Bird(name: "Himalayan Monal", scientificName: "Lophophorus impejanus", images: ["HimalayanMonal"], rarity: [.rare], location: ["Kathmandu, Nepal"], date: [randomDate(daysBack: 10)])
-    let bird2 = Bird(name: "Asian Koel", scientificName: "Eudynamys scolopaceus", images: ["AsianKoel"], rarity: [.common], location: ["Pune, Maharashtra"], date: [randomDate(daysBack: 2)])
-    let bird3 = Bird(name: "Indian Peafowl", scientificName: "Pavo cristatus", images: ["IndianPeafowl"], rarity: [.common], location: ["Mumbai, Maharashtra"], date: [randomDate(daysBack: 5)])
-    let bird4 = Bird(name: "Great Hornbill", scientificName: "Buceros bicornis", images: ["GreatHornbill"], rarity: [.rare], location: ["Munnar, Kerala"], date: [randomDate(daysBack: 15)])
-    let bird5 = Bird(name: "Oriental Magpie-Robin", scientificName: "Copsychus saularis", images: ["OrientalMagpieRobin"], rarity: [.common], location: ["New Delhi, India"], date: [randomDate(daysBack: 1)])
-    let bird6 = Bird(name: "Greater Flameback", scientificName: "Chrysocolaptes lucidus", images: ["GreaterFlameback"], rarity: [.rare], location: ["Panaji, Goa"], date: [randomDate(daysBack: 8)])
-    let bird7 = Bird(name: "Sarus Crane", scientificName: "Antigone antigone", images: ["SarusCrane"], rarity: [.common], location: ["Agra, Uttar Pradesh"], date: [randomDate(daysBack: 3)])
-    let bird8 = Bird(name: "Blue Grosbeak", scientificName: "Passerina caerulea", images: ["BlueGrosbeak"], rarity: [.rare], location: ["Texas, USA"], date: [randomDate(daysBack: 20)])
-    let bird9 = Bird(name: "Indigo Bunting", scientificName: "Passerina cyanea", images: ["IndigoBunting"], rarity: [.common], location: ["New York, USA"], date: [randomDate(daysBack: 7)])
-    let bird10 = Bird(name: "Lazuli Bunting", scientificName: "Passerina amoena", images: ["LazuliBunting"], rarity: [.rare], location: ["Colorado, USA"], date: [randomDate(daysBack: 12)])
+    let bird1 = Bird(name: "Himalayan Monal", scientificName: "Lophophorus impejanus", images: ["HimalayanMonal"], rarity: [.rare], location: ["Kathmandu, Nepal"], date: [randomDate(daysBack: 10)], observedBy: ["person.circle", "person.fill"])
+    let bird2 = Bird(name: "Asian Koel", scientificName: "Eudynamys scolopaceus", images: ["AsianKoel"], rarity: [.common], location: ["Pune, Maharashtra"], date: [randomDate(daysBack: 2)], observedBy: ["person.2.circle"])
+    let bird3 = Bird(name: "Indian Peafowl", scientificName: "Pavo cristatus", images: ["IndianPeafowl"], rarity: [.common], location: ["Mumbai, Maharashtra"], date: [randomDate(daysBack: 5)], observedBy: nil)
+    let bird4 = Bird(name: "Great Hornbill", scientificName: "Buceros bicornis", images: ["GreatHornbill"], rarity: [.rare], location: ["Munnar, Kerala"], date: [randomDate(daysBack: 15)], observedBy: ["person.crop.circle.fill"])
+    let bird5 = Bird(name: "Oriental Magpie-Robin", scientificName: "Copsychus saularis", images: ["OrientalMagpieRobin"], rarity: [.common], location: ["New Delhi, India"], date: [randomDate(daysBack: 1)], observedBy: ["person.crop.circle", "person.circle.fill", "person.circle"])
+    let bird6 = Bird(name: "Greater Flameback", scientificName: "Chrysocolaptes lucidus", images: ["GreaterFlameback"], rarity: [.rare], location: ["Panaji, Goa"], date: [randomDate(daysBack: 8)], observedBy: nil)
+    let bird7 = Bird(name: "Sarus Crane", scientificName: "Antigone antigone", images: ["SarusCrane"], rarity: [.common], location: ["Agra, Uttar Pradesh"], date: [randomDate(daysBack: 3)], observedBy: ["person.fill"])
+    let bird8 = Bird(name: "Blue Grosbeak", scientificName: "Passerina caerulea", images: ["BlueGrosbeak"], rarity: [.rare], location: ["Texas, USA"], date: [randomDate(daysBack: 20)], observedBy: ["person.3.fill"])
+    let bird9 = Bird(name: "Indigo Bunting", scientificName: "Passerina cyanea", images: ["IndigoBunting"], rarity: [.common], location: ["New York, USA"], date: [randomDate(daysBack: 7)], observedBy: ["person.circle"])
+    let bird10 = Bird(name: "Lazuli Bunting", scientificName: "Passerina amoena", images: ["LazuliBunting"], rarity: [.rare], location: ["Colorado, USA"], date: [randomDate(daysBack: 12)], observedBy: ["person.crop.circle.badge.plus"])
     
         // 2. Create Watchlists with distinct observed and toObserve lists
     let watchlist1 = Watchlist(title: "My Watchlist", location: "Home", startDate: Date(), endDate: Date(), observedBirds: [bird1, bird3, bird5], toObserveBirds: [bird2, bird7]) // 3 observed, 2 toObserve
