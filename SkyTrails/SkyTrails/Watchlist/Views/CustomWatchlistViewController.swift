@@ -11,15 +11,16 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 	
 		// MARK: - Outlets
 	@IBOutlet weak var collectionView: UICollectionView!
-	@IBOutlet weak var searchBar: UISearchBar!
-	
-		// MARK: - Properties
-	var viewModel: WatchlistViewModel?
-	
-		// Computed property to access watchlists from viewModel
-	var allWatchlists: [Watchlist] {
-		return viewModel?.watchlists ?? []
-	}
+    @IBOutlet weak var searchBar: UISearchBar!
+    
+    // MARK: - Properties
+    var viewModel: WatchlistViewModel?
+    weak var coordinator: WatchlistCoordinator?
+    
+    // Computed property to access watchlists from viewModel
+    var allWatchlists: [Watchlist] {
+        return viewModel?.watchlists ?? []
+    }
 	
 	var filteredWatchlists: [Watchlist] = []
 	var currentSortOption: SortOption = .nameAZ
@@ -70,10 +71,10 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 		searchBar.delegate = self
 	}
 	
-	@IBAction func addTapped(_ sender: Any) {
-			// Handle add action
-		print("Add button tapped")
-	}    
+    @IBAction func addTapped(_ sender: Any) {
+        // Handle add action
+        coordinator?.showCreateWatchlist()
+    }    
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
 		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
 		
