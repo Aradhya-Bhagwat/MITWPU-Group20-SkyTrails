@@ -12,6 +12,9 @@ class IdentificationSizeViewController: UIViewController {
     @IBOutlet weak var birdImage: UIImageView!
     @IBOutlet weak var birdSlider: UISlider!
     @IBOutlet weak var birdLabel: UILabel!
+    
+    @IBOutlet weak var progressView: UIProgressView!
+
     weak var delegate: IdentificationFlowStepDelegate?
 
     override func viewDidLoad() {
@@ -82,6 +85,12 @@ class IdentificationSizeViewController: UIViewController {
     @objc private func nextTapped() {
         delegate?.didFinishStep()
     }
-
+    
+}
+extension IdentificationSizeViewController: IdentificationProgressUpdatable {
+    func updateProgress(current: Int, total: Int) {
+        let percent = Float(current) / Float(total)
+        progressView.setProgress(percent, animated: true)
+    }
 }
 

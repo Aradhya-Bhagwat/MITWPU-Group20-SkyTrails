@@ -12,6 +12,9 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var shapeTableView: UITableView!
+    
+    @IBOutlet weak var progressView: UIProgressView!
+
     var viewModel: ViewModel = ViewModel()
     weak var delegate: IdentificationFlowStepDelegate?
 
@@ -96,4 +99,10 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
 
    
 
+}
+extension IdentificationShapeViewController: IdentificationProgressUpdatable {
+    func updateProgress(current: Int, total: Int) {
+        let percent = Float(current) / Float(total)
+        progressView.setProgress(percent, animated: true)
+    }
 }

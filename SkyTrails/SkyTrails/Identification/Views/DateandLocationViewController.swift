@@ -10,6 +10,8 @@ import UIKit
 class DateandLocationViewController: UIViewController,UITableViewDelegate, UITableViewDataSource {
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
+    @IBOutlet weak var progressView: UIProgressView!
+
     weak var delegate: IdentificationFlowStepDelegate?
 
     var viewModel: ViewModel = ViewModel()
@@ -109,11 +111,16 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
     
 
 }
-extension DateandLocationViewController: DateInputCellDelegate {
+extension DateandLocationViewController: DateInputCellDelegate, IdentificationProgressUpdatable {
 
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
         print("Selected Date:", date)
      
     }
+    func updateProgress(current: Int, total: Int) {
+        let percent = Float(current) / Float(total)
+        progressView.setProgress(percent, animated: true)
+    }
 }
+
 
