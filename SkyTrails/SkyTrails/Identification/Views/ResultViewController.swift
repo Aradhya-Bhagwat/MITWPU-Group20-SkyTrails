@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ResultViewController: UIViewController,UITableViewDelegate, UITableViewDataSource {
+class ResultViewController: UIViewController,UITableViewDelegate, UITableViewDataSource,ResultCellDelegate{
 
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var resultTableView: UITableView!
@@ -23,6 +23,7 @@ class ResultViewController: UIViewController,UITableViewDelegate, UITableViewDat
         tableContainerView.layer.masksToBounds = false
         
     }
+  
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         viewModel.birdResults.count
@@ -30,41 +31,51 @@ class ResultViewController: UIViewController,UITableViewDelegate, UITableViewDat
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
-    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-    }
+//    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
+//        let renderer = UIGraphicsImageRenderer(size: size)
+//        return renderer.image { _ in
+//            image.draw(in: CGRect(origin: .zero, size: size))
+//        }
+//    }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "result_cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ResultTableViewCell", for: indexPath) as! ResultTableViewCell
+       
         let item = viewModel.birdResults[indexPath.row]
-        cell.textLabel?.text = item.name
-        cell.detailTextLabel?.text = "\(item.percentage)%"
-         cell.detailTextLabel?.textColor = .gray
-         cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 14)
-        if let img = UIImage(named: item.imageView) {
+       
+        let img = UIImage(named: item.imageView)
+
+    cell.configure(image: img,
+                   name: item.name,
+                   percentage: "\(item.percentage)"
+    )
     
-            let targetSize = CGSize(width: 100, height: 100)
-            let resized = resize(img, to: targetSize)
-            cell.imageView?.image = resized
-            cell.imageView?.contentMode = .scaleAspectFill
-            cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
-            cell.imageView?.layer.cornerRadius = 10
-        } else {
-            cell.imageView?.image = nil
-        }
+        cell.delegate = self
         return cell
     }
-
+  
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        resultTableView.register(
+            UINib(nibName: "ResultTableViewCell", bundle: nil),
+            forCellReuseIdentifier: "ResultTableViewCell"
+        )
+        resultTableView.rowHeight = 75
         styleTableContainer()
         resultTableView.delegate = self
         resultTableView.dataSource = self
 
     }
-   
+    func didTapPredict(for cell: ResultTableViewCell) {
+        print("Predict pressed")
+    }
+
+    func didTapAddToWatchlist(for cell: ResultTableViewCell) {
+        print("Add to watchlist pressed")
+    }
+
+  
 
   
 }
+
