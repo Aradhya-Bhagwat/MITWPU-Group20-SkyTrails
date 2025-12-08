@@ -25,22 +25,18 @@ class WatchlistHomeViewController: UIViewController {
         }
     }
     
-    @IBOutlet weak var SummaryCardCollectionView: UICollectionView!
-    
-    var viewModel: WatchlistViewModel?
-    weak var coordinator: WatchlistCoordinator?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.title = "Watchlist"
-        self.navigationItem.largeTitleDisplayMode = .always
-        
-        // Add + Button
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
-        
-        viewModel = WatchlistViewModel()
-        
-            // 1. Set the Compositional Layout first
+	@IBOutlet weak var SummaryCardCollectionView: UICollectionView!
+	
+	var viewModel: WatchlistViewModel?
+	
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		self.title = "Watchlist"
+		self.navigationItem.largeTitleDisplayMode = .always
+		
+		viewModel = WatchlistViewModel()
+		
+			// 1. Set the Compositional Layout first
 		SummaryCardCollectionView.collectionViewLayout = createCompositionalLayout()
 		
 			// 2. Assign Data Source and Delegate (must be done after layout change)
@@ -171,12 +167,8 @@ class WatchlistHomeViewController: UIViewController {
 		
 		SummaryCardCollectionView.register(sharedWatchlistNib, forCellWithReuseIdentifier: SharedWatchlistCollectionViewCell.identifier)
 		
-        SummaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
-    }
-    
-    @objc private func didTapAdd() {
-        coordinator?.showAddOptions(from: self)
-    }
+		SummaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
+	}
 }
 
 // --- Step 2: Protocol Conformance Extension ---
