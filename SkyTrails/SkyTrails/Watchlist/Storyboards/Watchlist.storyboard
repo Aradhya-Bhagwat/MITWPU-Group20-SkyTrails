@@ -132,7 +132,7 @@
                         <viewLayoutGuide key="safeArea" id="3kE-WV-CuL"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="3Xq-9M-RTe" firstAttribute="bottom" secondItem="eOa-m5-vWc" secondAttribute="bottom" constant="-68" id="ABo-YJ-d8F"/>
+                            <constraint firstItem="3kE-WV-CuL" firstAttribute="bottom" secondItem="3Xq-9M-RTe" secondAttribute="bottom" id="ABo-YJ-d8F"/>
                             <constraint firstItem="3Xq-9M-RTe" firstAttribute="leading" secondItem="3kE-WV-CuL" secondAttribute="leading" constant="16" id="XKq-BE-Ium"/>
                             <constraint firstItem="Caz-dl-GZR" firstAttribute="leading" secondItem="3kE-WV-CuL" secondAttribute="leading" constant="16" id="XTF-Oq-a6Q"/>
                             <constraint firstItem="3Xq-9M-RTe" firstAttribute="top" secondItem="Caz-dl-GZR" secondAttribute="bottom" constant="8" id="Zdk-Yv-JiB"/>
@@ -151,11 +151,12 @@
                     <connections>
                         <outlet property="collectionView" destination="3Xq-9M-RTe" id="6Fr-qF-fgS"/>
                         <outlet property="searchBar" destination="vKS-E0-o0A" id="1yE-kM-n2q"/>
+                        <segue destination="SpeciesSelectionVC" kind="show" identifier="ShowSpeciesSelection" id="YWD-y0-7EQ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aUX-ve-xYc" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="5170" y="-467"/>
+            <point key="canvasLocation" x="5060" y="-408"/>
         </scene>
         <!--Custom Watchlists-->
         <scene sceneID="sNq-iX-DCF">
@@ -228,7 +229,7 @@
                         <constraints>
                             <constraint firstItem="5rY-ZG-Hv6" firstAttribute="leading" secondItem="n8i-Kh-xry" secondAttribute="leading" constant="16" id="6JC-9e-21Y"/>
                             <constraint firstItem="Jm1-2J-V0D" firstAttribute="top" secondItem="5rY-ZG-Hv6" secondAttribute="bottom" constant="8" id="9dy-vW-In9"/>
-                            <constraint firstItem="Jm1-2J-V0D" firstAttribute="bottom" secondItem="y9D-CO-Oa0" secondAttribute="bottom" constant="-68" id="BCa-hu-0XX"/>
+                            <constraint firstItem="n8i-Kh-xry" firstAttribute="bottom" secondItem="Jm1-2J-V0D" secondAttribute="bottom" id="BCa-hu-0XX"/>
                             <constraint firstItem="5rY-ZG-Hv6" firstAttribute="top" secondItem="n8i-Kh-xry" secondAttribute="top" constant="8" id="WVd-S2-D33"/>
                             <constraint firstItem="Jm1-2J-V0D" firstAttribute="leading" secondItem="n8i-Kh-xry" secondAttribute="leading" constant="16" id="X72-ta-2SK"/>
                             <constraint firstItem="n8i-Kh-xry" firstAttribute="trailing" secondItem="5rY-ZG-Hv6" secondAttribute="trailing" constant="16" id="c3m-uF-mtd"/>
@@ -245,11 +246,12 @@
                     <connections>
                         <outlet property="collectionView" destination="Jm1-2J-V0D" id="SZV-mn-z7H"/>
                         <outlet property="searchBar" destination="nEJ-cO-xuf" id="z0C-dY-bLZ"/>
+                        <segue destination="SpeciesSelectionVC" kind="show" identifier="ShowSpeciesSelection" id="oGV-ly-q5u"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="7FK-Vi-qhQ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="5297" y="280"/>
+            <point key="canvasLocation" x="5364" y="397"/>
         </scene>
         <!--Watchlist-->
         <scene sceneID="epi-3b-LKT">
@@ -260,7 +262,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZaP-mE-nYF" userLabel="HeaderView">
-                                <rect key="frame" x="0.0" y="178" width="402" height="111"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="131"/>
                                 <subviews>
                                     <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="8qu-DE-Keg">
                                         <rect key="frame" x="16" y="10" width="370" height="32"/>
@@ -307,7 +309,6 @@
                                         </subviews>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="50" id="WD1-H8-K2g"/>
-                                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="50" id="hhH-d4-ltb"/>
                                         </constraints>
                                     </stackView>
                                 </subviews>
@@ -315,7 +316,7 @@
                                 <constraints>
                                     <constraint firstItem="E4j-Cd-9gw" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="6An-v1-aSP"/>
                                     <constraint firstItem="8qu-DE-Keg" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="top" constant="10" id="8Vw-Vk-hYo"/>
-                                    <constraint firstAttribute="bottom" secondItem="E4j-Cd-9gw" secondAttribute="bottom" constant="10" id="CYc-wf-M4Z"/>
+                                    <constraint firstAttribute="bottom" secondItem="E4j-Cd-9gw" secondAttribute="bottom" constant="30" id="CYc-wf-M4Z"/>
                                     <constraint firstItem="E4j-Cd-9gw" firstAttribute="top" secondItem="8qu-DE-Keg" secondAttribute="bottom" constant="10" id="IfM-rD-Id3"/>
                                     <constraint firstAttribute="trailing" secondItem="E4j-Cd-9gw" secondAttribute="trailing" constant="16" id="UkN-9S-BPG"/>
                                     <constraint firstItem="8qu-DE-Keg" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="aEC-Md-Mh1"/>
@@ -323,7 +324,7 @@
                                 </constraints>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="yez-to-lUt">
-                                <rect key="frame" x="0.0" y="289" width="402" height="585"/>
+                                <rect key="frame" x="0.0" y="309" width="402" height="497"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="BirdSmartCell" rowHeight="116" id="4jF-6g-ae5" customClass="BirdSmartCell" customModule="SkyTrails" customModuleProvider="target">
@@ -400,24 +401,31 @@
                         <constraints>
                             <constraint firstItem="ZaP-mE-nYF" firstAttribute="trailing" secondItem="0NY-hU-HEx" secondAttribute="trailing" id="4Rk-cH-UdW"/>
                             <constraint firstItem="ZaP-mE-nYF" firstAttribute="top" secondItem="0NY-hU-HEx" secondAttribute="top" id="4Sl-zh-wfU"/>
-                            <constraint firstAttribute="bottom" secondItem="yez-to-lUt" secondAttribute="bottom" id="4uw-kq-QLm"/>
+                            <constraint firstItem="0NY-hU-HEx" firstAttribute="bottom" secondItem="yez-to-lUt" secondAttribute="bottom" id="4uw-kq-QLm"/>
                             <constraint firstItem="ZaP-mE-nYF" firstAttribute="leading" secondItem="0NY-hU-HEx" secondAttribute="leading" id="P3t-Oi-4rx"/>
                             <constraint firstItem="yez-to-lUt" firstAttribute="leading" secondItem="0NY-hU-HEx" secondAttribute="leading" id="her-rV-M7B"/>
                             <constraint firstItem="yez-to-lUt" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="bottom" id="nDU-At-ZuL"/>
                             <constraint firstItem="0NY-hU-HEx" firstAttribute="trailing" secondItem="yez-to-lUt" secondAttribute="trailing" id="pLQ-39-bkk"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Watchlist" id="eWu-qa-gFF"/>
+                    <navigationItem key="navigationItem" title="Watchlist" largeTitleDisplayMode="never" id="eWu-qa-gFF">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="HFF-cc-OL2">
+                            <connections>
+                                <action selector="didTapAdd:" destination="zap-jy-tCo" id="gJa-LA-vYF"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="headerView" destination="ZaP-mE-nYF" id="bP7-M0-MJ4"/>
                         <outlet property="searchBar" destination="htl-r6-KZI" id="dX7-rx-sLI"/>
                         <outlet property="segmentedControl" destination="8qu-DE-Keg" id="3ak-rq-Tjb"/>
                         <outlet property="tableView" destination="yez-to-lUt" id="YKE-Nn-i0H"/>
+                        <segue destination="SpeciesSelectionVC" kind="show" identifier="ShowSpeciesSelection" id="WlZ-eO-mfp"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="OXF-Hz-DyX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4970" y="1071"/>
+            <point key="canvasLocation" x="4964" y="1084"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Uh5-pg-t6m">
@@ -437,14 +445,297 @@
             </objects>
             <point key="canvasLocation" x="2943.2835820895521" y="32.265446224256287"/>
         </scene>
+        <!--Select Species-->
+        <scene sceneID="SpeciesSelectionScene">
+            <objects>
+                <viewController storyboardIdentifier="SpeciesSelectionViewController" id="SpeciesSelectionVC" customClass="SpeciesSelectionViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="SpeciesSelectionView">
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesSearchBar">
+                                <rect key="frame" x="0.0" y="178" width="402" height="64"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </searchBar>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesTableView">
+                                <rect key="frame" x="0.0" y="242" width="402" height="564"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="BirdSmartCell" rowHeight="116" id="SpeciesCell" customClass="BirdSmartCell" customModule="SkyTrails" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="50" width="402" height="116"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="SpeciesCell" id="SpeciesContent">
+                                            <rect key="frame" x="0.0" y="0.0" width="402" height="116"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesContainer">
+                                                    <rect key="frame" x="16" y="8" width="370" height="100"/>
+                                                    <subviews>
+                                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesImage">
+                                                            <rect key="frame" x="8" y="10" width="80" height="80"/>
+                                                            <constraints>
+                                                                <constraint firstAttribute="height" constant="80" id="ImgH"/>
+                                                                <constraint firstAttribute="width" constant="80" id="ImgW"/>
+                                                            </constraints>
+                                                        </imageView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesStack">
+                                                            <rect key="frame" x="96" y="21.000000000000004" width="266" height="58.333333333333343"/>
+                                                            <subviews>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesTitle">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="266" height="21.666666666666668"/>
+                                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
+                                                                    <nil key="textColor"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesDate">
+                                                                    <rect key="frame" x="0.0" y="25.666666666666661" width="266" height="14.333333333333332"/>
+                                                                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                                                                    <color key="textColor" systemColor="secondaryLabelColor"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesLocation">
+                                                                    <rect key="frame" x="0.0" y="44" width="266" height="14.333333333333336"/>
+                                                                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                                                                    <color key="textColor" systemColor="secondaryLabelColor"/>
+                                                                    <nil key="highlightedColor"/>
+                                                                </label>
+                                                            </subviews>
+                                                        </stackView>
+                                                    </subviews>
+                                                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                    <constraints>
+                                                        <constraint firstItem="SpeciesImage" firstAttribute="centerY" secondItem="SpeciesContainer" secondAttribute="centerY" id="ImgCenter"/>
+                                                        <constraint firstItem="SpeciesImage" firstAttribute="leading" secondItem="SpeciesContainer" secondAttribute="leading" constant="8" id="ImgLead"/>
+                                                        <constraint firstItem="SpeciesStack" firstAttribute="centerY" secondItem="SpeciesContainer" secondAttribute="centerY" id="StkCenter"/>
+                                                        <constraint firstItem="SpeciesStack" firstAttribute="leading" secondItem="SpeciesImage" secondAttribute="trailing" constant="8" id="StkLead"/>
+                                                        <constraint firstAttribute="trailing" secondItem="SpeciesStack" secondAttribute="trailing" constant="8" id="StkTrail"/>
+                                                    </constraints>
+                                                </view>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="bottom" secondItem="SpeciesContainer" secondAttribute="bottom" constant="8" id="CntBot"/>
+                                                <constraint firstItem="SpeciesContainer" firstAttribute="leading" secondItem="SpeciesContent" secondAttribute="leading" constant="16" id="CntLead"/>
+                                                <constraint firstItem="SpeciesContainer" firstAttribute="top" secondItem="SpeciesContent" secondAttribute="top" constant="8" id="CntTop"/>
+                                                <constraint firstAttribute="trailing" secondItem="SpeciesContainer" secondAttribute="trailing" constant="16" id="CntTrail"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="birdImageView" destination="SpeciesImage" id="OutImg"/>
+                                            <outlet property="containerView" destination="SpeciesContainer" id="OutCnt"/>
+                                            <outlet property="dateLabel" destination="SpeciesDate" id="OutDate"/>
+                                            <outlet property="locationLabel" destination="SpeciesLocation" id="OutLoc"/>
+                                            <outlet property="titleLabel" destination="SpeciesTitle" id="OutTitle"/>
+                                        </connections>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="SpeciesSafeArea"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="SpeciesSearchBar" firstAttribute="leading" secondItem="SpeciesSafeArea" secondAttribute="leading" id="SBlead"/>
+                            <constraint firstItem="SpeciesSearchBar" firstAttribute="trailing" secondItem="SpeciesSafeArea" secondAttribute="trailing" id="SBtrail"/>
+                            <constraint firstItem="SpeciesSafeArea" firstAttribute="bottom" secondItem="SpeciesTableView" secondAttribute="bottom" id="TVbot"/>
+                            <constraint firstItem="SpeciesTableView" firstAttribute="leading" secondItem="SpeciesSafeArea" secondAttribute="leading" id="TVlead"/>
+                            <constraint firstItem="SpeciesTableView" firstAttribute="top" secondItem="SpeciesSearchBar" secondAttribute="bottom" id="TVtop"/>
+                            <constraint firstItem="SpeciesTableView" firstAttribute="trailing" secondItem="SpeciesSafeArea" secondAttribute="trailing" id="TVtrail"/>
+                            <constraint firstItem="SpeciesSearchBar" firstAttribute="top" secondItem="SpeciesSafeArea" secondAttribute="top" id="rVw-Fg-aaQ"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Select Species" id="9DC-KM-QDC"/>
+                    <connections>
+                        <outlet property="searchBar" destination="SpeciesSearchBar" id="OutSearchBar"/>
+                        <outlet property="tableView" destination="SpeciesTableView" id="OutTableView"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="SpeciesSelectionResponder" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="6521" y="209"/>
+        </scene>
+        <!--Species Detail-->
+        <scene sceneID="tja-i6-SBa">
+            <objects>
+                <viewController storyboardIdentifier="SmartFormViewController" id="W89-Ze-pdv" customClass="SmartFormViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="igf-nJ-BRD">
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DetailScrollView">
+                                <rect key="frame" x="0.0" y="103" width="402" height="737"/>
+                                <subviews>
+                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="DetailStackView">
+                                        <rect key="frame" x="0.0" y="0.0" width="402" height="423.66666666666669"/>
+                                        <subviews>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="HeaderCenteringContainer">
+                                                <rect key="frame" x="0.0" y="0.0" width="402" height="151"/>
+                                                <subviews>
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DetailHeaderWrapper">
+                                                        <rect key="frame" x="120.66666666666667" y="10" width="160.66666666666663" height="131"/>
+                                                        <subviews>
+                                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="DetailHeaderImage">
+                                                                <rect key="frame" x="0.0" y="0.0" width="160.66666666666666" height="131"/>
+                                                            </imageView>
+                                                            <visualEffectView hidden="YES" opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DetailBlur">
+                                                                <rect key="frame" x="0.0" y="0.0" width="160.66666666666666" height="131"/>
+                                                                <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="DetailBlurContent">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="160" height="131"/>
+                                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                                </view>
+                                                                <blurEffect style="regular"/>
+                                                            </visualEffectView>
+                                                            <imageView hidden="YES" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="rectangle.stack.badge.plus" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="DetailIcon">
+                                                                <rect key="frame" x="57.666666666666671" y="45.666666666666657" width="42.666666666666671" height="42.666666666666671"/>
+                                                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="height" constant="40" id="DIH"/>
+                                                                    <constraint firstAttribute="width" constant="40" id="DIW"/>
+                                                                </constraints>
+                                                            </imageView>
+                                                        </subviews>
+                                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="bottom" secondItem="DetailBlur" secondAttribute="bottom" id="DHBbot"/>
+                                                            <constraint firstItem="DetailBlur" firstAttribute="leading" secondItem="DetailHeaderWrapper" secondAttribute="leading" id="DHBlead"/>
+                                                            <constraint firstItem="DetailBlur" firstAttribute="top" secondItem="DetailHeaderWrapper" secondAttribute="top" id="DHBtop"/>
+                                                            <constraint firstAttribute="trailing" secondItem="DetailBlur" secondAttribute="trailing" id="DHBtrail"/>
+                                                            <constraint firstAttribute="bottom" secondItem="DetailHeaderImage" secondAttribute="bottom" id="DHIbot"/>
+                                                            <constraint firstItem="DetailHeaderImage" firstAttribute="leading" secondItem="DetailHeaderWrapper" secondAttribute="leading" id="DHIlead"/>
+                                                            <constraint firstItem="DetailHeaderImage" firstAttribute="top" secondItem="DetailHeaderWrapper" secondAttribute="top" id="DHItop"/>
+                                                            <constraint firstAttribute="trailing" secondItem="DetailHeaderImage" secondAttribute="trailing" id="DHItrail"/>
+                                                            <constraint firstItem="DetailIcon" firstAttribute="centerX" secondItem="DetailHeaderWrapper" secondAttribute="centerX" id="DICX"/>
+                                                            <constraint firstItem="DetailIcon" firstAttribute="centerY" secondItem="DetailHeaderWrapper" secondAttribute="centerY" id="DICY"/>
+                                                        </constraints>
+                                                    </view>
+                                                </subviews>
+                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="bottom" secondItem="DetailHeaderWrapper" secondAttribute="bottom" constant="10" id="DHWBot"/>
+                                                    <constraint firstItem="DetailHeaderWrapper" firstAttribute="centerX" secondItem="HeaderCenteringContainer" secondAttribute="centerX" id="DHWCenterX"/>
+                                                    <constraint firstItem="DetailHeaderWrapper" firstAttribute="top" secondItem="HeaderCenteringContainer" secondAttribute="top" constant="10" id="DHWTop"/>
+                                                </constraints>
+                                            </view>
+                                            <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="FormStack">
+                                                <rect key="frame" x="0.0" y="175" width="402" height="248.66666666666663"/>
+                                                <subviews>
+                                                    <textField hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Watchlist Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="NameTF">
+                                                        <rect key="frame" x="20" y="0.0" width="362" height="0.0"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                        <textInputTraits key="textInputTraits"/>
+                                                    </textField>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LblTitle">
+                                                        <rect key="frame" x="20" y="0.0" width="362" height="33.666666666666664"/>
+                                                        <fontDescription key="fontDescription" style="UICTFontTextStyleTitle1"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Scientific Name" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LblSci">
+                                                        <rect key="frame" x="20" y="41.666666666666686" width="362" height="20.333333333333329"/>
+                                                        <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                                        <color key="textColor" systemColor="secondaryLabelColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SpacerView">
+                                                        <rect key="frame" x="20" y="70" width="362" height="50"/>
+                                                    </view>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Log Observation" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LblLog">
+                                                        <rect key="frame" x="20" y="127.99999999999999" width="362" height="20.333333333333329"/>
+                                                        <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" distribution="equalSpacing" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="DateRow">
+                                                        <rect key="frame" x="20" y="156.33333333333331" width="362" height="50"/>
+                                                        <subviews>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LblDate">
+                                                                <rect key="frame" x="0.0" y="14.999999999999998" width="36" height="20.333333333333329"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="DatePicker">
+                                                                <rect key="frame" x="230" y="0.0" width="132" height="50"/>
+                                                            </datePicker>
+                                                        </subviews>
+                                                    </stackView>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" distribution="equalSpacing" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="LocRow">
+                                                        <rect key="frame" x="20" y="214.33333333333337" width="362" height="34.333333333333343"/>
+                                                        <subviews>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LblLoc">
+                                                                <rect key="frame" x="0.0" y="6.9999999999999982" width="65.333333333333329" height="20.333333333333329"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                                <nil key="textColor"/>
+                                                                <nil key="highlightedColor"/>
+                                                            </label>
+                                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BtnLoc">
+                                                                <rect key="frame" x="207.66666666666663" y="0.0" width="154.33333333333337" height="34.333333333333336"/>
+                                                                <state key="normal" title="Button"/>
+                                                                <buttonConfiguration key="configuration" style="gray" image="location.fill" catalog="system" title="Get Location" imagePadding="8" cornerStyle="capsule"/>
+                                                                <connections>
+                                                                    <action selector="didTapLocation:" destination="W89-Ze-pdv" eventType="touchUpInside" id="ActLoc"/>
+                                                                </connections>
+                                                            </button>
+                                                        </subviews>
+                                                    </stackView>
+                                                </subviews>
+                                                <edgeInsets key="layoutMargins" top="0.0" left="20" bottom="0.0" right="20"/>
+                                            </stackView>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="DetailStackView" firstAttribute="top" secondItem="DetailScrollView" secondAttribute="top" id="EF0-Ok-Zu1"/>
+                                    <constraint firstItem="DetailStackView" firstAttribute="leading" secondItem="DetailScrollView" secondAttribute="leading" id="IGG-AY-An3"/>
+                                    <constraint firstItem="DetailStackView" firstAttribute="bottom" secondItem="DetailScrollView" secondAttribute="bottom" id="caM-Ie-gz8"/>
+                                    <constraint firstItem="DetailStackView" firstAttribute="trailing" secondItem="DetailScrollView" secondAttribute="trailing" id="j74-ZT-I1l"/>
+                                    <constraint firstItem="DetailStackView" firstAttribute="width" secondItem="DetailScrollView" secondAttribute="width" id="v3a-VP-Qbf"/>
+                                </constraints>
+                                <viewLayoutGuide key="contentLayoutGuide" id="zXy-77-Jc9"/>
+                                <viewLayoutGuide key="frameLayoutGuide" id="M5k-22-Lz1"/>
+                            </scrollView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="Imi-5d-E52"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="DetailHeaderWrapper" firstAttribute="height" secondItem="igf-nJ-BRD" secondAttribute="height" multiplier="0.15" id="DHWHeight"/>
+                            <constraint firstItem="DetailHeaderWrapper" firstAttribute="width" secondItem="igf-nJ-BRD" secondAttribute="width" multiplier="0.4" id="DHWWidth"/>
+                            <constraint firstItem="DetailScrollView" firstAttribute="bottom" secondItem="Imi-5d-E52" secondAttribute="bottom" id="NAY-DS-3Gy"/>
+                            <constraint firstItem="DetailScrollView" firstAttribute="leading" secondItem="Imi-5d-E52" secondAttribute="leading" id="U6f-Aw-PPy"/>
+                            <constraint firstItem="DetailScrollView" firstAttribute="trailing" secondItem="Imi-5d-E52" secondAttribute="trailing" id="bay-XQ-eUc"/>
+                            <constraint firstItem="DetailScrollView" firstAttribute="top" secondItem="Imi-5d-E52" secondAttribute="top" id="pMi-eh-bxf"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Species Detail" id="LSx-pC-Njo">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="g8J-uw-IWX"/>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="datePicker" destination="DatePicker" id="OutDatePicker"/>
+                        <outlet property="formStackView" destination="FormStack" id="OutFormStack"/>
+                        <outlet property="headerIconView" destination="DetailIcon" id="OutDetailIcon"/>
+                        <outlet property="headerImageView" destination="DetailHeaderImage" id="OutDetailImg"/>
+                        <outlet property="locationLabel" destination="LblLoc" id="OutLocLbl"/>
+                        <outlet property="nameTextField" destination="NameTF" id="OutNameTF"/>
+                        <outlet property="scientificNameLabel" destination="LblSci" id="OutSciLbl"/>
+                        <outlet property="titleLabel" destination="LblTitle" id="OutTitleLbl"/>
+                        <outlet property="visualEffectView" destination="DetailBlur" id="OutDetailBlur"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="pzU-nQ-bfD" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="7601" y="109"/>
+        </scene>
     </scenes>
+    <inferredMetricsTieBreakers>
+        <segue reference="oGV-ly-q5u"/>
+    </inferredMetricsTieBreakers>
     <resources>
         <image name="line.3.horizontal.decrease" catalog="system" width="128" height="73"/>
+        <image name="location.fill" catalog="system" width="128" height="119"/>
+        <image name="rectangle.stack.badge.plus" catalog="system" width="128" height="120"/>
         <systemColor name="labelColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>

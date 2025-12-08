@@ -14,17 +14,19 @@ enum WatchlistType {
 }
 
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
-	
-		// MARK: - Outlets
-	@IBOutlet weak var tableView: UITableView!
-	@IBOutlet weak var searchBar: UISearchBar!
-	@IBOutlet weak var segmentedControl: UISegmentedControl!
-	@IBOutlet weak var headerView: UIView! // Optional: To add shadow or styling
-	
-		// MARK: - Properties
+    
+    weak var coordinator: WatchlistCoordinator?
+    
+    // MARK: - Outlets
+    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var searchBar: UISearchBar!
+    @IBOutlet weak var segmentedControl: UISegmentedControl!
+    @IBOutlet weak var headerView: UIView! // Optional: To add shadow or styling
+    
+    // MARK: - Properties
     var watchlistType: WatchlistType = .custom
-	var watchlistTitle: String = "Watchlist"
-	
+    var watchlistTitle: String = "Watchlist"
+    
     // --- Data Source for My Watchlist (Multi-Section) ---
     var allWatchlists: [Watchlist] = []
     var filteredSections: [[Bird]] = []
@@ -33,50 +35,49 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     var observedBirds: [Bird] = []
     var toObserveBirds: [Bird] = []
     var currentList: [Bird] = []
-	
-		// State
-	var currentSegmentIndex: Int = 0 // 0 = Observed, 1 = To Observe
+    
+    // State
+    var currentSegmentIndex: Int = 0 // 0 = Observed, 1 = To Observe
     var currentSortOption: SortOption = .nameAZ // Track sort option
-	
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		setupUI()
-		applyFilters()
-	}
-	
-	private func setupUI() {
-			// 1. Navigation Bar Styling
-		self.title = watchlistTitle
-		self.view.backgroundColor = .systemGroupedBackground
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        applyFilters()
+    }
+    
+    private func setupUI() {
+        // 1. Navigation Bar Styling
+        self.title = watchlistTitle
+        self.view.backgroundColor = .systemGroupedBackground
         self.navigationItem.largeTitleDisplayMode = .never
-		
-			// 2. TableView Setup
-		tableView.delegate = self
-		tableView.dataSource = self
-		tableView.backgroundColor = .clear
-		tableView.separatorStyle = .none // Cleaner look for card-style cells
-		
-			// 3. Search Bar Styling (Matching CustomWatchlistViewController)
-		searchBar.backgroundImage = UIImage() // Removes gray border
-		searchBar.delegate = self
-		
-			// 4. Segmented Control Styling
-		segmentedControl.selectedSegmentIndex = 0
+        
+        // 2. TableView Setup
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none // Cleaner look for card-style cells
+        
+        // 3. Search Bar Styling (Matching CustomWatchlistViewController)
+        searchBar.backgroundImage = UIImage() // Removes gray border
+        searchBar.delegate = self
+        
+        // 4. Segmented Control Styling
+        segmentedControl.selectedSegmentIndex = 0
         segmentedControl.setTitle("Observed", forSegmentAt: 0)
         segmentedControl.setTitle("To Observe", forSegmentAt: 1)
-	}
-
-	
-		// MARK: - Filter Logic
-	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
-		currentSegmentIndex = sender.selectedSegmentIndex
-		applyFilters()
-	}
-
-	func applyFilters() {
-		let searchText = searchBar.text ?? ""
+    }
+    
+    // MARK: - Filter Logic
+    @IBAction func segmentChanged(_ sender: UISegmentedControl) {
+        currentSegmentIndex = sender.selectedSegmentIndex
+        applyFilters()
+    }
+    
+    func applyFilters() {
+        let searchText = searchBar.text ?? ""
         let isObserved = (currentSegmentIndex == 0)
-
+        
         if watchlistType == .myWatchlist {
             // Filter each watchlist in allWatchlists
             filteredSections = allWatchlists.map { watchlist in
@@ -97,10 +98,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         
         // Apply current sort
         sortBirds(by: currentSortOption)
-	}
-
-    // ... Actions ...
-
+    }
+    
     func sortBirds(by option: SortOption) {
         currentSortOption = option
         
@@ -134,11 +133,49 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     }
     
     enum SortOption { case nameAZ, nameZA, date, rarity }
+    
+    @IBAction func didTapAdd(_ sender: Any) {
+        coordinator?.showAddOptions(from: self, sender: sender)
+    }
+    
+    @IBAction func filterButtonTapped(_ sender: UIButton) {
+        showSortOptions(sender: sender)
+    }
+    
+    private func showSortOptions(sender: UIButton) {
+        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Name (A-Z)", style: .default) { [weak self] _ in
+            self?.sortBirds(by: .nameAZ)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Name (Z-A)", style: .default) { [weak self] _ in
+            self?.sortBirds(by: .nameZA)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Date", style: .default) { [weak self] _ in
+            self?.sortBirds(by: .date)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Rarity", style: .default) { [weak self] _ in
+            self?.sortBirds(by: .rarity)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popoverController = alert.popoverPresentationController {
+            popoverController.sourceView = sender
+            popoverController.sourceRect = sender.bounds
+            popoverController.permittedArrowDirections = .up // Optional: specify arrow direction
+        }
+        
+        present(alert, animated: true)
+    }
 }
 
-	// MARK: - TableView Extensions
+// MARK: - TableView Extensions
 extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSource {
-	
+    
     func numberOfSections(in tableView: UITableView) -> Int {
         if watchlistType == .myWatchlist {
             return allWatchlists.count
@@ -146,12 +183,12 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         return 1
     }
     
-	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if watchlistType == .myWatchlist {
             return filteredSections[section].count
         }
-		return currentList.count
-	}
+        return currentList.count
+    }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if watchlistType == .myWatchlist {
@@ -170,13 +207,13 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         header.textLabel?.textColor = .label
         // header.contentView.backgroundColor = .systemGroupedBackground
     }
-	
-	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-			// Ensure you set this Identifier in Storyboard
-		guard let cell = tableView.dequeueReusableCell(withIdentifier: "BirdSmartCell", for: indexPath) as? BirdSmartCell else {
-			return UITableViewCell()
-		}
-		
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        // Ensure you set this Identifier in Storyboard
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "BirdSmartCell", for: indexPath) as? BirdSmartCell else {
+            return UITableViewCell()
+        }
+        
         let bird: Bird
         if watchlistType == .myWatchlist {
             bird = filteredSections[indexPath.section][indexPath.row]
@@ -184,48 +221,14 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             bird = currentList[indexPath.row]
         }
         
-		cell.shouldShowAvatars = (watchlistType == .shared)
-		
-		cell.configure(with: bird)
-		
-		return cell
-	}
-	
-	func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-		return 100 // Or UITableView.automaticDimension
-	}
-	
-	@IBAction func filterButtonTapped(_ sender: UIButton) {
-		showSortOptions(sender: sender)
-	}
-	
-	private func showSortOptions(sender: UIButton) {
-		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-		
-		alert.addAction(UIAlertAction(title: "Name (A-Z)", style: .default) { [weak self] _ in
-			self?.sortBirds(by: .nameAZ)
-		})
-		
-		alert.addAction(UIAlertAction(title: "Name (Z-A)", style: .default) { [weak self] _ in
-			self?.sortBirds(by: .nameZA)
-		})
-		
-		alert.addAction(UIAlertAction(title: "Date", style: .default) { [weak self] _ in
-			self?.sortBirds(by: .date)
-		})
-		
-		alert.addAction(UIAlertAction(title: "Rarity", style: .default) { [weak self] _ in
-			self?.sortBirds(by: .rarity)
-		})
-		
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-		
-        if let popoverController = alert.popoverPresentationController {
-            popoverController.sourceView = sender
-            popoverController.sourceRect = sender.bounds
-            popoverController.permittedArrowDirections = .up // Optional: specify arrow direction
-        }
-
-		present(alert, animated: true)
-	}
+        cell.shouldShowAvatars = (watchlistType == .shared)
+        
+        cell.configure(with: bird)
+        
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 100 // Or UITableView.automaticDimension
+    }
 }

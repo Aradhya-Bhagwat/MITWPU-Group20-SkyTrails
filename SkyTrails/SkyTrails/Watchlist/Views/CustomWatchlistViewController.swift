@@ -15,6 +15,7 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 	
 		// MARK: - Properties
 	var viewModel: WatchlistViewModel?
+    weak var coordinator: WatchlistCoordinator?
 	
 		// Computed property to access watchlists from viewModel
 	var allWatchlists: [Watchlist] {
@@ -70,10 +71,9 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 		searchBar.delegate = self
 	}
 	
-	@IBAction func addTapped(_ sender: Any) {
-			// Handle add action
-		print("Add button tapped")
-	}    
+    @IBAction func addTapped(_ sender: Any) {
+        coordinator?.showCreateWatchlist()
+    }    
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
 		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
 		
@@ -137,6 +137,14 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
 		searchBar.resignFirstResponder()
 	}
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ShowSpeciesSelection",
+           let destVC = segue.destination as? SpeciesSelectionViewController {
+            destVC.coordinator = self.coordinator
+            destVC.viewModel = self.viewModel
+        }
+    }
 }
 
 	// MARK: - UICollectionView DataSource & Delegate
