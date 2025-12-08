@@ -15,9 +15,12 @@
 import UIKit
 class IdentificationCoordinator{
     private let navigationController: UINavigationController
-    
+
     private var steps: [IdentificationStep] = []
     private var currentIndex: Int = 0
+    private var totalSteps: Int { steps.count }
+    private var currentStepNumber: Int { currentIndex }
+
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -60,28 +63,40 @@ class IdentificationCoordinator{
         
         let step = steps[currentIndex]
         currentIndex += 1
-        
+        let screen: UIViewController
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         switch step {
             case .size:
                 let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationSizeViewController" ) as! IdentificationSizeViewController
                 vc.delegate = self
-                navigationController.pushViewController(vc, animated: true)
+               screen = vc
                 
             case .fieldMarks:
                 let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationFieldMarksViewController" ) as! IdentificationFieldMarksViewController
                 vc.delegate = self
-                navigationController.pushViewController(vc, animated: true)
+            screen = vc
         case .shape:
             let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationShapeViewController" ) as! IdentificationShapeViewController
             vc.delegate = self
-            navigationController.pushViewController(vc, animated: true)
+            screen = vc
             
             case .dateLocation:
             let vc = storyboard.instantiateViewController( withIdentifier: "DateandLocationViewController" ) as! DateandLocationViewController
             vc.delegate = self
-            navigationController.pushViewController(vc, animated: true)
+            screen = vc
         }
+        if let progressVC = screen as? (UIViewController & IdentificationProgressUpdatable) {
+
+            progressVC.loadViewIfNeeded()   // Now valid!
+            
+            progressVC.updateProgress(
+                current: currentIndex,
+                total: steps.count
+            )
+        }
+
+        navigationController.pushViewController(screen, animated: true)
+
     }
 }
 extension IdentificationCoordinator: IdentificationFlowStepDelegate { func didFinishStep() { goToNextStep() } }

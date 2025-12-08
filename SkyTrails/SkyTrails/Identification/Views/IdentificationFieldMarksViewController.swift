@@ -13,6 +13,9 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     @IBOutlet weak var tableContainerView: UIView!
     
     @IBOutlet weak var fieldMarkTableView: UITableView!
+    
+    @IBOutlet weak var progressView: UIProgressView!
+
     weak var delegate: IdentificationFlowStepDelegate?
 
     var viewModel: ViewModel = ViewModel()
@@ -105,4 +108,11 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
 
    
 
+}
+
+extension IdentificationFieldMarksViewController: IdentificationProgressUpdatable {
+    func updateProgress(current: Int, total: Int) {
+        let percent = Float(current) / Float(total)
+        progressView.setProgress(percent, animated: true)
+    }
 }

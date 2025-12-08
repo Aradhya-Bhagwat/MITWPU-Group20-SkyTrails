@@ -230,6 +230,7 @@
                         <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="euy-nZ-pAV"/>
                     </navigationItem>
                     <connections>
+                        <outlet property="progressView" destination="wmt-g3-CEs" id="uY6-8g-e0y"/>
                         <outlet property="shapeTableView" destination="dfG-UT-sYy" id="cRA-jQ-Bhv"/>
                         <outlet property="tableContainerView" destination="Ek7-Hm-WK4" id="Un0-dM-UeL"/>
                     </connections>
@@ -293,6 +294,7 @@
                         <outlet property="birdImage" destination="Tyw-Jv-ciW" id="DPL-TK-9SS"/>
                         <outlet property="birdLabel" destination="g4k-WR-MNl" id="uh5-DF-tiB"/>
                         <outlet property="birdSlider" destination="iaE-19-gNh" id="luW-oH-lLV"/>
+                        <outlet property="progressView" destination="RyS-20-GYu" id="1C8-Jw-CF2"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wO1-pK-VUK" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -354,6 +356,7 @@
                     </navigationItem>
                     <connections>
                         <outlet property="fieldMarkTableView" destination="OAI-gE-SYf" id="y1j-5J-Vxy"/>
+                        <outlet property="progressView" destination="9Wj-ji-0gq" id="msH-fo-tUi"/>
                         <outlet property="tableContainerView" destination="fGn-Sr-Rr8" id="EPq-rn-g7q"/>
                     </connections>
                 </viewController>
@@ -446,6 +449,7 @@
                     </navigationItem>
                     <connections>
                         <outlet property="dateandlocationTableView" destination="pqE-CW-yjS" id="9KS-oM-i4z"/>
+                        <outlet property="progressView" destination="Ocq-bk-U3B" id="I51-fM-hX1"/>
                         <outlet property="tableContainerView" destination="DRg-5F-1xg" id="AF9-DG-8NG"/>
                     </connections>
                 </viewController>
@@ -583,7 +587,7 @@
     <resources>
         <image name="checkmark" catalog="system" width="128" height="114"/>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
