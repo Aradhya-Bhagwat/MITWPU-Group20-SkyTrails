@@ -7,28 +7,14 @@ import Foundation
 
 class WatchlistViewModel {
 	
-	    var watchlists: [Watchlist] = []
-	    var sharedWatchlists: [SharedWatchlist] = []
-	    
-	    // Master list of birds for search
-	    private var allBirds: [Bird] = []
-	    
-	    init() {
-	        self.watchlists = createMockWatchlists()
-	        
-	        // Populate master list from mock watchlists
-	        // In a real app, this would fetch from a database or API
-	        let observed = self.watchlists.flatMap { $0.observedBirds }
-	        let toObserve = self.watchlists.flatMap { $0.toObserveBirds }
-	        // De-duplicate birds by ID
-	        let combined = observed + toObserve
-	        var uniqueBirds = [UUID: Bird]()
-	        for bird in combined {
-	            uniqueBirds[bird.id] = bird
-	        }
-	        self.allBirds = Array(uniqueBirds.values)
-	        
-	        // Helper to get some random birds from mock watchlists        // Ensure we have enough birds for distinct lists
+	var watchlists: [Watchlist] = []
+    var sharedWatchlists: [SharedWatchlist] = []
+	
+	init() {
+		self.watchlists = createMockWatchlists()
+        
+        // Helper to get some random birds from mock watchlists
+        // Ensure we have enough birds for distinct lists
         let allBirds = self.watchlists.flatMap { $0.birds }
         
         // Split birds to ensure distinct observed and toObserve lists for shared watchlists
@@ -77,34 +63,7 @@ class WatchlistViewModel {
 			let rareInThisList = watchlist.birds.filter { bird in
 				bird.rarity.contains(.rare)
 			}.count
-			            return currentTotal + rareInThisList
-					}
-				}
-			    
-			    // MARK: - Actions
-			    
-			    func searchBirds(query: String) -> [Bird] {
-			        if query.isEmpty {
-			            return allBirds
-			        }
-			        return allBirds.filter { bird in
-			            bird.name.localizedCaseInsensitiveContains(query) ||
-			            bird.scientificName.localizedCaseInsensitiveContains(query)
-			        }
-			    }
-			    
-			    func createWatchlist(name: String, image: UIImage?, start: Date, end: Date, location: String) {
-			        // Note: The Watchlist model currently does not support an image field.
-			        // We are accepting the image parameter as requested but it won't be stored in the model.
-			        let newWatchlist = Watchlist(
-			            title: name,
-			            location: location,
-			            startDate: start,
-			            endDate: end,
-			            observedBirds: [],
-			            toObserveBirds: []
-			        )
-			        self.watchlists.append(newWatchlist)
-			    }
-			}
-			
+			return currentTotal + rareInThisList
+		}
+	}
+}
