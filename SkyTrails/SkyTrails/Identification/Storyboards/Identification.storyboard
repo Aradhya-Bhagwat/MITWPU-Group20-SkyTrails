@@ -12,7 +12,7 @@
         <!--Identification-->
         <scene sceneID="bwH-sq-Dco">
             <objects>
-                <viewController id="dwe-Lt-A6a" customClass="IdentificationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="IdentificationViewController" id="dwe-Lt-A6a" customClass="IdentificationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="N5e-xC-qyH">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -54,7 +54,7 @@
                                                     <fontDescription key="titleFontDescription" style="UICTFontTextStyleHeadline"/>
                                                 </buttonConfiguration>
                                                 <connections>
-                                                    <segue destination="h1V-CV-BvQ" kind="show" id="3PX-r4-zET"/>
+                                                    <action selector="startButtonTapped:" destination="dwe-Lt-A6a" eventType="touchUpInside" id="w8Q-cu-CIa"/>
                                                 </connections>
                                             </button>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="History" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mPg-zb-PDo">
@@ -179,19 +179,19 @@
         <!--Select the shape of the bird-->
         <scene sceneID="fLO-kk-N5A">
             <objects>
-                <viewController id="h1V-CV-BvQ" customClass="IdentificationShapeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="IdentificationShapeViewController" id="h1V-CV-BvQ" customClass="IdentificationShapeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Lpq-sA-XCn">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="wmt-g3-CEs">
-                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                                <rect key="frame" x="8" y="124" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Ek7-Hm-WK4">
-                                <rect key="frame" x="16" y="202" width="370" height="672"/>
+                                <rect key="frame" x="16" y="148" width="370" height="726"/>
                                 <subviews>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="dfG-UT-sYy">
-                                        <rect key="frame" x="8" y="8" width="354" height="648"/>
+                                        <rect key="frame" x="8" y="8" width="354" height="702"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <prototypes>
                                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="shape_cell" id="bUj-x6-64u">
@@ -227,11 +227,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select the shape of the bird" largeTitleDisplayMode="never" id="i9d-im-kzx">
-                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="euy-nZ-pAV">
-                            <connections>
-                                <segue destination="2tn-Vl-zi5" kind="show" id="39o-FF-nIN"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="euy-nZ-pAV"/>
                     </navigationItem>
                     <connections>
                         <outlet property="shapeTableView" destination="dfG-UT-sYy" id="cRA-jQ-Bhv"/>
@@ -245,13 +241,13 @@
         <!--Select the size of the bird-->
         <scene sceneID="LlW-c5-pBZ">
             <objects>
-                <viewController id="2tn-Vl-zi5" customClass="IdentificationSizeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="IdentificationSizeViewController" id="2tn-Vl-zi5" customClass="IdentificationSizeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="nwb-gu-olA">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="RyS-20-GYu">
-                                <rect key="frame" x="16" y="186" width="370" height="4"/>
+                                <rect key="frame" x="16" y="132" width="370" height="4"/>
                             </progressView>
                             <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="iaE-19-gNh">
                                 <rect key="frame" x="16" y="420" width="370" height="34"/>
@@ -291,11 +287,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select the size of the bird" largeTitleDisplayMode="never" id="bI2-pk-hLZ">
-                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="Qhp-7o-QPD">
-                            <connections>
-                                <segue destination="qmL-5v-0nM" kind="show" id="nRC-yM-3sE"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="Qhp-7o-QPD"/>
                     </navigationItem>
                     <connections>
                         <outlet property="birdImage" destination="Tyw-Jv-ciW" id="DPL-TK-9SS"/>
@@ -310,16 +302,16 @@
         <!--Select 5 field marks to use-->
         <scene sceneID="xCJ-NJ-tg9">
             <objects>
-                <viewController id="qmL-5v-0nM" customClass="IdentificationFieldMarksViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="IdentificationFieldMarksViewController" id="qmL-5v-0nM" customClass="IdentificationFieldMarksViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="edF-f2-COB">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="9Wj-ji-0gq">
-                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                                <rect key="frame" x="8" y="124" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fGn-Sr-Rr8">
-                                <rect key="frame" x="16" y="202" width="370" height="672"/>
+                                <rect key="frame" x="16" y="148" width="370" height="726"/>
                                 <subviews>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="OAI-gE-SYf">
                                         <rect key="frame" x="0.0" y="0.0" width="354" height="580"/>
@@ -358,11 +350,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select 5 field marks to use" id="JGR-Vv-OcD">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf">
-                            <connections>
-                                <segue destination="sFd-Fo-NuK" kind="show" id="qqf-Zf-0wk"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf"/>
                     </navigationItem>
                     <connections>
                         <outlet property="fieldMarkTableView" destination="OAI-gE-SYf" id="y1j-5J-Vxy"/>
@@ -376,19 +364,19 @@
         <!--Enter Date and Location-->
         <scene sceneID="isO-04-E9U">
             <objects>
-                <viewController id="sFd-Fo-NuK" customClass="DateandLocationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="DateandLocationViewController" id="sFd-Fo-NuK" customClass="DateandLocationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="GoC-4g-qND">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Ocq-bk-U3B">
-                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                                <rect key="frame" x="8" y="124" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DRg-5F-1xg">
-                                <rect key="frame" x="8" y="202" width="386" height="672"/>
+                                <rect key="frame" x="8" y="148" width="386" height="726"/>
                                 <subviews>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" estimatedSectionHeaderHeight="-1" sectionFooterHeight="28" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="pqE-CW-yjS">
-                                        <rect key="frame" x="8" y="8" width="370" height="648"/>
+                                        <rect key="frame" x="8" y="8" width="370" height="702"/>
                                         <prototypes>
                                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" id="aR2-Fr-N3O" customClass="DateInputCell" customModule="SkyTrails" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="50" width="370" height="51"/>
@@ -454,11 +442,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Enter Date and Location" id="v4m-cf-cKV">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="39r-KO-tOE">
-                            <connections>
-                                <segue destination="OBK-yW-fvY" kind="show" id="FKW-f4-5ih"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="39r-KO-tOE"/>
                     </navigationItem>
                     <connections>
                         <outlet property="dateandlocationTableView" destination="pqE-CW-yjS" id="9KS-oM-i4z"/>
@@ -542,10 +526,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="iof-A5-gQh">
-                                <rect key="frame" x="8" y="178" width="386" height="4"/>
+                                <rect key="frame" x="8" y="124" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gUF-JE-6ut">
-                                <rect key="frame" x="16" y="202" width="370" height="672"/>
+                                <rect key="frame" x="16" y="148" width="370" height="726"/>
                                 <subviews>
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="W7g-kI-yxE">
                                         <rect key="frame" x="0.0" y="0.0" width="354" height="580"/>
