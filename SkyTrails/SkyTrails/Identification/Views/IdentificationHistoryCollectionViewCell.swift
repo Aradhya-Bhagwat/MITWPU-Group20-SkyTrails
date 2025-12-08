@@ -12,7 +12,7 @@ class IdentificationHistoryCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var historyImageView: UIImageView!
     @IBOutlet weak var specieNameLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
-    
+
     func configureCell(historyItem: History) {
         historyImageView.image = UIImage(named: historyItem.imageView)
         historyImageView.clipsToBounds = true

@@ -13,6 +13,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var collectionView: UICollectionView!
     
+    var coordinator: IdentificationCoordinator?
+
     var viewModel: ViewModel = ViewModel()
     var history: [History] = []
     
@@ -50,7 +52,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-
+      
         tableView.delegate = self
         tableView.dataSource = self
         
@@ -71,6 +73,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         collectionView.delegate = self
         history = viewModel.migrationHistory
         collectionView.reloadData()
+        if coordinator == nil, let nav = self.navigationController {
+                   coordinator = IdentificationCoordinator(navigationController: nav)
+                   //coordinator?.start()
+               }
+
     }
     func applyCardShadow(to view: UIView) {
         view.layer.cornerRadius = 12
@@ -138,6 +145,25 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         
         let layout = UICollectionViewCompositionalLayout(section: section)
         return layout
+    }
+
+    @IBAction func startButtonTapped(_ sender: UIButton) {
+        print("DEBUG: startButtonTapped — coordinator is \(coordinator == nil ? "nil" : "NOT nil")")
+
+        let selected = viewModel.fieldMarkOptions.filter { $0.isSelected }
+
+        if selected.count < 2 {
+            let alert = UIAlertController(
+                title: "Select at least two",
+                message: "Please choose at least two identification methods to continue.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        coordinator?.configureSteps(from: viewModel.fieldMarkOptions)
     }
 
 }
