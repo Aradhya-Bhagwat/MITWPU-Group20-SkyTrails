@@ -28,6 +28,7 @@ class WatchlistHomeViewController: UIViewController {
 	@IBOutlet weak var SummaryCardCollectionView: UICollectionView!
 	
 	var viewModel: WatchlistViewModel?
+    var coordinator: WatchlistCoordinator?
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -35,6 +36,10 @@ class WatchlistHomeViewController: UIViewController {
 		self.navigationItem.largeTitleDisplayMode = .always
 		
 		viewModel = WatchlistViewModel()
+        
+        if let nav = self.navigationController {
+            self.coordinator = WatchlistCoordinator(navigationController: nav)
+        }
 		
 			// 1. Set the Compositional Layout first
 		SummaryCardCollectionView.collectionViewLayout = createCompositionalLayout()
@@ -355,10 +360,12 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 				// If you needed to pass the ViewModel or specific data, do it here
 			if let destinationVC = segue.destination as? CustomWatchlistViewController {
 					destinationVC.viewModel = self.viewModel
+                    destinationVC.coordinator = self.coordinator
 			}
         } else if segue.identifier == "ShowSharedWatchlistGrid" {
             if let destinationVC = segue.destination as? SharedWatchlistsViewController {
                 destinationVC.viewModel = self.viewModel
+                destinationVC.coordinator = self.coordinator
             }
 		} else if segue.identifier == "ShowSmartWatchlist" {
             guard let destVC = segue.destination as? SmartWatchlistViewController else { return }
@@ -383,6 +390,8 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
                 destVC.observedBirds = sharedWatchlist.observedBirds
                 destVC.toObserveBirds = sharedWatchlist.toObserveBirds
             }
+            // Pass the coordinator to the SmartWatchlistViewController
+            destVC.coordinator = self.coordinator
         }
 	}
 }

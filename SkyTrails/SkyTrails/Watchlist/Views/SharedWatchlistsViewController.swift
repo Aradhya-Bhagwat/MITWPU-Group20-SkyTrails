@@ -15,6 +15,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
 
     // MARK: - Properties
     var viewModel: WatchlistViewModel?
+    weak var coordinator: WatchlistCoordinator?
     
     // Computed property to access shared watchlists from viewModel
     var allSharedWatchlists: [SharedWatchlist] {
@@ -77,7 +78,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     
     // MARK: - Actions
     @IBAction func addTapped(_ sender: Any) {
-        print("Add button tapped")
+        coordinator?.showCreateWatchlist()
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
@@ -132,6 +133,14 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ShowSpeciesSelection",
+           let destVC = segue.destination as? SpeciesSelectionViewController {
+            destVC.coordinator = self.coordinator
+            destVC.viewModel = self.viewModel
+        }
     }
 }
 
