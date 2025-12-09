@@ -64,6 +64,8 @@ class ResultViewController: UIViewController,UITableViewDelegate, UITableViewDat
         styleTableContainer()
         resultTableView.delegate = self
         resultTableView.dataSource = self
+        resultTableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+
 
     }
     func didTapPredict(for cell: ResultTableViewCell) {

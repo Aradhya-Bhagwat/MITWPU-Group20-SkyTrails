@@ -8,6 +8,7 @@ class ViewModel {
     init() {
         print("📌 ViewModel initialized")
     }
+   
 
     var histories: [History] {
         get { model.histories }

@@ -17,6 +17,7 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     @IBOutlet weak var progressView: UIProgressView!
 
     weak var delegate: IdentificationFlowStepDelegate?
+    var selectedFieldMarks: [Int] = []
 
     var viewModel: ViewModel = ViewModel()
     func styleTableContainer() {
@@ -42,9 +43,7 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
             image.draw(in: CGRect(origin: .zero, size: size))
         }
     }
-    @objc func switchChanged(_ sender: UISwitch) {
-        print("Row \(sender.tag), isOn = \(sender.isOn)")
-    }
+   
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
@@ -61,11 +60,13 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
             cell.imageView?.image = nil
         }
         let toggle = UISwitch()
-        toggle.isOn = false
         toggle.tag = indexPath.row
+
+        toggle.isOn = selectedFieldMarks.contains(indexPath.row)
+
         toggle.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
         cell.accessoryView = toggle
-        cell.selectionStyle = .none
+
         return cell
     }
 
@@ -77,6 +78,47 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
         setupRightTickButton()
 
     }
+    @objc func switchChanged(_ sender: UISwitch) {
+        let index = sender.tag
+
+        if sender.isOn {
+            if selectedFieldMarks.count >= 5 {
+                sender.setOn(false, animated: true)
+                showMaxLimitAlert()
+                return
+            }
+            if !selectedFieldMarks.contains(index) {
+                selectedFieldMarks.append(index)
+            }
+        } else {
+            // Remove index
+            if let position = selectedFieldMarks.firstIndex(of: index) {
+                selectedFieldMarks.remove(at: position)
+            }
+        }
+
+        print("Selected indices = \(selectedFieldMarks)")
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+      
+        
+    
+        
+
+        
+    }
+    
+    private func showMaxLimitAlert() {
+        let alert = UIAlertController(
+            title: "Limit Reached",
+            message: "You can select at most 5 field marks.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
     private func setupRightTickButton() {
         // Create button
         let button = UIButton(type: .system)
