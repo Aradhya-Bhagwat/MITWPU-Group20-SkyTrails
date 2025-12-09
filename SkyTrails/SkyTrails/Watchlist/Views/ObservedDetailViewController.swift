@@ -1,141 +1,173 @@
-//
-//  ObservedDetailViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 09/12/25.
-//
-
-
-//
-//  ObservedDetailViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 09/12/25.
-//
-
+	//
+	//  ObservedDetailViewController.swift
+	//  SkyTrails
+	//
+	//  Created by SDC-USER on 09/12/25.
+	//
 
 import UIKit
 
 class ObservedDetailViewController: UIViewController {
 	
-		    // MARK: - Data Dependency
-		    // This is how we pass data into this screen
-		    var bird: Bird?
-		    weak var coordinator: WatchlistCoordinator?
-		    
-		    // MARK: - IBOutlets
-		    // Connect these to your Storyboard elements
-		    @IBOutlet weak var birdImageView: UIImageView!
-		    @IBOutlet weak var startLabel: UILabel! // The label inside the Start Date row
-		    @IBOutlet weak var endLabel: UILabel!   // The label inside the End Date row
-		    @IBOutlet weak var startDatePicker: UIDatePicker!
-		    @IBOutlet weak var endDatePicker: UIDatePicker!
-		    @IBOutlet weak var notesTextView: UITextView!
-		    @IBOutlet weak var searchTextField: UITextField!
-            @IBOutlet weak var detailsCardView: UIView!
-            @IBOutlet weak var locationCardView: UIView!
-		    
-		    // MARK: - Lifecycle
-		    override func viewDidLoad() {
-		        super.viewDidLoad()
-		        
-		        // 1. Setup the visual styling (Round corners, shadows)
-		        setupStyling()
-		        
-		        // 2. Load the data if it exists
-		        if let birdData = bird {
-		            configure(with: birdData)
-		        }
-		        
-		        // 3. Setup Navigation
-		        let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
-		        navigationItem.rightBarButtonItem = saveButton
-		    }
-		    
-		    @objc func didTapSave() {
-		        guard var updatedBird = bird else { return }
-		        
-		        // Update dates
-		        updatedBird.date = [startDatePicker.date, endDatePicker.date]
-		        
-		        // Update location (simple string append/replace for now)
-		        if let loc = searchTextField.text, !loc.isEmpty {
-		            updatedBird.location = [loc]
-		        }
-		        
-		        coordinator?.saveBirdDetails(bird: updatedBird)
-		    }
-		    
-		    // MARK: - Data Population
-            func configure(with bird: Bird) {
-			// 1. Set Navigation Title
-		self.navigationItem.title = bird.name
+		// MARK: - Data Dependency
+	var bird: Bird? // nil if adding new
+	weak var coordinator: WatchlistCoordinator?
+	
+	private var selectedImageName: String?
+	
+		// MARK: - IBOutlets
+	@IBOutlet weak var birdImageView: UIImageView!
+	@IBOutlet weak var dateLabel: UILabel!
+
+	@IBOutlet weak var dateTimePicker: UIDatePicker!
+// Note: In your XML this view might not exist in Observed, but we'll keep the outlet if it's there.
+	@IBOutlet weak var notesTextView: UITextView!
+	@IBOutlet weak var searchTextField: UITextField! // This is actually the Name TextField in Observed View
+	@IBOutlet weak var detailsCardView: UIView!
+
+	
+		// MARK: - Lifecycle
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		setupStyling()
+		setupInteractions()
 		
-			// 2. Load Image (Safely)
-		if let imageName = bird.images.first {
-			birdImageView.image = UIImage(named: imageName)
+			// Load data if editing existing (not applicable for "Add New", but good practice)
+		if let birdData = bird {
+			configure(with: birdData)
 		} else {
-				// Fallback if array is empty
-			birdImageView.image = UIImage(systemName: "photo")
+				// New Entry Setup
+			self.navigationItem.title = "New Observation"
+			birdImageView.image = UIImage(systemName: "camera.fill")
+			birdImageView.tintColor = .systemGray
 		}
 		
-			// 3. Set Dates
-			// Logic: Use first date for Start, last date for End.
-			// If only 1 date exists, use it for both.
-		if let firstDate = bird.date.first {
-			startDatePicker.date = firstDate
-		}
-		
-		if let lastDate = bird.date.last {
-			endDatePicker.date = lastDate
-		}
-		
-			// 4. Set Location
-			// Pre-fill the search bar with the saved location
-		if let locationName = bird.location.first {
-			searchTextField.text = locationName
-		}
-		
-			// 5. Notes?
-			// Your Bird model currently doesn't have a 'notes' field.
-			// I have left the placeholder text, but if you add 'var notes: String?'
-			// to your model later, map it here:
-			// notesTextView.text = bird.notes ?? "Add notes..."
+			// Save Button
+		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
+		navigationItem.rightBarButtonItem = saveButton
 	}
 	
-		// MARK: - Styling (From previous step)
-	func setupStyling() {
-			// 1. Background
-		view.backgroundColor = .systemGray6 // Light gray background
+	private func setupInteractions() {
+			// Image Tap Gesture
+		let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapImage))
+		birdImageView.isUserInteractionEnabled = true
+		birdImageView.addGestureRecognizer(tapGesture)
+	}
+	
+	@objc func didTapImage() {
+		let picker = UIImagePickerController()
+		picker.sourceType = .photoLibrary // Or .camera
+		picker.delegate = self
+		picker.allowsEditing = true
+		present(picker, animated: true)
+	}
+	
+	@objc func didTapSave() {
+		guard let name = searchTextField.text, !name.isEmpty else {
+			let alert = UIAlertController(title: "Missing Info", message: "Please enter a bird name.", preferredStyle: .alert)
+			alert.addAction(UIAlertAction(title: "OK", style: .default))
+			present(alert, animated: true)
+			return
+		}
 		
-			// 2. Bird Image
+			// 1. Create Image Array (use selected image or default)
+		var images: [String] = []
+		if let imgName = selectedImageName {
+			images.append(imgName)
+		} else {
+			images.append("bird_placeholder") // Ensure you have a placeholder asset or handle nil
+		}
+		
+			// 2. Create Location Array
+			// Note: Using a text field for location in this context based on your XML structure
+			// In the Observed XML, there is a location text field near the bottom,
+			// but let's assume 'location' is handled or default it for now.
+		let loc = "User Location" // Or fetch from the second text field if you wire it up
+		
+			// 3. Create the New Bird Object
+		let newBird = Bird(
+			name: name,
+			scientificName: "Unknown", // Default
+			images: images,
+			rarity: [.common], // Default
+			location: [loc],
+			date: [dateTimePicker.date],
+			observedBy: ["person.circle.fill"] // Current user
+		)
+		
+			// 4. Pass back to Coordinator
+		coordinator?.saveBirdDetails(bird: newBird)
+	}
+	
+		// MARK: - Configuration
+	func configure(with bird: Bird) {
+		searchTextField.text = bird.name
+		if let imageName = bird.images.first {
+			birdImageView.image = UIImage(named: imageName)
+		}
+		if let date = bird.date.first {
+			dateTimePicker.date = date
+		}
+	}
+	
+		// MARK: - Styling
+	func setupStyling() {
+		view.backgroundColor = .systemGray6
 		birdImageView.layer.cornerRadius = 24
 		birdImageView.clipsToBounds = true
+		birdImageView.contentMode = .scaleAspectFill
 		
-			// 3. Search Bar Styling
-		searchTextField.layer.cornerRadius = 25 // Pill shape (half of height 50)
-		searchTextField.clipsToBounds = true
-			// Add a subtle shadow to the search bar
-		searchTextField.layer.shadowColor = UIColor.black.cgColor
-		searchTextField.layer.shadowOpacity = 0.05
-		searchTextField.layer.shadowOffset = CGSize(width: 0, height: 2)
-		searchTextField.layer.shadowRadius = 4
-		searchTextField.layer.masksToBounds = false // Needed for shadow
+		searchTextField.layer.cornerRadius = 8
+		searchTextField.layer.masksToBounds = true
 		
-			// 4. Cards (Details & Location) styling helper
 		styleCard(detailsCardView)
-		styleCard(locationCardView)
+			// Check if locationCardView is connected before styling
+		
 	}
 	
 	func styleCard(_ view: UIView) {
 		view.layer.cornerRadius = 20
 		view.backgroundColor = .white
-		
-			// The Elite Shadow
 		view.layer.shadowColor = UIColor.black.cgColor
 		view.layer.shadowOpacity = 0.08
 		view.layer.shadowOffset = CGSize(width: 0, height: 4)
 		view.layer.shadowRadius = 12
 		view.layer.masksToBounds = false
+	}
+}
+
+// MARK: - Image Picker Delegate
+extension ObservedDetailViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+	
+	func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+		picker.dismiss(animated: true)
+		
+		guard let image = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage else { return }
+		
+			// 1. Update UI
+		birdImageView.image = image
+		
+			// 2. Save to Disk and get filename
+		if let filename = saveImageToDocuments(image) {
+			self.selectedImageName = filename
+		}
+	}
+	
+	private func saveImageToDocuments(_ image: UIImage) -> String? {
+		guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+		let filename = UUID().uuidString + ".jpg"
+		let fileURL = getDocumentsDirectory().appendingPathComponent(filename)
+		
+		do {
+			try data.write(to: fileURL)
+			return filename // This string matches the `Bird` model `images` array expectation
+		} catch {
+			print("Error saving image: \(error)")
+			return nil
+		}
+	}
+	
+	private func getDocumentsDirectory() -> URL {
+		return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
 	}
 }
