@@ -40,10 +40,35 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     var currentSegmentIndex: Int = 0 // 0 = Observed, 1 = To Observe
     var currentSortOption: SortOption = .nameAZ // Track sort option
     
+    // Dependencies
+    var viewModel: WatchlistViewModel?
+    var currentWatchlistId: UUID?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         applyFilters()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Refresh data if possible
+        if let vm = viewModel {
+            if watchlistType == .myWatchlist {
+                self.allWatchlists = vm.watchlists
+                applyFilters()
+            } else if let id = currentWatchlistId {
+                if let updatedWatchlist = vm.watchlists.first(where: { $0.id == id }) {
+                    self.observedBirds = updatedWatchlist.observedBirds
+                    self.toObserveBirds = updatedWatchlist.toObserveBirds
+                    applyFilters()
+                } else if let updatedShared = vm.sharedWatchlists.first(where: { $0.id == id }) {
+                    self.observedBirds = updatedShared.observedBirds
+                    self.toObserveBirds = updatedShared.toObserveBirds
+                    applyFilters()
+                }
+            }
+        }
     }
     
     private func setupUI() {
@@ -135,7 +160,14 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     enum SortOption { case nameAZ, nameZA, date, rarity }
     
     @IBAction func didTapAdd(_ sender: Any) {
-        coordinator?.showAddOptions(from: self, sender: sender)
+        // Only allow adding if we have a valid context (e.g. Custom Watchlist with an ID)
+        if let id = currentWatchlistId {
+            coordinator?.showAddOptions(from: self, sender: sender, targetWatchlistId: id, viewModel: viewModel)
+        } else {
+            // Fallback or handle Shared/MyWatchlist cases where adding might be different or disabled
+            print("Cannot add: Missing Watchlist ID or context.")
+            coordinator?.showAddOptions(from: self, sender: sender)
+        }
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
