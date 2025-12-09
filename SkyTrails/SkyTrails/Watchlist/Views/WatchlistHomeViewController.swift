@@ -370,11 +370,16 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		} else if segue.identifier == "ShowSmartWatchlist" {
             guard let destVC = segue.destination as? SmartWatchlistViewController else { return }
             
+            // Pass the ViewModel
+            destVC.viewModel = self.viewModel
+            
             if let watchlists = sender as? [Watchlist] {
                 // Case 1: My Watchlist (All aggregated)
                 destVC.watchlistType = .myWatchlist
                 destVC.watchlistTitle = "My Watchlist"
                 destVC.allWatchlists = watchlists
+                // Defaulting "My Watchlist" additions to the first watchlist in the array (usually "My Watchlist")
+                destVC.currentWatchlistId = watchlists.first?.id
                 
             } else if let watchlist = sender as? Watchlist {
                 // Case 2: Single Custom Watchlist
@@ -382,6 +387,7 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
                 destVC.watchlistTitle = watchlist.title
                 destVC.observedBirds = watchlist.observedBirds
                 destVC.toObserveBirds = watchlist.toObserveBirds
+                destVC.currentWatchlistId = watchlist.id // Pass ID
                 
             } else if let sharedWatchlist = sender as? SharedWatchlist {
                 // Case 3: Shared Watchlist
@@ -389,6 +395,7 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
                 destVC.watchlistTitle = sharedWatchlist.title
                 destVC.observedBirds = sharedWatchlist.observedBirds
                 destVC.toObserveBirds = sharedWatchlist.toObserveBirds
+                destVC.currentWatchlistId = sharedWatchlist.id // Pass ID
             }
             // Pass the coordinator to the SmartWatchlistViewController
             destVC.coordinator = self.coordinator

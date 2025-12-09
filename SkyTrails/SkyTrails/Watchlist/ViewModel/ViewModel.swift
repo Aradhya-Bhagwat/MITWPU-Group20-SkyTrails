@@ -66,4 +66,23 @@ class WatchlistViewModel {
 			return currentTotal + rareInThisList
 		}
 	}
+    
+    func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) {
+        if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
+            if asObserved {
+                watchlists[index].observedBirds.append(contentsOf: birds)
+            } else {
+                watchlists[index].toObserveBirds.append(contentsOf: birds)
+            }
+            return
+        }
+        
+        if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
+            if asObserved {
+                sharedWatchlists[index].observedBirds.append(contentsOf: birds)
+            } else {
+                sharedWatchlists[index].toObserveBirds.append(contentsOf: birds)
+            }
+        }
+    }
 }

@@ -58,6 +58,7 @@ struct Watchlist {
 }
 
 struct SharedWatchlist {
+    let id: UUID = UUID()
     let title: String
     let location: String
     let dateRange: String

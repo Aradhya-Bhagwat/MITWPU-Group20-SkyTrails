@@ -18,7 +18,12 @@ class WatchlistCoordinator: Coordinator {
 	
 		// State for the Detail Loop
 	private var birdQueue: [Bird] = []
+    private var processedBirds: [Bird] = []
 	private var currentMode: WatchlistMode = .observed
+    
+    // Context for Adding
+    var targetWatchlistId: UUID?
+    weak var viewModel: WatchlistViewModel?
 	
 	init(navigationController: UINavigationController) {
 		self.navigationController = navigationController
@@ -29,11 +34,15 @@ class WatchlistCoordinator: Coordinator {
 	}
 	
 		// Step 1: Trigger Popup
-	func showAddOptions(from viewController: UIViewController, sender: Any? = nil) {
+	func showAddOptions(from viewController: UIViewController, sender: Any? = nil, targetWatchlistId: UUID? = nil, viewModel: WatchlistViewModel? = nil) {
+        self.targetWatchlistId = targetWatchlistId
+        self.viewModel = viewModel
+        
 		let alert = UIAlertController(title: "Add to Watchlist", message: nil, preferredStyle: .actionSheet)
 		
 		alert.addAction(UIAlertAction(title: "Add to Observed", style: .default, handler: { _ in
-			self.showSpeciesSelection(mode: .observed)
+            print("user clicked observed")
+			// self.showSpeciesSelection(mode: .observed)
 		}))
 		
 		alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default, handler: { _ in
@@ -66,7 +75,7 @@ class WatchlistCoordinator: Coordinator {
 		
 		vc.coordinator = self
 		vc.mode = mode
-		vc.viewModel = WatchlistViewModel() // Inject existing or new VM
+		vc.viewModel = self.viewModel ?? WatchlistViewModel() // Use existing VM if available
 		
 		navigationController.pushViewController(vc, animated: true)
 	}
@@ -74,6 +83,7 @@ class WatchlistCoordinator: Coordinator {
 		// Step 3: Start Detail Entry Loop
 	func startDetailLoop(birds: [Bird], mode: WatchlistMode) {
 		self.birdQueue = birds
+        self.processedBirds = []
 		self.currentMode = mode
 		showNextInLoop()
 	}
@@ -81,50 +91,54 @@ class WatchlistCoordinator: Coordinator {
 	func showNextInLoop() {
 		guard !birdQueue.isEmpty else {
 				// Loop finished
-			navigationController.popToRootViewController(animated: true)
+            print("Loop finished. Updating data with \(processedBirds.count) birds.")
+            
+            if let vm = viewModel, let watchlistId = targetWatchlistId {
+                let isObserved = (currentMode == .observed)
+                vm.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
+            }
+            
+            // Pop back to the Watchlist Detail (SmartWatchlistViewController)
+            // We assume it's 2 steps back (SpeciesSelection -> UnobservedDetail -> ... -> SmartWatchlist)
+            // Actually, we are in a loop of UnobservedDetailVCs.
+            // The stack is [Home, SmartWatchlist, SpeciesSelection, UnobservedDetail, UnobservedDetail...]
+            // We want to go back to SmartWatchlist.
+            
+            if let smartWatchlistVC = navigationController.viewControllers.first(where: { $0 is SmartWatchlistViewController }) {
+                navigationController.popToViewController(smartWatchlistVC, animated: true)
+            } else {
+                navigationController.popToRootViewController(animated: true)
+            }
 			return
 		}
 		
 		let bird = birdQueue.removeFirst()
 		showBirdDetail(bird: bird, mode: currentMode)
 	}
+    
+    func saveBirdDetails(bird: Bird) {
+        processedBirds.append(bird)
+        showNextInLoop()
+    }
 	
 	func showBirdDetail(bird: Bird?, mode: WatchlistMode) {
-		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-		guard let vc = storyboard.instantiateViewController(withIdentifier: "SmartFormViewController") as? SmartFormViewController else { return }
-		
-		vc.coordinator = self
-		
-			// FIXED: Correct mapping of WatchlistMode to ScreenMode
-		switch mode {
-			case .create:
-				vc.mode = .newWatchlist
-				
-			case .observed:
-					// Adding to OBSERVED = logging a bird you just saw
-					// This is an UNKNOWN species - need to capture new details
-				vc.mode = .newSpecies
-				
-			case .unobserved:
-					// Adding to UNOBSERVED = adding a bird you WANT to see
-					// This is a KNOWN species - user selected it from the list
-				vc.mode = .knownSpecies
-				vc.bird = bird
-		}
-		
-			// If we are in a loop, we push. When "Save" is tapped on VC, it calls coordinator.showNextInLoop()
-		navigationController.pushViewController(vc, animated: true)
+        if mode == .unobserved {
+            let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+            guard let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else { return }
+            
+            vc.coordinator = self
+            vc.bird = bird
+            navigationController.pushViewController(vc, animated: true)
+            return
+        }
+        
+        print("Error: SmartFormViewController is missing. Implementation pending for mode: \(mode)")
+
 	}
 	
 		// Step 4: Create Watchlist
 	func showCreateWatchlist() {
-			// Reuses SmartFormViewController in 'create' mode
-		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-		guard let vc = storyboard.instantiateViewController(withIdentifier: "SmartFormViewController") as? SmartFormViewController else { return }
-		
-		vc.coordinator = self
-		vc.mode = .newWatchlist
-		
-		navigationController.pushViewController(vc, animated: true)
+        print("Error: SmartFormViewController is missing. Implementation pending for create watchlist.")
+
 	}
 }
