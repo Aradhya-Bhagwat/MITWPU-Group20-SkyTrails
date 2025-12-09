@@ -13,6 +13,8 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
     @IBOutlet weak var progressView: UIProgressView!
     var viewModel: ViewModel = ViewModel()
     weak var delegate: IdentificationFlowStepDelegate?
+    var selectedDate: Date? = Date()
+
 
     func styleTableContainer() {
         tableContainerView.backgroundColor = .white
@@ -103,8 +105,17 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
         // Put inside UIBarButtonItem
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
+    func formatDate(_ date: Date?) -> String? {
+        guard let date = date else { return nil }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy"   // Example: 09 Dec 2025
+        return formatter.string(from: date)
+    }
 
     @objc private func nextTapped() {
+        let formattedDate = formatDate(selectedDate)
+        viewModel.data.date = formattedDate
         delegate?.didFinishStep()
     }
 
@@ -115,6 +126,7 @@ extension DateandLocationViewController: DateInputCellDelegate, IdentificationPr
 
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
         print("Selected Date:", date)
+        selectedDate = date
      
     }
     func updateProgress(current: Int, total: Int) {

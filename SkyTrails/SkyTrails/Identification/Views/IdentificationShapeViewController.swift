@@ -45,7 +45,8 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         }
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
+        let selectedShape = filteredShapes[indexPath.row]
+         viewModel.data.shape = selectedShape.name
         delegate?.didTapShapes()
 
     }
