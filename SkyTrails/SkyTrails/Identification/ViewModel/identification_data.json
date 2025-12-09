@@ -30,19 +30,68 @@
   ],
 
   "bird_shapes": [
-    { "imageView": "bird_auks_shape", "name": "Auks" },
-    { "imageView": "bird_chickadees_shape", "name": "Chickadees" },
-    { "imageView": "bird_owls_shape", "name": "Owls" },
-    { "imageView": "bird_ducks_shape", "name": "Ducks" },
-    { "imageView": "bird_hummingbird_shape", "name": "Hummingbird" },
-    { "imageView": "bird_heron_shape", "name": "Heron" },
-    { "imageView": "bird_shorebird_shape", "name": "Shorebird" },
-    { "imageView": "bird_game_bird_shape", "name": "Game Bird" },
-    { "imageView": "bird_finch_shape", "name": "Finch" },
-    { "imageView": "bird_doves_shape", "name": "Doves" },
-    { "imageView": "bird_wrens_shape", "name": "Wrens" },
-    { "imageView": "bird_hawks_and_falcons_shape", "name": "Hawks & Falcons" }
+    {
+      "imageView": "bird_auks_shape",
+      "name": "Auks",
+      "sizeCategory": [2, 3]
+    },
+    {
+      "imageView": "bird_chickadees_shape",
+      "name": "Chickadees",
+      "sizeCategory": [0, 1]
+    },
+    {
+      "imageView": "bird_owls_shape",
+      "name": "Owls",
+      "sizeCategory": [2, 3]
+    },
+    {
+      "imageView": "bird_ducks_shape",
+      "name": "Ducks",
+      "sizeCategory": [2, 3]
+    },
+    {
+      "imageView": "bird_hummingbird_shape",
+      "name": "Hummingbird",
+      "sizeCategory": [0]
+    },
+    {
+      "imageView": "bird_heron_shape",
+      "name": "Heron",
+      "sizeCategory": [3]
+    },
+    {
+      "imageView": "bird_shorebird_shape",
+      "name": "Shorebird",
+      "sizeCategory": [1, 2]
+    },
+    {
+      "imageView": "bird_game_bird_shape",
+      "name": "Game Bird",
+      "sizeCategory": [2, 3]
+    },
+    {
+      "imageView": "bird_finch_shape",
+      "name": "Finch",
+      "sizeCategory": [1]
+    },
+    {
+      "imageView": "bird_doves_shape",
+      "name": "Doves",
+      "sizeCategory": [1, 2]
+    },
+    {
+      "imageView": "bird_wrens_shape",
+      "name": "Wrens",
+      "sizeCategory": [0, 1]
+    },
+    {
+      "imageView": "bird_hawks_and_falcons_shape",
+      "name": "Hawks & Falcons",
+      "sizeCategory": [2, 3]
+    }
   ],
+
 
   "field_marks": [
     { "imageView": "bird_back", "name": "Back" },

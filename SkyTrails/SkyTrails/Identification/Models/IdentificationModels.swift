@@ -93,12 +93,12 @@ extension IdentificationModels {
     func load(from filename: String = "identification_data") throws -> IdentificationModels {
 
         guard let url = Bundle.main.url(forResource: filename, withExtension: "json") else {
-            print("❌ JSON NOT FOUND IN BUNDLE")
+ 
             throw NSError(domain: "IdentificationModels",
                 code: 404,
                 userInfo: [NSLocalizedDescriptionKey: "\(filename).json not found"])
         }
-        print("📁 JSON Loaded from:", url.path)
+
 
         let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()

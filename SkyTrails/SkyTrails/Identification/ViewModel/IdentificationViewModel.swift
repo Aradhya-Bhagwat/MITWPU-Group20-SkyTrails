@@ -1,6 +1,7 @@
 import Foundation
 
 class ViewModel {
+    var selectedSizeCategory: Int?
 
     private var model = IdentificationModels()
 

@@ -24,8 +24,8 @@ class IdentificationSizeViewController: UIViewController {
         birdSlider.minimumValue = 0
         birdSlider.maximumValue = 4
         birdSlider.isContinuous = true
-
-        updateBirdDisplay(for: 0) // initial
+        viewModel.selectedSizeCategory = 0
+        updateBirdDisplay(for: 0) 
         
         setupRightTickButton()
      
@@ -35,6 +35,7 @@ class IdentificationSizeViewController: UIViewController {
     @IBAction func sliderChanged(_ sender: UISlider) {
         let steppedValue = Int(round(sender.value)) // 0–4
         updateBirdDisplay(for: steppedValue)
+        viewModel.selectedSizeCategory = steppedValue
     }
     
     private func updateBirdDisplay(for index: Int) {
