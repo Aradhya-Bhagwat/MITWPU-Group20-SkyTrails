@@ -19,11 +19,21 @@ class IdentificationHistoryCollectionViewCell: UICollectionViewCell {
         historyImageView.layer.cornerRadius = 10.0
         specieNameLabel.text = historyItem.specieName
         
-        func formatDate(_ date: Date) -> String {
+        func formatDate(_ dateString: String) -> String {
+
             let formatter = DateFormatter()
-            formatter.dateFormat = "d MMM"
-            return formatter.string(from: date)
+            formatter.dateFormat = "yyyy-MM-dd"
+
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateFormat = "d MMM"
+
+            if let date = formatter.date(from: dateString) {
+                return outputFormatter.string(from: date)
+            } else {
+                return dateString   
+            }
         }
+
         dateLabel.text = formatDate(historyItem.date)
     }
 }

@@ -15,7 +15,8 @@
 import UIKit
 class IdentificationCoordinator{
     private let navigationController: UINavigationController
-
+    
+    let viewModel = ViewModel()
     private var steps: [IdentificationStep] = []
     private var currentIndex: Int = 0
     private var totalSteps: Int { steps.count }
@@ -29,6 +30,7 @@ class IdentificationCoordinator{
     func start(){
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "IdentificationViewController") as! IdentificationViewController
+        vc.viewModel = viewModel
         vc.coordinator = self
         navigationController.setViewControllers([vc], animated: true)
         
@@ -36,16 +38,16 @@ class IdentificationCoordinator{
     
     func configureSteps(from options: [FieldMarkType]){
         steps.removeAll()
-        for option in options where option.isSelected {
+        for option in options where option.isSelected ?? false {
             switch option.fieldMarkName {
-            case "Size":
-                steps.append(.size)
-            case "Field Marks":
-                steps.append(.fieldMarks)
-            case "Shape":
-                steps.append(.shape)
             case "Location & Date":
                 steps.append(.dateLocation)
+            case "Size":
+                steps.append(.size)
+            case "Shape":
+                steps.append(.shape)
+            case "Field Marks":
+                steps.append(.fieldMarks)
             default:
                 break
             }
@@ -66,23 +68,25 @@ class IdentificationCoordinator{
         let screen: UIViewController
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         switch step {
-            case .size:
-                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationSizeViewController" ) as! IdentificationSizeViewController
-                vc.delegate = self
-               screen = vc
-                
-            case .fieldMarks:
-                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationFieldMarksViewController" ) as! IdentificationFieldMarksViewController
-                vc.delegate = self
-            screen = vc
-        case .shape:
-            let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationShapeViewController" ) as! IdentificationShapeViewController
-            vc.delegate = self
-            screen = vc
-            
             case .dateLocation:
             let vc = storyboard.instantiateViewController( withIdentifier: "DateandLocationViewController" ) as! DateandLocationViewController
             vc.delegate = self
+            vc.viewModel = viewModel
+            screen = vc
+            case .size:
+                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationSizeViewController" ) as! IdentificationSizeViewController
+                vc.delegate = self
+                vc.viewModel = viewModel
+               screen = vc
+            case .shape:
+                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationShapeViewController" ) as! IdentificationShapeViewController
+                vc.delegate = self
+            vc.viewModel = viewModel
+                screen = vc
+            case .fieldMarks:
+                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationFieldMarksViewController" ) as! IdentificationFieldMarksViewController
+                vc.delegate = self
+            vc.viewModel = viewModel
             screen = vc
         }
         if let progressVC = screen as? (UIViewController & IdentificationProgressUpdatable) {

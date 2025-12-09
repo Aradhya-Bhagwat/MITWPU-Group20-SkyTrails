@@ -14,7 +14,7 @@ class IdentificationSizeViewController: UIViewController {
     @IBOutlet weak var birdLabel: UILabel!
     
     @IBOutlet weak var progressView: UIProgressView!
-
+    var viewModel: ViewModel = ViewModel()
     weak var delegate: IdentificationFlowStepDelegate?
 
     override func viewDidLoad() {

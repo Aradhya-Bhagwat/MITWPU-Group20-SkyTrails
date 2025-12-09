@@ -8,10 +8,10 @@
 import UIKit
 
 enum IdentificationStep{
-    case size
-    case fieldMarks
-    case shape
     case dateLocation
+    case size
+    case shape
+    case fieldMarks
 }
 
 protocol IdentificationFlowStepDelegate: AnyObject {

@@ -11,10 +11,8 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
     @IBOutlet weak var progressView: UIProgressView!
-
-    weak var delegate: IdentificationFlowStepDelegate?
-
     var viewModel: ViewModel = ViewModel()
+    weak var delegate: IdentificationFlowStepDelegate?
 
     func styleTableContainer() {
         tableContainerView.backgroundColor = .white

@@ -16,6 +16,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     var coordinator: IdentificationCoordinator?
 
     var viewModel: ViewModel = ViewModel()
+
+
     var history: [History] = []
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -52,41 +54,19 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-      
+       
         tableView.delegate = self
         tableView.dataSource = self
         
-        // Configure startButton appearance using UIButton.Configuration on iOS 15+
-        if #available(iOS 15.0, *) {
-            var config = startButton.configuration ?? .filled()
-            config.baseBackgroundColor = .white
-            config.baseForegroundColor = .black
-            config.background.cornerRadius = 12
-            startButton.configuration = config
-            startButton.tintColor = .white
 
-            // Control highlight behavior without deprecated API
-            startButton.configurationUpdateHandler = { button in
-                guard var updated = button.configuration else { return }
-                if button.isHighlighted {
-                    // Keep same appearance (equivalent to "no dimming")
-                    updated.baseBackgroundColor = .white
-                    updated.baseForegroundColor = .black
-                    updated.imageProperties.tintColor = .white
-                } else {
-                    updated.baseBackgroundColor = .white
-                    updated.baseForegroundColor = .black
-                    updated.imageProperties.tintColor = .white
-                }
-                button.configuration = updated
-            }
-        } else {
-            // Fallback for iOS versions before 15
-            startButton.backgroundColor = .white
-            startButton.setTitleColor(.black, for: .normal)
-            startButton.tintColor = .white
-            // Do not set adjustsImageWhenHighlighted (deprecated on iOS 15+)
-        }
+
+     
+        startButton.backgroundColor = .white
+        startButton.setTitleColor(.black, for: .normal)
+        startButton.tintColor = .white
+        startButton.adjustsImageWhenHighlighted = false
+        
+
        
         tableView.rowHeight = 56
     
@@ -96,7 +76,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         collectionView.setCollectionViewLayout(layout, animated: true)
         collectionView.dataSource = self
         collectionView.delegate = self
-        history = viewModel.migrationHistory
+        history = viewModel.histories
+
         collectionView.reloadData()
         if coordinator == nil, let nav = self.navigationController {
                    coordinator = IdentificationCoordinator(navigationController: nav)
@@ -144,13 +125,16 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             cell.imageView?.image = nil
         }
         
-        cell.accessoryType = item.isSelected ? .checkmark : .none
+        cell.accessoryType = (item.isSelected ?? false) ? .checkmark : .none
+
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        viewModel.fieldMarkOptions[indexPath.row].isSelected.toggle()
+        viewModel.fieldMarkOptions[indexPath.row].isSelected = !(viewModel.fieldMarkOptions[indexPath.row].isSelected ?? false)
+
         tableView.reloadRows(at: [indexPath], with: .none)
+
     }
     
     func generateLayout() -> UICollectionViewLayout {
@@ -173,9 +157,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
 
     @IBAction func startButtonTapped(_ sender: UIButton) {
-        print("DEBUG: startButtonTapped — coordinator is \(coordinator == nil ? "nil" : "NOT nil")")
+      
 
-        let selected = viewModel.fieldMarkOptions.filter { $0.isSelected }
+        let selected = viewModel.fieldMarkOptions.filter { $0.isSelected ?? false }
+
 
         if selected.count < 2 {
             let alert = UIAlertController(
