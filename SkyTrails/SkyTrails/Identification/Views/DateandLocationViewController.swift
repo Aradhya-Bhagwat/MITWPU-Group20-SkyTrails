@@ -67,6 +67,8 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.largeTitleDisplayMode = .never
+        navigationController?.navigationBar.prefersLargeTitles = false
         let nib = UINib(nibName: "DateInputCell", bundle: nil)
           dateandlocationTableView.register(nib, forCellReuseIdentifier: "DateInputCell")
       

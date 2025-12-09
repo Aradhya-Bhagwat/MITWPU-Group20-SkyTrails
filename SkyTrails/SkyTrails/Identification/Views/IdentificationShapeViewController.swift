@@ -16,6 +16,9 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     @IBOutlet weak var progressView: UIProgressView!
 
     var viewModel: ViewModel = ViewModel()
+    var selectedSizeIndex: Int?
+    var filteredShapes: [BirdShape] = []
+
     weak var delegate: IdentificationFlowStepDelegate?
 
     func styleTableContainer() {
@@ -30,7 +33,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewModel.birdShapes.count
+        filteredShapes.count
     }
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -43,7 +46,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "shape_cell", for: indexPath)
-        let item = viewModel.birdShapes[indexPath.row]
+        let item = filteredShapes[indexPath.row]
         cell.textLabel?.text = item.name
         if let img = UIImage(named: item.imageView) {
     
@@ -62,6 +65,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     override func viewDidLoad() {
         super.viewDidLoad()
         styleTableContainer()
+        applySizeFilter()
         shapeTableView.delegate = self
         shapeTableView.dataSource = self
         setupRightTickButton()
@@ -88,6 +92,16 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
 
         // Put inside UIBarButtonItem
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
+    }
+    func applySizeFilter() {
+        guard let sizeIndex = selectedSizeIndex else {
+            filteredShapes = viewModel.birdShapes
+            return
+        }
+
+        filteredShapes = viewModel.birdShapes.filter { shape in
+            shape.sizeCategory?.contains(sizeIndex) ?? false
+        }
     }
 
     @objc private func nextTapped() {

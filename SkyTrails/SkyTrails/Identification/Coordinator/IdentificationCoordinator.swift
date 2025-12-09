@@ -82,6 +82,8 @@ class IdentificationCoordinator{
                 let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationShapeViewController" ) as! IdentificationShapeViewController
                 vc.delegate = self
             vc.viewModel = viewModel
+            vc.selectedSizeIndex = viewModel.selectedSizeCategory
+
                 screen = vc
             case .fieldMarks:
                 let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationFieldMarksViewController" ) as! IdentificationFieldMarksViewController
