@@ -48,6 +48,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         super.viewDidLoad()
         setupUI()
         applyFilters()
+        setupGestureRecognizers()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -202,6 +203,61 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         }
         
         present(alert, animated: true)
+    }
+    
+    // MARK: - Gesture Recognizer Setup
+    private func setupGestureRecognizers() {
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        tableView.addGestureRecognizer(longPressGesture)
+    }
+
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        let point = gesture.location(in: tableView)
+        guard let indexPath = tableView.indexPathForRow(at: point) else { return }
+
+        let bird: Bird
+        if watchlistType == .myWatchlist {
+            bird = filteredSections[indexPath.section][indexPath.row]
+        } else {
+            bird = currentList[indexPath.row]
+        }
+
+        let alert = UIAlertController(title: bird.name, message: nil, preferredStyle: .actionSheet)
+
+        if currentSegmentIndex == 1 { // To Observe Tab
+            alert.addAction(UIAlertAction(title: "Info", style: .default) { _ in
+                self.showBirdInfo(bird)
+            })
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+                self.deleteBird(bird, at: indexPath)
+            })
+            alert.addAction(UIAlertAction(title: "Add Reminder", style: .default) { _ in
+                self.addReminder(for: bird)
+            })
+        } else if currentSegmentIndex == 0 { // Observed Tab
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+                self.deleteBird(bird, at: indexPath)
+            })
+        }
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func showBirdInfo(_ bird: Bird) {
+        // Implement logic to show bird info
+        print("Showing info for bird: \(bird.name)")
+    }
+
+    private func deleteBird(_ bird: Bird, at indexPath: IndexPath) {
+        // Implement logic to delete bird
+        print("Deleting bird: \(bird.name)")
+    }
+
+    private func addReminder(for bird: Bird) {
+        // Implement logic to add reminder
+        print("Adding reminder for bird: \(bird.name)")
     }
 }
 

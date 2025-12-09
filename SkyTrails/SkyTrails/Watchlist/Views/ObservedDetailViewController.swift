@@ -1,4 +1,4 @@
-	//
+//
 	//  ObservedDetailViewController.swift
 	//  SkyTrails
 	//
@@ -60,6 +60,7 @@ class ObservedDetailViewController: UIViewController {
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		self.title = bird?.name
 		setupStyling()
 		setupInteractions()
         setupAutocomplete()
