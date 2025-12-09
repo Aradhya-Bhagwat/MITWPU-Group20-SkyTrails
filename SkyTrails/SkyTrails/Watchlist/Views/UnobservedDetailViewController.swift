@@ -47,6 +47,10 @@ class UnobservedDetailViewController: UIViewController {
 		    // MARK: - Lifecycle
 		    override func viewDidLoad() {
 		        super.viewDidLoad()
+                self.title = bird?.name
+                
+                // Display empty/default fields for observation data
+                // Example: observationField.text = ""
 		        
 		        // 1. Setup the visual styling (Round corners, shadows)
 		        setupStyling()
