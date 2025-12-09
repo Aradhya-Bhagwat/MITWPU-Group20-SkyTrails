@@ -14,6 +14,8 @@ class IdentificationSizeViewController: UIViewController {
     @IBOutlet weak var birdLabel: UILabel!
     
     @IBOutlet weak var progressView: UIProgressView!
+    var selectedSize: String?
+
     var viewModel: ViewModel = ViewModel()
     weak var delegate: IdentificationFlowStepDelegate?
 
@@ -31,9 +33,9 @@ class IdentificationSizeViewController: UIViewController {
      
 
     }
-    
+ 
     @IBAction func sliderChanged(_ sender: UISlider) {
-        let steppedValue = Int(round(sender.value)) // 0–4
+       let steppedValue = Int(round(sender.value)) 
         updateBirdDisplay(for: steppedValue)
         viewModel.selectedSizeCategory = steppedValue
     }
@@ -82,9 +84,21 @@ class IdentificationSizeViewController: UIViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
 
-  
+    func sizeDescription(for index: Int) -> String {
+        switch index {
+        case 0: return "Less than 6 inches"
+        case 1: return "6–14 inches"
+        case 2: return "14–25 inches"
+        case 3: return "25–59 inches"
+        case 4: return "59 inches and over"
+        default: return ""
+        }
+    }
+
     @objc private func nextTapped() {
         delegate?.didFinishStep()
+        let sizeText = sizeDescription(for: viewModel.selectedSizeCategory ?? 0)
+        viewModel.data.size = sizeText
     }
     
 }

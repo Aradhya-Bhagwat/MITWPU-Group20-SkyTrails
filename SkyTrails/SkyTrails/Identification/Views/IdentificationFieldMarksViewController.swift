@@ -145,10 +145,12 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     }
 
     @objc private func nextTapped() {
+        let selectedNames = selectedFieldMarks.map { viewModel.fieldMarks[$0].name }
+        viewModel.data.fieldMarks = selectedNames
         delegate?.didFinishStep()
     }
 
-   
+    
 
 }
 

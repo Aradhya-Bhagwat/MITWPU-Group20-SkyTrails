@@ -117,6 +117,7 @@ class IdentificationCoordinator{
         case .gui:
             let vc = storyboard.instantiateViewController(withIdentifier: "GUIViewController") as! GUIViewController
             vc.delegate = self
+            vc.data = viewModel.data
             screen = vc
             
         case .result:

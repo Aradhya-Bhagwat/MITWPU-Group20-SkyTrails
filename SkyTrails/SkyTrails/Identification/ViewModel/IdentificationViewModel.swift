@@ -4,7 +4,7 @@ class ViewModel {
     var selectedSizeCategory: Int?
 
     private var model = IdentificationModels()
-
+    var data = IdentificationData()
     init() {
         print("📌 ViewModel initialized")
     }
