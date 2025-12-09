@@ -1,0 +1,104 @@
+{
+  "predicted_migrations": [
+    {
+      "title": "Migrating Soon",
+      "subtitle": "Expected Movement in Winter",
+      "imageName": "migration_soon_1"
+    },
+    {
+      "title": "Winter Migration",
+      "subtitle": "Birds Traveling Across Regions",
+      "imageName": "migration_soon_2"
+    }
+  ],
+  "upcoming_birds": [
+    {
+      "imageName": "arctic_tern",
+      "title": "Arctic Tern",
+      "date": "17 Nov ’25 – 02 Dec ’25"
+    },
+    {
+      "imageName": "brown_headed_barbet",
+      "title": "Brown Headed Barbet",
+      "date": "20 Oct ’25 – 02 Dec ’25"
+    },
+    {
+      "imageName": "eurasian_wigeon",
+      "title": "Eurasian Wigeon",
+      "date": "05 Nov ’25 – 15 Dec ’25"
+    }
+  ],
+  "bird_categories": [
+    {
+      "icon": "shorebirds_icon",
+      "title": "Shorebirds"
+    },
+    {
+      "icon": "forest_icon",
+      "title": "Forest Birds"
+    },
+    {
+      "icon": "raptors_icon",
+      "title": "Raptors"
+    },
+    {
+      "icon": "songbirds_icon",
+      "title": "Songbirds"
+    }
+  ],
+  "popular_spots": [
+    {
+      "imageName": "spot_kashmir",
+      "title": "Kashmir Valley",
+      "location": "Jammu & Kashmir"
+    },
+    {
+      "imageName": "spot_bharatpur",
+      "title": "Keoladeo Sanctuary",
+      "location": "Rajasthan"
+    },
+    {
+      "imageName": "spot_sundarbans",
+      "title": "Sundarbans Delta",
+      "location": "West Bengal"
+    }
+  ],
+  "dynamic_predictions": [
+    {
+      "card_type": "migration",
+      "bird_name": "Wire-tailed Swallow",
+      "bird_image_name": "wire_tailed_swallow",
+      "start_location": "Ayodhya",
+      "end_location": "Pune",
+      "date_range": "05 March '26   09 June '26",
+      "current_progress": 0.65,
+      "path_points": [
+        {"lat": 11.7906, "lon": 82.1996},
+        {"lat": 12.1000, "lon": 79.8300},
+        {"lat": 13.1000, "lon": 76.8000},
+        {"lat": 15.5204, "lon": 73.8567}
+      ]
+    },
+    {
+      "card_type": "hotspot",
+      "place_name": "Khadakwasla Backwaters",
+      "place_image": "Khadakwasla",
+      "species_count": 5,
+      "distance_string": "12.6 km away",
+      "date_range": "28 Nov '25 - 06 Jan '26",
+      "area_boundary": [
+        {"lat": 18.4410, "lon": 73.7410},
+        {"lat": 18.4300, "lon": 73.7250},
+        {"lat": 18.4100, "lon": 73.7100},
+        {"lat": 18.4000, "lon": 73.7300},
+        {"lat": 18.4050, "lon": 73.7650},
+        {"lat": 18.4200, "lon": 73.7800}
+      ],
+      "hotspots": [
+        {"lat": 18.4300, "lon": 73.7400, "bird_image_name": "flamingo"},
+        {"lat": 18.4220, "lon": 73.7550, "bird_image_name": "kingfisher"},
+        {"lat": 18.4100, "lon": 73.7600, "bird_image_name": "crow"}
+      ]
+    }
+  ]
+}
