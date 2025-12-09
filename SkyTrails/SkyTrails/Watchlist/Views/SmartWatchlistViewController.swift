@@ -263,4 +263,39 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100 // Or UITableView.automaticDimension
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        let bird: Bird
+        if watchlistType == .myWatchlist {
+            bird = filteredSections[indexPath.section][indexPath.row]
+        } else {
+            bird = currentList[indexPath.row]
+        }
+        
+        if currentSegmentIndex == 0 {
+            // Observed
+            performSegue(withIdentifier: "ShowObservedDetail", sender: bird)
+        } else {
+            // To Observe
+            performSegue(withIdentifier: "ShowUnobservedDetailFromWatchlist", sender: bird)
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ShowObservedDetail",
+           let vc = segue.destination as? ObservedDetailViewController,
+           let bird = sender as? Bird {
+            vc.bird = bird
+            vc.watchlistId = self.currentWatchlistId
+            vc.coordinator = self.coordinator
+        } else if segue.identifier == "ShowUnobservedDetailFromWatchlist",
+                  let vc = segue.destination as? UnobservedDetailViewController,
+                  let bird = sender as? Bird {
+            vc.bird = bird
+            vc.watchlistId = self.currentWatchlistId
+            vc.coordinator = self.coordinator
+        }
+    }
 }

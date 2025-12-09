@@ -421,12 +421,13 @@
                         <outlet property="segmentedControl" destination="8qu-DE-Keg" id="3ak-rq-Tjb"/>
                         <outlet property="tableView" destination="yez-to-lUt" id="YKE-Nn-i0H"/>
                         <segue destination="SpeciesSelectionVC" kind="show" identifier="ShowSpeciesSelection" id="WlZ-eO-mfp"/>
-                        <segue destination="uAV-Lc-SQb" kind="show" id="Q3h-G3-Lju"/>
+                        <segue destination="uAV-Lc-SQb" kind="show" identifier="ShowObservedDetail" id="Q3h-G3-Lju"/>
+                        <segue destination="I9i-aB-Ta1" kind="show" identifier="ShowUnobservedDetailFromWatchlist" id="New-Seg-Id"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="OXF-Hz-DyX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4964" y="1084"/>
+            <point key="canvasLocation" x="6043" y="1019"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Uh5-pg-t6m">
@@ -806,10 +807,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="E8v-ty-KlX">
-                        <rightBarButtonItems>
-                            <barButtonItem title="Item" image="chevron.right" catalog="system" id="Mzf-nY-k24"/>
-                            <barButtonItem title="Item" image="ellipsis" catalog="system" id="Pjj-Ev-UTa"/>
-                        </rightBarButtonItems>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="chevron.right" catalog="system" id="Mzf-nY-k24"/>
                     </navigationItem>
                     <connections>
                         <outlet property="birdImageView" destination="1Bj-th-8bY" id="bxd-kM-hAi"/>
@@ -845,10 +843,10 @@
                                                 <rect key="frame" x="20" y="24" width="362" height="220"/>
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2Pe-sK-fWr">
-                                                        <rect key="frame" x="143.66666666666666" y="72.666666666666686" width="75" height="75"/>
+                                                        <rect key="frame" x="31" y="10" width="300" height="200"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="75" id="Mss-7d-81P"/>
-                                                            <constraint firstAttribute="width" constant="75" id="PHx-nb-Tyl"/>
+                                                            <constraint firstAttribute="height" constant="200" id="Mss-7d-81P"/>
+                                                            <constraint firstAttribute="width" constant="300" id="PHx-nb-Tyl"/>
                                                         </constraints>
                                                         <userDefinedRuntimeAttributes>
                                                             <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
@@ -1085,21 +1083,22 @@
                         <outlet property="dateLabel" destination="8nZ-5d-hox" id="9zi-Rf-wh7"/>
                         <outlet property="dateTimePicker" destination="2dj-q9-RH4" id="b8J-zu-JSU"/>
                         <outlet property="detailsCardView" destination="Z2D-L9-Pra" id="8gO-2l-nH9"/>
+                        <outlet property="locationTextField" destination="vzo-T0-ccf" id="new-loc-id"/>
                         <outlet property="notesTextView" destination="vcq-hq-eeV" id="aJp-Tl-jl8"/>
-                        <outlet property="searchTextField" destination="vzo-T0-ccf" id="1PW-bv-5tU"/>
+                        <outlet property="searchTextField" destination="alD-NS-MOa" id="new-name-id"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Mj8-HM-ZVX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="6248" y="1667"/>
+            <point key="canvasLocation" x="6704" y="1905"/>
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
+        <segue reference="New-Seg-Id"/>
         <segue reference="WlZ-eO-mfp"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="chevron.right" catalog="system" width="97" height="128"/>
-        <image name="ellipsis" catalog="system" width="128" height="37"/>
         <image name="line.3.horizontal.decrease" catalog="system" width="128" height="73"/>
         <image name="location.fill" catalog="system" width="128" height="119"/>
         <image name="map" catalog="system" width="128" height="112"/>
