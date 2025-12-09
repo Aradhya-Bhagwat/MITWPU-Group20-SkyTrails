@@ -165,7 +165,7 @@
                             <constraint firstItem="deH-Bp-JJV" firstAttribute="top" secondItem="sOI-JW-pbl" secondAttribute="top" id="meM-LO-huO"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Identification" id="h4S-7J-WvE"/>
+                    <navigationItem key="navigationItem" title="Identification" largeTitleDisplayMode="always" id="h4S-7J-WvE"/>
                     <connections>
                         <outlet property="collectionView" destination="vFz-1I-rOM" id="Vi4-jj-4kl"/>
                         <outlet property="startButton" destination="FQA-lr-sA1" id="ObG-E6-yqv"/>
