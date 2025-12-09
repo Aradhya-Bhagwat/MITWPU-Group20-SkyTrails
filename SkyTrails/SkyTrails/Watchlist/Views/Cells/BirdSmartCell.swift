@@ -80,7 +80,16 @@ class BirdSmartCell: UITableViewCell {
         
         // Image
         if let imageName = bird.images.first {
-            birdImageView.image = UIImage(named: imageName)
+            if let assetImage = UIImage(named: imageName) {
+                birdImageView.image = assetImage
+            } else {
+                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
+                if let docImage = UIImage(contentsOfFile: fileURL.path) {
+                    birdImageView.image = docImage
+                } else {
+                    birdImageView.image = UIImage(systemName: "photo")
+                }
+            }
         } else {
             birdImageView.image = nil 
         }

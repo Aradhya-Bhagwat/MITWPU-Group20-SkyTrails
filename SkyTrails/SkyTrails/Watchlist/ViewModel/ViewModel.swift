@@ -85,4 +85,25 @@ class WatchlistViewModel {
             }
         }
     }
+    
+    func deleteBird(_ bird: Bird, from watchlistId: UUID) {
+        if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
+            if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                watchlists[index].observedBirds.remove(at: birdIndex)
+            }
+            if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                watchlists[index].toObserveBirds.remove(at: birdIndex)
+            }
+            return
+        }
+        
+        if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
+            if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                sharedWatchlists[index].observedBirds.remove(at: birdIndex)
+            }
+            if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                sharedWatchlists[index].toObserveBirds.remove(at: birdIndex)
+            }
+        }
+    }
 }
