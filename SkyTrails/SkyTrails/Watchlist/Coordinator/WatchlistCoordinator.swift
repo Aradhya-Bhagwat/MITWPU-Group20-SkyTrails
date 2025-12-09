@@ -33,40 +33,7 @@ class WatchlistCoordinator: Coordinator {
 			// Entry point logic if needed
 	}
 	
-		// Step 1: Trigger Popup
-	func showAddOptions(from viewController: UIViewController, sender: Any? = nil, targetWatchlistId: UUID? = nil, viewModel: WatchlistViewModel? = nil) {
-        self.targetWatchlistId = targetWatchlistId
-        self.viewModel = viewModel
-        
-		let alert = UIAlertController(title: "Add to Watchlist", message: nil, preferredStyle: .actionSheet)
-		
-		alert.addAction(UIAlertAction(title: "Add to Observed", style: .default, handler: { _ in
-            print("user clicked observed")
-			// self.showSpeciesSelection(mode: .observed)
-		}))
-		
-		alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default, handler: { _ in
-			self.showSpeciesSelection(mode: .unobserved)
-		}))
-		
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-		
-		if let popoverController = alert.popoverPresentationController {
-			if let barButtonItem = sender as? UIBarButtonItem {
-				popoverController.barButtonItem = barButtonItem
-			} else if let sourceView = sender as? UIView {
-				popoverController.sourceView = sourceView
-				popoverController.sourceRect = sourceView.bounds
-			} else {
-					// Fallback for iPad if sender is unknown or not view/item: center it
-				popoverController.sourceView = viewController.view
-				popoverController.sourceRect = CGRect(x: viewController.view.bounds.midX, y: viewController.view.bounds.midY, width: 0, height: 0)
-				popoverController.permittedArrowDirections = []
-			}
-		}
-		
-		viewController.present(alert, animated: true)
-	}
+
 	
 		// Step 2: Screen #3 (Species Selection)
 	func showSpeciesSelection(mode: WatchlistMode) {
@@ -88,57 +55,116 @@ class WatchlistCoordinator: Coordinator {
 		showNextInLoop()
 	}
 	
+
+    func saveBirdDetails(bird: Bird) {
+        processedBirds.append(bird)
+        showNextInLoop()
+    }
+
+	
+		// Step 4: Create Watchlist
+	func showCreateWatchlist() {
+        print("Error: SmartFormViewController is missing. Implementation pending for create watchlist.")
+
+	}
+	
+		// In WatchlistCoordinator.swift
+	
+		// ... existing init ...
+	
+		// Step 1: Trigger Popup
+	func showAddOptions(from viewController: UIViewController, sender: Any? = nil, targetWatchlistId: UUID? = nil, viewModel: WatchlistViewModel? = nil) {
+		self.targetWatchlistId = targetWatchlistId
+		self.viewModel = viewModel
+		
+		let alert = UIAlertController(title: "Add to Watchlist", message: nil, preferredStyle: .actionSheet)
+		
+			// 1. UPDATED: Add to Observed -> Direct Flow
+		alert.addAction(UIAlertAction(title: "Add to Observed", style: .default, handler: { _ in
+			self.currentMode = .observed
+			self.processedBirds = [] // Reset processed birds
+			self.birdQueue = []      // No queue needed for single create
+									 // Direct call to show detail with nil bird (indicating Create Mode)
+			self.showBirdDetail(bird: nil, mode: .observed)
+		}))
+		
+		alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default, handler: { _ in
+			self.showSpeciesSelection(mode: .unobserved)
+		}))
+		
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+		
+			// ... (Popover presentation code remains the same) ...
+		if let popoverController = alert.popoverPresentationController {
+			if let barButtonItem = sender as? UIBarButtonItem {
+				popoverController.barButtonItem = barButtonItem
+			} else if let sourceView = sender as? UIView {
+				popoverController.sourceView = sourceView
+				popoverController.sourceRect = sourceView.bounds
+			} else {
+				popoverController.sourceView = viewController.view
+				popoverController.sourceRect = CGRect(x: viewController.view.bounds.midX, y: viewController.view.bounds.midY, width: 0, height: 0)
+				popoverController.permittedArrowDirections = []
+			}
+		}
+		viewController.present(alert, animated: true)
+	}
+	
+		// ... existing showSpeciesSelection ...
+		// ... existing startDetailLoop ...
+	
+		// Step 3 Update: Handle single entry save loop
 	func showNextInLoop() {
-		guard !birdQueue.isEmpty else {
-				// Loop finished
-            print("Loop finished. Updating data with \(processedBirds.count) birds.")
-            
-            if let vm = viewModel, let watchlistId = targetWatchlistId {
-                let isObserved = (currentMode == .observed)
-                vm.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
-            }
-            
-            // Pop back to the Watchlist Detail (SmartWatchlistViewController)
-            // We assume it's 2 steps back (SpeciesSelection -> UnobservedDetail -> ... -> SmartWatchlist)
-            // Actually, we are in a loop of UnobservedDetailVCs.
-            // The stack is [Home, SmartWatchlist, SpeciesSelection, UnobservedDetail, UnobservedDetail...]
-            // We want to go back to SmartWatchlist.
-            
-            if let smartWatchlistVC = navigationController.viewControllers.first(where: { $0 is SmartWatchlistViewController }) {
-                navigationController.popToViewController(smartWatchlistVC, animated: true)
-            } else {
-                navigationController.popToRootViewController(animated: true)
-            }
+			// If queue is empty, we are done
+		if birdQueue.isEmpty {
+				// Check if we have processed birds to save
+			if !processedBirds.isEmpty {
+				print("Loop finished. Updating data with \(processedBirds.count) birds.")
+				
+				if let vm = viewModel, let watchlistId = targetWatchlistId {
+					let isObserved = (currentMode == .observed)
+					vm.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
+				}
+			}
+			
+				// Navigate Back logic...
+			if let smartWatchlistVC = navigationController.viewControllers.first(where: { $0 is SmartWatchlistViewController }) {
+				navigationController.popToViewController(smartWatchlistVC, animated: true)
+			} else {
+				navigationController.popToRootViewController(animated: true)
+			}
 			return
 		}
 		
 		let bird = birdQueue.removeFirst()
 		showBirdDetail(bird: bird, mode: currentMode)
 	}
-    
-    func saveBirdDetails(bird: Bird) {
-        processedBirds.append(bird)
-        showNextInLoop()
-    }
 	
+		// Step 4 Update: Instantiate Observed Detail
 	func showBirdDetail(bird: Bird?, mode: WatchlistMode) {
-        if mode == .unobserved {
-            let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-            guard let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else { return }
-            
-            vc.coordinator = self
-            vc.bird = bird
-            navigationController.pushViewController(vc, animated: true)
-            return
-        }
-        
-        print("Error: SmartFormViewController is missing. Implementation pending for mode: \(mode)")
-
-	}
-	
-		// Step 4: Create Watchlist
-	func showCreateWatchlist() {
-        print("Error: SmartFormViewController is missing. Implementation pending for create watchlist.")
-
+		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+		
+		if mode == .unobserved {
+			guard let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else { return }
+			vc.coordinator = self
+			vc.bird = bird
+			navigationController.pushViewController(vc, animated: true)
+			return
+		}
+		
+			// NEW: Handle Observed Mode
+		if mode == .observed {
+				// Using the Storyboard ID "ObservedDetailViewController"
+			guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
+			
+			vc.coordinator = self
+			vc.bird = bird // Will be nil for "Add New"
+			
+				// Push directly onto navigation stack
+			navigationController.pushViewController(vc, animated: true)
+			return
+		}
+		
+		print("Error: Unknown mode: \(mode)")
 	}
 }
