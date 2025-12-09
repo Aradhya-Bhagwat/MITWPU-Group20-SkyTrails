@@ -12,10 +12,13 @@ enum IdentificationStep{
     case size
     case shape
     case fieldMarks
+    case gui
+    case result
 }
 
 protocol IdentificationFlowStepDelegate: AnyObject {
     func didFinishStep()
+    func didTapShapes()
 }
 protocol IdentificationProgressUpdatable: AnyObject {
     func updateProgress(current: Int, total: Int)

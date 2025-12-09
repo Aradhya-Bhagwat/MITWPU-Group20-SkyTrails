@@ -13,15 +13,18 @@
 //  Created by SDC-USER on 25/11/25.
 //
 import UIKit
+
+
 class IdentificationCoordinator{
     private let navigationController: UINavigationController
     
     let viewModel = ViewModel()
     private var steps: [IdentificationStep] = []
     private var currentIndex: Int = 0
-    private var totalSteps: Int { steps.count }
+    private var totalSteps: Int { steps.count  }
     private var currentStepNumber: Int { currentIndex }
-
+    private var progressSteps: [IdentificationStep] = []
+    
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -38,6 +41,7 @@ class IdentificationCoordinator{
     
     func configureSteps(from options: [FieldMarkType]){
         steps.removeAll()
+        let selected = options.filter { $0.isSelected ?? false }
         for option in options where option.isSelected ?? false {
             switch option.fieldMarkName {
             case "Location & Date":
@@ -52,14 +56,34 @@ class IdentificationCoordinator{
                 break
             }
         }
+        if selected.contains(where: { $0.fieldMarkName == "Field Marks" }) {
+            steps.append(.gui)
+        }
+        
+        steps.append(.result)
+        
+        progressSteps = steps.filter { step in
+            switch step {
+            case .gui, .result:
+                return false
+            default:
+                return true
+            }
+        }
         
         currentIndex = 0
         goToNextStep()
     }
-    
+    func goDirectlyToResult() {
+        let storyboard = UIStoryboard(name: "Identification", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
+        vc.viewModel = viewModel
+
+        navigationController.pushViewController(vc, animated: true)
+    }
+
     func goToNextStep(){
         guard currentIndex < steps.count else {
-            navigationController.popViewController(animated: true)
             return
         }
         
@@ -68,41 +92,82 @@ class IdentificationCoordinator{
         let screen: UIViewController
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         switch step {
-            case .dateLocation:
+        case .dateLocation:
             let vc = storyboard.instantiateViewController( withIdentifier: "DateandLocationViewController" ) as! DateandLocationViewController
             vc.delegate = self
             vc.viewModel = viewModel
             screen = vc
-            case .size:
-                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationSizeViewController" ) as! IdentificationSizeViewController
-                vc.delegate = self
-                vc.viewModel = viewModel
-               screen = vc
-            case .shape:
-                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationShapeViewController" ) as! IdentificationShapeViewController
-                vc.delegate = self
+        case .size:
+            let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationSizeViewController" ) as! IdentificationSizeViewController
+            vc.delegate = self
+            vc.viewModel = viewModel
+            screen = vc
+        case .shape:
+            let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationShapeViewController" ) as! IdentificationShapeViewController
+            vc.delegate = self
             vc.viewModel = viewModel
             vc.selectedSizeIndex = viewModel.selectedSizeCategory
-
-                screen = vc
-            case .fieldMarks:
-                let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationFieldMarksViewController" ) as! IdentificationFieldMarksViewController
-                vc.delegate = self
+            
+            screen = vc
+        case .fieldMarks:
+            let vc = storyboard.instantiateViewController( withIdentifier: "IdentificationFieldMarksViewController" ) as! IdentificationFieldMarksViewController
+            vc.delegate = self
+            vc.viewModel = viewModel
+            screen = vc
+        case .gui:
+            let vc = storyboard.instantiateViewController(withIdentifier: "GUIViewController") as! GUIViewController
+            vc.delegate = self
+            screen = vc
+            
+        case .result:
+            let vc = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
             vc.viewModel = viewModel
             screen = vc
         }
-        if let progressVC = screen as? (UIViewController & IdentificationProgressUpdatable) {
+        if let progressVC = screen as? (UIViewController & IdentificationProgressUpdatable),
+           let idx = progressSteps.firstIndex(of: step) {
 
-            progressVC.loadViewIfNeeded()   // Now valid!
-            
-            progressVC.updateProgress(
-                current: currentIndex,
-                total: steps.count
-            )
+            let current = idx + 1
+            let total = progressSteps.count
+
+            progressVC.loadViewIfNeeded()
+            progressVC.updateProgress(current: current, total: total)
         }
 
+        
         navigationController.pushViewController(screen, animated: true)
-
+        
     }
+    func didTapShape() {
+
+        let fieldMarksSelected = viewModel.fieldMarkOptions.contains {
+            $0.fieldMarkName == "Field Marks" && ($0.isSelected ?? false)
+        }
+
+        let isLastDecisionStep = !steps.contains(.fieldMarks) && !steps.contains(.gui)
+
+        if fieldMarksSelected {
+            if let nextIndex = steps.firstIndex(of: .fieldMarks) {
+                currentIndex = nextIndex
+                goToNextStep()
+            }
+        }
+        else if isLastDecisionStep {
+            goDirectlyToResult()
+        }
+        else {
+
+            goToNextStep()
+        }
+    }
+
+
 }
-extension IdentificationCoordinator: IdentificationFlowStepDelegate { func didFinishStep() { goToNextStep() } }
+
+extension IdentificationCoordinator: IdentificationFlowStepDelegate {
+    func didTapShapes() {
+       didTapShape()
+    }
+    
+    func didFinishStep() { goToNextStep() }
+    }

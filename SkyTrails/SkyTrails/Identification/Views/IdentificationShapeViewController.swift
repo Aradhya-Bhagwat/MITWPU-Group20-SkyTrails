@@ -44,6 +44,12 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
             image.draw(in: CGRect(origin: .zero, size: size))
         }
     }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        delegate?.didTapShapes()
+
+    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "shape_cell", for: indexPath)
         let item = filteredShapes[indexPath.row]
@@ -68,31 +74,10 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         applySizeFilter()
         shapeTableView.delegate = self
         shapeTableView.dataSource = self
-        setupRightTickButton()
+
 
     }
-    private func setupRightTickButton() {
-        // Create button
-        let button = UIButton(type: .system)
-        
-        // Circle background
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20   // for 40x40 size
-
-        button.layer.masksToBounds = true   // important to remove rectangle
-        
-        // Checkmark icon
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        let image = UIImage(systemName: "checkmark", withConfiguration: config)
-        button.setImage(image, for: .normal)
-        button.tintColor = .black
-
-        // Add tap action
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-
-        // Put inside UIBarButtonItem
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
+   
     func applySizeFilter() {
         guard let sizeIndex = selectedSizeIndex else {
             filteredShapes = viewModel.birdShapes
@@ -104,10 +89,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         }
     }
 
-    @objc private func nextTapped() {
-        delegate?.didFinishStep()
-    }
-
+  
 
    
 
