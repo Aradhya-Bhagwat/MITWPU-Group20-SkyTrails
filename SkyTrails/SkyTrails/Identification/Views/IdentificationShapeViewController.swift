@@ -83,8 +83,6 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         button.setImage(image, for: .normal)
         button.tintColor = .black
 
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-
         // Add tap action
         button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
 

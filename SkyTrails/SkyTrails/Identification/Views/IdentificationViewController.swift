@@ -56,12 +56,37 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         tableView.delegate = self
         tableView.dataSource = self
         
-     
-        startButton.backgroundColor = .white
-        startButton.setTitleColor(.black, for: .normal)
-        startButton.tintColor = .white
-        startButton.adjustsImageWhenHighlighted = false
-        
+        // Configure startButton appearance using UIButton.Configuration on iOS 15+
+        if #available(iOS 15.0, *) {
+            var config = startButton.configuration ?? .filled()
+            config.baseBackgroundColor = .white
+            config.baseForegroundColor = .black
+            config.background.cornerRadius = 12
+            startButton.configuration = config
+            startButton.tintColor = .white
+
+            // Control highlight behavior without deprecated API
+            startButton.configurationUpdateHandler = { button in
+                guard var updated = button.configuration else { return }
+                if button.isHighlighted {
+                    // Keep same appearance (equivalent to "no dimming")
+                    updated.baseBackgroundColor = .white
+                    updated.baseForegroundColor = .black
+                    updated.imageProperties.tintColor = .white
+                } else {
+                    updated.baseBackgroundColor = .white
+                    updated.baseForegroundColor = .black
+                    updated.imageProperties.tintColor = .white
+                }
+                button.configuration = updated
+            }
+        } else {
+            // Fallback for iOS versions before 15
+            startButton.backgroundColor = .white
+            startButton.setTitleColor(.black, for: .normal)
+            startButton.tintColor = .white
+            // Do not set adjustsImageWhenHighlighted (deprecated on iOS 15+)
+        }
        
         tableView.rowHeight = 56
     
