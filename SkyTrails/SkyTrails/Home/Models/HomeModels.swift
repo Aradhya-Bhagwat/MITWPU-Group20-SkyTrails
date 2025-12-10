@@ -34,7 +34,8 @@ struct CoreHomeData: Codable {
     let predicted_migrations: [PredictedMigration]?
     let upcoming_birds: [UpcomingBird]?
     let bird_categories: [BirdCategory]?
-    let popular_spots: [PopularSpot]?
+    let watchlist_spots: [PopularSpot]?
+    let recommended_spots: [PopularSpot]?
     let dynamic_predictions: [DynamicCard]?
 }
 
@@ -185,7 +186,15 @@ class HomeModels {
     var predictedMigrations: [PredictedMigration] = []
     var upcomingBirds: [UpcomingBird] = []
     var birdCategories: [BirdCategory] = []
-    var popularSpots: [PopularSpot] = []
+    var watchlistSpots: [PopularSpot] = []
+    var recommendedSpots: [PopularSpot] = []
+    var homeScreenSpots: [PopularSpot] {
+            if watchlistSpots.isEmpty {
+                return recommendedSpots
+            } else {
+                return watchlistSpots
+            }
+        }
     var latestNews: [NewsItem] = []
     var communityObservations: [CommunityObservation] = []
     
@@ -203,7 +212,8 @@ class HomeModels {
         self.predictedMigrations = coreData.predicted_migrations ?? []
         self.upcomingBirds = coreData.upcoming_birds ?? []
         self.birdCategories = coreData.bird_categories ?? []
-        self.popularSpots = coreData.popular_spots ?? []
+        self.watchlistSpots = coreData.watchlist_spots ?? []
+        self.recommendedSpots = coreData.recommended_spots ?? []
         self.dynamicCards = coreData.dynamic_predictions ?? []
         
         // 2. Load Community Data (from community.json)

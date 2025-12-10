@@ -18,6 +18,8 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		setupStyle()
+    
+        
 	}
 	
     private func setupStyle() {
@@ -42,6 +44,7 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
         
         // 3. Connect this IBAction to the button in XIB (Touch Up Inside)
         @IBAction func didTapChevron(_ sender: Any) {
+            print("🔘 Chevron Button was tapped inside the Header View!") // Add this line
             onChevronTap?()
         }
 }

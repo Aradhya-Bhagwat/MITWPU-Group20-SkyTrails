@@ -46,23 +46,60 @@
       "title": "Songbirds"
     }
   ],
-  "popular_spots": [
-    {
-      "imageName": "spot_kashmir",
-      "title": "Kashmir Valley",
-      "location": "Jammu & Kashmir"
-    },
-    {
-      "imageName": "spot_bharatpur",
-      "title": "Keoladeo Sanctuary",
-      "location": "Rajasthan"
-    },
-    {
-      "imageName": "spot_sundarbans",
-      "title": "Sundarbans Delta",
-      "location": "West Bengal"
-    }
-  ],
+  "watchlist_spots": [
+      {
+        "imageName": "spot_kashmir",
+        "title": "Kashmir Valley",
+        "location": "Jammu & Kashmir"
+      },
+      {
+        "imageName": "spot_bharatpur",
+        "title": "Keoladeo Sanctuary",
+        "location": "Rajasthan"
+      },
+      {
+        "imageName": "spot_sundarbans",
+        "title": "Sundarbans Delta",
+        "location": "West Bengal"
+      },
+      {
+        "imageName": "spot_chilika",
+        "title": "Chilika Lake",
+        "location": "Odisha"
+      },
+      {
+        "imageName": "spot_ranganathittu",
+        "title": "Ranganathittu",
+        "location": "Karnataka"
+      }
+    ],
+    "recommended_spots": [
+      {
+        "imageName": "spot_thattekkad",
+        "title": "Thattekkad",
+        "location": "Kerala"
+      },
+      {
+        "imageName": "spot_nalsarovar",
+        "title": "Nalsarovar",
+        "location": "Gujarat"
+      },
+      {
+        "imageName": "spot_kaziranga",
+        "title": "Kaziranga",
+        "location": "Assam"
+      },
+      {
+        "imageName": "spot_kumarakom",
+        "title": "Kumarakom",
+        "location": "Kerala"
+      },
+      {
+        "imageName": "spot_salimali",
+        "title": "Salim Ali Sanctuary",
+        "location": "Goa"
+      }
+    ],
   "dynamic_predictions": [
     {
       "card_type": "migration",
