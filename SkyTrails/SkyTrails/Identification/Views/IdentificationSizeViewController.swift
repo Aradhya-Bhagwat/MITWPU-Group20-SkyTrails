@@ -16,7 +16,7 @@ class IdentificationSizeViewController: UIViewController {
     @IBOutlet weak var progressView: UIProgressView!
     var selectedSize: String?
 
-    var viewModel: ViewModel = ViewModel()
+    var viewModel: ViewModel!
     weak var delegate: IdentificationFlowStepDelegate?
 
     override func viewDidLoad() {
@@ -27,11 +27,10 @@ class IdentificationSizeViewController: UIViewController {
         birdSlider.maximumValue = 4
         birdSlider.isContinuous = true
         viewModel.selectedSizeCategory = 0
-        updateBirdDisplay(for: 0) 
-        
+        updateBirdDisplay(for: 0)
         setupRightTickButton()
-     
-
+             
+      
     }
  
     @IBAction func sliderChanged(_ sender: UISlider) {
@@ -39,26 +38,6 @@ class IdentificationSizeViewController: UIViewController {
         updateBirdDisplay(for: steppedValue)
         viewModel.selectedSizeCategory = steppedValue
     }
-    
-    private func updateBirdDisplay(for index: Int) {
-        switch index {
-                case 0:
-                    birdLabel.text = "Less than 6 inches"
-                case 1:
-                    birdLabel.text = "6–14 inches"
-                case 2:
-                    birdLabel.text = "14–25 inches"
-                case 3:
-                    birdLabel.text = "25–59 inches"
-                case 4:
-                    birdLabel.text = "59 inches and over"
-                default:
-                    birdLabel.text = ""
-                }
-                
-                let imageName = "bird\(index)"
-                birdImage.image = UIImage(named: imageName)
-            }
     private func setupRightTickButton() {
         // Create button
         let button = UIButton(type: .system)
@@ -83,6 +62,26 @@ class IdentificationSizeViewController: UIViewController {
         // Put inside UIBarButtonItem
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
+    
+    private func updateBirdDisplay(for index: Int) {
+        switch index {
+                case 0:
+                    birdLabel.text = "Less than 6 inches"
+                case 1:
+                    birdLabel.text = "6–14 inches"
+                case 2:
+                    birdLabel.text = "14–25 inches"
+                case 3:
+                    birdLabel.text = "25–59 inches"
+                case 4:
+                    birdLabel.text = "59 inches and over"
+                default:
+                    birdLabel.text = ""
+                }
+                
+                let imageName = "bird\(index)"
+                birdImage.image = UIImage(named: imageName)
+            }
 
     func sizeDescription(for index: Int) -> String {
         switch index {

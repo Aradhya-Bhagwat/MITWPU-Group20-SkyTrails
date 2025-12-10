@@ -23,12 +23,6 @@
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4nx-pp-Ahc">
                                         <rect key="frame" x="0.0" y="0.0" width="402" height="682"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="How would you like to start Identification?" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rkK-99-Cad">
-                                                <rect key="frame" x="16" y="8" width="370" height="21"/>
-                                                <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
-                                                <nil key="textColor"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
                                             <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="6lX-AX-Dd8">
                                                 <rect key="frame" x="4" y="37" width="390" height="250"/>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -46,6 +40,12 @@
                                                     </tableViewCell>
                                                 </prototypes>
                                             </tableView>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="How would you like to start Identification?" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rkK-99-Cad">
+                                                <rect key="frame" x="16" y="8" width="370" height="21"/>
+                                                <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
                                             <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FQA-lr-sA1">
                                                 <rect key="frame" x="18" y="295" width="365" height="35"/>
                                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -64,11 +64,8 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
-                                                <rect key="frame" x="16" y="375" width="370" height="307"/>
+                                                <rect key="frame" x="16" y="375" width="370" height="287"/>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="307" id="EVs-j4-dEc"/>
-                                                </constraints>
                                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
                                                     <size key="itemSize" width="361" height="192"/>
                                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -86,7 +83,7 @@
                                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="252" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vup-st-1ZR">
                                                                     <rect key="frame" x="8" y="8" width="345" height="120"/>
                                                                     <constraints>
-                                                                        <constraint firstAttribute="height" constant="120" id="2d5-d1-KaH"/>
+                                                                        <constraint firstAttribute="height" constant="120" id="osa-Es-Gam"/>
                                                                     </constraints>
                                                                 </imageView>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="SpecieName" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="K1e-At-YzL">
@@ -104,6 +101,7 @@
                                                             </subviews>
                                                             <constraints>
                                                                 <constraint firstItem="vup-st-1ZR" firstAttribute="leading" secondItem="h4Z-VK-LhD" secondAttribute="leading" constant="8" id="0Av-lq-lEt"/>
+                                                                <constraint firstAttribute="bottom" secondItem="Ifd-XM-1mF" secondAttribute="bottom" constant="20" id="5eu-j5-plb"/>
                                                                 <constraint firstAttribute="trailing" secondItem="vup-st-1ZR" secondAttribute="trailing" constant="8" id="D1N-1y-YCP"/>
                                                                 <constraint firstItem="K1e-At-YzL" firstAttribute="top" secondItem="vup-st-1ZR" secondAttribute="bottomMargin" constant="8" id="W1d-dC-aUa"/>
                                                                 <constraint firstItem="K1e-At-YzL" firstAttribute="leading" secondItem="h4Z-VK-LhD" secondAttribute="leading" constant="8" id="XpM-5L-Qcg"/>
@@ -128,6 +126,7 @@
                                         <constraints>
                                             <constraint firstAttribute="trailing" secondItem="mPg-zb-PDo" secondAttribute="trailing" constant="16" id="1kB-lq-OYz"/>
                                             <constraint firstAttribute="trailing" secondItem="6lX-AX-Dd8" secondAttribute="trailing" constant="16" id="2sw-YB-v8f"/>
+                                            <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="20" id="521-B8-GzE"/>
                                             <constraint firstItem="vFz-1I-rOM" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="9Ar-hk-zce"/>
                                             <constraint firstItem="rkK-99-Cad" firstAttribute="trailing" secondItem="4nx-pp-Ahc" secondAttribute="trailing" constant="-16" id="E3q-kV-ycR"/>
                                             <constraint firstAttribute="trailing" secondItem="vFz-1I-rOM" secondAttribute="trailing" constant="16" id="GXg-dc-xQW"/>
@@ -141,7 +140,7 @@
                                             <constraint firstItem="rkK-99-Cad" firstAttribute="top" secondItem="4nx-pp-Ahc" secondAttribute="top" constant="8" id="aDb-Gr-Jxy"/>
                                             <constraint firstItem="mPg-zb-PDo" firstAttribute="top" secondItem="FQA-lr-sA1" secondAttribute="bottom" constant="8" id="j29-Ok-MRL"/>
                                             <constraint firstAttribute="trailing" secondItem="FQA-lr-sA1" secondAttribute="trailing" constant="16" id="k9R-sh-w8b"/>
-                                            <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" id="rCY-CS-URY"/>
+                                            <constraint firstAttribute="height" constant="682" id="xuX-UT-AzD"/>
                                         </constraints>
                                     </view>
                                 </subviews>
@@ -674,7 +673,7 @@
     <resources>
         <image name="checkmark" catalog="system" width="128" height="114"/>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>

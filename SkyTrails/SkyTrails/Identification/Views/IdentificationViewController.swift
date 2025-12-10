@@ -55,16 +55,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     override func viewDidLoad() {
         super.viewDidLoad()
        
+
         tableView.delegate = self
         tableView.dataSource = self
-        
 
-
-     
         startButton.backgroundColor = .white
         startButton.setTitleColor(.black, for: .normal)
         startButton.tintColor = .white
-        startButton.adjustsImageWhenHighlighted = false
+      startButton.adjustsImageWhenHighlighted = false
         
 
        
