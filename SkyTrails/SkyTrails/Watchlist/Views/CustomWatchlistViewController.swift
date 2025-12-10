@@ -39,7 +39,61 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 		filteredWatchlists = allWatchlists
 			// No need to loadData() internally if we inject viewModel
 		collectionView.reloadData()
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        collectionView.addGestureRecognizer(longPress)
 	}
+    
+    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        if gesture.state != .began { return }
+        
+        let point = gesture.location(in: collectionView)
+        if let indexPath = collectionView.indexPathForItem(at: point) {
+            let watchlist = filteredWatchlists[indexPath.row]
+            showOptions(for: watchlist, at: indexPath)
+        }
+    }
+    
+    func showOptions(for watchlist: Watchlist, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: watchlist.title, message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
+            guard let vm = self.viewModel else { return }
+            self.coordinator?.showEditWatchlist(watchlist, viewModel: vm)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.confirmDelete(watchlist: watchlist)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        if let popover = alert.popoverPresentationController {
+            if let cell = collectionView.cellForItem(at: indexPath) {
+                popover.sourceView = cell
+                popover.sourceRect = cell.bounds
+            } else {
+                popover.sourceView = collectionView
+                popover.sourceRect = CGRect(x: 0, y: 0, width: 100, height: 100) // Fallback
+            }
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    func confirmDelete(watchlist: Watchlist) {
+        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(watchlist.title)'?", preferredStyle: .alert)
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.viewModel?.deleteWatchlist(id: watchlist.id)
+            // Refresh
+            self.filteredWatchlists = self.allWatchlists
+            self.collectionView.reloadData()
+        }))
+        
+        present(alert, animated: true)
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -176,16 +230,24 @@ extension CustomWatchlistViewController {
 	
 		// MARK: - Flow Layout (The 2-Column Grid Logic)
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-			// Logic: (Screen Width - Left Padding - Right Padding - Space Between) / 2
-			// Padding: 16pt left + 16pt right = 32pt
-			// Space between columns: 12pt
-			// Total to subtract: 32 + 12 = 44pt
-		
-		let totalHorizontalSpacing: CGFloat = 16 + 16 + 12 // left + right + middle
-		let availableWidth = collectionView.bounds.width - totalHorizontalSpacing
-		let cellWidth = availableWidth / 2
-		
-		return CGSize(width: cellWidth, height: 220) // Height to match your design
+        // Padding: 16pt left + 16pt right = 32pt
+        let padding: CGFloat = 32
+        let availableWidth = collectionView.bounds.width - padding
+        
+        // Check for iPad / Wide Screen (e.g. > 700pt)
+        if availableWidth > 700 {
+            // Target: 3 items per row
+            // Spacing: 2 gaps of 12pt = 24pt
+            let spacing: CGFloat = 12 * 2
+            let cellWidth = (availableWidth - spacing) / 3
+            return CGSize(width: floor(cellWidth), height: 220)
+        } else {
+            // Target: 2 items per row (iPhone)
+            // Spacing: 1 gap of 12pt = 12pt
+            let spacing: CGFloat = 12
+            let cellWidth = (availableWidth - spacing) / 2
+            return CGSize(width: floor(cellWidth), height: 220)
+        }
 	}
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {

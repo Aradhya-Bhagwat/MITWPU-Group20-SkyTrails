@@ -48,6 +48,31 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         super.viewDidLoad()
         setupUI()
         applyFilters()
+        
+        // Add Pencil Icon for Custom/Shared types
+        if watchlistType == .custom || watchlistType == .shared {
+            let pencil = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .plain, target: self, action: #selector(didTapEdit))
+            // Append to existing right items if any (like + button)
+            if let existing = navigationItem.rightBarButtonItems {
+                navigationItem.rightBarButtonItems = [pencil] + existing
+            } else {
+                navigationItem.rightBarButtonItem = pencil
+            }
+        }
+    }
+    
+    @objc func didTapEdit() {
+        guard let id = currentWatchlistId, let vm = viewModel else { return }
+        
+        if watchlistType == .custom {
+            if let watchlist = vm.watchlists.first(where: { $0.id == id }) {
+                coordinator?.showEditWatchlist(watchlist, viewModel: vm)
+            }
+        } else if watchlistType == .shared {
+            if let shared = vm.sharedWatchlists.first(where: { $0.id == id }) {
+                coordinator?.showEditSharedWatchlist(shared, viewModel: vm)
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -61,10 +86,14 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 if let updatedWatchlist = vm.watchlists.first(where: { $0.id == id }) {
                     self.observedBirds = updatedWatchlist.observedBirds
                     self.toObserveBirds = updatedWatchlist.toObserveBirds
+                    // Update Title
+                    self.title = updatedWatchlist.title
                     applyFilters()
                 } else if let updatedShared = vm.sharedWatchlists.first(where: { $0.id == id }) {
                     self.observedBirds = updatedShared.observedBirds
                     self.toObserveBirds = updatedShared.toObserveBirds
+                    // Update Title
+                    self.title = updatedShared.title
                     applyFilters()
                 }
             }

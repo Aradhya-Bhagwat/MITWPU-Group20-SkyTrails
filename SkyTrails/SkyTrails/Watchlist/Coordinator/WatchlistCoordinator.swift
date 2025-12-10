@@ -76,6 +76,30 @@ class WatchlistCoordinator: Coordinator {
         
         navigationController.pushViewController(vc, animated: true)
 	}
+    
+    func showEditWatchlist(_ watchlist: Watchlist, viewModel: WatchlistViewModel) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
+        
+        vc.watchlistType = .custom
+        vc.viewModel = viewModel
+        vc.coordinator = self
+        vc.watchlistToEdit = watchlist
+        
+        navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func showEditSharedWatchlist(_ shared: SharedWatchlist, viewModel: WatchlistViewModel) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
+        
+        vc.watchlistType = .shared
+        vc.viewModel = viewModel
+        vc.coordinator = self
+        vc.sharedWatchlistToEdit = shared
+        
+        navigationController.pushViewController(vc, animated: true)
+    }
 	
 		// In WatchlistCoordinator.swift
 	

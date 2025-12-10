@@ -53,7 +53,86 @@ class WatchlistHomeViewController: UIViewController {
 		
 			// 3. Register Cells
 		registerCells()
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        SummaryCardCollectionView.addGestureRecognizer(longPress)
 	}
+    
+    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        if gesture.state != .began { return }
+        
+        let point = gesture.location(in: SummaryCardCollectionView)
+        if let indexPath = SummaryCardCollectionView.indexPathForItem(at: point),
+           let sectionType = WatchlistSection(rawValue: indexPath.section) {
+            
+            guard let vm = viewModel else { return }
+            
+            if sectionType == .myWatchlist {
+                if let watchlist = vm.watchlists.first {
+                    showOptions(for: watchlist, at: indexPath)
+                }
+            } else if sectionType == .customWatchlist {
+                // Adjust index as per cell configuration logic (custom excludes first)
+                let actualIndex = indexPath.item + 1
+                if actualIndex < vm.watchlists.count {
+                    let watchlist = vm.watchlists[actualIndex]
+                    showOptions(for: watchlist, at: indexPath)
+                }
+            } else if sectionType == .sharedWatchlist {
+                if let shared = vm.sharedWatchlists[safe: indexPath.item] {
+                    showOptions(for: shared, at: indexPath)
+                }
+            }
+        }
+    }
+    
+    func showOptions(for watchlist: Watchlist, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: watchlist.title, message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
+            guard let vm = self.viewModel else { return }
+            self.coordinator?.showEditWatchlist(watchlist, viewModel: vm)
+        }))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.viewModel?.deleteWatchlist(id: watchlist.id)
+            self.SummaryCardCollectionView.reloadData()
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        presentAlert(alert, sourceView: SummaryCardCollectionView.cellForItem(at: indexPath))
+    }
+    
+    func showOptions(for shared: SharedWatchlist, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
+            guard let vm = self.viewModel else { return }
+            self.coordinator?.showEditSharedWatchlist(shared, viewModel: vm)
+        }))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.viewModel?.deleteSharedWatchlist(id: shared.id)
+            self.SummaryCardCollectionView.reloadData()
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        presentAlert(alert, sourceView: SummaryCardCollectionView.cellForItem(at: indexPath))
+    }
+    
+    private func presentAlert(_ alert: UIAlertController, sourceView: UIView?) {
+        if let popover = alert.popoverPresentationController {
+            if let view = sourceView {
+                popover.sourceView = view
+                popover.sourceRect = view.bounds
+            } else {
+                popover.sourceView = SummaryCardCollectionView
+                popover.sourceRect = CGRect(x: SummaryCardCollectionView.bounds.midX, y: SummaryCardCollectionView.bounds.midY, width: 0, height: 0)
+            }
+        }
+        present(alert, animated: true)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        SummaryCardCollectionView.reloadData()
+    }
 	
 		// --- Compositional Layout Definition ---
 	private func createCompositionalLayout() -> UICollectionViewLayout {
@@ -68,7 +147,7 @@ class WatchlistHomeViewController: UIViewController {
 				case .myWatchlist:
 					return self.createMyWatchlistSectionLayout()
 				case .customWatchlist:
-					return self.createCustomWatchlistSectionLayout()
+                    return self.createCustomWatchlistSectionLayout(layoutEnvironment: layoutEnvironment)
 				case .sharedWatchlist:
 					return self.createSharedWatchlistSectionLayout()
 			}
@@ -105,13 +184,21 @@ class WatchlistHomeViewController: UIViewController {
 		return section
 	}
 	
-	private func createCustomWatchlistSectionLayout() -> NSCollectionLayoutSection {
+    private func createCustomWatchlistSectionLayout(layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
 		let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
 		let item = NSCollectionLayoutItem(layoutSize: itemSize)
 		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 12)
 		
-			// Cards are ~45% width to allow for scrolling
-		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.45), heightDimension: .absolute(160))
+        // Determine available width
+        let containerWidth = layoutEnvironment.container.effectiveContentSize.width
+        
+        // Logic:
+        // iPhone (Portrait ~390pt): 0.45 -> ~175pt (2.2 items visible)
+        // iPad (Portrait ~744pt+): we want 3.5 items visible. 1.0 / 3.5 = ~0.28
+        
+        let fraction: CGFloat = containerWidth > 700 ? 0.28 : 0.45
+        
+		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(fraction), heightDimension: .absolute(160))
 		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 		
 		let section = NSCollectionLayoutSection(group: group)
@@ -250,7 +337,17 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				watchlistCount: totalCount,
 				image: coverImage
 			)
-		}
+		} else {
+            // Handle empty state
+            cell.configure(
+                discoveredText: "0 species",
+                upcomingText: "0 species",
+                dateText: "N/A",
+                observedCount: 0,
+                watchlistCount: 0,
+                image: nil
+            )
+        }
 		return cell
 	}
 	

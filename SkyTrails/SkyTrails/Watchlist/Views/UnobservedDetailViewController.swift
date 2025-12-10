@@ -2,7 +2,7 @@ import UIKit
 import MapKit
 import CoreLocation
 
-class UnobservedDetailViewController: UIViewController {
+class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegate {
 	
 		    // MARK: - Data Dependency
 		    // This is how we pass data into this screen
@@ -10,6 +10,8 @@ class UnobservedDetailViewController: UIViewController {
             var watchlistId: UUID?
 		    weak var coordinator: WatchlistCoordinator?
             weak var viewModel: WatchlistViewModel?
+    
+            private let locationManager = CLLocationManager()
     
             // Autocomplete State
             private var searchCompleter = MKLocalSearchCompleter()
@@ -66,7 +68,116 @@ class UnobservedDetailViewController: UIViewController {
                     let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
                     navigationItem.rightBarButtonItem = saveButton
                 }
+                
+                setupKeyboardHandling()
+                setupLocationManager()
+                setupLocationButton()
 		    }
+            
+            private func setupLocationManager() {
+                locationManager.delegate = self
+                locationManager.desiredAccuracy = kCLLocationAccuracyBest
+                locationManager.requestWhenInUseAuthorization()
+            }
+            
+            private func setupLocationButton() {
+                let locationButton = UIButton(type: .system)
+                locationButton.setImage(UIImage(systemName: "location.fill"), for: .normal)
+                locationButton.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
+                locationButton.addTarget(self, action: #selector(didTapCurrentLocation), for: .touchUpInside)
+                
+                searchTextField.rightView = locationButton
+                searchTextField.rightViewMode = .always
+            }
+            
+            @objc private func didTapCurrentLocation() {
+                locationManager.requestLocation()
+            }
+            
+            func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+                guard let location = locations.last else { return }
+                
+                let geocoder = CLGeocoder()
+                geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
+                    guard let self = self else { return }
+                    if let error = error {
+                        print("Reverse geocoding failed: \(error.localizedDescription)")
+                        return
+                    }
+                    
+                    if let placemark = placemarks?.first {
+                        let city = placemark.locality ?? ""
+                        let area = placemark.subLocality ?? ""
+                        let country = placemark.country ?? ""
+                        
+                        var address = ""
+                        if !area.isEmpty { address += area + ", " }
+                        if !city.isEmpty { address += city + ", " }
+                        address += country
+                        
+                        DispatchQueue.main.async {
+                            self.searchTextField.text = address
+                        }
+                    }
+                }
+            }
+            
+            func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+                print("Location manager failed: \(error.localizedDescription)")
+            }
+    
+            // MARK: - Keyboard Handling
+            
+            private var mainScrollView: UIScrollView? {
+                // Try to find the main scroll view, excluding the suggestions table view
+                return view.subviews.first(where: { $0 is UIScrollView && $0 !== suggestionsTableView }) as? UIScrollView
+            }
+            
+            private func setupKeyboardHandling() {
+                addDoneButtonOnKeyboard()
+                
+                NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+                NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+            }
+            
+            private func addDoneButtonOnKeyboard() {
+                let doneToolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+                doneToolbar.barStyle = .default
+                
+                let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+                let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneButtonAction))
+                
+                doneToolbar.items = [flexSpace, done]
+                doneToolbar.sizeToFit()
+                
+                searchTextField.inputAccessoryView = doneToolbar
+                notesTextView.inputAccessoryView = doneToolbar
+            }
+            
+            @objc func doneButtonAction() {
+                view.endEditing(true)
+            }
+            
+            @objc func keyboardWillShow(notification: NSNotification) {
+                guard let userInfo = notification.userInfo,
+                      let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+                      let scrollView = mainScrollView else { return }
+                
+                let keyboardHeight = keyboardFrame.height
+                var contentInset = scrollView.contentInset
+                contentInset.bottom = keyboardHeight
+                scrollView.contentInset = contentInset
+                scrollView.verticalScrollIndicatorInsets = contentInset
+            }
+            
+            @objc func keyboardWillHide(notification: NSNotification) {
+                guard let scrollView = mainScrollView else { return }
+                
+                var contentInset = scrollView.contentInset
+                contentInset.bottom = 0
+                scrollView.contentInset = contentInset
+                scrollView.verticalScrollIndicatorInsets = contentInset
+            }
     
             private func setupRightBarButtons() {
                 let deleteButton = UIBarButtonItem(image: UIImage(systemName: "trash"), style: .plain, target: self, action: #selector(didTapDelete))
@@ -88,7 +199,11 @@ class UnobservedDetailViewController: UIViewController {
                 let alert = UIAlertController(title: "Delete Bird", message: "Are you sure you want to delete this bird from your watchlist?", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
                 alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-                    self?.coordinator?.viewModel?.deleteBird(birdToDelete, from: id)
+                    if let vm = self?.viewModel {
+                        vm.deleteBird(birdToDelete, from: id)
+                    } else {
+                        self?.coordinator?.viewModel?.deleteBird(birdToDelete, from: id)
+                    }
                     self?.navigationController?.popViewController(animated: true)
                 }))
                 present(alert, animated: true)

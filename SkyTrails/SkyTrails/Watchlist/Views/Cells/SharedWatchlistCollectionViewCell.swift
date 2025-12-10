@@ -97,7 +97,7 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
 				   location: String,
 				   dateRange: String,
 				   mainImage: UIImage?,
-				   stats: (Int, Int),
+				   stats: SharedWatchlistStats,
 				   userImages: [UIImage]) {
 		
 		titleLabel.text = title
@@ -108,8 +108,8 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
 		addIconToLabel(label: dateLabel, text: dateRange, iconName: "calendar")
 		
 			// 2. Configure Badges
-		addIconToLabel(label: greenBadgeLabel, text: "\(stats.0)", iconName: "bird")
-		addIconToLabel(label: blueBadgeLabel, text: "\(stats.1)", iconName: "bird.fill")
+		addIconToLabel(label: greenBadgeLabel, text: "\(stats.greenValue)", iconName: "bird")
+		addIconToLabel(label: blueBadgeLabel, text: "\(stats.blueValue)", iconName: "bird.fill")
 		
 			// 3. Configure Avatars
 		setupAvatars(images: userImages)
