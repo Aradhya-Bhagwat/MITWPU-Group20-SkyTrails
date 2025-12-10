@@ -59,7 +59,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     
           let targetSize = CGSize(width: 60, height: 60)
             let resized = resize(img, to: targetSize)
-            cell.imageView?.image = img
+            cell.imageView?.image = resized
             cell.imageView?.contentMode = .scaleAspectFill
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
         } else {
