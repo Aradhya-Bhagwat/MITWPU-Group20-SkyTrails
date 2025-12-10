@@ -48,7 +48,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         super.viewDidLoad()
         setupUI()
         applyFilters()
-        setupGestureRecognizers()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -205,56 +204,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         present(alert, animated: true)
     }
     
-    // MARK: - Gesture Recognizer Setup
-    private func setupGestureRecognizers() {
-        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-        tableView.addGestureRecognizer(longPressGesture)
-    }
-
-    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-        guard gesture.state == .began else { return }
-        let point = gesture.location(in: tableView)
-        guard let indexPath = tableView.indexPathForRow(at: point) else { return }
-
-        let bird: Bird
-        if watchlistType == .myWatchlist {
-            bird = filteredSections[indexPath.section][indexPath.row]
-        } else {
-            bird = currentList[indexPath.row]
-        }
-
-        let alert = UIAlertController(title: bird.name, message: nil, preferredStyle: .actionSheet)
-
-        if currentSegmentIndex == 1 { // To Observe Tab
-            alert.addAction(UIAlertAction(title: "Info", style: .default) { _ in
-                self.showBirdInfo(bird)
-            })
-            alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
-                self.deleteBird(bird, at: indexPath)
-            })
-            alert.addAction(UIAlertAction(title: "Add Reminder", style: .default) { _ in
-                self.addReminder(for: bird)
-            })
-        } else if currentSegmentIndex == 0 { // Observed Tab
-            alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
-                self.deleteBird(bird, at: indexPath)
-            })
-        }
-
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
-    }
-
-    private func showBirdInfo(_ bird: Bird) {
-        // Implement logic to show bird info
-        print("Showing info for bird: \(bird.name)")
-    }
-
-    private func deleteBird(_ bird: Bird, at indexPath: IndexPath) {
-        // Implement logic to delete bird
-        print("Deleting bird: \(bird.name)")
-    }
-
+    
     private func addReminder(for bird: Bird) {
         // Implement logic to add reminder
         print("Adding reminder for bird: \(bird.name)")
@@ -324,34 +274,129 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         tableView.deselectRow(at: indexPath, animated: true)
         
         let bird: Bird
+        let wId: UUID?
+        
         if watchlistType == .myWatchlist {
             bird = filteredSections[indexPath.section][indexPath.row]
+            wId = allWatchlists[indexPath.section].id
         } else {
             bird = currentList[indexPath.row]
+            wId = currentWatchlistId
         }
         
-        if currentSegmentIndex == 0 {
-            // Observed
-            performSegue(withIdentifier: "ShowObservedDetail", sender: bird)
+        guard let id = wId else { return }
+        
+        // Always show Observed Detail as per new requirement (Move/Convert flow)
+        // Pass bird and ID together to ensure correct ID is used
+        performSegue(withIdentifier: "ShowObservedDetail", sender: (bird, id))
+    }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let bird: Bird
+        let wId: UUID?
+        
+        if watchlistType == .myWatchlist {
+            bird = filteredSections[indexPath.section][indexPath.row]
+            wId = allWatchlists[indexPath.section].id
         } else {
-            // To Observe
-            performSegue(withIdentifier: "ShowUnobservedDetailFromWatchlist", sender: bird)
+            bird = currentList[indexPath.row]
+            wId = currentWatchlistId
         }
+        
+        guard let id = wId else { return nil }
+        
+        // Delete Action
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (_, _, completion) in
+            self?.deleteBird(bird, watchlistId: id)
+            completion(true)
+        }
+        deleteAction.image = UIImage(systemName: "trash")
+        deleteAction.backgroundColor = .systemRed
+        
+        // Edit Action
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { [weak self] (_, _, completion) in
+            if self?.currentSegmentIndex == 1 {
+                // To Observe -> Unobserved Detail
+                self?.performSegue(withIdentifier: "ShowUnobservedDetailFromWatchlist", sender: (bird, id))
+            } else {
+                // Observed -> Observed Detail
+                self?.performSegue(withIdentifier: "ShowObservedDetail", sender: (bird, id))
+            }
+            completion(true)
+        }
+        editAction.image = UIImage(systemName: "pencil") // Using pencil for edit
+        editAction.backgroundColor = .systemBlue
+        
+        // Optional: Reminder Action for To Observe (if needed, keeping it as requested previously, but user only mentioned Edit/Delete specifically in this turn? 
+        // User said "Rename info to edit...". Previously there was "Reminder". I'll keep Reminder if it doesn't conflict, or just strictly follow "Rename Info to Edit".
+        // Let's keep Reminder for To Observe as it adds value and wasn't explicitly forbidden, just "Info" was renamed.
+        
+        var actions = [deleteAction, editAction]
+        
+        if currentSegmentIndex == 1 {
+            let reminderAction = UIContextualAction(style: .normal, title: "Remind") { [weak self] (_, _, completion) in
+                self?.addReminder(for: bird)
+                completion(true)
+            }
+            reminderAction.image = UIImage(systemName: "bell")
+            reminderAction.backgroundColor = .systemOrange
+            actions.append(reminderAction)
+        }
+        
+        return UISwipeActionsConfiguration(actions: actions)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        var targetBird: Bird?
+        var targetId: UUID?
+        
+        if let bird = sender as? Bird {
+            targetBird = bird
+            targetId = self.currentWatchlistId
+        } else if let tuple = sender as? (Bird, UUID) {
+            targetBird = tuple.0
+            targetId = tuple.1
+        }
+        
         if segue.identifier == "ShowObservedDetail",
            let vc = segue.destination as? ObservedDetailViewController,
-           let bird = sender as? Bird {
+           let bird = targetBird {
             vc.bird = bird
-            vc.watchlistId = self.currentWatchlistId
+            vc.watchlistId = targetId
             vc.coordinator = self.coordinator
+            vc.viewModel = self.viewModel
         } else if segue.identifier == "ShowUnobservedDetailFromWatchlist",
                   let vc = segue.destination as? UnobservedDetailViewController,
-                  let bird = sender as? Bird {
+                  let bird = targetBird {
             vc.bird = bird
-            vc.watchlistId = self.currentWatchlistId
+            vc.watchlistId = targetId
             vc.coordinator = self.coordinator
+            vc.viewModel = self.viewModel
+        }
+    }
+    
+    // Updated deleteBird to use ViewModel
+    private func deleteBird(_ bird: Bird, watchlistId: UUID) {
+        guard let vm = viewModel else { return }
+        
+        vm.deleteBird(bird, from: watchlistId)
+        
+        // Refresh UI
+        if watchlistType == .myWatchlist {
+             // Reload all watchlists from VM to get updated state
+            self.allWatchlists = vm.watchlists
+            applyFilters()
+        } else {
+             // Single Watchlist Refresh
+             if let updatedWatchlist = vm.watchlists.first(where: { $0.id == watchlistId }) {
+                 self.observedBirds = updatedWatchlist.observedBirds
+                 self.toObserveBirds = updatedWatchlist.toObserveBirds
+             } else if let updatedShared = vm.sharedWatchlists.first(where: { $0.id == watchlistId }) {
+                 self.observedBirds = updatedShared.observedBirds
+                 self.toObserveBirds = updatedShared.toObserveBirds
+             }
+             applyFilters()
         }
     }
 }

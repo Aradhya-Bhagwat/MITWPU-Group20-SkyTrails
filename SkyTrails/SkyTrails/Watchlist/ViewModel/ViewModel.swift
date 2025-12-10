@@ -106,4 +106,71 @@ class WatchlistViewModel {
             }
         }
     }
+    
+    func saveObservation(bird: Bird, watchlistId: UUID) {
+        // 1. Check My Watchlists
+        if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
+            // Case A: Update existing Observed
+            if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                watchlists[index].observedBirds[birdIndex] = bird
+                return
+            }
+            
+            // Case B: Move from To Observe -> Observed
+            if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                watchlists[index].toObserveBirds.remove(at: birdIndex)
+                watchlists[index].observedBirds.append(bird)
+                return
+            }
+            
+            // Case C: New Observation
+            watchlists[index].observedBirds.append(bird)
+            return
+        }
+        
+        // 2. Check Shared Watchlists
+        if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
+            // Case A: Update existing Observed
+            if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                sharedWatchlists[index].observedBirds[birdIndex] = bird
+                return
+            }
+            
+            // Case B: Move from To Observe -> Observed
+            if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                sharedWatchlists[index].toObserveBirds.remove(at: birdIndex)
+                sharedWatchlists[index].observedBirds.append(bird)
+                return
+            }
+            
+            // Case C: New Observation
+            sharedWatchlists[index].observedBirds.append(bird)
+        }
+    }
+    
+    func updateBird(_ bird: Bird, watchlistId: UUID) {
+         // 1. Check My Watchlists
+         if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
+             if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                 watchlists[index].observedBirds[birdIndex] = bird
+                 return
+             }
+             if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                 watchlists[index].toObserveBirds[birdIndex] = bird
+                 return
+             }
+         }
+         
+         // 2. Check Shared Watchlists
+         if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
+             if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                 sharedWatchlists[index].observedBirds[birdIndex] = bird
+                 return
+             }
+             if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                 sharedWatchlists[index].toObserveBirds[birdIndex] = bird
+                 return
+             }
+         }
+    }
 }

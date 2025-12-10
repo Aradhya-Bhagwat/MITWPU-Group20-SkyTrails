@@ -9,6 +9,7 @@ class UnobservedDetailViewController: UIViewController {
 		    var bird: Bird?
             var watchlistId: UUID?
 		    weak var coordinator: WatchlistCoordinator?
+            weak var viewModel: WatchlistViewModel?
     
             // Autocomplete State
             private var searchCompleter = MKLocalSearchCompleter()
@@ -131,7 +132,12 @@ class UnobservedDetailViewController: UIViewController {
 		            updatedBird.location = [loc]
 		        }
 		        
-		        coordinator?.saveBirdDetails(bird: updatedBird)
+                if let vm = viewModel, let wId = watchlistId {
+                    vm.updateBird(updatedBird, watchlistId: wId)
+                    navigationController?.popViewController(animated: true)
+                } else {
+		            coordinator?.saveBirdDetails(bird: updatedBird)
+                }
 		    }
 		    
 		    // MARK: - Data Population

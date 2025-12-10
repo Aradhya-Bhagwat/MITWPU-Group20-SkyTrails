@@ -47,6 +47,14 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         print("SharedWatchlistsViewController appeared. Count: \(allSharedWatchlists.count)")
+        
+        // Refresh data to reflect any changes (e.g. new watchlist added)
+        if let text = searchBar.text, !text.isEmpty {
+            filteredWatchlists = allSharedWatchlists.filter { $0.title.lowercased().contains(text.lowercased()) }
+        } else {
+            filteredWatchlists = allSharedWatchlists
+        }
+        sortWatchlists(by: currentSortOption)
     }
     
     private func setupUI() {
@@ -78,7 +86,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     
     // MARK: - Actions
     @IBAction func addTapped(_ sender: Any) {
-        coordinator?.showCreateWatchlist()
+        coordinator?.showCreateWatchlist(type: .shared, viewModel: viewModel)
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
@@ -184,26 +192,19 @@ extension SharedWatchlistsViewController {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = filteredWatchlists[indexPath.row]
         
-        // Instantiate SmartWatchlistViewController and navigate
-        // Assuming we can find it by ID or Segue. Since I can't easily verify ID without reading full storyboard again,
-        // I will use the segue if it exists or instantiate.
-        // Based on previous context, there might not be a direct segue yet.
-        // I will try to perform the segue "ShowSmartWatchlist" if it exists on THIS controller, 
-        // but usually it's on the Home controller.
-        // Best approach here: check if we can perform segue, if not log.
-        // Actually, I see `ShowSmartWatchlist` segue on Home VC.
-        // I'll assume the user wants navigation. I'll try to instantiate by ID "SmartWatchlistViewController" (assuming standard naming)
-        // If that fails, I'll leave it as a TODO or try a generic push.
-        
-        if let smartVC = self.storyboard?.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
             smartVC.watchlistType = .shared
             smartVC.watchlistTitle = item.title
             smartVC.observedBirds = item.observedBirds
             smartVC.toObserveBirds = item.toObserveBirds
+            smartVC.currentWatchlistId = item.id
+            smartVC.viewModel = self.viewModel
+            smartVC.coordinator = self.coordinator
+            
             self.navigationController?.pushViewController(smartVC, animated: true)
         } else {
-            // Fallback: If ID is not set, we can't easily push.
-            print("Could not instantiate SmartWatchlistViewController. Check Storyboard ID.")
+            print("Could not instantiate SmartWatchlistViewController.")
         }
     }
 }
