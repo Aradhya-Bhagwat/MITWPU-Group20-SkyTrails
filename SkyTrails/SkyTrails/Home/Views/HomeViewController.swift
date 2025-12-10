@@ -295,7 +295,7 @@ extension HomeViewController: UICollectionViewDataSource {
             return homeData.upcomingBirds.count
         } else if section == 2 {
             // SHIFTED: Spots to Visit
-            return homeData.popularSpots.count
+            return min(homeData.homeScreenSpots.count, 5)
         } else if section == 3 {
             // SHIFTED: Community Observations
             return homeData.communityObservations.count
@@ -358,7 +358,7 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! q_3SpotsToVisitCollectionViewCell
             
-            let item = homeData.popularSpots[indexPath.row]
+            let item = homeData.homeScreenSpots[indexPath.row]
             cell.configure(
                 image: UIImage(named: item.imageName),
                 title: item.title,
@@ -420,35 +420,55 @@ extension HomeViewController: UICollectionViewDataSource {
          }
          
          // HANDLE SECTION HEADERS
-         else if kind == UICollectionView.elementKindSectionHeader {
-             let header = collectionView.dequeueReusableSupplementaryView(
-                 ofKind: kind,
-                 withReuseIdentifier: SectionHeaderCollectionReusableView.identifier,
-                 for: indexPath
-             ) as! SectionHeaderCollectionReusableView
-             
-             let action: () -> Void = {
-                         print("Chevron tapped for section \(indexPath.section)")
-                         // Perform navigation here, e.g., self.performSegue(...)
-                     }
-             
-             // Assign titles based on the section index
-             if indexPath.section == 0 {
-                         header.configure(title: "Prediction", tapAction: action)
-                     }
-                     else if indexPath.section == 1 {
-                         header.configure(title: "Upcoming Birds", tapAction: action)
-                     }
-                     else if indexPath.section == 2 {
-                         header.configure(title: "Spots to Visit", tapAction: action)
-                     }
-                     else if indexPath.section == 3 {
-                         header.configure(title: "Community Observations", tapAction: action)
-                     }
-             // Section 0 does not have a header
-             return header
-         }
-         
+        // ... inside viewForSupplementaryElementOfKind ...
+
+        // HANDLE SECTION HEADERS
+        else if kind == UICollectionView.elementKindSectionHeader {
+            let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: SectionHeaderCollectionReusableView.identifier,
+                for: indexPath
+            ) as! SectionHeaderCollectionReusableView
+            
+            // Variable to hold the specific action for the current section
+            var action: (() -> Void)? = nil
+            
+            // Configure based on section index
+            if indexPath.section == 0 {
+                header.configure(title: "Prediction")
+            }
+            else if indexPath.section == 1 {
+                header.configure(title: "Upcoming Birds")
+            }
+            else if indexPath.section == 2 {
+                print("⚡️ Setting up action for Spots Section")
+                
+                // ⭐️ SECTION 2 LOGIC: Navigate to AllSpotsViewController
+                action = { [weak self] in
+                    print("🚀 Executing Navigation Logic")
+                    guard let self = self else { return }
+                    
+                    // 1. Initialize the new screen
+                    let allSpotsVC = AllSpotsViewController()
+                    
+                    // 2. Pass the data (Watchlist & Recommendations)
+                    allSpotsVC.watchlistData = self.homeData.watchlistSpots
+                    allSpotsVC.recommendationsData = self.homeData.recommendedSpots
+                    
+                    // 3. Push to navigation stack
+                    self.navigationController?.pushViewController(allSpotsVC, animated: true)
+                }
+                
+                // Configure header with the specific action
+                header.configure(title: "Spots to Visit", tapAction: action)
+                
+            }
+            else if indexPath.section == 3 {
+                header.configure(title: "Community Observations")
+            }
+            
+            return header
+        }
          return UICollectionReusableView()
      }
 }

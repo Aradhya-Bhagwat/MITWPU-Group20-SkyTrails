@@ -20,27 +20,31 @@
                     <nil key="highlightedColor"/>
                 </label>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mZG-Pt-Ko8">
-                    <rect key="frame" x="60" y="8" width="24" height="21"/>
+                    <rect key="frame" x="70" y="8" width="24" height="21"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="21" id="LcN-8G-Mhm"/>
+                        <constraint firstAttribute="width" constant="24" id="XmS-wZ-abV"/>
                     </constraints>
                     <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <state key="normal" title="Button"/>
                     <buttonConfiguration key="configuration" style="plain"/>
+                    <connections>
+                        <action selector="didTapChevron:" destination="U6b-Vx-4bR" eventType="touchUpInside" id="ZWD-B0-Oee"/>
+                    </connections>
                 </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="VXr-Tz-HHm"/>
             <constraints>
                 <constraint firstItem="mZG-Pt-Ko8" firstAttribute="top" secondItem="U6b-Vx-4bR" secondAttribute="top" constant="8" id="5oJ-hF-6GI"/>
                 <constraint firstItem="Kme-xc-v50" firstAttribute="top" secondItem="U6b-Vx-4bR" secondAttribute="top" constant="8" id="DwX-Ox-GSe"/>
-                <constraint firstItem="mZG-Pt-Ko8" firstAttribute="leading" secondItem="Kme-xc-v50" secondAttribute="trailing" id="nHq-ls-ItT"/>
+                <constraint firstItem="mZG-Pt-Ko8" firstAttribute="leading" secondItem="Kme-xc-v50" secondAttribute="trailing" constant="10" id="nHq-ls-ItT"/>
                 <constraint firstItem="Kme-xc-v50" firstAttribute="leading" secondItem="VXr-Tz-HHm" secondAttribute="leading" constant="8" id="xVU-9K-eWP"/>
             </constraints>
             <connections>
-                <outlet property="chevronButton" destination="mZG-Pt-Ko8" id="8W7-ep-TlE"/>
+                <outlet property="chevronButton" destination="mZG-Pt-Ko8" id="74K-DD-Rvf"/>
                 <outlet property="sectionTitle" destination="Kme-xc-v50" id="FSQ-TP-lqD"/>
             </connections>
-            <point key="canvasLocation" x="18" y="123"/>
+            <point key="canvasLocation" x="17.557251908396946" y="122.53521126760565"/>
         </collectionReusableView>
     </objects>
 </document>
