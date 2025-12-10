@@ -42,6 +42,57 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
         
         filteredWatchlists = allSharedWatchlists
         collectionView.reloadData()
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        collectionView.addGestureRecognizer(longPress)
+    }
+    
+    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        if gesture.state != .began { return }
+        
+        let point = gesture.location(in: collectionView)
+        if let indexPath = collectionView.indexPathForItem(at: point) {
+            let shared = filteredWatchlists[indexPath.row]
+            showOptions(for: shared, at: indexPath)
+        }
+    }
+    
+    func showOptions(for shared: SharedWatchlist, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
+            guard let vm = self.viewModel else { return }
+            self.coordinator?.showEditSharedWatchlist(shared, viewModel: vm)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.confirmDelete(shared: shared)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        if let popover = alert.popoverPresentationController {
+            if let cell = collectionView.cellForItem(at: indexPath) {
+                popover.sourceView = cell
+                popover.sourceRect = cell.bounds
+            }
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    func confirmDelete(shared: SharedWatchlist) {
+        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(shared.title)'?", preferredStyle: .alert)
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.viewModel?.deleteSharedWatchlist(id: shared.id)
+            // Refresh
+            self.filteredWatchlists = self.allSharedWatchlists
+            self.collectionView.reloadData()
+        }))
+        
+        present(alert, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {

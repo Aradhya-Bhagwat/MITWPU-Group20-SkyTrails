@@ -9,15 +9,13 @@ import Foundation
 import CoreLocation
 
 
-
-enum Rarity{
+enum Rarity: String, Codable {
 	case rare
 	case common
-	
 }
 
 
-struct Bird {
+struct Bird: Codable {
 	var id: UUID = UUID()
 	
 	let name: String
@@ -31,14 +29,14 @@ struct Bird {
 	var date : [Date]
     
     var observedBy: [String]? // List of user image names/SF symbols who observed this bird
-	
-    // Removed isObserved as it's now context-dependent
+    
+    var notes: String?
 }
 
 
 // The Watchlist model containing metadata
-struct Watchlist {
-	let id: UUID = UUID()
+struct Watchlist: Codable {
+	let id: UUID
 	var title: String
 	var location: String
 	var startDate: Date
@@ -55,16 +53,32 @@ struct Watchlist {
 	var observedCount: Int {
 		return observedBirds.count
 	}
+    
+    // Custom init to provide default ID if needed, though Codable handles it if present
+    init(id: UUID = UUID(), title: String, location: String, startDate: Date, endDate: Date, observedBirds: [Bird], toObserveBirds: [Bird]) {
+        self.id = id
+        self.title = title
+        self.location = location
+        self.startDate = startDate
+        self.endDate = endDate
+        self.observedBirds = observedBirds
+        self.toObserveBirds = toObserveBirds
+    }
 }
 
-struct SharedWatchlist {
-    let id: UUID = UUID()
-    let title: String
-    let location: String
-    let dateRange: String
-    let mainImageName: String
-    let stats: (Int, Int)
-    let userImages: [String] // Using SF Symbol names or asset names
+struct SharedWatchlistStats: Codable {
+    var greenValue: Int
+    var blueValue: Int
+}
+
+struct SharedWatchlist: Codable {
+    let id: UUID
+    var title: String
+    var location: String
+    var dateRange: String
+    var mainImageName: String
+    var stats: SharedWatchlistStats
+    var userImages: [String] // Using SF Symbol names or asset names
     
     var observedBirds: [Bird] = []
     var toObserveBirds: [Bird] = []
@@ -72,4 +86,17 @@ struct SharedWatchlist {
     var birds: [Bird] {
         return observedBirds + toObserveBirds
     }
+    
+    init(id: UUID = UUID(), title: String, location: String, dateRange: String, mainImageName: String, stats: SharedWatchlistStats, userImages: [String], observedBirds: [Bird] = [], toObserveBirds: [Bird] = []) {
+        self.id = id
+        self.title = title
+        self.location = location
+        self.dateRange = dateRange
+        self.mainImageName = mainImageName
+        self.stats = stats
+        self.userImages = userImages
+        self.observedBirds = observedBirds
+        self.toObserveBirds = toObserveBirds
+    }
 }
+
