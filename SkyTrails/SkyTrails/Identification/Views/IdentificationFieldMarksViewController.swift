@@ -47,13 +47,13 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
-//    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
-//        let renderer = UIGraphicsImageRenderer(size: size)
-//        return renderer.image { _ in
-//            image.draw(in: CGRect(origin: .zero, size: size))
-//        }
-//    }
-//   
+    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+   
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
@@ -62,8 +62,8 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
         if let img = UIImage(named: item.imageView) {
     
             let targetSize = CGSize(width: 60, height: 60)
-            //let resized = resize(img, to: targetSize)
-            cell.imageView?.image = img
+            let resized = resize(img, to: targetSize)
+            cell.imageView?.image = resized
             cell.imageView?.contentMode = .scaleAspectFill
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
         } else {

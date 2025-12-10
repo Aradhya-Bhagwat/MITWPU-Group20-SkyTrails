@@ -5,30 +5,28 @@
     { "symbols": "icn_shape_bird_question", "fieldMarkName": "Shape" },
     { "symbols": "icn_field_marks", "fieldMarkName": "Field Marks" }
   ],
-
   "histories": [
-    {
-      "imageView": "bird_Common_kingfisher",
-      "specieName": "Common Kingfisher",
-      "date": "2024-01-01"
-    },
-    {
-      "imageView": "bird_hoopoe",
-      "specieName": "Hoopoe",
-      "date": "2024-01-02"
-    },
-    {
-      "imageView": "bird_blue_throated_barbet",
-      "specieName": "Blue-Throated Barbaret",
-      "date": "2024-01-03"
-    },
-    {
-      "imageView": "bird_spoonbill",
-      "specieName": "SpoonBill",
-      "date": "2024-01-05"
-    }
-  ],
-
+      {
+        "imageView": "bird_Common_kingfisher",
+        "specieName": "Common Kingfisher",
+        "date": "2024-01-01"
+      },
+      {
+        "imageView": "bird_hoopoe",
+        "specieName": "Hoopoe",
+        "date": "2024-01-02"
+      },
+      {
+        "imageView": "bird_blue_throated_barbet",
+        "specieName": "Blue-Throated Barbaret",
+        "date": "2024-01-03"
+      },
+      {
+        "imageView": "bird_spoonbill",
+        "specieName": "SpoonBill",
+        "date": "2024-01-05"
+      }
+    ],
   "bird_shapes": [
     {
       "imageView": "bird_auks_shape",

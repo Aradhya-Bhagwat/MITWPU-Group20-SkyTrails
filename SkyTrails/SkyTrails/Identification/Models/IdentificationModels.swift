@@ -65,7 +65,7 @@ struct IdentificationModels: Codable {
 
             print("✅ JSON LOADED SUCCESSFULLY")
 
-            histories = response.histories
+            histories = []
             fieldMarkOptions = response.fieldMarkOptions
             birdShapes = response.birdShapes
             chooseFieldMarks = response.chooseFieldMarks

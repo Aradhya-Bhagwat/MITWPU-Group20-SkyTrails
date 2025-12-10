@@ -20,32 +20,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
 
     var history: [History] = []
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return history.count
-    }
-
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "history_cell", for: indexPath)
-        
-        guard let historyCell = cell as? IdentificationHistoryCollectionViewCell else {
-            return cell
-        }
-        let historyItems = history[indexPath.row]
-        historyCell.configureCell(historyItem: historyItems)
-
-        historyCell.layer.backgroundColor = UIColor.white.cgColor
-        historyCell.layer.cornerRadius = 12
-        historyCell.layer.shadowColor = UIColor.black.cgColor
-        historyCell.layer.shadowOpacity = 0.1
-        historyCell.layer.shadowOffset = CGSize(width: 0, height: 2)
-        historyCell.layer.shadowRadius = 8
-        historyCell.layer.masksToBounds = false
-        
-        return historyCell
-    }
-    
-//
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         // Apply shadow after the button has its final frame for correct corner radius
@@ -83,6 +57,55 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
                }
 
     }
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return max(history.count, 1)
+
+    }
+
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "history_cell", for: indexPath)
+        
+        guard let historyCell = cell as? IdentificationHistoryCollectionViewCell else {
+              return cell
+          }
+
+        if history.isEmpty {
+            // IMAGE
+            historyCell.historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
+            historyCell.historyImageView.tintColor = .lightGray
+            historyCell.historyImageView.contentMode = .scaleAspectFit
+            
+            // TEXT
+            historyCell.specieNameLabel.text = "No history yet"
+            historyCell.specieNameLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            historyCell.specieNameLabel.textAlignment = .center
+            historyCell.specieNameLabel.textColor = .darkGray
+            
+            historyCell.dateLabel.text = "Start identifying birds!"
+            historyCell.dateLabel.font = UIFont.systemFont(ofSize: 14)
+            historyCell.dateLabel.textAlignment = .center
+            historyCell.dateLabel.textColor = .lightGray
+            historyCell.layer.shadowOpacity = 0
+
+            return historyCell
+        }
+
+        let historyItems = history[indexPath.row]
+        historyCell.configureCell(historyItem: historyItems)
+
+        historyCell.layer.backgroundColor = UIColor.white.cgColor
+        historyCell.layer.cornerRadius = 12
+        historyCell.layer.shadowColor = UIColor.black.cgColor
+        historyCell.layer.shadowOpacity = 0.1
+        historyCell.layer.shadowOffset = CGSize(width: 0, height: 2)
+        historyCell.layer.shadowRadius = 8
+        historyCell.layer.masksToBounds = false
+        
+        return historyCell
+    }
+    
+
     func applyCardShadow(to view: UIView) {
         view.layer.cornerRadius = 12
         view.layer.shadowColor = UIColor.black.cgColor
@@ -107,11 +130,13 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
  
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-       
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+       
+
         let item = viewModel.fieldMarkOptions[indexPath.row]
         cell.textLabel?.text = item.fieldMarkName
-        
+      
         if let img = UIImage(named: item.symbols) {
     
             let targetSize = CGSize(width: 28, height: 28)
@@ -138,11 +163,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     func generateLayout() -> UICollectionViewLayout {
         let size  = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(0.5),
-            heightDimension: .fractionalHeight(1.0))
+            heightDimension: .estimated(200))
         let item = NSCollectionLayoutItem(layoutSize: size)
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(200))
+            heightDimension: .estimated(200))
         
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         group.interItemSpacing = .fixed(10)
@@ -173,5 +198,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
 
         coordinator?.configureSteps(from: viewModel.fieldMarkOptions)
     }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedHistory = history[indexPath.row]
+        coordinator?.goDirectlyToResult(fromHistory: selectedHistory, index: indexPath.row)
+        }
+    }
 
-}
+
+

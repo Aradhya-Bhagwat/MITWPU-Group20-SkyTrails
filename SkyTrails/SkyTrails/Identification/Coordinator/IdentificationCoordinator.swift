@@ -84,6 +84,28 @@ class IdentificationCoordinator{
         currentIndex = steps.count 
         navigationController.pushViewController(vc, animated: true)
     }
+    func goDirectlyToResult(fromHistory historyItem: History, index: Int) {
+        let storyboard = UIStoryboard(name: "Identification", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
+        
+        vc.viewModel = viewModel
+        vc.historyItem = historyItem
+        vc.historyIndex = index
+        vc.delegate = self
+        
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    func goDirectlyToResult(fromHistory historyItem: History) {
+        let storyboard = UIStoryboard(name: "Identification", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
+        
+        vc.viewModel = viewModel
+        vc.historyItem = historyItem
+        vc.delegate = self
+        
+        navigationController.pushViewController(vc, animated: true)
+    }
     func LeftButton() {
         currentIndex = 0
         goToNextStep()

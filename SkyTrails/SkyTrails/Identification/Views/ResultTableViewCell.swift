@@ -46,6 +46,11 @@ class ResultTableViewCell: UITableViewCell {
  
 
       }
+    func configureHistory(image: UIImage?, name: String, date: String) {
+        resultImageView.image = image
+        nameLabel.text = name
+        percentageLabel.text = date   
+    }
     func setupMenu() {
         let predictAction = UIAction(title: "Predict Species on map",
                                      image: UIImage(systemName: "map")) { [weak self] _ in
