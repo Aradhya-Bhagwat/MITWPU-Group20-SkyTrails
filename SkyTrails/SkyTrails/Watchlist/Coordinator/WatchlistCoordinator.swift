@@ -63,9 +63,18 @@ class WatchlistCoordinator: Coordinator {
 
 	
 		// Step 4: Create Watchlist
-	func showCreateWatchlist() {
-        print("Error: SmartFormViewController is missing. Implementation pending for create watchlist.")
-
+	func showCreateWatchlist(type: WatchlistType, viewModel: WatchlistViewModel?) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else {
+            print("Error: Could not instantiate EditWatchlistDetailViewController")
+            return
+        }
+        
+        vc.watchlistType = type
+        vc.viewModel = viewModel
+        vc.coordinator = self
+        
+        navigationController.pushViewController(vc, animated: true)
 	}
 	
 		// In WatchlistCoordinator.swift
@@ -158,6 +167,7 @@ class WatchlistCoordinator: Coordinator {
 			guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
 			
 			vc.coordinator = self
+            vc.viewModel = self.viewModel
 			vc.bird = bird // Will be nil for "Add New"
 			
 				// Push directly onto navigation stack

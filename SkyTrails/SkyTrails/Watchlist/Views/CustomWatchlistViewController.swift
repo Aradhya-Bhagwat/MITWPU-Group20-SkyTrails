@@ -44,6 +44,14 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         print("CustomWatchlistViewController appeared. Watchlist count: \(allWatchlists.count)")
+        
+        // Refresh data to reflect any changes (e.g. new watchlist added)
+        if let text = searchBar.text, !text.isEmpty {
+            filteredWatchlists = allWatchlists.filter { $0.title.lowercased().contains(text.lowercased()) }
+        } else {
+            filteredWatchlists = allWatchlists
+        }
+        sortWatchlists(by: currentSortOption)
     }
 	
 	private func setupUI() {
@@ -70,10 +78,6 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 		searchBar.backgroundImage = UIImage()
 		searchBar.delegate = self
 	}
-	
-    @IBAction func addTapped(_ sender: Any) {
-        coordinator?.showCreateWatchlist()
-    }    
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
 		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
 		
@@ -137,12 +141,21 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
 		searchBar.resignFirstResponder()
 	}
+	
+    @IBAction func addTapped(_ sender: Any) {
+        performSegue(withIdentifier: "ShowEditCustomWatchlist", sender: nil)
+    }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowSpeciesSelection",
            let destVC = segue.destination as? SpeciesSelectionViewController {
             destVC.coordinator = self.coordinator
             destVC.viewModel = self.viewModel
+        } else if segue.identifier == "ShowEditCustomWatchlist",
+                  let destVC = segue.destination as? EditWatchlistDetailViewController {
+            destVC.watchlistType = .custom
+            destVC.viewModel = self.viewModel
+            destVC.coordinator = self.coordinator
         }
     }
 }
@@ -174,6 +187,24 @@ extension CustomWatchlistViewController {
 		
 		return CGSize(width: cellWidth, height: 220) // Height to match your design
 	}
+
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let item = filteredWatchlists[indexPath.row]
+        
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
+            
+            smartVC.watchlistType = .custom
+            smartVC.watchlistTitle = item.title
+            smartVC.observedBirds = item.observedBirds
+            smartVC.toObserveBirds = item.toObserveBirds
+            smartVC.currentWatchlistId = item.id
+            smartVC.viewModel = self.viewModel
+            smartVC.coordinator = self.coordinator
+            
+            self.navigationController?.pushViewController(smartVC, animated: true)
+        }
+    }
 }
 
 

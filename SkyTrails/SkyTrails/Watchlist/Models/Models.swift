@@ -18,7 +18,7 @@ enum Rarity{
 
 
 struct Bird {
-	let id: UUID = UUID()
+	var id: UUID = UUID()
 	
 	let name: String
 	let scientificName: String

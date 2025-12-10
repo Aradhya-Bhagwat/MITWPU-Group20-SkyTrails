@@ -15,6 +15,7 @@ class ObservedDetailViewController: UIViewController {
 	var bird: Bird? // nil if adding new
     var watchlistId: UUID?
 	weak var coordinator: WatchlistCoordinator?
+    weak var viewModel: WatchlistViewModel?
 	
 	private var selectedImageName: String?
     
@@ -175,7 +176,9 @@ class ObservedDetailViewController: UIViewController {
 		var images: [String] = []
 		if let imgName = selectedImageName {
 			images.append(imgName)
-		} else {
+		} else if let existing = bird?.images.first {
+            images.append(existing)
+        } else {
 			images.append("bird_placeholder") // Ensure you have a placeholder asset or handle nil
 		}
 		
@@ -183,7 +186,10 @@ class ObservedDetailViewController: UIViewController {
 		let loc = locationTextField.text ?? "Unknown Location"
 		
 			// 3. Create the New Bird Object
+        let idToUse = bird?.id ?? UUID()
+        
 		let newBird = Bird(
+            id: idToUse,
 			name: name,
 			scientificName: "Unknown", // Default
 			images: images,
@@ -193,8 +199,13 @@ class ObservedDetailViewController: UIViewController {
 			observedBy: ["person.circle.fill"] // Current user
 		)
 		
-			// 4. Pass back to Coordinator
-		coordinator?.saveBirdDetails(bird: newBird)
+			// 4. Pass back to Coordinator or ViewModel
+        if let vm = viewModel, let wId = watchlistId {
+            vm.saveObservation(bird: newBird, watchlistId: wId)
+            navigationController?.popViewController(animated: true)
+        } else {
+		    coordinator?.saveBirdDetails(bird: newBird)
+        }
 	}
 	
 		// MARK: - Configuration
