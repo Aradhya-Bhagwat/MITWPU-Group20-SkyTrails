@@ -33,9 +33,11 @@ class IdentificationCoordinator{
     func start(){
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "IdentificationViewController") as! IdentificationViewController
-        vc.viewModel = viewModel
+        
+        vc.viewModel = self.viewModel
         vc.coordinator = self
-        navigationController.setViewControllers([vc], animated: true)
+        
+        navigationController.setViewControllers([vc], animated: false)
         
     }
     
@@ -78,15 +80,21 @@ class IdentificationCoordinator{
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
         vc.viewModel = viewModel
-
+        vc.delegate = self
+        currentIndex = steps.count 
         navigationController.pushViewController(vc, animated: true)
+    }
+    func LeftButton() {
+        currentIndex = 0
+        goToNextStep()
     }
 
     func goToNextStep(){
-        guard currentIndex < steps.count else {
-            return
-        }
         
+        if currentIndex >= steps.count {
+                start()
+                return
+            }
         let step = steps[currentIndex]
         currentIndex += 1
         let screen: UIViewController
@@ -122,6 +130,7 @@ class IdentificationCoordinator{
             
         case .result:
             let vc = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
+            vc.delegate = self
             vc.viewModel = viewModel
             screen = vc
         }
@@ -166,6 +175,10 @@ class IdentificationCoordinator{
 }
 
 extension IdentificationCoordinator: IdentificationFlowStepDelegate {
+    func didTapLeftButton(){
+        LeftButton()
+    }
+    
     func didTapShapes() {
        didTapShape()
     }

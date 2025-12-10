@@ -11,9 +11,9 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
     @IBOutlet weak var progressView: UIProgressView!
-    var viewModel: ViewModel = ViewModel()
+    var viewModel: ViewModel!
     weak var delegate: IdentificationFlowStepDelegate?
-    var selectedDate: Date? = Date()
+    var selectedDate: Date?
 
 
     func styleTableContainer() {

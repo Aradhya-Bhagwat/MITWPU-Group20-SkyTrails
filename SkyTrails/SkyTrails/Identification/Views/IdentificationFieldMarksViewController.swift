@@ -19,7 +19,17 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     weak var delegate: IdentificationFlowStepDelegate?
     var selectedFieldMarks: [Int] = []
 
-    var viewModel: ViewModel = ViewModel()
+    var viewModel: ViewModel!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        styleTableContainer()
+        fieldMarkTableView.delegate = self
+        fieldMarkTableView.dataSource = self
+        setupRightTickButton()
+        
+
+    }
     func styleTableContainer() {
         tableContainerView.backgroundColor = .white
         tableContainerView.layer.cornerRadius = 12
@@ -37,13 +47,13 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
-    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-    }
-   
+//    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
+//        let renderer = UIGraphicsImageRenderer(size: size)
+//        return renderer.image { _ in
+//            image.draw(in: CGRect(origin: .zero, size: size))
+//        }
+//    }
+//   
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
@@ -52,8 +62,8 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
         if let img = UIImage(named: item.imageView) {
     
             let targetSize = CGSize(width: 60, height: 60)
-            let resized = resize(img, to: targetSize)
-            cell.imageView?.image = resized
+            //let resized = resize(img, to: targetSize)
+            cell.imageView?.image = img
             cell.imageView?.contentMode = .scaleAspectFill
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
         } else {
@@ -70,14 +80,7 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
         return cell
     }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        styleTableContainer()
-        fieldMarkTableView.delegate = self
-        fieldMarkTableView.dataSource = self
-        setupRightTickButton()
-
-    }
+   
     @objc func switchChanged(_ sender: UISwitch) {
         let index = sender.tag
 
@@ -100,15 +103,6 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
         print("Selected indices = \(selectedFieldMarks)")
     }
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-      
-        
-    
-        
-
-        
-    }
-    
     private func showMaxLimitAlert() {
         let alert = UIAlertController(
             title: "Limit Reached",

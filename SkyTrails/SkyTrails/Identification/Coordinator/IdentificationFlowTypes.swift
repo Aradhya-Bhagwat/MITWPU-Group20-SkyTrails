@@ -19,6 +19,8 @@ enum IdentificationStep{
 protocol IdentificationFlowStepDelegate: AnyObject {
     func didFinishStep()
     func didTapShapes()
+    func didTapLeftButton()
+    
 }
 protocol IdentificationProgressUpdatable: AnyObject {
     func updateProgress(current: Int, total: Int)

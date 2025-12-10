@@ -15,7 +15,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     
     @IBOutlet weak var progressView: UIProgressView!
 
-    var viewModel: ViewModel = ViewModel()
+    var viewModel: ViewModel!
     var selectedSizeIndex: Int?
     var filteredShapes: [BirdShape] = []
 
@@ -57,9 +57,9 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         cell.textLabel?.text = item.name
         if let img = UIImage(named: item.imageView) {
     
-            let targetSize = CGSize(width: 60, height: 60)
+          let targetSize = CGSize(width: 60, height: 60)
             let resized = resize(img, to: targetSize)
-            cell.imageView?.image = resized
+            cell.imageView?.image = img
             cell.imageView?.contentMode = .scaleAspectFill
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
         } else {
@@ -75,7 +75,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         applySizeFilter()
         shapeTableView.delegate = self
         shapeTableView.dataSource = self
-
+        
 
     }
    
