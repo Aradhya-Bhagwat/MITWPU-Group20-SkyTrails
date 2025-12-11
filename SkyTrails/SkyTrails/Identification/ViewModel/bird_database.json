@@ -1,0 +1,87 @@
+{
+  "reference_data": {
+    "shapes": [
+      { "id": "perching", "name": "Perching-like", "icon": "bird_perching_icon" },
+      { "id": "tree-clinging", "name": "Tree-clinging", "icon": "bird_tree_clinging_icon" },
+      { "id": "pigeon", "name": "Pigeon-like", "icon": "bird_pigeon_icon" },
+      { "id": "game", "name": "Game-like", "icon": "bird_game_icon" }
+    ],
+    "locations": [
+      "Vetal Tekdi",
+      "Singhad Valley",
+      "Himalayas",
+      "Western Ghats"
+    ],
+    "colors": ["Blue", "Red", "Yellow", "Black", "White", "Green", "Brown"],
+    "field_marks": [
+      { "area": "Head", "variants": ["Crest", "Crown", "Mask"] },
+      { "area": "Wing", "variants": ["Bar", "Patch"] },
+      { "area": "Tail", "variants": ["Long", "Forked", "Square"] }
+    ]
+  },
+  "birds": [
+    {
+      "id": "asian_fairy_bluebird",
+      "common_name": "Asian Fairy Bluebird",
+      "scientific_name": "Irena puella",
+      "image_name": "AsianFairyBluebird",
+      "valid_locations": ["Vetal Tekdi", "Western Ghats"],
+      "attributes": {
+        "shape_id": "perching",
+        "size_category": 2,
+        "rarity": "common"
+      },
+      "field_marks": [
+        { "area": "Head", "variant": "Crown", "colors": ["Blue"] },
+        { "area": "Wing", "variant": "Patch", "colors": ["Black"] }
+      ]
+    },
+    {
+      "id": "himalayan_monal",
+      "common_name": "Himalayan Monal",
+      "scientific_name": "Lophophorus impejanus",
+      "image_name": "HimalayanMonal",
+      "valid_locations": ["Himalayas"],
+      "attributes": {
+        "shape_id": "game",
+        "size_category": 3,
+        "rarity": "rare"
+      },
+      "field_marks": [
+        { "area": "Head", "variant": "Crest", "colors": ["Green"] },
+        { "area": "Tail", "variant": "Long", "colors": ["Brown"] }
+      ]
+    },
+    {
+      "id": "indigo_bunting",
+      "common_name": "Indigo Bunting",
+      "scientific_name": "Passerina cyanea",
+      "image_name": "IndigoBunting",
+      "valid_locations": ["Vetal Tekdi"],
+      "attributes": {
+        "shape_id": "perching",
+        "size_category": 1,
+        "rarity": "common"
+      },
+      "field_marks": [
+        { "area": "Head", "variant": "Mask", "colors": ["Blue"] }
+      ]
+    },
+    {
+        "id": "great_hornbill",
+        "common_name": "Great Hornbill",
+        "scientific_name": "Buceros bicornis",
+        "image_name": "GreatHornbill",
+        "valid_locations": ["Western Ghats", "Himalayas"],
+        "attributes": {
+          "shape_id": "tree-clinging",
+          "size_category": 3,
+          "rarity": "rare"
+        },
+        "field_marks": [
+          { "area": "Head", "variant": "Casque", "colors": ["Yellow", "Black"] },
+           { "area": "Beak", "variant": "Curved", "colors": ["Yellow"] }
+        ]
+      }
+  ]
+}
