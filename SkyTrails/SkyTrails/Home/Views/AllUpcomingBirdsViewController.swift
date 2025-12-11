@@ -1,5 +1,5 @@
 //
-//  AllSpotsViewController.swift
+//  AllUpcomingBirdsViewController.swift
 //  SkyTrails
 //
 //  Created by SDC-USER on 10/12/25.
@@ -7,34 +7,36 @@
 
 import UIKit
 
-class AllSpotsViewController: UIViewController {
+class AllUpcomingBirdsViewController: UIViewController {
     
-    var watchlistData: [PopularSpot] = []
-    var recommendationsData: [PopularSpot] = []
+    // Data Source
+    var watchlistData: [UpcomingBird] = []
+    var recommendationsData: [UpcomingBird] = []
     
     private var cachedItemSize: NSCollectionLayoutSize?
-    
-    // MARK: - UI Elements
+        
+    // UI Elements
     @IBOutlet weak var collectionView: UICollectionView!
-    
+
     override func viewDidLoad() {
+     
         super.viewDidLoad()
-        self.title = "All Spots"
+        self.title = "All Upcoming Birds"
         self.view.backgroundColor = .systemBackground
+                
         setupNavigationBar()
         setupCollectionView()
     }
     
-    
-    // MARK: - 2. Setup Collection View
+  
     private func setupCollectionView() {
-        // Initialize with Compositional Layout
+        // Initialize with Dynamic Layout
         collectionView.collectionViewLayout = createLayout()
         
-        // Register Cell
+        // ⭐️ REGISTER NEW CELL
         collectionView.register(
-            UINib(nibName: SpotsToVisitCollectionViewCell.identifier, bundle: nil),
-            forCellWithReuseIdentifier: SpotsToVisitCollectionViewCell.identifier
+            UINib(nibName: UpcomingBirdGridCollectionViewCell.identifier, bundle: nil),
+            forCellWithReuseIdentifier: UpcomingBirdGridCollectionViewCell.identifier
         )
         
         // Register Header
@@ -44,23 +46,22 @@ class AllSpotsViewController: UIViewController {
             withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
         )
         
-        // Set Delegates
         collectionView.dataSource = self
         collectionView.delegate = self
     }
+    // MARK: - 1. Setup Navigation
     private func setupNavigationBar() {
-        // Add "Predict" button to Top Right
-        let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
-        self.navigationItem.rightBarButtonItem = predictButton
-    }
+            // Add "Predict" button to Top Right
+            let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
+            self.navigationItem.rightBarButtonItem = predictButton
+        }
+            
+        @objc private func didTapPredict() {
+            print("Predict button tapped! (Navigate to Prediction Page later)")
+            // TODO: Navigation to Prediction Page goes here
+        }
         
-    @objc private func didTapPredict() {
-        print("Predict button tapped! (Navigate to Prediction Page later)")
-        // TODO: Navigation to Prediction Page goes here
-    }
-    
-    // MARK: - 3. Dynamic Ratio Layout Logic
-    // MARK: - 3. Smart Grid Layout (Fixed Size per Device)
+    // MARK: - 3. Dynamic Ratio Layout Logic (Same as AllSpots)
     private func createLayout() -> UICollectionViewLayout {
             return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
                 guard let self = self else { return nil }
@@ -69,7 +70,6 @@ class AllSpotsViewController: UIViewController {
                 let containerWidth = layoutEnvironment.container.effectiveContentSize.width
                 
                 // 1. Calculate the Fixed Card Size (Only once!)
-                // We base this on the screen's "Portrait" width (narrowest dimension) to ensure consistency.
                 if self.cachedItemSize == nil {
                     
                     // Use the smallest dimension of the screen to calculate the "Base" layout
@@ -77,7 +77,7 @@ class AllSpotsViewController: UIViewController {
                     let screenMinDimension = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
                     
                     // Logic: Fit at least 2 columns in that min dimension, max width 400
-                    let padding: CGFloat = 16.0 // Total padding (8 left + 8 right)
+                    let padding: CGFloat = 16.0 // Total padding
                     let spacing: CGFloat = 16.0 // Inter-item spacing
                     
                     let maxCardWidth: CGFloat = 400.0
@@ -85,11 +85,7 @@ class AllSpotsViewController: UIViewController {
                     
                     var columnCount = minColumns
                     
-                    // Calculate width per item excluding spacing
-                    // Available Space = ScreenWidth - (Spacing * (Columns - 1)) - OuterPadding
-                    // ItemWidth = AvailableSpace / Columns
-                    
-                    // Simplified calculation for sizing:
+                    // Simplified calculation for sizing width per item
                     var calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
                     
                     // If cards are too big, add columns until they fit under maxWidth
@@ -107,25 +103,23 @@ class AllSpotsViewController: UIViewController {
                         widthDimension: .absolute(calculatedWidth),
                         heightDimension: .absolute(calculatedHeight)
                     )
-                    print("🔒 Fixed Card Size Calculated: \(calculatedWidth) x \(calculatedHeight)")
+                    print("🔒 Fixed Bird Card Size Calculated: \(calculatedWidth) x \(calculatedHeight)")
                 }
                 
                 // 2. Use Fixed Size to Layout Current Screen
                 guard let fixedSize = self.cachedItemSize else { return nil }
                 
                 // Determine how many of these "Fixed Cards" fit in the CURRENT width
-                // (In Landscape, containerWidth is huge, so more columns will fit)
                 let itemWidth = fixedSize.widthDimension.dimension
                 let interItemSpacing: CGFloat = 8
                 
-                // Math: How many (Item + Spacing) fit?
-                // Estimate columns
+                // Estimate columns based on current container width
                 let estimatedColumns = Int((containerWidth + interItemSpacing) / (itemWidth + interItemSpacing))
                 let actualColumns = max(1, estimatedColumns) // Ensure at least 1 column
                 
                 // 3. Build Layout Group
                 
-                // We use a "fractional" approach for the group to ensure the grid is solid
+                // Use fractional width for the item to ensure solid grid alignment
                 let groupItemSize = NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1.0/CGFloat(actualColumns)),
                     heightDimension: .fractionalHeight(1.0)
@@ -159,53 +153,50 @@ class AllSpotsViewController: UIViewController {
     }
 
 // MARK: - DataSource
-    extension AllSpotsViewController: UICollectionViewDataSource {
-        
-        func numberOfSections(in collectionView: UICollectionView) -> Int {
-            return 2 // Watchlist + Recommendations
-        }
-
-        func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-            if section == 0 {
-                return watchlistData.count
-            } else {
-                return recommendationsData.count
-            }
-        }
-
-        func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-                
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: SpotsToVisitCollectionViewCell.identifier,
-                for: indexPath
-            ) as? SpotsToVisitCollectionViewCell else {
-                return UICollectionViewCell()
-            }
-
-            let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-            
-            cell.configure(with: item)
-            
-            return cell
-        }
-        
-        // Headers
-        func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-            guard kind == UICollectionView.elementKindSectionHeader,
-                  let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as? SectionHeaderCollectionReusableView else {
-                return UICollectionReusableView()
-            }
-            
-            if indexPath.section == 0 {
-                header.isHidden = watchlistData.isEmpty
-                header.configure(title: "Your Watchlist")
-            } else {
-                header.isHidden = false
-                header.configure(title: "Recommendations")
-            }
-            return header
-        }
+extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 2 // Watchlist + Recommendations
     }
 
-    // MARK: - Delegate
-    extension AllSpotsViewController: UICollectionViewDelegate { }
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if section == 0 { return watchlistData.count }
+        else { return recommendationsData.count }
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+            
+        // ⭐️ DEQUEUE NEW CELL
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: UpcomingBirdGridCollectionViewCell.identifier,
+            for: indexPath
+        ) as? UpcomingBirdGridCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+
+        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
+        
+        // ⭐️ CONFIGURE
+        cell.configure(with: item)
+        
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard kind == UICollectionView.elementKindSectionHeader,
+              let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as? SectionHeaderCollectionReusableView else {
+            return UICollectionReusableView()
+        }
+        
+        if indexPath.section == 0 {
+            header.isHidden = watchlistData.isEmpty
+            header.configure(title: "Your Bird Watchlist")
+        } else {
+            header.isHidden = false
+            header.configure(title: "Recommended Birds")
+        }
+        return header
+    }
+}
+
+extension AllUpcomingBirdsViewController: UICollectionViewDelegate { }

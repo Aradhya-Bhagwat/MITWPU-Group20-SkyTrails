@@ -11,23 +11,60 @@
       "imageName": "migration_soon_2"
     }
   ],
-  "upcoming_birds": [
-    {
-      "imageName": "arctic_tern",
-      "title": "Arctic Tern",
-      "date": "17 Nov ’25 – 02 Dec ’25"
-    },
-    {
-      "imageName": "brown_headed_barbet",
-      "title": "Brown Headed Barbet",
-      "date": "20 Oct ’25 – 02 Dec ’25"
-    },
-    {
-      "imageName": "eurasian_wigeon",
-      "title": "Eurasian Wigeon",
-      "date": "05 Nov ’25 – 15 Dec ’25"
-    }
-  ],
+  "watchlist_birds": [
+      {
+        "imageName": "arctic_tern",
+        "title": "Arctic Tern",
+        "date": "17 Nov ’25 – 02 Dec ’25"
+      },
+      {
+        "imageName": "brown_headed_barbet",
+        "title": "Brown Headed Barbet",
+        "date": "20 Oct ’25 – 02 Dec ’25"
+      },
+      {
+        "imageName": "eurasian_wigeon",
+        "title": "Eurasian Wigeon",
+        "date": "05 Nov ’25 – 15 Dec ’25"
+      },
+      {
+        "imageName": "bird_rosy_starling",
+        "title": "Rosy Starling",
+        "date": "01 Dec ’25 – 15 Jan ’26"
+      },
+      {
+        "imageName": "bird_demosielle_crane",
+        "title": "Demoiselle Crane",
+        "date": "10 Dec ’25 – 20 Feb ’26"
+      }
+    ],
+    "recommended_birds": [
+      {
+        "imageName": "bird_northern_pintail",
+        "title": "Northern Pintail",
+        "date": "15 Dec ’25 – 28 Feb ’26"
+      },
+      {
+        "imageName": "bird_bar_headed_goose",
+        "title": "Bar-headed Goose",
+        "date": "20 Dec ’25 – 10 Mar ’26"
+      },
+      {
+        "imageName": "bird_black_winged_stilt",
+        "title": "Black-winged Stilt",
+        "date": "01 Jan ’26 – 30 Mar ’26"
+      },
+      {
+        "imageName": "bird_pied_cuckoo",
+        "title": "Pied Cuckoo",
+        "date": "15 May ’26 – 30 Jul ’26"
+      },
+      {
+        "imageName": "bird_blue_tailed_bee_eater",
+        "title": "Blue-tailed Bee-eater",
+        "date": "01 Apr ’26 – 30 Jun ’26"
+      }
+    ],
   "bird_categories": [
     {
       "icon": "shorebirds_icon",

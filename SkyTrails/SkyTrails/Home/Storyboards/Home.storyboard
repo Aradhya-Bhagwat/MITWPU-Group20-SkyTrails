@@ -12,7 +12,7 @@
         <!--Home View Controller-->
         <scene sceneID="s0d-6b-0kx">
             <objects>
-                <viewController storyboardIdentifier="Home" id="Y6W-OH-hqX" customClass="HomeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="HomeViewController" id="Y6W-OH-hqX" customClass="HomeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -51,26 +51,109 @@
                     <navigationItem key="navigationItem" id="6vh-2x-Gle"/>
                     <connections>
                         <outlet property="homeCollectionView" destination="HW6-l3-VNR" id="09v-sW-EJ7"/>
+                        <segue destination="pZh-13-5MG" kind="show" identifier="ShowAllSpots" id="OeG-hv-jgT"/>
+                        <segue destination="Gfn-o0-NbS" kind="show" identifier="ShowAllBirds" id="R2i-Y0-18M"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1064.885496183206" y="130.98591549295776"/>
         </scene>
+        <!--All Upcoming Birds View Controller-->
+        <scene sceneID="KXw-ZV-Va4">
+            <objects>
+                <viewController storyboardIdentifier="AllUpcomingBirdsViewController" id="Gfn-o0-NbS" customClass="AllUpcomingBirdsViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="2Zu-ct-rCS">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="AuY-Cn-Gqw">
+                                <rect key="frame" x="0.0" y="172" width="393" height="612"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="hyt-2B-sLA">
+                                    <size key="itemSize" width="238" height="193"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells>
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="yHf-Ox-9g1">
+                                        <rect key="frame" x="0.0" y="0.0" width="176" height="182"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="jv9-g0-cpg">
+                                            <rect key="frame" x="0.0" y="0.0" width="176" height="182"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </collectionViewCellContentView>
+                                        <size key="customSize" width="176" height="182"/>
+                                    </collectionViewCell>
+                                </cells>
+                            </collectionView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="go4-dI-dnf"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="go4-dI-dnf" firstAttribute="trailing" secondItem="AuY-Cn-Gqw" secondAttribute="trailing" id="2ua-fw-ytc"/>
+                            <constraint firstItem="go4-dI-dnf" firstAttribute="bottom" secondItem="AuY-Cn-Gqw" secondAttribute="bottom" id="fej-oI-tey"/>
+                            <constraint firstItem="AuY-Cn-Gqw" firstAttribute="leading" secondItem="go4-dI-dnf" secondAttribute="leading" id="jGa-LH-dVt"/>
+                            <constraint firstItem="AuY-Cn-Gqw" firstAttribute="top" secondItem="go4-dI-dnf" secondAttribute="top" id="kYs-UY-vM4"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="8PN-GO-QZN"/>
+                    <connections>
+                        <outlet property="collectionView" destination="AuY-Cn-Gqw" id="voH-Ye-DHy"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="7pr-OD-1Yg" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1930.534351145038" y="-658.45070422535218"/>
+        </scene>
         <!--All Spots View Controller-->
         <scene sceneID="g2K-9t-XII">
             <objects>
-                <viewController id="pZh-13-5MG" customClass="AllSpotsViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="AllSpotsViewController" id="pZh-13-5MG" customClass="AllSpotsViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="SPl-NH-b72">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="bWX-xn-ZcC">
+                                <rect key="frame" x="0.0" y="172" width="393" height="612"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="8Ih-oJ-yuD">
+                                    <size key="itemSize" width="239" height="229"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells>
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="4Fa-bZ-xu6">
+                                        <rect key="frame" x="0.0" y="0.0" width="176" height="182"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="dQS-vk-RcX">
+                                            <rect key="frame" x="0.0" y="0.0" width="176" height="182"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </collectionViewCellContentView>
+                                        <size key="customSize" width="176" height="182"/>
+                                    </collectionViewCell>
+                                </cells>
+                            </collectionView>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="BdR-hQ-pg7"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="bWX-xn-ZcC" firstAttribute="leading" secondItem="BdR-hQ-pg7" secondAttribute="leading" id="5ch-fk-pB0"/>
+                            <constraint firstItem="bWX-xn-ZcC" firstAttribute="top" secondItem="BdR-hQ-pg7" secondAttribute="top" id="GtM-EL-VAo"/>
+                            <constraint firstItem="BdR-hQ-pg7" firstAttribute="trailing" secondItem="bWX-xn-ZcC" secondAttribute="trailing" id="R8Y-81-Ds6"/>
+                            <constraint firstItem="BdR-hQ-pg7" firstAttribute="bottom" secondItem="bWX-xn-ZcC" secondAttribute="bottom" id="n6r-FJ-Urt"/>
+                        </constraints>
                     </view>
+                    <navigationItem key="navigationItem" id="L3m-Ck-dxZ"/>
+                    <connections>
+                        <outlet property="collectionView" destination="bWX-xn-ZcC" id="GIp-oG-lpR"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="98y-JM-3ya" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1933" y="135"/>
+            <point key="canvasLocation" x="1932.06106870229" y="134.50704225352112"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="1yQ-Pm-LDN">

@@ -32,7 +32,8 @@ class DataLoader {
 // Wrapper for 'home_data.json'
 struct CoreHomeData: Codable {
     let predicted_migrations: [PredictedMigration]?
-    let upcoming_birds: [UpcomingBird]?
+    let watchlist_birds: [UpcomingBird]?
+    let recommended_birds: [UpcomingBird]?
     let bird_categories: [BirdCategory]?
     let watchlist_spots: [PopularSpot]?
     let recommended_spots: [PopularSpot]?
@@ -184,7 +185,8 @@ class HomeModels {
     
     // Data Arrays accessed by ViewController
     var predictedMigrations: [PredictedMigration] = []
-    var upcomingBirds: [UpcomingBird] = []
+    var watchlistBirds: [UpcomingBird] = []
+    var recommendedBirds: [UpcomingBird] = []
     var birdCategories: [BirdCategory] = []
     var watchlistSpots: [PopularSpot] = []
     var recommendedSpots: [PopularSpot] = []
@@ -193,6 +195,13 @@ class HomeModels {
                 return recommendedSpots
             } else {
                 return watchlistSpots
+            }
+        }
+    var homeScreenBirds: [UpcomingBird] {
+            if watchlistBirds.isEmpty {
+                return recommendedBirds
+            } else {
+                return watchlistBirds
             }
         }
     var latestNews: [NewsItem] = []
@@ -210,7 +219,8 @@ class HomeModels {
         let coreData = DataLoader.load("home_data", as: CoreHomeData.self)
         
         self.predictedMigrations = coreData.predicted_migrations ?? []
-        self.upcomingBirds = coreData.upcoming_birds ?? []
+        self.watchlistBirds = coreData.watchlist_birds ?? []
+        self.recommendedBirds = coreData.recommended_birds ?? []
         self.birdCategories = coreData.bird_categories ?? []
         self.watchlistSpots = coreData.watchlist_spots ?? []
         self.recommendedSpots = coreData.recommended_spots ?? []
