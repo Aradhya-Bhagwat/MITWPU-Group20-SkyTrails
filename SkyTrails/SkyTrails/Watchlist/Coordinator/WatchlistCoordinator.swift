@@ -37,8 +37,7 @@ class WatchlistCoordinator: Coordinator {
 	
 		// Step 2: Screen #3 (Species Selection)
 	func showSpeciesSelection(mode: WatchlistMode) {
-		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
+        let vc = UIStoryboard.named("Watchlist").instantiate(SpeciesSelectionViewController.self)
 		
 		vc.coordinator = self
 		vc.mode = mode
@@ -64,11 +63,7 @@ class WatchlistCoordinator: Coordinator {
 	
 		// Step 4: Create Watchlist
 	func showCreateWatchlist(type: WatchlistType, viewModel: WatchlistViewModel?) {
-        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else {
-            print("Error: Could not instantiate EditWatchlistDetailViewController")
-            return
-        }
+        let vc = UIStoryboard.named("Watchlist").instantiate(EditWatchlistDetailViewController.self)
         
         vc.watchlistType = type
         vc.viewModel = viewModel
@@ -78,8 +73,7 @@ class WatchlistCoordinator: Coordinator {
 	}
     
     func showEditWatchlist(_ watchlist: Watchlist, viewModel: WatchlistViewModel) {
-        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
+        let vc = UIStoryboard.named("Watchlist").instantiate(EditWatchlistDetailViewController.self)
         
         vc.watchlistType = .custom
         vc.viewModel = viewModel
@@ -90,8 +84,7 @@ class WatchlistCoordinator: Coordinator {
     }
     
     func showEditSharedWatchlist(_ shared: SharedWatchlist, viewModel: WatchlistViewModel) {
-        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
+        let vc = UIStoryboard.named("Watchlist").instantiate(EditWatchlistDetailViewController.self)
         
         vc.watchlistType = .shared
         vc.viewModel = viewModel
@@ -175,10 +168,10 @@ class WatchlistCoordinator: Coordinator {
 	
 		// Step 4 Update: Instantiate Observed Detail
 	func showBirdDetail(bird: Bird?, mode: WatchlistMode) {
-		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        let storyboard = UIStoryboard.named("Watchlist")
 		
 		if mode == .unobserved {
-			guard let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else { return }
+            let vc = storyboard.instantiate(UnobservedDetailViewController.self)
 			vc.coordinator = self
 			vc.bird = bird
 			navigationController.pushViewController(vc, animated: true)
@@ -188,7 +181,7 @@ class WatchlistCoordinator: Coordinator {
 			// NEW: Handle Observed Mode
 		if mode == .observed {
 				// Using the Storyboard ID "ObservedDetailViewController"
-			guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
+            let vc = storyboard.instantiate(ObservedDetailViewController.self)
 			
 			vc.coordinator = self
             vc.viewModel = self.viewModel

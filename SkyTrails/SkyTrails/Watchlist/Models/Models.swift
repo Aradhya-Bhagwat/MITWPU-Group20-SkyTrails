@@ -8,32 +8,6 @@
 import Foundation
 import CoreLocation
 
-
-enum Rarity: String, Codable {
-	case rare
-	case common
-}
-
-
-struct Bird: Codable {
-	var id: UUID = UUID()
-	
-	let name: String
-	let scientificName: String
-	
-	var images: [String]
-	
-	var rarity : [Rarity]
-	
-	var location: [String] // Changed from [CLLocation] to [String]
-	var date : [Date]
-    
-    var observedBy: [String]? // List of user image names/SF symbols who observed this bird
-    
-    var notes: String?
-}
-
-
 // The Watchlist model containing metadata
 struct Watchlist: Codable {
 	let id: UUID
