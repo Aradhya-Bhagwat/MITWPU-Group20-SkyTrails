@@ -49,8 +49,11 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         
         // Update ViewModel state
         viewModel.selectedShapeId = selectedShape.id
-        viewModel.data.shape = selectedShape.name
-        
+
+			// Inside tableView didSelectRowAt
+		viewModel.data.shape = selectedShape.name // Needed for Summary
+		viewModel.selectedShapeId = selectedShape.id // Needed for Filtering
+		
         // Trigger intermediate filtering
         viewModel.filterBirds(
             shape: selectedShape.id,
@@ -120,6 +123,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         // Even if nothing is explicitly selected (user just wants to skip or current selection is implied),
         // we trigger the delegate to move forward.
         delegate?.didTapShapes()
+		
     }
    
     func applySizeFilter() {

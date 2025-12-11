@@ -143,7 +143,7 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     @objc private func nextTapped() {
         // 1. Get selected names for GUI display
         let selectedNames = selectedFieldMarks.map { viewModel.fieldMarks[$0].name }
-        viewModel.data.fieldMarks = selectedNames
+
         
         // 2. Construct FieldMarkData objects for filtering
         // Since we are only selecting the AREA (e.g., "Back"), we pass empty variant.
@@ -160,6 +160,9 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
             fieldMarks: marksForFilter
         )
         
+			// Inside nextTapped()
+		viewModel.data.fieldMarks = selectedNames // Needed for Summary
+												  // ... existing filtering logic ...
         delegate?.didFinishStep()
     }
 
