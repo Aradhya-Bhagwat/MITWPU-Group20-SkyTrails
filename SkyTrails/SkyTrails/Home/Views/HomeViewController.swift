@@ -11,7 +11,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
     @IBOutlet weak var homeCollectionView: UICollectionView!
     
-  
+    weak var coordinator: HomeNavigationDelegate?
     let homeData = HomeModels()
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
@@ -22,13 +22,30 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         navigationController?.navigationBar.prefersLargeTitles = true
         setupCollectionView()        // Do any additional setup after loading the view.
     }
+    /*
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
             super.viewWillTransition(to: size, with: coordinator)
             coordinator.animate(alongsideTransition: { _ in
                 self.homeCollectionView.collectionViewLayout.invalidateLayout()
             }, completion: nil)
         }
-
+    // Add this inside HomeViewController class
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ShowAllSpots" {
+            if let destinationVC = segue.destination as? AllSpotsViewController {
+                destinationVC.watchlistData = homeData.watchlistSpots
+                destinationVC.recommendationsData = homeData.recommendedSpots
+            }
+        }
+        
+        if segue.identifier == "ShowAllBirds" {
+            if let destinationVC = segue.destination as? AllUpcomingBirdsViewController {
+                destinationVC.watchlistData = homeData.watchlistBirds
+                destinationVC.recommendationsData = homeData.recommendedBirds
+            }
+        }
+    }
+    */
 }
 
 // HomeViewController.swift
@@ -144,7 +161,7 @@ extension HomeViewController {
             
             cachedUpcomingBirdCardWidth = cardWidth
         }
-        
+       
         // 2. Layout
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
@@ -292,7 +309,7 @@ extension HomeViewController: UICollectionViewDataSource {
             return homeData.getDynamicMapCards().count
         } else if section == 1 {
             // SHIFTED: Upcoming Birds
-            return homeData.upcomingBirds.count
+            return homeData.homeScreenBirds.count
         } else if section == 2 {
             // SHIFTED: Spots to Visit
             return min(homeData.homeScreenSpots.count, 5)
@@ -343,7 +360,7 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! q_2UpcomingBirdsCollectionViewCell
             
-            let item = homeData.upcomingBirds[indexPath.row]
+            let item = homeData.homeScreenBirds[indexPath.row]
             cell.configure(
                 image: UIImage(named: item.imageName),
                 title: item.title,
@@ -438,30 +455,34 @@ extension HomeViewController: UICollectionViewDataSource {
                 header.configure(title: "Prediction")
             }
             else if indexPath.section == 1 {
-                header.configure(title: "Upcoming Birds")
+                action = { [weak self] in
+                        guard let self = self else { return }
+                        print("👆 Tapped Upcoming Birds Chevron")
+                        
+                        // Pass the data to the coordinator
+                        self.coordinator?.didSelectAllBirds(
+                            watchlist: self.homeData.watchlistBirds,
+                            recommendations: self.homeData.recommendedBirds
+                        )
+                    }
+                    
+                    header.configure(title: "Upcoming Birds", tapAction: action)
             }
             else if indexPath.section == 2 {
                 print("⚡️ Setting up action for Spots Section")
                 
-                // ⭐️ SECTION 2 LOGIC: Navigate to AllSpotsViewController
+                // ⭐️ SECTION 2 LOGIC: Navigate using Storyboard Segue
                 action = { [weak self] in
-                    print("🚀 Executing Navigation Logic")
-                    guard let self = self else { return }
-                    
-                    // 1. Initialize the new screen
-                    let allSpotsVC = AllSpotsViewController()
-                    
-                    // 2. Pass the data (Watchlist & Recommendations)
-                    allSpotsVC.watchlistData = self.homeData.watchlistSpots
-                    allSpotsVC.recommendationsData = self.homeData.recommendedSpots
-                    
-                    // 3. Push to navigation stack
-                    self.navigationController?.pushViewController(allSpotsVC, animated: true)
-                }
-                
-                // Configure header with the specific action
+                        guard let self = self else { return }
+                        print("👆 Tapped Spots Chevron")
+                        
+                        // Pass the data to the coordinator
+                        self.coordinator?.didSelectAllSpots(
+                            watchlist: self.homeData.watchlistSpots,
+                            recommendations: self.homeData.recommendedSpots
+                        )
+                    }
                 header.configure(title: "Spots to Visit", tapAction: action)
-                
             }
             else if indexPath.section == 3 {
                 header.configure(title: "Community Observations")
@@ -552,6 +573,7 @@ extension HomeViewController {
 //        }
 //    }
 }
+
 // HomeViewController.swift
 extension HomeViewController {
     

@@ -1,5 +1,5 @@
 //
-//  q_3SpotsToVisitCollectionViewCell.swift
+//  q_2UpcomingBirdsCollectionViewCell.swift
 //  SkyTrails
 //
 //  Created by SDC-USER on 25/11/25.
@@ -7,57 +7,51 @@
 
 import UIKit
 
-class q_3SpotsToVisitCollectionViewCell: UICollectionViewCell {
+class q_2UpcomingBirdsCollectionViewCell: UICollectionViewCell {
+    @IBOutlet weak var cardContainerView: UIView!
+    @IBOutlet weak var birdImageView: UIImageView!
+    @IBOutlet weak var titleLabel: UILabel!
+    @IBOutlet weak var dateLabel: UILabel!
     
-    @IBOutlet weak var cardContainerView2: UIView!
-    @IBOutlet weak var birdImageView2: UIImageView!
-    @IBOutlet weak var titleLabel2: UILabel!
-    @IBOutlet weak var dateLabel2: UILabel!
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
         self.backgroundColor = .clear
-        setupUI()   
+        setupUI()        // Initialization code
     }
+    
     private func setupUI() {
         self.backgroundColor = .clear
-        contentView.backgroundColor = .systemBackground
-                
-                // Round the corners of the card
+                contentView.backgroundColor = .clear
                 contentView.layer.cornerRadius = 16
-                
-                // IMPORTANT: Allow the shadow to spill outside the bounds
                 contentView.layer.masksToBounds = false
-                
-                // Add the Shadow
                 contentView.layer.shadowColor = UIColor.black.cgColor
-        contentView.layer.shadowOpacity = 0.15  // Adjust for darkness (0.1 to 0.2 is good)
+                contentView.layer.shadowOpacity = 0.15  // Adjust for darkness (0.1 to 0.2 is good)
                 contentView.layer.shadowOffset = CGSize(width: 0, height: 4) // Shadow moves down slightly
                 contentView.layer.shadowRadius = 8 // Softness of the shadow
                 
                 // Optimization: improves scrolling performance
                 contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
-        cardContainerView2.backgroundColor = .systemBackground
-            cardContainerView2.layer.cornerRadius = 16
+            cardContainerView.backgroundColor = .systemBackground
+            cardContainerView.layer.cornerRadius = 16
             
             // This view MUST clip its content (the image) to keep the corners clean.
-            cardContainerView2.layer.masksToBounds = true
+            cardContainerView.layer.masksToBounds = true
 
         // Image styling
-           birdImageView2.contentMode = .scaleAspectFill
-           birdImageView2.clipsToBounds = true
-           birdImageView2.layer.cornerRadius = 12
+           birdImageView.contentMode = .scaleAspectFill
+           birdImageView.clipsToBounds = true
+           birdImageView.layer.cornerRadius = 12
            
            // Title label
-           titleLabel2.numberOfLines = 1
-           titleLabel2.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-           titleLabel2.textColor = .label
+           titleLabel.numberOfLines = 1
+           titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+           titleLabel.textColor = .label
            
            // Date label
-           dateLabel2.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-           dateLabel2.textColor = .secondaryLabel
+           dateLabel.font = UIFont.systemFont(ofSize: 11, weight: .regular)
+           dateLabel.textColor = .secondaryLabel
            
          
        }
@@ -69,10 +63,11 @@ class q_3SpotsToVisitCollectionViewCell: UICollectionViewCell {
     override func prepareForReuse() {
            super.prepareForReuse()
            
-           birdImageView2.image = nil
-           titleLabel2.text = nil
-           dateLabel2.text = nil
+           birdImageView.image = nil
+           titleLabel.text = nil
+           dateLabel.text = nil
        }
+    
     private func createIconString(text: String, iconName: String, color: UIColor, fontSize: CGFloat) -> NSAttributedString {
             let config = UIImage.SymbolConfiguration(pointSize: fontSize * 0.9, weight: .semibold)
             
@@ -90,21 +85,18 @@ class q_3SpotsToVisitCollectionViewCell: UICollectionViewCell {
             return completeString
         }
        
-    // MARK: - Configuration Method
-    func configure(image: UIImage?, title: String, date: String) {
-        birdImageView2.image = image
-        titleLabel2.text = title
-        let locationColor = dateLabel2.textColor ?? .secondaryLabel
-                let locationFontSize = dateLabel2.font.pointSize
-                
-                dateLabel2.attributedText = createIconString(
-                    text: date,
-                    iconName: "mappin.and.ellipse", // Use map pin icon for location
-                    color: locationColor,
-                    fontSize: locationFontSize
-                )
-    }
+       // MARK: - Configuration Method
+       func configure(image: UIImage?, title: String, date: String) {
+           birdImageView.image = image
+           titleLabel.text = title
+           let dateColor = dateLabel.textColor ?? .secondaryLabel
+                   let dateFontSize = dateLabel.font.pointSize
+           dateLabel.attributedText = createIconString(
+                       text: date,
+                       iconName: "calendar", // Use calendar icon
+                       color: dateColor,
+                       fontSize: dateFontSize
+                       )
+       }
     
 }
-
-
