@@ -3,6 +3,7 @@
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <capability name="Map view configurations" minToolsVersion="14.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -15,13 +16,28 @@
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0zf-aK-I4l">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <standardMapConfiguration key="preferredConfiguration"/>
+                            </mapView>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="0zf-aK-I4l" firstAttribute="leading" secondItem="5EZ-qb-Rvc" secondAttribute="leading" id="D7T-b3-eIE"/>
+                            <constraint firstItem="0zf-aK-I4l" firstAttribute="top" secondItem="5EZ-qb-Rvc" secondAttribute="top" id="ZT1-Sr-n2J"/>
+                            <constraint firstAttribute="bottom" secondItem="0zf-aK-I4l" secondAttribute="bottom" id="fT9-u2-ocw"/>
+                            <constraint firstAttribute="trailing" secondItem="0zf-aK-I4l" secondAttribute="trailing" id="i0P-SG-A9E"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="mapView" destination="0zf-aK-I4l" id="Uui-qZ-Jrc"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="140" y="92"/>
+            <point key="canvasLocation" x="139.69465648854961" y="91.549295774647888"/>
         </scene>
     </scenes>
     <resources>

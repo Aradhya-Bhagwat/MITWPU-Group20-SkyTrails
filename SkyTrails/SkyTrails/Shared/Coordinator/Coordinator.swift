@@ -7,19 +7,18 @@
 
 import UIKit
 
-protocol Coordinator {
-    var navigationController: UINavigationController { get set }
-    func start()
-}
-
-class SharedCoordinator: Coordinator {
+class SharedCoordinator {
     
     var navigationController: UINavigationController
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
-    func start() {
-        let storyboard = UIStoryboard.named("Shared")
+    func openSharedMapScreen() {
+        startMapScreen()
+    }
+
+    func startMapScreen() {
+        let storyboard = UIStoryboard.named("SharedStoryboard")
         let vc = storyboard.instantiate(MapViewController.self)
         navigationController.pushViewController(vc, animated: true)
        

@@ -138,7 +138,20 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
         delegate?.didFinishStep()
     }
 
-    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+       
+        if indexPath.section == 2 && indexPath.row == 0 {
+             print("Map tapped")
+             delegate?.openMapScreen()
+             return
+         }
+         
+       
+         if indexPath.section == 2 && indexPath.row == 1 {
+             print("Current Location tapped")
+         }
+
+    }
 
 }
 extension DateandLocationViewController: DateInputCellDelegate, IdentificationProgressUpdatable {
