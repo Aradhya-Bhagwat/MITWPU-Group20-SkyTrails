@@ -13,7 +13,14 @@ class WatchlistViewModel {
 	init() {
         loadData()
         
-        if self.watchlists.isEmpty {
+        // Only seed mock data if the file DOES NOT EXIST.
+        // If file exists but loadData failed (decoding error), watchlists is empty,
+        // but we MUST NOT overwrite the file with mocks.
+        let watchlistsURL = getDocumentsDirectory().appendingPathComponent("watchlists.json")
+        let fileExists = FileManager.default.fileExists(atPath: watchlistsURL.path)
+        
+        if self.watchlists.isEmpty && !fileExists {
+            print("🌱 Seeding Mock Data (First Run)")
             self.watchlists = createMockWatchlists()
             
             // Helper to get some random birds from mock watchlists
@@ -24,31 +31,32 @@ class WatchlistViewModel {
             let firstHalf = Array(allBirds.prefix(allBirds.count / 2)) // First half
             let secondHalf = Array(allBirds.suffix(allBirds.count - firstHalf.count)) // Second half
             
-        self.sharedWatchlists = [
-            SharedWatchlist(
-                title: "Canopy Wanderers",
-                location: "Vetal tekdi",
-                dateRange: "8th Oct - 7th Nov",
-                mainImageName: "AsianFairyBluebird",
-                stats: SharedWatchlistStats(greenValue: 18, blueValue: 7),
-                userImages: ["person.crop.circle.fill", "person.crop.circle", "person.circle.fill", "person.crop.circle.fill", "person.crop.circle"],
-                observedBirds: Array(firstHalf.prefix(max(1, firstHalf.count / 2))), // At least one bird observed
-                toObserveBirds: Array(firstHalf.suffix(max(1, firstHalf.count - firstHalf.count / 2))) // At least one bird to observe
-            ),
-            SharedWatchlist(
-                title: "Feather Trail",
-                location: "Singhad Valley",
-                dateRange: "12th Oct - 15th Nov",
-                mainImageName: "HimalayanMonal",
-                stats: SharedWatchlistStats(greenValue: 10, blueValue: 2),
-                userImages: ["person.circle.fill", "person.crop.circle", "person.crop.circle.fill", "person.crop.circle"],
-                observedBirds: Array(secondHalf.prefix(max(1, secondHalf.count / 2))), // At least one bird observed
-                toObserveBirds: Array(secondHalf.suffix(max(1, secondHalf.count - secondHalf.count / 2))) // At least one bird to observe
-            )
-        ]
-        saveData()
+            self.sharedWatchlists = [
+                SharedWatchlist(
+                    title: "Canopy Wanderers",
+                    location: "Vetal tekdi",
+                    dateRange: "8th Oct - 7th Nov",
+                    mainImageName: "AsianFairyBluebird",
+                    stats: SharedWatchlistStats(greenValue: 18, blueValue: 7),
+                    userImages: ["person.crop.circle.fill", "person.crop.circle", "person.circle.fill", "person.crop.circle.fill", "person.crop.circle"],
+                    observedBirds: Array(firstHalf.prefix(max(1, firstHalf.count / 2))), // At least one bird observed
+                    toObserveBirds: Array(firstHalf.suffix(max(1, firstHalf.count - firstHalf.count / 2))) // At least one bird to observe
+                ),
+                SharedWatchlist(
+                    title: "Feather Trail",
+                    location: "Singhad Valley",
+                    dateRange: "12th Oct - 15th Nov",
+                    mainImageName: "HimalayanMonal",
+                    stats: SharedWatchlistStats(greenValue: 10, blueValue: 2),
+                    userImages: ["person.circle.fill", "person.crop.circle", "person.crop.circle.fill", "person.crop.circle"],
+                    observedBirds: Array(secondHalf.prefix(max(1, secondHalf.count / 2))), // At least one bird observed
+                    toObserveBirds: Array(secondHalf.suffix(max(1, secondHalf.count - secondHalf.count / 2))) // At least one bird to observe
+                )
+            ]
+            saveData()
+        }
     }
-}
+
     
     // MARK: - Persistence
     
@@ -83,18 +91,29 @@ class WatchlistViewModel {
         
         // Load Custom Watchlists
         if let data = try? Data(contentsOf: watchlistsURL) {
-            if let decoded = try? decoder.decode([Watchlist].self, from: data) {
+            do {
+                let decoded = try decoder.decode([Watchlist].self, from: data)
                 self.watchlists = decoded
+            } catch {
+                print("❌ CRITICAL ERROR: Failed to decode watchlists.json: \(error)")
+                // Do NOT overwrite with mock data here. Let it fail safely so user knows something is wrong
+                // or at least doesn't save over it immediately.
             }
+        } else {
+             print("ℹ️ No watchlists.json found (Fresh install?)")
         }
         
         // Load Shared Watchlists
         if let data = try? Data(contentsOf: sharedWatchlistsURL) {
-            if let decoded = try? decoder.decode([SharedWatchlist].self, from: data) {
+            do {
+                let decoded = try decoder.decode([SharedWatchlist].self, from: data)
                 self.sharedWatchlists = decoded
+            } catch {
+                 print("❌ CRITICAL ERROR: Failed to decode sharedWatchlists.json: \(error)")
             }
         }
     }
+
 	
 		// MARK: - Calculated Stats for Summary Cards
 	
