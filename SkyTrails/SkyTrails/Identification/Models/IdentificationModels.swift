@@ -185,21 +185,25 @@ class IdentificationModels {
     private func populateUIModels() {
         guard let db = masterDatabase else { return }
         
+        // 1. Shapes
         self.birdShapes = db.referenceData.shapes.map { shape in
             BirdShape(imageView: shape.icon, name: shape.name, sizeCategory: nil, id: shape.id)
         }
         
+        // 2. Field Mark Options (Categories for the main menu)
         self.fieldMarkOptions = [
-            FieldMarkType(symbols: "calendar", fieldMarkName: "Location & Date"),
-            FieldMarkType(symbols: "ruler", fieldMarkName: "Size"),
-            FieldMarkType(symbols: "square.grid.2x2", fieldMarkName: "Shape"),
-            FieldMarkType(symbols: "paintpalette", fieldMarkName: "Field Marks")
+            FieldMarkType(symbols: "icn_location_date_pin", fieldMarkName: "Location & Date"),
+            FieldMarkType(symbols: "icn_size", fieldMarkName: "Size"),
+            FieldMarkType(symbols: "icn_shape_bird_question", fieldMarkName: "Shape"),
+            FieldMarkType(symbols: "icn_field_marks", fieldMarkName: "Field Marks")
         ]
         
-        self.chooseFieldMarks = db.referenceData.fieldMarks.flatMap { fm in
-            fm.variants.map { variant in
-                ChooseFieldMark(imageView: "bird_\(fm.area.lowercased())_\(variant.lowercased())", name: "\(fm.area) - \(variant)")
-            }
+        // 3. Detailed Field Marks (for the selection screen)
+        // Map one entry per Area (e.g., "Back", "Beak"), not per variant.
+        self.chooseFieldMarks = db.referenceData.fieldMarks.map { fm in
+            // Construct image name: "bird_" + area name lowercased (e.g., "bird_back", "bird_wings")
+            let imageName = "bird_\(fm.area.lowercased())"
+            return ChooseFieldMark(imageView: imageName, name: fm.area)
         }
     }
     

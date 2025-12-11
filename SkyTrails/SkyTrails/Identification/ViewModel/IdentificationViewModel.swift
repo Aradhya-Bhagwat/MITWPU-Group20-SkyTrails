@@ -109,10 +109,10 @@ class ViewModel {
                 // Bird must have ALL the selected marks (AND logic)
                 for mark in marks {
                     let hasMark = bird.fieldMarks.contains { birdMark in
-                        // Comparing area and variant. Colors could be strict or loose.
-                        // For now, strict match on Area and Variant, AND intersection on colors (if selected colors are present)
+                        // Comparing area.
+                        // If variant is empty (generic area selection), we ignore variant matching.
                         let areaMatch = birdMark.area == mark.area
-                        let variantMatch = birdMark.variant == mark.variant
+                        let variantMatch = mark.variant.isEmpty || birdMark.variant == mark.variant
                         
                         // If user selected colors, check overlap
                         var colorMatch = true
