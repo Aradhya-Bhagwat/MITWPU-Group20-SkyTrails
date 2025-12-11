@@ -13,7 +13,7 @@ enum WatchlistMode {
 	case create
 }
 
-class WatchlistCoordinator: Coordinator {
+class WatchlistCoordinator {
 	unowned var navigationController: UINavigationController
 	
 		// State for the Detail Loop

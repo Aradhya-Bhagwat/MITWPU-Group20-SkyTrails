@@ -14,7 +14,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     @IBOutlet weak var collectionView: UICollectionView!
     
     var coordinator: IdentificationCoordinator?
-
+    var sharedCoordinator: SharedCoordinator?
     var viewModel: ViewModel = ViewModel()
 
 
@@ -52,11 +52,17 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
 
         collectionView.reloadData()
         if coordinator == nil, let nav = self.navigationController {
-                   coordinator = IdentificationCoordinator(navigationController: nav)
+            coordinator = IdentificationCoordinator(navigationController: nav)
+
+                 let shared = SharedCoordinator(navigationController: nav)
+    
+                 self.sharedCoordinator = shared
+                 coordinator?.parentCoordinator = shared
+            
                    //coordinator?.start()
                }
 
-    }
+  }
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return max(history.count, 1)
 
