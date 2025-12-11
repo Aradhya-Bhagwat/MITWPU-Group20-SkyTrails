@@ -5,7 +5,7 @@
 *.xcscmblueprint
 DerivedData/
 build/
-
+.DS_Store
 ## User data
 xcuserdata/
 *.xcuserdatad
