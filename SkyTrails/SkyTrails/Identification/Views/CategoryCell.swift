@@ -1,17 +1,30 @@
-//
-//  CategoryCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 11/12/25.
-//
-
 import UIKit
 
 class CategoryCell: UICollectionViewCell {
-
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
-    }
-
+	@IBOutlet weak var iconImageView: UIImageView!
+		// @IBOutlet weak var nameLabel: UILabel! // Optional if you want text below
+	
+	override var isSelected: Bool {
+		didSet {
+			updateAppearance()
+		}
+	}
+	
+	func configure(name: String, iconName: String, isSelected: Bool) {
+		iconImageView.image = UIImage(named: iconName)
+		self.isSelected = isSelected
+		updateAppearance()
+	}
+	
+	private func updateAppearance() {
+		if isSelected {
+			iconImageView.layer.borderWidth = 3
+			iconImageView.layer.borderColor = UIColor.systemBlue.cgColor
+			iconImageView.layer.cornerRadius = iconImageView.frame.width / 2
+			iconImageView.alpha = 1.0
+		} else {
+			iconImageView.layer.borderWidth = 0
+			iconImageView.alpha = 0.5 // Dimmed when not selected
+		}
+	}
 }
