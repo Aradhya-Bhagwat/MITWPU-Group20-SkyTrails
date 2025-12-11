@@ -115,15 +115,18 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
 
     @objc private func nextTapped() {
         let formattedDate = formatDate(selectedDate)
-        viewModel.data.date = formattedDate
+
         
         // Simulating location selection for now as the UI doesn't fully implement the picker logic yet.
         // In a real app, this would come from the selected cell or map.
         // Using a valid location from bird_database.json for testing.
         let location = "Pune, India"
-        viewModel.selectedLocation = location
-        viewModel.data.location = location
-        
+
+			// Inside nextTapped()
+		viewModel.data.date = formattedDate       // Needed for Summary
+		viewModel.data.location = location        // Needed for Summary
+		viewModel.selectedLocation = location     // Needed for Filtering
+		
         // Trigger intermediate filtering
         viewModel.filterBirds(
             shape: viewModel.selectedShapeId,

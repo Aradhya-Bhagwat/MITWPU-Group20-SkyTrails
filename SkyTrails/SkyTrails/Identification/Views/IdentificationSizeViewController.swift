@@ -108,7 +108,9 @@ class IdentificationSizeViewController: UIViewController {
         
         // 3. Update data for GUI display
         let sizeText = sizeDescription(for: viewModel.selectedSizeCategory ?? 0)
-        viewModel.data.size = sizeText
+			// Inside nextTapped()
+		viewModel.data.size = sizeText            // Needed for Summary
+		viewModel.selectedSizeCategory = Int(round(birdSlider.value)) // Needed for Filtering
         
         delegate?.didFinishStep()
     }
