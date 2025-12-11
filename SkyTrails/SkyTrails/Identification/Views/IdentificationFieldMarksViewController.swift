@@ -58,7 +58,9 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
         let item = viewModel.fieldMarks[indexPath.row]
+        
         cell.textLabel?.text = item.name
+        
         if let img = UIImage(named: item.imageView) {
     
             let targetSize = CGSize(width: 60, height: 60)
@@ -139,8 +141,25 @@ class IdentificationFieldMarksViewController: UIViewController,UITableViewDelega
     }
 
     @objc private func nextTapped() {
+        // 1. Get selected names for GUI display
         let selectedNames = selectedFieldMarks.map { viewModel.fieldMarks[$0].name }
         viewModel.data.fieldMarks = selectedNames
+        
+        // 2. Construct FieldMarkData objects for filtering
+        // Since we are only selecting the AREA (e.g., "Back"), we pass empty variant.
+        // The filtering logic in ViewModel needs to handle this (match ANY variant if variant is empty).
+        let marksForFilter: [FieldMarkData] = selectedNames.map { name in
+            return FieldMarkData(area: name, variant: "", colors: [])
+        }
+        
+        // 3. Trigger filtering in ViewModel
+        viewModel.filterBirds(
+            shape: viewModel.selectedShapeId,
+            size: viewModel.selectedSizeCategory,
+            location: viewModel.selectedLocation,
+            fieldMarks: marksForFilter
+        )
+        
         delegate?.didFinishStep()
     }
 

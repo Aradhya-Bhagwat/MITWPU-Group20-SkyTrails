@@ -139,13 +139,16 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
       
         if let img = UIImage(named: item.symbols) {
     
-            let targetSize = CGSize(width: 28, height: 28)
+            let targetSize = CGSize(width: 28, height: 28) // Restore the target size
             let resized = resize(img, to: targetSize)
             cell.imageView?.image = resized
-            cell.imageView?.contentMode = .scaleAspectFill
-            cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
+            cell.imageView?.contentMode = .scaleAspectFit // Use ScaleAspectFit for icons
+            cell.imageView?.frame = CGRect(origin: .zero, size: targetSize) // Explicitly set frame
+            cell.imageView?.tintColor = .label // Keep tint color for SF Symbols if they are being used.
         } else {
-            cell.imageView?.image = nil
+            // Fallback for debugging, keep this.
+            cell.imageView?.image = UIImage(systemName: "questionmark.circle")
+            cell.imageView?.tintColor = .systemGray
         }
         
         cell.accessoryType = (item.isSelected ?? false) ? .checkmark : .none

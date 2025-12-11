@@ -46,7 +46,19 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.row]
-         viewModel.data.shape = selectedShape.name
+        
+        // Update ViewModel state
+        viewModel.selectedShapeId = selectedShape.id
+        viewModel.data.shape = selectedShape.name
+        
+        // Trigger intermediate filtering
+        viewModel.filterBirds(
+            shape: selectedShape.id,
+            size: viewModel.selectedSizeCategory,
+            location: viewModel.selectedLocation,
+            fieldMarks: [] // Field marks not selected yet
+        )
+        
         delegate?.didTapShapes()
 
     }
@@ -75,19 +87,46 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         applySizeFilter()
         shapeTableView.delegate = self
         shapeTableView.dataSource = self
+        setupRightTickButton()
+    }
+    
+    private func setupRightTickButton() {
+        // Create button
+        let button = UIButton(type: .system)
         
+        // Circle background
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 20   // for 40x40 size
 
+        button.layer.masksToBounds = true   // important to remove rectangle
+        
+        // Checkmark icon
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        let image = UIImage(systemName: "checkmark", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .black
+
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+
+        // Add tap action
+        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+
+        // Put inside UIBarButtonItem
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
+    }
+
+    @objc private func nextTapped() {
+        // If a shape is selected in the table, we proceed.
+        // Even if nothing is explicitly selected (user just wants to skip or current selection is implied),
+        // we trigger the delegate to move forward.
+        delegate?.didTapShapes()
     }
    
     func applySizeFilter() {
-        guard let sizeIndex = selectedSizeIndex else {
-            filteredShapes = viewModel.birdShapes
-            return
-        }
-
-        filteredShapes = viewModel.birdShapes.filter { shape in
-            shape.sizeCategory?.contains(sizeIndex) ?? false
-        }
+        // New database shapes don't currently have size categories mapped in the struct.
+        // Showing all shapes to prevent empty screen.
+        // Future improvement: derive valid shapes from birds that match the selected size.
+        filteredShapes = viewModel.birdShapes
     }
 
   

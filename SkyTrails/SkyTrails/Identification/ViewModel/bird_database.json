@@ -1,87 +1,453 @@
 {
+  "metadata": {
+    "version": "1.0",
+    "total_species": 20
+  },
   "reference_data": {
-    "shapes": [
-      { "id": "perching", "name": "Perching-like", "icon": "bird_perching_icon" },
-      { "id": "tree-clinging", "name": "Tree-clinging", "icon": "bird_tree_clinging_icon" },
-      { "id": "pigeon", "name": "Pigeon-like", "icon": "bird_pigeon_icon" },
-      { "id": "game", "name": "Game-like", "icon": "bird_game_icon" }
-    ],
     "locations": [
-      "Vetal Tekdi",
-      "Singhad Valley",
+      "Pune, India",
       "Himalayas",
-      "Western Ghats"
+      "Western Ghats",
+      "Wetlands",
+      "Dessert",
+      "Urban"
     ],
-    "colors": ["Blue", "Red", "Yellow", "Black", "White", "Green", "Brown"],
+    "colors": [
+      "Blue",
+      "Red",
+      "Green",
+      "Yellow",
+      "Black",
+      "White",
+      "Brown",
+      "Grey",
+      "Orange"
+    ],
+    "shapes": [
+      {
+        "id": "Auks",
+        "name": "Auks",
+        "icon": "bird_auks_shape"
+      },
+      {
+        "id": "Chickadees",
+        "name": "Chickadees",
+        "icon": "bird_chickadees_shape"
+      },
+      {
+        "id": "Owls",
+        "name": "Owls",
+        "icon": "bird_owls_shape"
+      },
+      {
+        "id": "Ducks",
+        "name": "Ducks",
+        "icon": "bird_ducks_shape"
+      },
+      {
+        "id": "Hummingbird",
+        "name": "Hummingbird",
+        "icon": "bird_hummingbird_shape"
+      },
+      {
+        "id": "Heron",
+        "name": "Heron",
+        "icon": "bird_heron_shape"
+      },
+      {
+        "id": "Shorebird",
+        "name": "Shorebird",
+        "icon": "bird_shorebird_shape"
+      },
+      {
+        "id": "Game bird",
+        "name": "Game bird",
+        "icon": "bird_game_bird_shape"
+      },
+      {
+        "id": "Finch",
+        "name": "Finch",
+        "icon": "bird_finch_shape"
+      },
+      {
+        "id": "Doves",
+        "name": "Doves",
+        "icon": "bird_doves_shape"
+      },
+      {
+        "id": "Wrens",
+        "name": "Wrens",
+        "icon": "bird_wrens_shape"
+      },
+      {
+        "id": "Hawks & falcons",
+        "name": "Hawks & falcons",
+        "icon": "bird_hawks_and_falcons_shape"
+      }
+    ],
     "field_marks": [
-      { "area": "Head", "variants": ["Crest", "Crown", "Mask"] },
-      { "area": "Wing", "variants": ["Bar", "Patch"] },
-      { "area": "Tail", "variants": ["Long", "Forked", "Square"] }
+      {
+        "area": "Back",
+        "variants": ["Solid", "Iridescent", "Streaked", "Mottled"]
+      },
+      {
+        "area": "Beak",
+        "variants": ["Hooked", "Straight", "Curved", "Spoon-shaped", "Short", "Long", "Heavy", "Pale", "Casque"]
+      },
+      {
+        "area": "Belly",
+        "variants": ["Solid", "Pale", "White", "Spotted"]
+      },
+      {
+        "area": "Crown",
+        "variants": ["Solid", "Striped", "Crest", "Cap"]
+      },
+      {
+        "area": "Eye",
+        "variants": ["Ring", "Solid", "Mask"]
+      },
+      {
+        "area": "Leg",
+        "variants": ["Long", "Short", "Pink", "Yellow"]
+      },
+      {
+        "area": "Nape",
+        "variants": ["Solid", "Patch"]
+      },
+      {
+        "area": "Tail",
+        "variants": ["Long", "Short", "Forked", "Square", "Notched", "Cocked", "Rufous", "Train"]
+      },
+      {
+        "area": "Thigh",
+        "variants": ["Solid"]
+      },
+      {
+        "area": "Throat",
+        "variants": ["Solid", "Patch", "White"]
+      },
+      {
+        "area": "Wings",
+        "variants": ["Solid", "Bar", "Striped", "Patch", "Broad"]
+      }
     ]
   },
   "birds": [
     {
-      "id": "asian_fairy_bluebird",
-      "common_name": "Asian Fairy Bluebird",
-      "scientific_name": "Irena puella",
-      "image_name": "AsianFairyBluebird",
-      "valid_locations": ["Vetal Tekdi", "Western Ghats"],
-      "attributes": {
-        "shape_id": "perching",
-        "size_category": 2,
-        "rarity": "common"
-      },
-      "field_marks": [
-        { "area": "Head", "variant": "Crown", "colors": ["Blue"] },
-        { "area": "Wing", "variant": "Patch", "colors": ["Black"] }
-      ]
-    },
-    {
-      "id": "himalayan_monal",
+      "id": "b_001",
       "common_name": "Himalayan Monal",
       "scientific_name": "Lophophorus impejanus",
       "image_name": "HimalayanMonal",
       "valid_locations": ["Himalayas"],
       "attributes": {
-        "shape_id": "game",
+        "shape_id": "Game bird",
         "size_category": 3,
-        "rarity": "rare"
+        "rarity": "Rare"
       },
       "field_marks": [
-        { "area": "Head", "variant": "Crest", "colors": ["Green"] },
-        { "area": "Tail", "variant": "Long", "colors": ["Brown"] }
+        { "area": "Crown", "variant": "Crest", "colors": ["Green"] },
+        { "area": "Back", "variant": "Iridescent", "colors": ["Blue", "Green", "Red"] },
+        { "area": "Tail", "variant": "Rufous", "colors": ["Brown"] }
       ]
     },
     {
-      "id": "indigo_bunting",
+      "id": "b_002",
+      "common_name": "Great Hornbill",
+      "scientific_name": "Buceros bicornis",
+      "image_name": "GreatHornbill",
+      "valid_locations": ["Western Ghats", "Himalayas"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 4,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Beak", "variant": "Casque", "colors": ["Yellow", "Black"] },
+        { "area": "Wings", "variant": "Broad", "colors": ["Black", "White", "Yellow"] }
+      ]
+    },
+    {
+      "id": "b_003",
+      "common_name": "Indian Peafowl",
+      "scientific_name": "Pavo cristatus",
+      "image_name": "IndianPeafowl",
+      "valid_locations": ["Pune, India", "Urban", "Dessert"],
+      "attributes": {
+        "shape_id": "Game bird",
+        "size_category": 4,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Tail", "variant": "Train", "colors": ["Green", "Blue"] },
+        { "area": "Crown", "variant": "Crest", "colors": ["Blue"] }
+      ]
+    },
+    {
+      "id": "b_004",
+      "common_name": "Blue Grosbeak",
+      "scientific_name": "Passerina caerulea",
+      "image_name": "BlueGrosbeak",
+      "valid_locations": ["Pune, India", "Urban"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Wings", "variant": "Bar", "colors": ["Brown"] },
+        { "area": "Beak", "variant": "Heavy", "colors": ["Grey"] }
+      ]
+    },
+    {
+      "id": "b_005",
+      "common_name": "Brown Headed Barbet",
+      "scientific_name": "Psilopogon zeylanicus",
+      "image_name": "BrownHeadedBarbet",
+      "valid_locations": ["Pune, India", "Urban"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Eye", "variant": "Ring", "colors": ["Yellow"] }
+      ]
+    },
+    {
+      "id": "b_006",
+      "common_name": "Greater Flameback",
+      "scientific_name": "Chrysocolaptes lucidus",
+      "image_name": "GreaterFlameback",
+      "valid_locations": ["Western Ghats"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 3,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Crown", "variant": "Crest", "colors": ["Red"] },
+        { "area": "Back", "variant": "Solid", "colors": ["Yellow", "Gold"] },
+        { "area": "Wings", "variant": "Striped", "colors": ["Black", "White"] }
+      ]
+    },
+    {
+      "id": "b_007",
+      "common_name": "Great Indian Bustard",
+      "scientific_name": "Ardeotis nigriceps",
+      "image_name": "GreatIndianBustard",
+      "valid_locations": ["Dessert"],
+      "attributes": {
+        "shape_id": "Game bird",
+        "size_category": 4,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Neck", "variant": "Long", "colors": ["White"] },
+        { "area": "Crown", "variant": "Cap", "colors": ["Black"] }
+      ]
+    },
+    {
+      "id": "b_008",
       "common_name": "Indigo Bunting",
       "scientific_name": "Passerina cyanea",
       "image_name": "IndigoBunting",
-      "valid_locations": ["Vetal Tekdi"],
+      "valid_locations": ["Pune, India", "Urban"],
       "attributes": {
-        "shape_id": "perching",
+        "shape_id": "Finch",
         "size_category": 1,
-        "rarity": "common"
+        "rarity": "Common"
       },
       "field_marks": [
-        { "area": "Head", "variant": "Mask", "colors": ["Blue"] }
+        { "area": "Wings", "variant": "Solid", "colors": ["Black"] }
       ]
     },
     {
-        "id": "great_hornbill",
-        "common_name": "Great Hornbill",
-        "scientific_name": "Buceros bicornis",
-        "image_name": "GreatHornbill",
-        "valid_locations": ["Western Ghats", "Himalayas"],
-        "attributes": {
-          "shape_id": "tree-clinging",
-          "size_category": 3,
-          "rarity": "rare"
-        },
-        "field_marks": [
-          { "area": "Head", "variant": "Casque", "colors": ["Yellow", "Black"] },
-           { "area": "Beak", "variant": "Curved", "colors": ["Yellow"] }
-        ]
-      }
+      "id": "b_009",
+      "common_name": "Lazuli Bunting",
+      "scientific_name": "Passerina amoena",
+      "image_name": "LazuliBunting",
+      "valid_locations": ["Pune, India"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 1,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Chest", "variant": "Band", "colors": ["Orange"] },
+        { "area": "Belly", "variant": "Solid", "colors": ["White"] }
+      ]
+    },
+    {
+      "id": "b_010",
+      "common_name": "Mountain Bluebird",
+      "scientific_name": "Sialia currucoides",
+      "image_name": "MountainBluebird",
+      "valid_locations": ["Himalayas"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Belly", "variant": "Pale", "colors": ["White", "Blue"] }
+      ]
+    },
+    {
+      "id": "b_011",
+      "common_name": "Oriental Magpie-Robin",
+      "scientific_name": "Copsychus saularis",
+      "image_name": "OrientalMagpieRobin",
+      "valid_locations": ["Pune, India", "Urban"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Tail", "variant": "Cocked", "colors": ["Black", "White"] }
+      ]
+    },
+    {
+      "id": "b_012",
+      "common_name": "Sarus Crane",
+      "scientific_name": "Antigone antigone",
+      "image_name": "SarusCrane",
+      "valid_locations": ["Wetlands"],
+      "attributes": {
+        "shape_id": "Heron",
+        "size_category": 4,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Crown", "variant": "Bare", "colors": ["Red"] },
+        { "area": "Leg", "variant": "Long", "colors": ["Pink"] }
+      ]
+    },
+    {
+      "id": "b_013",
+      "common_name": "Asian Koel",
+      "scientific_name": "Eudynamys scolopaceus",
+      "image_name": "AsianKoel",
+      "valid_locations": ["Urban", "Pune, India"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 3,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Eye", "variant": "Solid", "colors": ["Red"] },
+        { "area": "Beak", "variant": "Pale", "colors": ["Green", "Grey"] }
+      ]
+    },
+    {
+      "id": "b_014",
+      "common_name": "Common Kingfisher",
+      "scientific_name": "Alcedo atthis",
+      "image_name": "bird_Common_kingfisher",
+      "valid_locations": ["Wetlands"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 1,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Back", "variant": "Solid", "colors": ["Blue", "Turquoise"] },
+        { "area": "Belly", "variant": "Solid", "colors": ["Orange"] }
+      ]
+    },
+    {
+      "id": "b_015",
+      "common_name": "Asian Fairy Bluebird",
+      "scientific_name": "Irena puella",
+      "image_name": "bird_asian_fairy_bluebird",
+      "valid_locations": ["Western Ghats"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Back", "variant": "Solid", "colors": ["Blue"] },
+        { "area": "Belly", "variant": "Solid", "colors": ["Black"] }
+      ]
+    },
+    {
+      "id": "b_016",
+      "common_name": "Hoopoe",
+      "scientific_name": "Upupa epops",
+      "image_name": "bird_hoopoe",
+      "valid_locations": ["Urban", "Pune, India"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Crown", "variant": "Crest", "colors": ["Orange", "Black"] },
+        { "area": "Wings", "variant": "Striped", "colors": ["Black", "White"] }
+      ]
+    },
+    {
+      "id": "b_017",
+      "common_name": "Rose-ringed Parakeet",
+      "scientific_name": "Psittacula krameri",
+      "image_name": "bird_parakeet",
+      "valid_locations": ["Urban", "Pune, India"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Beak", "variant": "Hooked", "colors": ["Red"] },
+        { "area": "Neck", "variant": "Ring", "colors": ["Black", "Pink"] }
+      ]
+    },
+    {
+      "id": "b_018",
+      "common_name": "House Sparrow",
+      "scientific_name": "Passer domesticus",
+      "image_name": "bird_sparrow",
+      "valid_locations": ["Urban", "Pune, India"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 1,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Throat", "variant": "Patch", "colors": ["Black"] }
+      ]
+    },
+    {
+      "id": "b_019",
+      "common_name": "Black Drongo",
+      "scientific_name": "Dicrurus macrocercus",
+      "image_name": "bird_drongo",
+      "valid_locations": ["Urban", "Pune, India", "Dessert"],
+      "attributes": {
+        "shape_id": "Finch",
+        "size_category": 2,
+        "rarity": "Common"
+      },
+      "field_marks": [
+        { "area": "Tail", "variant": "Forked", "colors": ["Black"] }
+      ]
+    },
+    {
+      "id": "b_020",
+      "common_name": "Spoonbill",
+      "scientific_name": "Platalea",
+      "image_name": "bird_spoonbill",
+      "valid_locations": ["Wetlands"],
+      "attributes": {
+        "shape_id": "Heron",
+        "size_category": 3,
+        "rarity": "Rare"
+      },
+      "field_marks": [
+        { "area": "Belly", "variant": "Solid", "colors": ["White"] },
+        { "area": "Beak", "variant": "Spoon-shaped", "colors": ["Black", "Grey"] }
+      ]
+    }
   ]
 }
