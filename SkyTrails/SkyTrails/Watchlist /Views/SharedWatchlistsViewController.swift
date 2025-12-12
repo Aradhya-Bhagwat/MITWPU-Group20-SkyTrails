@@ -131,7 +131,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
         collectionView.register(nib, forCellWithReuseIdentifier: SharedWatchlistCollectionViewCell.identifier)
         
         // Search Bar
-        searchBar.backgroundImage = UIImage()
+        searchBar.searchBarStyle = .minimal
         searchBar.delegate = self
     }
     

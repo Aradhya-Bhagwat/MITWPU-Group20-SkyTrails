@@ -113,7 +113,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         tableView.separatorStyle = .none // Cleaner look for card-style cells
         
         // 3. Search Bar Styling (Matching CustomWatchlistViewController)
-        searchBar.backgroundImage = UIImage() // Removes gray border
+        searchBar.searchBarStyle = .minimal
         searchBar.delegate = self
         
         // 4. Segmented Control Styling
@@ -184,6 +184,16 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         }
         
         tableView.reloadData()
+    }
+    
+    // MARK: - UISearchBarDelegate
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        applyFilters()
+    }
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
     }
     
     enum SortOption { case nameAZ, nameZA, date, rarity }

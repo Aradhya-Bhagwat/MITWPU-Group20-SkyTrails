@@ -198,7 +198,7 @@ class WatchlistHomeViewController: UIViewController {
         
         let fraction: CGFloat = containerWidth > 700 ? 0.28 : 0.45
         
-		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(fraction), heightDimension: .absolute(160))
+		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(fraction), heightDimension: .absolute(184))
 		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 		
 		let section = NSCollectionLayoutSection(group: group)

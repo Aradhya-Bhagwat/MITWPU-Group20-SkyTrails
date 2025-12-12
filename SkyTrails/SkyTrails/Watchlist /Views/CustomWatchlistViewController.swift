@@ -129,7 +129,7 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 		collectionView.register(nib, forCellWithReuseIdentifier: CustomWatchlistCollectionViewCell.identifier)
 		
 			// Remove the default search bar background for a cleaner look
-		searchBar.backgroundImage = UIImage()
+		searchBar.searchBarStyle = .minimal
 		searchBar.delegate = self
 	}
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
