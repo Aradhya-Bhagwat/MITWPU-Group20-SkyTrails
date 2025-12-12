@@ -9,6 +9,9 @@ import UIKit
 
 class PredictOutputViewController: UIViewController {
 
+    var predictions: [FinalPredictionResult] = []
+    var inputData: [PredictionInputData] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
