@@ -50,10 +50,23 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 			// MARK: - 2. Initial Setup
 			// If editing history, pre-select the bird
 		if let history = historyItem {
-				// Find the bird in the results that matches the history name
+			// Find the bird in the FULL database first, not just filtered results
 			if let match = viewModel.birdResults.first(where: { $0.name == history.specieName }) {
 				selectedResult = match
-			}
+            } else if let dbBird = viewModel.getBird(byName: history.specieName) {
+                // Manually construct result if not in current filter
+                selectedResult = IdentificationBird(
+                    id: dbBird.id,
+                    name: dbBird.commonName,
+                    scientificName: dbBird.scientificName ?? "",
+                    confidence: 1.0, // Historical item is 100% matched effectively
+                    description: "From History",
+                    imageName: dbBird.imageName,
+                    scoreBreakdown: "From History"
+                )
+                // Append to results so table shows it
+                viewModel.birdResults = [selectedResult!]
+            }
 		} else {
 				// If not editing history, run the filter once to ensure data is fresh
 			viewModel.filterBirds(
@@ -204,10 +217,34 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		let bird = viewModel.birdResults[indexPath.row]
 		
 			// Logic to add to watchlist
-			// e.g. converting to SavedBird and adding to database
+            // 1. Convert to SavedBird (Bird model)
 		let savedBird = bird.toSavedBird(location: viewModel.selectedLocation)
-			// viewModel.saveToWatchlist(savedBird) // Assuming you add this method later
-		
-		print("Added \(bird.name) to watchlist")
+        
+            // 2. Add to "My Watchlist" (Default)
+        saveToWatchlist(bird: savedBird)
 	}
+    
+    private func saveToWatchlist(bird: Bird) {
+        // Instantiate WatchlistViewModel on demand (or inject it if preferred)
+        let watchlistVM = WatchlistViewModel()
+        
+        // Find "My Watchlist" (assuming it's the first one or finding by title)
+        // Ideally, use a consistent ID or flag, but for now we look for the first one which is usually default.
+        if let defaultWatchlist = watchlistVM.watchlists.first {
+            // Add to "To Observe" list by default? Or "Observed"?
+            // Usually "Watchlist" implies "To Observe".
+            watchlistVM.addBirds([bird], to: defaultWatchlist.id, asObserved: false)
+            
+            // Show Alert
+            let alert = UIAlertController(
+                title: "Added to watchlist",
+                message: "\(bird.name) added to My watchlist under to observe",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        } else {
+             print("❌ No default watchlist found to save to.")
+        }
+    }
 }
