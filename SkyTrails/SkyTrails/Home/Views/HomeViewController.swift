@@ -11,7 +11,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
     @IBOutlet weak var homeCollectionView: UICollectionView!
     
-    weak var coordinator: HomeNavigationDelegate?
+
     let homeData = HomeModels()
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
@@ -22,7 +22,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         navigationController?.navigationBar.prefersLargeTitles = true
         setupCollectionView()        // Do any additional setup after loading the view.
     }
-    /*
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
             super.viewWillTransition(to: size, with: coordinator)
             coordinator.animate(alongsideTransition: { _ in
@@ -45,7 +44,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
             }
         }
     }
-    */
 }
 
 // HomeViewController.swift
@@ -459,11 +457,7 @@ extension HomeViewController: UICollectionViewDataSource {
                         guard let self = self else { return }
                         print("👆 Tapped Upcoming Birds Chevron")
                         
-                        // Pass the data to the coordinator
-                        self.coordinator?.didSelectAllBirds(
-                            watchlist: self.homeData.watchlistBirds,
-                            recommendations: self.homeData.recommendedBirds
-                        )
+                        self.performSegue(withIdentifier: "ShowAllBirds", sender: nil)
                     }
                     
                     header.configure(title: "Upcoming Birds", tapAction: action)
@@ -476,11 +470,7 @@ extension HomeViewController: UICollectionViewDataSource {
                         guard let self = self else { return }
                         print("👆 Tapped Spots Chevron")
                         
-                        // Pass the data to the coordinator
-                        self.coordinator?.didSelectAllSpots(
-                            watchlist: self.homeData.watchlistSpots,
-                            recommendations: self.homeData.recommendedSpots
-                        )
+                        self.performSegue(withIdentifier: "ShowAllSpots", sender: nil)
                     }
                 header.configure(title: "Spots to Visit", tapAction: action)
             }

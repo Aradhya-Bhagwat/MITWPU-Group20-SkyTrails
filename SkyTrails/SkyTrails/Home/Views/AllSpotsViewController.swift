@@ -55,6 +55,7 @@ class AllSpotsViewController: UIViewController {
     }
         
     @objc private func didTapPredict() {
+        self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
         print("Predict button tapped! (Navigate to Prediction Page later)")
         // TODO: Navigation to Prediction Page goes here
     }
