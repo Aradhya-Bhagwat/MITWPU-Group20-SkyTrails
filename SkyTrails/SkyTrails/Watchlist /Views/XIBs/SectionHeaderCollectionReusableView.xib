@@ -10,34 +10,33 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <collectionReusableView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="SectionHeaderCollectionReusableView" id="U6b-Vx-4bR" customClass="SectionHeaderCollectionReusableView" customModule="SkyTrails" customModuleProvider="target">
-            <rect key="frame" x="0.0" y="0.0" width="375" height="50"/>
+            <rect key="frame" x="0.0" y="0.0" width="639" height="452"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kme-xc-v50">
-                    <rect key="frame" x="8" y="8" width="43.333333333333336" height="23"/>
+                    <rect key="frame" x="8" y="7.9999999999999982" width="43.333333333333336" height="20.333333333333329"/>
                     <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fsk-oM-nsO">
-                    <rect key="frame" x="-47.666666666666686" y="8" width="39.666666666666686" height="34.333333333333336"/>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Eao-R7-Mw3">
+                    <rect key="frame" x="59.333333333333343" y="1" width="39.666666666666657" height="34.333333333333336"/>
                     <state key="normal" title="Button"/>
                     <buttonConfiguration key="configuration" style="plain" image="chevron.right" catalog="system"/>
                 </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="VXr-Tz-HHm"/>
             <constraints>
-                <constraint firstItem="fsk-oM-nsO" firstAttribute="height" secondItem="Kme-xc-v50" secondAttribute="height" multiplier="1.5" id="CPY-Vv-FR3"/>
                 <constraint firstItem="Kme-xc-v50" firstAttribute="top" secondItem="U6b-Vx-4bR" secondAttribute="top" constant="8" id="DwX-Ox-GSe"/>
-                <constraint firstItem="VXr-Tz-HHm" firstAttribute="leading" secondItem="fsk-oM-nsO" secondAttribute="trailing" constant="8" id="IFm-5N-TmH"/>
-                <constraint firstItem="fsk-oM-nsO" firstAttribute="top" secondItem="U6b-Vx-4bR" secondAttribute="top" constant="8" id="UzP-yf-GtO"/>
+                <constraint firstItem="Eao-R7-Mw3" firstAttribute="leading" secondItem="Kme-xc-v50" secondAttribute="trailing" constant="8" id="hX6-c6-s5D"/>
+                <constraint firstItem="Eao-R7-Mw3" firstAttribute="centerY" secondItem="Kme-xc-v50" secondAttribute="centerY" id="uTK-5D-pIp"/>
                 <constraint firstItem="Kme-xc-v50" firstAttribute="leading" secondItem="VXr-Tz-HHm" secondAttribute="leading" constant="8" id="xVU-9K-eWP"/>
             </constraints>
             <connections>
                 <outlet property="sectionTitle" destination="Kme-xc-v50" id="FSQ-TP-lqD"/>
-                <outlet property="seeAllButton" destination="fsk-oM-nsO" id="NEW-ID-XYZ"/>
+                <outlet property="seeAllButton" destination="Eao-R7-Mw3" id="924-V0-b9p"/>
             </connections>
-            <point key="canvasLocation" x="18" y="123"/>
+            <point key="canvasLocation" x="-183.96946564885496" y="264.08450704225356"/>
         </collectionReusableView>
     </objects>
     <resources>
