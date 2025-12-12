@@ -1,26 +1,43 @@
-//
-//  DateandLocationViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 28/11/25.
-//
-
 import UIKit
+import CoreLocation
+import MapKit
 
-class DateandLocationViewController: UIViewController,
-    UITableViewDelegate,
-    UITableViewDataSource,
-    MapSelectionDelegate
- {
+class DateandLocationViewController: UIViewController {
+
+    // MARK: - Outlets
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
     @IBOutlet weak var progressView: UIProgressView!
+    
+    // MARK: - Properties
     var viewModel: ViewModel!
     weak var delegate: IdentificationFlowStepDelegate?
-    var selectedDate: Date?
-
-
-    func styleTableContainer() {
+    
+    // State
+    private var selectedDate: Date? = Date()
+    private var searchQuery: String = "" // The active text in the bar
+    private var searchResults: [MKLocalSearchCompletion] = []
+    
+    // Tools
+    private var completer = MKLocalSearchCompleter()
+    
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupTableView()
+        setupCompleter()
+        setupRightTickButton()
+        // Pre-fill query if we already have a location selected
+        if let currentLoc = viewModel.selectedLocation {
+            searchQuery = currentLoc
+        }
+    }
+    
+    private func setupUI() {
+        navigationItem.largeTitleDisplayMode = .never
+        navigationController?.navigationBar.prefersLargeTitles = false
+        
         tableContainerView.backgroundColor = .white
         tableContainerView.layer.cornerRadius = 12
         tableContainerView.layer.shadowColor = UIColor.black.cgColor
@@ -28,88 +45,51 @@ class DateandLocationViewController: UIViewController,
         tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
         tableContainerView.layer.shadowRadius = 8
         tableContainerView.layer.masksToBounds = false
-        
     }
     
-    func numberOfSections(in tableView: UITableView) -> Int {
-       return 3
-    }
-
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 || section == 1 {
-            return 1
-        }
-        return 2
-    }
-
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 0 {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
-            cell.configure(withTitle: "Date", date: Date())
-            cell.delegate = self
-            cell.selectionStyle = .none
-            return cell
-        }
-      
-      
-        if indexPath.section == 1 {
-                let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath)
-                return cell
-            }
-      let  cell = UITableViewCell(style: .default, reuseIdentifier: "location_cell")
-            
-            if indexPath.row == 1 {
-                cell.textLabel?.text = "Current Location"
-                cell.imageView?.image = UIImage(systemName: "location.fill")
-                cell.accessoryType = .disclosureIndicator
-            } else {
-                cell.textLabel?.text = "Map"
-                cell.imageView?.image = UIImage(systemName: "map")
-            }
-   
-        return cell
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        navigationItem.largeTitleDisplayMode = .never
-        navigationController?.navigationBar.prefersLargeTitles = false
+    private func setupTableView() {
         let nib = UINib(nibName: "DateInputCell", bundle: nil)
-          dateandlocationTableView.register(nib, forCellReuseIdentifier: "DateInputCell")
-      
-          dateandlocationTableView.delegate = self
-          dateandlocationTableView.dataSource = self
-        styleTableContainer()
+        dateandlocationTableView.register(nib, forCellReuseIdentifier: "DateInputCell")
+        
+        // Assuming SearchCell is defined in Storyboard or registered here
+        // dateandlocationTableView.register(UINib(nibName: "SearchCell", bundle: nil), forCellReuseIdentifier: "SearchCell")
+        
+        dateandlocationTableView.delegate = self
+        dateandlocationTableView.dataSource = self
+        
+        // Hide empty rows
+        dateandlocationTableView.tableFooterView = UIView()
+    }
     
-        
-        // Initialize with today's date so it's not nil if user clicks Next immediately
-        selectedDate = Date() 
+    private func setupCompleter() {
+        completer.delegate = self
+        // Optional: Limit region if needed
+        // completer.region = ...
     }
-   
-    func formatDate(_ date: Date?) -> String? {
-        guard let date = date else { return nil }
+    private func setupRightTickButton() {
+        let button = UIButton(type: .system)
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 20
+        button.layer.masksToBounds = true
         
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd MMM yyyy"   // Example: 09 Dec 2025
-        return formatter.string(from: date)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        let image = UIImage(systemName: "checkmark", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .black
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        
+        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
-
+    // MARK: - Actions
     @objc private func nextTapped() {
-        let formattedDate = formatDate(selectedDate)
-
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy"
+        let formattedDate = formatter.string(from: selectedDate ?? Date())
         
-        // Simulating location selection for now as the UI doesn't fully implement the picker logic yet.
-        // In a real app, this would come from the selected cell or map.
-        // Using a valid location from bird_database.json for testing.
-        let location = "Pune, India"
-
-			// Inside nextTapped()
-		viewModel.data.date = formattedDate       // Needed for Summary
-		viewModel.data.location = location        // Needed for Summary
-		viewModel.selectedLocation = location     // Needed for Filtering
-		
-        // Trigger intermediate filtering
+        viewModel.data.date = formattedDate
+        // Location is already in viewModel.selectedLocation / viewModel.data.location
+        
         viewModel.filterBirds(
             shape: viewModel.selectedShapeId,
             size: viewModel.selectedSizeCategory,
@@ -119,48 +99,201 @@ class DateandLocationViewController: UIViewController,
         
         delegate?.didFinishStep()
     }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-       
-        if indexPath.section == 2 && indexPath.row == 0 {
-             print("Map tapped")
-            let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
-            if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
-                mapVC.delegate = self   // ⭐ important
-
-                navigationController?.pushViewController(mapVC, animated: true)
-            }
-
-             return
-         }
-         
-       
-         if indexPath.section == 2 && indexPath.row == 1 {
-             print("Current Location tapped")
-         }
-
-    }
-    func didSelectMapLocation(_ locationName: String) {
-        print("Location returned:", locationName)
-
-        viewModel.data.location = locationName
-        viewModel.selectedLocation = locationName
-
+    
+    private func updateLocationSelection(_ name: String) {
+        // Update Model
+        viewModel.selectedLocation = name
+        viewModel.data.location = name
+        
+        // Update UI State
+        searchQuery = name
+        searchResults = [] // Clear suggestions
+        
+        // Update Table
+        // We reload everything to ensure the search bar shows the committed text
+        // and suggestions disappear.
         dateandlocationTableView.reloadData()
+        view.endEditing(true) // Dismiss keyboard
     }
     
+    private func fetchCurrentLocationName() {
+        let manager = CLLocationManager()
+        manager.requestWhenInUseAuthorization()
+        
+        if let loc = manager.location {
+            CLGeocoder().reverseGeocodeLocation(loc) { [weak self] placemarks, _ in
+                guard let self = self, let name = placemarks?.first?.name else { return }
+                DispatchQueue.main.async {
+                    self.updateLocationSelection(name)
+                }
+            }
+        }
+    }
 }
-extension DateandLocationViewController: DateInputCellDelegate, IdentificationProgressUpdatable {
 
+// MARK: - UITableView DataSource & Delegate
+extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSource {
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 3
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 { return 1 } // Date
+        if section == 1 { return 1 + searchResults.count } // Search Bar + Suggestions
+        if section == 2 { return 2 } // Map & Current Location
+        return 0
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        // Section 0: Date
+        if indexPath.section == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
+            cell.delegate = self
+            // Configure date cell...
+            return cell
+        }
+        
+        // Section 1: Search
+        if indexPath.section == 1 {
+            // Row 0: The Search Bar
+            if indexPath.row == 0 {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as! SearchCell
+                cell.searchBar.delegate = self
+                cell.searchBar.text = searchQuery // Always reflect the State variable
+                return cell
+            }
+            
+            // Remaining Rows: Suggestions
+            let suggestionIndex = indexPath.row - 1
+            if suggestionIndex < searchResults.count {
+                let item = searchResults[suggestionIndex]
+                let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "suggestionCell")
+                cell.textLabel?.text = item.title
+                cell.detailTextLabel?.text = item.subtitle
+                return cell
+            }
+        }
+        
+        // Section 2: Static Options
+        if indexPath.section == 2 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "location_cell", for: indexPath)
+            if indexPath.row == 0 {
+                cell.textLabel?.text = "Map"
+                cell.imageView?.image = UIImage(systemName: "map")
+            } else {
+                cell.textLabel?.text = "Current Location"
+                cell.imageView?.image = UIImage(systemName: "location.fill")
+                cell.accessoryType = .disclosureIndicator
+            }
+            return cell
+        }
+        
+        return UITableViewCell()
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        // Handle Suggestion Tap
+        if indexPath.section == 1 && indexPath.row > 0 {
+            let suggestionIndex = indexPath.row - 1
+            let completion = searchResults[suggestionIndex]
+            
+            let request = MKLocalSearch.Request(completion: completion)
+            let search = MKLocalSearch(request: request)
+            
+            search.start { [weak self] response, _ in
+                guard let self = self, let place = response?.mapItems.first else { return }
+                let name = place.name ?? completion.title
+                self.updateLocationSelection(name)
+            }
+        }
+        
+        // Handle Map Tap
+        if indexPath.section == 2 && indexPath.row == 0 {
+            let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
+            if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
+                mapVC.delegate = self
+                navigationController?.pushViewController(mapVC, animated: true)
+            }
+        }
+        
+        // Handle Current Location Tap
+        if indexPath.section == 2 && indexPath.row == 1 {
+            fetchCurrentLocationName()
+        }
+    }
+}
+
+
+extension DateandLocationViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // 1. Update State
+        searchQuery = searchText
+        
+        // 2. Clear previous selection state if user starts typing again
+        if !searchText.isEmpty {
+            viewModel.selectedLocation = nil // or keep it, depending on preference
+        }
+        
+        // 3. Trigger Search
+        if searchText.isEmpty {
+            searchResults = []
+            reloadSuggestionsOnly()
+        } else {
+            completer.queryFragment = searchText
+        }
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+}
+
+extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
+    
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        self.searchResults = completer.results
+        reloadSuggestionsOnly()
+    }
+    
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        // Handle error if needed
+    }
+    
+    // Helper to reload strictly the suggestion rows, NOT the search bar row.
+    // This prevents the search bar from resigning first responder.
+    private func reloadSuggestionsOnly() {
+        // Section 1 is the search section
+        let sectionIndex = 1
+        
+        // Current number of rows in table for this section (including search bar)
+        let currentRows = dateandlocationTableView.numberOfRows(inSection: sectionIndex)
+        let newRows = 1 + searchResults.count // 1 for SearchBar
+        
+        // If we just do reloadData(), it kills the keyboard.
+        // We can just reload the section, but `reloadSections` often resigns responder too.
+        // A simple reloadData() works IF cellForRow sets text correctly,
+        // BUT it is better to not touch the SearchBar row if possible.
+        
+        dateandlocationTableView.reloadData()
+        
+        // Note: Because we sync `cell.searchBar.text = searchQuery` in cellForRowAt,
+        // `reloadData` is actually safe here. The cursor might jump to end,
+        // but it won't clear the text.
+    }
+}
+
+// MARK: - Other Delegates
+extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDelegate {
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
-        print("Selected Date:", date)
         selectedDate = date
-     
     }
-    func updateProgress(current: Int, total: Int) {
-        let percent = Float(current) / Float(total)
-        progressView.setProgress(percent, animated: true)
+    
+    func didSelectMapLocation(_ locationName: String) {
+        updateLocationSelection(locationName)
     }
 }
-
-
