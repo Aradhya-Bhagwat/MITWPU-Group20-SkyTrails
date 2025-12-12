@@ -142,7 +142,7 @@ class IdentificationCoordinator {
         case .gui:
             let vc = storyboard.instantiate(GUIViewController.self)
             vc.delegate = self
-            vc.data = viewModel.data
+            vc.viewModel = viewModel
             screen = vc
             
         case .result:
@@ -205,5 +205,5 @@ extension IdentificationCoordinator: IdentificationFlowStepDelegate {
     }
     
     func didFinishStep() { goToNextStep() }
->>>>>>> 0cd9755 (Map controller stage 1)
+
 }

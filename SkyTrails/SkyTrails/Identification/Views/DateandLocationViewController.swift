@@ -78,8 +78,9 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
           dateandlocationTableView.dataSource = self
         styleTableContainer()
         setupRightTickButton()
-    
-
+        
+        // Initialize with today's date so it's not nil if user clicks Next immediately
+        selectedDate = Date() 
     }
     private func setupRightTickButton() {
         // Create button
