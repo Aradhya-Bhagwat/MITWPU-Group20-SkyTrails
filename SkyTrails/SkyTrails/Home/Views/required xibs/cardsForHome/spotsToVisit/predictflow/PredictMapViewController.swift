@@ -84,10 +84,23 @@ class PredictMapViewController: UIViewController {
                     return mapRect.union(rect)
                 }
 
+<<<<<<< HEAD
                 // Fit the calculated mapRect with padding
                 let padding: CGFloat = 40
                 mapView.setVisibleMapRect(mapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: true)
             }
+=======
+        mapView.addAnnotations(annotations)
+        mapView.addOverlays(overlays)
+        
+        // Optional: Zoom map to fit all new pins/circles
+        if let firstInput = inputs.first,
+           let lat = firstInput.latitude,
+           let lon = firstInput.longitude {
+            let firstCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            let region = MKCoordinateRegion(center: firstCoord, latitudinalMeters: 50000, longitudinalMeters: 50000)
+            mapView.setRegion(region, animated: true)
+>>>>>>> 0d2e653452c6af2b56089643b470ce3a7e5d58f5
         }
         
         // MARK: - Setup Methods

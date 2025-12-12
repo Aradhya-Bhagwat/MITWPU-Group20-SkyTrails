@@ -13,7 +13,7 @@ class RootTabBarController: UITabBarController {
         super.viewDidLoad()
         
         viewControllers = [
-            loadFeature(storyboard: "Home", isInitial: true, title: "Home", systemImage: "house"),
+            loadFeature(storyboard: "birdspred", isInitial: true, title: "birdspred", systemImage: "house"),
             loadFeature(storyboard: "Watchlist", id: "Watchlist", title: "Watchlist", systemImage: "list.number"),
             loadFeature(storyboard: "Identification", id: "Identification", title: "ID", systemImage: "sparkle.magnifyingglass")
         ]
