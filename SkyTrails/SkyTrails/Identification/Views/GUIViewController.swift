@@ -1,10 +1,3 @@
-	//
-	//  GUIViewController.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 09/12/25.
-	//
-
 import UIKit
 
 class GUIViewController: UIViewController {
@@ -20,7 +13,6 @@ class GUIViewController: UIViewController {
 	weak var delegate: IdentificationFlowStepDelegate?
 	
 		// Data Sources
-		// ✅ FIX: Changed type to [ChooseFieldMark] because that is where "Beak", "Eye" etc. live.
 	private var categories: [ChooseFieldMark] = []
 	private var currentCategoryIndex: Int = 0
 	
@@ -30,6 +22,16 @@ class GUIViewController: UIViewController {
 		// Canvas Layers
 	private var baseShapeLayer: UIImageView!
 	private var partLayers: [String: UIImageView] = [:]
+	
+		// Z-Index Order (Bottom to Top)
+		// Adjust this based on your specific bird art (e.g., Wings usually go on top of Body)
+	private let layerOrder = [
+		"Tail", "Leg", "Thigh",         // Background parts
+		"Back", "Belly", "Nape",        // Main body
+		"Throat", "Crown",              // Head base
+		"Beak", "Eye",                  // Face details
+		"Wings"                         // Foreground
+	]
 	
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
@@ -41,8 +43,8 @@ class GUIViewController: UIViewController {
 		let categoryNib = UINib(nibName: "CategoryCell", bundle: nil)
 		categoriesCollectionView.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
 		
-		setupCanvas()
 		loadData()
+		setupCanvas() // Call setupCanvas AFTER loadData
 		setupRightTickButton()
 		
 		if !categories.isEmpty {
@@ -50,7 +52,7 @@ class GUIViewController: UIViewController {
 		}
 	}
 	
-		// MARK: - Data Loading (THE FIX)
+		// MARK: - Data Loading
 	private func loadData() {
 			// 1. Get the names you selected (e.g. "Beak", "Eye")
 		guard let selectedNames = viewModel.data.fieldMarks, !selectedNames.isEmpty else {
@@ -59,7 +61,7 @@ class GUIViewController: UIViewController {
 			return
 		}
 		
-			// 2. Use 'fieldMarks' (The list of Body Parts), NOT 'fieldMarkOptions'
+			// 2. Use 'fieldMarks' (The list of Body Parts)
 		let allParts = viewModel.fieldMarks
 		
 			// 3. Filter to get the objects for the selected names
@@ -77,8 +79,11 @@ class GUIViewController: UIViewController {
 		categoriesCollectionView.delegate = self
 		categoriesCollectionView.dataSource = self
 		
+			// --- FIX IS HERE ---
+			// We must disable estimatedItemSize so the delegate 'sizeForItemAt' is respected.
 		if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
 			layout.estimatedItemSize = .zero
+			layout.scrollDirection = .horizontal
 		}
 		if let layout = categoriesCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
 			layout.estimatedItemSize = .zero
@@ -87,19 +92,33 @@ class GUIViewController: UIViewController {
 	}
 	
 	private func setupCanvas() {
+			// Clear any existing subviews if reloading
+		canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
+		partLayers.removeAll()
+		
+			// 1. Add Base Shape Layer
 		baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
 		baseShapeLayer.contentMode = .scaleAspectFit
 		baseShapeLayer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 		
-		let shapeID = viewModel.selectedShapeId ?? "Finch"
+		let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
 		baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base")
 		canvasContainerView.addSubview(baseShapeLayer)
 		
-			// Use .name instead of .fieldMarkName
-		for cat in categories {
+			// 2. Sort categories based on Z-Index to ensure correct layering
+			// If a category isn't in layerOrder, it defaults to the end (top)
+		let sortedCategories = categories.sorted {
+			let index1 = layerOrder.firstIndex(of: $0.name) ?? 999
+			let index2 = layerOrder.firstIndex(of: $1.name) ?? 999
+			return index1 < index2
+		}
+		
+			// 3. Add Layers for each category
+		for cat in sortedCategories {
 			let imgView = UIImageView(frame: canvasContainerView.bounds)
 			imgView.contentMode = .scaleAspectFit
 			imgView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+			
 			canvasContainerView.addSubview(imgView)
 			partLayers[cat.name] = imgView
 		}
@@ -113,49 +132,66 @@ class GUIViewController: UIViewController {
 		let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
 		button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
 		button.tintColor = .black
+		
+			// Fix frame for UIBarButtonItem custom view
 		button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
 		button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
 		navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
 	}
 	
 		// MARK: - Logic
+	
+		/// Sanitizes strings for filenames (e.g. "Spoon-shaped" -> "Spoon_shaped")
+	func cleanForFilename(_ name: String) -> String {
+		return name
+			.replacingOccurrences(of: " ", with: "_")
+			.replacingOccurrences(of: "-", with: "_")
+	}
+	
 	func selectCategory(at index: Int) {
 		guard index < categories.count else { return }
 		currentCategoryIndex = index
 		let cat = categories[index]
 		
-			// ✅ FIX: Use .name
 		categoryLabel.text = cat.name
-		print("\(cat.name) category selected")
 		
 		variationsCollectionView.reloadData()
 		categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
 	}
 	
 	func updateCanvas(category: String, variant: String) {
-		let shapeID = viewModel.selectedShapeId ?? "Finch"
-		let imageName = "canvas_\(shapeID)_\(category)_\(variant)"
+		let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+		let cleanCategory = cleanForFilename(category)
+		let cleanVariant = cleanForFilename(variant)
+		
+		let imageName = "canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
+		
+			// Debug print to help you find missing images
+		print("🎨 Loading Canvas Image: \(imageName)")
+		
 		if let layer = partLayers[category] {
-			layer.image = UIImage(named: imageName)
+			if let image = UIImage(named: imageName) {
+				layer.image = image
+			} else {
+				print("⚠️ Image not found: \(imageName)")
+			}
 		}
 	}
 	
 	func getVariantsForCurrentCategory() -> [String] {
 		guard currentCategoryIndex < categories.count else { return [] }
-		
-			// ✅ FIX: Use .name
 		let currentName = categories[currentCategoryIndex].name
 		
 		if let fieldMark = viewModel.referenceFieldMarks.first(where: { $0.area == currentName }) {
 			return fieldMark.variants
 		}
-		
 		return []
 	}
 	
 	@objc private func nextTapped() {
 		var marks: [FieldMarkData] = []
 		for (area, variant) in selectedVariations {
+				// Note: Colors are empty for now as per your prototype scope
 			marks.append(FieldMarkData(area: area, variant: variant, colors: []))
 		}
 		
@@ -170,8 +206,8 @@ class GUIViewController: UIViewController {
 	}
 }
 
-// MARK: - CollectionView Delegate & DataSource
-extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+	// MARK: - CollectionView Delegate & DataSource
+extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 	
 	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
 		if collectionView == categoriesCollectionView {
@@ -183,25 +219,27 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 	
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		if collectionView == categoriesCollectionView {
-				// BOTTOM BAR
+				// BOTTOM BAR (Categories)
 			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
 			let item = categories[indexPath.row]
 			
-				// ✅ FIX: Use .name and .imageView (from ChooseFieldMark)
 			cell.configure(name: item.name, iconName: item.imageView, isSelected: indexPath.row == currentCategoryIndex)
 			return cell
 			
 		} else {
-				// TOP BAR
+				// TOP BAR (Variations)
 			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
 			let variants = getVariantsForCurrentCategory()
 			let variantName = variants[indexPath.row]
+			let categoryName = categories[currentCategoryIndex].name
 			
-				// ✅ FIX: Use .name
-			let currentCatName = categories[currentCategoryIndex].name
-			let isSelected = selectedVariations[currentCatName] == variantName
+			let isSelected = selectedVariations[categoryName] == variantName
 			
-			let iconName = "icon_\(currentCatName)_\(variantName)"
+				// Filename construction
+			let cleanCat = cleanForFilename(categoryName)
+			let cleanVar = cleanForFilename(variantName)
+			let iconName = "icon_\(cleanCat)_\(cleanVar)"
+			
 			cell.configure(imageName: iconName, isSelected: isSelected)
 			return cell
 		}
@@ -213,23 +251,27 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 		} else {
 			let variants = getVariantsForCurrentCategory()
 			let selectedVariant = variants[indexPath.row]
-			
-				// ✅ FIX: Use .name
 			let categoryName = categories[currentCategoryIndex].name
 			
-			print("\(categoryName) category \(selectedVariant) variant selected")
+			print("👉 Selected: \(categoryName) - \(selectedVariant)")
 			
 			selectedVariations[categoryName] = selectedVariant
 			variationsCollectionView.reloadData()
 			updateCanvas(category: categoryName, variant: selectedVariant)
 		}
 	}
-}
-
-extension GUIViewController: UICollectionViewDelegateFlowLayout {
+	
+		// Layout sizing
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-		return collectionView == categoriesCollectionView ? CGSize(width: 70, height: 70) : CGSize(width: 60, height: 60)
+			// I restored the sizes from your original code (70 and 60)
+			// because you mentioned they worked better than the larger ones.
+		if collectionView == categoriesCollectionView {
+			return CGSize(width: 70, height: 70)
+		} else {
+			return CGSize(width: 60, height: 60)
+		}
 	}
+	
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
 		return 15
 	}

@@ -8,7 +8,7 @@
 import UIKit
 
 
-class IdentificationCoordinator {
+class IdentificationCoordinator: NSObject, UINavigationControllerDelegate {
     var navigationController: UINavigationController
     weak var parentCoordinator: SharedCoordinator?
     let viewModel = ViewModel()
@@ -21,6 +21,39 @@ class IdentificationCoordinator {
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        super.init()
+        self.navigationController.delegate = self
+    }
+    
+    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+        // Sync currentIndex with the actual visible view controller
+        
+        // If we are back at the root, reset to 0
+        if viewController is IdentificationViewController {
+            currentIndex = 0
+            return
+        }
+        
+        // Otherwise, find which step this View Controller corresponds to
+        if let index = getStepIndex(for: viewController) {
+            // The "currentIndex" variable tracks the *next* step to be pushed.
+            // So if we are currently showing steps[i], the next one is i+1.
+            currentIndex = index + 1
+        }
+    }
+    
+    private func getStepIndex(for vc: UIViewController) -> Int? {
+        var step: IdentificationStep?
+        
+        if vc is DateandLocationViewController { step = .dateLocation }
+        else if vc is IdentificationSizeViewController { step = .size }
+        else if vc is IdentificationShapeViewController { step = .shape }
+        else if vc is IdentificationFieldMarksViewController { step = .fieldMarks }
+        else if vc is GUIViewController { step = .gui }
+        else if vc is ResultViewController { step = .result }
+        
+        guard let foundStep = step else { return nil }
+        return steps.firstIndex(of: foundStep)
     }
     
     func start(){
@@ -82,7 +115,7 @@ class IdentificationCoordinator {
         let storyboard = UIStoryboard.named("Identification")
         let vc = storyboard.instantiate(ResultViewController.self)
         
-        vc.viewModel = viewModel
+        vc.viewModel = viewModel // Inject the shared view model
         vc.historyItem = historyItem
         vc.historyIndex = index
         vc.delegate = self
@@ -94,7 +127,7 @@ class IdentificationCoordinator {
         let storyboard = UIStoryboard.named("Identification")
         let vc = storyboard.instantiate(ResultViewController.self)
         
-        vc.viewModel = viewModel
+        vc.viewModel = viewModel // Inject the shared view model
         vc.historyItem = historyItem
         vc.delegate = self
         

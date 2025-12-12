@@ -51,7 +51,7 @@ class ResultTableViewCell: UITableViewCell {
         percentageLabel.text = date   
     }
     func setupMenu() {
-        let predictAction = UIAction(title: "Predict Species on map",
+        let predictAction = UIAction(title: "Predict Species",
                                      image: UIImage(systemName: "map")) { [weak self] _ in
             guard let self = self else { return }
             self.delegate?.didTapPredict(for: self)
@@ -59,8 +59,9 @@ class ResultTableViewCell: UITableViewCell {
 
 
         let watchlistAction = UIAction(title: "Add to Watchlist",
-                                       image: UIImage(systemName: "text.badge.plus")) { _ in
-            print("Add to watchlist tapped")
+                                       image: UIImage(systemName: "text.badge.plus")) { [weak self] _ in
+            guard let self = self else { return }
+            self.delegate?.didTapAddToWatchlist(for: self)
         }
 
         let menu = UIMenu(title: "", children: [predictAction, watchlistAction])

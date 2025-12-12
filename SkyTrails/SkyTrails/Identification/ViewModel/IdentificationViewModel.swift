@@ -221,6 +221,10 @@ class ViewModel {
 	func getBird(by id: String) -> ReferenceBird? {
 		return model.masterDatabase?.birds.first(where: { $0.id == id })
 	}
+    
+    func getBird(byName name: String) -> ReferenceBird? {
+        return model.masterDatabase?.birds.first(where: { $0.commonName == name })
+    }
 	
 	func addBirdToDatabase(_ bird: ReferenceBird) {
 		model.addBird(bird)

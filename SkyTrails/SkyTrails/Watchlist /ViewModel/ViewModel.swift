@@ -83,7 +83,7 @@ class WatchlistViewModel {
         }
     }
     
-    private func loadData() {
+    public func loadData() {
         let watchlistsURL = getDocumentsDirectory().appendingPathComponent("watchlists.json")
         let sharedWatchlistsURL = getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
         

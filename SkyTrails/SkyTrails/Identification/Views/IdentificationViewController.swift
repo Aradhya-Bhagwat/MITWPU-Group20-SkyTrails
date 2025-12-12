@@ -208,6 +208,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         coordinator?.configureSteps(from: viewModel.fieldMarkOptions)
     }
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        // Prevent action on the "Empty State" placeholder cell
+        guard !history.isEmpty else { return }
+        
         let selectedHistory = history[indexPath.row]
         coordinator?.goDirectlyToResult(fromHistory: selectedHistory, index: indexPath.row)
         }
