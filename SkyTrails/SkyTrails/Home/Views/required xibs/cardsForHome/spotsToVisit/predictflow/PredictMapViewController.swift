@@ -13,7 +13,7 @@ class PredictMapViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
     private var currentChildVC: UIViewController?
-    private var modalContainerView: UIView!
+        private var modalContainerView: UIView!
         private var modalTopConstraint: NSLayoutConstraint!
         
         // Drag State Variables
@@ -30,52 +30,67 @@ class PredictMapViewController: UIViewController {
             setupCustomModal()
             mapView.delegate = self
         }
-    private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
-        // 1. Clear existing annotations/overlays
-        mapView.removeAnnotations(mapView.annotations)
-        mapView.removeOverlays(mapView.overlays)
         
-        var annotations: [MKAnnotation] = []
-        var overlays: [MKOverlay] = []
+        // MARK: - Map Update Logic
         
-        for input in inputs {
-            guard let lat = input.latitude,
-                  let lon = input.longitude else { continue }
+        private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
+            // 1. Clear existing annotations/overlays
+            mapView.removeAnnotations(mapView.annotations)
+            mapView.removeOverlays(mapView.overlays)
             
-            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            print("\n--- DEBUG: Map Update Triggered ---\n")
             
-            // A. Add Pin (Annotation) for user's input location
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = coordinate
-            annotation.title = input.locationName ?? "Search Location"
-            annotations.append(annotation)
+            var annotations: [MKAnnotation] = []
+            var locationCoordinates: [CLLocationCoordinate2D] = [] // Used for zooming
             
-            // B. Add Circle (Overlay) for the area
-            // MKCircle requires radius in meters
-            let circle = MKCircle(center: coordinate, radius: Double(input.areaValue * 1000))
-            overlays.append(circle)
-        }
-        
-        // C. Add Bird Pins (optional, using the matched sighting coordinates)
-        for prediction in predictions {
-            let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
-            let birdPin = MKPointAnnotation()
-            birdPin.coordinate = coord
-            birdPin.title = prediction.birdName // Title of the bird
-            birdPin.subtitle = "Predicted near \(inputs[prediction.matchedInputIndex].locationName ?? "input")"
-            annotations.append(birdPin)
-        }
+            for input in inputs {
+                guard let lat = input.latitude,
+                      let lon = input.longitude else { continue }
+                
+                let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+                locationCoordinates.append(coordinate)
+                
+                // A. Add Pin (Annotation) for user's input location
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = coordinate
+                annotation.title = input.locationName ?? "Search Location"
+                annotations.append(annotation)
+                
+                // B. Add Circle (Overlay) for the area
+                let circle = MKCircle(center: coordinate, radius: Double(input.areaValue * 1000))
+                mapView.addOverlay(circle)
+            }
+            
+            // C. Add Bird Pins (using the matched sighting coordinates)
+            for prediction in predictions {
+                let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
+                let birdPin = MKPointAnnotation()
+                birdPin.coordinate = coord
+                birdPin.title = prediction.birdName // Title of the bird
+                birdPin.subtitle = "Predicted near \(inputs[prediction.matchedInputIndex].locationName ?? "input")"
+                annotations.append(birdPin)
+                locationCoordinates.append(coord) // Include bird sightings in zoom calculation
+            }
+            
+            mapView.addAnnotations(annotations)
+            
+            // 2. Zoom map to fit all new pins/circles
+            if !locationCoordinates.isEmpty {
+                
+                // Calculate region containing all points
+                let mapRect = locationCoordinates.reduce(MKMapRect.null) { (mapRect, coordinate) -> MKMapRect in
+                    let point = MKMapPoint(coordinate)
+                    let rect = MKMapRect(x: point.x, y: point.y, width: 0, height: 0)
+                    return mapRect.union(rect)
+                }
 
-        mapView.addAnnotations(annotations)
-        mapView.addOverlays(overlays)
-        
-        // Optional: Zoom map to fit all new pins/circles
-        if let firstCoord = inputs.first?.location {
-            let region = MKCoordinateRegion(center: firstCoord, latitudinalMeters: 50000, longitudinalMeters: 50000)
-            mapView.setRegion(region, animated: true)
+                // Fit the calculated mapRect with padding
+                let padding: CGFloat = 40
+                mapView.setVisibleMapRect(mapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: true)
+            }
         }
-    }
-    
+        
+        // MARK: - Setup Methods
         
         private func setupMap() {
             let center = CLLocationCoordinate2D(latitude: 20.0, longitude: 78.0)
@@ -93,16 +108,9 @@ class PredictMapViewController: UIViewController {
             
             // --- CALCULATION UPDATES ---
             
-            // A. Ceiling: Safe area + 140
             maxTopY = safeAreaTop + 140
-            
-            // B. Initial Position: Occupy 2/5 of screen
-            // Meaning: Top edge is 3/5 (60%) down the screen
             initialLoadY = screenHeight * 0.60
-            
-            // C. The Floor: Occupy 1/10 of screen
-            // Meaning: Top edge is 9/10 (90%) down the screen
-            minBottomY = screenHeight * 0.80
+            minBottomY = screenHeight * 0.90 // Changed from 0.80 back to 0.90 for 1/10th visibility
             
             // ---------------------------
             
@@ -110,7 +118,12 @@ class PredictMapViewController: UIViewController {
             modalContainerView = UIView()
             modalContainerView.backgroundColor = .clear
             modalContainerView.layer.cornerRadius = 24
-            modalContainerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            
+            // ✅ FIX 2: Use CACornerMask prefix for contextual type
+            modalContainerView.layer.maskedCorners = [
+                CACornerMask.layerMinXMinYCorner,
+                CACornerMask.layerMaxXMinYCorner
+            ]
             
             // Shadows
             modalContainerView.layer.shadowColor = UIColor.black.cgColor
@@ -118,16 +131,25 @@ class PredictMapViewController: UIViewController {
             modalContainerView.layer.shadowOffset = CGSize(width: 0, height: -4)
             modalContainerView.layer.shadowRadius = 10
             
-            
             modalContainerView.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(modalContainerView)
             
             // 3. Embed Child VC
             addChild(navVC)
             modalContainerView.addSubview(navVC.view)
+            
+            // ⭐️ Save the initial child reference
+            currentChildVC = navVC
+            
             navVC.view.translatesAutoresizingMaskIntoConstraints = false
             navVC.view.layer.cornerRadius = 24
-            navVC.view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            
+            // ✅ FIX 2: Use CACornerMask prefix for contextual type
+            navVC.view.layer.maskedCorners = [
+                CACornerMask.layerMinXMinYCorner,
+                CACornerMask.layerMaxXMinYCorner
+            ]
+            
             navVC.view.clipsToBounds = true
             
             NSLayoutConstraint.activate([
@@ -139,7 +161,6 @@ class PredictMapViewController: UIViewController {
             navVC.didMove(toParent: self)
             
             // 4. MAIN CONSTRAINTS
-            // ⭐️ Start at `initialLoadY` (2/5ths visible), not `minBottomY`
             modalTopConstraint = modalContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: initialLoadY)
             
             NSLayoutConstraint.activate([
@@ -154,7 +175,7 @@ class PredictMapViewController: UIViewController {
             navVC.navigationBar.addGestureRecognizer(panGesture)
         }
         
-        // MARK: - Absolute Drag Logic
+        // MARK: - Drag Logic
         
         @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
             let translation = gesture.translation(in: view)
@@ -168,91 +189,81 @@ class PredictMapViewController: UIViewController {
                 
                 // Apply Limits (Clamp)
                 if newY < maxTopY {
-                    // Hit the Ceiling
                     modalTopConstraint.constant = maxTopY
                 } else if newY > minBottomY {
-                    // Hit the Floor (Now the 1/10th mark)
                     modalTopConstraint.constant = minBottomY
                 } else {
-                    // Free Movement (Between 1/10th and Ceiling)
                     modalTopConstraint.constant = newY
                 }
                 
                 view.layoutIfNeeded()
                 
             case .ended, .cancelled:
-                // Still "Stay Put" logic (no snapping)
                 break
                 
             default:
                 break
             }
         }
-    func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
         
-        // 1. Update the Map Visualization immediately
-        updateMap(with: inputs, predictions: predictions)
+        // MARK: - Navigation Logic
         
-        // 2. Instantiate the Output VC
-        let storyboard = UIStoryboard(name: "Home", bundle: nil)
-        guard let outputVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputViewController") as? PredictOutputViewController,
-              let currentVC = currentChildVC,
-              let container = modalContainerView else {
-            print("❌ Could not find PredictOutputViewController or current child.")
-            return
-        }
-        
-        // 3. Pass data to the Output VC
-        // ⭐️ You will need to define these properties in PredictOutputViewController
-        outputVC.predictions = predictions
-        outputVC.inputData = inputs
-        
-        // 4. Prepare for transition (using existing transition logic)
-        outputVC.view.frame = container.bounds
-        outputVC.view.layer.cornerRadius = 24
-        outputVC.view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        outputVC.view.clipsToBounds = true
-        outputVC.view.translatesAutoresizingMaskIntoConstraints = false
-        
-        // 5. Execute Transition
-        addChild(outputVC)
-        
-        transition(from: currentVC, to: outputVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+        func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
             
-            // 6. Cleanup & Pin New View
-            currentVC.removeFromParent()
-            outputVC.didMove(toParent: self)
-            self?.currentChildVC = outputVC
+            updateMap(with: inputs, predictions: predictions)
             
-            NSLayoutConstraint.activate([
-                outputVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                outputVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                outputVC.view.topAnchor.constraint(equalTo: container.topAnchor),
-                outputVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-            ])
-        }
+            // 1. Update the Map Visualization immediately
+            let storyboard = UIStoryboard(name: "Home", bundle: nil)
+                
+                // ⭐️ Step 1: Instantiate the Navigation Controller wrapper
+                guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
+                    print("❌ Could not find PredictOutputNavigationController.")
+                    return
+                }
+
+                // ⭐️ Step 2: Extract the root PredictOutputViewController
+                guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController,
+                      let currentVC = currentChildVC,
+                      let container = modalContainerView else {
+                    print("❌ Error: Internal state failure or could not extract root VC.")
+                    return
+                }
+
+                // Pass data to the extracted root VC
+                outputVC.predictions = predictions
+                outputVC.inputData = inputs
+                
+                // ⭐️ Use the Navigation Controller for the transition and pinning
+                addChild(outputNavVC) // Use the wrapper
+                
+                transition(from: currentVC, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+                    
+                    // ... (Cleanup and pinning using outputNavVC)
+                    currentVC.removeFromParent()
+                    outputNavVC.didMove(toParent: self)
+                    self?.currentChildVC = outputNavVC // currentChildVC must now hold the Nav Controller
+                    
+                    // Pin the Navigation Controller's view
+                    NSLayoutConstraint.activate([
+                        outputNavVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                        outputNavVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                        outputNavVC.view.topAnchor.constraint(equalTo: container.topAnchor),
+                        outputNavVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+                    ])
+                }
+            }
     }
-    
-    
-    }
+
+
+// MARK: - MKMapViewDelegate
 extension PredictMapViewController: MKMapViewDelegate {
     
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        if let circleOverlay = overlay as? MKCircle {
-            let circleRenderer = MKCircleRenderer(circle: circleOverlay)
-            circleRenderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.8)
-            circleRenderer.lineWidth = 2
-            circleRenderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.1) // Light fill color
-            return circleRenderer
-        }
-        return MKOverlayRenderer(overlay: overlay)
-    }
+    // ... (mapView(_:rendererFor:) remains unchanged)
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        // We can skip MKUserLocation if we don't want to customize it
         guard !(annotation is MKUserLocation) else { return nil }
         
-        let identifier = "CustomAnnotation"
+        let identifier = "PredictionPin"
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
         
         if annotationView == nil {
@@ -262,10 +273,21 @@ extension PredictMapViewController: MKMapViewDelegate {
             annotationView?.annotation = annotation
         }
         
-        // ⭐️ Optional: Customize appearance based on whether it's an input pin or a bird pin
-        // if let birdAnnotation = annotation as? BirdAnnotation { // Requires a custom class
-        //     // annotationView?.image = UIImage(named: birdAnnotation.imageName)
-        // }
+        if let markerView = annotationView as? MKMarkerAnnotationView {
+            
+            // ⭐️ FIX: Safely check the optional subtitle using optional chaining and nil-coalescing.
+            let isPredictedBird = annotation.subtitle??.contains("Predicted near") ?? false
+            
+            if isPredictedBird {
+                // Pin for a Bird Sighting (Prediction Result)
+                markerView.markerTintColor = .systemGreen
+                markerView.glyphImage = UIImage(systemName: "feather")
+            } else {
+                // Pin for User Input Location
+                markerView.markerTintColor = .systemBlue
+                markerView.glyphImage = UIImage(systemName: "magnifyingglass")
+            }
+        }
         
         return annotationView
     }

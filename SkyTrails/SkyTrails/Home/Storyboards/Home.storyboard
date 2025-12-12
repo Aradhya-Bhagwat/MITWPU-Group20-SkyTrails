@@ -309,17 +309,32 @@
             </objects>
             <point key="canvasLocation" x="4649.6183206106871" y="1570.4225352112676"/>
         </scene>
-        <!--View Controller-->
+        <!--Output-->
         <scene sceneID="Puu-nc-raf">
             <objects>
-                <viewController id="KzX-b6-IpH" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="PredictOutputViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="KzX-b6-IpH" customClass="PredictOutputViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5cL-C3-3Jg">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="ygN-IF-vKc">
+                                <rect key="frame" x="0.0" y="172" width="393" height="612"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </tableView>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="bUG-Ir-K8P"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="ygN-IF-vKc" firstAttribute="leading" secondItem="bUG-Ir-K8P" secondAttribute="leading" id="S52-El-twg"/>
+                            <constraint firstItem="ygN-IF-vKc" firstAttribute="top" secondItem="bUG-Ir-K8P" secondAttribute="top" id="bfF-r5-g55"/>
+                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="bottom" secondItem="ygN-IF-vKc" secondAttribute="bottom" id="d9I-Fw-Q2B"/>
+                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="trailing" secondItem="ygN-IF-vKc" secondAttribute="trailing" id="uXm-CT-hac"/>
+                        </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="CsV-tk-mcl"/>
+                    <navigationItem key="navigationItem" title="Output" id="CsV-tk-mcl">
+                        <barButtonItem key="leftBarButtonItem" systemItem="redo" id="ocP-7a-dlj"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="stop" id="wbn-zj-6pI"/>
+                    </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dX2-kF-RWH" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -382,7 +397,7 @@
         <!--Navigation Controller-->
         <scene sceneID="pbi-Qo-ETs">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="hLo-ND-Ps0" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="PredictOutputNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="hLo-ND-Ps0" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="ICa-ky-BBy">
                         <rect key="frame" x="0.0" y="118" width="393" height="54"/>
