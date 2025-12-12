@@ -70,7 +70,10 @@ class PredictMapViewController: UIViewController {
         mapView.addOverlays(overlays)
         
         // Optional: Zoom map to fit all new pins/circles
-        if let firstCoord = inputs.first?.location {
+        if let firstInput = inputs.first,
+           let lat = firstInput.latitude,
+           let lon = firstInput.longitude {
+            let firstCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             let region = MKCoordinateRegion(center: firstCoord, latitudinalMeters: 50000, longitudinalMeters: 50000)
             mapView.setRegion(region, animated: true)
         }
