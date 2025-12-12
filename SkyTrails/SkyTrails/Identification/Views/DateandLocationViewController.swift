@@ -7,7 +7,11 @@
 
 import UIKit
 
-class DateandLocationViewController: UIViewController,UITableViewDelegate, UITableViewDataSource {
+class DateandLocationViewController: UIViewController,
+    UITableViewDelegate,
+    UITableViewDataSource,
+    MapSelectionDelegate
+ {
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
     @IBOutlet weak var progressView: UIProgressView!
@@ -77,35 +81,12 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
           dateandlocationTableView.delegate = self
           dateandlocationTableView.dataSource = self
         styleTableContainer()
-        setupRightTickButton()
+    
         
         // Initialize with today's date so it's not nil if user clicks Next immediately
         selectedDate = Date() 
     }
-    private func setupRightTickButton() {
-        // Create button
-        let button = UIButton(type: .system)
-        
-        // Circle background
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20   // for 40x40 size
-
-        button.layer.masksToBounds = true   // important to remove rectangle
-        
-        // Checkmark icon
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        let image = UIImage(systemName: "checkmark", withConfiguration: config)
-        button.setImage(image, for: .normal)
-        button.tintColor = .black
-
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-
-        // Add tap action
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-
-        // Put inside UIBarButtonItem
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
+   
     func formatDate(_ date: Date?) -> String? {
         guard let date = date else { return nil }
         
@@ -143,7 +124,13 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
        
         if indexPath.section == 2 && indexPath.row == 0 {
              print("Map tapped")
-             delegate?.openMapScreen()
+            let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
+            if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
+                mapVC.delegate = self   // ⭐ important
+
+                navigationController?.pushViewController(mapVC, animated: true)
+            }
+
              return
          }
          
@@ -153,7 +140,15 @@ class DateandLocationViewController: UIViewController,UITableViewDelegate, UITab
          }
 
     }
+    func didSelectMapLocation(_ locationName: String) {
+        print("Location returned:", locationName)
 
+        viewModel.data.location = locationName
+        viewModel.selectedLocation = locationName
+
+        dateandlocationTableView.reloadData()
+    }
+    
 }
 extension DateandLocationViewController: DateInputCellDelegate, IdentificationProgressUpdatable {
 

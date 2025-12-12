@@ -2,157 +2,82 @@
 //  MapViewController.swift
 //  SkyTrails
 //
-//  Created by SDC-USER on 11/12/25.
-//
 
 import UIKit
 import MapKit
 import CoreLocation
+
+// ------------------------
+// MARK: - Delegates
+// ------------------------
+
+protocol MapSelectionDelegate: AnyObject {
+    func didSelectMapLocation(_ name: String)
+}
+
 class MapViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
     private let locationManager = CLLocationManager()
-    private var isInMoveMode = false
-    private var movingAnnotation: MKPointAnnotation?
-    private var searchSheetVC: LocationBottomSheetViewController?
-    private var detailsSheetVC: LocationDetailsViewController?
+
+    weak var delegate: MapSelectionDelegate?
+    var selectedLocationName: String?
+
+    @IBOutlet weak var searchPillView: UIView!
+    @IBOutlet weak var searchBar: UISearchBar!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupRightTickButton()
 
         mapView.delegate = self
         locationManager.delegate = self
-        mapView.mapType = .standard
-        mapView.pointOfInterestFilter = .excludingAll
-        mapView.showsBuildings = false
         locationManager.requestWhenInUseAuthorization()
 
+        styleFloatingSearchBar()
+        searchBar.delegate = self
+
+        // Tap to add pin
         let tap = UITapGestureRecognizer(target: self, action: #selector(mapTapped(_:)))
         mapView.addGestureRecognizer(tap)
     }
 
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        presentSearchSheetIfNeeded()
+    // --------------------------------------------------------
+    // MARK: - UI
+    // --------------------------------------------------------
+
+    private func styleFloatingSearchBar() {
+        searchPillView.layer.cornerRadius = 28
+        searchBar.setBackgroundImage(UIImage(), for: .any, barMetrics: .default)
+        searchBar.searchBarStyle = .minimal
+        searchBar.searchTextField.textColor = .black
     }
 
-    private func presentSearchSheetIfNeeded() {
-        if searchSheetVC != nil { return }
+    private func setupRightTickButton() {
+        let button = UIButton(type: .system)
+  
+        button.layer.cornerRadius = 20
+        button.layer.masksToBounds = true
 
-        let vc = storyboard?.instantiateViewController(withIdentifier: "LocationBottomSheetViewController") as! LocationBottomSheetViewController
-        vc.delegate = self
-        searchSheetVC = vc
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
+        button.tintColor = .black
 
-        if let sheet = vc.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.prefersGrabberVisible = true
-            sheet.preferredCornerRadius = 20
-        }
-
-        present(vc, animated: true)
+        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
+
+    // --------------------------------------------------------
+    // MARK: - Map Interactions
+    // --------------------------------------------------------
 
     @objc func mapTapped(_ sender: UITapGestureRecognizer) {
-        guard sender.state == .ended else { return }
         let point = sender.location(in: mapView)
         let coord = mapView.convert(point, toCoordinateFrom: mapView)
 
-        if isInMoveMode {
-            guard let moving = movingAnnotation else {
-                endMoveMode()
-                return
-            }
-            moving.coordinate = coord
-            isInMoveMode = false
-            reverseGeocodeTappedLocation(coord)
-            movingAnnotation = nil
-            return
-        }
-
-        addPin(at: coord, title: "Dropped Pin")
+        addPin(at: coord)
         reverseGeocodeTappedLocation(coord)
     }
-
-    func addPin(at coordinate: CLLocationCoordinate2D, title: String) {
-        let nonUserPins = mapView.annotations.filter { !($0 is MKUserLocation) }
-        mapView.removeAnnotations(nonUserPins)
-
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        annotation.title = title
-        mapView.addAnnotation(annotation)
-        mapView.setCenter(coordinate, animated: true)
-    }
-
-    func reverseGeocodeTappedLocation(_ coord: CLLocationCoordinate2D) {
-        let location = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-        CLGeocoder().reverseGeocodeLocation(location) { [weak self] placemarks, _ in
-            guard let self = self else { return }
-            if let place = placemarks?.first {
-                let name = place.name ?? "Dropped Pin"
-                let address = place.formattedAddress
-                self.showLocationDetails(for: coord, name: name, address: address)
-            } else {
-                self.showLocationDetails(for: coord, name: "Dropped Pin", address: "Unknown Address")
-            }
-        }
-    }
-
-    func showLocationDetails(for coordinate: CLLocationCoordinate2D,
-                             name: String,
-                             address: String) {
-
-        if let old = detailsSheetVC {
-            old.dismiss(animated: false)
-        }
-
-        let vc = storyboard?.instantiateViewController(withIdentifier: "LocationDetailsVC") as! LocationDetailsViewController
-        vc.coordinate = coordinate
-        vc.locationName = name
-        vc.addressString = address
-        vc.delegate = self
-        detailsSheetVC = vc
-
-        if let sheet = vc.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.prefersGrabberVisible = true
-            sheet.preferredCornerRadius = 20
-        }
-
-        present(vc, animated: true)
-    }
-    private func findAnnotation(at coordinate: CLLocationCoordinate2D) -> MKPointAnnotation? {
-        return mapView.annotations.compactMap { $0 as? MKPointAnnotation }.first(where: {
-            abs($0.coordinate.latitude - coordinate.latitude) < 0.000001 &&
-            abs($0.coordinate.longitude - coordinate.longitude) < 0.000001
-        })
-    }
-
-    private func beginMoveMode(for coordinate: CLLocationCoordinate2D) {
-        guard let ann = findAnnotation(at: coordinate) else { return }
-
-        movingAnnotation = ann
-        isInMoveMode = true
-
-        let alert = UIAlertController(
-            title: "Move Pin",
-            message: "Tap on the map where you want to move the pin.",
-            preferredStyle: .alert
-        )
-
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            self.endMoveMode()
-        })
-
-        (self.detailsSheetVC ?? self.searchSheetVC)?.present(alert, animated: true)
-    }
-    private func endMoveMode() {
-        isInMoveMode = false
-        movingAnnotation = nil
-    }
-}
-
-extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation { return nil }
 
@@ -170,54 +95,101 @@ extension MapViewController: MKMapViewDelegate {
         return pinView
     }
 
-    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        guard let coord = view.annotation?.coordinate else { return }
-        reverseGeocodeTappedLocation(coord)
+    func addPin(at coordinate: CLLocationCoordinate2D) {
+        mapView.removeAnnotations(mapView.annotations)
+
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        mapView.addAnnotation(annotation)
+        mapView.setCenter(coordinate, animated: true)
+    }
+
+    func reverseGeocodeTappedLocation(_ coord: CLLocationCoordinate2D) {
+        CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: coord.latitude, longitude: coord.longitude)) {
+            [weak self] placemarks, _ in
+            guard let self = self else { return }
+
+            if let place = placemarks?.first {
+                let name = place.name ?? "Location"
+                self.selectedLocationName = name
+                self.searchBar.text = name
+            }
+        }
+    }
+
+    // --------------------------------------------------------
+    // MARK: - Tick Button
+    // --------------------------------------------------------
+
+    @objc private func nextTapped() {
+        guard let name = selectedLocationName else { return }
+        delegate?.didSelectMapLocation(name)
+        navigationController?.popViewController(animated: true)
     }
 }
+
+// ------------------------------------------------------------
+// MARK: - MKMapViewDelegate
+// ------------------------------------------------------------
+
+extension MapViewController: MKMapViewDelegate {
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        if let coord = view.annotation?.coordinate {
+            reverseGeocodeTappedLocation(coord)
+        }
+    }
+}
+
+// ------------------------------------------------------------
+// MARK: - CLLocationManagerDelegate
+// ------------------------------------------------------------
 
 extension MapViewController: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse ||
-           manager.authorizationStatus == .authorizedAlways {
+        if manager.authorizationStatus == .authorizedWhenInUse {
             mapView.showsUserLocation = true
-            locationManager.startUpdatingLocation()
         }
     }
 }
 
-extension MapViewController: LocationDetailsDelegate {
-    func removePin(at coordinate: CLLocationCoordinate2D) {
-        if let ann = findAnnotation(at: coordinate) {
-            mapView.removeAnnotation(ann)
-        }
-    }
+// ------------------------------------------------------------
+// MARK: - UISearchBarDelegate (Bottom Sheet Trigger)
+// ------------------------------------------------------------
 
-    func startMovePin(at coordinate: CLLocationCoordinate2D) {
-        beginMoveMode(for: coordinate)
+extension MapViewController: UISearchBarDelegate {
+    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+
+        // Present bottom sheet for searching
+        let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "LocationBottomSheetViewController")
+            as! LocationBottomSheetViewController
+
+        vc.delegate = self
+
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+
+        present(vc, animated: true)
+        return false
     }
 }
+
+// ------------------------------------------------------------
+// MARK: - LocationSearchDelegate
+// ------------------------------------------------------------
 
 extension MapViewController: LocationSearchDelegate {
     func locationSelected(_ coordinate: CLLocationCoordinate2D, name: String?) {
-        addPin(at: coordinate, title: name ?? "Selected Place")
-        reverseGeocodeTappedLocation(coordinate)
+
+        let finalName = name ?? "Selected Place"
+
+        selectedLocationName = finalName
+        searchBar.text = finalName
+
+        addPin(at: coordinate)
+        reverseGeocodeTappedLocation(coordinate)   // optional second pass
     }
 }
-
-extension CLPlacemark {
-    var formattedAddress: String {
-        [
-            name,
-            thoroughfare,
-            subThoroughfare,
-            locality,
-            administrativeArea,
-            postalCode,
-            country
-        ]
-        .compactMap { $0 }
-        .joined(separator: ", ")
-    }
-}
-
