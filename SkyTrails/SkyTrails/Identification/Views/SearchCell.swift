@@ -7,18 +7,16 @@
 
 import UIKit
 
-class SearchCell: UITableViewCell {
-
+class SearchCell: UITableViewCell, UISearchBarDelegate {
     @IBOutlet weak var searchBar: UISearchBar!
+
+
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+        searchBar.backgroundImage = UIImage() // Remove default borders if needed
+        searchBar.placeholder = "Search for a location"
     }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
 
 }
+

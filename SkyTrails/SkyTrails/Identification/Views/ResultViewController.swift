@@ -126,8 +126,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	
 	@objc private func nextTapped() {
 		guard let result = selectedResult else {
-				// If nothing selected, just exit (or show alert)
-			navigationController?.popToRootViewController(animated: true)
+							navigationController?.popToRootViewController(animated: true)
 			return
 		}
 		
