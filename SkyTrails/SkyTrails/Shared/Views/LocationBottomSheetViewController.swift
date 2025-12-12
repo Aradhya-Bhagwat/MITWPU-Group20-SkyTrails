@@ -97,12 +97,12 @@ extension LocationBottomSheetViewController: UITableViewDelegate, UITableViewDat
         let completion = suggestions[indexPath.row]
         let request = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: request)
-        
+
         search.start { [weak self] response, error in
             guard let self = self else { return }
             guard let item = response?.mapItems.first else { return }
+
             self.delegate?.locationSelected(item.placemark.coordinate, name: item.name)
-            self.dismiss(animated: true)
         }
     }
     
