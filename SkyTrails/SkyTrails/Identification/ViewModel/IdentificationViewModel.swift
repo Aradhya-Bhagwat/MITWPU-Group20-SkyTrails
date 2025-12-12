@@ -22,6 +22,10 @@ class ViewModel {
 		get { model.birdShapes }
 	}
 	
+	var referenceFieldMarks: [ReferenceFieldMark] {
+		return model.masterDatabase?.reference_data.fieldMarks ?? []
+	}
+	
 	var fieldMarkOptions: [FieldMarkType] {
 		get { model.fieldMarkOptions }
 		set { model.fieldMarkOptions = newValue }
@@ -56,113 +60,154 @@ class ViewModel {
 		self.selectedLocation = location
 		self.selectedFieldMarks = fieldMarks ?? []
 		
-		var scoredBirds: [(bird: ReferenceBird, score: Double, details: String)] = []
-		
-			// 1. HARD FILTER: Location (Pass/Fail)
-			// If bird is not in the location, it is excluded immediately.
-		let locationFiltered = allBirds.filter { bird in
-			guard let loc = location else { return true }
-			return bird.validLocations.contains(loc)
+			// Date Parsing for Seasonality
+		var searchMonth: Int?
+		if let dateString = data.date {
+			let formatter = DateFormatter()
+			formatter.dateFormat = "dd MMM yyyy"
+			if let date = formatter.date(from: dateString) {
+				searchMonth = Calendar.current.component(.month, from: date)
+				print("📅 Filtering for Month: \(searchMonth!)")
+			} else {
+				print("⚠️ Date Parsing Failed for: \(dateString)")
+			}
+		} else {
+			print("⚠️ No Date Provided")
 		}
 		
-			// 2. SCORING LOOP
-		for bird in locationFiltered {
+		var scoredBirds: [(bird: ReferenceBird, score: Double, breakdown: String)] = []
+		
+		for bird in allBirds {
 			var score = 0.0
-			var maxPossibleScore = 0.0
-			var matchDetails: [String] = []
+			var breakdownParts: [String] = []
 			
-				// --- CRITERIA 1: SHAPE (Weight: 30) ---
+				// 1. HARD FILTER: Location
+			if let loc = location, !bird.validLocations.contains(loc) {
+				// Skip immediately
+				continue
+			}
+			
+				// 2. SEASONALITY (Hard Penalty)
+			if let month = searchMonth, let validMonths = bird.validMonths {
+				if !validMonths.contains(month) {
+					score -= 50
+					breakdownParts.append("Wrong Season (-50)")
+				}
+			}
+			
+				// 3. SHAPE (30 pts)
 			if let userShape = shape {
-				maxPossibleScore += 30
 				if bird.attributes.shapeId == userShape {
 					score += 30
-					matchDetails.append("Shape")
+					breakdownParts.append("Shape Match (+30)")
+				} else {
+					// Neutral or slight penalty? Keeping neutral as shapes can be ambiguous
 				}
 			}
 			
-				// --- CRITERIA 2: SIZE (Weight: 20) ---
+				// 4. SIZE (20 pts)
 			if let userSize = size {
-				maxPossibleScore += 20
 				let diff = abs(bird.attributes.sizeCategory - userSize)
-				
 				if diff == 0 {
-					score += 20 // Exact match
-					matchDetails.append("Size")
+					score += 20
+					breakdownParts.append("Size Match (+20)")
 				} else if diff == 1 {
-					score += 10 // Close enough
+					score += 10
+					breakdownParts.append("Size Approx (+10)")
+				} else {
+					score -= 20
+					breakdownParts.append("Size Mismatch (-20)")
 				}
 			}
 			
-				// --- CRITERIA 3: FIELD MARKS (Weight: 50) ---
+				// 5. FIELD MARKS (50 pts Distributed)
 			if let marks = fieldMarks, !marks.isEmpty {
 				let pointsPerMark = 50.0 / Double(marks.count)
 				
 				for userMark in marks {
-					maxPossibleScore += pointsPerMark
-					
-						// Check if bird has this mark
+					// Does the bird have this body part defined?
 					if let birdMark = bird.fieldMarks.first(where: { $0.area == userMark.area }) {
-						var markScore = pointsPerMark * 0.4 // Base score for Area match
-						var specificMatch = false
 						
-							// Variant Check (if user specified one)
-						if userMark.variant.isEmpty || userMark.variant == birdMark.variant {
-							markScore += pointsPerMark * 0.3
-							specificMatch = true
-						}
-						
-							// Color Check (if user specified colors)
-						if userMark.colors.isEmpty {
-							markScore += pointsPerMark * 0.3
-						} else {
-							let birdColors = Set(birdMark.colors)
-							let userColors = Set(userMark.colors)
-							if !birdColors.isDisjoint(with: userColors) {
-								markScore += pointsPerMark * 0.3
-								specificMatch = true
+						// A. VARIANT CHECK
+						if !userMark.variant.isEmpty {
+							if userMark.variant == birdMark.variant {
+								let p = pointsPerMark * 0.6
+								score += p
+								breakdownParts.append("\(userMark.area) Variant (+\(Int(p)))")
+							} else {
+								let p = pointsPerMark * 0.5
+								score -= p
+								breakdownParts.append("\(userMark.area) Mismatch (-\(Int(p)))")
 							}
 						}
 						
-						score += markScore
-						if specificMatch {
-							matchDetails.append(userMark.area)
+						// B. COLOR CHECK
+						if !userMark.colors.isEmpty {
+							let userColors = Set(userMark.colors)
+							let birdColors = Set(birdMark.colors)
+							let intersection = userColors.intersection(birdColors)
+							
+							if !intersection.isEmpty {
+								// Strictness: Ratio of matched colors to what user selected
+								let ratio = Double(intersection.count) / Double(userColors.count)
+								let p = (pointsPerMark * 0.4) * ratio
+								score += p
+								breakdownParts.append("\(userMark.area) Color (+\(Int(p)))")
+							}
+						} else {
+							// If user didn't specify color, assume neutral/match for now or ignore
+							// breakdownParts.append("\(userMark.area) (Ignored Color)")
 						}
+						
+					} else {
+						// Bird doesn't have this mark defined in DB
+						// Neutral or slight penalty?
 					}
 				}
 			}
 			
-				// Calculate Final Percentage
-			if maxPossibleScore > 0 {
-					// Rarity Bonus (Common birds get a 5% boost)
-				if bird.attributes.rarity.lowercased() == "common" {
-					score += (maxPossibleScore * 0.05)
-				}
-				
-				let finalScore = score / maxPossibleScore
-				let detailsString = matchDetails.isEmpty ? "Partial Match" : matchDetails.joined(separator: ", ")
-				scoredBirds.append((bird, finalScore, detailsString))
-			} else {
-					// No filters applied: Return everything with 0 score (or 100 if you prefer)
-				scoredBirds.append((bird, 0.0, "No Filters"))
+				// 6. RARITY BONUS
+			if bird.attributes.rarity.lowercased() == "common" {
+				score += 5
+				breakdownParts.append("Common (+5)")
 			}
 			
-			DispatchQueue.main.async {
-				self.onResultsUpdated?()
-			}
+			// Normalize Score (0.0 to 1.0) for confidence, but keep raw score for sorting logic
+			// Max possible is roughly 100 + 5.
+			let finalScore = max(0.0, score) // Clamp negative scores to 0 for display
+			let normalized = min(finalScore / 100.0, 1.0)
+			
+			let breakdownString = breakdownParts.joined(separator: ", ")
+			scoredBirds.append((bird, normalized, breakdownString))
 		}
 		
-			// 3. SORT & MAP
+			// 3. FILTER (> 30%)
+		scoredBirds = scoredBirds.filter { $0.score > 0.3 }
+		
+			// 4. SORT & LOG
 		scoredBirds.sort { $0.score > $1.score }
+		
+		print("--- CALCULATION RESULTS ---")
+		for item in scoredBirds {
+			print("🐦 \(item.bird.commonName): \(Int(item.score * 100))%")
+			print("   Breakdown: \(item.breakdown)")
+		}
+		print("---------------------------")
 		
 		self.birdResults = scoredBirds.map { item in
 			IdentificationBird(
 				id: item.bird.id,
 				name: item.bird.commonName,
 				scientificName: item.bird.scientificName ?? "",
-				confidence: min(item.score, 1.0),
-				description: item.details,
-				imageName: item.bird.imageName
+				confidence: item.score,
+				description: item.breakdown, // Using description to store breakdown for now
+				imageName: item.bird.imageName,
+				scoreBreakdown: item.breakdown
 			)
+		}
+		
+		DispatchQueue.main.async {
+			self.onResultsUpdated?()
 		}
 	}
 	

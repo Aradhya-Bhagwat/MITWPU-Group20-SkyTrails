@@ -126,6 +126,7 @@ class GUIViewController: UIViewController {
 		
 			// ✅ FIX: Use .name
 		categoryLabel.text = cat.name
+		print("\(cat.name) category selected")
 		
 		variationsCollectionView.reloadData()
 		categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
@@ -145,17 +146,11 @@ class GUIViewController: UIViewController {
 			// ✅ FIX: Use .name
 		let currentName = categories[currentCategoryIndex].name
 		
-		switch currentName {
-			case "Beak": return ["Hooked", "Straight", "Curved", "Short", "Heavy"]
-			case "Eye": return ["Ring", "Solid", "Mask"]
-			case "Wings": return ["Solid", "Bar", "Striped"]
-			case "Tail": return ["Long", "Short", "Forked"]
-			case "Leg": return ["Short", "Long", "Webbed"]
-			case "Back": return ["Solid", "Spotted", "Striped"]
-			case "Belly": return ["White", "Yellow", "Spotted"]
-			case "Crown": return ["Plain", "Tufted", "Striped"]
-			default: return ["Standard", "Variation A"]
+		if let fieldMark = viewModel.referenceFieldMarks.first(where: { $0.area == currentName }) {
+			return fieldMark.variants
 		}
+		
+		return []
 	}
 	
 	@objc private func nextTapped() {
@@ -221,6 +216,8 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 			
 				// ✅ FIX: Use .name
 			let categoryName = categories[currentCategoryIndex].name
+			
+			print("\(categoryName) category \(selectedVariant) variant selected")
 			
 			selectedVariations[categoryName] = selectedVariant
 			variationsCollectionView.reloadData()

@@ -139,6 +139,7 @@
       "scientific_name": "Lophophorus impejanus",
       "image_name": "HimalayanMonal",
       "valid_locations": ["Himalayas"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Game bird",
         "size_category": 3,
@@ -156,6 +157,7 @@
       "scientific_name": "Buceros bicornis",
       "image_name": "GreatHornbill",
       "valid_locations": ["Western Ghats", "Himalayas"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 4,
@@ -172,6 +174,7 @@
       "scientific_name": "Pavo cristatus",
       "image_name": "IndianPeafowl",
       "valid_locations": ["Pune, India", "Urban", "Dessert"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Game bird",
         "size_category": 4,
@@ -188,6 +191,7 @@
       "scientific_name": "Passerina caerulea",
       "image_name": "BlueGrosbeak",
       "valid_locations": ["Pune, India", "Urban"],
+      "valid_months": [5, 6, 7, 8],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -204,6 +208,7 @@
       "scientific_name": "Psilopogon zeylanicus",
       "image_name": "BrownHeadedBarbet",
       "valid_locations": ["Pune, India", "Urban"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -219,6 +224,7 @@
       "scientific_name": "Chrysocolaptes lucidus",
       "image_name": "GreaterFlameback",
       "valid_locations": ["Western Ghats"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 3,
@@ -236,6 +242,7 @@
       "scientific_name": "Ardeotis nigriceps",
       "image_name": "GreatIndianBustard",
       "valid_locations": ["Dessert"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Game bird",
         "size_category": 4,
@@ -252,6 +259,7 @@
       "scientific_name": "Passerina cyanea",
       "image_name": "IndigoBunting",
       "valid_locations": ["Pune, India", "Urban"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 1,
@@ -267,6 +275,7 @@
       "scientific_name": "Passerina amoena",
       "image_name": "LazuliBunting",
       "valid_locations": ["Pune, India"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 1,
@@ -283,6 +292,7 @@
       "scientific_name": "Sialia currucoides",
       "image_name": "MountainBluebird",
       "valid_locations": ["Himalayas"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -298,6 +308,7 @@
       "scientific_name": "Copsychus saularis",
       "image_name": "OrientalMagpieRobin",
       "valid_locations": ["Pune, India", "Urban"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -313,6 +324,7 @@
       "scientific_name": "Antigone antigone",
       "image_name": "SarusCrane",
       "valid_locations": ["Wetlands"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Heron",
         "size_category": 4,
@@ -329,6 +341,7 @@
       "scientific_name": "Eudynamys scolopaceus",
       "image_name": "AsianKoel",
       "valid_locations": ["Urban", "Pune, India"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 3,
@@ -345,6 +358,7 @@
       "scientific_name": "Alcedo atthis",
       "image_name": "bird_Common_kingfisher",
       "valid_locations": ["Wetlands"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 1,
@@ -361,6 +375,7 @@
       "scientific_name": "Irena puella",
       "image_name": "bird_asian_fairy_bluebird",
       "valid_locations": ["Western Ghats"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -377,6 +392,7 @@
       "scientific_name": "Upupa epops",
       "image_name": "bird_hoopoe",
       "valid_locations": ["Urban", "Pune, India"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -393,6 +409,7 @@
       "scientific_name": "Psittacula krameri",
       "image_name": "bird_parakeet",
       "valid_locations": ["Urban", "Pune, India"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -409,6 +426,7 @@
       "scientific_name": "Passer domesticus",
       "image_name": "bird_sparrow",
       "valid_locations": ["Urban", "Pune, India"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 1,
@@ -424,6 +442,7 @@
       "scientific_name": "Dicrurus macrocercus",
       "image_name": "bird_drongo",
       "valid_locations": ["Urban", "Pune, India", "Dessert"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Finch",
         "size_category": 2,
@@ -439,6 +458,7 @@
       "scientific_name": "Platalea",
       "image_name": "bird_spoonbill",
       "valid_locations": ["Wetlands"],
+      "valid_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "attributes": {
         "shape_id": "Heron",
         "size_category": 3,

@@ -21,6 +21,17 @@ struct BirdDatabase: Codable {
 
 struct ReferenceData: Codable {
 	let shapes: [BirdShape]
+	let fieldMarks: [ReferenceFieldMark]
+	
+	enum CodingKeys: String, CodingKey {
+		case shapes
+		case fieldMarks = "field_marks"
+	}
+}
+
+struct ReferenceFieldMark: Codable {
+	let area: String
+	let variants: [String]
 }
 
 struct BirdShape: Codable {
@@ -39,6 +50,7 @@ struct ReferenceBird: Codable, Identifiable {
 	let scientificName: String?
 	let imageName: String
 	let validLocations: [String]
+	let validMonths: [Int]? // 1 = January, 12 = December
 	let attributes: BirdAttributes
 	let fieldMarks: [FieldMarkData]
 	var isUserCreated: Bool? = false
@@ -50,6 +62,7 @@ struct ReferenceBird: Codable, Identifiable {
 		case scientificName = "scientific_name"
 		case imageName = "image_name"
 		case validLocations = "valid_locations"
+		case validMonths = "valid_months"
 		case attributes
 		case fieldMarks = "field_marks"
 		case isUserCreated
@@ -103,6 +116,7 @@ struct IdentificationBird: Codable, Identifiable {
 	let confidence: Double // 0.0 to 1.0 (Match Percentage)
 	let description: String // "Matched: Size, Shape, Crown"
 	let imageName: String
+	let scoreBreakdown: String // Detailed point breakdown
 	
 		// Helper to Convert to Saved Logbook Bird
 	func toSavedBird(location: String?) -> Bird {
