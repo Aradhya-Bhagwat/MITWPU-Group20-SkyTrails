@@ -17,6 +17,11 @@ class PredictInputViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Temporary Test Code in PredictInputViewController.swift
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        let testVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputViewController")
+        print("Test Instantiation Result: \(testVC)")
+        // The line above should print "PredictOutputViewController" if it's found.
        
         setupPageControl()
         setupCollectionView()
