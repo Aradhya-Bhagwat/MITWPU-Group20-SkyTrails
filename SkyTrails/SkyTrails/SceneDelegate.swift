@@ -10,33 +10,14 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 	var window: UIWindow?
-    var homeCoordinator: HomeCoordinator?
-
-
-	func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
-                
-                // 1. Create the Window
-                let window = UIWindow(windowScene: windowScene)
-                
-                // 2. Create a Navigation Controller (The root of our stack)
-                let navigationController = UINavigationController()
-                
-                // 3. Initialize the Coordinator
-                homeCoordinator = HomeCoordinator(navigationController: navigationController)
-                
-                // 4. Start the flow
-                homeCoordinator?.start()
-                
-                // 5. Set the window's root and show it
-                window.rootViewController = navigationController
-                self.window = window
-                window.makeKeyAndVisible()
-		// Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-		// If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-		// This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-		guard let _ = (scene as? UIWindowScene) else { return }
-	}
+
+        let window = UIWindow(windowScene: windowScene)
+        window.rootViewController = RootTabBarController()
+        self.window = window
+        window.makeKeyAndVisible()
+    }
 
 	func sceneDidDisconnect(_ scene: UIScene) {
 		// Called as the scene is being released by the system.

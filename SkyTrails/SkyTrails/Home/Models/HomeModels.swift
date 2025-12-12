@@ -71,6 +71,16 @@ struct RawHotspotPin: Codable {
     let bird_image_name: String
 }
 
+struct PredictionInputData {
+    var id: UUID = UUID()
+    var locationName: String?
+    var latitude: Double?
+    var longitude: Double?
+    var startDate: Date?
+    var endDate: Date?
+    var areaValue: Int = 2 // Default 2 km
+}
+
 struct DynamicCard: Codable {
     let card_type: String
     
@@ -176,6 +186,130 @@ struct CommunityObservation: Codable {
         case user, location
         case birdName = "bird_name"
         case imageName = "image_name"
+    }
+}
+
+// MARK: - Prediction Models
+
+struct PredictionDataWrapper: Codable {
+    let species_data: [SpeciesData]
+}
+
+struct SpeciesData: Codable {
+    let id: String
+    let name: String
+    let imageName: String
+    let sightings: [Sighting]
+}
+
+struct Sighting: Codable {
+    let week: Int
+    let lat: Double
+    let lon: Double
+    let locationName: String
+}
+
+// Helper for the Logic
+// models.swift
+
+// ... (All structs, extensions, and other classes remain the same)
+
+// MARK: - Prediction Models (Continued)
+
+struct FinalPredictionResult: Hashable { // Make it Hashable to easily get unique results
+    let birdName: String
+    let imageName: String
+    let matchedInputIndex: Int
+    let matchedLocation: (lat: Double, lon: Double)
+    
+    // Conform to Hashable for unique filtering
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(birdName)
+    }
+    static func == (lhs: FinalPredictionResult, rhs: FinalPredictionResult) -> Bool {
+        return lhs.birdName == rhs.birdName
+    }
+}
+
+
+// Helper for the Logic
+class PredictionEngine {
+    static let shared = PredictionEngine()
+    private var allSpecies: [SpeciesData] = []
+    
+    init() {
+        // Load data immediately
+        let wrapper = DataLoader.load("prediction_data", as: PredictionDataWrapper.self)
+        self.allSpecies = wrapper.species_data
+    }
+    
+    /// Finds all matching birds based on a single user input card's criteria.
+    func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
+        guard let lat = input.latitude,
+              let lon = input.longitude,
+              let weekRange = input.weekRange else {
+            print("Skipping input \(inputIndex): Missing location or date range.")
+            return []
+        }
+        
+        let radiusKM = Double(input.areaValue)
+        let searchLoc = CLLocation(latitude: lat, longitude: lon)
+
+        var matchingBirds: [FinalPredictionResult] = []
+
+        for species in allSpecies {
+            
+            // Optimization: Track if this species is already found for this input
+            var speciesFoundForThisInput = false
+            
+            for sighting in species.sightings {
+                
+                // 1. Week Match Check
+                let sightingWeek = sighting.week
+                var isWeekMatch = false
+                
+                if weekRange.start <= weekRange.end {
+                    // Normal year range
+                    isWeekMatch = (sightingWeek >= weekRange.start) && (sightingWeek <= weekRange.end)
+                } else {
+                    // Year-end wrap-around
+                    let checkWeek = sightingWeek > weekRange.start ? sightingWeek : sightingWeek + 52
+                    isWeekMatch = (checkWeek >= weekRange.start) && (checkWeek <= weekRange.end)
+                }
+                
+                // Add a flexibility window of +/- 2 weeks
+                // This logic is simplified: check if the sighting week is close to ANY part of the user's range.
+                if !isWeekMatch {
+                    // Check close proximity to boundaries
+                    let startBound = weekRange.start - 2
+                    let endBound = weekRange.end + 2
+                    isWeekMatch = (sightingWeek >= startBound && sightingWeek <= endBound)
+                }
+                
+                if !isWeekMatch { continue }
+                
+                // 2. Location Match Check
+                let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
+                let distanceKM = sightingLoc.distance(from: searchLoc) / 1000.0
+                
+                if distanceKM <= radiusKM {
+                    // Match found!
+                    matchingBirds.append(
+                        FinalPredictionResult(
+                            birdName: species.name,
+                            imageName: species.imageName,
+                            matchedInputIndex: inputIndex,
+                            matchedLocation: (sighting.lat, sighting.lon)
+                        )
+                    )
+                    // We only need to find a species once per input location
+                    speciesFoundForThisInput = true
+                    break
+                }
+            }
+            if speciesFoundForThisInput { continue }
+        }
+        return matchingBirds
     }
 }
 
@@ -305,6 +439,32 @@ class HomeModels {
         }
     }
 }
+
+extension Date {
+    /// Calculates the Gregorian calendar week number of the year for the date.
+    var weekOfYear: Int {
+        let calendar = Calendar.current
+        return calendar.component(.weekOfYear, from: self)
+    }
+}
+
+extension PredictionInputData {
+    /// Converts the user's date range into a range of week numbers.
+    var weekRange: (start: Int, end: Int)? {
+        guard let start = startDate, let end = endDate else { return nil }
+        
+        let startWeek = start.weekOfYear
+        let endWeek = end.weekOfYear
+        
+        if startWeek > endWeek {
+            // Handle wrap-around year change
+            return (start: startWeek, end: endWeek + 52)
+        }
+        return (start: startWeek, end: endWeek)
+    }
+}
+
+
 
 // MARK: - 5. UTILITIES (Renamed to avoid conflicts)
 
