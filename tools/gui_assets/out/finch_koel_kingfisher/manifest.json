@@ -1,0 +1,431 @@
+{
+  "summary": {
+    "shape": "Finch",
+    "shape_clean": "Finch",
+    "birds": [
+      "Asian Koel",
+      "Common Kingfisher"
+    ],
+    "areas": [
+      "Back",
+      "Beak",
+      "Belly",
+      "Eye"
+    ],
+    "missing_areas_not_in_reference": [],
+    "counts": {
+      "base_shape": 1,
+      "category_icons": 4,
+      "variation_icons": 20,
+      "canvas_layers": 20,
+      "total": 45
+    }
+  },
+  "assets": [
+    {
+      "asset_name": "shape_Finch_base",
+      "kind": "base_shape",
+      "shape_id": "Finch",
+      "area": null,
+      "variant": null,
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate the Finch base silhouette/outline for a compositing canvas: body fill color #cdcdcd and outline color #707070. Side profile facing right, perched pose, wings folded. Full body visible. This is the anchor layer. Background must be solid chroma key #FF00FF.",
+      "notes": "Generate once; use as reference for all canvas layers."
+    },
+    {
+      "asset_name": "bird_back",
+      "kind": "category_icon",
+      "shape_id": null,
+      "area": "Back",
+      "variant": null,
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a simple monochrome UI category icon representing 'Back' (bird field mark category). Minimal, bold outline, centered, readable at small size. Background must be solid chroma key #FF00FF.",
+      "notes": "Used by ChooseFieldMark.imageView (bird_<area.lowercased>)."
+    },
+    {
+      "asset_name": "bird_beak",
+      "kind": "category_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": null,
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a simple monochrome UI category icon representing 'Beak' (bird field mark category). Minimal, bold outline, centered, readable at small size. Background must be solid chroma key #FF00FF.",
+      "notes": "Used by ChooseFieldMark.imageView (bird_<area.lowercased>)."
+    },
+    {
+      "asset_name": "bird_belly",
+      "kind": "category_icon",
+      "shape_id": null,
+      "area": "Belly",
+      "variant": null,
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a simple monochrome UI category icon representing 'Belly' (bird field mark category). Minimal, bold outline, centered, readable at small size. Background must be solid chroma key #FF00FF.",
+      "notes": "Used by ChooseFieldMark.imageView (bird_<area.lowercased>)."
+    },
+    {
+      "asset_name": "bird_eye",
+      "kind": "category_icon",
+      "shape_id": null,
+      "area": "Eye",
+      "variant": null,
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a simple monochrome UI category icon representing 'Eye' (bird field mark category). Minimal, bold outline, centered, readable at small size. Background must be solid chroma key #FF00FF.",
+      "notes": "Used by ChooseFieldMark.imageView (bird_<area.lowercased>)."
+    },
+    {
+      "asset_name": "icon_Back_Solid",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Back",
+      "variant": "Solid",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Back = Solid. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Back_Solid",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Back",
+      "variant": "Solid",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Back = Solid.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\nWings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers. Keep all wing areas exactly as the base fill (#cdcdcd) or the chroma key background (#FF00FF) if outside the bird silhouette. ",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Back_Iridescent",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Back",
+      "variant": "Iridescent",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Back = Iridescent. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Back_Iridescent",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Back",
+      "variant": "Iridescent",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Back = Iridescent.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\nWings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers. Keep all wing areas exactly as the base fill (#cdcdcd) or the chroma key background (#FF00FF) if outside the bird silhouette. ",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Back_Streaked",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Back",
+      "variant": "Streaked",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Back = Streaked. Simple, bold, centered, readable at 60×60. Flat colors only. Show a close-up feather patch with high-contrast streaks (clean repeated lines). Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Back_Streaked",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Back",
+      "variant": "Streaked",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Back = Streaked.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\nWings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers. Keep all wing areas exactly as the base fill (#cdcdcd) or the chroma key background (#FF00FF) if outside the bird silhouette. ",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Back_Mottled",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Back",
+      "variant": "Mottled",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Back = Mottled. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Back_Mottled",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Back",
+      "variant": "Mottled",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Back = Mottled.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\nWings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers. Keep all wing areas exactly as the base fill (#cdcdcd) or the chroma key background (#FF00FF) if outside the bird silhouette. ",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Hooked",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Hooked",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Hooked. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Hooked",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Hooked",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Hooked.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Straight",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Straight",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Straight. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Straight",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Straight",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Straight.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Curved",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Curved",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Curved. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Curved",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Curved",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Curved.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Spoon_shaped",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Spoon-shaped",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Spoon-shaped. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Spoon_shaped",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Spoon-shaped",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Spoon-shaped.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Short",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Short",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Short. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Short",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Short",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Short.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Long",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Long",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Long. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Long",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Long",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Long.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Heavy",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Heavy",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Heavy. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Heavy",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Heavy",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Heavy.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Pale",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Pale",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Pale. Simple, bold, centered, readable at 60×60. Flat colors only. Use off-white creamy ivory tone (similar to #F3E9D2), NOT pure white. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Pale",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Pale",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Pale. Color must be off-white creamy ivory (similar to #F3E9D2), not pure white.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Beak_Casque",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Beak",
+      "variant": "Casque",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Beak = Casque. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Beak_Casque",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Beak",
+      "variant": "Casque",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Beak = Casque.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Belly_Solid",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Belly",
+      "variant": "Solid",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Belly = Solid. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Belly_Solid",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Belly",
+      "variant": "Solid",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Belly = Solid.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Belly_Pale",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Belly",
+      "variant": "Pale",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Belly = Pale. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Belly_Pale",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Belly",
+      "variant": "Pale",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Belly = Pale.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Belly_White",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Belly",
+      "variant": "White",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Belly = White. Simple, bold, centered, readable at 60×60. Flat colors only. Use pure stark white (#FFFFFF). Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Belly_White",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Belly",
+      "variant": "White",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Belly = White. Color must be pure stark white (#FFFFFF), not ivory/pale.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Belly_Spotted",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Belly",
+      "variant": "Spotted",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Belly = Spotted. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Belly_Spotted",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Belly",
+      "variant": "Spotted",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Belly = Spotted.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Eye_Ring",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Eye",
+      "variant": "Ring",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Eye = Ring. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Eye_Ring",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Eye",
+      "variant": "Ring",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Eye = Ring.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Eye layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Eye_Solid",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Eye",
+      "variant": "Solid",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Eye = Solid. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Eye_Solid",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Eye",
+      "variant": "Solid",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Eye = Solid.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Eye layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    },
+    {
+      "asset_name": "icon_Eye_Mask",
+      "kind": "variation_icon",
+      "shape_id": null,
+      "area": "Eye",
+      "variant": "Mask",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nCreate a small UI variation icon for Eye = Mask. Simple, bold, centered, readable at 60×60. Flat colors only. Background must be solid chroma key #FF00FF.",
+      "notes": "Centered is OK; shown in variationsCollectionView."
+    },
+    {
+      "asset_name": "canvas_Finch_Eye_Mask",
+      "kind": "canvas_layer",
+      "shape_id": "Finch",
+      "area": "Eye",
+      "variant": "Mask",
+      "prompt": "Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.\nREFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.\nTask: generate a canvas layer ONLY for Eye = Mask.\nPlacement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.\nBackground handling: every pixel NOT part of the intended Eye layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.\n",
+      "notes": "Must align to base; use inpainting/reference image."
+    }
+  ]
+}

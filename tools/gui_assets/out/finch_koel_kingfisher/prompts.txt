@@ -1,0 +1,770 @@
+# GUI Asset Prompts
+# NOTE: variation icon prompts omitted (variation_icon)
+# Shape: Finch | Birds: Asian Koel, Common Kingfisher
+# Areas: Back, Beak, Belly, Crown, Eye, Leg, Nape, Tail, Thigh, Throat, Wings
+
+== shape_Finch_base DONE ==
+kind: base_shape
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+Create the Finch base silhouette/outline for a compositing canvas: body fill color #cdcdcd and outline color #707070. Side profile facing right, perched pose, wings folded. Full body visible. This is the anchor layer. Background must be solid chroma key #FF00FF.
+
+notes: Generate once; use as reference for all canvas layers.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Hooked DONE ==
+kind: canvas_layer
+area: Beak
+variant: Hooked
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Hooked.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Straight ==
+kind: canvas_layer
+area: Beak
+variant: Straight
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Straight.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Curved DONE ==
+kind: canvas_layer
+area: Beak
+variant: Curved
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Curved.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Spoon_shaped DONE ==
+kind: canvas_layer
+area: Beak
+variant: Spoon-shaped
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Spoon-shaped (a spatulate bill shape: beak widens toward the tip; think “spoonbill-like bill geometry”, NOT a utensil).
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+Shape specifics: modify ONLY the beak region so the bill is noticeably broader/flatter near the tip than at the base (spatulate). Do NOT add any separate object, do NOT draw a literal spoon/utensil.
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Back_Solid DONE ==
+kind: canvas_layer
+area: Back
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Back = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+Wings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Back_Iridescent DONE ==
+kind: canvas_layer
+area: Back
+variant: Iridescent
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Back = Iridescent.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+Wings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Back_Streaked DONE ==
+kind: canvas_layer
+area: Back
+variant: Streaked
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Back = Streaked.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+Wings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Back_Mottled DONE ==
+kind: canvas_layer
+area: Back
+variant: Mottled
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Back = Mottled.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Back layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+Wings rule: this is Back (upper torso) ONLY. Do NOT draw or modify Wings/feather groups; do NOT place patterns on the wing feathers.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Crown_Solid ==
+kind: canvas_layer
+area: Crown
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Crown = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Crown layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Crown_Striped ==
+kind: canvas_layer
+area: Crown
+variant: Striped
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Crown = Striped.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Crown layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Crown_Crest ==
+kind: canvas_layer
+area: Crown
+variant: Crest
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Crown = Crest.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Crown layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Crown_Cap ==
+kind: canvas_layer
+area: Crown
+variant: Cap
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Crown = Cap.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Crown layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Leg_Long ==
+kind: canvas_layer
+area: Leg
+variant: Long
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Leg = Long.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Leg layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Leg_Short ==
+kind: canvas_layer
+area: Leg
+variant: Short
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Leg = Short.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Leg layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Leg_Pink ==
+kind: canvas_layer
+area: Leg
+variant: Pink
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Leg = Pink. Color must be pink (similar to #E28AB8), not red.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Leg layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Leg_Yellow ==
+kind: canvas_layer
+area: Leg
+variant: Yellow
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Leg = Yellow. Color must be yellow (similar to #F2D35A), not orange.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Leg layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Nape_Solid ==
+kind: canvas_layer
+area: Nape
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Nape = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Nape layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Nape_Patch ==
+kind: canvas_layer
+area: Nape
+variant: Patch
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Nape = Patch.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Nape layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Long ==
+kind: canvas_layer
+area: Tail
+variant: Long
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Long.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Short ==
+kind: canvas_layer
+area: Tail
+variant: Short
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Short.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Forked ==
+kind: canvas_layer
+area: Tail
+variant: Forked
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Forked.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Square ==
+kind: canvas_layer
+area: Tail
+variant: Square
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Square.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Notched ==
+kind: canvas_layer
+area: Tail
+variant: Notched
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Notched.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Cocked ==
+kind: canvas_layer
+area: Tail
+variant: Cocked
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Cocked.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Rufous ==
+kind: canvas_layer
+area: Tail
+variant: Rufous
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Rufous. Color must be rufous reddish-brown (similar to #A35A2A).
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Tail_Train ==
+kind: canvas_layer
+area: Tail
+variant: Train
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Tail = Train.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Tail layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Thigh_Solid ==
+kind: canvas_layer
+area: Thigh
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Thigh = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Thigh layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Throat_Solid ==
+kind: canvas_layer
+area: Throat
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Throat = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Throat layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Throat_Patch ==
+kind: canvas_layer
+area: Throat
+variant: Patch
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Throat = Patch.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Throat layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Throat_White ==
+kind: canvas_layer
+area: Throat
+variant: White
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Throat = White. Color must be pure stark white (#FFFFFF), not ivory/pale.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Throat layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Wings_Solid ==
+kind: canvas_layer
+area: Wings
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Wings = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Wings layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Wings_Bar ==
+kind: canvas_layer
+area: Wings
+variant: Bar
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Wings = Bar.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Wings layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Wings_Striped ==
+kind: canvas_layer
+area: Wings
+variant: Striped
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Wings = Striped.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Wings layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Wings_Patch ==
+kind: canvas_layer
+area: Wings
+variant: Patch
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Wings = Patch.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Wings layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Wings_Broad ==
+kind: canvas_layer
+area: Wings
+variant: Broad
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Wings = Broad.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Wings layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+
+== canvas_Finch_Beak_Short DONE ==
+kind: canvas_layer
+area: Beak
+variant: Short
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Short.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Long DONE ==
+kind: canvas_layer
+area: Beak
+variant: Long
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Long.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Heavy DONE ==
+kind: canvas_layer
+area: Beak
+variant: Heavy
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Heavy.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Pale DONE ==
+kind: canvas_layer
+area: Beak
+variant: Pale
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Pale. Color must be off-white creamy ivory (similar to #F3E9D2), not pure white.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Beak_Casque DONE ==
+kind: canvas_layer
+area: Beak
+variant: Casque
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Beak = Casque.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Beak layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Belly_Solid DONE ==
+kind: canvas_layer
+area: Belly
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Belly = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Belly_Pale DONE ==
+kind: canvas_layer
+area: Belly
+variant: Pale
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Belly = Pale.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Belly_White DONE ==
+kind: canvas_layer
+area: Belly
+variant: White
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Belly = White. Color must be pure stark white (#FFFFFF), not ivory/pale.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Belly_Spotted DONE ==
+kind: canvas_layer
+area: Belly
+variant: Spotted
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Belly = Spotted.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Belly layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Eye_Ring DONE ==
+kind: canvas_layer
+area: Eye
+variant: Ring
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Eye = Ring.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Eye layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Eye_Solid DONE ==
+kind: canvas_layer
+area: Eye
+variant: Solid
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Eye = Solid.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Eye layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------
+
+== canvas_Finch_Eye_Mask DONE ==
+kind: canvas_layer
+area: Eye
+variant: Mask
+
+Style: clean flat 2D vector-like illustration, consistent line weight, no gradients, no shadows. Colors: bird fill #cdcdcd, outline/stroke #707070. Background: fill entire canvas with solid chroma key #FF00FF. Do NOT use #FF00FF anywhere in the bird/markings. Output: PNG, square 1024×1024 (or 2048×2048). Framing: do NOT crop, do NOT zoom, do NOT center the subject. Maintain absolute positioning in the full canvas. Negative/avoid: blurry, 3D, realistic, gradients, shadows, ghosting, faint outline of full bird, extra body parts, smoke, partial opacity, cropped, zoomed, centered.
+REFERENCE IMAGE PROVIDED: Use the attached finch base as the fixed coordinate frame.
+Task: generate a canvas layer ONLY for Eye = Mask.
+Placement: keep the changed pixels positioned exactly where they belong on the reference bird. Do not move them, do not center them, do not zoom.
+Background handling: every pixel NOT part of the intended Eye layer must remain solid chroma key #FF00FF (no partial transparency). Do not draw faint outlines/ghosting of the rest of the bird.
+
+
+notes: Must align to base; use inpainting/reference image.
+
+------------------------------------------------------------

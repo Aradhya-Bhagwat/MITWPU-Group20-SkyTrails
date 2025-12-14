@@ -178,6 +178,32 @@ class GUIViewController: UIViewController {
 		}
 	}
 	
+	private func compositePreviewImage(base: UIImage, overlay: UIImage) -> UIImage {
+		let renderer = UIGraphicsImageRenderer(size: base.size)
+		return renderer.image { _ in
+			base.draw(in: CGRect(origin: .zero, size: base.size))
+			overlay.draw(in: CGRect(origin: .zero, size: base.size))
+		}
+	}
+	
+	private func variationThumbnailImage(shapeID: String, categoryName: String, variantName: String) -> UIImage? {
+		let cleanCategory = cleanForFilename(categoryName)
+		let cleanVariant = cleanForFilename(variantName)
+		
+		let canvasName = "canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
+		let iconName = "icon_\(cleanCategory)_\(cleanVariant)"
+		let baseName = "shape_\(shapeID)_base"
+		
+		if let canvas = UIImage(named: canvasName) {
+			if let base = UIImage(named: baseName) {
+				return compositePreviewImage(base: base, overlay: canvas)
+			}
+			return canvas
+		}
+		
+		return UIImage(named: iconName)
+	}
+	
 	func getVariantsForCurrentCategory() -> [String] {
 		guard currentCategoryIndex < categories.count else { return [] }
 		let currentName = categories[currentCategoryIndex].name
@@ -234,13 +260,9 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 			let categoryName = categories[currentCategoryIndex].name
 			
 			let isSelected = selectedVariations[categoryName] == variantName
-			
-				// Filename construction
-			let cleanCat = cleanForFilename(categoryName)
-			let cleanVar = cleanForFilename(variantName)
-			let iconName = "icon_\(cleanCat)_\(cleanVar)"
-			
-			cell.configure(imageName: iconName, isSelected: isSelected)
+			let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+			let thumb = variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
+			cell.configure(image: thumb, isSelected: isSelected)
 			return cell
 		}
 	}
