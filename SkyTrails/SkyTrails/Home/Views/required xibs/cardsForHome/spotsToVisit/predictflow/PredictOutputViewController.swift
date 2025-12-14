@@ -22,9 +22,6 @@ class PredictOutputViewController: UIViewController {
     // Group predictions by the input card they matched for structured display
     private var groupedPredictions: [String: [FinalPredictionResult]] = [:]
 
-    var predictions: [FinalPredictionResult] = []
-    var inputData: [PredictionInputData] = []
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground

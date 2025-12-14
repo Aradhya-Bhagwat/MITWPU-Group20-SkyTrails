@@ -33,77 +33,78 @@ class PredictMapViewController: UIViewController {
         
         // MARK: - Map Update Logic
         
-        private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
-            // 1. Clear existing annotations/overlays
-            mapView.removeAnnotations(mapView.annotations)
-            mapView.removeOverlays(mapView.overlays)
-            
-            print("\n--- DEBUG: Map Update Triggered ---\n")
-            
-            var annotations: [MKAnnotation] = []
-            var locationCoordinates: [CLLocationCoordinate2D] = [] // Used for zooming
-            
-            for input in inputs {
-                guard let lat = input.latitude,
-                      let lon = input.longitude else { continue }
-                
-                let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-                locationCoordinates.append(coordinate)
-                
-                // A. Add Pin (Annotation) for user's input location
-                let annotation = MKPointAnnotation()
-                annotation.coordinate = coordinate
-                annotation.title = input.locationName ?? "Search Location"
-                annotations.append(annotation)
-                
-                // B. Add Circle (Overlay) for the area
-                let circle = MKCircle(center: coordinate, radius: Double(input.areaValue * 1000))
-                mapView.addOverlay(circle)
-            }
-            
-            // C. Add Bird Pins (using the matched sighting coordinates)
-            for prediction in predictions {
-                let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
-                let birdPin = MKPointAnnotation()
-                birdPin.coordinate = coord
-                birdPin.title = prediction.birdName // Title of the bird
-                birdPin.subtitle = "Predicted near \(inputs[prediction.matchedInputIndex].locationName ?? "input")"
-                annotations.append(birdPin)
-                locationCoordinates.append(coord) // Include bird sightings in zoom calculation
-            }
-            
-            mapView.addAnnotations(annotations)
-            
-            // 2. Zoom map to fit all new pins/circles
-            if !locationCoordinates.isEmpty {
-                
-                // Calculate region containing all points
-                let mapRect = locationCoordinates.reduce(MKMapRect.null) { (mapRect, coordinate) -> MKMapRect in
-                    let point = MKMapPoint(coordinate)
-                    let rect = MKMapRect(x: point.x, y: point.y, width: 0, height: 0)
-                    return mapRect.union(rect)
-                }
-
-<<<<<<< HEAD
-                // Fit the calculated mapRect with padding
-                let padding: CGFloat = 40
-                mapView.setVisibleMapRect(mapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: true)
-            }
-=======
-        mapView.addAnnotations(annotations)
-        mapView.addOverlays(overlays)
+    private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
+        // 1. Clear existing annotations/overlays
+        mapView.removeAnnotations(mapView.annotations)
+        mapView.removeOverlays(mapView.overlays)
         
-        // Optional: Zoom map to fit all new pins/circles
-        if let firstInput = inputs.first,
-           let lat = firstInput.latitude,
-           let lon = firstInput.longitude {
-            let firstCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            let region = MKCoordinateRegion(center: firstCoord, latitudinalMeters: 50000, longitudinalMeters: 50000)
-            mapView.setRegion(region, animated: true)
->>>>>>> 0d2e653452c6af2b56089643b470ce3a7e5d58f5
+        print("\n--- DEBUG: Map Update Triggered ---\n")
+        
+        var annotations: [MKAnnotation] = []
+        var locationCoordinates: [CLLocationCoordinate2D] = [] // Used for zooming
+        
+        for input in inputs {
+            guard let lat = input.latitude,
+                  let lon = input.longitude else { continue }
+            
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            locationCoordinates.append(coordinate)
+            
+            // A. Add Pin (Annotation) for user's input location
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = coordinate
+            annotation.title = input.locationName ?? "Search Location"
+            annotations.append(annotation)
+            
+            // B. Add Circle (Overlay) for the area
+            let circle = MKCircle(center: coordinate, radius: Double(input.areaValue * 1000))
+            mapView.addOverlay(circle)
         }
         
+        // C. Add Bird Pins (using the matched sighting coordinates)
+        for prediction in predictions {
+            let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
+            let birdPin = MKPointAnnotation()
+            birdPin.coordinate = coord
+            birdPin.title = prediction.birdName // Title of the bird
+            birdPin.subtitle = "Predicted near \(inputs[prediction.matchedInputIndex].locationName ?? "input")"
+            annotations.append(birdPin)
+            locationCoordinates.append(coord) // Include bird sightings in zoom calculation
+        }
+        
+        mapView.addAnnotations(annotations)
+        
+        // 2. Zoom map to fit all new pins/circles
+        if !locationCoordinates.isEmpty {
+            
+            // Calculate region containing all points
+            let mapRect = locationCoordinates.reduce(MKMapRect.null) { (mapRect, coordinate) -> MKMapRect in
+                let point = MKMapPoint(coordinate)
+                let rect = MKMapRect(x: point.x, y: point.y, width: 0, height: 0)
+                return mapRect.union(rect)
+            }
+            
+            
+            // Fit the calculated mapRect with padding
+            let padding: CGFloat = 40
+            mapView.setVisibleMapRect(mapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: true)
+        }
+        
+        //  mapView.addAnnotations(annotations)
+          // mapView.addOverlays(overlays)
+        
+        // Optional: Zoom map to fit all new pins/circles
+                if let firstInput = inputs.first,
+                   let lat = firstInput.latitude,
+                   let lon = firstInput.longitude {
+                    let firstCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+                    let region = MKCoordinateRegion(center: firstCoord, latitudinalMeters: 50000, longitudinalMeters: 50000)
+                    mapView.setRegion(region, animated: true)
+        
+                }
+        
         // MARK: - Setup Methods
+    }
         
         private func setupMap() {
             let center = CLLocationCoordinate2D(latitude: 20.0, longitude: 78.0)
@@ -221,10 +222,11 @@ class PredictMapViewController: UIViewController {
         
         // MARK: - Navigation Logic
         
-        func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
+    // NEW function signature
+    // ORIGINAL function signature
+    func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
             
-            updateMap(with: inputs, predictions: predictions)
-            
+        updateMap(with: inputs, predictions: predictions)
             // 1. Update the Map Visualization immediately
             let storyboard = UIStoryboard(name: "Home", bundle: nil)
                 
@@ -243,9 +245,11 @@ class PredictMapViewController: UIViewController {
                 }
 
                 // Pass data to the extracted root VC
-                outputVC.predictions = predictions
-                outputVC.inputData = inputs
-                
+        
+        outputVC.inputData = inputs
+          outputVC.predictions = predictions
+          //  outputVC.inputData = newInputs
+                    
                 // ⭐️ Use the Navigation Controller for the transition and pinning
                 addChild(outputNavVC) // Use the wrapper
                 
