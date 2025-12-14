@@ -4,20 +4,14 @@ import UIKit
 class VariationCell: UICollectionViewCell {
 	@IBOutlet weak var variationImageView: UIImageView!
 	
-	func configure(imageName: String, isSelected: Bool) {
+	func configure(image: UIImage?, isSelected: Bool) {
 			// 1. SAFETY CHECK: Ensure the outlet is connected before using it
 		guard let imageView = variationImageView else {
 			print("⚠️ Critical: variationImageView is not connected in Storyboard!")
 			return
 		}
 		
-			// 2. Load image (with fallback if specific variation icon is missing)
-		if let image = UIImage(named: imageName) {
-			imageView.image = image
-		} else {
-				// Fallback to a generic icon from your list so it's not empty
-			imageView.image = UIImage(named: "icn_field_marks")
-		}
+		imageView.image = image ?? UIImage(named: "icn_field_marks")
 		
 			// 3. Styling
 		variationImageView.contentMode = .scaleAspectFit
