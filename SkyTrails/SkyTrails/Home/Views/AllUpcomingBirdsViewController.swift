@@ -57,11 +57,10 @@ class AllUpcomingBirdsViewController: UIViewController {
         }
             
         @objc private func didTapPredict() {
-        print("Predict button tapped! Initiating Prediction Flow...")
         
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "birdspredViewController") as? BirdSelectionViewController else {
-            print("❌ Could not instantiate BirdSelectionViewController from birdspred.storyboard")
+            print(" Could not instantiate BirdSelectionViewController from birdspred.storyboard")
             return
         }
         
