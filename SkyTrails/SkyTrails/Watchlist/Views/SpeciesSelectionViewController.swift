@@ -2,7 +2,6 @@
 //  SpeciesSelectionViewController.swift
 //  SkyTrails
 //
-//  Created by Gemini on 07/12/25.
 //
 
 import UIKit
