@@ -12,7 +12,7 @@ class BirdSelectionViewController: UIViewController {
     var allSpecies: [SpeciesData] = []
     var selectedSpecies: Set<String> = [] // IDs of selected species
     
-    private let tableView = UITableView()
+    private let tableView = UITableView(frame: .zero, style: .plain)
     
     override func viewDidLoad() {
         super.viewDidLoad()
