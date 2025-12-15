@@ -332,8 +332,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Output" id="CsV-tk-mcl">
-                        <barButtonItem key="leftBarButtonItem" systemItem="redo" id="ocP-7a-dlj"/>
-                        <barButtonItem key="rightBarButtonItem" systemItem="stop" id="wbn-zj-6pI"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="redo" id="ocP-7a-dlj"/>
                     </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dX2-kF-RWH" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

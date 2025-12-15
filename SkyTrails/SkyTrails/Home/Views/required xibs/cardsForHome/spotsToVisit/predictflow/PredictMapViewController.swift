@@ -123,7 +123,7 @@ class PredictMapViewController: UIViewController {
             // --- CALCULATION UPDATES ---
             
             maxTopY = safeAreaTop + 140
-            initialLoadY = screenHeight * 0.60
+            initialLoadY = screenHeight * 0.45
             minBottomY = screenHeight * 0.90 // Changed from 0.80 back to 0.90 for 1/10th visibility
             
             // ---------------------------
@@ -155,7 +155,9 @@ class PredictMapViewController: UIViewController {
             // ⭐️ Save the initial child reference
             currentChildVC = navVC
             
+            
             navVC.view.translatesAutoresizingMaskIntoConstraints = false
+            navVC.view.clipsToBounds = true
             navVC.view.layer.cornerRadius = 24
             
             // ✅ FIX 2: Use CACornerMask prefix for contextual type
@@ -164,7 +166,7 @@ class PredictMapViewController: UIViewController {
                 CACornerMask.layerMaxXMinYCorner
             ]
             
-            navVC.view.clipsToBounds = true
+    
             
             NSLayoutConstraint.activate([
                 navVC.view.leadingAnchor.constraint(equalTo: modalContainerView.leadingAnchor),
@@ -219,56 +221,140 @@ class PredictMapViewController: UIViewController {
                 break
             }
         }
+    // In PredictMapViewController.swift, inside the PredictMapViewController class:
+
+    func updateMapWithCurrentInputs(inputs: [PredictionInputData]) {
+        // ⭐️ CALL THE MAIN MAP LOGIC, but pass empty predictions
+        // since the user is still on the input screen.
+        updateMap(with: inputs, predictions: [])
+    }
         
         // MARK: - Navigation Logic
         
     // NEW function signature
     // ORIGINAL function signature
     func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
-            
+                
+        // ⭐️ FIX: Call updateMap here to show final pins/circles before transition
         updateMap(with: inputs, predictions: predictions)
-            // 1. Update the Map Visualization immediately
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-                
-                // ⭐️ Step 1: Instantiate the Navigation Controller wrapper
-                guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
-                    print("❌ Could not find PredictOutputNavigationController.")
-                    return
-                }
-
-                // ⭐️ Step 2: Extract the root PredictOutputViewController
-                guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController,
-                      let currentVC = currentChildVC,
-                      let container = modalContainerView else {
-                    print("❌ Error: Internal state failure or could not extract root VC.")
-                    return
-                }
-
-                // Pass data to the extracted root VC
         
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+            
+        // ⭐️ Step 1: Instantiate the Navigation Controller wrapper
+        guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
+            print("❌ Could not find PredictOutputNavigationController.")
+            return
+        }
+        
+        outputNavVC.view.layer.cornerRadius = 24
+            outputNavVC.view.clipsToBounds = true
+            outputNavVC.view.translatesAutoresizingMaskIntoConstraints = false // Necessary for the pinning constraints
+            outputNavVC.view.layer.maskedCorners = [
+                CACornerMask.layerMinXMinYCorner,
+                CACornerMask.layerMaxXMinYCorner
+            ]
+
+        // ⭐️ Step 2: Extract the root PredictOutputViewController
+        guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController,
+              let currentVC = currentChildVC,
+              let container = modalContainerView else {
+            print("❌ Error: Internal state failure or could not extract root VC.")
+            return
+        }
+
+        // Pass data to the extracted root VC
+        outputVC.predictions = predictions
         outputVC.inputData = inputs
-          outputVC.predictions = predictions
-          //  outputVC.inputData = newInputs
-                    
-                // ⭐️ Use the Navigation Controller for the transition and pinning
-                addChild(outputNavVC) // Use the wrapper
+            
+        // ⭐️ Use the Navigation Controller for the transition and pinning
+        addChild(outputNavVC) // Use the wrapper
+            
+        transition(from: currentVC, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+            
+            // --- ⭐️ DRAG GESTURE TRANSFER FIX ⭐️ ---
+            if let originalNavVC = currentVC as? UINavigationController,
+               let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
                 
-                transition(from: currentVC, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
-                    
-                    // ... (Cleanup and pinning using outputNavVC)
-                    currentVC.removeFromParent()
-                    outputNavVC.didMove(toParent: self)
-                    self?.currentChildVC = outputNavVC // currentChildVC must now hold the Nav Controller
-                    
-                    // Pin the Navigation Controller's view
-                    NSLayoutConstraint.activate([
-                        outputNavVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                        outputNavVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                        outputNavVC.view.topAnchor.constraint(equalTo: container.topAnchor),
-                        outputNavVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-                    ])
-                }
+                // 1. Remove the gesture from the old navigation bar
+                originalNavVC.navigationBar.removeGestureRecognizer(panGesture)
+                
+                // 2. Add the SAME gesture to the new output navigation bar
+                outputNavVC.navigationBar.addGestureRecognizer(panGesture)
             }
+            // ----------------------------------------
+            
+            // Cleanup and Pinning
+            currentVC.removeFromParent()
+            outputNavVC.didMove(toParent: self)
+            self?.currentChildVC = outputNavVC // currentChildVC must now hold the Nav Controller
+            
+            // Pin the Navigation Controller's view
+            NSLayoutConstraint.activate([
+                outputNavVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                outputNavVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                outputNavVC.view.topAnchor.constraint(equalTo: container.topAnchor),
+                outputNavVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ])
+        }
+    }
+    
+    // In PredictMapViewController.swift (inside the class definition)
+
+    func revertToInputScreen(with inputs: [PredictionInputData]) {
+        
+        // 1. Instantiate the Predict Input Navigation Controller
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        guard let inputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictInputNavigationController") as? UINavigationController,
+              let inputVC = inputNavVC.viewControllers.first as? PredictInputViewController,
+              let currentVC = currentChildVC,
+              let container = modalContainerView else {
+            print("❌ Could not instantiate PredictInputNavigationController for Revert.")
+            return
+        }
+        
+        // 2. Load the retained data back into the Input VC
+        inputVC.inputData = inputs // ⭐️ This retains all the user's previously entered data
+        
+        // 3. Update the map to clear predictions and only show input pins/circles
+        updateMap(with: inputs, predictions: [])
+        
+        // 4. Set up the input VC view
+        inputNavVC.view.layer.cornerRadius = 24
+        inputNavVC.view.clipsToBounds = true
+        inputNavVC.view.translatesAutoresizingMaskIntoConstraints = false
+        inputNavVC.view.layer.maskedCorners = [
+            CACornerMask.layerMinXMinYCorner,
+            CACornerMask.layerMaxXMinYCorner
+        ]
+        
+        // 5. Execute Reverse Transition
+        addChild(inputNavVC)
+        
+        transition(from: currentVC, to: inputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+            
+            // --- DRAG GESTURE TRANSFER FIX (Must be repeated for reverse transition) ---
+            if let originalNavVC = currentVC as? UINavigationController,
+               let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
+                
+                originalNavVC.navigationBar.removeGestureRecognizer(panGesture)
+                inputNavVC.navigationBar.addGestureRecognizer(panGesture) // Transfer back to Input VC
+            }
+            // ------------------------------------------------------------------------
+            
+            // Cleanup and Pinning
+            currentVC.removeFromParent()
+            inputNavVC.didMove(toParent: self)
+            self?.currentChildVC = inputNavVC // currentChildVC now holds the Input VC
+            
+            // Pin the Navigation Controller's view
+            NSLayoutConstraint.activate([
+                inputNavVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                inputNavVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                inputNavVC.view.topAnchor.constraint(equalTo: container.topAnchor),
+                inputNavVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ])
+        }
+    }
     }
 
 
