@@ -18,10 +18,10 @@ class SharedCoordinator {
     }
 
     func startMapScreen() {
-        let storyboard = UIStoryboard.named("SharedStoryboard")
-        let vc = storyboard.instantiate(MapViewController.self)
-        navigationController.pushViewController(vc, animated: true)
-       
+        let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
+        if let vc = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
+            navigationController.pushViewController(vc, animated: true)
+        }
     }
  
 }
