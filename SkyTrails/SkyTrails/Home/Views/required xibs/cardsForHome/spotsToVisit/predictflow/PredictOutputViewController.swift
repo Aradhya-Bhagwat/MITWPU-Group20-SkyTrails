@@ -78,28 +78,23 @@ class PredictOutputViewController: UIViewController {
     
     // MARK: - Navigation Actions
     
+    // In PredictOutputViewController.swift
+
     @objc private func didTapRedo() {
-        // This dismisses the output VC and returns to the PredictInputViewController
-        // Assuming PredictOutputViewController is embedded in a Nav Controller:
-        self.navigationController?.popViewController(animated: true)
-        
-        // If it's the root of the modal swap, we need the map VC to revert the swap.
-        // For simplicity, let's assume the user taps "Redo" on the Output VC, and we need to go back to the Input VC state.
-        // Since we did a child view controller swap, reversing this is complex.
-        // A simple solution for MVP: just ask the mapVC to load the Input VC again.
-        if let mapVC = self.parent as? PredictMapViewController {
-            // mapVC.revertToInputScreen(with: inputData) // (Requires new function in MapVC)
-            
-            // For now, let the user manually drag the modal up or start a new prediction
-            // Or, simply dismiss the entire modal flow:
-            // self.dismiss(animated: true, completion: nil)
-            print("TODO: Implement Redo/Revert logic on PredictMapViewController.")
+        // ⭐️ FIX: Go up two levels: self.navigationController?.parent ⭐️
+        if let mapVC = self.navigationController?.parent as? PredictMapViewController {
+            // Pass the retained input data back to the map view controller
+            mapVC.revertToInputScreen(with: inputData)
+        } else {
+            // Fallback for debugging/unexpected hierarchy
+            print("❌ Redo failed: Could not find PredictMapViewController grandparent.")
+            self.dismiss(animated: true, completion: nil)
         }
     }
     
     @objc private func didTapHome() {
-        // Dismiss the entire prediction modal flow
-        self.parent?.dismiss(animated: true, completion: nil)
+        // Dismiss the entire prediction modal flow to return to the Home screen
+        self.dismiss(animated: true, completion: nil)
     }
 }
 
