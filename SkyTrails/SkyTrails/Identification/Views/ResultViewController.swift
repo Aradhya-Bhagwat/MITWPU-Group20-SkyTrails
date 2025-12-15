@@ -12,7 +12,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	@IBOutlet weak var tableContainerView: UIView!
 	@IBOutlet weak var resultTableView: UITableView!
 	
-	var viewModel: ViewModel!
+	var viewModel: IdentificationModels!
 	weak var delegate: IdentificationFlowStepDelegate?
 	
 		// History editing state

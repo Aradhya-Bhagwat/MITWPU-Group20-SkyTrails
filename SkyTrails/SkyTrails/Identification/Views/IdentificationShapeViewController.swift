@@ -15,7 +15,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     
     @IBOutlet weak var progressView: UIProgressView!
 
-    var viewModel: ViewModel!
+    var viewModel: IdentificationModels!
     var selectedSizeIndex: Int?
     var filteredShapes: [BirdShape] = []
 

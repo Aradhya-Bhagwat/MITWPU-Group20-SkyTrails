@@ -16,7 +16,7 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
 	weak var delegate: IdentificationFlowStepDelegate?
 	var selectedFieldMarks: [Int] = [] // Stores indices of selected rows
 	
-	var viewModel: ViewModel!
+	var viewModel: IdentificationModels!
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -36,9 +36,9 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
 		tableContainerView.layer.masksToBounds = false
 	}
 	
-		// MARK: - TableView Data Source
+
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return viewModel.fieldMarks.count
+		return viewModel.chooseFieldMarks.count
 	}
 	
 	func numberOfSections(in tableView: UITableView) -> Int {
@@ -54,7 +54,7 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
-		let item = viewModel.fieldMarks[indexPath.row]
+		let item = viewModel.chooseFieldMarks[indexPath.row]
 		
 		cell.textLabel?.text = item.name
 		
@@ -126,7 +126,7 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
 		// MARK: - Navigation Logic
 	@objc private func nextTapped() {
 			// 1. Get the NAMES of what the user selected (e.g., "Beak", "Eye")
-		let selectedNames = selectedFieldMarks.map { viewModel.fieldMarks[$0].name }
+		let selectedNames = selectedFieldMarks.map { viewModel.chooseFieldMarks[$0].name }
 		
 			// 2. SAVE this list to the Shared Data Model
 			// This is the CRITICAL STEP for the next screen

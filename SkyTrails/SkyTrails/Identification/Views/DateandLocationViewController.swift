@@ -4,13 +4,13 @@ import MapKit
 
 class DateandLocationViewController: UIViewController {
 
-    // MARK: - Outlets
+
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
     @IBOutlet weak var progressView: UIProgressView!
     
-    // MARK: - Properties
-    var viewModel: ViewModel!
+
+    var viewModel: IdentificationModels!
     weak var delegate: IdentificationFlowStepDelegate?
     
     // State
