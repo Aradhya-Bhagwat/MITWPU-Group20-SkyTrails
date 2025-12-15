@@ -57,9 +57,38 @@ class AllUpcomingBirdsViewController: UIViewController {
         }
             
         @objc private func didTapPredict() {
-            print("Predict button tapped! (Navigate to Prediction Page later)")
-            // TODO: Navigation to Prediction Page goes here
+        print("Predict button tapped! Initiating Prediction Flow...")
+        
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "birdspredViewController") as? BirdSelectionViewController else {
+            print("❌ Could not instantiate BirdSelectionViewController from birdspred.storyboard")
+            return
         }
+        
+        // 1. Get all available species data
+        // Note: Make sure 'allSpecies' in PredictionEngine is accessible (not private)
+        // If it is private, you might need to expose it or load it similarly here.
+        // Assuming we can access it or we load it fresh:
+        
+        // Option A: Use shared engine if 'allSpecies' is internal/public
+         let allSpeciesData = PredictionEngine.shared.allSpecies
+        
+        // Option B: If 'allSpecies' is private, we'd need to load it manually:
+        // let wrapper = DataLoader.load("prediction_data", as: PredictionDataWrapper.self)
+        // let allSpeciesData = wrapper.species_data
+        
+        selectionVC.allSpecies = allSpeciesData
+        
+        // 2. Pre-select birds that are currently in the watchlist?
+        // Let's map the current watchlist birds to the species data IDs
+        let watchlistTitles = watchlistData.map { $0.title }
+        let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.name) }.map { $0.id }
+        
+        selectionVC.selectedSpecies = Set(preSelectedIDs)
+        
+        // 3. Navigate
+        navigationController?.pushViewController(selectionVC, animated: true)
+    }
         
     // MARK: - 3. Dynamic Ratio Layout Logic (Same as AllSpots)
     private func createLayout() -> UICollectionViewLayout {
@@ -199,4 +228,15 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
     }
 }
 
-extension AllUpcomingBirdsViewController: UICollectionViewDelegate { }
+extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let item: UpcomingBird
+        if indexPath.section == 0 {
+            item = watchlistData[indexPath.row]
+        } else {
+            item = recommendationsData[indexPath.row]
+        }
+        print("Bird card clicked: \(item.title) at section \(indexPath.section), row \(indexPath.row)")
+        // TODO: Navigate to detail view for the selected bird
+    }
+}

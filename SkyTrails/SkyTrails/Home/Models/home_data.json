@@ -87,54 +87,124 @@
       {
         "imageName": "spot_kashmir",
         "title": "Kashmir Valley",
-        "location": "Jammu & Kashmir"
+        "location": "Jammu & Kashmir",
+        "latitude": 34.1,
+        "longitude": 74.8,
+        "radius": 5,
+        "birds": [
+            {"name": "Bar-headed Goose", "imageName": "bird_bar_headed_goose", "lat": 34.102, "lon": 74.805},
+            {"name": "Paradise Flycatcher", "imageName": "paradise_flycatcher", "lat": 34.098, "lon": 74.795}
+        ]
       },
       {
         "imageName": "spot_bharatpur",
         "title": "Keoladeo Sanctuary",
-        "location": "Rajasthan"
+        "location": "Rajasthan",
+        "latitude": 27.17,
+        "longitude": 77.52,
+        "radius": 5,
+        "birds": [
+            {"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 27.175, "lon": 77.525},
+            {"name": "Painted Stork", "imageName": "painted_stork", "lat": 27.165, "lon": 77.515}
+        ]
       },
       {
         "imageName": "spot_sundarbans",
         "title": "Sundarbans Delta",
-        "location": "West Bengal"
+        "location": "West Bengal",
+        "latitude": 21.94,
+        "longitude": 88.89,
+        "radius": 5,
+        "birds": [
+            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 21.945, "lon": 88.895},
+            {"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 21.935, "lon": 88.885}
+        ]
       },
       {
         "imageName": "spot_chilika",
         "title": "Chilika Lake",
-        "location": "Odisha"
+        "location": "Odisha",
+        "latitude": 19.60,
+        "longitude": 85.35,
+        "radius": 5,
+        "birds": [
+            {"name": "Greater Flamingo", "imageName": "flamingo", "lat": 19.605, "lon": 85.355},
+            {"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 19.595, "lon": 85.345}
+        ]
       },
       {
         "imageName": "spot_ranganathittu",
         "title": "Ranganathittu",
-        "location": "Karnataka"
+        "location": "Karnataka",
+        "latitude": 12.42,
+        "longitude": 76.68,
+        "radius": 5,
+        "birds": [
+            {"name": "Painted Stork", "imageName": "painted_stork", "lat": 12.425, "lon": 76.685},
+            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 12.415, "lon": 76.675}
+        ]
       }
     ],
     "recommended_spots": [
       {
         "imageName": "spot_thattekkad",
         "title": "Thattekkad",
-        "location": "Kerala"
+        "location": "Kerala",
+        "latitude": 10.12,
+        "longitude": 76.69,
+        "radius": 5,
+        "birds": [
+            {"name": "Malabar Trogon", "imageName": "malabar_trogon", "lat": 10.125, "lon": 76.695},
+            {"name": "Indian Pitta", "imageName": "indian_pitta", "lat": 10.115, "lon": 76.685}
+        ]
       },
       {
         "imageName": "spot_nalsarovar",
         "title": "Nalsarovar",
-        "location": "Gujarat"
+        "location": "Gujarat",
+        "latitude": 22.80,
+        "longitude": 72.05,
+        "radius": 5,
+        "birds": [
+            {"name": "Greater Flamingo", "imageName": "flamingo", "lat": 22.805, "lon": 72.055},
+            {"name": "Rosy Starling", "imageName": "bird_rosy_starling", "lat": 22.795, "lon": 72.045}
+        ]
       },
       {
         "imageName": "spot_kaziranga",
         "title": "Kaziranga",
-        "location": "Assam"
+        "location": "Assam",
+        "latitude": 26.65,
+        "longitude": 93.35,
+        "radius": 5,
+        "birds": [
+            {"name": "Great Hornbill", "imageName": "great_hornbill", "lat": 26.655, "lon": 93.355},
+            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 26.645, "lon": 93.345}
+        ]
       },
       {
         "imageName": "spot_kumarakom",
         "title": "Kumarakom",
-        "location": "Kerala"
+        "location": "Kerala",
+        "latitude": 9.61,
+        "longitude": 76.43,
+        "radius": 5,
+        "birds": [
+            {"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 9.615, "lon": 76.435},
+            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 9.605, "lon": 76.425}
+        ]
       },
       {
         "imageName": "spot_salimali",
         "title": "Salim Ali Sanctuary",
-        "location": "Goa"
+        "location": "Goa",
+        "latitude": 15.51,
+        "longitude": 73.91,
+        "radius": 5,
+        "birds": [
+            {"name": "Little Bittern", "imageName": "little_bittern", "lat": 15.515, "lon": 73.915},
+            {"name": "Striated Heron", "imageName": "striated_heron", "lat": 15.505, "lon": 73.905}
+        ]
       }
     ],
   "dynamic_predictions": [
@@ -161,13 +231,9 @@
       "distance_string": "12.6 km away",
       "date_range": "28 Nov '25 - 06 Jan '26",
       "area_boundary": [
-        {"lat": 18.4410, "lon": 73.7410},
-        {"lat": 18.4300, "lon": 73.7250},
-        {"lat": 18.4100, "lon": 73.7100},
-        {"lat": 18.4000, "lon": 73.7300},
-        {"lat": 18.4050, "lon": 73.7650},
-        {"lat": 18.4200, "lon": 73.7800}
+        {"lat": 18.4200, "lon": 73.7600}
       ],
+      "radius": 2500,
       "hotspots": [
         {"lat": 18.4300, "lon": 73.7400, "bird_image_name": "flamingo"},
         {"lat": 18.4220, "lon": 73.7550, "bird_image_name": "kingfisher"},

@@ -51,7 +51,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="6vh-2x-Gle"/>
                     <connections>
-                        <outlet property="homeCollectionView" destination="HW6-l3-VNR" id="09v-sW-EJ7"/>
+                        <outlet property="homeCollectionView" destination="HW6-l3-VNR" id="wnq-zF-rjW"/>
                         <segue destination="pZh-13-5MG" kind="show" identifier="ShowAllSpots" id="OeG-hv-jgT"/>
                         <segue destination="Gfn-o0-NbS" kind="show" identifier="ShowAllBirds" id="R2i-Y0-18M"/>
                     </connections>
