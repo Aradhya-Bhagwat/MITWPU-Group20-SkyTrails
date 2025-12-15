@@ -69,7 +69,7 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
 		setupBadge(blueBadgeView, label: blueBadgeLabel, color: .systemBlue)
 		
 			// 4. Label Styling
-		titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+
 		dateLabel.textColor = .secondaryLabel
 		locationLabel.textColor = .secondaryLabel
 	}

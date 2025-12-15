@@ -75,7 +75,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
 		setupBadge(rightBadgeView, label: rightBadgeLabel, color: .systemBlue, cornerRadius: 8)
 		
 			// 5. Text Styling
-		titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+
 		titleLabel.textColor = .label
 		
 		[dateLabel, locationLabel].forEach {
