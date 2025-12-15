@@ -39,30 +39,18 @@ class IdentificationSizeViewController: UIViewController {
         viewModel.selectedSizeCategory = steppedValue
     }
     private func setupRightTickButton() {
-        // Create button
         let button = UIButton(type: .system)
-        
-        // Circle background
         button.backgroundColor = .white
-        button.layer.cornerRadius = 20   // for 40x40 size
-
-        button.layer.masksToBounds = true   // important to remove rectangle
-        
-        // Checkmark icon
+        button.layer.cornerRadius = 20
+        button.layer.masksToBounds = true
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        let image = UIImage(systemName: "checkmark", withConfiguration: config)
-        button.setImage(image, for: .normal)
+        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
         button.tintColor = .black
-
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-
-        // Add tap action
+        
+        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
         button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-
-        // Put inside UIBarButtonItem
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
-    
     private func updateBirdDisplay(for index: Int) {
         switch index {
                 case 0:

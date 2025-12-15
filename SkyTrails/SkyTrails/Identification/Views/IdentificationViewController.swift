@@ -17,6 +17,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var collectionView: UICollectionView!
  
+    @IBOutlet weak var warningLabel: UILabel!
     var model: IdentificationModels = IdentificationModels()
 
 
@@ -24,7 +25,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Apply shadow after the button has its final frame for correct corner radius
+       
         applyCardShadow(to: startButton)
         startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
     }
@@ -34,15 +35,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
 
         tableView.delegate = self
         tableView.dataSource = self
-
-        startButton.backgroundColor = .white
-        startButton.setTitleColor(.black, for: .normal)
-        startButton.tintColor = .white
-      startButton.adjustsImageWhenHighlighted = false
-        
-
-       
-        tableView.rowHeight = 56
     
         applyCardShadow(to: tableView)
 
@@ -52,9 +44,36 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         collectionView.delegate = self
         history = model.histories
 
-      
+        updateSelectionState()
 
   }
+    func updateSelectionState() {
+            let selectedCount = model.fieldMarkOptions.filter { $0.isSelected ?? false }.count
+            let isValid = selectedCount >= 2
+            
+            // Update Warning Label
+            warningLabel.isHidden = isValid
+            if !isValid {
+                 warningLabel.text = selectedCount == 0 ? "Select options to start" : "Please select at least two options."
+            }
+
+    
+            startButton.isEnabled = isValid
+            
+            startButton.alpha = 1.0
+            
+            if isValid {
+                // Enabled State: Black Text (Standard)
+                startButton.setTitleColor(.black, for: .normal)
+             
+                startButton.layer.shadowOpacity = 0.1
+            } else {
+                // Disabled State: Light Gray Text
+                startButton.setTitleColor(.systemGray3, for: .normal)
+                // Optional: Make shadow slightly lighter, but not invisible
+                startButton.layer.shadowOpacity = 0.05
+            }
+        }
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return max(history.count, 1)
 
@@ -140,9 +159,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             let targetSize = CGSize(width: 28, height: 28) // Restore the target size
             let resized = resize(img, to: targetSize)
             cell.imageView?.image = resized
-            cell.imageView?.contentMode = .scaleAspectFit // Use ScaleAspectFit for icons
-            cell.imageView?.frame = CGRect(origin: .zero, size: targetSize) // Explicitly set frame
-            cell.imageView?.tintColor = .label // Keep tint color for SF Symbols if they are being used.
+            cell.imageView?.contentMode = .scaleAspectFit
+            cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
+            cell.imageView?.tintColor = .label
         } else {
             // Fallback for debugging, keep this.
             cell.imageView?.image = UIImage(systemName: "questionmark.circle")
@@ -155,11 +174,29 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        model.fieldMarkOptions[indexPath.row].isSelected = !(model.fieldMarkOptions[indexPath.row].isSelected ?? false)
+          
+            let currentState = model.fieldMarkOptions[indexPath.row].isSelected ?? false
+            model.fieldMarkOptions[indexPath.row].isSelected = !currentState
+            
 
-        tableView.reloadRows(at: [indexPath], with: .none)
-
-    }
+            let tappedItemName = model.fieldMarkOptions[indexPath.row].fieldMarkName
+            let isNowSelected = model.fieldMarkOptions[indexPath.row].isSelected ?? false
+            
+     
+            if tappedItemName == "Field Marks" && isNowSelected {
+                
+                if let shapeIndex = model.fieldMarkOptions.firstIndex(where: { $0.fieldMarkName == "Shape" }) {
+             
+                    model.fieldMarkOptions[shapeIndex].isSelected = true
+                }
+            }
+            
+          
+            tableView.reloadData()
+            
+  
+            updateSelectionState()
+        }
     
     func generateLayout() -> UICollectionViewLayout {
         let size  = NSCollectionLayoutSize(
@@ -183,30 +220,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     @IBAction func startButtonTapped(_ sender: UIButton) {
       
 
-        let selected = model.fieldMarkOptions.filter { $0.isSelected ?? false }
+     
 
-
-        if selected.count < 2 {
-            let alert = UIAlertController(
-                title: "Select at least two",
-                message: "Please choose at least two identification methods to continue.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-            return
-        }
-
-//        coordinator?.configureSteps(from: viewModel.fieldMarkOptions)
         startIdentificationFlow(from: model.fieldMarkOptions)
     }
-//    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-//        // Prevent action on the "Empty State" placeholder cell
-//        guard !history.isEmpty else { return }
-//        
-//        let selectedHistory = history[indexPath.row]
-//        coordinator?.goDirectlyToResult(fromHistory: selectedHistory, index: indexPath.row)
-//        }
+
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
             guard !history.isEmpty else { return }
             let selectedHistory = history[indexPath.row]
@@ -322,7 +340,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
                 self.navigationController?.pushViewController(vc, animated: true)
         }
 
-        // Specialized Logic from Coordinator (didTapShape)
+   
         func handleShapeStepCompletion() {
             let fieldMarksSelected = model.fieldMarkOptions.contains {
                 $0.fieldMarkName == "Field Marks" && ($0.isSelected ?? false)
