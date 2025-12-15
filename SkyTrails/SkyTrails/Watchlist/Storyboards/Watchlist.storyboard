@@ -40,6 +40,9 @@
                                     <rect key="frame" x="0.0" y="0.0" width="402" height="50"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </collectionReusableView>
+                                <connections>
+                                    <outletCollection property="gestureRecognizers" destination="Lng-Prs-Ges" id="out-Lng-Prs-Ges"/>
+                                </connections>
                             </collectionView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="UUu-kk-OMN"/>
@@ -58,6 +61,13 @@
                         <segue destination="zap-jy-tCo" kind="show" identifier="ShowSmartWatchlist" id="78Y-oW-Tc8"/>
                         <segue destination="x1S-M0-dFV" kind="show" identifier="ShowSharedWatchlistGrid" id="FUa-La-SUT"/>
                     </connections>
+                    <gestureRecognizers>
+                        <longPressGestureRecognizer minimumPressDuration="0.5" id="Lng-Prs-Ges">
+                            <connections>
+                                <action selector="handleLongPress:" destination="3EX-gn-Dso" id="LPG-3Ex-Id"/>
+                            </connections>
+                        </longPressGestureRecognizer>
+                    </gestureRecognizers>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wge-VU-nXA" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -369,6 +379,65 @@
                                                                 </label>
                                                             </subviews>
                                                         </stackView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="-10" translatesAutoresizingMaskIntoConstraints="NO" id="Avt-Stk-001">
+                                                            <rect key="frame" x="296" y="62" width="70" height="30"/>
+                                                            <subviews>
+                                                                <imageView hidden="YES" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Avt-Img-001">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                    <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="width" constant="30" id="avt-w-01"/>
+                                                                        <constraint firstAttribute="height" constant="30" id="avt-h-01"/>
+                                                                    </constraints>
+                                                                    <userDefinedRuntimeAttributes>
+                                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                            <integer key="value" value="15"/>
+                                                                        </userDefinedRuntimeAttribute>
+                                                                    </userDefinedRuntimeAttributes>
+                                                                </imageView>
+                                                                <imageView hidden="YES" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Avt-Img-002">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                    <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="width" constant="30" id="avt-w-02"/>
+                                                                        <constraint firstAttribute="height" constant="30" id="avt-h-02"/>
+                                                                    </constraints>
+                                                                    <userDefinedRuntimeAttributes>
+                                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                            <integer key="value" value="15"/>
+                                                                        </userDefinedRuntimeAttribute>
+                                                                    </userDefinedRuntimeAttributes>
+                                                                </imageView>
+                                                                <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Avt-Badge-001">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                    <subviews>
+                                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="+1" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Avt-Lbl-001">
+                                                                            <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                            <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
+                                                                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                            <nil key="highlightedColor"/>
+                                                                        </label>
+                                                                    </subviews>
+                                                                    <color key="backgroundColor" systemColor="systemGrayColor"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="width" constant="30" id="bad-w-01"/>
+                                                                        <constraint firstAttribute="height" constant="30" id="bad-h-01"/>
+                                                                        <constraint firstItem="Avt-Lbl-001" firstAttribute="leading" secondItem="Avt-Badge-001" secondAttribute="leading" id="bad-cst-1"/>
+                                                                        <constraint firstAttribute="trailing" secondItem="Avt-Lbl-001" secondAttribute="trailing" id="bad-cst-2"/>
+                                                                        <constraint firstItem="Avt-Lbl-001" firstAttribute="top" secondItem="Avt-Badge-001" secondAttribute="top" id="bad-cst-3"/>
+                                                                        <constraint firstAttribute="bottom" secondItem="Avt-Lbl-001" secondAttribute="bottom" id="bad-cst-4"/>
+                                                                    </constraints>
+                                                                    <userDefinedRuntimeAttributes>
+                                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                            <integer key="value" value="15"/>
+                                                                        </userDefinedRuntimeAttribute>
+                                                                    </userDefinedRuntimeAttributes>
+                                                                </view>
+                                                            </subviews>
+                                                            <constraints>
+                                                                <constraint firstAttribute="height" constant="30" id="stk-hgt-01"/>
+                                                            </constraints>
+                                                        </stackView>
                                                     </subviews>
                                                     <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                     <constraints>
@@ -377,6 +446,8 @@
                                                         <constraint firstAttribute="trailing" secondItem="Stk-Vi-ew3" secondAttribute="trailing" constant="8" id="Cns-Img-Tr"/>
                                                         <constraint firstItem="Stk-Vi-ew3" firstAttribute="centerY" secondItem="Cnt-Vi-ew1" secondAttribute="centerY" id="Cns-Stk-Cen"/>
                                                         <constraint firstItem="Stk-Vi-ew3" firstAttribute="leading" secondItem="Img-Vi-ew2" secondAttribute="trailing" constant="8" id="Cns-Stk-Ld"/>
+                                                        <constraint firstAttribute="trailing" secondItem="Avt-Stk-001" secondAttribute="trailing" constant="12" id="avt-stk-cst-tr"/>
+                                                        <constraint firstAttribute="bottom" secondItem="Avt-Stk-001" secondAttribute="bottom" constant="12" id="avt-stk-cst-bt"/>
                                                     </constraints>
                                                 </view>
                                             </subviews>
@@ -388,11 +459,16 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="avatarStackView" destination="Avt-Stk-001" id="out-avt-stk"/>
                                             <outlet property="birdImageView" destination="Img-Vi-ew2" id="Out-Img-View"/>
                                             <outlet property="containerView" destination="Cnt-Vi-ew1" id="Out-Cnt-View"/>
                                             <outlet property="dateLabel" destination="Lbl-Da-te" id="Out-Dat-Lbl"/>
                                             <outlet property="locationLabel" destination="Lbl-Lo-cat" id="Out-Loc-Lbl"/>
+                                            <outlet property="overflowBadgeView" destination="Avt-Badge-001" id="out-ovr-bad"/>
+                                            <outlet property="overflowLabel" destination="Avt-Lbl-001" id="out-ovr-lbl"/>
                                             <outlet property="titleLabel" destination="Lbl-Ti-tle" id="Out-Tit-Lbl"/>
+                                            <outletCollection property="avatarImageViews" destination="Avt-Img-001" collectionClass="NSMutableArray" id="col-avt-001"/>
+                                            <outletCollection property="avatarImageViews" destination="Avt-Img-002" collectionClass="NSMutableArray" id="col-avt-002"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -411,11 +487,18 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Watchlist" largeTitleDisplayMode="never" id="eWu-qa-gFF">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="HFF-cc-OL2">
-                            <connections>
-                                <action selector="didTapAdd:" destination="zap-jy-tCo" id="gJa-LA-vYF"/>
-                            </connections>
-                        </barButtonItem>
+                        <rightBarButtonItems>
+                            <barButtonItem image="pencil" catalog="system" id="Btn-Edit-Smart">
+                                <connections>
+                                    <action selector="didTapEdit:" destination="zap-jy-tCo" id="btn-edit-smart-action"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem systemItem="add" id="HFF-cc-OL2">
+                                <connections>
+                                    <action selector="didTapAdd:" destination="zap-jy-tCo" id="gJa-LA-vYF"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
                     </navigationItem>
                     <connections>
                         <outlet property="headerView" destination="ZaP-mE-nYF" id="bP7-M0-MJ4"/>
@@ -742,9 +825,66 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                             </view>
-                                            <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WoM-F1-gCE">
-                                                <rect key="frame" x="20" y="1358.3333333333333" width="362" height="128"/>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WoM-F1-gCE" userLabel="InviteContactsView">
+                                                <rect key="frame" x="20" y="1358.3333333333333" width="362" height="216"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Participants" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Inv-Lb-001">
+                                                        <rect key="frame" x="16" y="12" width="330" height="16"/>
+                                                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="13"/>
+                                                        <color key="textColor" systemColor="secondaryLabelColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Inv-Tb-002">
+                                                        <rect key="frame" x="8" y="36" width="346" height="120"/>
+                                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="120" id="fix-hgt-tbl"/>
+                                                        </constraints>
+                                                        <prototypes>
+                                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="ParticipantCell" textLabel="txt-lbl-001" style="IBUITableViewCellStyleDefault" id="Ptc-Cell-01">
+                                                                <rect key="frame" x="0.0" y="50" width="346" height="43.666667938232422"/>
+                                                                <autoresizingMask key="autoresizingMask"/>
+                                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Ptc-Cell-01" id="Cnt-View-01">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="346" height="43.666667938232422"/>
+                                                                    <autoresizingMask key="autoresizingMask"/>
+                                                                    <subviews>
+                                                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="txt-lbl-001">
+                                                                            <rect key="frame" x="20" y="0.0" width="306" height="43.666667938232422"/>
+                                                                            <autoresizingMask key="autoresizingMask"/>
+                                                                            <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
+                                                                            <nil key="textColor"/>
+                                                                            <nil key="highlightedColor"/>
+                                                                        </label>
+                                                                    </subviews>
+                                                                </tableViewCellContentView>
+                                                            </tableViewCell>
+                                                        </prototypes>
+                                                    </tableView>
+                                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Inv-Btn-003">
+                                                        <rect key="frame" x="16" y="164" width="330" height="40"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="40" id="btn-hgt-cst"/>
+                                                        </constraints>
+                                                        <state key="normal" title="Button"/>
+                                                        <buttonConfiguration key="configuration" style="tinted" image="square.and.arrow.up" catalog="system" title=" Invite Friends" cornerStyle="capsule"/>
+                                                        <connections>
+                                                            <action selector="didTapInvite:" destination="6Sg-aR-vKV" eventType="touchUpInside" id="act-inv-001"/>
+                                                        </connections>
+                                                    </button>
+                                                </subviews>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="trailing" secondItem="Inv-Lb-001" secondAttribute="trailing" constant="16" id="cst-01"/>
+                                                    <constraint firstItem="Inv-Lb-001" firstAttribute="top" secondItem="WoM-F1-gCE" secondAttribute="top" constant="12" id="cst-02"/>
+                                                    <constraint firstItem="Inv-Lb-001" firstAttribute="leading" secondItem="WoM-F1-gCE" secondAttribute="leading" constant="16" id="cst-03"/>
+                                                    <constraint firstItem="Inv-Tb-002" firstAttribute="top" secondItem="Inv-Lb-001" secondAttribute="bottom" constant="8" id="cst-04"/>
+                                                    <constraint firstItem="Inv-Tb-002" firstAttribute="leading" secondItem="WoM-F1-gCE" secondAttribute="leading" constant="8" id="cst-05"/>
+                                                    <constraint firstAttribute="trailing" secondItem="Inv-Tb-002" secondAttribute="trailing" constant="8" id="cst-06"/>
+                                                    <constraint firstItem="Inv-Btn-003" firstAttribute="top" secondItem="Inv-Tb-002" secondAttribute="bottom" constant="8" id="cst-07"/>
+                                                    <constraint firstItem="Inv-Btn-003" firstAttribute="leading" secondItem="WoM-F1-gCE" secondAttribute="leading" constant="16" id="cst-08"/>
+                                                    <constraint firstAttribute="trailing" secondItem="Inv-Btn-003" secondAttribute="trailing" constant="16" id="cst-09"/>
+                                                    <constraint firstAttribute="bottom" secondItem="Inv-Btn-003" secondAttribute="bottom" constant="12" id="cst-10"/>
+                                                </constraints>
                                             </view>
                                         </subviews>
                                         <edgeInsets key="layoutMargins" top="24" left="20" bottom="40" right="20"/>
@@ -760,6 +900,32 @@
                                 <viewLayoutGuide key="contentLayoutGuide" id="sup-Y9-aQa"/>
                                 <viewLayoutGuide key="frameLayoutGuide" id="upZ-ET-94n"/>
                             </scrollView>
+                            <tableView hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Srg-Tb-004">
+                                <rect key="frame" x="20" y="1160" width="362" height="200"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                     <constraint firstAttribute="height" constant="200" id="srg-hgt-001"/>
+                                </constraints>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SuggestionCell" textLabel="srg-txt-01" style="IBUITableViewCellStyleDefault" id="Srg-Cell-01">
+                                        <rect key="frame" x="0.0" y="50" width="362" height="43.666667938232422"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Srg-Cell-01" id="Srg-Cnt-01">
+                                            <rect key="frame" x="0.0" y="0.0" width="362" height="43.666667938232422"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="srg-txt-01">
+                                                    <rect key="frame" x="20" y="0.0" width="322" height="43.666667938232422"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="jfT-7c-raw"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -768,6 +934,9 @@
                             <constraint firstItem="jfT-7c-raw" firstAttribute="bottom" secondItem="ept-Cy-3ka" secondAttribute="bottom" id="U4m-ap-I5z"/>
                             <constraint firstItem="ept-Cy-3ka" firstAttribute="leading" secondItem="jfT-7c-raw" secondAttribute="leading" id="jHh-t5-vfp"/>
                             <constraint firstItem="ept-Cy-3ka" firstAttribute="top" secondItem="jfT-7c-raw" secondAttribute="top" id="shn-UH-ecg"/>
+                            <constraint firstItem="Srg-Tb-004" firstAttribute="top" secondItem="EditLocationSearchBar" secondAttribute="bottom" constant="0" id="cst-srg-top"/>
+                            <constraint firstItem="Srg-Tb-004" firstAttribute="leading" secondItem="EditLocationSearchBar" secondAttribute="leading" id="cst-srg-lead"/>
+                            <constraint firstItem="Srg-Tb-004" firstAttribute="trailing" secondItem="EditLocationSearchBar" secondAttribute="trailing" id="cst-srg-trail"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="8db-AZ-sI1"/>
@@ -776,7 +945,9 @@
                         <outlet property="inviteContactsView" destination="WoM-F1-gCE" id="kQY-2h-FIa"/>
                         <outlet property="locationOptionsContainer" destination="lpQ-BV-dJE" id="loc-opt-cont-id"/>
                         <outlet property="locationSearchBar" destination="EditLocationSearchBar" id="edit-loc-bar-id"/>
+                        <outlet property="participantsTableView" destination="Inv-Tb-002" id="out-prt-tbl"/>
                         <outlet property="startDatePicker" destination="HBs-re-bci" id="luv-yf-rgO"/>
+                        <outlet property="suggestionsTableView" destination="Srg-Tb-004" id="out-srg-tbl"/>
                         <outlet property="titleTextField" destination="Vir-5J-XZr" id="3Ak-Ro-8Nc"/>
                     </connections>
                 </viewController>
@@ -1012,6 +1183,32 @@
                                 <viewLayoutGuide key="contentLayoutGuide" id="Xes-vd-oeI"/>
                                 <viewLayoutGuide key="frameLayoutGuide" id="p1N-Ra-r46"/>
                             </scrollView>
+                            <tableView hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Unobs-Sugg-Table">
+                                <rect key="frame" x="20" y="2063" width="362" height="200"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                     <constraint firstAttribute="height" constant="200" id="unobs-srg-hgt-001"/>
+                                </constraints>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SuggestionCell" textLabel="unobs-srg-txt-01" style="IBUITableViewCellStyleDefault" id="Unobs-Srg-Cell-01">
+                                        <rect key="frame" x="0.0" y="50" width="362" height="43.666667938232422"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Unobs-Srg-Cell-01" id="Unobs-Srg-Cnt-01">
+                                            <rect key="frame" x="0.0" y="0.0" width="362" height="43.666667938232422"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="unobs-srg-txt-01">
+                                                    <rect key="frame" x="20" y="0.0" width="322" height="43.666667938232422"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Afl-bE-WAQ"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -1020,6 +1217,9 @@
                             <constraint firstItem="Sqi-JJ-Qe1" firstAttribute="leading" secondItem="Afl-bE-WAQ" secondAttribute="leading" id="XI9-ch-CHt"/>
                             <constraint firstItem="Afl-bE-WAQ" firstAttribute="bottom" secondItem="Sqi-JJ-Qe1" secondAttribute="bottom" id="csu-nC-4Du"/>
                             <constraint firstItem="Afl-bE-WAQ" firstAttribute="trailing" secondItem="Sqi-JJ-Qe1" secondAttribute="trailing" id="nk3-nb-uRQ"/>
+                            <constraint firstItem="Unobs-Sugg-Table" firstAttribute="top" secondItem="UnobservedLocationSearchBar" secondAttribute="bottom" constant="0" id="unobs-cst-srg-top"/>
+                            <constraint firstItem="Unobs-Sugg-Table" firstAttribute="leading" secondItem="Afl-bE-WAQ" secondAttribute="leading" id="unobs-cst-srg-lead"/>
+                            <constraint firstItem="Afl-bE-WAQ" firstAttribute="trailing" secondItem="Unobs-Sugg-Table" secondAttribute="trailing" id="unobs-cst-srg-trail"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="E8v-ty-KlX">
@@ -1035,6 +1235,7 @@
                         <outlet property="notesTextView" destination="SAf-x6-zW7" id="FWJ-9U-HH1"/>
                         <outlet property="startDatePicker" destination="7o2-uw-Uu3" id="EHk-vo-9Vg"/>
                         <outlet property="startLabel" destination="2Qv-Pz-pdQ" id="Alp-gC-rJ0"/>
+                        <outlet property="suggestionsTableView" destination="Unobs-Sugg-Table" id="out-unobs-srg"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nay-k8-dgf" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -1265,6 +1466,32 @@
                                 <viewLayoutGuide key="contentLayoutGuide" id="cCB-zl-I4H"/>
                                 <viewLayoutGuide key="frameLayoutGuide" id="RPO-Rz-A7S"/>
                             </scrollView>
+                            <tableView hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Obs-Sugg-Table">
+                                <rect key="frame" x="20" y="706" width="362" height="200"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                     <constraint firstAttribute="height" constant="200" id="obs-srg-hgt-001"/>
+                                </constraints>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SuggestionCell" textLabel="obs-srg-txt-01" style="IBUITableViewCellStyleDefault" id="Obs-Srg-Cell-01">
+                                        <rect key="frame" x="0.0" y="50" width="362" height="43.666667938232422"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Obs-Srg-Cell-01" id="Obs-Srg-Cnt-01">
+                                            <rect key="frame" x="0.0" y="0.0" width="362" height="43.666667938232422"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="obs-srg-txt-01">
+                                                    <rect key="frame" x="20" y="0.0" width="322" height="43.666667938232422"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="qJF-2t-yFm"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -1273,6 +1500,9 @@
                             <constraint firstItem="f9y-Mk-VkH" firstAttribute="bottom" secondItem="qJF-2t-yFm" secondAttribute="bottom" id="b9b-fu-xb7"/>
                             <constraint firstItem="f9y-Mk-VkH" firstAttribute="leading" secondItem="qJF-2t-yFm" secondAttribute="leading" id="rQp-cx-aD4"/>
                             <constraint firstItem="f9y-Mk-VkH" firstAttribute="trailing" secondItem="qJF-2t-yFm" secondAttribute="trailing" id="z5e-7B-je6"/>
+                            <constraint firstItem="Obs-Sugg-Table" firstAttribute="top" secondItem="ObservedLocationSearchBar" secondAttribute="bottom" constant="0" id="obs-cst-srg-top"/>
+                            <constraint firstItem="Obs-Sugg-Table" firstAttribute="leading" secondItem="qJF-2t-yFm" secondAttribute="leading" id="obs-cst-srg-lead"/>
+                            <constraint firstItem="qJF-2t-yFm" firstAttribute="trailing" secondItem="Obs-Sugg-Table" secondAttribute="trailing" id="obs-cst-srg-trail"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="xd6-8e-6Id"/>
@@ -1286,6 +1516,7 @@
                         <outlet property="nameTextField" destination="alD-NS-MOa" id="new-name-id"/>
                         <outlet property="notesCardView" destination="aJz-lZ-mkb" id="notes-card-view-id"/>
                         <outlet property="notesTextView" destination="vcq-hq-eeV" id="aJp-Tl-jl8"/>
+                        <outlet property="suggestionsTableView" destination="Obs-Sugg-Table" id="out-obs-srg"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Mj8-HM-ZVX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

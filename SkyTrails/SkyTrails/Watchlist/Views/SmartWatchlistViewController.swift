@@ -45,22 +45,10 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        applyFilters()
-        
-        // Add Pencil Icon for Custom/Shared types
-        if watchlistType == .custom || watchlistType == .shared {
-            let pencil = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .plain, target: self, action: #selector(didTapEdit))
-            // Append to existing right items if any (like + button)
-            if let existing = navigationItem.rightBarButtonItems {
-                navigationItem.rightBarButtonItems = [pencil] + existing
-            } else {
-                navigationItem.rightBarButtonItem = pencil
-            }
-        }
-    }
-    
-    @objc func didTapEdit() {
-        guard let id = currentWatchlistId else { return }
+        		applyFilters()
+        	}
+            
+            @IBAction func didTapEdit(_ sender: Any) {        guard let id = currentWatchlistId else { return }
         let manager = WatchlistManager.shared
         
         if watchlistType == .custom {

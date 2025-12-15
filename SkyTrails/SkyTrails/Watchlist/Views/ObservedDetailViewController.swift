@@ -36,22 +36,7 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
     
     private var currentInputType: InputType = .none
     
-    private lazy var suggestionsTableView: UITableView = {
-        let tv = UITableView()
-        tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.backgroundColor = .white
-        tv.layer.cornerRadius = 12
-        tv.layer.shadowColor = UIColor.black.cgColor
-        tv.layer.shadowOpacity = 0.1
-        tv.layer.shadowOffset = CGSize(width: 0, height: 4)
-        tv.layer.shadowRadius = 8
-        tv.isHidden = true
-        tv.delegate = self
-        tv.dataSource = self
-        tv.separatorStyle = .none
-        tv.register(UITableViewCell.self, forCellReuseIdentifier: "SuggestionCell")
-        return tv
-    }()
+    @IBOutlet weak var suggestionsTableView: UITableView!
     
     // MARK: - IBOutlets
     @IBOutlet weak var birdImageView: UIImageView!
@@ -105,9 +90,8 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
         searchCompleter.delegate = self
         locationSearchBar.delegate = self
         nameTextField.delegate = self
-        
-        view.addSubview(suggestionsTableView)
-        view.bringSubviewToFront(suggestionsTableView)
+        suggestionsTableView.delegate = self
+        suggestionsTableView.dataSource = self
     }
     
     private func setupLocationOptionsInteractions() {
@@ -238,24 +222,6 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
         birdImageView.addGestureRecognizer(tapGesture)
     }
     
-    private func updateSuggestionsLayout(for viewToLayout: UIView) {
-        guard !suggestionsTableView.isHidden else { return }
-        
-        let frame = viewToLayout.convert(viewToLayout.bounds, to: view)
-        
-        suggestionsTableView.removeConstraints(suggestionsTableView.constraints)
-        view.removeConstraints(view.constraints.filter { $0.firstItem as? UIView == suggestionsTableView })
-        
-        NSLayoutConstraint.activate([
-            suggestionsTableView.topAnchor.constraint(equalTo: view.topAnchor, constant: frame.maxY + 4),
-            suggestionsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: frame.minX),
-            suggestionsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -(view.bounds.width - frame.maxX)),
-            suggestionsTableView.heightAnchor.constraint(equalToConstant: 200)
-        ])
-        
-        view.bringSubviewToFront(suggestionsTableView)
-    }
-    
     @objc func didTapImage() {
         let picker = UIImagePickerController()
         picker.sourceType = .photoLibrary
@@ -370,7 +336,7 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         currentInputType = .location
-        updateSuggestionsLayout(for: searchBar)
+        suggestionsTableView.isHidden = false
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -383,7 +349,7 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
     func textFieldDidBeginEditing(_ textField: UITextField) {
         if textField == nameTextField {
             currentInputType = .name
-            updateSuggestionsLayout(for: textField)
+            suggestionsTableView.isHidden = false
         }
     }
     
@@ -416,7 +382,6 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
             locationResults = completer.results
             suggestionsTableView.isHidden = locationResults.isEmpty
             suggestionsTableView.reloadData()
-            updateSuggestionsLayout(for: locationSearchBar)
         }
     }
     
@@ -433,7 +398,6 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
             suggestionsTableView.isHidden = filteredBirdNames.isEmpty
         }
         suggestionsTableView.reloadData()
-        updateSuggestionsLayout(for: nameTextField)
     }
     
     // MARK: - Table View
