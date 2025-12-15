@@ -15,12 +15,16 @@ class SpeciesSelectionViewController: UIViewController {
     
     // MARK: - Properties
     var mode: WatchlistMode = .observed
-    var viewModel: WatchlistViewModel?
-    weak var coordinator: WatchlistCoordinator?
+    // var viewModel: WatchlistViewModel? // Removed
+    var targetWatchlistId: UUID?
     
     private var allBirds: [Bird] = []
     private var filteredBirds: [Bird] = []
     private var selectedBirds: Set<UUID> = []
+    
+    // Local Loop State
+    private var birdQueue: [Bird] = []
+    private var processedBirds: [Bird] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,11 +48,10 @@ class SpeciesSelectionViewController: UIViewController {
     }
     
     private func loadData() {
-        // Fetch all birds via ViewModel (simulated search)
-        // Use the injected VM or create a temporary one to ensure data is always available
-        let vm = viewModel ?? WatchlistViewModel()
+        // Fetch all birds via Manager (simulated search)
+        let manager = WatchlistManager.shared
         
-        let all = vm.watchlists.flatMap { $0.birds }
+        let all = manager.watchlists.flatMap { $0.birds }
         // De-duplicate
         var unique = [UUID: Bird]()
         for b in all { unique[b.id] = b }
@@ -71,7 +74,69 @@ class SpeciesSelectionViewController: UIViewController {
         let birds = allBirds.filter { selectedBirds.contains($0.id) }
         
         // Start Loop
-        coordinator?.startDetailLoop(birds: birds, mode: mode)
+        startDetailLoop(birds: birds)
+    }
+    
+    // MARK: - Detail Loop Logic
+    private func startDetailLoop(birds: [Bird]) {
+        self.birdQueue = birds
+        self.processedBirds = []
+        showNextInLoop()
+    }
+    
+    private func showNextInLoop() {
+        // If queue is empty, we are done
+        if birdQueue.isEmpty {
+            if !processedBirds.isEmpty {
+                print("Loop finished. Updating data with \(processedBirds.count) birds.")
+                if let watchlistId = targetWatchlistId {
+                    let isObserved = (mode == .observed)
+                    WatchlistManager.shared.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
+                }
+            }
+            
+            // Navigate Back
+            navigationController?.popViewController(animated: true)
+            return
+        }
+        
+        let bird = birdQueue.removeFirst()
+        showBirdDetail(bird: bird)
+    }
+    
+    private func showBirdDetail(bird: Bird) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        
+        if mode == .unobserved {
+            let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as! UnobservedDetailViewController
+            vc.bird = bird
+            // We do NOT pass watchlistId because we want to intercept save
+            // vc.watchlistId = targetWatchlistId
+            // vc.viewModel = self.viewModel // Removed
+            
+            vc.onSave = { [weak self] savedBird in
+                self?.processedBirds.append(savedBird)
+                self?.showNextInLoop()
+            }
+            
+            navigationController?.pushViewController(vc, animated: true)
+            return
+        }
+        
+        if mode == .observed {
+            let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as! ObservedDetailViewController
+            vc.bird = bird // Pre-filled data
+            // vc.viewModel = self.viewModel // Removed
+            // No watchlistId passed, so it triggers onSave
+            
+            vc.onSave = { [weak self] savedBird in
+                self?.processedBirds.append(savedBird)
+                self?.showNextInLoop()
+            }
+            
+            navigationController?.pushViewController(vc, animated: true)
+            return
+        }
     }
 }
 

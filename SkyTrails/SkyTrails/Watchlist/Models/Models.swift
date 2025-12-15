@@ -8,6 +8,12 @@
 import Foundation
 import CoreLocation
 
+enum WatchlistMode {
+	case observed
+	case unobserved
+	case create
+}
+
 // The Watchlist model containing metadata
 struct Watchlist: Codable {
 	let id: UUID

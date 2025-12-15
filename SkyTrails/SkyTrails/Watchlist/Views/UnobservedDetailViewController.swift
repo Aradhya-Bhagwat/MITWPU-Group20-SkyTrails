@@ -7,8 +7,8 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
     // MARK: - Data Dependency
     var bird: Bird?
     var watchlistId: UUID?
-    weak var coordinator: WatchlistCoordinator?
-    weak var viewModel: WatchlistViewModel?
+    // weak var viewModel: WatchlistViewModel? // Removed
+    var onSave: ((Bird) -> Void)?
     
     private let locationManager = CLLocationManager()
     
@@ -191,7 +191,7 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
         let alert = UIAlertController(title: "Delete Bird", message: "Delete this bird from watchlist?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            self?.viewModel?.deleteBird(birdToDelete, from: id)
+            WatchlistManager.shared.deleteBird(birdToDelete, from: id)
             self?.navigationController?.popViewController(animated: true)
         }))
         present(alert, animated: true)
@@ -215,12 +215,12 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
         updatedBird.date = [startDatePicker.date, endDatePicker.date]
         updatedBird.notes = notes
         
-        if let vm = viewModel, let wId = watchlistId {
-            vm.updateBird(updatedBird, watchlistId: wId)
+        if let wId = watchlistId {
+            WatchlistManager.shared.updateBird(updatedBird, watchlistId: wId)
             navigationController?.popViewController(animated: true)
         } else {
             // New Bird Logic
-            coordinator?.saveBirdDetails(bird: updatedBird)
+            onSave?(updatedBird)
         }
     }
     

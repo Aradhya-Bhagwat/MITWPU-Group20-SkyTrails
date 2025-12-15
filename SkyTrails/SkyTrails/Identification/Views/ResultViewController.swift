@@ -224,15 +224,13 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	}
     
     private func saveToWatchlist(bird: Bird) {
-        // Instantiate WatchlistViewModel on demand (or inject it if preferred)
-        let watchlistVM = WatchlistViewModel()
+        // Use WatchlistManager shared instance
+        let manager = WatchlistManager.shared
         
         // Find "My Watchlist" (assuming it's the first one or finding by title)
-        // Ideally, use a consistent ID or flag, but for now we look for the first one which is usually default.
-        if let defaultWatchlist = watchlistVM.watchlists.first {
-            // Add to "To Observe" list by default? Or "Observed"?
-            // Usually "Watchlist" implies "To Observe".
-            watchlistVM.addBirds([bird], to: defaultWatchlist.id, asObserved: false)
+        if let defaultWatchlist = manager.watchlists.first {
+            // Add to "To Observe" list by default
+            manager.addBirds([bird], to: defaultWatchlist.id, asObserved: false)
             
             // Show Alert
             let alert = UIAlertController(

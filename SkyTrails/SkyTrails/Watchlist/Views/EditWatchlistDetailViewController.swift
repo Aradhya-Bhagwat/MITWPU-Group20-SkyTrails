@@ -26,9 +26,8 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
     @IBOutlet weak var inviteContactsView: UIView!
     
     // MARK: - Properties
-    var viewModel: WatchlistViewModel?
+    // var viewModel: WatchlistViewModel? // Removed
     var watchlistType: WatchlistType = .custom
-    weak var coordinator: WatchlistCoordinator?
     
     // Edit Mode Properties
     var watchlistToEdit: Watchlist?
@@ -338,19 +337,20 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
         let endDate = endDatePicker.date
         
         let finalUserImages = participants.map { $0.imageName }
+        let manager = WatchlistManager.shared
         
         if let watchlist = watchlistToEdit {
-            viewModel?.updateWatchlist(id: watchlist.id, title: title, location: location, startDate: startDate, endDate: endDate)
+            manager.updateWatchlist(id: watchlist.id, title: title, location: location, startDate: startDate, endDate: endDate)
             navigationController?.popViewController(animated: true)
             return
         }
         
         if let shared = sharedWatchlistToEdit {
             let dr = formatDateRange(start: startDate, end: endDate)
-            if let index = viewModel?.sharedWatchlists.firstIndex(where: { $0.id == shared.id }) {
-                viewModel?.sharedWatchlists[index].userImages = finalUserImages
+            if let index = manager.sharedWatchlists.firstIndex(where: { $0.id == shared.id }) {
+                manager.sharedWatchlists[index].userImages = finalUserImages
             }
-            viewModel?.updateSharedWatchlist(id: shared.id, title: title, location: location, dateRange: dr)
+            manager.updateSharedWatchlist(id: shared.id, title: title, location: location, dateRange: dr)
             navigationController?.popViewController(animated: true)
             return
         }
@@ -364,7 +364,7 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
                 observedBirds: [],
                 toObserveBirds: []
             )
-            viewModel?.addWatchlist(newWatchlist)
+            manager.addWatchlist(newWatchlist)
             
         } else if watchlistType == .shared {
             let newShared = SharedWatchlist(
@@ -375,7 +375,7 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
                 stats: SharedWatchlistStats(greenValue: 0, blueValue: 0),
                 userImages: finalUserImages
             )
-            viewModel?.addSharedWatchlist(newShared)
+            manager.addSharedWatchlist(newShared)
         }
         
         navigationController?.popViewController(animated: true)

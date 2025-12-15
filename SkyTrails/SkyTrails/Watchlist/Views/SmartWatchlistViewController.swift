@@ -15,8 +15,6 @@ enum WatchlistType {
 
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
-    weak var coordinator: WatchlistCoordinator?
-    
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
@@ -41,7 +39,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     var currentSortOption: SortOption = .nameAZ // Track sort option
     
     // Dependencies
-    var viewModel: WatchlistViewModel?
+    // var viewModel: WatchlistViewModel? // Removed
     var currentWatchlistId: UUID?
     
     override func viewDidLoad() {
@@ -62,40 +60,48 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     }
     
     @objc func didTapEdit() {
-        guard let id = currentWatchlistId, let vm = viewModel else { return }
+        guard let id = currentWatchlistId else { return }
+        let manager = WatchlistManager.shared
         
         if watchlistType == .custom {
-            if let watchlist = vm.watchlists.first(where: { $0.id == id }) {
-                coordinator?.showEditWatchlist(watchlist, viewModel: vm)
+            if let watchlist = manager.watchlists.first(where: { $0.id == id }) {
+                let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
+                vc.watchlistType = .custom
+                // vc.viewModel = manager // Removed
+                vc.watchlistToEdit = watchlist
+                navigationController?.pushViewController(vc, animated: true)
             }
         } else if watchlistType == .shared {
-            if let shared = vm.sharedWatchlists.first(where: { $0.id == id }) {
-                coordinator?.showEditSharedWatchlist(shared, viewModel: vm)
+            if let shared = manager.sharedWatchlists.first(where: { $0.id == id }) {
+                let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
+                vc.watchlistType = .shared
+                // vc.viewModel = manager // Removed
+                vc.sharedWatchlistToEdit = shared
+                navigationController?.pushViewController(vc, animated: true)
             }
         }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Refresh data if possible
-        if let vm = viewModel {
-            if watchlistType == .myWatchlist {
-                self.allWatchlists = vm.watchlists
+        // Refresh data
+        let manager = WatchlistManager.shared
+        if watchlistType == .myWatchlist {
+            self.allWatchlists = manager.watchlists
+            applyFilters()
+        } else if let id = currentWatchlistId {
+            if let updatedWatchlist = manager.watchlists.first(where: { $0.id == id }) {
+                self.observedBirds = updatedWatchlist.observedBirds
+                self.toObserveBirds = updatedWatchlist.toObserveBirds
+                // Update Title
+                self.title = updatedWatchlist.title
                 applyFilters()
-            } else if let id = currentWatchlistId {
-                if let updatedWatchlist = vm.watchlists.first(where: { $0.id == id }) {
-                    self.observedBirds = updatedWatchlist.observedBirds
-                    self.toObserveBirds = updatedWatchlist.toObserveBirds
-                    // Update Title
-                    self.title = updatedWatchlist.title
-                    applyFilters()
-                } else if let updatedShared = vm.sharedWatchlists.first(where: { $0.id == id }) {
-                    self.observedBirds = updatedShared.observedBirds
-                    self.toObserveBirds = updatedShared.toObserveBirds
-                    // Update Title
-                    self.title = updatedShared.title
-                    applyFilters()
-                }
+            } else if let updatedShared = manager.sharedWatchlists.first(where: { $0.id == id }) {
+                self.observedBirds = updatedShared.observedBirds
+                self.toObserveBirds = updatedShared.toObserveBirds
+                // Update Title
+                self.title = updatedShared.title
+                applyFilters()
             }
         }
     }
@@ -200,13 +206,57 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     @IBAction func didTapAdd(_ sender: Any) {
         // Only allow adding if we have a valid context (e.g. Custom Watchlist with an ID)
-        if let id = currentWatchlistId {
-            coordinator?.showAddOptions(from: self, sender: sender, targetWatchlistId: id, viewModel: viewModel)
-        } else {
-            // Fallback or handle Shared/MyWatchlist cases where adding might be different or disabled
+        guard let id = currentWatchlistId else {
             print("Cannot add: Missing Watchlist ID or context.")
-            coordinator?.showAddOptions(from: self, sender: sender)
+            return
         }
+        
+        let alert = UIAlertController(title: "Add to Watchlist", message: nil, preferredStyle: .actionSheet)
+        
+        // 1. Add to Observed -> Direct Flow
+        alert.addAction(UIAlertAction(title: "Add to Observed", style: .default, handler: { _ in
+            // Direct call to show detail with nil bird (indicating Create Mode)
+            self.showObservedDetail(bird: nil)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default, handler: { _ in
+            self.showSpeciesSelection(mode: .unobserved)
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        if let popoverController = alert.popoverPresentationController {
+            if let barButtonItem = sender as? UIBarButtonItem {
+                popoverController.barButtonItem = barButtonItem
+            } else if let sourceView = sender as? UIView {
+                popoverController.sourceView = sourceView
+                popoverController.sourceRect = sourceView.bounds
+            } else {
+                popoverController.sourceView = self.view
+                popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
+            }
+        }
+        present(alert, animated: true)
+    }
+    
+    // Helper to replace coordinator calls
+    func showObservedDetail(bird: Bird?) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as! ObservedDetailViewController
+        vc.bird = bird
+        vc.watchlistId = currentWatchlistId
+        // vc.viewModel = self.viewModel // Removed
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    func showSpeciesSelection(mode: WatchlistMode) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as! SpeciesSelectionViewController
+        vc.mode = mode
+        // vc.viewModel = self.viewModel // Removed
+        vc.targetWatchlistId = currentWatchlistId
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
@@ -403,35 +453,32 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
            let bird = targetBird {
             vc.bird = bird
             vc.watchlistId = targetId
-            vc.coordinator = self.coordinator
-            vc.viewModel = self.viewModel
+            // vc.viewModel = self.viewModel // Removed
         } else if segue.identifier == "ShowUnobservedDetailFromWatchlist",
                   let vc = segue.destination as? UnobservedDetailViewController,
                   let bird = targetBird {
             vc.bird = bird
             vc.watchlistId = targetId
-            vc.coordinator = self.coordinator
-            vc.viewModel = self.viewModel
+            // vc.viewModel = self.viewModel // Removed
         }
     }
     
-    // Updated deleteBird to use ViewModel
+    // Updated deleteBird to use Manager
     private func deleteBird(_ bird: Bird, watchlistId: UUID) {
-        guard let vm = viewModel else { return }
-        
-        vm.deleteBird(bird, from: watchlistId)
+        let manager = WatchlistManager.shared
+        manager.deleteBird(bird, from: watchlistId)
         
         // Refresh UI
         if watchlistType == .myWatchlist {
-             // Reload all watchlists from VM to get updated state
-            self.allWatchlists = vm.watchlists
+             // Reload all watchlists from Manager to get updated state
+            self.allWatchlists = manager.watchlists
             applyFilters()
         } else {
              // Single Watchlist Refresh
-             if let updatedWatchlist = vm.watchlists.first(where: { $0.id == watchlistId }) {
+             if let updatedWatchlist = manager.watchlists.first(where: { $0.id == watchlistId }) {
                  self.observedBirds = updatedWatchlist.observedBirds
                  self.toObserveBirds = updatedWatchlist.toObserveBirds
-             } else if let updatedShared = vm.sharedWatchlists.first(where: { $0.id == watchlistId }) {
+             } else if let updatedShared = manager.sharedWatchlists.first(where: { $0.id == watchlistId }) {
                  self.observedBirds = updatedShared.observedBirds
                  self.toObserveBirds = updatedShared.toObserveBirds
              }

@@ -14,8 +14,8 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
     // MARK: - Data Dependency
     var bird: Bird? // nil if adding new
     var watchlistId: UUID?
-    weak var coordinator: WatchlistCoordinator?
-    weak var viewModel: WatchlistViewModel?
+    // weak var viewModel: WatchlistViewModel? // Removed
+    var onSave: ((Bird) -> Void)?
     
     private let locationManager = CLLocationManager()
     private var selectedImageName: String?
@@ -220,18 +220,14 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
         let alert = UIAlertController(title: "Delete Observation", message: "Are you sure you want to delete this observation?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            if let vm = self?.viewModel {
-                vm.deleteBird(birdToDelete, from: id)
-            } else {
-                self?.coordinator?.viewModel?.deleteBird(birdToDelete, from: id)
-            }
+            WatchlistManager.shared.deleteBird(birdToDelete, from: id)
             self?.navigationController?.popViewController(animated: true)
         }))
         present(alert, animated: true)
     }
     
     private func setupData() {
-        let watchlists = createMockWatchlists()
+        let watchlists = WatchlistManager.shared.watchlists
         let birds = watchlists.flatMap { $0.birds }
         self.allBirdNames = Array(Set(birds.map { $0.name })).sorted()
     }
@@ -301,11 +297,11 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
             notes: notesTextView.text
         )
         
-        if let vm = viewModel, let wId = watchlistId {
-            vm.saveObservation(bird: newBird, watchlistId: wId)
+        if let wId = watchlistId {
+            WatchlistManager.shared.saveObservation(bird: newBird, watchlistId: wId)
             navigationController?.popViewController(animated: true)
         } else {
-            coordinator?.saveBirdDetails(bird: newBird)
+            onSave?(newBird)
         }
     }
     
