@@ -88,12 +88,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
           }
 
         if history.isEmpty {
-            // IMAGE
+           
             historyCell.historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
             historyCell.historyImageView.tintColor = .lightGray
             historyCell.historyImageView.contentMode = .scaleAspectFit
-            
-            // TEXT
+         
             historyCell.specieNameLabel.text = "No history yet"
             historyCell.specieNameLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
             historyCell.specieNameLabel.textAlignment = .center
@@ -156,14 +155,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
       
         if let img = UIImage(named: item.symbols) {
     
-            let targetSize = CGSize(width: 28, height: 28) // Restore the target size
+            let targetSize = CGSize(width: 28, height: 28)
             let resized = resize(img, to: targetSize)
             cell.imageView?.image = resized
             cell.imageView?.contentMode = .scaleAspectFit
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
             cell.imageView?.tintColor = .label
         } else {
-            // Fallback for debugging, keep this.
+           
             cell.imageView?.image = UIImage(systemName: "questionmark.circle")
             cell.imageView?.tintColor = .systemGray
         }
@@ -327,7 +326,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
                 vc = nextVC
             }
             
-            // Progress Bar Logic
+           
             if let progressVC = vc as? (UIViewController & IdentificationProgressUpdatable),
                    let idx = progressSteps.firstIndex(of: step) {
                     
@@ -384,7 +383,6 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
         // MVC style map opening
         let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
         if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
-             // mapVC.delegate = self (if needed)
             navigationController?.pushViewController(mapVC, animated: true)
         }
     }
