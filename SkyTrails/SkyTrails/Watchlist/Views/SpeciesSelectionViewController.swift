@@ -106,37 +106,38 @@ class SpeciesSelectionViewController: UIViewController {
     
     private func showBirdDetail(bird: Bird) {
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-        
+        var nextVC: UIViewController?
+
         if mode == .unobserved {
             let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as! UnobservedDetailViewController
             vc.bird = bird
             // We do NOT pass watchlistId because we want to intercept save
-            // vc.watchlistId = targetWatchlistId
-            // vc.viewModel = self.viewModel // Removed
-            
             vc.onSave = { [weak self] savedBird in
                 self?.processedBirds.append(savedBird)
                 self?.showNextInLoop()
             }
-            
-            navigationController?.pushViewController(vc, animated: true)
-            return
-        }
-        
-        if mode == .observed {
+            nextVC = vc
+        } else if mode == .observed {
             let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as! ObservedDetailViewController
-            vc.bird = bird // Pre-filled data
-            // vc.viewModel = self.viewModel // Removed
+            vc.bird = bird
             // No watchlistId passed, so it triggers onSave
-            
             vc.onSave = { [weak self] savedBird in
                 self?.processedBirds.append(savedBird)
                 self?.showNextInLoop()
             }
-            
-            navigationController?.pushViewController(vc, animated: true)
-            return
+            nextVC = vc
         }
+
+        guard let vc = nextVC else { return }
+
+        // MARK: - Memory Fix
+        // Instead of pushing endlessly, we replace the current detail view if one exists.
+        var vcs = navigationController?.viewControllers ?? []
+        if let last = vcs.last, (last is ObservedDetailViewController || last is UnobservedDetailViewController) {
+            vcs.removeLast()
+        }
+        vcs.append(vc)
+        navigationController?.setViewControllers(vcs, animated: true)
     }
 }
 
