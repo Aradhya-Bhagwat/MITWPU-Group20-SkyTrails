@@ -349,19 +349,19 @@
                                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="Stk-Vi-ew3">
                                                             <rect key="frame" x="96" y="21.000000000000004" width="266" height="58.333333333333343"/>
                                                             <subviews>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Ti-tle">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Ti-tle">
                                                                     <rect key="frame" x="0.0" y="0.0" width="266" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
                                                                     <nil key="textColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Da-te">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Da-te">
                                                                     <rect key="frame" x="0.0" y="25.666666666666661" width="266" height="14.333333333333332"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Lo-cat">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Lo-cat">
                                                                     <rect key="frame" x="0.0" y="44" width="266" height="14.333333333333336"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
@@ -660,23 +660,13 @@
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Search location" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="zQ4-pd-rjR">
+                                            <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder="Search location" translatesAutoresizingMaskIntoConstraints="NO" id="EditLocationSearchBar">
                                                 <rect key="frame" x="20" y="1110.3333333333333" width="362" height="50"/>
-                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="50" id="LiB-aC-V55"/>
-                                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="50" id="hzH-NM-p29"/>
                                                 </constraints>
-                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits"/>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="20"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
-                                                    <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
-                                                </userDefinedRuntimeAttributes>
-                                            </textField>
+                                            </searchBar>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lpQ-BV-dJE" userLabel="Location">
                                                 <rect key="frame" x="20" y="1184.3333333333333" width="362" height="150"/>
                                                 <subviews>
@@ -784,7 +774,8 @@
                     <connections>
                         <outlet property="endDatePicker" destination="QWB-i9-M4X" id="G1o-Ad-iiR"/>
                         <outlet property="inviteContactsView" destination="WoM-F1-gCE" id="kQY-2h-FIa"/>
-                        <outlet property="locationTextField" destination="zQ4-pd-rjR" id="z35-u3-YB8"/>
+                        <outlet property="locationOptionsContainer" destination="lpQ-BV-dJE" id="loc-opt-cont-id"/>
+                        <outlet property="locationSearchBar" destination="EditLocationSearchBar" id="edit-loc-bar-id"/>
                         <outlet property="startDatePicker" destination="HBs-re-bci" id="luv-yf-rgO"/>
                         <outlet property="titleTextField" destination="Vir-5J-XZr" id="3Ak-Ro-8Nc"/>
                     </connections>
@@ -925,23 +916,13 @@
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Search location" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="MSm-11-Dl0">
+                                            <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder="Search location" translatesAutoresizingMaskIntoConstraints="NO" id="UnobservedLocationSearchBar">
                                                 <rect key="frame" x="20" y="2013" width="362" height="50"/>
-                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="50" id="xGh-ec-EXo"/>
                                                     <constraint firstAttribute="height" constant="50" id="ypz-ts-LJs"/>
                                                 </constraints>
-                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits"/>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="20"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
-                                                    <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
-                                                </userDefinedRuntimeAttributes>
-                                            </textField>
+                                            </searchBar>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="XrQ-Xh-qdH" userLabel="Location">
                                                 <rect key="frame" x="20" y="2087" width="362" height="150"/>
                                                 <subviews>
@@ -1050,8 +1031,8 @@
                         <outlet property="endDatePicker" destination="0PE-Z8-VUr" id="af4-Qz-3IO"/>
                         <outlet property="endLabel" destination="ADy-rz-YZ3" id="3gn-fI-uhX"/>
                         <outlet property="locationCardView" destination="XrQ-Xh-qdH" id="lCv-12-345"/>
+                        <outlet property="locationSearchBar" destination="UnobservedLocationSearchBar" id="unobs-loc-bar-id"/>
                         <outlet property="notesTextView" destination="SAf-x6-zW7" id="FWJ-9U-HH1"/>
-                        <outlet property="searchTextField" destination="MSm-11-Dl0" id="SA2-kf-aIN"/>
                         <outlet property="startDatePicker" destination="7o2-uw-Uu3" id="EHk-vo-9Vg"/>
                         <outlet property="startLabel" destination="2Qv-Pz-pdQ" id="Alp-gC-rJ0"/>
                     </connections>
@@ -1155,33 +1136,13 @@
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="M50-6r-s46">
+                                            <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder="Search location" translatesAutoresizingMaskIntoConstraints="NO" id="ObservedLocationSearchBar">
                                                 <rect key="frame" x="20" y="656" width="362" height="50"/>
-                                                <subviews>
-                                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Search location" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="vzo-T0-ccf">
-                                                        <rect key="frame" x="0.0" y="0.0" width="362" height="50"/>
-                                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                        <constraints>
-                                                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="50" id="DFA-d3-UHp"/>
-                                                            <constraint firstAttribute="height" constant="50" id="RKd-4r-E5d"/>
-                                                        </constraints>
-                                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                        <textInputTraits key="textInputTraits"/>
-                                                    </textField>
-                                                </subviews>
-                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                 <constraints>
-                                                    <constraint firstItem="vzo-T0-ccf" firstAttribute="leading" secondItem="M50-6r-s46" secondAttribute="leading" id="Jm4-0f-9Ta"/>
-                                                    <constraint firstAttribute="bottom" secondItem="vzo-T0-ccf" secondAttribute="bottom" id="ez5-kr-Bbo"/>
-                                                    <constraint firstItem="vzo-T0-ccf" firstAttribute="top" secondItem="M50-6r-s46" secondAttribute="top" id="lcs-Wu-Z02"/>
-                                                    <constraint firstAttribute="trailing" secondItem="vzo-T0-ccf" secondAttribute="trailing" id="qm1-wv-d6l"/>
+                                                    <constraint firstAttribute="height" constant="50" id="RKd-4r-E5d"/>
                                                 </constraints>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="20"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                </userDefinedRuntimeAttributes>
-                                            </view>
+                                                <textInputTraits key="textInputTraits"/>
+                                            </searchBar>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="y7J-jn-QDP" userLabel="Location">
                                                 <rect key="frame" x="20" y="730" width="362" height="150"/>
                                                 <subviews>
@@ -1320,10 +1281,11 @@
                         <outlet property="dateLabel" destination="8nZ-5d-hox" id="9zi-Rf-wh7"/>
                         <outlet property="dateTimePicker" destination="2dj-q9-RH4" id="b8J-zu-JSU"/>
                         <outlet property="detailsCardView" destination="Z2D-L9-Pra" id="8gO-2l-nH9"/>
-                        <outlet property="locationStack" destination="qlv-dJ-WJS" id="te5-Xe-FJJ"/>
-                        <outlet property="locationTextField" destination="vzo-T0-ccf" id="new-loc-id"/>
+                        <outlet property="locationCardView" destination="y7J-jn-QDP" id="loc-card-view-id"/>
+                        <outlet property="locationSearchBar" destination="ObservedLocationSearchBar" id="new-loc-bar-id"/>
+                        <outlet property="nameTextField" destination="alD-NS-MOa" id="new-name-id"/>
+                        <outlet property="notesCardView" destination="aJz-lZ-mkb" id="notes-card-view-id"/>
                         <outlet property="notesTextView" destination="vcq-hq-eeV" id="aJp-Tl-jl8"/>
-                        <outlet property="searchTextField" destination="alD-NS-MOa" id="new-name-id"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Mj8-HM-ZVX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

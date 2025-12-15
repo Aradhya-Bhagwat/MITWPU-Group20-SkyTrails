@@ -15,7 +15,7 @@ enum Rarity: String, Codable {
 struct Bird: Codable {
     var id: UUID = UUID()
     
-    let name: String
+    var name: String
     let scientificName: String
     
     var images: [String]
