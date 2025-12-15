@@ -5,8 +5,6 @@
 //  Created by SDC-USER on 12/12/25.
 //
 
-// PredictOutputViewController.swift
-
 import UIKit
 import CoreLocation
 
@@ -16,110 +14,217 @@ class PredictOutputViewController: UIViewController {
     var predictions: [FinalPredictionResult] = []
     var inputData: [PredictionInputData] = []
     
-    // UI Elements
-    private let tableView = UITableView()
+    // Data organized by input index to match cards
+    private var organizedPredictions: [[FinalPredictionResult]] = []
     
-    // Group predictions by the input card they matched for structured display
-    private var groupedPredictions: [String: [FinalPredictionResult]] = [:]
-
+    // UI Elements
+    private var collectionView: UICollectionView!
+    private let pageControl = UIPageControl()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         
         setupNavigation()
-        setupTableView()
-        processData()
+        organizeData()
+        setupCollectionView()
+        setupPageControl()
+    }
+    
+    private func organizeData() {
+        // Initialize array with empty lists for each input card
+        organizedPredictions = Array(repeating: [], count: inputData.count)
+        
+        for prediction in predictions {
+            let index = prediction.matchedInputIndex
+            // Ensure the index is valid
+            if index >= 0 && index < organizedPredictions.count {
+                organizedPredictions[index].append(prediction)
+            }
+        }
     }
     
     private func setupNavigation() {
         // Title
         navigationItem.title = "Prediction Results"
         
-        // Redo Button (Top Left)
+        // Redo Button (Top Right)
         let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedo))
-        navigationItem.leftBarButtonItem = redoButton
+        navigationItem.rightBarButtonItem = redoButton
         
-        // Home Button (Top Right)
-        let homeButton = UIBarButtonItem(image: UIImage(systemName: "house"), style: .plain, target: self, action: #selector(didTapHome))
-        navigationItem.rightBarButtonItem = homeButton
+        // Clear left bar button item
+        navigationItem.leftBarButtonItem = nil
     }
     
-    private func setupTableView() {
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.separatorStyle = .none
-        tableView.rowHeight = 80 // Fixed height for bird cell
-        tableView.register(BirdResultCell.self, forCellReuseIdentifier: "BirdResultCell")
+    private func setupCollectionView() {
+        // Custom Layout
+        let layout = CardSnappingLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 16
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
         
-        view.addSubview(tableView)
+        let screenWidth = UIScreen.main.bounds.width
+        // Card size: width = screen - 48 (margins), height = 320 (similar to input)
+        layout.itemSize = CGSize(width: screenWidth - 48, height: 400) // Increased height for output list
+        
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.backgroundColor = .clear
+        collectionView.decelerationRate = .fast
+        collectionView.showsHorizontalScrollIndicator = false
+        
+        // Register Cell
+        collectionView.register(PredictionOutputCardCell.self, forCellWithReuseIdentifier: "PredictionOutputCardCell")
+        
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        
+        view.addSubview(collectionView)
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.heightAnchor.constraint(equalToConstant: 420) // Constraint for the collection view height
         ])
     }
     
-    private func processData() {
-        // Group predictions by the location name of the input card
-        for prediction in predictions {
-            let inputIndex = prediction.matchedInputIndex
-            let locationName = inputData[inputIndex].locationName ?? "Input \(inputIndex + 1)"
-            
-            if groupedPredictions[locationName] == nil {
-                groupedPredictions[locationName] = []
-            }
-            groupedPredictions[locationName]?.append(prediction)
-        }
-        tableView.reloadData()
+    private func setupPageControl() {
+        pageControl.translatesAutoresizingMaskIntoConstraints = false
+        pageControl.numberOfPages = inputData.count
+        pageControl.currentPage = 0
+        pageControl.hidesForSinglePage = true
+        pageControl.pageIndicatorTintColor = .systemGray4
+        pageControl.currentPageIndicatorTintColor = .label
+        pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
+        
+        view.addSubview(pageControl)
+        
+        NSLayoutConstraint.activate([
+            pageControl.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: 8),
+            pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pageControl.heightAnchor.constraint(equalToConstant: 26)
+        ])
+    }
+    
+    @objc func pageControlChanged(_ sender: UIPageControl) {
+        let indexPath = IndexPath(item: sender.currentPage, section: 0)
+        collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
     }
     
     // MARK: - Navigation Actions
     
-    // In PredictOutputViewController.swift
-
     @objc private func didTapRedo() {
-        // ⭐️ FIX: Go up two levels: self.navigationController?.parent ⭐️
         if let mapVC = self.navigationController?.parent as? PredictMapViewController {
-            // Pass the retained input data back to the map view controller
             mapVC.revertToInputScreen(with: inputData)
         } else {
-            // Fallback for debugging/unexpected hierarchy
             print("❌ Redo failed: Could not find PredictMapViewController grandparent.")
             self.dismiss(animated: true, completion: nil)
         }
     }
     
-    @objc private func didTapHome() {
-        // Explicitly find the parent MapViewController to ensure the modal is dismissed
-        if let mapVC = self.navigationController?.parent as? PredictMapViewController {
-            mapVC.dismiss(animated: true, completion: nil)
-        } else {
-            // Fallback if the hierarchy is different than expected
-            self.dismiss(animated: true, completion: nil)
+    private func updatePageControl() {
+        guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
+        
+        let itemWidth = layout.itemSize.width
+        let spacing = layout.minimumLineSpacing
+        let stride = itemWidth + spacing
+        let offset = collectionView.contentOffset.x
+        
+        let index = Int(round(offset / stride))
+        let safeIndex = max(0, min(index, inputData.count - 1))
+        
+        if pageControl.currentPage != safeIndex {
+            pageControl.currentPage = safeIndex
         }
     }
 }
 
-// MARK: - Table View Data Source and Delegate
+// MARK: - Collection View DataSource & Delegate
+extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return inputData.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PredictionOutputCardCell", for: indexPath) as? PredictionOutputCardCell else {
+            return UICollectionViewCell()
+        }
+        
+        let locationName = inputData[indexPath.row].locationName ?? "Location \(indexPath.row + 1)"
+        let cardPredictions = organizedPredictions[indexPath.row]
+        
+        cell.configure(location: locationName, data: cardPredictions)
+        
+        return cell
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        updatePageControl()
+    }
+}
 
-extension PredictOutputViewController: UITableViewDataSource, UITableViewDelegate {
+// MARK: - Custom Card Cell with TableView
+class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UITableViewDelegate {
     
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return groupedPredictions.keys.count // One section per input location
+    private let titleLabel = UILabel()
+    private let tableView = UITableView()
+    private var predictions: [FinalPredictionResult] = []
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
     }
     
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let keys = groupedPredictions.keys.sorted() // Ensure stable order
-        return keys[section]
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
+    private func setupUI() {
+        // Card Styling
+        contentView.backgroundColor = .secondarySystemBackground
+        contentView.layer.cornerRadius = 16
+        contentView.clipsToBounds = true
+        
+        // Title Label
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textAlignment = .center
+        contentView.addSubview(titleLabel)
+        
+        // TableView
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
+        tableView.register(BirdResultCell.self, forCellReuseIdentifier: "BirdResultCell")
+        tableView.dataSource = self
+        tableView.delegate = self
+        contentView.addSubview(tableView)
+        
+        NSLayoutConstraint.activate([
+            // Title Constraints
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            
+            // TableView Constraints
+            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+        ])
+    }
+    
+    func configure(location: String, data: [FinalPredictionResult]) {
+        titleLabel.text = location
+        self.predictions = data
+        tableView.reloadData()
+    }
+    
+    // MARK: - TableView DataSource
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let keys = groupedPredictions.keys.sorted()
-        let locationName = keys[section]
-        return groupedPredictions[locationName]?.count ?? 0
+        return predictions.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -127,26 +232,20 @@ extension PredictOutputViewController: UITableViewDataSource, UITableViewDelegat
             return UITableViewCell()
         }
         
-        let keys = groupedPredictions.keys.sorted()
-        let locationName = keys[indexPath.section]
-        
-        if let prediction = groupedPredictions[locationName]?[indexPath.row] {
-            cell.configure(with: prediction.birdName, imageName: prediction.imageName)
-        }
+        let prediction = predictions[indexPath.row]
+        cell.configure(with: prediction.birdName, imageName: prediction.imageName)
+        // Adjust cell background for card context
+        cell.backgroundColor = .clear
         
         return cell
     }
     
-    func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
-        if let header = view as? UITableViewHeaderFooterView {
-            header.textLabel?.textColor = .label
-            header.textLabel?.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80
     }
 }
 
-// MARK: - Custom Cell (Must be defined separately, or in the same file for quick testing)
-
+// MARK: - Bird Result Cell (Reused)
 class BirdResultCell: UITableViewCell {
     
     private let birdImageView = UIImageView()
@@ -155,12 +254,11 @@ class BirdResultCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        // Setup Image View
         birdImageView.translatesAutoresizingMaskIntoConstraints = false
         birdImageView.contentMode = .scaleAspectFit
         birdImageView.clipsToBounds = true
+        birdImageView.layer.cornerRadius = 8 // Slight roundness
         
-        // Setup Label
         birdNameLabel.translatesAutoresizingMaskIntoConstraints = false
         birdNameLabel.font = UIFont.preferredFont(forTextStyle: .headline)
         
@@ -168,13 +266,11 @@ class BirdResultCell: UITableViewCell {
         contentView.addSubview(birdNameLabel)
         
         NSLayoutConstraint.activate([
-            // Image Constraints
             birdImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             birdImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             birdImageView.widthAnchor.constraint(equalToConstant: 60),
             birdImageView.heightAnchor.constraint(equalToConstant: 60),
             
-            // Label Constraints
             birdNameLabel.leadingAnchor.constraint(equalTo: birdImageView.trailingAnchor, constant: 16),
             birdNameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             birdNameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
@@ -187,7 +283,6 @@ class BirdResultCell: UITableViewCell {
     
     func configure(with name: String, imageName: String) {
         birdNameLabel.text = name
-        // ⭐️ IMPORTANT: This relies on having images with these names in your Assets catalog
         birdImageView.image = UIImage(named: imageName) ?? UIImage(systemName: "photo")
     }
 }
