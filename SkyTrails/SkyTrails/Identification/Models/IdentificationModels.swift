@@ -1,266 +1,334 @@
-	//
-	//  IdentificationModels.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 25/11/25.
-	//
 
 import Foundation
 
-	// MARK: - Database Structure (JSON)
 
 struct BirdDatabase: Codable {
-	var birds: [ReferenceBird] // Changed to var so we can append user birds
-	let reference_data: ReferenceData
-	
-	enum CodingKeys: String, CodingKey {
-		case birds
-		case reference_data
-	}
+    var birds: [ReferenceBird]
+    let reference_data: ReferenceData
+    
+    enum CodingKeys: String, CodingKey {
+        case birds
+        case reference_data
+    }
 }
 
 struct ReferenceData: Codable {
-	let shapes: [BirdShape]
-	let fieldMarks: [ReferenceFieldMark]
-	
-	enum CodingKeys: String, CodingKey {
-		case shapes
-		case fieldMarks = "field_marks"
-	}
+    let shapes: [BirdShape]
+    let fieldMarks: [ReferenceFieldMark]
+    
+    enum CodingKeys: String, CodingKey {
+        case shapes
+        case fieldMarks = "field_marks"
+    }
 }
 
 struct ReferenceFieldMark: Codable {
-	let area: String
-	let variants: [String]
+    let area: String
+    let variants: [String]
 }
 
 struct BirdShape: Codable {
-	let id: String
-	let name: String
-	let icon: String
-	// Computed property for UI convenience
-	var imageView: String { return icon }
+    let id: String
+    let name: String
+    let icon: String
+    var imageView: String { return icon }
 }
 
-// MARK: - Main Bird Model (Source of Truth)
-
 struct ReferenceBird: Codable, Identifiable {
-	let id: String
-	let commonName: String
-	let scientificName: String?
-	let imageName: String
-	let validLocations: [String]
-	let validMonths: [Int]? // 1 = January, 12 = December
-	let attributes: BirdAttributes
-	let fieldMarks: [FieldMarkData]
-	var isUserCreated: Bool? = false
-	
-		// Maps JSON snake_case to Swift camelCase
-	enum CodingKeys: String, CodingKey {
-		case id
-		case commonName = "common_name"
-		case scientificName = "scientific_name"
-		case imageName = "image_name"
-		case validLocations = "valid_locations"
-		case validMonths = "valid_months"
-		case attributes
-		case fieldMarks = "field_marks"
-		case isUserCreated
-	}
+    let id: String
+    let commonName: String
+    let scientificName: String?
+    let imageName: String
+    let validLocations: [String]
+    let validMonths: [Int]?
+    let attributes: BirdAttributes
+    let fieldMarks: [FieldMarkData]
+    var isUserCreated: Bool? = false
+    
+    enum CodingKeys: String, CodingKey {
+        case id, attributes, isUserCreated
+        case commonName = "common_name"
+        case scientificName = "scientific_name"
+        case imageName = "image_name"
+        case validLocations = "valid_locations"
+        case validMonths = "valid_months"
+        case fieldMarks = "field_marks"
+    }
 }
 
 struct BirdAttributes: Codable {
-	let shapeId: String
-	let sizeCategory: Int
-	let rarity: String
-	
-	enum CodingKeys: String, CodingKey {
-		case shapeId = "shape_id"
-		case sizeCategory = "size_category"
-		case rarity
-	}
+    let shapeId: String
+    let sizeCategory: Int
+    let rarity: String
+    
+    enum CodingKeys: String, CodingKey {
+        case shapeId = "shape_id"
+        case sizeCategory = "size_category"
+        case rarity
+    }
 }
 
 struct FieldMarkData: Codable {
-	let area: String
-	let variant: String
-	let colors: [String]
+    let area: String
+    let variant: String
+    let colors: [String]
 }
 
-// MARK: - UI & History Support Models
-
 struct History: Codable {
-	var imageView: String
-	var specieName: String
-	var date: String
+    var imageView: String
+    var specieName: String
+    var date: String
 }
 
 struct FieldMarkType: Codable {
-	var symbols: String
-	var fieldMarkName: String
-	var isSelected: Bool? = false
+    var symbols: String
+    var fieldMarkName: String
+    var isSelected: Bool? = false
 }
 
 struct ChooseFieldMark: Codable {
-	var imageView: String
-	var name: String
-	var isSelected: Bool? = false
+    var imageView: String
+    var name: String
+    var isSelected: Bool? = false
 }
 
-// MARK: - Identification Result Model (Output)
-// This is the struct used to display results after filtering
 struct IdentificationBird: Codable, Identifiable {
-	let id: String
-	let name: String
-	let scientificName: String
-	let confidence: Double // 0.0 to 1.0 (Match Percentage)
-	let description: String // "Matched: Size, Shape, Crown"
-	let imageName: String
-	let scoreBreakdown: String // Detailed point breakdown
-	
-		// Helper to Convert to Saved Logbook Bird
-	func toSavedBird(location: String?) -> Bird {
-		return Bird(
-			id: UUID(),
-			name: self.name,
-			scientificName: self.scientificName,
-			images: [self.imageName],
-			rarity: [.common],
-			location: location != nil ? [location!] : [],
-			date: [Date()],
-			observedBy: nil,
-			notes: "Identified via Filter: \(self.description)"
-		)
-	}
+    let id: String
+    let name: String
+    let scientificName: String
+    let confidence: Double
+    let description: String
+    let imageName: String
+    let scoreBreakdown: String
+    
+    // Helper to Convert to Saved Logbook Bird
+    func toSavedBird(location: String?) -> Bird {
+        return Bird(
+            id: UUID(),
+            name: self.name,
+            scientificName: self.scientificName,
+            images: [self.imageName],
+            rarity: [.common],
+            location: location != nil ? [location!] : [],
+            date: [Date()],
+            observedBy: nil,
+            notes: "Identified via Filter: \(self.description)"
+        )
+    }
 }
 
-// MARK: - Data Manager (Persistence & Loading)
+// MARK: - 2. The Smart Model (Merged Logic)
 
 class IdentificationModels {
-	
-	var masterDatabase: BirdDatabase?
-	var histories: [History] = []
-	
-		// UI Helpers
-	var fieldMarkOptions: [FieldMarkType] = []
-	var birdShapes: [BirdShape] = []
-	var chooseFieldMarks: [ChooseFieldMark] = []
-	
-	init() {
-		do {
-				// 1. Load Static JSON Database
-			var db = try loadDatabase()
-			
-				// 2. Load User Created Birds (Persistence)
-			let userBirds = loadUserBirds()
-			db.birds.append(contentsOf: userBirds)
-			
-			self.masterDatabase = db
-			print("✅ BIRD DATABASE LOADED SUCCESSFULLY")
-			
-				// 3. Load History
-			self.histories = loadHistory()
-			
-				// 4. Populate UI Models
-			self.populateUIModels()
-			
-		} catch {
-			print("❌ IDENTIFICATION DATABASE LOAD FAILED:", error)
-		}
-	}
-	
-		// MARK: - Loading Logic
-	
-	private func loadDatabase() throws -> BirdDatabase {
-		guard let url = Bundle.main.url(forResource: "bird_database", withExtension: "json") else {
-			throw NSError(domain: "IdentificationModels", code: 404, userInfo: [NSLocalizedDescriptionKey: "bird_database.json not found"])
-		}
-		let data = try Data(contentsOf: url)
-		return try JSONDecoder().decode(BirdDatabase.self, from: data)
-	}
-	
-	private func populateUIModels() {
-		guard let db = masterDatabase else { return }
-		
-			// 1. Shapes
-		self.birdShapes = db.reference_data.shapes
-		
-			// 2. Field Mark Menu Options
-		self.fieldMarkOptions = [
-			FieldMarkType(symbols: "icn_location_date_pin", fieldMarkName: "Location & Date"),
-			FieldMarkType(symbols: "icn_size", fieldMarkName: "Size"),
-			FieldMarkType(symbols: "icn_shape_bird_question", fieldMarkName: "Shape"),
-			FieldMarkType(symbols: "icn_field_marks", fieldMarkName: "Field Marks")
-		]
-		
-			// 3. Flatten Field Marks for UI Selection
-			// Get unique areas from the first few birds or define statically if preferred
-			// For now, we extract unique areas from the database to populate the list
-		let allMarks = db.birds.flatMap { $0.fieldMarks }
-		let uniqueAreas = Array(Set(allMarks.map { $0.area })).sorted()
-		
-		self.chooseFieldMarks = uniqueAreas.map { area in
-			let imageName = "bird_\(area.lowercased())"
-			return ChooseFieldMark(imageView: imageName, name: area)
-		}
-	}
-	
-		// MARK: - Persistence
-	
-	private func getDocumentsDirectory() -> URL {
-		return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-	}
-	
-	private func loadUserBirds() -> [ReferenceBird] {
-		let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
-		guard let data = try? Data(contentsOf: url) else { return [] }
-		return (try? JSONDecoder().decode([ReferenceBird].self, from: data)) ?? []
-	}
-	
-	func saveUserBirds() {
-		guard let db = masterDatabase else { return }
-		let userBirds = db.birds.filter { $0.isUserCreated == true }
-		let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
-		
-		do {
-			let data = try JSONEncoder().encode(userBirds)
-			try data.write(to: url)
-		} catch {
-			print("❌ Failed to save user birds: \(error)")
-		}
-	}
-	
-	private func loadHistory() -> [History] {
-		let url = getDocumentsDirectory().appendingPathComponent("history.json")
-		guard let data = try? Data(contentsOf: url) else { return [] }
-		return (try? JSONDecoder().decode([History].self, from: data)) ?? []
-	}
-	
-	func saveHistory() {
-		let url = getDocumentsDirectory().appendingPathComponent("history.json")
-		do {
-			let data = try JSONEncoder().encode(histories)
-			try data.write(to: url)
-		} catch {
-			print("❌ Failed to save history: \(error)")
-		}
-	}
-	
-		// MARK: - CRUD
-	
-	func addBird(_ bird: ReferenceBird) {
-		var newBird = bird
-		newBird.isUserCreated = true
-		masterDatabase?.birds.append(newBird)
-		saveUserBirds()
-	}
-	
-	func deleteBird(id: String) {
-		guard let index = masterDatabase?.birds.firstIndex(where: { $0.id == id }) else { return }
-		let bird = masterDatabase?.birds[index]
-		if bird?.isUserCreated == true {
-			masterDatabase?.birds.remove(at: index)
-			saveUserBirds()
-		}
-	}
+    
+    // --- Data Storage ---
+    var masterDatabase: BirdDatabase?
+    var histories: [History] = []
+    var fieldMarkOptions: [FieldMarkType] = []
+    var birdShapes: [BirdShape] = []
+    var chooseFieldMarks: [ChooseFieldMark] = []
+    
+    // --- State Variables (Moved from ViewModel) ---
+    var data = IdentificationData() // Holds generic data
+    var selectedSizeCategory: Int?
+    var selectedShapeId: String?
+    var selectedLocation: String?
+    var selectedFieldMarks: [FieldMarkData] = []
+    
+    // --- Output Results ---
+    var birdResults: [IdentificationBird] = []
+    
+    // Notification Closure (Controller listens to this)
+    var onResultsUpdated: (() -> Void)?
+    
+    init() {
+        loadAllData()
+    }
+    
+    // MARK: - Initialization & Loading
+    
+    private func loadAllData() {
+        do {
+            // 1. Database
+            var db = try loadDatabase()
+            let userBirds = loadUserBirds()
+            db.birds.append(contentsOf: userBirds)
+            self.masterDatabase = db
+            
+            // 2. History
+            self.histories = loadHistory()
+            
+            // 3. UI Helpers
+            self.birdShapes = db.reference_data.shapes
+            self.fieldMarkOptions = [
+                FieldMarkType(symbols: "icn_location_date_pin", fieldMarkName: "Location & Date"),
+                FieldMarkType(symbols: "icn_size", fieldMarkName: "Size"),
+                FieldMarkType(symbols: "icn_shape_bird_question", fieldMarkName: "Shape"),
+                FieldMarkType(symbols: "icn_field_marks", fieldMarkName: "Field Marks")
+            ]
+            
+            let allMarks = db.birds.flatMap { $0.fieldMarks }
+            let uniqueAreas = Array(Set(allMarks.map { $0.area })).sorted()
+            self.chooseFieldMarks = uniqueAreas.map { area in
+                ChooseFieldMark(imageView: "bird_\(area.lowercased())", name: area)
+            }
+            
+            print("✅ MVC Model Loaded Successfully")
+            
+        } catch {
+            print("❌ Model Load Failed:", error)
+        }
+    }
+    
+    private func loadDatabase() throws -> BirdDatabase {
+        guard let url = Bundle.main.url(forResource: "bird_database", withExtension: "json") else {
+            throw NSError(domain: "Model", code: 404, userInfo: ["msg": "json not found"])
+        }
+        return try JSONDecoder().decode(BirdDatabase.self, from: try Data(contentsOf: url))
+    }
+    
+    // MARK: - Business Logic (Moved from ViewModel)
+    
+    func filterBirds(shape: String?, size: Int?, location: String?, fieldMarks: [FieldMarkData]?) {
+        guard let allBirds = masterDatabase?.birds else { return }
+        
+        // 1. Update Internal State
+        self.selectedShapeId = shape
+        self.selectedSizeCategory = size
+        self.selectedLocation = location
+        self.selectedFieldMarks = fieldMarks ?? []
+        
+        // 2. Prepare Date Logic
+        var searchMonth: Int?
+        if let dateString = data.date {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "dd MMM yyyy"
+            if let date = formatter.date(from: dateString) {
+                searchMonth = Calendar.current.component(.month, from: date)
+            }
+        }
+        
+        var scoredBirds: [(bird: ReferenceBird, score: Double, breakdown: String)] = []
+        
+        // 3. Scoring Loop
+        for bird in allBirds {
+            var score = 0.0
+            var breakdownParts: [String] = []
+            
+            // A. Location (Hard Filter)
+            if let loc = location, !bird.validLocations.contains(loc) { continue }
+            
+            // B. Seasonality
+            if let month = searchMonth, let validMonths = bird.validMonths, !validMonths.contains(month) {
+                score -= 50
+                breakdownParts.append("Wrong Season (-50)")
+            }
+            
+            // C. Shape
+            if let userShape = shape, bird.attributes.shapeId == userShape {
+                score += 30
+                breakdownParts.append("Shape Match (+30)")
+            }
+            
+            // D. Size
+            if let userSize = size {
+                let diff = abs(bird.attributes.sizeCategory - userSize)
+                if diff == 0 { score += 20; breakdownParts.append("Size Match (+20)") }
+                else if diff == 1 { score += 10; breakdownParts.append("Size Approx (+10)") }
+                else { score -= 20; breakdownParts.append("Size Mismatch (-20)") }
+            }
+            
+            // E. Field Marks
+            if let marks = fieldMarks, !marks.isEmpty {
+                let pointsPerMark = 50.0 / Double(marks.count)
+                for userMark in marks {
+                    if let birdMark = bird.fieldMarks.first(where: { $0.area == userMark.area }) {
+                        if !userMark.variant.isEmpty {
+                            if userMark.variant == birdMark.variant {
+                                let p = pointsPerMark * 0.6
+                                score += p
+                                breakdownParts.append("\(userMark.area) (+)")
+                            } else {
+                                score -= (pointsPerMark * 0.5)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // F. Rarity
+            if bird.attributes.rarity.lowercased() == "common" { score += 5 }
+            
+            let finalScore = max(0.0, score)
+            let normalized = min(finalScore / 100.0, 1.0)
+            
+            scoredBirds.append((bird, normalized, breakdownParts.joined(separator: ", ")))
+        }
+        
+        // 4. Sort and Store
+        scoredBirds = scoredBirds.filter { $0.score > 0.3 }
+        scoredBirds.sort { $0.score > $1.score }
+        
+        self.birdResults = scoredBirds.map { item in
+            IdentificationBird(
+                id: item.bird.id,
+                name: item.bird.commonName,
+                scientificName: item.bird.scientificName ?? "",
+                confidence: item.score,
+                description: item.breakdown,
+                imageName: item.bird.imageName,
+                scoreBreakdown: item.breakdown
+            )
+        }
+        
+        // 5. Notify Controller
+        DispatchQueue.main.async {
+            self.onResultsUpdated?()
+        }
+    }
+    
+    // MARK: - Helpers (Helpers)
+    
+    var referenceFieldMarks: [ReferenceFieldMark] {
+        return masterDatabase?.reference_data.fieldMarks ?? []
+    }
+    
+    func getBird(byName name: String) -> ReferenceBird? {
+        return masterDatabase?.birds.first(where: { $0.commonName == name })
+    }
+    
+    func addToHistory(_ item: History) {
+        histories.append(item)
+        saveHistory()
+    }
+    
+    // MARK: - Persistence (Private)
+    
+    private func getDocumentsDirectory() -> URL {
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+    
+    private func loadUserBirds() -> [ReferenceBird] {
+        let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
+        guard let data = try? Data(contentsOf: url) else { return [] }
+        return (try? JSONDecoder().decode([ReferenceBird].self, from: data)) ?? []
+    }
+    
+    func saveUserBirds() {
+        guard let db = masterDatabase else { return }
+        let userBirds = db.birds.filter { $0.isUserCreated == true }
+        let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
+        try? JSONEncoder().encode(userBirds).write(to: url)
+    }
+    
+    private func loadHistory() -> [History] {
+        let url = getDocumentsDirectory().appendingPathComponent("history.json")
+        guard let data = try? Data(contentsOf: url) else { return [] }
+        return (try? JSONDecoder().decode([History].self, from: data)) ?? []
+    }
+    
+    func saveHistory() {
+        let url = getDocumentsDirectory().appendingPathComponent("history.json")
+        try? JSONEncoder().encode(histories).write(to: url)
+    }
 }

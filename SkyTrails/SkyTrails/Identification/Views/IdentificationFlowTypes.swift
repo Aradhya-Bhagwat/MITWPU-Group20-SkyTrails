@@ -20,9 +20,9 @@ protocol IdentificationFlowStepDelegate: AnyObject {
     func didFinishStep()
     func didTapShapes()
     func didTapLeftButton()
-    func openMapScreen()
     
 }
+
 protocol IdentificationProgressUpdatable: AnyObject {
     func updateProgress(current: Int, total: Int)
 }

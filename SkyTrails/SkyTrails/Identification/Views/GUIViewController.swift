@@ -9,7 +9,7 @@ class GUIViewController: UIViewController {
 	@IBOutlet weak var categoriesCollectionView: UICollectionView!
 	
 		// MARK: - Properties
-	var viewModel: ViewModel!
+	var viewModel: IdentificationModels!
 	weak var delegate: IdentificationFlowStepDelegate?
 	
 		// Data Sources
@@ -62,7 +62,7 @@ class GUIViewController: UIViewController {
 		}
 		
 			// 2. Use 'fieldMarks' (The list of Body Parts)
-		let allParts = viewModel.fieldMarks
+        let allParts = viewModel.chooseFieldMarks
 		
 			// 3. Filter to get the objects for the selected names
 		self.categories = allParts.filter { part in
