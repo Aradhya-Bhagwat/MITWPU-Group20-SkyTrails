@@ -48,12 +48,9 @@ class WatchlistHomeViewController: UIViewController {
 		
 			// 3. Register Cells
 		registerCells()
-        
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-        SummaryCardCollectionView.addGestureRecognizer(longPress)
 	}
     
-    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+    @IBAction func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         if gesture.state != .began { return }
         
         let point = gesture.location(in: SummaryCardCollectionView)

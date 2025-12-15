@@ -18,9 +18,14 @@ class BirdSmartCell: UITableViewCell {
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var locationLabel: UILabel!
     
-    var avatarStackView: UIStackView!
+    @IBOutlet var avatarImageViews: [UIImageView]! // Collection
+    @IBOutlet weak var overflowBadgeView: UIView!
+    @IBOutlet weak var overflowLabel: UILabel!
+    @IBOutlet weak var avatarStackView: UIStackView! // Existing, now connected to Storyboard
+
     var shouldShowAvatars: Bool = true {
         didSet {
+            // Updated to use the new avatarStackView outlet
             avatarStackView.isHidden = !shouldShowAvatars
         }
     }
@@ -28,8 +33,8 @@ class BirdSmartCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         setupUI()
-        setupAvatarStackView()
-        avatarStackView.isHidden = !shouldShowAvatars // Set initial state
+        // setupAvatarStackView() - Removed, UI is now in Storyboard
+        // avatarStackView.isHidden = !shouldShowAvatars - Initial state handled by new setupAvatars
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
@@ -57,24 +62,28 @@ class BirdSmartCell: UITableViewCell {
         
         locationLabel.font = .systemFont(ofSize: 13, weight: .medium)
         locationLabel.textColor = .secondaryLabel
+
+        // Configure all avatar image views initially
+        avatarImageViews.forEach {
+            $0.layer.cornerRadius = 15 // imageSize / 2 where imageSize = 30
+            $0.clipsToBounds = true
+            $0.layer.borderWidth = 2
+            $0.layer.borderColor = UIColor.white.cgColor
+        }
+
+        // Configure overflow badge
+        overflowBadgeView.layer.cornerRadius = 15
+        overflowBadgeView.clipsToBounds = true
+        overflowBadgeView.layer.borderWidth = 2
+        overflowBadgeView.layer.borderColor = UIColor.white.cgColor
+        overflowBadgeView.backgroundColor = .systemGray
+        overflowLabel.textColor = .white
+        overflowLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        overflowLabel.textAlignment = .center
     }
     
-    private func setupAvatarStackView() {
-        avatarStackView = UIStackView()
-        avatarStackView.axis = .horizontal
-        avatarStackView.spacing = -10 // Overlap effect
-        avatarStackView.alignment = .center
-        avatarStackView.distribution = .fillEqually
-        avatarStackView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(avatarStackView)
-        
-        NSLayoutConstraint.activate([
-            avatarStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
-            avatarStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
-            avatarStackView.heightAnchor.constraint(equalToConstant: 30)
-        ])
-    }
-
+    // setupAvatarStackView() removed
+    
     func configure(with bird: Bird) {
         titleLabel.text = bird.name
         
@@ -119,80 +128,39 @@ class BirdSmartCell: UITableViewCell {
         } else {
             // Ensure avatars are hidden and cleared if not supposed to be shown
             avatarStackView.isHidden = true
-            avatarStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            avatarImageViews.forEach { $0.isHidden = true }
+            overflowBadgeView.isHidden = true
         }
     }
     
     private func setupAvatars(images: [String]) {
-        // Clear existing views
-        avatarStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        // Reset
+        avatarImageViews.forEach { $0.isHidden = true }
+        overflowBadgeView.isHidden = true
         
         guard !images.isEmpty else {
-            avatarStackView.isHidden = true // Hide if no images
+            avatarStackView.isHidden = true
             return
         }
+        avatarStackView.isHidden = false
         
-        avatarStackView.isHidden = false // Show if images exist
+        let limit = avatarImageViews.count
+        let displayCount = min(images.count, limit)
         
-        let maxDisplay = 2 // Max 2 users + overflow
-        let imageSize: CGFloat = 30
-        
-        let shouldShowCountBadge = images.count > maxDisplay
-        let displayCount = shouldShowCountBadge ? maxDisplay : images.count // Show 2 images if more than 2, else show all
-        
-        // 1. Add User Images
         for i in 0..<displayCount {
-            let imageName = images[i]
-            let imageView = UIImageView()
-            // Check if it's a system symbol or named asset
-            if let systemImage = UIImage(systemName: imageName) {
-                imageView.image = systemImage.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
-                imageView.backgroundColor = .secondarySystemBackground
+            let imgView = avatarImageViews[i]
+            imgView.isHidden = false
+            let name = images[i]
+            if let sys = UIImage(systemName: name) {
+                 imgView.image = sys.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
             } else {
-                imageView.image = UIImage(named: imageName)
+                 imgView.image = UIImage(named: name)
             }
-            
-            imageView.contentMode = .scaleAspectFill
-            imageView.layer.cornerRadius = imageSize / 2
-            imageView.clipsToBounds = true
-            imageView.layer.borderWidth = 2
-            imageView.layer.borderColor = UIColor.white.cgColor
-            
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
-            imageView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
-            
-            avatarStackView.addArrangedSubview(imageView)
         }
         
-        // 2. Add "+X" Badge if needed
-        if shouldShowCountBadge {
-            let remaining = images.count - displayCount
-            let badgeLabel = UILabel()
-            badgeLabel.text = "+\(remaining)"
-            badgeLabel.font = .systemFont(ofSize: 12, weight: .bold)
-            badgeLabel.textColor = .white
-            badgeLabel.textAlignment = .center
-            
-            let badgeView = UIView()
-            badgeView.backgroundColor = .systemGray
-            badgeView.layer.cornerRadius = imageSize / 2
-            badgeView.clipsToBounds = true
-            badgeView.layer.borderWidth = 2
-            badgeView.layer.borderColor = UIColor.white.cgColor
-            
-            badgeView.addSubview(badgeLabel)
-            badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                badgeLabel.centerXAnchor.constraint(equalTo: badgeView.centerXAnchor),
-                badgeLabel.centerYAnchor.constraint(equalTo: badgeView.centerYAnchor)
-            ])
-            
-            badgeView.translatesAutoresizingMaskIntoConstraints = false
-            badgeView.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
-            badgeView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
-            
-            avatarStackView.addArrangedSubview(badgeView)
+        if images.count > limit {
+            overflowBadgeView.isHidden = false
+            overflowLabel.text = "+\(images.count - limit)"
         }
     }
     

@@ -16,22 +16,7 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
     private var searchCompleter = MKLocalSearchCompleter()
     private var locationResults: [MKLocalSearchCompletion] = []
     
-    private lazy var suggestionsTableView: UITableView = {
-        let tv = UITableView()
-        tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.backgroundColor = .white
-        tv.layer.cornerRadius = 12
-        tv.layer.shadowColor = UIColor.black.cgColor
-        tv.layer.shadowOpacity = 0.1
-        tv.layer.shadowOffset = CGSize(width: 0, height: 4)
-        tv.layer.shadowRadius = 8
-        tv.isHidden = true
-        tv.delegate = self
-        tv.dataSource = self
-        tv.separatorStyle = .none
-        tv.register(UITableViewCell.self, forCellReuseIdentifier: "SuggestionCell")
-        return tv
-    }()
+    @IBOutlet weak var suggestionsTableView: UITableView!
     
     // MARK: - IBOutlets
     @IBOutlet weak var birdImageView: UIImageView!
@@ -77,8 +62,8 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
     private func setupSearch() {
         searchCompleter.delegate = self
         locationSearchBar.delegate = self
-        
-        view.addSubview(suggestionsTableView)
+        suggestionsTableView.delegate = self
+        suggestionsTableView.dataSource = self
     }
     
     private func setupLocationOptionsInteractions() {
@@ -97,24 +82,6 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
             mapView.isUserInteractionEnabled = true
             mapView.addGestureRecognizer(mapTap)
         }
-    }
-    
-    private func updateSuggestionsLayout() {
-        guard !suggestionsTableView.isHidden else { return }
-        
-        let frame = locationSearchBar.convert(locationSearchBar.bounds, to: view)
-        
-        suggestionsTableView.removeConstraints(suggestionsTableView.constraints)
-        view.removeConstraints(view.constraints.filter { $0.firstItem as? UIView == suggestionsTableView })
-        
-        NSLayoutConstraint.activate([
-            suggestionsTableView.topAnchor.constraint(equalTo: view.topAnchor, constant: frame.maxY + 4),
-            suggestionsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: frame.minX),
-            suggestionsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -(view.bounds.width - frame.maxX)),
-            suggestionsTableView.heightAnchor.constraint(equalToConstant: 200)
-        ])
-        
-        view.bringSubviewToFront(suggestionsTableView)
     }
     
     @objc private func didTapCurrentLocation() {
@@ -312,7 +279,7 @@ extension UnobservedDetailViewController: UISearchBarDelegate {
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        updateSuggestionsLayout()
+        suggestionsTableView.isHidden = false
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -326,7 +293,6 @@ extension UnobservedDetailViewController: MKLocalSearchCompleterDelegate {
         locationResults = completer.results
         suggestionsTableView.isHidden = locationResults.isEmpty
         suggestionsTableView.reloadData()
-        updateSuggestionsLayout()
     }
 }
 

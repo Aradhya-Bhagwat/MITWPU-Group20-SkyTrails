@@ -38,32 +38,11 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
     // Autocomplete
     private var searchCompleter = MKLocalSearchCompleter()
     private var searchResults: [MKLocalSearchCompletion] = []
-    private lazy var suggestionsTableView: UITableView = {
-        let tv = UITableView()
-        tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.backgroundColor = .white
-        tv.layer.cornerRadius = 12
-        tv.layer.shadowColor = UIColor.black.cgColor
-        tv.layer.shadowOpacity = 0.1
-        tv.layer.shadowOffset = CGSize(width: 0, height: 4)
-        tv.layer.shadowRadius = 8
-        tv.isHidden = true
-        tv.delegate = self
-        tv.dataSource = self
-        tv.separatorStyle = .none
-        tv.register(UITableViewCell.self, forCellReuseIdentifier: "SuggestionCell")
-        return tv
-    }()
+    @IBOutlet weak var suggestionsTableView: UITableView!
     
     // Internal State
     private var participants: [Participant] = []
-    private var participantsTableView: UITableView = {
-        let tv = UITableView()
-        tv.register(UITableViewCell.self, forCellReuseIdentifier: "ParticipantCell")
-        tv.separatorStyle = .singleLine
-        tv.backgroundColor = .clear
-        return tv
-    }()
+    @IBOutlet weak var participantsTableView: UITableView!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -104,10 +83,6 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
     private func setupSearch() {
         searchCompleter.delegate = self
         locationSearchBar.delegate = self
-        
-        // Add suggestions table to the view hierarchy
-        // We add it to the main view to float above everything
-        view.addSubview(suggestionsTableView)
     }
     
     private func setupLocationOptionsInteractions() {
@@ -130,25 +105,6 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
             mapView.isUserInteractionEnabled = true
             mapView.addGestureRecognizer(mapTap)
         }
-    }
-    
-    private func updateSuggestionsLayout() {
-        guard !suggestionsTableView.isHidden else { return }
-        
-        // Convert search bar frame to main view coordinates
-        let frame = locationSearchBar.convert(locationSearchBar.bounds, to: view)
-        
-        suggestionsTableView.removeConstraints(suggestionsTableView.constraints)
-        view.removeConstraints(view.constraints.filter { $0.firstItem as? UIView == suggestionsTableView })
-        
-        NSLayoutConstraint.activate([
-            suggestionsTableView.topAnchor.constraint(equalTo: view.topAnchor, constant: frame.maxY + 4),
-            suggestionsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: frame.minX),
-            suggestionsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -(view.bounds.width - frame.maxX)),
-            suggestionsTableView.heightAnchor.constraint(equalToConstant: 200)
-        ])
-        
-        view.bringSubviewToFront(suggestionsTableView)
     }
     
     // MARK: - Location Logic
@@ -222,6 +178,12 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
         }
         view.backgroundColor = .systemGray6
         
+        // Connect tables
+        participantsTableView.delegate = self
+        participantsTableView.dataSource = self
+        suggestionsTableView.delegate = self
+        suggestionsTableView.dataSource = self
+        
         // InviteContactsView Styling
         if let inviteView = inviteContactsView {
             inviteView.layer.cornerRadius = 12
@@ -230,53 +192,7 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
             inviteView.layer.shadowOpacity = 0.05
             inviteView.layer.shadowOffset = CGSize(width: 0, height: 2)
             inviteView.layer.shadowRadius = 8
-            
-            setupInviteContent(in: inviteView)
         }
-    }
-    
-    private func setupInviteContent(in view: UIView) {
-        view.subviews.forEach { $0.removeFromSuperview() }
-        
-        let titleLabel = UILabel()
-        titleLabel.text = "Participants"
-        titleLabel.textColor = .secondaryLabel
-        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        participantsTableView.delegate = self
-        participantsTableView.dataSource = self
-        participantsTableView.translatesAutoresizingMaskIntoConstraints = false
-        
-        var config = UIButton.Configuration.tinted()
-        config.title = "Invite Friends"
-        config.image = UIImage(systemName: "square.and.arrow.up")
-        config.imagePadding = 8
-        config.cornerStyle = .capsule
-        
-        let inviteButton = UIButton(configuration: config)
-        inviteButton.translatesAutoresizingMaskIntoConstraints = false
-        inviteButton.addTarget(self, action: #selector(didTapInvite), for: .touchUpInside)
-        
-        view.addSubview(titleLabel)
-        view.addSubview(participantsTableView)
-        view.addSubview(inviteButton)
-        
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 12),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            
-            participantsTableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            participantsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            participantsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
-            participantsTableView.heightAnchor.constraint(equalToConstant: 120),
-            
-            inviteButton.topAnchor.constraint(equalTo: participantsTableView.bottomAnchor, constant: 12),
-            inviteButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            inviteButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            inviteButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -12),
-            inviteButton.heightAnchor.constraint(equalToConstant: 44)
-        ])
     }
     
     private func configureViewBasedOnType() {
@@ -289,7 +205,7 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
     }
     
     // MARK: - Invite Logic
-    @objc private func didTapInvite() {
+    @IBAction func didTapInvite(_ sender: Any) {
         let titleToShare = titleTextField.text ?? "New Watchlist"
         let shareText = "Hey! Join my Bird Watchlist: \(titleToShare) on SkyTrails!"
         
@@ -451,7 +367,8 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate {
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        updateSuggestionsLayout()
+        // updateSuggestionsLayout() - Removed
+        suggestionsTableView.isHidden = false
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -465,7 +382,6 @@ extension EditWatchlistDetailViewController: MKLocalSearchCompleterDelegate {
         self.searchResults = completer.results
         suggestionsTableView.isHidden = searchResults.isEmpty
         suggestionsTableView.reloadData()
-        updateSuggestionsLayout()
     }
 }
 
