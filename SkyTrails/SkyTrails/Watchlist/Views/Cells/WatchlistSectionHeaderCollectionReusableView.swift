@@ -5,9 +5,9 @@ protocol SectionHeaderDelegate: AnyObject {
 	func didTapSeeAll(in section: Int)
 }
 
-class SectionHeaderCollectionReusableView: UICollectionReusableView {
+class WatchlistSectionHeaderCollectionReusableView: UICollectionReusableView {
 	
-	static var identifier: String = "SectionHeaderCollectionReusableView"
+	static var identifier: String = "WatchlistSectionHeaderCollectionReusableView"
 	
 	@IBOutlet weak var sectionTitle: UILabel!
 	@IBOutlet weak var seeAllButton: UIButton!

@@ -1,0 +1,16 @@
+
+
+{
+    "latest_news": [
+      {
+        "title": "Rare Migratory Bird Spotted",
+        "description": "A rare Siberian species was seen near the wetlands.",
+        "imageName": "news_rare_migratory"
+      },
+      {
+        "title": "Climate Impact on Birds",
+        "description": "Researchers predict altered migration routes.",
+        "imageName": "news_climate_change"
+      }
+    ]
+}

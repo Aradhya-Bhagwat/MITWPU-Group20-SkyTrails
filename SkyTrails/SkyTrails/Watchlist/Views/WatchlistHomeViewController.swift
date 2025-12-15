@@ -246,11 +246,11 @@ class WatchlistHomeViewController: UIViewController {
 	
 		// --- Cell Registration ---
 	private func registerCells() {
-		let headerNib = UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil)
+		let headerNib = UINib(nibName: "WatchlistSectionHeaderCollectionReusableView", bundle: nil)
 		SummaryCardCollectionView.register(
 			headerNib,
 			forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-			withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
+			withReuseIdentifier: "WatchlistSectionHeaderCollectionReusableView"
 		)
 		
 		let summaryNib = UINib(nibName: "SummaryCardCollectionViewCell", bundle: nil)
@@ -448,9 +448,9 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		
 		let header = collectionView.dequeueReusableSupplementaryView(
 			ofKind: kind,
-			withReuseIdentifier: SectionHeaderCollectionReusableView.identifier,
+			withReuseIdentifier: "WatchlistSectionHeaderCollectionReusableView",
 			for: indexPath
-		) as! SectionHeaderCollectionReusableView
+		) as! WatchlistSectionHeaderCollectionReusableView
 		
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return header }
 		

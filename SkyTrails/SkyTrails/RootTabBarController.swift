@@ -25,8 +25,7 @@ class RootTabBarController: UITabBarController {
 						systemImage: "sparkle.magnifyingglass")
 		]
 	}
-	
-	var fakechange = "haha"
+
 	private func loadFeature(storyboard: String,
 							 title: String,
 							 systemImage: String) -> UIViewController {
