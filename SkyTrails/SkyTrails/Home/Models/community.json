@@ -1,0 +1,34 @@
+{
+    "community_observations": [
+        {
+            "user": {
+                "name": "Disha Jain",
+                "observations": 5,
+                "profile_image_name": "profile_disha"
+            },
+            "bird_name": "Rose Ringed Parakeet",
+            "location": "Vihar Lake, Mumbai, Maharashtra",
+            "image_name": "rose_ringed_parakeet"
+        },
+        {
+            "user": {
+                "name": "Tanmay Dani",
+                "observations": 1,
+                "profile_image_name": "profile_tanmay"
+            },
+            "bird_name": "European Honey Buzzard",
+            "location": "Vetal Tekdi, Pune, Maharashtra",
+            "image_name": "honey_buzzard"
+        },
+        {
+            "user": {
+                "name": "Soumyadeep Guria",
+                "observations": 12,
+                "profile_image_name": "profile_aisha"
+            },
+            "bird_name": "Asian Koel",
+            "location": "Lodi Gardens, New Delhi",
+            "image_name": "asian_koel"
+        }
+    ]
+}
