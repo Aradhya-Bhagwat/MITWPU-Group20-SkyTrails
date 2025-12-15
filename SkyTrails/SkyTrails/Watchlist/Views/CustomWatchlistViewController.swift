@@ -14,12 +14,11 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
 	@IBOutlet weak var searchBar: UISearchBar!
 	
 		// MARK: - Properties
-	var viewModel: WatchlistViewModel?
-    weak var coordinator: WatchlistCoordinator?
+	// var viewModel: WatchlistViewModel? // Removed
 	
-		// Computed property to access watchlists from viewModel
+		// Computed property to access watchlists from Manager
 	var allWatchlists: [Watchlist] {
-		return viewModel?.watchlists ?? []
+		return WatchlistManager.shared.watchlists
 	}
 	
 	var filteredWatchlists: [Watchlist] = []
@@ -58,8 +57,14 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
         let alert = UIAlertController(title: watchlist.title, message: nil, preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
-            guard let vm = self.viewModel else { return }
-            self.coordinator?.showEditWatchlist(watchlist, viewModel: vm)
+            // guard let vm = self.viewModel else { return } // Removed
+            let vm = WatchlistManager.shared // Use shared instance
+            
+            let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
+            vc.watchlistType = .custom
+            // vc.viewModel = vm // Removed injection
+            vc.watchlistToEdit = watchlist
+            self.navigationController?.pushViewController(vc, animated: true)
         }))
         
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
@@ -86,7 +91,7 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            self.viewModel?.deleteWatchlist(id: watchlist.id)
+            WatchlistManager.shared.deleteWatchlist(id: watchlist.id)
             // Refresh
             self.filteredWatchlists = self.allWatchlists
             self.collectionView.reloadData()
@@ -203,13 +208,11 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowSpeciesSelection",
            let destVC = segue.destination as? SpeciesSelectionViewController {
-            destVC.coordinator = self.coordinator
-            destVC.viewModel = self.viewModel
+            // destVC.viewModel = self.viewModel // Removed
         } else if segue.identifier == "ShowEditCustomWatchlist",
                   let destVC = segue.destination as? EditWatchlistDetailViewController {
             destVC.watchlistType = .custom
-            destVC.viewModel = self.viewModel
-            destVC.coordinator = self.coordinator
+            // destVC.viewModel = self.viewModel // Removed
         }
     }
 }
@@ -261,8 +264,7 @@ extension CustomWatchlistViewController {
             smartVC.observedBirds = item.observedBirds
             smartVC.toObserveBirds = item.toObserveBirds
             smartVC.currentWatchlistId = item.id
-            smartVC.viewModel = self.viewModel
-            smartVC.coordinator = self.coordinator
+            // smartVC.viewModel = self.viewModel // Removed
             
             self.navigationController?.pushViewController(smartVC, animated: true)
         }

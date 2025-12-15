@@ -14,12 +14,11 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     @IBOutlet weak var searchBar: UISearchBar!
 
     // MARK: - Properties
-    var viewModel: WatchlistViewModel?
-    weak var coordinator: WatchlistCoordinator?
+    // var viewModel: WatchlistViewModel? // Removed
     
-    // Computed property to access shared watchlists from viewModel
+    // Computed property to access shared watchlists from Manager
     var allSharedWatchlists: [SharedWatchlist] {
-        return viewModel?.sharedWatchlists ?? []
+        return WatchlistManager.shared.sharedWatchlists
     }
     
     var filteredWatchlists: [SharedWatchlist] = []
@@ -35,10 +34,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
         super.viewDidLoad()
         setupUI()
         
-        // If viewModel wasn't injected (e.g. independent run), create one
-        if viewModel == nil {
-            viewModel = WatchlistViewModel()
-        }
+        // Manager is singleton, always available.
         
         filteredWatchlists = allSharedWatchlists
         collectionView.reloadData()
@@ -61,8 +57,12 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
         let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
-            guard let vm = self.viewModel else { return }
-            self.coordinator?.showEditSharedWatchlist(shared, viewModel: vm)
+            // guard let vm = self.viewModel else { return } // Removed
+            let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
+            vc.watchlistType = .shared
+            // vc.viewModel = vm // Removed
+            vc.sharedWatchlistToEdit = shared
+            self.navigationController?.pushViewController(vc, animated: true)
         }))
         
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
@@ -86,7 +86,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            self.viewModel?.deleteSharedWatchlist(id: shared.id)
+            WatchlistManager.shared.deleteSharedWatchlist(id: shared.id)
             // Refresh
             self.filteredWatchlists = self.allSharedWatchlists
             self.collectionView.reloadData()
@@ -137,7 +137,10 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     
     // MARK: - Actions
     @IBAction func addTapped(_ sender: Any) {
-        coordinator?.showCreateWatchlist(type: .shared, viewModel: viewModel)
+        let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
+        vc.watchlistType = .shared
+        // vc.viewModel = viewModel // Removed
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
@@ -197,8 +200,7 @@ class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowSpeciesSelection",
            let destVC = segue.destination as? SpeciesSelectionViewController {
-            destVC.coordinator = self.coordinator
-            destVC.viewModel = self.viewModel
+            // destVC.viewModel = self.viewModel // Removed
         }
     }
 }
@@ -250,8 +252,7 @@ extension SharedWatchlistsViewController {
             smartVC.observedBirds = item.observedBirds
             smartVC.toObserveBirds = item.toObserveBirds
             smartVC.currentWatchlistId = item.id
-            smartVC.viewModel = self.viewModel
-            smartVC.coordinator = self.coordinator
+            // smartVC.viewModel = self.viewModel // Removed
             
             self.navigationController?.pushViewController(smartVC, animated: true)
         } else {
