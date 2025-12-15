@@ -2,55 +2,77 @@ import UIKit
 import MapKit
 import CoreLocation
 
-class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegate {
+class UnobservedDetailViewController: UIViewController {
     
-    // MARK: - Data Dependency
+    // MARK: - Dependencies
     var bird: Bird?
     var watchlistId: UUID?
-    // weak var viewModel: WatchlistViewModel? // Removed
     var onSave: ((Bird) -> Void)?
     
+    // MARK: - Private Properties
     private let locationManager = CLLocationManager()
-    
-    // Autocomplete State
     private var searchCompleter = MKLocalSearchCompleter()
     private var locationResults: [MKLocalSearchCompletion] = []
     
-    @IBOutlet weak var suggestionsTableView: UITableView!
-    
     // MARK: - IBOutlets
+    @IBOutlet weak var suggestionsTableView: UITableView!
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var startLabel: UILabel!
     @IBOutlet weak var endLabel: UILabel!
     @IBOutlet weak var startDatePicker: UIDatePicker!
     @IBOutlet weak var endDatePicker: UIDatePicker!
     @IBOutlet weak var notesTextView: UITextView!
-    
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var locationSearchBar: UISearchBar!
-    
     @IBOutlet weak var detailsCardView: UIView!
-    @IBOutlet weak var locationCardView: UIView! // Acts as locationOptionsContainer
+    @IBOutlet weak var locationCardView: UIView!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = bird?.name
-        
-        setupStyling()
+        setupUI()
+        setupLocationManager()
         setupSearch()
+        setupKeyboardHandling()
+        configureView()
+    }
+    
+    // MARK: - Setup
+    private func setupUI() {
+        title = bird?.name ?? "Add Species"
+        view.backgroundColor = .systemGray6
         
-        if let birdData = bird {
-            configure(with: birdData)
-            setupRightBarButtons()
+        birdImageView.layer.cornerRadius = 24
+        birdImageView.clipsToBounds = true
+        
+        styleCard(detailsCardView)
+        styleCard(locationCardView)
+        
+        setupLocationOptionsInteractions()
+        setupNavigationItems()
+    }
+    
+    private func styleCard(_ view: UIView) {
+        view.layer.cornerRadius = 20
+        view.backgroundColor = .white
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.layer.masksToBounds = false
+    }
+    
+    private func setupNavigationItems() {
+        if bird != nil {
+            let deleteButton = UIBarButtonItem(image: UIImage(systemName: "trash"), style: .plain, target: self, action: #selector(didTapDelete))
+            deleteButton.tintColor = .systemRed
+            
+            let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
+            navigationItem.rightBarButtonItems = [saveButton, deleteButton]
         } else {
             let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
             navigationItem.rightBarButtonItem = saveButton
         }
-        
-        setupKeyboardHandling()
-        setupLocationManager()
-        setupLocationOptionsInteractions()
     }
     
     private func setupLocationManager() {
@@ -66,22 +88,64 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
         suggestionsTableView.dataSource = self
     }
     
+    private func setupKeyboardHandling() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    
     private func setupLocationOptionsInteractions() {
-        guard let container = locationCardView else { return }
+        guard let container = locationCardView,
+              let mainStack = container.subviews.first as? UIStackView,
+              mainStack.arrangedSubviews.count >= 3 else { return }
+            
+        let currentLocationView = mainStack.arrangedSubviews[0]
+        let mapView = mainStack.arrangedSubviews[2]
         
-        // Assuming structure: StackView -> [CurrentLocationStack, Separator, MapStack]
-        if let mainStack = container.subviews.first as? UIStackView, mainStack.arrangedSubviews.count >= 3 {
-            let currentLocationView = mainStack.arrangedSubviews[0]
-            let mapView = mainStack.arrangedSubviews[2]
-            
-            let locationTap = UITapGestureRecognizer(target: self, action: #selector(didTapCurrentLocation))
-            currentLocationView.isUserInteractionEnabled = true
-            currentLocationView.addGestureRecognizer(locationTap)
-            
-            let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapMap))
-            mapView.isUserInteractionEnabled = true
-            mapView.addGestureRecognizer(mapTap)
+        addTapGesture(to: currentLocationView, action: #selector(didTapCurrentLocation))
+        addTapGesture(to: mapView, action: #selector(didTapMap))
+    }
+    
+    private func addTapGesture(to view: UIView, action: Selector) {
+        let tap = UITapGestureRecognizer(target: self, action: action)
+        view.isUserInteractionEnabled = true
+        view.addGestureRecognizer(tap)
+    }
+    
+    private func configureView() {
+        guard let bird = bird else { return }
+        
+        navigationItem.title = "Edit Species"
+        nameTextField.text = bird.name
+        loadImage(for: bird)
+        
+        if let firstDate = bird.date.first { startDatePicker.date = firstDate }
+        if let lastDate = bird.date.last { endDatePicker.date = lastDate }
+        
+        locationSearchBar.text = bird.location.first
+        notesTextView.text = bird.notes ?? "Add notes..."
+    }
+    
+    private func loadImage(for bird: Bird) {
+        if let imageName = bird.images.first {
+            if let assetImage = UIImage(named: imageName) {
+                birdImageView.image = assetImage
+            } else {
+                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
+                if let docImage = UIImage(contentsOfFile: fileURL.path) {
+                    birdImageView.image = docImage
+                } else {
+                    birdImageView.image = UIImage(systemName: "photo")
+                }
+            }
+        } else {
+            birdImageView.image = UIImage(systemName: "photo")
         }
+    }
+    
+    // MARK: - Actions
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
     
     @objc private func didTapCurrentLocation() {
@@ -89,86 +153,26 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
     }
     
     @objc private func didTapMap() {
-        let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
+        let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
         if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
             mapVC.delegate = self
             navigationController?.pushViewController(mapVC, animated: true)
         }
     }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            guard let self = self else { return }
-            if let error = error { return }
-            
-            if let placemark = placemarks?.first {
-                let city = placemark.locality ?? ""
-                let country = placemark.country ?? ""
-                var address = ""
-                if !city.isEmpty { address += city + ", " }
-                address += country
-                
-                DispatchQueue.main.async {
-                    self.updateLocationSelection(address)
-                }
-            }
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location Error: \(error.localizedDescription)")
-    }
-    
-    private func updateLocationSelection(_ name: String) {
-        locationSearchBar.text = name
-        suggestionsTableView.isHidden = true
-        locationSearchBar.resignFirstResponder()
-    }
-    
-    // MARK: - Keyboard Handling
-    private func setupKeyboardHandling() {
-        // Basic keyboard handling if needed
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-    }
-    
-    @objc func dismissKeyboard() {
-        view.endEditing(true)
-    }
-    
-    private func setupRightBarButtons() {
-        let deleteButton = UIBarButtonItem(image: UIImage(systemName: "trash"), style: .plain, target: self, action: #selector(didTapDelete))
-        deleteButton.tintColor = .systemRed
-        
-        let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
-        navigationItem.rightBarButtonItems = [saveButton, deleteButton]
-    }
-    
     @objc private func didTapDelete() {
-        deleteBird()
-    }
-    
-    private func deleteBird() {
-        guard let birdToDelete = bird, let id = watchlistId else { return }
+        guard let bird = bird, let id = watchlistId else { return }
         
         let alert = UIAlertController(title: "Delete Bird", message: "Delete this bird from watchlist?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            WatchlistManager.shared.deleteBird(birdToDelete, from: id)
+            WatchlistManager.shared.deleteBird(bird, from: id)
             self?.navigationController?.popViewController(animated: true)
         }))
         present(alert, animated: true)
     }
     
-    @objc func didTapSave() {
-        // Create or Update Bird
-        // For Unobserved, usually we are just setting ranges.
-        // But if editing, we might change name too.
-        
+    @objc private func didTapSave() {
         let name = nameTextField.text ?? (bird?.name ?? "Unknown Bird")
         let location = locationSearchBar.text ?? ""
         let notes = notesTextView.text
@@ -186,62 +190,42 @@ class UnobservedDetailViewController: UIViewController, CLLocationManagerDelegat
             WatchlistManager.shared.updateBird(updatedBird, watchlistId: wId)
             navigationController?.popViewController(animated: true)
         } else {
-            // New Bird Logic
             onSave?(updatedBird)
         }
     }
     
-    func configure(with bird: Bird) {
-        self.navigationItem.title = "Edit Species"
-        
-        nameTextField.text = bird.name
-        
-        if let imageName = bird.images.first {
-            if let assetImage = UIImage(named: imageName) {
-                birdImageView.image = assetImage
-            } else {
-                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
-                if let docImage = UIImage(contentsOfFile: fileURL.path) {
-                    birdImageView.image = docImage
-                } else {
-                    birdImageView.image = UIImage(systemName: "photo")
-                }
-            }
-        } else {
-            birdImageView.image = UIImage(systemName: "photo")
-        }
-        
-        if let firstDate = bird.date.first { startDatePicker.date = firstDate }
-        if let lastDate = bird.date.last { endDatePicker.date = lastDate }
-        
-        if let locationName = bird.location.first {
-            locationSearchBar.text = locationName
-        }
-        
-        notesTextView.text = bird.notes ?? "Add notes..."
-    }
-    
-    func setupStyling() {
-        view.backgroundColor = .systemGray6
-        birdImageView.layer.cornerRadius = 24
-        birdImageView.clipsToBounds = true
-        
-        styleCard(detailsCardView)
-        styleCard(locationCardView)
-    }
-    
-    func styleCard(_ view: UIView) {
-        view.layer.cornerRadius = 20
-        view.backgroundColor = .white
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.08
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.masksToBounds = false
+    private func updateLocationSelection(_ name: String) {
+        locationSearchBar.text = name
+        suggestionsTableView.isHidden = true
+        locationSearchBar.resignFirstResponder()
     }
 }
 
-// MARK: - Delegates
+// MARK: - CLLocationManagerDelegate
+extension UnobservedDetailViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
+            guard let self = self, error == nil, let placemark = placemarks?.first else { return }
+            
+            let city = placemark.locality ?? ""
+            let country = placemark.country ?? ""
+            let address = [city, country].filter { !$0.isEmpty }.joined(separator: ", ")
+            
+            DispatchQueue.main.async {
+                self.updateLocationSelection(address)
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location Error: \(error.localizedDescription)")
+    }
+}
+
+// MARK: - UITableViewDelegate & DataSource
 extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return locationResults.count
@@ -249,10 +233,12 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
+        let result = locationResults[indexPath.row]
+        
         cell.backgroundColor = .white
         cell.textLabel?.textColor = .black
-        let result = locationResults[indexPath.row]
-        cell.textLabel?.text = result.title + " " + result.subtitle
+        cell.textLabel?.text = "\(result.title) \(result.subtitle)"
+        
         return cell
     }
     
@@ -260,6 +246,7 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
         let result = locationResults[indexPath.row]
         let request = MKLocalSearch.Request(completion: result)
         let search = MKLocalSearch(request: request)
+        
         search.start { [weak self] (response, error) in
             guard let self = self, let response = response else { return }
             let name = response.mapItems.first?.name ?? result.title
@@ -268,6 +255,7 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
     }
 }
 
+// MARK: - UISearchBarDelegate
 extension UnobservedDetailViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText.isEmpty {
@@ -288,6 +276,7 @@ extension UnobservedDetailViewController: UISearchBarDelegate {
     }
 }
 
+// MARK: - MKLocalSearchCompleterDelegate
 extension UnobservedDetailViewController: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         locationResults = completer.results
@@ -296,6 +285,7 @@ extension UnobservedDetailViewController: MKLocalSearchCompleterDelegate {
     }
 }
 
+// MARK: - MapSelectionDelegate
 extension UnobservedDetailViewController: MapSelectionDelegate {
     func didSelectMapLocation(_ locationName: String) {
         updateLocationSelection(locationName)

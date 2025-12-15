@@ -2,228 +2,212 @@
 //  SharedWatchlistsViewController.swift
 //  SkyTrails
 //
-//  Created by SDC-USER on 28/11/25.
+//  Merged / cleaned version
 //
 
 import UIKit
 
-class SharedWatchlistsViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UISearchBarDelegate {
+class SharedWatchlistsViewController: UIViewController {
 
     // MARK: - Outlets
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var searchBar: UISearchBar!
 
+    // MARK: - Types
+    enum SortOption {
+        case nameAZ, nameZA, date
+    }
+
     // MARK: - Properties
-    // var viewModel: WatchlistViewModel? // Removed
-    
-    // Computed property to access shared watchlists from Manager
+    var filteredWatchlists: [SharedWatchlist] = []
+    var currentSortOption: SortOption = .nameAZ
+
+    // Computed property to access shared watchlists from Singleton
     var allSharedWatchlists: [SharedWatchlist] {
         return WatchlistManager.shared.sharedWatchlists
     }
-    
-    var filteredWatchlists: [SharedWatchlist] = []
-    var currentSortOption: SortOption = .nameAZ
-    
-    enum SortOption {
-        case nameAZ
-        case nameZA
-        case date // Using date generically for dateRange string
-    }
 
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        
-        // Manager is singleton, always available.
-        
+        setupGestures()
+        // initial data populate
         filteredWatchlists = allSharedWatchlists
         collectionView.reloadData()
-        
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        refreshData()
+    }
+
+    // MARK: - Setup
+    private func setupUI() {
+        title = "Shared Watchlists"
+        view.backgroundColor = .systemGroupedBackground
+        navigationItem.largeTitleDisplayMode = .never
+
+        // Search Bar
+        searchBar.searchBarStyle = .minimal
+        searchBar.delegate = self
+
+        // Collection View Layout
+        let flowLayout = UICollectionViewFlowLayout()
+        flowLayout.scrollDirection = .vertical
+        flowLayout.minimumLineSpacing = 16
+        flowLayout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+
+        collectionView.collectionViewLayout = flowLayout
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.backgroundColor = .clear
+
+        // Register Cell (if using nib)
+        let nib = UINib(nibName: SharedWatchlistCollectionViewCell.identifier, bundle: nil)
+        collectionView.register(nib, forCellWithReuseIdentifier: SharedWatchlistCollectionViewCell.identifier)
+    }
+
+    private func setupGestures() {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         collectionView.addGestureRecognizer(longPress)
     }
-    
+
+    // MARK: - Data Management
+    func refreshData() {
+        var list = allSharedWatchlists
+
+        if let searchText = searchBar.text, !searchText.isEmpty {
+            list = list.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        }
+
+        switch currentSortOption {
+        case .nameAZ:
+            list.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .nameZA:
+            list.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        case .date:
+            // Basic string comparison; consider parsing to Date for correct chronological order.
+            list.sort { $0.dateRange < $1.dateRange }
+        }
+
+        filteredWatchlists = list
+        collectionView.reloadData()
+    }
+
+    // MARK: - Actions
+    @IBAction func addTapped(_ sender: Any) {
+        navigateToEdit(watchlist: nil)
+    }
+
+    @IBAction func filterButtonTapped(_ sender: UIButton) {
+        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
+
+        let options: [(String, SortOption)] = [
+            ("Name (A-Z)", .nameAZ),
+            ("Name (Z-A)", .nameZA),
+            ("Date", .date)
+        ]
+
+        for (title, option) in options {
+            alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
+                guard let self = self else { return }
+                self.currentSortOption = option
+                self.refreshData()
+            }))
+        }
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        // Popover for iPad
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = sender
+            popover.sourceRect = sender.bounds
+            popover.permittedArrowDirections = .any
+        }
+
+        present(alert, animated: true)
+    }
+
     @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-        if gesture.state != .began { return }
-        
+        guard gesture.state == .began else { return }
+
         let point = gesture.location(in: collectionView)
         if let indexPath = collectionView.indexPathForItem(at: point) {
             let shared = filteredWatchlists[indexPath.row]
             showOptions(for: shared, at: indexPath)
         }
     }
-    
-    func showOptions(for shared: SharedWatchlist, at indexPath: IndexPath) {
-        let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
-        
-        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
-            // guard let vm = self.viewModel else { return } // Removed
-            let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
-            vc.watchlistType = .shared
-            // vc.viewModel = vm // Removed
-            vc.sharedWatchlistToEdit = shared
-            self.navigationController?.pushViewController(vc, animated: true)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            self.confirmDelete(shared: shared)
-        }))
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        
-        if let popover = alert.popoverPresentationController {
-            if let cell = collectionView.cellForItem(at: indexPath) {
-                popover.sourceView = cell
-                popover.sourceRect = cell.bounds
-            }
+
+    // MARK: - Navigation Helpers
+    private func navigateToEdit(watchlist: SharedWatchlist?) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else {
+            print("Could not instantiate EditWatchlistDetailViewController")
+            return
         }
-        
-        present(alert, animated: true)
-    }
-    
-    func confirmDelete(shared: SharedWatchlist) {
-        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(shared.title)'?", preferredStyle: .alert)
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            WatchlistManager.shared.deleteSharedWatchlist(id: shared.id)
-            // Refresh
-            self.filteredWatchlists = self.allSharedWatchlists
-            self.collectionView.reloadData()
-        }))
-        
-        present(alert, animated: true)
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        print("SharedWatchlistsViewController appeared. Count: \(allSharedWatchlists.count)")
-        
-        // Refresh data to reflect any changes (e.g. new watchlist added)
-        if let text = searchBar.text, !text.isEmpty {
-            filteredWatchlists = allSharedWatchlists.filter { $0.title.lowercased().contains(text.lowercased()) }
-        } else {
-            filteredWatchlists = allSharedWatchlists
-        }
-        sortWatchlists(by: currentSortOption)
-    }
-    
-    private func setupUI() {
-        // Navigation Bar
-        self.title = "Shared Watchlists"
-        self.view.backgroundColor = .systemGroupedBackground
-        self.navigationItem.largeTitleDisplayMode = .never
-        
-        // Collection View Layout
-        let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.scrollDirection = .vertical
-        // Full width cards, so just vertical spacing
-        flowLayout.minimumLineSpacing = 16
-        flowLayout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-        
-        collectionView.collectionViewLayout = flowLayout
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.backgroundColor = .clear
-        
-        // Register Cell
-        let nib = UINib(nibName: SharedWatchlistCollectionViewCell.identifier, bundle: nil)
-        collectionView.register(nib, forCellWithReuseIdentifier: SharedWatchlistCollectionViewCell.identifier)
-        
-        // Search Bar
-        searchBar.searchBarStyle = .minimal
-        searchBar.delegate = self
-    }
-    
-    // MARK: - Actions
-    @IBAction func addTapped(_ sender: Any) {
-        let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
+
         vc.watchlistType = .shared
-        // vc.viewModel = viewModel // Removed
+        if let watchlist = watchlist {
+            vc.sharedWatchlistToEdit = watchlist
+        }
         navigationController?.pushViewController(vc, animated: true)
     }
-    
-    @IBAction func filterButtonTapped(_ sender: UIButton) {
-        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-        
-        let options: [(String, SortOption)] = [
-            ("Name (A-Z)", .nameAZ),
-            ("Name (Z-A)", .nameZA),
-            ("Date", .date)
-        ]
-        
-        for (title, option) in options {
-            alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
-                self.sortWatchlists(by: option)
-            }))
+
+    private func showOptions(for shared: SharedWatchlist, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
+
+        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { [weak self] _ in
+            self?.navigateToEdit(watchlist: shared)
+        }))
+
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            self?.confirmDelete(shared: shared)
+        }))
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let cell = collectionView.cellForItem(at: indexPath), let popover = alert.popoverPresentationController {
+            popover.sourceView = cell
+            popover.sourceRect = cell.bounds
+            popover.permittedArrowDirections = .any
         }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        
-        if let popoverController = alert.popoverPresentationController {
-            popoverController.sourceView = sender
-            popoverController.sourceRect = sender.bounds
-            popoverController.permittedArrowDirections = .up
-        }
-        
-        present(alert, animated: true, completion: nil)
-    }
-    
-    func sortWatchlists(by option: SortOption) {
-        currentSortOption = option
-        switch option {
-        case .nameAZ:
-            filteredWatchlists.sort { $0.title < $1.title }
-        case .nameZA:
-            filteredWatchlists.sort { $0.title > $1.title }
-        case .date:
-            // Basic string comparison for dateRange
-            filteredWatchlists.sort { $0.dateRange < $1.dateRange }
-        }
-        collectionView.reloadData()
+
+        present(alert, animated: true)
     }
 
-    // MARK: - UISearchBarDelegate
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchText.isEmpty {
-            filteredWatchlists = allSharedWatchlists
-        } else {
-            filteredWatchlists = allSharedWatchlists.filter { $0.title.lowercased().contains(searchText.lowercased()) }
-        }
-        sortWatchlists(by: currentSortOption)
-    }
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.resignFirstResponder()
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "ShowSpeciesSelection",
-           let destVC = segue.destination as? SpeciesSelectionViewController {
-            // destVC.viewModel = self.viewModel // Removed
-        }
+    private func confirmDelete(shared: SharedWatchlist) {
+        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(shared.title)'?", preferredStyle: .alert)
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            guard let self = self else { return }
+            WatchlistManager.shared.deleteSharedWatchlist(id: shared.id)
+            self.refreshData()
+        }))
+
+        present(alert, animated: true)
     }
 }
 
 // MARK: - UICollectionView DataSource & Delegate
-extension SharedWatchlistsViewController {
-    
+extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredWatchlists.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SharedWatchlistCollectionViewCell.identifier, for: indexPath) as? SharedWatchlistCollectionViewCell else {
             return UICollectionViewCell()
         }
-        
+
         let item = filteredWatchlists[indexPath.row]
-        
-        // Convert SF Symbol strings to UIImages
-        let userImages = item.userImages.compactMap { imageName -> UIImage? in
-            return UIImage(systemName: imageName)?.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
+
+        let userImages = item.userImages.compactMap {
+            UIImage(systemName: $0)?.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
         }
-        
+
         cell.configure(
             title: item.title,
             location: item.location,
@@ -232,31 +216,42 @@ extension SharedWatchlistsViewController {
             stats: item.stats,
             userImages: userImages
         )
-        
+
         return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // Full width card: Screen width - Left Padding - Right Padding
         let width = collectionView.bounds.width - 32
-        return CGSize(width: width, height: 140) // Height matching design/XIB
+        return CGSize(width: width, height: 140)
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = filteredWatchlists[indexPath.row]
-        
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-        if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
-            smartVC.watchlistType = .shared
-            smartVC.watchlistTitle = item.title
-            smartVC.observedBirds = item.observedBirds
-            smartVC.toObserveBirds = item.toObserveBirds
-            smartVC.currentWatchlistId = item.id
-            // smartVC.viewModel = self.viewModel // Removed
-            
-            self.navigationController?.pushViewController(smartVC, animated: true)
-        } else {
-            print("Could not instantiate SmartWatchlistViewController.")
+
+        guard let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController else {
+            print("Error: Could not instantiate SmartWatchlistViewController")
+            return
         }
+
+        smartVC.watchlistType = .shared
+        smartVC.watchlistTitle = item.title
+        smartVC.observedBirds = item.observedBirds
+        smartVC.toObserveBirds = item.toObserveBirds
+        smartVC.currentWatchlistId = item.id
+
+        navigationController?.pushViewController(smartVC, animated: true)
+    }
+}
+
+// MARK: - UISearchBarDelegate
+extension SharedWatchlistsViewController: UISearchBarDelegate {
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        refreshData()
+    }
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
     }
 }

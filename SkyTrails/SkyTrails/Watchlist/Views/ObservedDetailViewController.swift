@@ -9,7 +9,7 @@ import UIKit
 import MapKit
 import CoreLocation
 
-class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate {
+class ObservedDetailViewController: UIViewController {
     
     // MARK: - Data Dependency
     var bird: Bird? // nil if adding new
@@ -17,7 +17,13 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
     // weak var viewModel: WatchlistViewModel? // Removed
     var onSave: ((Bird) -> Void)?
     
-    private let locationManager = CLLocationManager()
+    private lazy var locationProvider: MKMapView = {
+        let mapView = MKMapView(frame: .zero)
+        mapView.isHidden = true
+        mapView.showsUserLocation = true
+        mapView.delegate = self
+        return mapView
+    }()
     private var selectedImageName: String?
     
     // Autocomplete State
@@ -76,14 +82,13 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
         }
         
         setupKeyboardHandling()
-        setupLocationManager()
+        setupLocationProvider()
         setupLocationOptionsInteractions()
     }
     
-    private func setupLocationManager() {
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.requestWhenInUseAuthorization()
+    private func setupLocationProvider() {
+        // Hidden map view to leverage MapKit user location APIs without direct CoreLocation manager usage.
+        view.addSubview(locationProvider)
     }
     
     private func setupSearch() {
@@ -112,7 +117,13 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
     }
     
     @objc private func didTapCurrentLocation() {
-        locationManager.requestLocation()
+        if let location = locationProvider.userLocation.location {
+            reverseGeocode(location)
+        } else {
+            // Trigger a refresh; MapKit will call delegate when the location becomes available.
+            locationProvider.showsUserLocation = true
+            locationProvider.setUserTrackingMode(.follow, animated: false)
+        }
     }
     
     @objc private func didTapMap() {
@@ -123,30 +134,20 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
         }
     }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        
+    private func reverseGeocode(_ location: CLLocation) {
         let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            guard let self = self else { return }
-            if let error = error { return }
-            
-            if let placemark = placemarks?.first {
-                let city = placemark.locality ?? ""
-                let country = placemark.country ?? ""
-                var address = ""
-                if !city.isEmpty { address += city + ", " }
-                address += country
-                
-                DispatchQueue.main.async {
-                    self.updateLocationSelection(address)
-                }
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
+            guard let self else { return }
+            guard let placemark = placemarks?.first else { return }
+            let city = placemark.locality ?? ""
+            let country = placemark.country ?? ""
+            var address = ""
+            if !city.isEmpty { address += city + ", " }
+            address += country
+            DispatchQueue.main.async {
+                self.updateLocationSelection(address)
             }
         }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed: \(error.localizedDescription)")
     }
     
     private func updateLocationSelection(_ name: String) {
@@ -321,7 +322,7 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
 }
 
 // MARK: - Delegates
-extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate {
+extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate, MKMapViewDelegate {
     
     // MARK: - Search Bar (Location)
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -456,6 +457,13 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
                 currentInputType = .none
                 nameTextField.resignFirstResponder()
             }
+        }
+    }
+
+    // MARK: - MapKit User Location
+    func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
+        if let location = userLocation.location {
+            reverseGeocode(location)
         }
     }
 }

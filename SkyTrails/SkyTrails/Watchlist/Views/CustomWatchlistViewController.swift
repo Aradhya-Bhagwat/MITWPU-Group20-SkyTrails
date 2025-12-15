@@ -1,50 +1,221 @@
-	//
-	//  CustomWatchlistViewController.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 27/11/25.
-	//
+//
+//  CustomWatchlistViewController.swift
+//  SkyTrails
+//
+//  Created by SDC-USER on 27/11/25.
+//
 
 import UIKit
 
-class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UISearchBarDelegate {
-	
-		// MARK: - Outlets
-	@IBOutlet weak var collectionView: UICollectionView!
-	@IBOutlet weak var searchBar: UISearchBar!
-	
-		// MARK: - Properties
-	// var viewModel: WatchlistViewModel? // Removed
-	
-		// Computed property to access watchlists from Manager
-	var allWatchlists: [Watchlist] {
-		return WatchlistManager.shared.watchlists
-	}
-	
-	var filteredWatchlists: [Watchlist] = []
-	var currentSortOption: SortOption = .nameAZ
-	
-	enum SortOption {
-		case nameAZ
-		case nameZA
-		case startDate
-		case endDate
-		case rarity
-	}
-	
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		setupUI()
-		filteredWatchlists = allWatchlists
-			// No need to loadData() internally if we inject viewModel
-		collectionView.reloadData()
+class CustomWatchlistViewController: UIViewController {
+
+    // MARK: - Outlets
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var searchBar: UISearchBar!
+
+    // MARK: - Properties
+    private var allWatchlists: [Watchlist] {
+        return WatchlistManager.shared.watchlists
+    }
+    
+    private var filteredWatchlists: [Watchlist] = []
+    private var currentSortOption: SortOption = .nameAZ
+    
+    enum SortOption {
+        case nameAZ, nameZA, startDate, endDate, rarity
+    }
+
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupGestures()
         
+        // Initial data load
+        filteredWatchlists = allWatchlists
+        updateData()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        print("CustomWatchlistViewController appeared. Watchlist count: \(allWatchlists.count)")
+        updateData()
+    }
+
+    // MARK: - Setup
+    private func setupUI() {
+        title = "Custom Watchlists"
+        view.backgroundColor = .systemGroupedBackground
+        
+        // Search Bar
+        searchBar.searchBarStyle = .minimal
+        searchBar.delegate = self
+        
+        // Collection View Layout
+        let flowLayout = UICollectionViewFlowLayout()
+        flowLayout.scrollDirection = .vertical
+        flowLayout.minimumInteritemSpacing = 12
+        flowLayout.minimumLineSpacing = 12
+        flowLayout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        
+        collectionView.collectionViewLayout = flowLayout
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.backgroundColor = .clear
+        
+        // Register Cell
+        let nib = UINib(nibName: "CustomWatchlistCollectionViewCell", bundle: nil)
+        collectionView.register(nib, forCellWithReuseIdentifier: CustomWatchlistCollectionViewCell.identifier)
+    }
+    
+    private func setupGestures() {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         collectionView.addGestureRecognizer(longPress)
-	}
+    }
+
+    // MARK: - Data Handling
+    private func updateData() {
+        // 1. Filter
+        if let text = searchBar.text, !text.isEmpty {
+            filteredWatchlists = allWatchlists.filter { $0.title.localizedCaseInsensitiveContains(text) }
+        } else {
+            filteredWatchlists = allWatchlists
+        }
+        
+        // 2. Sort & Reload (Now handled by sortWatchlists)
+        sortWatchlists(by: currentSortOption)
+    }
+
+    private func sortWatchlists(by option: SortOption) {
+        currentSortOption = option
+        
+        switch option {
+        case .nameAZ:
+            // Updated to use localizedStandardCompare for smarter sorting
+            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        case .nameZA:
+            // Updated to use localizedStandardCompare for smarter sorting
+            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedDescending }
+        case .startDate:
+            filteredWatchlists.sort { $0.startDate < $1.startDate }
+        case .endDate:
+            filteredWatchlists.sort { $0.endDate < $1.endDate }
+        case .rarity:
+            filteredWatchlists.sort {
+                let rareCount1 = $0.birds.filter { $0.rarity.contains(.rare) }.count
+                let rareCount2 = $1.birds.filter { $0.rarity.contains(.rare) }.count
+                return rareCount1 > rareCount2
+            }
+        }
+        
+        // Ensure UI is updated when this is called
+        collectionView.reloadData()
+    }
+
+    // MARK: - Actions & Navigation
+    @IBAction func addTapped(_ sender: Any) {
+        performSegue(withIdentifier: "ShowEditCustomWatchlist", sender: nil)
+    }
+    
+    @IBAction func filterButtonTapped(_ sender: UIButton) {
+        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
+        
+        let options: [(String, SortOption)] = [
+            ("Name (A-Z)", .nameAZ),
+            ("Name (Z-A)", .nameZA),
+            ("Start Date", .startDate),
+            ("End Date", .endDate),
+            ("Rarity", .rarity)
+        ]
+        
+        for (title, option) in options {
+            alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
+                // Directly calling sortWatchlists now handles the reload automatically
+                self?.sortWatchlists(by: option)
+            }))
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popoverController = alert.popoverPresentationController {
+            popoverController.sourceView = sender
+            popoverController.sourceRect = sender.bounds
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "ShowEditCustomWatchlist",
+           let destVC = segue.destination as? EditWatchlistDetailViewController {
+            destVC.watchlistType = .custom
+        }
+    }
+}
+
+// MARK: - CollectionView DataSource & Delegate
+extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return filteredWatchlists.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath) as? CustomWatchlistCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+        let item = filteredWatchlists[indexPath.row]
+        cell.configure(with: item)
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let item = filteredWatchlists[indexPath.row]
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        
+        if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
+            smartVC.watchlistType = .custom
+            smartVC.watchlistTitle = item.title
+            smartVC.observedBirds = item.observedBirds
+            smartVC.toObserveBirds = item.toObserveBirds
+            smartVC.currentWatchlistId = item.id
+            navigationController?.pushViewController(smartVC, animated: true)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let padding: CGFloat = 32
+        let availableWidth = collectionView.bounds.width - padding
+        let spacing: CGFloat = 12
+        
+        if availableWidth > 700 {
+            let totalSpacing = spacing * 2
+            let cellWidth = (availableWidth - totalSpacing) / 3
+            return CGSize(width: floor(cellWidth), height: 220)
+        } else {
+            let cellWidth = (availableWidth - spacing) / 2
+            return CGSize(width: floor(cellWidth), height: 220)
+        }
+    }
+}
+
+// MARK: - SearchBar Delegate
+extension CustomWatchlistViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        updateData()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+}
+
+// MARK: - Context Menu (Long Press)
+extension CustomWatchlistViewController {
     
     @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-        if gesture.state != .began { return }
+        guard gesture.state == .began else { return }
         
         let point = gesture.location(in: collectionView)
         if let indexPath = collectionView.indexPathForItem(at: point) {
@@ -56,22 +227,23 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
     func showOptions(for watchlist: Watchlist, at indexPath: IndexPath) {
         let alert = UIAlertController(title: watchlist.title, message: nil, preferredStyle: .actionSheet)
         
-        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { _ in
-            // guard let vm = self.viewModel else { return } // Removed
-            let vm = WatchlistManager.shared // Use shared instance
-            
-            let vc = UIStoryboard(name: "Watchlist", bundle: nil).instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as! EditWatchlistDetailViewController
-            vc.watchlistType = .custom
-            // vc.viewModel = vm // Removed injection
-            vc.watchlistToEdit = watchlist
-            self.navigationController?.pushViewController(vc, animated: true)
+        // Edit Action
+        alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { [weak self] _ in
+            guard let self = self else { return }
+            let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+            if let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController {
+                vc.watchlistType = .custom
+                vc.watchlistToEdit = watchlist
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
         }))
         
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            self.confirmDelete(watchlist: watchlist)
+        // Delete Action
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            self?.confirmDelete(watchlist: watchlist)
         }))
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         
         if let popover = alert.popoverPresentationController {
             if let cell = collectionView.cellForItem(at: indexPath) {
@@ -79,7 +251,7 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
                 popover.sourceRect = cell.bounds
             } else {
                 popover.sourceView = collectionView
-                popover.sourceRect = CGRect(x: 0, y: 0, width: 100, height: 100) // Fallback
+                popover.sourceRect = CGRect(x: 0, y: 0, width: 100, height: 100)
             }
         }
         
@@ -89,202 +261,30 @@ class CustomWatchlistViewController: UIViewController, UICollectionViewDelegate,
     func confirmDelete(watchlist: Watchlist) {
         let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(watchlist.title)'?", preferredStyle: .alert)
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             WatchlistManager.shared.deleteWatchlist(id: watchlist.id)
-            // Refresh
-            self.filteredWatchlists = self.allWatchlists
-            self.collectionView.reloadData()
+            self?.updateData()
         }))
         
         present(alert, animated: true)
     }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        print("CustomWatchlistViewController appeared. Watchlist count: \(allWatchlists.count)")
-        
-        // Refresh data to reflect any changes (e.g. new watchlist added)
-        if let text = searchBar.text, !text.isEmpty {
-            filteredWatchlists = allWatchlists.filter { $0.title.lowercased().contains(text.lowercased()) }
-        } else {
-            filteredWatchlists = allWatchlists
-        }
-        sortWatchlists(by: currentSortOption)
-    }
-	
-	private func setupUI() {
-			// Navigation Bar styling to match image
-		self.title = "Custom Watchlists"
-		self.view.backgroundColor = .systemGroupedBackground // Light gray background
-		
-			// Collection View Setup with Flow Layout
-		let flowLayout = UICollectionViewFlowLayout()
-		flowLayout.scrollDirection = .vertical
-		flowLayout.minimumInteritemSpacing = 12 // Space between columns
-		flowLayout.minimumLineSpacing = 12 // Space between rows
-		flowLayout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-		
-		collectionView.collectionViewLayout = flowLayout
-		collectionView.delegate = self
-		collectionView.dataSource = self
-		collectionView.backgroundColor = .clear // Let the grey background show through
-		
-		let nib = UINib(nibName: "CustomWatchlistCollectionViewCell", bundle: nil)
-		collectionView.register(nib, forCellWithReuseIdentifier: CustomWatchlistCollectionViewCell.identifier)
-		
-			// Remove the default search bar background for a cleaner look
-		searchBar.searchBarStyle = .minimal
-		searchBar.delegate = self
-	}
-	@IBAction func filterButtonTapped(_ sender: UIButton) {
-		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-		
-		let options: [(String, SortOption)] = [
-			("Name (A-Z)", .nameAZ),
-			("Name (Z-A)", .nameZA),
-			("Start Date", .startDate),
-			("End Date", .endDate),
-			("Rarity", .rarity)
-		]
-		
-		for (title, option) in options {
-			alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
-				self.sortWatchlists(by: option)
-			}))
-		}
-		
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-		
-		if let popoverController = alert.popoverPresentationController {
-			popoverController.sourceView = sender
-			popoverController.sourceRect = sender.bounds
-		}
-		
-		present(alert, animated: true, completion: nil)
-	}
-	
-	func sortWatchlists(by option: SortOption) {
-		currentSortOption = option
-		switch option {
-			case .nameAZ:
-				filteredWatchlists.sort { $0.title < $1.title }
-			case .nameZA:
-				filteredWatchlists.sort { $0.title > $1.title }
-			case .startDate:
-				filteredWatchlists.sort { $0.startDate < $1.startDate }
-			case .endDate:
-				filteredWatchlists.sort { $0.endDate < $1.endDate }
-			case .rarity:
-					// Sorting by number of rare birds (descending)
-				filteredWatchlists.sort {
-					let rareCount1 = $0.birds.filter { $0.rarity.contains(.rare) }.count
-					let rareCount2 = $1.birds.filter { $0.rarity.contains(.rare) }.count
-					return rareCount1 > rareCount2
-				}
-		}
-		collectionView.reloadData()
-	}
-	
-		// MARK: - UISearchBarDelegate
-	
-	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-		if searchText.isEmpty {
-			filteredWatchlists = allWatchlists
-		} else {
-			filteredWatchlists = allWatchlists.filter { $0.title.lowercased().contains(searchText.lowercased()) }
-		}
-		sortWatchlists(by: currentSortOption) // Re-apply sort
-	}
-	
-	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-		searchBar.resignFirstResponder()
-	}
-	
-    @IBAction func addTapped(_ sender: Any) {
-        performSegue(withIdentifier: "ShowEditCustomWatchlist", sender: nil)
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "ShowSpeciesSelection",
-           let destVC = segue.destination as? SpeciesSelectionViewController {
-            // destVC.viewModel = self.viewModel // Removed
-        } else if segue.identifier == "ShowEditCustomWatchlist",
-                  let destVC = segue.destination as? EditWatchlistDetailViewController {
-            destVC.watchlistType = .custom
-            // destVC.viewModel = self.viewModel // Removed
-        }
-    }
 }
 
-	// MARK: - UICollectionView DataSource & Delegate
-extension CustomWatchlistViewController {
-	
-	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		return filteredWatchlists.count
-	}
-	
-	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath) as! CustomWatchlistCollectionViewCell
-		let item = filteredWatchlists[indexPath.row]
-		cell.configure(with: item)
-		return cell
-	}
-	
-		// MARK: - Flow Layout (The 2-Column Grid Logic)
-	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // Padding: 16pt left + 16pt right = 32pt
-        let padding: CGFloat = 32
-        let availableWidth = collectionView.bounds.width - padding
-        
-        // Check for iPad / Wide Screen (e.g. > 700pt)
-        if availableWidth > 700 {
-            // Target: 3 items per row
-            // Spacing: 2 gaps of 12pt = 24pt
-            let spacing: CGFloat = 12 * 2
-            let cellWidth = (availableWidth - spacing) / 3
-            return CGSize(width: floor(cellWidth), height: 220)
-        } else {
-            // Target: 2 items per row (iPhone)
-            // Spacing: 1 gap of 12pt = 12pt
-            let spacing: CGFloat = 12
-            let cellWidth = (availableWidth - spacing) / 2
-            return CGSize(width: floor(cellWidth), height: 220)
-        }
-	}
-
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = filteredWatchlists[indexPath.row]
-        
-        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
-        if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
-            
-            smartVC.watchlistType = .custom
-            smartVC.watchlistTitle = item.title
-            smartVC.observedBirds = item.observedBirds
-            smartVC.toObserveBirds = item.toObserveBirds
-            smartVC.currentWatchlistId = item.id
-            // smartVC.viewModel = self.viewModel // Removed
-            
-            self.navigationController?.pushViewController(smartVC, animated: true)
-        }
-    }
-}
-
-
-
-
+// MARK: - UIView Extensions
 extension UIView {
-	@IBInspectable var shadow: Bool {
-		get { layer.shadowOpacity > 0 }
-		set {
-			if newValue {
-				self.layer.shadowColor = UIColor.black.cgColor
-				self.layer.shadowOpacity = 0.1  // Subtle shadow like the screenshot
-				self.layer.shadowOffset = CGSize(width: 0, height: 2)
-				self.layer.shadowRadius = 4
-				self.layer.masksToBounds = false
-			}
-		}
-	}
+    @IBInspectable var shadow: Bool {
+        get { layer.shadowOpacity > 0 }
+        set {
+            if newValue {
+                self.layer.shadowColor = UIColor.black.cgColor
+                self.layer.shadowOpacity = 0.1
+                self.layer.shadowOffset = CGSize(width: 0, height: 2)
+                self.layer.shadowRadius = 4
+                self.layer.masksToBounds = false
+            } else {
+                self.layer.shadowOpacity = 0
+            }
+        }
+    }
 }

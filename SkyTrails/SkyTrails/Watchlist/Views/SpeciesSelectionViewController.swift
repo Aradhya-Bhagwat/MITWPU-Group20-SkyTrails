@@ -9,75 +9,90 @@ import UIKit
 
 class SpeciesSelectionViewController: UIViewController {
 
+    // MARK: - Constants
+    private struct Constants {
+        static let birdCellId = "BirdSmartCell"
+        static let storyboardName = "Watchlist"
+        static let unobservedVCId = "UnobservedDetailViewController"
+        static let observedVCId = "ObservedDetailViewController"
+        static let checkmarkIcon = "checkmark"
+        static let plusIcon = "plus"
+    }
+
     // MARK: - Outlets
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
     
     // MARK: - Properties
     var mode: WatchlistMode = .observed
-    // var viewModel: WatchlistViewModel? // Removed
     var targetWatchlistId: UUID?
     
+    // Data Source
     private var allBirds: [Bird] = []
     private var filteredBirds: [Bird] = []
     private var selectedBirds: Set<UUID> = []
     
-    // Local Loop State
+    // Wizard/Loop State
     private var birdQueue: [Bird] = []
     private var processedBirds: [Bird] = []
     
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         loadData()
     }
     
+    // MARK: - Setup
     private func setupUI() {
         title = "Select Species"
         
-        // TableView
         tableView.delegate = self
         tableView.dataSource = self
         tableView.allowsMultipleSelection = true
         
-        // Search
         searchBar.delegate = self
         
-        // Navigation Button
         updateNextButton()
     }
     
     private func loadData() {
-        // Fetch all birds via Manager (simulated search)
+        // Flatten all birds from all watchlists
         let manager = WatchlistManager.shared
-        
         let all = manager.watchlists.flatMap { $0.birds }
-        // De-duplicate
-        var unique = [UUID: Bird]()
-        for b in all { unique[b.id] = b }
-        self.allBirds = Array(unique.values).sorted { $0.name < $1.name }
         
-        filteredBirds = allBirds
+        // Deduplicate birds by ID using a Dictionary grouping
+        let uniqueBirds = Dictionary(grouping: all, by: { $0.id })
+            .compactMap { $0.value.first }
+            .sorted { $0.name < $1.name }
+        
+        self.allBirds = uniqueBirds
+        self.filteredBirds = uniqueBirds
+        
         tableView.reloadData()
     }
     
     private func updateNextButton() {
-        let iconName = selectedBirds.isEmpty ? "plus" : "checkmark"
+        let iconName = selectedBirds.isEmpty ? Constants.plusIcon : Constants.checkmarkIcon
         let item = UIBarButtonItem(image: UIImage(systemName: iconName), style: .plain, target: self, action: #selector(didTapNext))
         navigationItem.rightBarButtonItem = item
+        navigationItem.rightBarButtonItem?.isEnabled = !selectedBirds.isEmpty
     }
+}
+
+// MARK: - Navigation Loop Logic
+extension SpeciesSelectionViewController {
     
     @objc private func didTapNext() {
         guard !selectedBirds.isEmpty else { return }
         
-        // Collect selected bird objects
-        let birds = allBirds.filter { selectedBirds.contains($0.id) }
+        // Filter the selected bird objects
+        let birdsToProcess = allBirds.filter { selectedBirds.contains($0.id) }
         
-        // Start Loop
-        startDetailLoop(birds: birds)
+        // Start the wizard loop
+        startDetailLoop(birds: birdsToProcess)
     }
     
-    // MARK: - Detail Loop Logic
     private func startDetailLoop(birds: [Bird]) {
         self.birdQueue = birds
         self.processedBirds = []
@@ -85,106 +100,126 @@ class SpeciesSelectionViewController: UIViewController {
     }
     
     private func showNextInLoop() {
-        // If queue is empty, we are done
-        if birdQueue.isEmpty {
-            if !processedBirds.isEmpty {
-                print("Loop finished. Updating data with \(processedBirds.count) birds.")
-                if let watchlistId = targetWatchlistId {
-                    let isObserved = (mode == .observed)
-                    WatchlistManager.shared.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
-                }
-            }
-            
-            // Navigate Back
-            navigationController?.popViewController(animated: true)
+        // 1. Check if Queue is empty (Base Case)
+        guard !birdQueue.isEmpty else {
+            finalizeLoop()
             return
         }
         
+        // 2. Process next bird
         let bird = birdQueue.removeFirst()
         showBirdDetail(bird: bird)
     }
     
+    private func finalizeLoop() {
+        if !processedBirds.isEmpty, let watchlistId = targetWatchlistId {
+            print("Loop finished. Updating data with \(processedBirds.count) birds.")
+            let isObserved = (mode == .observed)
+            WatchlistManager.shared.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
+        }
+        navigationController?.popViewController(animated: true)
+    }
+    
     private func showBirdDetail(bird: Bird) {
-        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        let storyboard = UIStoryboard(name: Constants.storyboardName, bundle: nil)
         var nextVC: UIViewController?
-
+        
+        // Configure VC based on mode
         if mode == .unobserved {
-            let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as! UnobservedDetailViewController
+            let vc = storyboard.instantiateViewController(withIdentifier: Constants.unobservedVCId) as! UnobservedDetailViewController
             vc.bird = bird
-            // We do NOT pass watchlistId because we want to intercept save
             vc.onSave = { [weak self] savedBird in
-                self?.processedBirds.append(savedBird)
-                self?.showNextInLoop()
+                self?.handleSave(bird: savedBird)
             }
             nextVC = vc
-        } else if mode == .observed {
-            let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as! ObservedDetailViewController
+        } else {
+            let vc = storyboard.instantiateViewController(withIdentifier: Constants.observedVCId) as! ObservedDetailViewController
             vc.bird = bird
-            // No watchlistId passed, so it triggers onSave
             vc.onSave = { [weak self] savedBird in
-                self?.processedBirds.append(savedBird)
-                self?.showNextInLoop()
+                self?.handleSave(bird: savedBird)
             }
             nextVC = vc
         }
-
+        
         guard let vc = nextVC else { return }
-
-        // MARK: - Memory Fix
-        // Instead of pushing endlessly, we replace the current detail view if one exists.
-        var vcs = navigationController?.viewControllers ?? []
+        updateNavigationStack(pushing: vc)
+    }
+    
+    private func handleSave(bird: Bird) {
+        processedBirds.append(bird)
+        showNextInLoop()
+    }
+    
+    /// Manipulates the stack to replace the current detail view with the next one,
+    /// preventing a deep navigation stack (Wizard Pattern).
+    private func updateNavigationStack(pushing newVC: UIViewController) {
+        guard let navigationController = navigationController else { return }
+        
+        var vcs = navigationController.viewControllers
+        
+        // If the top VC is already a detail view, remove it so we replace it instead of stacking
         if let last = vcs.last, (last is ObservedDetailViewController || last is UnobservedDetailViewController) {
             vcs.removeLast()
         }
-        vcs.append(vc)
-        navigationController?.setViewControllers(vcs, animated: true)
+        
+        vcs.append(newVC)
+        navigationController.setViewControllers(vcs, animated: true)
     }
 }
 
+// MARK: - UITableView DataSource & Delegate
 extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSource {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return filteredBirds.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "BirdSmartCell", for: indexPath) as? BirdSmartCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: Constants.birdCellId, for: indexPath) as? BirdSmartCell else {
             return UITableViewCell()
         }
         
         let bird = filteredBirds[indexPath.row]
+        
+        // Configure Cell Content
         cell.shouldShowAvatars = false
         cell.configure(with: bird)
-        
-        // Custom overrides for Species Selection
         cell.dateLabel.isHidden = true
         
-        let rarityString = bird.rarity.map { "\($0)" }.joined(separator: ", ").capitalized
+        // Rarity Logic
+        let rarityString = bird.rarity.compactMap { "\($0)" }.joined(separator: ", ").capitalized
         cell.locationLabel.text = rarityString.isEmpty ? "Unknown" : rarityString
         cell.locationLabel.textColor = .systemOrange
         
+        // Selection State
         cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
         let bird = filteredBirds[indexPath.row]
         if selectedBirds.contains(bird.id) {
             selectedBirds.remove(bird.id)
         } else {
             selectedBirds.insert(bird.id)
         }
+        
+        // Efficiently reload only the tapped row to update the checkmark
         tableView.reloadRows(at: [indexPath], with: .automatic)
         updateNextButton()
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 90
-		
     }
 }
 
+// MARK: - UISearchBar Delegate
 extension SpeciesSelectionViewController: UISearchBarDelegate {
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText.isEmpty {
             filteredBirds = allBirds
@@ -192,5 +227,9 @@ extension SpeciesSelectionViewController: UISearchBarDelegate {
             filteredBirds = allBirds.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
         tableView.reloadData()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
     }
 }
