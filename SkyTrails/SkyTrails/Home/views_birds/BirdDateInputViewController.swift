@@ -26,7 +26,7 @@ class BirdDateInputViewController: UIViewController {
     
     // MARK: - UI Elements
     private let imageView = UIImageView()
-    private let tableView = UITableView(frame: .zero, style: .grouped)
+    private let tableView = UITableView(frame: .zero, style: .plain)
     
     override func viewDidLoad() {
         super.viewDidLoad()

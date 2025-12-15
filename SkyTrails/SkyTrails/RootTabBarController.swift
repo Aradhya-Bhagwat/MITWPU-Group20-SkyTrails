@@ -7,6 +7,7 @@
 import UIKit
 
 class RootTabBarController: UITabBarController {
+
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -21,7 +22,7 @@ class RootTabBarController: UITabBarController {
 						systemImage: "list.number"),
 			
 			loadFeature(storyboard: "Identification",
-						title: "ID",
+						title: "Identification",
 						systemImage: "sparkle.magnifyingglass")
 		]
 	}
