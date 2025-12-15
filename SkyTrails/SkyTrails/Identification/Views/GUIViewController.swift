@@ -90,40 +90,66 @@ class GUIViewController: UIViewController {
 			layout.scrollDirection = .horizontal
 		}
 	}
-	
-	private func setupCanvas() {
-			// Clear any existing subviews if reloading
-		canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
-		partLayers.removeAll()
-		
-			// 1. Add Base Shape Layer
-		baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
-		baseShapeLayer.contentMode = .scaleAspectFit
-		baseShapeLayer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-		
-		let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-		baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base")
-		canvasContainerView.addSubview(baseShapeLayer)
-		
-			// 2. Sort categories based on Z-Index to ensure correct layering
-			// If a category isn't in layerOrder, it defaults to the end (top)
-		let sortedCategories = categories.sorted {
-			let index1 = layerOrder.firstIndex(of: $0.name) ?? 999
-			let index2 = layerOrder.firstIndex(of: $1.name) ?? 999
-			return index1 < index2
-		}
-		
-			// 3. Add Layers for each category
-		for cat in sortedCategories {
-			let imgView = UIImageView(frame: canvasContainerView.bounds)
-			imgView.contentMode = .scaleAspectFit
-			imgView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-			
-			canvasContainerView.addSubview(imgView)
-			partLayers[cat.name] = imgView
-		}
-	}
-	
+    private func setupCanvas() {
+            // Clear any existing subviews if reloading
+            canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
+            partLayers.removeAll()
+            
+            // 1. Determine Base Suffix based on selection
+            // Logic: If a part is selected, we load a base that is MISSING that part
+            // so the user can overlay their choice.
+            
+            let hasTail = categories.contains { $0.name == "Tail" }
+            let hasLeg  = categories.contains { $0.name == "Leg" }
+            
+            let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+            var baseSuffix = "base" // Default: Both are NOT selected
+            
+            if hasTail && hasLeg {
+                // Both selected -> "base_no_leg_tail"
+                baseSuffix = "base_no_leg_tail"
+            } else if hasTail {
+                // Tail only -> "base_no_tail"
+                baseSuffix = "base_no_tail"
+            } else if hasLeg {
+                // Leg only -> "base_no_leg"
+                baseSuffix = "base_no_leg"
+            }
+            
+            let baseImageName = "shape_\(shapeID)_\(baseSuffix)"
+            print("🎨 Loading Base Image: \(baseImageName)")
+            
+            // 2. Add Base Shape Layer
+            baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
+            baseShapeLayer.contentMode = .scaleAspectFit
+            baseShapeLayer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            
+            if let img = UIImage(named: baseImageName) {
+                baseShapeLayer.image = img
+            } else {
+                // Safety: Fallback to standard base if the specific "no_x" image is missing
+                print("⚠️ Image \(baseImageName) not found. Using default.")
+                baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base")
+            }
+            
+            canvasContainerView.addSubview(baseShapeLayer)
+            
+            // 3. Add Feature Layers (Standard Z-Index Logic)
+            let sortedCategories = categories.sorted {
+                let index1 = layerOrder.firstIndex(of: $0.name) ?? 999
+                let index2 = layerOrder.firstIndex(of: $1.name) ?? 999
+                return index1 < index2
+            }
+            
+            for cat in sortedCategories {
+                let imgView = UIImageView(frame: canvasContainerView.bounds)
+                imgView.contentMode = .scaleAspectFit
+                imgView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                
+                canvasContainerView.addSubview(imgView)
+                partLayers[cat.name] = imgView
+            }
+        }
 	private func setupRightTickButton() {
 		let button = UIButton(type: .system)
 		button.backgroundColor = .white
@@ -133,7 +159,6 @@ class GUIViewController: UIViewController {
 		button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
 		button.tintColor = .black
 		
-			// Fix frame for UIBarButtonItem custom view
 		button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
 		button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
 		navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)

@@ -7,25 +7,23 @@ import UIKit
 import MapKit
 import CoreLocation
 
-// ------------------------
-// MARK: - Delegates
-// ------------------------
+
 
 protocol MapSelectionDelegate: AnyObject {
     func didSelectMapLocation(_ name: String)
 }
-
+@MainActor
 class MapViewController: UIViewController {
 
-    // MARK: - Outlets
+    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var searchPillView: UIView!
     @IBOutlet weak var searchBar: UISearchBar!
     
-    // STEP 1: Connect this in Storyboard!
+    
     @IBOutlet weak var resultsTableView: UITableView!
 
-    // MARK: - Properties
+    
     private let locationManager = CLLocationManager()
     private var completer = MKLocalSearchCompleter()
     private var searchResults: [MKLocalSearchCompletion] = []
@@ -33,7 +31,7 @@ class MapViewController: UIViewController {
     weak var delegate: MapSelectionDelegate?
     var selectedLocationName: String?
 
-    // MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -41,7 +39,7 @@ class MapViewController: UIViewController {
         setupSearch()
     }
 
-    // MARK: - Setup
+    
     private func setupUI() {
         setupRightTickButton()
         
@@ -128,15 +126,41 @@ class MapViewController: UIViewController {
         }
     }
 
+   
     func reverseGeocode(_ coord: CLLocationCoordinate2D) {
-        let loc = CLLocation(latitude: coord.latitude, longitude: coord.longitude)
-        CLGeocoder().reverseGeocodeLocation(loc) { [weak self] placemarks, _ in
-            guard let self = self, let place = placemarks?.first else { return }
-            let name = place.name ?? "Location"
-            self.selectedLocationName = name
-            self.searchBar.text = name
+        let location = CLLocation(latitude: coord.latitude,
+                                  longitude: coord.longitude)
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                guard let request = MKReverseGeocodingRequest(location: location) else {
+                    await MainActor.run {
+                        self.selectedLocationName = "Location"
+                        self.searchBar.text = "Location"
+                    }
+                    return
+                }
+                let response = try await request.mapItems
+                let item = response.first
+
+                let name = item?.name ?? "Location"
+
+                self.selectedLocationName = name
+                self.searchBar.text = name
+
+
+
+            } catch {
+                await MainActor.run {
+                    self.selectedLocationName = "Location"
+                    self.searchBar.text = "Location"
+                }
+            }
         }
     }
+
     
     func toggleResults(show: Bool) {
         if show {
@@ -151,7 +175,7 @@ class MapViewController: UIViewController {
         }
     }
 
-    // MARK: - Finish Action
+
     @objc private func nextTapped() {
         guard let name = selectedLocationName else { return }
         delegate?.didSelectMapLocation(name)
@@ -159,23 +183,33 @@ class MapViewController: UIViewController {
     }
 }
 
-// ------------------------
-// MARK: - Map & Location Delegates
-// ------------------------
+
 extension MapViewController: MKMapViewDelegate, CLLocationManagerDelegate {
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        if annotation is MKUserLocation { return nil }
-        let id = "redPin"
-        var pin = mapView.dequeueReusableAnnotationView(withIdentifier: id) as? MKPinAnnotationView
-        if pin == nil {
-            pin = MKPinAnnotationView(annotation: annotation, reuseIdentifier: id)
-            pin?.canShowCallout = true
-            pin?.pinTintColor = .red
-        } else {
-            pin?.annotation = annotation
-        }
-        return pin
-    }
+//    func mapView(_ mapView: MKMapView,
+//                 viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+//
+//        if annotation is MKUserLocation { return nil }
+//
+//        let id = "marker"
+//        var marker = mapView.dequeueReusableAnnotationView(
+//            withIdentifier: id
+//        ) as? MKMarkerAnnotationView
+//
+//        if marker == nil {
+//            marker = MKMarkerAnnotationView(annotation: annotation,
+//                                            reuseIdentifier: id)
+//            marker?.canShowCallout = true
+//            marker?.markerTintColor = .red
+//            marker?.glyphImage = nil
+//            marker?.glyphText = nil
+//        } else {
+//            marker?.annotation = annotation
+//        }
+//
+//        return marker
+//    }
+
+
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         if manager.authorizationStatus == .authorizedWhenInUse {
@@ -184,9 +218,7 @@ extension MapViewController: MKMapViewDelegate, CLLocationManagerDelegate {
     }
 }
 
-// ------------------------
-// MARK: - Search Logic
-// ------------------------
+
 extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -216,9 +248,7 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
     }
 }
 
-// ------------------------
-// MARK: - TableView Logic
-// ------------------------
+
 extension MapViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -237,23 +267,28 @@ extension MapViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
+
         let completion = searchResults[indexPath.row]
         let searchRequest = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: searchRequest)
-        
+
         search.start { [weak self] response, _ in
-            guard let self = self, let mapItem = response?.mapItems.first else { return }
-            
-            let coord = mapItem.placemark.coordinate
+            guard let self = self,
+                  let mapItem = response?.mapItems.first
+            else { return }
+
+            let coord = mapItem.location.coordinate
             let name = mapItem.name ?? completion.title
+
             
-            // 1. Update Map
             self.updateLocationOnMap(coord: coord, name: name)
-            
+
             // 2. Hide Results
             self.toggleResults(show: false)
             self.searchBar.resignFirstResponder()
         }
     }
+
+
 }
+

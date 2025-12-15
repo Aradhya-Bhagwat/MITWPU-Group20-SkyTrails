@@ -90,21 +90,19 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		tableContainerView.layer.masksToBounds = false
 	}
 	
-	private func setupRightTickButton() {
-		let button = UIButton(type: .system)
-		button.backgroundColor = .white
-		button.layer.cornerRadius = 20
-		button.layer.masksToBounds = true
-		
-		let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-		let image = UIImage(systemName: "checkmark", withConfiguration: config)
-		button.setImage(image, for: .normal)
-		button.tintColor = .black
-		button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-		
-		button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-		navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-	}
+    private func setupRightTickButton() {
+        let button = UIButton(type: .system)
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 20
+        button.layer.masksToBounds = true
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
+        button.tintColor = .black
+        
+        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
+    }
 	
 	private func setupLeftResetButton() {
 		let button = UIButton(type: .system)
@@ -116,7 +114,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		let image = UIImage(systemName: "arrow.trianglehead.counterclockwise", withConfiguration: config)
 		button.setImage(image, for: .normal)
 		button.tintColor = .black
-		button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
 		
 		button.addTarget(self, action: #selector(restartTapped), for: .touchUpInside)
 		navigationItem.leftBarButtonItem = UIBarButtonItem(customView: button)
