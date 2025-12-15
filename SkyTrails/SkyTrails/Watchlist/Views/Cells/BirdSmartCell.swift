@@ -54,7 +54,7 @@ class BirdSmartCell: UITableViewCell {
         birdImageView.backgroundColor = .systemGray5
         
         // Text Styling
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.font = .systemFont(ofSize: 18, weight: .medium)
         titleLabel.textColor = .label
         
         dateLabel.font = .systemFont(ofSize: 13, weight: .medium)
