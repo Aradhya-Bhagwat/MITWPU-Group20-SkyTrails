@@ -35,7 +35,7 @@ class PredictInputViewController: UIViewController {
             collectionView.translatesAutoresizingMaskIntoConstraints = false
             
             // 2. Calculate needed height: Card Height (320) + Shadow/Padding (40)
-            let neededHeight: CGFloat = 360
+            let neededHeight: CGFloat = 324
             
             // 3. Add a hard height constraint
             let heightConstraint = collectionView.heightAnchor.constraint(equalToConstant: neededHeight)
@@ -299,21 +299,25 @@ class PredictInputViewController: UIViewController {
     }
 
     // MARK: - Search Delegate
-    extension PredictInputViewController: SearchLocationDelegate {
-        func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
-            print("📍 Received Location: \(name) for card \(index)")
-            
-            inputData[index].locationName = name
-            inputData[index].latitude = lat
-            inputData[index].longitude = lon
-            
-            // Reload cell to show new name
-            collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
-            
-            validateInputs() // Enable "Done" button if all valid
+// In PredictInputViewController.swift
+
+extension PredictInputViewController: SearchLocationDelegate {
+    func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
+        // ... (data update logic)
+        
+        inputData[index].locationName = name
+        inputData[index].latitude = lat
+        inputData[index].longitude = lon
+        
+        collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+        validateInputs()
+        
+        // ⭐️ FIX: Call the live map update here ⭐️
+        if let mapVC = self.navigationController?.parent as? PredictMapViewController {
+            mapVC.updateMapWithCurrentInputs(inputs: inputData)
         }
     }
-
+}
 // MARK: - Custom Snapping Layout
 class CardSnappingLayout: UICollectionViewFlowLayout {
     
