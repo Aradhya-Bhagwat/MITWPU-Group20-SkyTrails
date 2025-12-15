@@ -12,7 +12,7 @@ import CoreLocation
 protocol MapSelectionDelegate: AnyObject {
     func didSelectMapLocation(_ name: String)
 }
-@MainActor
+
 class MapViewController: UIViewController {
 
     
@@ -153,10 +153,10 @@ class MapViewController: UIViewController {
 
 
             } catch {
-                await MainActor.run {
+               
                     self.selectedLocationName = "Location"
                     self.searchBar.text = "Location"
-                }
+                
             }
         }
     }
