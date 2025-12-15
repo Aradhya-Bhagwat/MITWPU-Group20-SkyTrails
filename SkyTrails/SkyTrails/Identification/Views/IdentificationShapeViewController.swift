@@ -9,7 +9,7 @@ import UIKit
 
 class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
     
-    
+
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var shapeTableView: UITableView!
     
@@ -22,7 +22,6 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     weak var delegate: IdentificationFlowStepDelegate?
 
     func styleTableContainer() {
-        tableContainerView.backgroundColor = .white
         tableContainerView.layer.cornerRadius = 12
         tableContainerView.layer.shadowColor = UIColor.black.cgColor
         tableContainerView.layer.shadowOpacity = 0.1
@@ -91,6 +90,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         shapeTableView.delegate = self
         shapeTableView.dataSource = self
         setupRightTickButton()
+        
     }
     
     private func setupRightTickButton() {

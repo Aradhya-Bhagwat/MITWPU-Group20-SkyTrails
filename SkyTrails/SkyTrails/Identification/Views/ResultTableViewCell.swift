@@ -43,7 +43,7 @@ class ResultTableViewCell: UITableViewCell {
           nameLabel.text = name
           percentageLabel.text = percentage + "%"
           percentageLabel.numberOfLines = 1
-          percentageLabel.font = UIFont.systemFont(ofSize: 14) // Reset font if needed
+         
       }
     func configureHistory(image: UIImage?, name: String, date: String) {
         resultImageView.image = image
