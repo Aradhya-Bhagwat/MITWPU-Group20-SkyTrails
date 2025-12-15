@@ -62,11 +62,16 @@ class SpeciesSelectionViewController: UIViewController {
         let all = manager.watchlists.flatMap { $0.birds }
         
         // Deduplicate birds by ID using a Dictionary grouping
-        let uniqueBirds = Dictionary(grouping: all, by: { $0.id })
-            .compactMap { $0.value.first }
-            .sorted { $0.name < $1.name }
-        
-        self.allBirds = uniqueBirds
+        var uniqueBirds : [Bird] = []
+        var seenIDs: Set<UUID> = []
+        for bird in all {
+            if !seenIDs.contains(bird.id) {
+                uniqueBirds.append(bird)
+                seenIDs.insert(bird.id)
+            }
+        }
+
+        self.allBirds = uniqueBirds.sorted { $0.name < $1.name }
         self.filteredBirds = uniqueBirds
         
         tableView.reloadData()
