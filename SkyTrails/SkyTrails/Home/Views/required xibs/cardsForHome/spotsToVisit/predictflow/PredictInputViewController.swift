@@ -46,8 +46,8 @@ class PredictInputViewController: UIViewController {
             // If so, you should lower the priority of that storyboard constraint or remove it.
         }
     private func setupCollectionView() {
-            // ⭐️ USE CUSTOM LAYOUT
-            let layout = CardSnappingLayout() // <--- Change this line
+            // ⭐️ USE STANDARD LAYOUT
+            let layout = UICollectionViewFlowLayout()
             
             layout.scrollDirection = .horizontal
             layout.minimumLineSpacing = 16
@@ -58,11 +58,11 @@ class PredictInputViewController: UIViewController {
             
             collectionView.collectionViewLayout = layout
             
-            // ⭐️ CRITICAL SETTINGS FOR SNAPPING
-        collectionView.isPagingEnabled = false
-                collectionView.decelerationRate = .fast
-                collectionView.showsHorizontalScrollIndicator = false // Hide the bar for cleaner look
-                collectionView.backgroundColor = .clear
+            // Standard scroll settings
+            collectionView.isPagingEnabled = false // Adjust based on preference, false for free scroll + snapping
+            collectionView.decelerationRate = .fast // Keeps the snappy feel if we implement targetContentOffset in subclass, but for standard flow layout, normal is fine.
+            collectionView.showsHorizontalScrollIndicator = false
+            collectionView.backgroundColor = .clear
             
             // Register Cell
             collectionView.register(

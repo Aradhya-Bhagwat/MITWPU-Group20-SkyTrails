@@ -57,8 +57,8 @@ class PredictOutputViewController: UIViewController {
     }
     
     private func setupCollectionView() {
-        // Custom Layout
-        let layout = CardSnappingLayout()
+        // Standard Flow Layout
+        let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
@@ -73,8 +73,8 @@ class PredictOutputViewController: UIViewController {
         collectionView.decelerationRate = .fast
         collectionView.showsHorizontalScrollIndicator = false
         
-        // Register Cell
-        collectionView.register(PredictionOutputCardCell.self, forCellWithReuseIdentifier: "PredictionOutputCardCell")
+        // Register Cell from XIB
+        collectionView.register(UINib(nibName: PredictionOutputCardCell.identifier, bundle: nil), forCellWithReuseIdentifier: PredictionOutputCardCell.identifier)
         
         collectionView.dataSource = self
         collectionView.delegate = self
@@ -148,7 +148,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PredictionOutputCardCell", for: indexPath) as? PredictionOutputCardCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionOutputCardCell.identifier, for: indexPath) as? PredictionOutputCardCell else {
             return UICollectionViewCell()
         }
         
@@ -157,91 +157,19 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         
         cell.configure(location: locationName, data: cardPredictions)
         
+        // ⭐️ Handle Bird Selection
+        cell.onSelectPrediction = { [weak self] selectedPrediction in
+            // Bubble up to Parent Map VC
+            if let mapVC = self?.navigationController?.parent as? PredictMapViewController {
+                mapVC.filterMapForBird(selectedPrediction)
+            }
+        }
+        
         return cell
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updatePageControl()
-    }
-}
-
-// MARK: - Custom Card Cell with TableView
-class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UITableViewDelegate {
-    
-    private let titleLabel = UILabel()
-    private let tableView = UITableView()
-    private var predictions: [FinalPredictionResult] = []
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupUI() {
-        // Card Styling
-        contentView.backgroundColor = .secondarySystemBackground
-        contentView.layer.cornerRadius = 16
-        contentView.clipsToBounds = true
-        
-        // Title Label
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-        titleLabel.textAlignment = .center
-        contentView.addSubview(titleLabel)
-        
-        // TableView
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.backgroundColor = .clear
-        tableView.separatorStyle = .none
-        tableView.register(BirdResultCell.self, forCellReuseIdentifier: "BirdResultCell")
-        tableView.dataSource = self
-        tableView.delegate = self
-        contentView.addSubview(tableView)
-        
-        NSLayoutConstraint.activate([
-            // Title Constraints
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            
-            // TableView Constraints
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
-        ])
-    }
-    
-    func configure(location: String, data: [FinalPredictionResult]) {
-        titleLabel.text = location
-        self.predictions = data
-        tableView.reloadData()
-    }
-    
-    // MARK: - TableView DataSource
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return predictions.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "BirdResultCell", for: indexPath) as? BirdResultCell else {
-            return UITableViewCell()
-        }
-        
-        let prediction = predictions[indexPath.row]
-        cell.configure(with: prediction.birdName, imageName: prediction.imageName)
-        // Adjust cell background for card context
-        cell.backgroundColor = .clear
-        
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 80
     }
 }
 

@@ -209,4 +209,54 @@ class AllSpotsViewController: UIViewController {
     }
 
     // MARK: - Delegate
-    extension AllSpotsViewController: UICollectionViewDelegate { }
+    extension AllSpotsViewController: UICollectionViewDelegate {
+        func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+            let item: PopularSpot
+            if indexPath.section == 0 {
+                item = watchlistData[indexPath.row]
+            } else {
+                item = recommendationsData[indexPath.row]
+            }
+            print("Spot card clicked: \(item.title) at section \(indexPath.section), row \(indexPath.row)")
+            
+            // 1. Prepare Data for Prediction Map
+            guard let lat = item.latitude, let lon = item.longitude else {
+                print("❌ Missing coordinates for spot: \(item.title)")
+                return
+            }
+            
+            // Create Input Data (The Spot itself)
+            var inputData = PredictionInputData()
+            inputData.locationName = item.title
+            inputData.latitude = lat
+            inputData.longitude = lon
+            inputData.areaValue = Int(item.radius ?? 5.0)
+            inputData.startDate = Date()
+            inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+            
+            // Create Prediction Results (The Birds at that spot)
+            let predictions: [FinalPredictionResult] = (item.birds ?? []).map { bird in
+                return FinalPredictionResult(
+                    birdName: bird.name,
+                    imageName: bird.imageName,
+                    matchedInputIndex: 0, // All match this single input
+                    matchedLocation: (lat: bird.lat, lon: bird.lon)
+                )
+            }
+            
+            // 2. Instantiate and Navigate
+            let storyboard = UIStoryboard(name: "Home", bundle: nil)
+            if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+                
+                // Push to the map view
+                self.navigationController?.pushViewController(predictMapVC, animated: true)
+                
+                // 3. Immediately transition to the Output state (bypass input wizard)
+                // We need the view to load first so the map and modal container are set up
+                predictMapVC.loadViewIfNeeded()
+                
+                // Execute the navigation to the bottom sheet output
+                predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+            }
+        }
+    }

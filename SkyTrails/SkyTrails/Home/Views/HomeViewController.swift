@@ -45,7 +45,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         }
     }
 }
-
 // HomeViewController.swift
 extension HomeViewController {
     func setupCollectionView() {
@@ -529,6 +528,49 @@ extension HomeViewController {
         }
     }
 
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        // Handle "Spots to Visit" Selection
+        if indexPath.section == 2 {
+            let item = homeData.homeScreenSpots[indexPath.row]
+            print("Spot card clicked in Home: \(item.title)")
+            
+            guard let lat = item.latitude, let lon = item.longitude else {
+                print("❌ Missing coordinates for spot: \(item.title)")
+                return
+            }
+            
+            // 1. Create Input Data
+            var inputData = PredictionInputData()
+            inputData.locationName = item.title
+            inputData.latitude = lat
+            inputData.longitude = lon
+            inputData.areaValue = Int(item.radius ?? 5.0)
+            inputData.startDate = Date()
+            inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+            
+            // 2. Create Predictions
+            let predictions: [FinalPredictionResult] = (item.birds ?? []).map { bird in
+                return FinalPredictionResult(
+                    birdName: bird.name,
+                    imageName: bird.imageName,
+                    matchedInputIndex: 0,
+                    matchedLocation: (lat: bird.lat, lon: bird.lon)
+                )
+            }
+            
+            // 3. Navigate
+            let storyboard = UIStoryboard(name: "Home", bundle: nil)
+            if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+                
+                self.navigationController?.pushViewController(predictMapVC, animated: true)
+                
+                predictMapVC.loadViewIfNeeded()
+                predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+            }
+        }
+    }
+
         
        
         
@@ -564,7 +606,7 @@ extension HomeViewController {
 //    }
 }
 
-// HomeViewController.swift
+// MARK: - Layout Helpers
 extension HomeViewController {
     
     // ... [existing setupCollectionView and createLayout functions] ...

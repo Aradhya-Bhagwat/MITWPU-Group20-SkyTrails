@@ -99,6 +99,7 @@ struct DynamicCard: Codable {
     let distance_string: String?
     let area_boundary: [RawCoordinate]?
     let hotspots: [RawHotspotPin]?
+    let radius: Double?
     
     let date_range: String?
 }
@@ -131,6 +132,7 @@ struct HotspotPrediction {
     let dateRange: String
     let areaBoundary: [CLLocationCoordinate2D]
     let hotspots: [BirdHotspot]
+    let radius: Double?
 }
 
 enum MapCardType {
@@ -161,6 +163,17 @@ struct PopularSpot: Codable {
     let imageName: String
     let title: String
     let location: String
+    let latitude: Double?
+    let longitude: Double?
+    let radius: Double?
+    let birds: [SpotBird]?
+}
+
+struct SpotBird: Codable {
+    let name: String
+    let imageName: String
+    let lat: Double
+    let lon: Double
 }
 
 // --- Community Models ---
@@ -235,7 +248,7 @@ struct FinalPredictionResult: Hashable { // Make it Hashable to easily get uniqu
 // Helper for the Logic
 class PredictionEngine {
     static let shared = PredictionEngine()
-    private var allSpecies: [SpeciesData] = []
+    var allSpecies: [SpeciesData] = []
     
     init() {
         // Load data immediately
@@ -430,7 +443,8 @@ class HomeModels {
                     distanceString: distance,
                     dateRange: date,
                     areaBoundary: boundaryCoords,
-                    hotspots: hotspotPins
+                    hotspots: hotspotPins,
+                    radius: rawCard.radius
                 )
                 return .hotspot(prediction)
             }

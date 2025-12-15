@@ -74,34 +74,39 @@ class PredictMapViewController: UIViewController {
         
         mapView.addAnnotations(annotations)
         
-        // 2. Zoom map to fit all new pins/circles
-        if !locationCoordinates.isEmpty {
+        // 2. Zoom map to fit the circle (10% of screen width) and position it in the top 1/3
+        if let firstInput = inputs.first,
+           let lat = firstInput.latitude,
+           let lon = firstInput.longitude {
             
-            // Calculate region containing all points
-            let mapRect = locationCoordinates.reduce(MKMapRect.null) { (mapRect, coordinate) -> MKMapRect in
-                let point = MKMapPoint(coordinate)
-                let rect = MKMapRect(x: point.x, y: point.y, width: 0, height: 0)
-                return mapRect.union(rect)
-            }
+            let centerCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            let radiusInMeters = Double(firstInput.areaValue * 1000)
             
+            // A. Calculate visible map width so circle is 50% of screen width
+            // If circle (diameter = 2*r) is 50% of width, then total width = (2*r) / 0.50
+            let visibleMapWidthInMeters = (radiusInMeters * 2) / 0.50
             
-            // Fit the calculated mapRect with padding
-            let padding: CGFloat = 40
-            mapView.setVisibleMapRect(mapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: true)
+            // B. Calculate visible map height based on aspect ratio
+            let aspectRatio = mapView.bounds.height / mapView.bounds.width
+            let visibleMapHeightInMeters = visibleMapWidthInMeters * Double(aspectRatio)
+            
+            // C. Offset the center to position circle in top 1/3
+            // To move the target UP on screen, we move the map center DOWN (lower latitude)
+            // Top 1/3 means center is at 1/6 from top. Screen center is at 3/6.
+            // Difference is 2/6 = 1/3 of screen height.
+            let verticalOffsetInMeters = visibleMapHeightInMeters / 3.0 // Move center down by 1/3 screen height
+            
+            // Convert meters to latitude degrees (approx 111,111 meters per degree)
+            let metersPerDegreeLatitude = 111111.0
+            let latitudeOffset = verticalOffsetInMeters / metersPerDegreeLatitude
+            
+            let newCenterLatitude = centerCoord.latitude - latitudeOffset
+            let newCenter = CLLocationCoordinate2D(latitude: newCenterLatitude, longitude: centerCoord.longitude)
+            
+            // D. Set the Region
+            let region = MKCoordinateRegion(center: newCenter, latitudinalMeters: visibleMapHeightInMeters, longitudinalMeters: visibleMapWidthInMeters)
+            mapView.setRegion(region, animated: true)
         }
-        
-        //  mapView.addAnnotations(annotations)
-          // mapView.addOverlays(overlays)
-        
-        // Optional: Zoom map to fit all new pins/circles
-                if let firstInput = inputs.first,
-                   let lat = firstInput.latitude,
-                   let lon = firstInput.longitude {
-                    let firstCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-                    let region = MKCoordinateRegion(center: firstCoord, latitudinalMeters: 50000, longitudinalMeters: 50000)
-                    mapView.setRegion(region, animated: true)
-        
-                }
         
         // MARK: - Setup Methods
     }
@@ -355,13 +360,80 @@ class PredictMapViewController: UIViewController {
             ])
         }
     }
+    // MARK: - Bird Selection Logic
+    func filterMapForBird(_ prediction: FinalPredictionResult) {
+        // 1. Remove ONLY bird annotations (keep user location pins)
+        let birdAnnotations = mapView.annotations.filter { annotation in
+            // Identify bird pins by their subtitle (as set in updateMap) or if they are NOT the user location
+            // Easier: Identify user location pins by title == input.locationName?
+            // Or assume anything with "Predicted near" subtitle is a bird.
+            if let subtitle = annotation.subtitle, subtitle?.contains("Predicted near") == true {
+                return true
+            }
+            return false
+        }
+        mapView.removeAnnotations(birdAnnotations)
+        
+        // 2. Add the SINGLE selected bird pin
+        let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
+        let birdPin = MKPointAnnotation()
+        birdPin.coordinate = coord
+        birdPin.title = prediction.birdName
+        birdPin.subtitle = "Predicted near location" 
+        
+        mapView.addAnnotation(birdPin)
+        
+        // 3. Zoom to it and position in Top 1/3
+        let latitudinalMeters: Double = 10000 // 10km span
+        let longitudinalMeters: Double = 10000
+        
+        // Calculate offset to move target to top 1/3
+        // We want the pin at 1/6 from top (Top 1/3 center). Map center is at 3/6.
+        // Shift map center DOWN by 2/6 = 1/3 of visible height.
+        let verticalOffsetInMeters = latitudinalMeters / 3.0
+        let metersPerDegreeLatitude = 111111.0
+        let latitudeOffset = verticalOffsetInMeters / metersPerDegreeLatitude
+        
+        let newCenterLatitude = coord.latitude - latitudeOffset
+        let newCenter = CLLocationCoordinate2D(latitude: newCenterLatitude, longitude: coord.longitude)
+        
+        let region = MKCoordinateRegion(center: newCenter, latitudinalMeters: latitudinalMeters, longitudinalMeters: longitudinalMeters)
+        mapView.setRegion(region, animated: true)
     }
+    
+    // Helper to generate consistent color from string
+    private func colorFor(name: String) -> UIColor {
+        var hash = 0
+        for char in name {
+            // Use wrapping arithmetic (&+, &-, &<<) to prevent overflow crash
+            let val = Int(char.asciiValue ?? 0)
+            hash = val &+ ((hash &<< 5) &- hash)
+        }
+        let color = UIColor(
+            red: CGFloat((hash >> 16) & 0xFF) / 255.0,
+            green: CGFloat((hash >> 8) & 0xFF) / 255.0,
+            blue: CGFloat(hash & 0xFF) / 255.0,
+            alpha: 1.0
+        )
+        return color
+    }
+}
 
 
 // MARK: - MKMapViewDelegate
 extension PredictMapViewController: MKMapViewDelegate {
     
-    // ... (mapView(_:rendererFor:) remains unchanged)
+    // Renderer for Overlays (Circles)
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let circle = overlay as? MKCircle {
+            let renderer = MKCircleRenderer(circle: circle)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.2) // Translucent Blue
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.5) // Slightly darker border
+            renderer.lineWidth = 1
+            return renderer
+        }
+        return MKOverlayRenderer(overlay: overlay)
+    }
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard !(annotation is MKUserLocation) else { return nil }
@@ -383,7 +455,9 @@ extension PredictMapViewController: MKMapViewDelegate {
             
             if isPredictedBird {
                 // Pin for a Bird Sighting (Prediction Result)
-                markerView.markerTintColor = .systemGreen
+                // ⭐️ FIX: Dynamic Color based on Title (Bird Name)
+                let birdName = annotation.title ?? ""
+                markerView.markerTintColor = colorFor(name: birdName ?? "Bird")
                 markerView.glyphImage = UIImage(systemName: "feather")
             } else {
                 // Pin for User Input Location
