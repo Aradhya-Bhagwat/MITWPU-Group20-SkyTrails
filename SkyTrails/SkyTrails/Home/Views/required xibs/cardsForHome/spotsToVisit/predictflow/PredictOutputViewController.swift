@@ -93,8 +93,13 @@ class PredictOutputViewController: UIViewController {
     }
     
     @objc private func didTapHome() {
-        // Dismiss the entire prediction modal flow to return to the Home screen
-        self.dismiss(animated: true, completion: nil)
+        // Explicitly find the parent MapViewController to ensure the modal is dismissed
+        if let mapVC = self.navigationController?.parent as? PredictMapViewController {
+            mapVC.dismiss(animated: true, completion: nil)
+        } else {
+            // Fallback if the hierarchy is different than expected
+            self.dismiss(animated: true, completion: nil)
+        }
     }
 }
 
