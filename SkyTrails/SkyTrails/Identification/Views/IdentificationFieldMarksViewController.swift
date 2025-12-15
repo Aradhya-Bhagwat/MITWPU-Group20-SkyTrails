@@ -123,7 +123,7 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
     }
     
 	
-		// MARK: - Navigation Logic
+	
 	@objc private func nextTapped() {
 			// 1. Get the NAMES of what the user selected (e.g., "Beak", "Eye")
 		let selectedNames = selectedFieldMarks.map { viewModel.chooseFieldMarks[$0].name }
