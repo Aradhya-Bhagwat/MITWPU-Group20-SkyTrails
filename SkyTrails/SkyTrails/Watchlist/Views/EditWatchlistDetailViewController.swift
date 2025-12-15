@@ -341,7 +341,8 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
             
             // Modern Async Search
             Task {
-                let request = MKLocalSearch.Request(completion: item)
+                let request = MKLocalSearch.Request()
+                request.naturalLanguageQuery = item.title + " " + item.subtitle
                 let search = MKLocalSearch(request: request)
                 
                 do {
