@@ -35,7 +35,7 @@ class PredictInputViewController: UIViewController {
             collectionView.translatesAutoresizingMaskIntoConstraints = false
             
             // 2. Calculate needed height: Card Height (320) + Shadow/Padding (40)
-            let neededHeight: CGFloat = 360
+            let neededHeight: CGFloat = 324
             
             // 3. Add a hard height constraint
             let heightConstraint = collectionView.heightAnchor.constraint(equalToConstant: neededHeight)
@@ -46,8 +46,8 @@ class PredictInputViewController: UIViewController {
             // If so, you should lower the priority of that storyboard constraint or remove it.
         }
     private func setupCollectionView() {
-            // ⭐️ USE CUSTOM LAYOUT
-            let layout = CardSnappingLayout() // <--- Change this line
+            // ⭐️ USE STANDARD LAYOUT
+            let layout = UICollectionViewFlowLayout()
             
             layout.scrollDirection = .horizontal
             layout.minimumLineSpacing = 16
@@ -58,11 +58,11 @@ class PredictInputViewController: UIViewController {
             
             collectionView.collectionViewLayout = layout
             
-            // ⭐️ CRITICAL SETTINGS FOR SNAPPING
-        collectionView.isPagingEnabled = false
-                collectionView.decelerationRate = .fast
-                collectionView.showsHorizontalScrollIndicator = false // Hide the bar for cleaner look
-                collectionView.backgroundColor = .clear
+            // Standard scroll settings
+            collectionView.isPagingEnabled = false // Adjust based on preference, false for free scroll + snapping
+            collectionView.decelerationRate = .fast // Keeps the snappy feel if we implement targetContentOffset in subclass, but for standard flow layout, normal is fine.
+            collectionView.showsHorizontalScrollIndicator = false
+            collectionView.backgroundColor = .clear
             
             // Register Cell
             collectionView.register(
@@ -299,52 +299,23 @@ class PredictInputViewController: UIViewController {
     }
 
     // MARK: - Search Delegate
-    extension PredictInputViewController: SearchLocationDelegate {
-        func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
-            print("📍 Received Location: \(name) for card \(index)")
-            
-            inputData[index].locationName = name
-            inputData[index].latitude = lat
-            inputData[index].longitude = lon
-            
-            // Reload cell to show new name
-            collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
-            
-            validateInputs() // Enable "Done" button if all valid
-        }
-    }
+// In PredictInputViewController.swift
 
-// MARK: - Custom Snapping Layout
-class CardSnappingLayout: UICollectionViewFlowLayout {
-    
-    override func targetContentOffset(forProposedContentOffset proposedContentOffset: CGPoint, withScrollingVelocity velocity: CGPoint) -> CGPoint {
+extension PredictInputViewController: SearchLocationDelegate {
+    func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
+        // ... (data update logic)
         
-        guard let collectionView = collectionView else {
-            return super.targetContentOffset(forProposedContentOffset: proposedContentOffset, withScrollingVelocity: velocity)
+        inputData[index].locationName = name
+        inputData[index].latitude = lat
+        inputData[index].longitude = lon
+        
+        collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+        validateInputs()
+        
+        // ⭐️ FIX: Call the live map update here ⭐️
+        if let mapVC = self.navigationController?.parent as? PredictMapViewController {
+            mapVC.updateMapWithCurrentInputs(inputs: inputData)
         }
-        
-        // 1. Calculate the center of the "proposed" landing spot
-        let targetRect = CGRect(x: proposedContentOffset.x, y: 0, width: collectionView.bounds.width, height: collectionView.bounds.height)
-        let horizontalCenter = proposedContentOffset.x + (collectionView.bounds.width / 2.0)
-        
-        // 2. Find the cell closest to that center
-        var offsetAdjustment = CGFloat.greatestFiniteMagnitude
-        
-        // Inspect all visible attributes in the target area
-        guard let attributesList = super.layoutAttributesForElements(in: targetRect) else {
-            return super.targetContentOffset(forProposedContentOffset: proposedContentOffset, withScrollingVelocity: velocity)
-        }
-        
-        for layoutAttributes in attributesList {
-            let itemHorizontalCenter = layoutAttributes.center.x
-            
-            // Find distance from the center
-            if abs(itemHorizontalCenter - horizontalCenter) < abs(offsetAdjustment) {
-                offsetAdjustment = itemHorizontalCenter - horizontalCenter
-            }
-        }
-        
-        // 3. Snap to that item's center
-        return CGPoint(x: proposedContentOffset.x + offsetAdjustment, y: proposedContentOffset.y)
     }
 }
+

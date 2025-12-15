@@ -79,12 +79,29 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         
         var annotationsToAdd: [MKAnnotation] = []
         
-        // 1. Draw Area Boundary (The Polygon)
-        if !prediction.areaBoundary.isEmpty {
+        // 1. Draw Area Boundary (Circle or Polygon)
+        if let radius = prediction.radius, let centerCoord = prediction.areaBoundary.first, prediction.areaBoundary.count == 1 {
+            // Case A: Circular Hotspot
+            let circle = MKCircle(center: centerCoord, radius: radius)
+            mapView.addOverlay(circle)
+            
+            // Zoom to fit the circle with padding
+            let padding: CGFloat = 20
+            mapView.setVisibleMapRect(circle.boundingMapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: false)
+            
+        } else if !prediction.areaBoundary.isEmpty {
+            // Case B: Polygon Hotspot (Legacy support)
             let smoothedBoundary = prediction.areaBoundary.generateSmoothedPath()
             let polygon = HotspotBoundaryPolygon(coordinates: prediction.areaBoundary,
                                                  count: prediction.areaBoundary.count)
             mapView.addOverlay(polygon)
+            
+            // Zoom to Fit the Polygon Area
+            if let firstCoord = prediction.areaBoundary.first {
+                let zoomPolyline = MKPolyline(coordinates: prediction.areaBoundary,
+                                              count: prediction.areaBoundary.count)
+                zoomToFitOverlays(for: zoomPolyline)
+            }
         }
         
         // 2. Add Hotspot Pins (Custom Icons)
@@ -98,13 +115,6 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         }
         
         mapView.addAnnotations(annotationsToAdd)
-
-        // 3. Zoom to Fit the Polygon Area
-        if let firstCoord = prediction.areaBoundary.first {
-            let zoomPolyline = MKPolyline(coordinates: prediction.areaBoundary,
-                                          count: prediction.areaBoundary.count)
-            zoomToFitOverlays(for: zoomPolyline)
-        }
     }
 
     private func zoomToFitOverlays(for pathLine: MKPolyline) {
@@ -119,7 +129,7 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
 
 extension HotspotCellCollectionViewCell {
     
-    // Renderer for Polygons
+    // Renderer for Polygons & Circles
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         
         if let polygon = overlay as? HotspotBoundaryPolygon {
@@ -128,6 +138,13 @@ extension HotspotCellCollectionViewCell {
             renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.3)
             renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.4)
             renderer.lineWidth = 2
+            return renderer
+        } else if let circle = overlay as? MKCircle {
+            // Circular Renderer
+            let renderer = MKCircleRenderer(circle: circle)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.2) // Translucent Blue
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.5) // Slightly darker border
+            renderer.lineWidth = 1
             return renderer
         }
         
