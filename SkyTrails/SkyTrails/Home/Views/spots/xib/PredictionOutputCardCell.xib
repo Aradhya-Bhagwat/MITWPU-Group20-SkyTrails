@@ -26,12 +26,20 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="A2y-tU-evf">
+                                <rect key="frame" x="0.0" y="40" width="300" height="344"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </tableView>
                         </subviews>
                         <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="abc-12-345" firstAttribute="leading" secondItem="1hK-z2-qQp" secondAttribute="leading" constant="16" id="123-ab-cde"/>
+                            <constraint firstAttribute="bottom" secondItem="A2y-tU-evf" secondAttribute="bottom" constant="16" id="1bA-Nn-LJS"/>
+                            <constraint firstAttribute="trailing" secondItem="A2y-tU-evf" secondAttribute="trailing" id="KJo-78-2W2"/>
+                            <constraint firstItem="A2y-tU-evf" firstAttribute="leading" secondItem="1hK-z2-qQp" secondAttribute="leading" id="Kza-uM-wlG"/>
                             <constraint firstAttribute="trailing" secondItem="abc-12-345" secondAttribute="trailing" constant="16" id="abc-de-fgh"/>
                             <constraint firstItem="abc-12-345" firstAttribute="top" secondItem="1hK-z2-qQp" secondAttribute="top" constant="16" id="hij-kl-mno"/>
+                            <constraint firstItem="A2y-tU-evf" firstAttribute="top" secondItem="abc-12-345" secondAttribute="bottom" id="o3B-kL-tNm"/>
                         </constraints>
                     </view>
                 </subviews>
@@ -45,16 +53,12 @@
             </constraints>
             <connections>
                 <outlet property="containerView" destination="1hK-z2-qQp" id="con-out-1"/>
+                <outlet property="tableView" destination="A2y-tU-evf" id="BqS-DF-O0W"/>
                 <outlet property="titleLabel" destination="abc-12-345" id="lbl-out-1"/>
             </connections>
             <point key="canvasLocation" x="139" y="20"/>
         </collectionViewCell>
-        <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" id="uka-tn-utc">
-            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-            <point key="canvasLocation" x="859" y="9"/>
-        </tableView>
+
     </objects>
     <resources>
         <systemColor name="secondarySystemBackgroundColor">
