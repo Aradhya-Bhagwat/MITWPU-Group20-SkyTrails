@@ -56,7 +56,7 @@ class AllSpotsViewController: UIViewController {
         
     @objc private func didTapPredict() {
         self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
-        print("Predict button tapped! (Navigate to Prediction Page later)")
+
         // TODO: Navigation to Prediction Page goes here
     }
     
@@ -108,7 +108,7 @@ class AllSpotsViewController: UIViewController {
                         widthDimension: .absolute(calculatedWidth),
                         heightDimension: .absolute(calculatedHeight)
                     )
-                    print("🔒 Fixed Card Size Calculated: \(calculatedWidth) x \(calculatedHeight)")
+
                 }
                 
                 // 2. Use Fixed Size to Layout Current Screen
@@ -217,11 +217,11 @@ class AllSpotsViewController: UIViewController {
             } else {
                 item = recommendationsData[indexPath.row]
             }
-            print("Spot card clicked: \(item.title) at section \(indexPath.section), row \(indexPath.row)")
+
             
             // 1. Prepare Data for Prediction Map
             guard let lat = item.latitude, let lon = item.longitude else {
-                print( \(item.title))
+    
                 return
             }
             

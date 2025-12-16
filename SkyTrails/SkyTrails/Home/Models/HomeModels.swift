@@ -1,9 +1,3 @@
-//
-//  models.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 24/11/25.
-//
 
 import Foundation
 import CoreLocation
@@ -12,7 +6,7 @@ import CoreLocation
 class DataLoader {
     static func load<T: Decodable>(_ filename: String, as type: T.Type) -> T {
         guard let url = Bundle.main.url(forResource: filename, withExtension: "json") else {
-            print("❌ File not found: \(filename).json")
+
             fatalError("Could not find file: \(filename).json")
         }
         
@@ -21,7 +15,7 @@ class DataLoader {
             let decoder = JSONDecoder()
             return try decoder.decode(T.self, from: data)
         } catch {
-            print("❌ Error parsing \(filename).json: \(error)")
+
             fatalError("Failed to parse \(filename).json: \(error.localizedDescription)")
         }
     }
@@ -261,7 +255,7 @@ class PredictionEngine {
         guard let lat = input.latitude,
               let lon = input.longitude,
               let weekRange = input.weekRange else {
-            print("Skipping input \(inputIndex): Missing location or date range.")
+
             return []
         }
         
