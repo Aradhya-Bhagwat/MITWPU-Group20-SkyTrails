@@ -286,7 +286,7 @@ extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
         // Current number of rows in table for this section (including search bar)
         let currentRows = dateandlocationTableView.numberOfRows(inSection: sectionIndex)
         let newRows = 1 + searchResults.count // 1 for SearchBar
-        
+        print("\(currentRows) \(newRows)")
         // If we just do reloadData(), it kills the keyboard.
         // We can just reload the section, but `reloadSections` often resigns responder too.
         // A simple reloadData() works IF cellForRow sets text correctly,
