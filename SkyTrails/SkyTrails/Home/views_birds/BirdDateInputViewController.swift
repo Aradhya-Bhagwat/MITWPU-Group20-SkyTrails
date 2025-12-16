@@ -32,9 +32,9 @@ class BirdDateInputViewController: UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = .systemBackground
         
-        print("📝 Wizard Step \(currentIndex + 1)/\(speciesList.count): Configuring for \(speciesList[currentIndex].name)")
+
         if !collectedData.isEmpty {
-            print("   ↳ Previous collected data count: \(collectedData.count)")
+
         }
         
         setupNavigationBar()
@@ -105,7 +105,7 @@ class BirdDateInputViewController: UIViewController {
         let bird = speciesList[currentIndex]
         let input = BirdDateInput(species: bird, startDate: currentStartDate, endDate: currentEndDate)
         
-        print("✅ Saving input for \(bird.name): \(currentStartDate) to \(currentEndDate)")
+
         
         // Append to our collection
         var newCollection = collectedData
@@ -124,7 +124,7 @@ class BirdDateInputViewController: UIViewController {
             
         } else {
             // Finished! Go to Map
-            print("🚀 Wizard Complete. Passing \(newCollection.count) inputs to Map.")
+
             let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
             guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
             
@@ -135,7 +135,7 @@ class BirdDateInputViewController: UIViewController {
     }
     
     @objc private func didTapDelete() {
-        print("🗑️ Delete requested for \(speciesList[currentIndex].name). Current collected data: \(collectedData.count)")
+
         
         // We create a NEW list without this bird
         var newSpeciesList = speciesList
@@ -143,7 +143,7 @@ class BirdDateInputViewController: UIViewController {
         
         if newSpeciesList.isEmpty {
             // Nothing left, go back to selection
-            print("   ↳ List empty. Returning to root.")
+
             navigationController?.popToRootViewController(animated: true)
             return
         }
@@ -154,7 +154,7 @@ class BirdDateInputViewController: UIViewController {
             // We push a new VC for that next bird.
             
             let nextBird = newSpeciesList[currentIndex]
-            print("   ↳ Moving to next bird: \(nextBird.name)")
+
             
             let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
             guard let nextVC = storyboard.instantiateViewController(withIdentifier: "BirdDateInputViewController") as? BirdDateInputViewController else { return }
@@ -170,13 +170,13 @@ class BirdDateInputViewController: UIViewController {
             // We should either finish (if we have data) or go back.
             
             if !collectedData.isEmpty {
-                print("   ↳ Deleted last item. Finishing with \(collectedData.count) previous inputs.")
+
                 let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
                 guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
                 mapVC.predictionInputs = collectedData
                 navigationController?.pushViewController(mapVC, animated: true)
             } else {
-                print("   ↳ Deleted last item and no previous data. Returning to root.")
+
                 navigationController?.popToRootViewController(animated: true)
             }
         }

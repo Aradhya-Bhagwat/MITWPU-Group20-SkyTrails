@@ -60,7 +60,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "birdspredViewController") as? BirdSelectionViewController else {
-            print(" Could not instantiate BirdSelectionViewController from birdspred.storyboard")
+
             return
         }
         
@@ -131,7 +131,7 @@ class AllUpcomingBirdsViewController: UIViewController {
                         widthDimension: .absolute(calculatedWidth),
                         heightDimension: .absolute(calculatedHeight)
                     )
-                    print("🔒 Fixed Bird Card Size Calculated: \(calculatedWidth) x \(calculatedHeight)")
+
                 }
                 
                 // 2. Use Fixed Size to Layout Current Screen
@@ -235,7 +235,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
         } else {
             item = recommendationsData[indexPath.row]
         }
-        print("Bird card clicked: \(item.title) at section \(indexPath.section), row \(indexPath.row)")
+
         // TODO: Navigate to detail view for the selected bird
     }
 }

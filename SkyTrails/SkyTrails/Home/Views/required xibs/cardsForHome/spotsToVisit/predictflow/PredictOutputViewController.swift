@@ -118,7 +118,7 @@ class PredictOutputViewController: UIViewController {
         if let mapVC = self.navigationController?.parent as? PredictMapViewController {
             mapVC.revertToInputScreen(with: inputData)
         } else {
-            print("❌ Redo failed: Could not find PredictMapViewController grandparent.")
+
             self.dismiss(animated: true, completion: nil)
         }
     }

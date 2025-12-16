@@ -148,7 +148,7 @@ class SearchLocationViewController: UIViewController {
         }
         
         func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-            print("Search Error: \(error.localizedDescription)")
+    
         }
     }
 
@@ -187,7 +187,7 @@ class SearchLocationViewController: UIViewController {
                 guard let self = self else { return }
                 
                 if let coordinate = response?.mapItems.first?.placemark.coordinate {
-                    print("📍 Found: \(selectedResult.title) at \(coordinate.latitude), \(coordinate.longitude)")
+
                     
                     // Send real data back to the Card
                     self.delegate?.didSelectLocation(
@@ -199,7 +199,7 @@ class SearchLocationViewController: UIViewController {
                     
                     self.dismiss(animated: true)
                 } else {
-                    print("Could not find coordinates")
+
                 }
             }
         }

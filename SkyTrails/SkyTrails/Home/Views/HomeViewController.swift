@@ -454,7 +454,7 @@ extension HomeViewController: UICollectionViewDataSource {
             else if indexPath.section == 1 {
                 action = { [weak self] in
                         guard let self = self else { return }
-                        print("👆 Tapped Upcoming Birds Chevron")
+
                         
                         self.performSegue(withIdentifier: "ShowAllBirds", sender: nil)
                     }
@@ -462,12 +462,12 @@ extension HomeViewController: UICollectionViewDataSource {
                     header.configure(title: "Upcoming Birds", tapAction: action)
             }
             else if indexPath.section == 2 {
-                print("⚡️ Setting up action for Spots Section")
+
                 
                 // ⭐️ SECTION 2 LOGIC: Navigate using Storyboard Segue
                 action = { [weak self] in
                         guard let self = self else { return }
-                        print("👆 Tapped Spots Chevron")
+
                         
                         self.performSegue(withIdentifier: "ShowAllSpots", sender: nil)
                     }
@@ -533,10 +533,10 @@ extension HomeViewController {
         // Handle "Spots to Visit" Selection
         if indexPath.section == 2 {
             let item = homeData.homeScreenSpots[indexPath.row]
-            print("Spot card clicked in Home: \(item.title)")
+
             
             guard let lat = item.latitude, let lon = item.longitude else {
-                print("❌ Missing coordinates for spot: \(item.title)")
+    
                 return
             }
             

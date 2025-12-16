@@ -38,7 +38,7 @@ class PredictMapViewController: UIViewController {
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         
-        print("\n--- DEBUG: Map Update Triggered ---\n")
+
         
         var annotations: [MKAnnotation] = []
         var locationCoordinates: [CLLocationCoordinate2D] = [] // Used for zooming
@@ -247,7 +247,7 @@ class PredictMapViewController: UIViewController {
             
         // ⭐️ Step 1: Instantiate the Navigation Controller wrapper
         guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
-            print("❌ Could not find PredictOutputNavigationController.")
+
             return
         }
         
@@ -261,11 +261,7 @@ class PredictMapViewController: UIViewController {
 
         // ⭐️ Step 2: Extract the root PredictOutputViewController
         guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController,
-              let currentVC = currentChildVC,
-              let container = modalContainerView else {
-            print("❌ Error: Internal state failure or could not extract root VC.")
-            return
-        }
+
 
         // Pass data to the extracted root VC
         outputVC.predictions = predictions
@@ -311,11 +307,7 @@ class PredictMapViewController: UIViewController {
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let inputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictInputNavigationController") as? UINavigationController,
               let inputVC = inputNavVC.viewControllers.first as? PredictInputViewController,
-              let currentVC = currentChildVC,
-              let container = modalContainerView else {
-            print("❌ Could not instantiate PredictInputNavigationController for Revert.")
-            return
-        }
+
         
         // 2. Load the retained data back into the Input VC
         inputVC.inputData = inputs // ⭐️ This retains all the user's previously entered data
