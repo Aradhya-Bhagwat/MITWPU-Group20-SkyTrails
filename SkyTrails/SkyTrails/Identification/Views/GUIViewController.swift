@@ -2,13 +2,13 @@ import UIKit
 
 class GUIViewController: UIViewController {
 	
-		// MARK: - Outlets
+		
 	@IBOutlet weak var variationsCollectionView: UICollectionView!
 	@IBOutlet weak var canvasContainerView: UIView!
 	@IBOutlet weak var categoryLabel: UILabel!
 	@IBOutlet weak var categoriesCollectionView: UICollectionView!
 	
-		// MARK: - Properties
+		
 	var viewModel: IdentificationModels!
 	weak var delegate: IdentificationFlowStepDelegate?
 	
@@ -33,7 +33,7 @@ class GUIViewController: UIViewController {
 		"Wings"                         // Foreground
 	]
 	
-		// MARK: - Lifecycle
+		
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
@@ -52,7 +52,7 @@ class GUIViewController: UIViewController {
 		}
 	}
 	
-		// MARK: - Data Loading
+		
 	private func loadData() {
 			// 1. Get the names you selected (e.g. "Beak", "Eye")
 		guard let selectedNames = viewModel.data.fieldMarks, !selectedNames.isEmpty else {
@@ -164,7 +164,7 @@ class GUIViewController: UIViewController {
 		navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
 	}
 	
-		// MARK: - Logic
+		
 	
 		/// Sanitizes strings for filenames (e.g. "Spoon-shaped" -> "Spoon_shaped")
 	func cleanForFilename(_ name: String) -> String {
@@ -257,7 +257,7 @@ class GUIViewController: UIViewController {
 	}
 }
 
-	// MARK: - CollectionView Delegate & DataSource
+	
 extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 	
 	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -308,7 +308,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 		}
 	}
 	
-		// Layout sizing
+		
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
 			// I restored the sizes from your original code (70 and 60)
 			// because you mentioned they worked better than the larger ones.

@@ -13,12 +13,12 @@ class DateandLocationViewController: UIViewController {
     var viewModel: IdentificationModels!
     weak var delegate: IdentificationFlowStepDelegate?
     
-    // State
+    
     private var selectedDate: Date? = Date()
     private var searchQuery: String = "" // The active text in the bar
     private var searchResults: [MKLocalSearchCompletion] = []
     
-    // Tools
+    
     private let locationManager = CLLocationManager()
     private let geocoder = CLGeocoder()
     private var completer = MKLocalSearchCompleter()
@@ -300,7 +300,7 @@ extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
     }
 }
 
-// MARK: - Other Delegates
+
 extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDelegate {
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
         selectedDate = date
@@ -311,7 +311,7 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
     }
 }
 
-// MARK: - CLLocationManagerDelegate
+
 extension DateandLocationViewController: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager,
