@@ -192,11 +192,21 @@ class IdentificationModels {
     func filterBirds(shape: String?, size: Int?, location: String?, fieldMarks: [FieldMarkData]?) {
         guard let allBirds = masterDatabase?.birds else { return }
         
-        // 1. Update Internal State
-        self.selectedShapeId = shape
-        self.selectedSizeCategory = size
-        self.selectedLocation = location
-        self.selectedFieldMarks = fieldMarks ?? []
+        // 1. Update Internal State - Only update what's been provided
+        if let shape = shape { self.selectedShapeId = shape }
+        if let size = size { self.selectedSizeCategory = size }
+        if let location = location { self.selectedLocation = location }
+        // Only overwrite field marks if a non-empty array is passed.
+        // This prevents the GUI selections from being erased by intermediate steps.
+        if let fieldMarks = fieldMarks, !fieldMarks.isEmpty {
+            self.selectedFieldMarks = fieldMarks
+        }
+
+        // Now, use the class properties for filtering
+        let currentShape = self.selectedShapeId
+        let currentSize = self.selectedSizeCategory
+        let currentLocation = self.selectedLocation
+        let currentFieldMarks = self.selectedFieldMarks
         
         // 2. Prepare Date Logic
         var searchMonth: Int?
@@ -215,8 +225,11 @@ class IdentificationModels {
             var score = 0.0
             var breakdownParts: [String] = []
             
-            // A. Location (Hard Filter)
-            if let loc = location, !bird.validLocations.contains(loc) { continue }
+            // A. Location (Soft Penalty)
+            if let loc = currentLocation, !bird.validLocations.contains(loc) {
+                score -= 5
+                breakdownParts.append("Wrong Location (-30)")
+            }
             
             // B. Seasonality
             if let month = searchMonth, let validMonths = bird.validMonths, !validMonths.contains(month) {
@@ -225,13 +238,13 @@ class IdentificationModels {
             }
             
             // C. Shape
-            if let userShape = shape, bird.attributes.shapeId == userShape {
+            if let userShape = currentShape, bird.attributes.shapeId == userShape {
                 score += 30
                 breakdownParts.append("Shape Match (+30)")
             }
             
             // D. Size
-            if let userSize = size {
+            if let userSize = currentSize {
                 let diff = abs(bird.attributes.sizeCategory - userSize)
                 if diff == 0 { score += 20; breakdownParts.append("Size Match (+20)") }
                 else if diff == 1 { score += 10; breakdownParts.append("Size Approx (+10)") }
@@ -239,9 +252,9 @@ class IdentificationModels {
             }
             
             // E. Field Marks
-            if let marks = fieldMarks, !marks.isEmpty {
-                let pointsPerMark = 50.0 / Double(marks.count)
-                for userMark in marks {
+            if !currentFieldMarks.isEmpty {
+                let pointsPerMark = 50.0 / Double(currentFieldMarks.count)
+                for userMark in currentFieldMarks {
                     if let birdMark = bird.fieldMarks.first(where: { $0.area == userMark.area }) {
                         if !userMark.variant.isEmpty {
                             if userMark.variant == birdMark.variant {
