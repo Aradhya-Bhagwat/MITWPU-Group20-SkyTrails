@@ -54,7 +54,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             // Update Warning Label
             warningLabel.isHidden = isValid
             if !isValid {
-                 warningLabel.text = selectedCount == 0 ? "Select options to start" : "Please select at least two options."
+                 warningLabel.text =  "Please select at least two options."
             }
 
     
