@@ -1,0 +1,520 @@
+[
+    {
+        "id": "BC6BB037-9603-4311-9854-4D33D8112362",
+        "title": "Canopy Wanderers",
+        "location": "Vetal tekdi",
+        "dateRange": "8th Oct - 7th Nov",
+        "mainImageName": "AsianFairyBluebird",
+        "stats": {
+            "greenValue": 18,
+            "blueValue": 7
+        },
+        "userImages": [
+            "person.crop.circle.fill",
+            "person.crop.circle",
+            "person.circle.fill",
+            "person.crop.circle.fill",
+            "person.crop.circle"
+        ],
+        "observedBirds": [
+            {
+                "id": "E137047A-7DEA-420C-9279-885450B375B1",
+                "name": "Himalayan Monal",
+                "scientificName": "Lophophorus impejanus",
+                "images": [
+                    "HimalayanMonal"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Kathmandu, Nepal"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.circle",
+                    "person.fill"
+                ]
+            },
+            {
+                "id": "40AC8D02-7AF5-464D-B5B8-B545B9CEB95C",
+                "name": "Indian Peafowl",
+                "scientificName": "Pavo cristatus",
+                "images": [
+                    "IndianPeafowl"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Mumbai, Maharashtra"
+                ],
+                "date": [
+                    787452799.648104
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "4F4AA5A3-15B2-46CE-AB4B-BC9686EBE6E6",
+                "name": "Oriental Magpie-Robin",
+                "scientificName": "Copsychus saularis",
+                "images": [
+                    "OrientalMagpieRobin"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "New Delhi, India"
+                ],
+                "date": [
+                    787452799.648104
+                ],
+                "observedBy": [
+                    "person.crop.circle",
+                    "person.circle.fill",
+                    "person.circle"
+                ]
+            },
+            {
+                "id": "C1D7A0BC-982C-47CA-A2C9-4DF07479C928",
+                "name": "Asian Koel",
+                "scientificName": "Eudynamys scolopaceus",
+                "images": [
+                    "AsianKoel"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Pune, Maharashtra"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.2.circle"
+                ]
+            },
+            {
+                "id": "9C237E09-5857-45D5-BC28-E3492BC23B33",
+                "name": "Sarus Crane",
+                "scientificName": "Antigone antigone",
+                "images": [
+                    "SarusCrane"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Agra, Uttar Pradesh"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.fill"
+                ]
+            },
+            {
+                "id": "599216E7-CBA3-4B77-AC2A-4815C87A0182",
+                "name": "Great Hornbill",
+                "scientificName": "Buceros bicornis",
+                "images": [
+                    "GreatHornbill"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Munnar, Kerala"
+                ],
+                "date": [
+                    787193599.648104
+                ],
+                "observedBy": [
+                    "person.crop.circle.fill"
+                ]
+            }
+        ],
+        "toObserveBirds": [
+            {
+                "id": "8807B70C-EA79-4777-ABBF-FDAA93A54695",
+                "name": "Greater Flameback",
+                "scientificName": "Chrysocolaptes lucidus",
+                "images": [
+                    "GreaterFlameback"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Panaji, Goa"
+                ],
+                "date": [
+                    787107199.648104
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "817E4B81-F63B-4CDF-A95F-A0C1C97244F8",
+                "name": "Blue Grosbeak",
+                "scientificName": "Passerina caerulea",
+                "images": [
+                    "BlueGrosbeak"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Texas, USA"
+                ],
+                "date": [
+                    786588799.648104
+                ],
+                "observedBy": [
+                    "person.3.fill"
+                ]
+            },
+            {
+                "id": "E137047A-7DEA-420C-9279-885450B375B1",
+                "name": "Himalayan Monal",
+                "scientificName": "Lophophorus impejanus",
+                "images": [
+                    "HimalayanMonal"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Kathmandu, Nepal"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.circle",
+                    "person.fill"
+                ]
+            },
+            {
+                "id": "10C7A61B-03AD-4D97-90CE-3F36DE98BC96",
+                "name": "Indigo Bunting",
+                "scientificName": "Passerina cyanea",
+                "images": [
+                    "IndigoBunting"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "New York, USA"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.circle"
+                ]
+            },
+            {
+                "id": "599216E7-CBA3-4B77-AC2A-4815C87A0182",
+                "name": "Great Hornbill",
+                "scientificName": "Buceros bicornis",
+                "images": [
+                    "GreatHornbill"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Munnar, Kerala"
+                ],
+                "date": [
+                    787193599.648104
+                ],
+                "observedBy": [
+                    "person.crop.circle.fill"
+                ]
+            },
+            {
+                "id": "00ABE908-602D-4446-AF7A-F86DEF7A0920",
+                "name": "Lazuli Bunting",
+                "scientificName": "Passerina amoena",
+                "images": [
+                    "LazuliBunting"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Colorado, USA"
+                ],
+                "date": [
+                    787107199.648104
+                ],
+                "observedBy": [
+                    "person.crop.circle.badge.plus"
+                ]
+            }
+        ]
+    },
+    {
+        "id": "68ABEA96-37A7-47DC-84AC-1A19F5A4339A",
+        "title": "Feather Trail",
+        "location": "Singhad Valley",
+        "dateRange": "12th Oct - 15th Nov",
+        "mainImageName": "HimalayanMonal",
+        "stats": {
+            "greenValue": 10,
+            "blueValue": 2
+        },
+        "userImages": [
+            "person.circle.fill",
+            "person.crop.circle",
+            "person.crop.circle.fill",
+            "person.crop.circle"
+        ],
+        "observedBirds": [
+            {
+                "id": "C1D7A0BC-982C-47CA-A2C9-4DF07479C928",
+                "name": "Asian Koel",
+                "scientificName": "Eudynamys scolopaceus",
+                "images": [
+                    "AsianKoel"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Pune, Maharashtra"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.2.circle"
+                ]
+            },
+            {
+                "id": "9C237E09-5857-45D5-BC28-E3492BC23B33",
+                "name": "Sarus Crane",
+                "scientificName": "Antigone antigone",
+                "images": [
+                    "SarusCrane"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Agra, Uttar Pradesh"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.fill"
+                ]
+            },
+            {
+                "id": "40AC8D02-7AF5-464D-B5B8-B545B9CEB95C",
+                "name": "Indian Peafowl",
+                "scientificName": "Pavo cristatus",
+                "images": [
+                    "IndianPeafowl"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Mumbai, Maharashtra"
+                ],
+                "date": [
+                    787452799.648104
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "817E4B81-F63B-4CDF-A95F-A0C1C97244F8",
+                "name": "Blue Grosbeak",
+                "scientificName": "Passerina caerulea",
+                "images": [
+                    "BlueGrosbeak"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Texas, USA"
+                ],
+                "date": [
+                    786588799.648104
+                ],
+                "observedBy": [
+                    "person.3.fill"
+                ]
+            },
+            {
+                "id": "40AC8D02-7AF5-464D-B5B8-B545B9CEB95C",
+                "name": "Indian Peafowl",
+                "scientificName": "Pavo cristatus",
+                "images": [
+                    "IndianPeafowl"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Mumbai, Maharashtra"
+                ],
+                "date": [
+                    787452799.648104
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "10C7A61B-03AD-4D97-90CE-3F36DE98BC96",
+                "name": "Indigo Bunting",
+                "scientificName": "Passerina cyanea",
+                "images": [
+                    "IndigoBunting"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "New York, USA"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.circle"
+                ]
+            }
+        ],
+        "toObserveBirds": [
+            {
+                "id": "8807B70C-EA79-4777-ABBF-FDAA93A54695",
+                "name": "Greater Flameback",
+                "scientificName": "Chrysocolaptes lucidus",
+                "images": [
+                    "GreaterFlameback"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Panaji, Goa"
+                ],
+                "date": [
+                    787107199.648104
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "00ABE908-602D-4446-AF7A-F86DEF7A0920",
+                "name": "Lazuli Bunting",
+                "scientificName": "Passerina amoena",
+                "images": [
+                    "LazuliBunting"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Colorado, USA"
+                ],
+                "date": [
+                    787107199.648104
+                ],
+                "observedBy": [
+                    "person.crop.circle.badge.plus"
+                ]
+            },
+            {
+                "id": "817E4B81-F63B-4CDF-A95F-A0C1C97244F8",
+                "name": "Blue Grosbeak",
+                "scientificName": "Passerina caerulea",
+                "images": [
+                    "BlueGrosbeak"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Texas, USA"
+                ],
+                "date": [
+                    786588799.648104
+                ],
+                "observedBy": [
+                    "person.3.fill"
+                ]
+            },
+            {
+                "id": "00ABE908-602D-4446-AF7A-F86DEF7A0920",
+                "name": "Lazuli Bunting",
+                "scientificName": "Passerina amoena",
+                "images": [
+                    "LazuliBunting"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Colorado, USA"
+                ],
+                "date": [
+                    787107199.648104
+                ],
+                "observedBy": [
+                    "person.crop.circle.badge.plus"
+                ]
+            },
+            {
+                "id": "E137047A-7DEA-420C-9279-885450B375B1",
+                "name": "Himalayan Monal",
+                "scientificName": "Lophophorus impejanus",
+                "images": [
+                    "HimalayanMonal"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Kathmandu, Nepal"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.circle",
+                    "person.fill"
+                ]
+            },
+            {
+                "id": "C1D7A0BC-982C-47CA-A2C9-4DF07479C928",
+                "name": "Asian Koel",
+                "scientificName": "Eudynamys scolopaceus",
+                "images": [
+                    "AsianKoel"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Pune, Maharashtra"
+                ],
+                "date": [
+                    787539199.648104
+                ],
+                "observedBy": [
+                    "person.2.circle"
+                ]
+            }
+        ]
+    }
+]

@@ -9,7 +9,7 @@ import UIKit
 import MapKit
 import CoreLocation
 
-class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate {
+class ObservedDetailViewController: UIViewController {
     
     // MARK: - Data Dependency
     var bird: Bird? // nil if adding new
@@ -18,6 +18,7 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
     var onSave: ((Bird) -> Void)?
     
     private let locationManager = CLLocationManager()
+    private let geocoder = CLGeocoder()
     private var selectedImageName: String?
     
     // Autocomplete State
@@ -76,14 +77,13 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
         }
         
         setupKeyboardHandling()
-        setupLocationManager()
+        setupLocationServices()
         setupLocationOptionsInteractions()
     }
     
-    private func setupLocationManager() {
+    private func setupLocationServices() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.requestWhenInUseAuthorization()
     }
     
     private func setupSearch() {
@@ -112,7 +112,20 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
     }
     
     @objc private func didTapCurrentLocation() {
-        locationManager.requestLocation()
+        let authStatus = locationManager.authorizationStatus
+        
+        switch authStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.requestLocation()
+        @unknown default:
+            break
+        }
     }
     
     @objc private func didTapMap() {
@@ -121,32 +134,6 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
             mapVC.delegate = self
             navigationController?.pushViewController(mapVC, animated: true)
         }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            guard let self = self else { return }
-            if let error = error { return }
-            
-            if let placemark = placemarks?.first {
-                let city = placemark.locality ?? ""
-                let country = placemark.country ?? ""
-                var address = ""
-                if !city.isEmpty { address += city + ", " }
-                address += country
-                
-                DispatchQueue.main.async {
-                    self.updateLocationSelection(address)
-                }
-            }
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed: \(error.localizedDescription)")
     }
     
     private func updateLocationSelection(_ name: String) {
@@ -321,7 +308,7 @@ class ObservedDetailViewController: UIViewController, CLLocationManagerDelegate 
 }
 
 // MARK: - Delegates
-extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate {
+extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate {
     
     // MARK: - Search Bar (Location)
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -439,13 +426,25 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
         
         if currentInputType == .location {
             if indexPath.row < locationResults.count {
-                let result = locationResults[indexPath.row]
-                let request = MKLocalSearch.Request(completion: result)
-                let search = MKLocalSearch(request: request)
-                search.start { [weak self] (response, error) in
-                    guard let self = self, let response = response else { return }
-                    let name = response.mapItems.first?.name ?? result.title
-                    self.updateLocationSelection(name)
+                let item = locationResults[indexPath.row]
+                
+                // Modern Async Search
+                Task {
+                    let request = MKLocalSearch.Request()
+                    request.naturalLanguageQuery = item.title + " " + item.subtitle
+                    let search = MKLocalSearch(request: request)
+                    
+                    do {
+                        let response = try await search.start()
+                        if let place = response.mapItems.first {
+                            let name = place.name ?? item.title
+                            await MainActor.run {
+                                self.updateLocationSelection(name)
+                            }
+                        }
+                    } catch {
+                        print("Search failed: \(error.localizedDescription)")
+                    }
                 }
             }
         } else if currentInputType == .name {
@@ -456,6 +455,42 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
                 currentInputType = .none
                 nameTextField.resignFirstResponder()
             }
+        }
+    }
+
+    // MARK: - CoreLocation Delegate
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        
+        // Modern Async Geocoding
+        Task {
+            do {
+                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                if let placemark = placemarks.first {
+                    let city = placemark.locality ?? ""
+                    let area = placemark.subLocality ?? ""
+                    let country = placemark.country ?? ""
+                    
+                    let parts = [area, city, country].filter { !$0.isEmpty }
+                    let address = parts.joined(separator: ", ")
+                    
+                    await MainActor.run {
+                        self.updateLocationSelection(address)
+                    }
+                }
+            } catch {
+                print("Reverse geocoding failed: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location manager failed: \(error.localizedDescription)")
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            manager.requestLocation()
         }
     }
 }

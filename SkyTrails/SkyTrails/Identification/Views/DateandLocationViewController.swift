@@ -19,6 +19,8 @@ class DateandLocationViewController: UIViewController {
     private var searchResults: [MKLocalSearchCompletion] = []
     
     // Tools
+    private let locationManager = CLLocationManager()
+    private let geocoder = CLGeocoder()
     private var completer = MKLocalSearchCompleter()
     
     // MARK: - Lifecycle
@@ -27,6 +29,7 @@ class DateandLocationViewController: UIViewController {
         setupUI()
         setupTableView()
         setupCompleter()
+        setupLocationServices()
         setupRightTickButton()
         // Pre-fill query if we already have a location selected
         if let currentLoc = viewModel.selectedLocation {
@@ -114,17 +117,25 @@ class DateandLocationViewController: UIViewController {
         view.endEditing(true) // Dismiss keyboard
     }
     
+    private func setupLocationServices() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
     private func fetchCurrentLocationName() {
-        let manager = CLLocationManager()
-        manager.requestWhenInUseAuthorization()
+        let authStatus = locationManager.authorizationStatus
         
-        if let loc = manager.location {
-            CLGeocoder().reverseGeocodeLocation(loc) { [weak self] placemarks, _ in
-                guard let self = self, let name = placemarks?.first?.name else { return }
-                DispatchQueue.main.async {
-                    self.updateLocationSelection(name)
-                }
-            }
+        switch authStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.requestLocation()
+        @unknown default:
+            break
         }
     }
 }
@@ -199,13 +210,22 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             let suggestionIndex = indexPath.row - 1
             let completion = searchResults[suggestionIndex]
             
-            let request = MKLocalSearch.Request(completion: completion)
-            let search = MKLocalSearch(request: request)
-            
-            search.start { [weak self] response, _ in
-                guard let self = self, let place = response?.mapItems.first else { return }
-                let name = place.name ?? completion.title
-                self.updateLocationSelection(name)
+            Task {
+                let request = MKLocalSearch.Request()
+                request.naturalLanguageQuery = completion.title + " " + completion.subtitle
+                let search = MKLocalSearch(request: request)
+                
+                do {
+                    let response = try await search.start()
+                    if let place = response.mapItems.first {
+                        let name = place.name ?? completion.title
+                        await MainActor.run {
+                            self.updateLocationSelection(name)
+                        }
+                    }
+                } catch {
+                    print("Search failed: \(error.localizedDescription)")
+                }
             }
         }
         
@@ -293,5 +313,44 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
     
     func didSelectMapLocation(_ locationName: String) {
         updateLocationSelection(locationName)
+    }
+}
+
+// MARK: - CLLocationManagerDelegate
+extension DateandLocationViewController: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        
+        // Modern Async Geocoding
+        Task {
+            do {
+                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                if let placemark = placemarks.first {
+                    let city = placemark.locality ?? ""
+                    let area = placemark.subLocality ?? ""
+                    let country = placemark.country ?? ""
+                    
+                    let parts = [area, city, country].filter { !$0.isEmpty }
+                    let address = parts.joined(separator: ", ")
+                    
+                    await MainActor.run {
+                        self.updateLocationSelection(address)
+                    }
+                }
+            } catch {
+                print("Reverse geocoding failed: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location manager failed: \(error.localizedDescription)")
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            manager.requestLocation()
+        }
     }
 }
