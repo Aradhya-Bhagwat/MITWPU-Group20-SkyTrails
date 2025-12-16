@@ -259,10 +259,70 @@ class WatchlistManager {
         saveData()
     }
     
-    func addSharedWatchlist(_ watchlist: SharedWatchlist) {
-        sharedWatchlists.append(watchlist)
-        saveData()
+        func addSharedWatchlist(_ watchlist: SharedWatchlist) {
+    
+            sharedWatchlists.append(watchlist)
+    
+            saveData()
+    
+        }
+    
     }
     
-
-}
+    
+    
+    // Extension for adding specific birds by request
+    
+    extension WatchlistManager {
+    
+        func addRoseRingedParakeetToMyWatchlist() {
+    
+            // Find "My Watchlist"
+    
+            guard let myWatchlistIndex = watchlists.firstIndex(where: { $0.title == "My Watchlist" }) else {
+    
+                print("Error: 'My Watchlist' not found.")
+    
+                return
+    
+            }
+    
+    
+    
+            // Create the Rose-ringed Parakeet bird object
+    
+            let roseRingedParakeet = Bird(
+    
+                id: UUID(),
+    
+                name: "Rose-ringed Parakeet",
+    
+                scientificName: "Psittacula krameri",
+    
+                images: ["rose_ringed_parakeet"],
+    
+                rarity: [.common],
+    
+                location: ["Pune, India"], // Example location
+    
+                date: [Date()], // Current date
+    
+                observedBy: nil,
+    
+                notes: "Added by user request."
+    
+            )
+    
+    
+    
+            // Add to 'toObserveBirds'
+    
+            watchlists[myWatchlistIndex].toObserveBirds.append(roseRingedParakeet)
+    
+            saveData()
+    
+            print("Rose-ringed Parakeet added to 'My Watchlist' successfully.")
+    
+        }
+    
+    }

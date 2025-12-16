@@ -14,6 +14,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
+		
+		// Call to add Rose-ringed Parakeet to My Watchlist (for one-time execution)
+        // Uncomment the line below, run the app once, then re-comment it.
+        // WatchlistManager.shared.addRoseRingedParakeetToMyWatchlist()
+        
 		return true
 	}
 
