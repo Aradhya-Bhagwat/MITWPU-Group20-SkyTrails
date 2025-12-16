@@ -17,7 +17,6 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
     
     private var predictions: [FinalPredictionResult] = []
     
-    // ⭐️ Callback for selection
     var onSelectPrediction: ((FinalPredictionResult) -> Void)?
     
     override func awakeFromNib() {
@@ -26,12 +25,11 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
     }
     
     private func setupUI() {
-        // Card Styling
+
         containerView.backgroundColor = .secondarySystemBackground
         containerView.layer.cornerRadius = 16
         containerView.clipsToBounds = true
         
-        // TableView
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
         tableView.register(BirdResultCell.self, forCellReuseIdentifier: "BirdResultCell")
@@ -57,9 +55,8 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
         
         let prediction = predictions[indexPath.row]
         cell.configure(with: prediction.birdName, imageName: prediction.imageName)
-        // Adjust cell background for card context
         cell.backgroundColor = .clear
-        cell.selectionStyle = .none // Handle visual selection manually if needed
+        cell.selectionStyle = .none
         
         return cell
     }
@@ -71,7 +68,6 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
     // MARK: - TableView Delegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedPrediction = predictions[indexPath.row]
-        // Trigger the callback
         onSelectPrediction?(selectedPrediction)
     }
 }
