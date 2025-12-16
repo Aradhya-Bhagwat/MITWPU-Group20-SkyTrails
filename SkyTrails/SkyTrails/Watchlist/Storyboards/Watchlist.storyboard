@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="eDw-RG-zyh">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="eDw-RG-zyh">
     <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
@@ -18,7 +18,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="TzJ-jT-Fht">
-                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="osc-uZ-ACG">
                                     <size key="itemSize" width="128" height="128"/>
@@ -36,7 +36,7 @@
                                         </collectionViewCellContentView>
                                     </collectionViewCell>
                                 </cells>
-                                <collectionReusableView key="sectionHeaderView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="WatchlistSectionHeaderCollectionReusableView" insetsLayoutMarginsFromSafeArea="NO" id="Qb8-Ta-QE2">
+                                <collectionReusableView key="sectionHeaderView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" reuseIdentifier="WatchlistSectionHeaderCollectionReusableView" id="Qb8-Ta-QE2">
                                     <rect key="frame" x="0.0" y="0.0" width="402" height="50"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </collectionReusableView>
@@ -47,7 +47,7 @@
                         <constraints>
                             <constraint firstItem="TzJ-jT-Fht" firstAttribute="top" secondItem="UUu-kk-OMN" secondAttribute="top" id="8Ay-iK-VAd"/>
                             <constraint firstItem="UUu-kk-OMN" firstAttribute="trailing" secondItem="TzJ-jT-Fht" secondAttribute="trailing" id="RzV-lV-uJX"/>
-                            <constraint firstItem="UUu-kk-OMN" firstAttribute="bottom" secondItem="TzJ-jT-Fht" secondAttribute="bottom" id="ka9-8u-j2s"/>
+                            <constraint firstAttribute="bottom" secondItem="TzJ-jT-Fht" secondAttribute="bottom" id="ka9-8u-j2s"/>
                             <constraint firstItem="TzJ-jT-Fht" firstAttribute="leading" secondItem="UUu-kk-OMN" secondAttribute="leading" id="sO4-Cl-2H5"/>
                         </constraints>
                     </view>
@@ -109,7 +109,7 @@
                                 </constraints>
                             </stackView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="3Xq-9M-RTe">
-                                <rect key="frame" x="16" y="244" width="370" height="562"/>
+                                <rect key="frame" x="16" y="244" width="370" height="630"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="xRY-8w-76t">
                                     <size key="itemSize" width="128" height="128"/>
@@ -132,7 +132,7 @@
                         <viewLayoutGuide key="safeArea" id="3kE-WV-CuL"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="3kE-WV-CuL" firstAttribute="bottom" secondItem="3Xq-9M-RTe" secondAttribute="bottom" id="ABo-YJ-d8F"/>
+                            <constraint firstAttribute="bottom" secondItem="3Xq-9M-RTe" secondAttribute="bottom" id="ABo-YJ-d8F"/>
                             <constraint firstItem="3Xq-9M-RTe" firstAttribute="leading" secondItem="3kE-WV-CuL" secondAttribute="leading" constant="16" id="XKq-BE-Ium"/>
                             <constraint firstItem="Caz-dl-GZR" firstAttribute="leading" secondItem="3kE-WV-CuL" secondAttribute="leading" constant="16" id="XTF-Oq-a6Q"/>
                             <constraint firstItem="3Xq-9M-RTe" firstAttribute="top" secondItem="Caz-dl-GZR" secondAttribute="bottom" constant="8" id="Zdk-Yv-JiB"/>
@@ -205,7 +205,7 @@
                                 </constraints>
                             </stackView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Jm1-2J-V0D">
-                                <rect key="frame" x="16" y="244" width="370" height="562"/>
+                                <rect key="frame" x="16" y="244" width="370" height="630"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Nwq-NT-sU0">
                                     <size key="itemSize" width="128" height="128"/>
@@ -230,7 +230,7 @@
                         <constraints>
                             <constraint firstItem="5rY-ZG-Hv6" firstAttribute="leading" secondItem="n8i-Kh-xry" secondAttribute="leading" constant="16" id="6JC-9e-21Y"/>
                             <constraint firstItem="Jm1-2J-V0D" firstAttribute="top" secondItem="5rY-ZG-Hv6" secondAttribute="bottom" constant="8" id="9dy-vW-In9"/>
-                            <constraint firstItem="n8i-Kh-xry" firstAttribute="bottom" secondItem="Jm1-2J-V0D" secondAttribute="bottom" id="BCa-hu-0XX"/>
+                            <constraint firstAttribute="bottom" secondItem="Jm1-2J-V0D" secondAttribute="bottom" id="BCa-hu-0XX"/>
                             <constraint firstItem="5rY-ZG-Hv6" firstAttribute="top" secondItem="n8i-Kh-xry" secondAttribute="top" constant="8" id="WVd-S2-D33"/>
                             <constraint firstItem="Jm1-2J-V0D" firstAttribute="leading" secondItem="n8i-Kh-xry" secondAttribute="leading" constant="16" id="X72-ta-2SK"/>
                             <constraint firstItem="n8i-Kh-xry" firstAttribute="trailing" secondItem="5rY-ZG-Hv6" secondAttribute="trailing" constant="16" id="c3m-uF-mtd"/>
@@ -326,7 +326,7 @@
                                 </constraints>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="yez-to-lUt">
-                                <rect key="frame" x="0.0" y="309" width="402" height="497"/>
+                                <rect key="frame" x="0.0" y="309" width="402" height="565"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="BirdSmartCell" rowHeight="116" id="4jF-6g-ae5" customClass="BirdSmartCell" customModule="SkyTrails" customModuleProvider="target">
@@ -469,7 +469,7 @@
                         <constraints>
                             <constraint firstItem="ZaP-mE-nYF" firstAttribute="trailing" secondItem="0NY-hU-HEx" secondAttribute="trailing" id="4Rk-cH-UdW"/>
                             <constraint firstItem="ZaP-mE-nYF" firstAttribute="top" secondItem="0NY-hU-HEx" secondAttribute="top" id="4Sl-zh-wfU"/>
-                            <constraint firstItem="0NY-hU-HEx" firstAttribute="bottom" secondItem="yez-to-lUt" secondAttribute="bottom" id="4uw-kq-QLm"/>
+                            <constraint firstAttribute="bottom" secondItem="yez-to-lUt" secondAttribute="bottom" id="4uw-kq-QLm"/>
                             <constraint firstItem="ZaP-mE-nYF" firstAttribute="leading" secondItem="0NY-hU-HEx" secondAttribute="leading" id="P3t-Oi-4rx"/>
                             <constraint firstItem="yez-to-lUt" firstAttribute="leading" secondItem="0NY-hU-HEx" secondAttribute="leading" id="her-rV-M7B"/>
                             <constraint firstItem="yez-to-lUt" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="bottom" id="nDU-At-ZuL"/>
@@ -639,7 +639,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ept-Cy-3ka">
-                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="1xb-Wh-bhx" userLabel="MainContentStack">
                                         <rect key="frame" x="0.0" y="0.0" width="402" height="1614.3333333333333"/>
@@ -921,7 +921,7 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="ept-Cy-3ka" firstAttribute="trailing" secondItem="jfT-7c-raw" secondAttribute="trailing" id="QLV-4o-yJZ"/>
-                            <constraint firstItem="jfT-7c-raw" firstAttribute="bottom" secondItem="ept-Cy-3ka" secondAttribute="bottom" id="U4m-ap-I5z"/>
+                            <constraint firstAttribute="bottom" secondItem="ept-Cy-3ka" secondAttribute="bottom" id="U4m-ap-I5z"/>
                             <constraint firstItem="Srg-Tb-004" firstAttribute="leading" secondItem="EditLocationSearchBar" secondAttribute="leading" id="cst-srg-lead"/>
                             <constraint firstItem="Srg-Tb-004" firstAttribute="top" secondItem="EditLocationSearchBar" secondAttribute="bottom" id="cst-srg-top"/>
                             <constraint firstItem="Srg-Tb-004" firstAttribute="trailing" secondItem="EditLocationSearchBar" secondAttribute="trailing" id="cst-srg-trail"/>
@@ -954,7 +954,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Sqi-JJ-Qe1">
-                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="iIr-nJ-PLp" userLabel="MainContentStack">
                                         <rect key="frame" x="0.0" y="0.0" width="402" height="2277"/>
@@ -1205,7 +1205,7 @@
                         <constraints>
                             <constraint firstItem="Sqi-JJ-Qe1" firstAttribute="top" secondItem="Afl-bE-WAQ" secondAttribute="top" id="Jrz-hm-w8Y"/>
                             <constraint firstItem="Sqi-JJ-Qe1" firstAttribute="leading" secondItem="Afl-bE-WAQ" secondAttribute="leading" id="XI9-ch-CHt"/>
-                            <constraint firstItem="Afl-bE-WAQ" firstAttribute="bottom" secondItem="Sqi-JJ-Qe1" secondAttribute="bottom" id="csu-nC-4Du"/>
+                            <constraint firstAttribute="bottom" secondItem="Sqi-JJ-Qe1" secondAttribute="bottom" id="csu-nC-4Du"/>
                             <constraint firstItem="Afl-bE-WAQ" firstAttribute="trailing" secondItem="Sqi-JJ-Qe1" secondAttribute="trailing" id="nk3-nb-uRQ"/>
                             <constraint firstItem="Unobs-Sugg-Table" firstAttribute="leading" secondItem="Afl-bE-WAQ" secondAttribute="leading" id="unobs-cst-srg-lead"/>
                             <constraint firstItem="Unobs-Sugg-Table" firstAttribute="top" secondItem="UnobservedLocationSearchBar" secondAttribute="bottom" id="unobs-cst-srg-top"/>
@@ -1241,7 +1241,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="f9y-Mk-VkH">
-                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="2gh-la-apK">
                                         <rect key="frame" x="0.0" y="0.0" width="402" height="1766.6666666666667"/>
@@ -1487,7 +1487,7 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="f9y-Mk-VkH" firstAttribute="top" secondItem="qJF-2t-yFm" secondAttribute="top" id="L7f-46-iVr"/>
-                            <constraint firstItem="f9y-Mk-VkH" firstAttribute="bottom" secondItem="qJF-2t-yFm" secondAttribute="bottom" id="b9b-fu-xb7"/>
+                            <constraint firstItem="f9y-Mk-VkH" firstAttribute="bottom" secondItem="PW8-uZ-hif" secondAttribute="bottom" id="b9b-fu-xb7"/>
                             <constraint firstItem="Obs-Sugg-Table" firstAttribute="leading" secondItem="qJF-2t-yFm" secondAttribute="leading" id="obs-cst-srg-lead"/>
                             <constraint firstItem="Obs-Sugg-Table" firstAttribute="top" secondItem="ObservedLocationSearchBar" secondAttribute="bottom" id="obs-cst-srg-top"/>
                             <constraint firstItem="qJF-2t-yFm" firstAttribute="trailing" secondItem="Obs-Sugg-Table" secondAttribute="trailing" id="obs-cst-srg-trail"/>
@@ -1515,9 +1515,9 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="k90-vC-BJg"/>
-        <segue reference="nKR-lt-0XR"/>
-        <segue reference="WlZ-eO-mfp"/>
+        <segue reference="New-Seg-Id"/>
+        <segue reference="DTx-dp-kNz"/>
+        <segue reference="YWD-y0-7EQ"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="chevron.right" catalog="system" width="97" height="128"/>

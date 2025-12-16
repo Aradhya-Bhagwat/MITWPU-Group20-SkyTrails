@@ -204,11 +204,22 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	
 		// MARK: - ResultCellDelegate
 	
-	func didTapPredict(for cell: ResultTableViewCell) {
-		print("Predict species on map tapped")
-			// Implementation for map prediction can go here
-	}
+	    func didTapPredict(for cell: ResultTableViewCell) {
+	        print("Predict species on map tapped")
+	        guard let indexPath = resultTableView.indexPath(for: cell) else { return }
+	        let selectedBird = viewModel.birdResults[indexPath.row]
 	
+	        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+	        guard let birdSelectionVC = storyboard.instantiateViewController(withIdentifier: "birdspredViewController") as? BirdSelectionViewController else {
+	            print("Error: Could not instantiate BirdSelectionViewController from birdspred.storyboard")
+	            return
+	        }
+	
+	        // Pass the ID of the selected bird to pre-select it in the next screen.
+	        birdSelectionVC.selectedSpecies = [selectedBird.id]
+	        
+	        self.navigationController?.pushViewController(birdSelectionVC, animated: true)
+	    }	
 	func didTapAddToWatchlist(for cell: ResultTableViewCell) {
 		guard let indexPath = resultTableView.indexPath(for: cell) else { return }
 		let bird = viewModel.birdResults[indexPath.row]

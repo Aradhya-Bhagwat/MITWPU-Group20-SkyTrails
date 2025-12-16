@@ -23,7 +23,6 @@ class UnobservedDetailViewController: UIViewController {
     @IBOutlet weak var startDatePicker: UIDatePicker!
     @IBOutlet weak var endDatePicker: UIDatePicker!
     @IBOutlet weak var notesTextView: UITextView!
-    @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var locationSearchBar: UISearchBar!
     @IBOutlet weak var detailsCardView: UIView!
     @IBOutlet weak var locationCardView: UIView!
@@ -116,7 +115,6 @@ class UnobservedDetailViewController: UIViewController {
         guard let bird = bird else { return }
         
         navigationItem.title = "Edit Species"
-        nameTextField.text = bird.name
         loadImage(for: bird)
         
         if let firstDate = bird.date.first { startDatePicker.date = firstDate }
@@ -186,13 +184,14 @@ class UnobservedDetailViewController: UIViewController {
     }
     
     @objc private func didTapSave() {
-        let name = nameTextField.text ?? (bird?.name ?? "Unknown Bird")
+        guard var updatedBird = bird else {
+            print("Error: Bird object is missing for saving.")
+            return
+        }
+
         let location = locationSearchBar.text ?? ""
         let notes = notesTextView.text
         
-        var updatedBird = bird ?? Bird(name: name, scientificName: "", images: [], rarity: [.common], location: [], date: [], observedBy: nil)
-        
-        updatedBird.name = name
         if !location.isEmpty {
             updatedBird.location = [location]
         }

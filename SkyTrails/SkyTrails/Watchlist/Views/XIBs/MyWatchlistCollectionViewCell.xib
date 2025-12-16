@@ -150,6 +150,7 @@
                 <constraint firstItem="QVp-oS-57f" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="EcR-Ka-H4m"/>
                 <constraint firstItem="QVp-oS-57f" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="8" id="URB-uu-Puu"/>
                 <constraint firstAttribute="trailing" secondItem="QVp-oS-57f" secondAttribute="trailing" id="n6N-9Q-fco"/>
+                <constraint firstAttribute="bottom" secondItem="QVp-oS-57f" secondAttribute="bottom" constant="8" id="new-bottom-constraint"/>
             </constraints>
             <size key="customSize" width="778" height="179"/>
             <connections>

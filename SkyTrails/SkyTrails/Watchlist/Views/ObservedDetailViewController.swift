@@ -60,6 +60,7 @@ class ObservedDetailViewController: UIViewController {
         setupStyling()
         setupSearch()
         setupData()
+        setupInteractions()
         
         // Load data if editing existing
         if let birdData = bird {
@@ -210,6 +211,7 @@ class ObservedDetailViewController: UIViewController {
     }
     
     @objc func didTapImage() {
+        print("did tap recoginsed")
         let picker = UIImagePickerController()
         picker.sourceType = .photoLibrary
         picker.delegate = self
