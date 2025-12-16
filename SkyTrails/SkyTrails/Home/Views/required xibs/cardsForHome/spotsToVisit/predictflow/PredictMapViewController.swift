@@ -260,7 +260,9 @@ class PredictMapViewController: UIViewController {
             ]
 
         // ⭐️ Step 2: Extract the root PredictOutputViewController
-        guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController,
+        guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController else {
+            return
+        }
 
 
         // Pass data to the extracted root VC
@@ -270,10 +272,10 @@ class PredictMapViewController: UIViewController {
         // ⭐️ Use the Navigation Controller for the transition and pinning
         addChild(outputNavVC) // Use the wrapper
             
-        transition(from: currentVC, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+        transition(from: self.currentChildVC!, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
             
             // --- ⭐️ DRAG GESTURE TRANSFER FIX ⭐️ ---
-            if let originalNavVC = currentVC as? UINavigationController,
+            if let originalNavVC = self?.currentChildVC as? UINavigationController,
                let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
                 
                 // 1. Remove the gesture from the old navigation bar
@@ -285,16 +287,16 @@ class PredictMapViewController: UIViewController {
             // ----------------------------------------
             
             // Cleanup and Pinning
-            currentVC.removeFromParent()
+            self?.currentChildVC?.removeFromParent()
             outputNavVC.didMove(toParent: self)
             self?.currentChildVC = outputNavVC // currentChildVC must now hold the Nav Controller
             
             // Pin the Navigation Controller's view
             NSLayoutConstraint.activate([
-                outputNavVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                outputNavVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                outputNavVC.view.topAnchor.constraint(equalTo: container.topAnchor),
-                outputNavVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+                outputNavVC.view.leadingAnchor.constraint(equalTo: (self?.modalContainerView.leadingAnchor)!),
+                outputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!),
+                outputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!),
+                outputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!)
             ])
         }
     }
@@ -306,7 +308,9 @@ class PredictMapViewController: UIViewController {
         // 1. Instantiate the Predict Input Navigation Controller
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let inputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictInputNavigationController") as? UINavigationController,
-              let inputVC = inputNavVC.viewControllers.first as? PredictInputViewController,
+              let inputVC = inputNavVC.viewControllers.first as? PredictInputViewController else {
+            return
+        }
 
         
         // 2. Load the retained data back into the Input VC
@@ -327,10 +331,10 @@ class PredictMapViewController: UIViewController {
         // 5. Execute Reverse Transition
         addChild(inputNavVC)
         
-        transition(from: currentVC, to: inputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+        transition(from: self.currentChildVC!, to: inputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
             
             // --- DRAG GESTURE TRANSFER FIX (Must be repeated for reverse transition) ---
-            if let originalNavVC = currentVC as? UINavigationController,
+            if let originalNavVC = self?.currentChildVC as? UINavigationController,
                let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
                 
                 originalNavVC.navigationBar.removeGestureRecognizer(panGesture)
@@ -339,16 +343,16 @@ class PredictMapViewController: UIViewController {
             // ------------------------------------------------------------------------
             
             // Cleanup and Pinning
-            currentVC.removeFromParent()
+            self?.currentChildVC?.removeFromParent()
             inputNavVC.didMove(toParent: self)
             self?.currentChildVC = inputNavVC // currentChildVC now holds the Input VC
             
             // Pin the Navigation Controller's view
             NSLayoutConstraint.activate([
-                inputNavVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                inputNavVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                inputNavVC.view.topAnchor.constraint(equalTo: container.topAnchor),
-                inputNavVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+                inputNavVC.view.leadingAnchor.constraint(equalTo: (self?.modalContainerView.leadingAnchor)!),
+                inputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!),
+                inputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!),
+                inputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!)
             ])
         }
     }
