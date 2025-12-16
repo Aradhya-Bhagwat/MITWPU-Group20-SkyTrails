@@ -34,7 +34,6 @@ class PredictMapViewController: UIViewController {
         // MARK: - Map Update Logic
         
     private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
-        // 1. Clear existing annotations/overlays
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         
@@ -129,7 +128,7 @@ class PredictMapViewController: UIViewController {
             
             maxTopY = safeAreaTop + 140
             initialLoadY = screenHeight * 0.45
-            minBottomY = screenHeight * 0.90 // Changed from 0.80 back to 0.90 for 1/10th visibility
+            minBottomY = screenHeight * 0.85 //1/10th visiblity
             
             // ---------------------------
             
@@ -157,15 +156,13 @@ class PredictMapViewController: UIViewController {
             addChild(navVC)
             modalContainerView.addSubview(navVC.view)
             
-            // ⭐️ Save the initial child reference
+            //  Save the initial child reference
             currentChildVC = navVC
             
             
             navVC.view.translatesAutoresizingMaskIntoConstraints = false
             navVC.view.clipsToBounds = true
             navVC.view.layer.cornerRadius = 24
-            
-            // ✅ FIX 2: Use CACornerMask prefix for contextual type
             navVC.view.layer.maskedCorners = [
                 CACornerMask.layerMinXMinYCorner,
                 CACornerMask.layerMaxXMinYCorner
@@ -229,7 +226,7 @@ class PredictMapViewController: UIViewController {
     // In PredictMapViewController.swift, inside the PredictMapViewController class:
 
     func updateMapWithCurrentInputs(inputs: [PredictionInputData]) {
-        // ⭐️ CALL THE MAIN MAP LOGIC, but pass empty predictions
+        //  CALL THE MAIN MAP LOGIC, but pass empty predictions
         // since the user is still on the input screen.
         updateMap(with: inputs, predictions: [])
     }
@@ -240,12 +237,12 @@ class PredictMapViewController: UIViewController {
     // ORIGINAL function signature
     func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
                 
-        // ⭐️ FIX: Call updateMap here to show final pins/circles before transition
+
         updateMap(with: inputs, predictions: predictions)
         
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
             
-        // ⭐️ Step 1: Instantiate the Navigation Controller wrapper
+        // Instantiate the Navigation Controller wrapper
         guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
 
             return
@@ -259,7 +256,7 @@ class PredictMapViewController: UIViewController {
                 CACornerMask.layerMaxXMinYCorner
             ]
 
-        // ⭐️ Step 2: Extract the root PredictOutputViewController
+        //  Extract the root PredictOutputViewController
         guard let outputVC = outputNavVC.viewControllers.first as? PredictOutputViewController else {
             return
         }
@@ -269,12 +266,12 @@ class PredictMapViewController: UIViewController {
         outputVC.predictions = predictions
         outputVC.inputData = inputs
             
-        // ⭐️ Use the Navigation Controller for the transition and pinning
+        // Use the Navigation Controller for the transition and pinning
         addChild(outputNavVC) // Use the wrapper
             
         transition(from: self.currentChildVC!, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
             
-            // --- ⭐️ DRAG GESTURE TRANSFER FIX ⭐️ ---
+            // drag gesture transfer
             if let originalNavVC = self?.currentChildVC as? UINavigationController,
                let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
                 
@@ -314,7 +311,7 @@ class PredictMapViewController: UIViewController {
 
         
         // 2. Load the retained data back into the Input VC
-        inputVC.inputData = inputs // ⭐️ This retains all the user's previously entered data
+        inputVC.inputData = inputs
         
         // 3. Update the map to clear predictions and only show input pins/circles
         updateMap(with: inputs, predictions: [])
@@ -333,14 +330,13 @@ class PredictMapViewController: UIViewController {
         
         transition(from: self.currentChildVC!, to: inputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
             
-            // --- DRAG GESTURE TRANSFER FIX (Must be repeated for reverse transition) ---
             if let originalNavVC = self?.currentChildVC as? UINavigationController,
                let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
                 
                 originalNavVC.navigationBar.removeGestureRecognizer(panGesture)
-                inputNavVC.navigationBar.addGestureRecognizer(panGesture) // Transfer back to Input VC
+                inputNavVC.navigationBar.addGestureRecognizer(panGesture)
             }
-            // ------------------------------------------------------------------------
+       
             
             // Cleanup and Pinning
             self?.currentChildVC?.removeFromParent()
@@ -360,9 +356,6 @@ class PredictMapViewController: UIViewController {
     func filterMapForBird(_ prediction: FinalPredictionResult) {
         // 1. Remove ONLY bird annotations (keep user location pins)
         let birdAnnotations = mapView.annotations.filter { annotation in
-            // Identify bird pins by their subtitle (as set in updateMap) or if they are NOT the user location
-            // Easier: Identify user location pins by title == input.locationName?
-            // Or assume anything with "Predicted near" subtitle is a bird.
             if let subtitle = annotation.subtitle, subtitle?.contains("Predicted near") == true {
                 return true
             }
@@ -446,12 +439,10 @@ extension PredictMapViewController: MKMapViewDelegate {
         
         if let markerView = annotationView as? MKMarkerAnnotationView {
             
-            // ⭐️ FIX: Safely check the optional subtitle using optional chaining and nil-coalescing.
             let isPredictedBird = annotation.subtitle??.contains("Predicted near") ?? false
             
             if isPredictedBird {
                 // Pin for a Bird Sighting (Prediction Result)
-                // ⭐️ FIX: Dynamic Color based on Title (Bird Name)
                 let birdName = annotation.title ?? ""
                 markerView.markerTintColor = colorFor(name: birdName ?? "Bird")
                 markerView.glyphImage = UIImage(systemName: "feather")

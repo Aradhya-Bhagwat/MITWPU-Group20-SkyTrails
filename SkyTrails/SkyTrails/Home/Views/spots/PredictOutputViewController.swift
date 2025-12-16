@@ -10,14 +10,10 @@ import CoreLocation
 
 class PredictOutputViewController: UIViewController {
     
-    // Data passed from PredictMapViewController
     var predictions: [FinalPredictionResult] = []
     var inputData: [PredictionInputData] = []
     
-    // Data organized by input index to match cards
     private var organizedPredictions: [[FinalPredictionResult]] = []
-    
-    // UI Elements
     private var collectionView: UICollectionView!
     private let pageControl = UIPageControl()
     
@@ -32,12 +28,12 @@ class PredictOutputViewController: UIViewController {
     }
     
     private func organizeData() {
-        // Initialize array with empty lists for each input card
+
         organizedPredictions = Array(repeating: [], count: inputData.count)
         
         for prediction in predictions {
             let index = prediction.matchedInputIndex
-            // Ensure the index is valid
+
             if index >= 0 && index < organizedPredictions.count {
                 organizedPredictions[index].append(prediction)
             }
@@ -45,14 +41,10 @@ class PredictOutputViewController: UIViewController {
     }
     
     private func setupNavigation() {
-        // Title
         navigationItem.title = "Prediction Results"
-        
-        // Redo Button (Top Right)
         let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedo))
         navigationItem.rightBarButtonItem = redoButton
         
-        // Clear left bar button item
         navigationItem.leftBarButtonItem = nil
     }
     
@@ -64,8 +56,8 @@ class PredictOutputViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
         
         let screenWidth = UIScreen.main.bounds.width
-        // Card size: width = screen - 48 (margins), height = 320 (similar to input)
-        layout.itemSize = CGSize(width: screenWidth - 48, height: 400) // Increased height for output list
+       
+        layout.itemSize = CGSize(width: screenWidth - 48, height: 320)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -157,7 +149,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         
         cell.configure(location: locationName, data: cardPredictions)
         
-        // ⭐️ Handle Bird Selection
+        // Handle Bird Selection
         cell.onSelectPrediction = { [weak self] selectedPrediction in
             // Bubble up to Parent Map VC
             if let mapVC = self?.navigationController?.parent as? PredictMapViewController {

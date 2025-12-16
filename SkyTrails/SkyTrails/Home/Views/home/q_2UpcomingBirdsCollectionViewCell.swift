@@ -26,30 +26,26 @@ class q_2UpcomingBirdsCollectionViewCell: UICollectionViewCell {
                 contentView.layer.cornerRadius = 16
                 contentView.layer.masksToBounds = false
                 contentView.layer.shadowColor = UIColor.black.cgColor
-                contentView.layer.shadowOpacity = 0.15  // Adjust for darkness (0.1 to 0.2 is good)
-                contentView.layer.shadowOffset = CGSize(width: 0, height: 4) // Shadow moves down slightly
-                contentView.layer.shadowRadius = 8 // Softness of the shadow
-                
-                // Optimization: improves scrolling performance
+                contentView.layer.shadowOpacity = 0.15
+                contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
+                contentView.layer.shadowRadius = 8
                 contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
             cardContainerView.backgroundColor = .systemBackground
             cardContainerView.layer.cornerRadius = 16
-            
-            // This view MUST clip its content (the image) to keep the corners clean.
             cardContainerView.layer.masksToBounds = true
 
-        // Image styling
+
            birdImageView.contentMode = .scaleAspectFill
            birdImageView.clipsToBounds = true
            birdImageView.layer.cornerRadius = 12
            
-           // Title label
+
            titleLabel.numberOfLines = 1
            titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
            titleLabel.textColor = .label
            
-           // Date label
+
            dateLabel.font = UIFont.systemFont(ofSize: 11, weight: .regular)
            dateLabel.textColor = .secondaryLabel
            
@@ -79,7 +75,6 @@ class q_2UpcomingBirdsCollectionViewCell: UICollectionViewCell {
             attachment.bounds = CGRect(x: 0, y: yOffset, width: icon.size.width, height: icon.size.height)
             
             let completeString = NSMutableAttributedString(attachment: attachment)
-            // Add a space after the icon by adding a space character to the text
             completeString.append(NSAttributedString(string: " " + text, attributes: [.foregroundColor: color]))
             
             return completeString
@@ -93,7 +88,7 @@ class q_2UpcomingBirdsCollectionViewCell: UICollectionViewCell {
                    let dateFontSize = dateLabel.font.pointSize
            dateLabel.attributedText = createIconString(
                        text: date,
-                       iconName: "calendar", // Use calendar icon
+                       iconName: "calendar", 
                        color: dateColor,
                        fontSize: dateFontSize
                        )

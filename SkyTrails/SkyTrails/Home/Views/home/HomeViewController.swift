@@ -20,7 +20,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         self.title = "Home"
         self.navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
-        setupCollectionView()        // Do any additional setup after loading the view.
+        setupCollectionView()
     }
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
             super.viewWillTransition(to: size, with: coordinator)
@@ -28,7 +28,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
                 self.homeCollectionView.collectionViewLayout.invalidateLayout()
             }, completion: nil)
         }
-    // Add this inside HomeViewController class
+   
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAllSpots" {
             if let destinationVC = segue.destination as? AllSpotsViewController {
@@ -45,14 +45,14 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         }
     }
 }
-// HomeViewController.swift
+
 extension HomeViewController {
     func setupCollectionView() {
             homeCollectionView.delegate = self
             homeCollectionView.dataSource = self
             homeCollectionView.backgroundColor = .white
             
-            // 1. Register Cells (Existing Logic)
+     
         homeCollectionView.register(
             UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil),
             forSupplementaryViewOfKind: "CommunityPageControlFooter",
@@ -90,15 +90,12 @@ extension HomeViewController {
             homeCollectionView.register(
                     UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil),
                     forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-                    withReuseIdentifier: SectionHeaderCollectionReusableView.identifier // Use the static identifier
+                    withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
                 )
-           
-            // 3. Apply Layout
+
             homeCollectionView.collectionViewLayout = createLayout()
             
     }
-    
-    // Change createLayout to return the layout based on the section index
     private func createLayout() -> UICollectionViewLayout {
         
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
@@ -110,10 +107,10 @@ extension HomeViewController {
                 return self.createUpcomingBirdsSection()
             case 2: // Spots to Visit
                 return self.createSpotsToVisitSection()
-            case 3: // ⭐️ SHIFTED & ADDED: Community Observations (was 2) ⭐️
-                return self.createCommunityObservationsSection() // Ensure this helper exists
+            case 3: // Community
+                return self.createCommunityObservationsSection()
             default:
-                return nil // Safely return nil for unexpected indices
+                return nil
             }
         }
         
@@ -125,21 +122,19 @@ extension HomeViewController {
     private func createSectionHeaderLayout() -> NSCollectionLayoutBoundarySupplementaryItem {
         let headerSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(40) // Define a fixed height for the header
+            heightDimension: .absolute(40)
         )
         let header = NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: headerSize,
             elementKind: UICollectionView.elementKindSectionHeader,
             alignment: .top
         )
-        // Add horizontal padding to align with section content
+    
         header.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16)
         
         return header
     }
     
-    
-    // --- Section 0: Upcoming Birds (Horizontal) ---
     private func createUpcomingBirdsSection() -> NSCollectionLayoutSection {
         let cardWidth: CGFloat
         
@@ -159,7 +154,6 @@ extension HomeViewController {
             cachedUpcomingBirdCardWidth = cardWidth
         }
        
-        // 2. Layout
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
             heightDimension: .fractionalHeight(1.0)
@@ -194,9 +188,8 @@ extension HomeViewController {
     }
 
     
-    // --- Section 1: Spots to Visit (Vertical Grid) 💡 NEW ---
     private func createSpotsToVisitSection() -> NSCollectionLayoutSection {
-        // Item takes up half the width of the group
+
         let cardWidth: CGFloat
             
             if let cached = cachedSpotsCardWidth {
@@ -215,7 +208,6 @@ extension HomeViewController {
                 cachedSpotsCardWidth = cardWidth
             }
             
-            // 2. Layout
             let itemSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
                 heightDimension: .fractionalHeight(1.0)
@@ -235,7 +227,6 @@ extension HomeViewController {
             section.orthogonalScrollingBehavior = .continuous
             section.interGroupSpacing = 16
             
-            // header
             section.boundarySupplementaryItems = [createSectionHeaderLayout()]
             
             section.contentInsets = NSDirectionalEdgeInsets(
@@ -247,29 +238,25 @@ extension HomeViewController {
             
             return section
         }
-    // In HomeViewController.swift -> createMigrationCarouselSection()
-
 
     private func createCommunityObservationsSection() -> NSCollectionLayoutSection {
             
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
             
-            // Group takes full section width, fixed height for the card
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(159))
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
             
             let section = NSCollectionLayoutSection(group: group)
             
-            // KEY FOR SWIPING: Full-page horizontal scrolling
             section.orthogonalScrollingBehavior = .groupPagingCentered
             section.interGroupSpacing = 0
         let pageControlFooterKind = "CommunityPageControlFooter"
             
             let pageControlFooterSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(30) // Fixed height for the Page Control area
+                heightDimension: .absolute(30)
             )
             
             section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
@@ -277,9 +264,7 @@ extension HomeViewController {
                     layoutSize: pageControlFooterSize,
                     elementKind: pageControlFooterKind,
                     alignment: .bottom
-                )// Added bottom padding for page control area
-            
-            // Attach header
+                )
             let header = createSectionHeaderLayout()
             section.boundarySupplementaryItems = [header,pageControlFooter]
             
@@ -292,38 +277,28 @@ extension HomeViewController {
 extension HomeViewController: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        // This must match the number of sections defined in createLayout()
         return 4
     }
-    
-    // In HomeViewController.swift -> extension HomeViewController: UICollectionViewDataSource
 
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
 
         if section == 0 {
-            // ✅ FIX 1: Return the total count of ALL dynamic map cards (Migration + Hotspot)
             return homeData.getDynamicMapCards().count
         } else if section == 1 {
-            // SHIFTED: Upcoming Birds
             return homeData.homeScreenBirds.count
         } else if section == 2 {
-            // SHIFTED: Spots to Visit
             return min(homeData.homeScreenSpots.count, 5)
         } else if section == 3 {
-            // SHIFTED: Community Observations
             return homeData.communityObservations.count
         }
         return 0
     }
-    
-    // In HomeViewController.swift -> extension HomeViewController: UICollectionViewDataSource
 
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         if indexPath.section == 0 {
-            // ✅ FIX 2: Handle both Migration and Hotspot Cells via switch statement
             
             let mapCard = homeData.getDynamicMapCards()[indexPath.row]
             
@@ -335,23 +310,20 @@ extension HomeViewController: UICollectionViewDataSource {
                     for: indexPath
                 ) as? MigrationCellCollectionViewCell else { fatalError("Migration Cell failure") }
                 
-                // Configure the Migration Cell
                 cell.configure(with: migrationData)
                 return cell
                 
             case .hotspot(let hotspotData):
-                // Dequeue the Hotspot Cell
                 guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: HotspotCellCollectionViewCell.identifier, // Assuming this matches your registration
+                    withReuseIdentifier: HotspotCellCollectionViewCell.identifier,
                     for: indexPath
                 ) as? HotspotCellCollectionViewCell else { fatalError("Hotspot Cell failure") }
-                
-                // Configure the Hotspot Cell
+
                 cell.configure(with: hotspotData)
                 return cell
             }
         } else if indexPath.section == 1 {
-            // SHIFTED: --- SECTION 1: UPCOMING BIRDS (was 0) ---
+
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "q_2UpcomingBirdsCollectionViewCell",
                 for: indexPath
@@ -366,7 +338,7 @@ extension HomeViewController: UICollectionViewDataSource {
             return cell
             
         } else if indexPath.section == 2 {
-            // SHIFTED: --- SECTION 2: SPOTS TO VISIT (was 1) ---
+
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "q_3SpotsToVisitCollectionViewCell",
                 for: indexPath
@@ -381,7 +353,6 @@ extension HomeViewController: UICollectionViewDataSource {
             return cell
             
         } else if indexPath.section == 3 {
-            // SHIFTED: --- SECTION 3: COMMUNITY OBSERVATIONS (was 2) ---
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: q_4CommunityObservationsCollectionViewCell.identifier,
                 for: indexPath
@@ -404,7 +375,7 @@ extension HomeViewController: UICollectionViewDataSource {
          let communityFooterKind = "CommunityPageControlFooter"
          let migrationFooterKind = "MigrationPageControlFooter"
          
-         // 🔑 HANDLE PAGE CONTROL FOOTER FOR SECTION 0 (Migration/Hotspot Carousel)
+   
          if kind == migrationFooterKind && indexPath.section == 0 {
              let footer = collectionView.dequeueReusableSupplementaryView(
                  ofKind: kind,
@@ -412,14 +383,14 @@ extension HomeViewController: UICollectionViewDataSource {
                  for: indexPath
              ) as! PageControlReusableViewCollectionReusableView
              
-             // Configure the number of pages based on ALL dynamic map cards
+     
              let totalMapCardCount = homeData.getDynamicMapCards().count
-             // Start on the first page (index 0)
+   
              footer.configure(numberOfPages: totalMapCardCount, currentPage: 0)
              return footer
          }
          
-         // 🔑 HANDLE PAGE CONTROL FOOTER FOR SECTION 3 (Community)
+    
          else if kind == communityFooterKind && indexPath.section == 3 {
              let footer = collectionView.dequeueReusableSupplementaryView(
                  ofKind: kind,
@@ -428,15 +399,11 @@ extension HomeViewController: UICollectionViewDataSource {
              ) as! PageControlReusableViewCollectionReusableView
              
              let observationCount = homeData.communityObservations.count
-             // Start on the first page (index 0)
              footer.configure(numberOfPages: observationCount, currentPage: 0)
              return footer
          }
          
-         // HANDLE SECTION HEADERS
-        // ... inside viewForSupplementaryElementOfKind ...
-
-        // HANDLE SECTION HEADERS
+ 
         else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(
                 ofKind: kind,
@@ -444,10 +411,10 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! SectionHeaderCollectionReusableView
             
-            // Variable to hold the specific action for the current section
+       
             var action: (() -> Void)? = nil
             
-            // Configure based on section index
+
             if indexPath.section == 0 {
                 header.configure(title: "Prediction")
             }
@@ -462,9 +429,6 @@ extension HomeViewController: UICollectionViewDataSource {
                     header.configure(title: "Upcoming Birds", tapAction: action)
             }
             else if indexPath.section == 2 {
-
-                
-                // ⭐️ SECTION 2 LOGIC: Navigate using Storyboard Segue
                 action = { [weak self] in
                         guard let self = self else { return }
 
@@ -483,10 +447,6 @@ extension HomeViewController: UICollectionViewDataSource {
      }
 }
 
-// In HomeViewController.swift
-
-// Note: willDisplay is actually part of UICollectionViewDelegate, so we can just use that extension.
-// If you have a separate extension for UIScrollViewDelegate, replace it with this:
 
 extension HomeViewController {
     
@@ -494,7 +454,7 @@ extension HomeViewController {
                         willDisplay cell: UICollectionViewCell,
                         forItemAt indexPath: IndexPath) {
         
-        // 1. Check if we are in Section 0 (Migration/Hotspot Map)
+
         if indexPath.section == 0 {
             let footerKind = "MigrationPageControlFooter"
             
@@ -504,15 +464,12 @@ extension HomeViewController {
                 at: IndexPath(item: 0, section: 0)
             ) as? PageControlReusableViewCollectionReusableView {
                 
-                // Get the total count of map cards
                 let totalCount = homeData.getDynamicMapCards().count
                 
-                // Update the Page Control to the current row index
                 footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
             }
         }
         
-        // 2. Check if we are in Section 3 (Community Observations)
         else if indexPath.section == 3 {
             let footerKind = "CommunityPageControlFooter"
             
@@ -530,7 +487,6 @@ extension HomeViewController {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        // Handle "Spots to Visit" Selection
         if indexPath.section == 2 {
             let item = homeData.homeScreenSpots[indexPath.row]
 
@@ -539,8 +495,7 @@ extension HomeViewController {
     
                 return
             }
-            
-            // 1. Create Input Data
+        
             var inputData = PredictionInputData()
             inputData.locationName = item.title
             inputData.latitude = lat
@@ -549,7 +504,6 @@ extension HomeViewController {
             inputData.startDate = Date()
             inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
             
-            // 2. Create Predictions
             let predictions: [FinalPredictionResult] = (item.birds ?? []).map { bird in
                 return FinalPredictionResult(
                     birdName: bird.name,
@@ -559,7 +513,6 @@ extension HomeViewController {
                 )
             }
             
-            // 3. Navigate
             let storyboard = UIStoryboard(name: "Home", bundle: nil)
             if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
                 
@@ -571,69 +524,31 @@ extension HomeViewController {
         } else if indexPath.section == 3 {
             let observation = homeData.communityObservations[indexPath.row]
             
-            // Create a Bird object from CommunityObservation data
             let bird = Bird(
-                id: UUID(), // Generate a new UUID for the bird
+                id: UUID(),
                 name: observation.birdName,
-                scientificName: "Unknown", // Scientific name is not available in CommunityObservation
+                scientificName: "Unknown",
                 images: [observation.imageName],
-                rarity: [.common], // Default to common rarity
+                rarity: [.common],
                 location: [observation.location],
-                date: [Date()], // Use current date as observation date is not available
+                date: [Date()],
                 observedBy: [observation.user.profileImageName],
-                notes: nil // No notes available in CommunityObservation
+                notes: nil
             )
             
             let watchlistStoryboard = UIStoryboard(name: "Watchlist", bundle: nil)
             if let observedDetailVC = watchlistStoryboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController {
                 observedDetailVC.bird = bird
-                observedDetailVC.watchlistId = nil // Community observations are not tied to a specific watchlist ID here
+                observedDetailVC.watchlistId = nil
                 navigationController?.pushViewController(observedDetailVC, animated: true)
             }
         }
     }
-
-        
-       
-        
-    
-    // 💡 NEW: Handle Page Control updates on scroll
-//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//        
-//        
-//        let targetSectionIndex = 2
-//
-//     
-//        guard scrollView == homeCollectionView else { return }
-//        
-//     
-//        for subview in homeCollectionView.subviews {
-//            if let internalCollectionView = subview as? UICollectionView {
-//                if internalCollectionView.collectionViewLayout.collectionView?.collectionViewLayout is UICollectionViewCompositionalLayout,
-//                   let sectionLayout = internalCollectionView.collectionViewLayout.layoutAttributesForItem(at: IndexPath(item: 0, section: 0)) {
-// 
-//                    let contentOffsetX = internalCollectionView.contentOffset.x
-//                
-//                    let pageWidth = internalCollectionView.bounds.width
-//    
-//                    let currentPage = Int(round(contentOffsetX / pageWidth))
-//           
-//                    if currentPage != pageControl.currentPage && currentPage >= 0 && currentPage < pageControl.numberOfPages {
-//                        pageControl.currentPage = currentPage
-//                    }
-//                    return
-//                }
-//            }
-//        }
-//    }
 }
 
 // MARK: - Layout Helpers
 extension HomeViewController {
     
-    // ... [existing setupCollectionView and createLayout functions] ...
-
-    // --- Section 0: Migration Map Carousel (Horizontal Scrolling) ---
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         
         // 1. Item Definition (Card Size)
@@ -642,26 +557,16 @@ extension HomeViewController {
             heightDimension: .fractionalHeight(1.0)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        
-        // 2. Group Definition (The viewing window for one card)
-        let groupWidth = 0.9 // Card fills 90% of the screen width
-        let groupHeight: CGFloat = 320 // Fixed height for the map card
-        
+        let groupWidth = 0.9
+        let groupHeight: CGFloat = 320
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(groupWidth),
-            heightDimension: .absolute(groupHeight) // Set absolute height
+            heightDimension: .absolute(groupHeight)
         )
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        
-        // 3. Section Definition (Horizontal Scroll)
-        // FIX 1: Explicitly cast group to NSCollectionLayoutGroup
+
         let section = NSCollectionLayoutSection(group: group as! NSCollectionLayoutGroup)
-        
-        // FIX 2: Access the scrolling constant directly on NSCollectionLayoutSection
         section.orthogonalScrollingBehavior = .groupPagingCentered
-        // Define the Page Control Footer
-        
-        
         let migrationPageControlFooterKind = "MigrationPageControlFooter"
         
         let pageControlFooterSize = NSCollectionLayoutSize(
@@ -674,19 +579,16 @@ extension HomeViewController {
             elementKind: migrationPageControlFooterKind,
             alignment: .bottom
         )
-      
-        
-        // Attach the footer to the section
+
         section.boundarySupplementaryItems = [pageControlFooter]
         
         let header = createSectionHeaderLayout()
         header.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         section.boundarySupplementaryItems = [header, pageControlFooter]
         
-        // Spacing and Insets
         section.interGroupSpacing = 20
         section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
         
         return section
-    }    // ... [rest of the existing layout helper functions: createSectionHeaderLayout, createUpcomingBirdsSection, etc.] ...
+    }
 }

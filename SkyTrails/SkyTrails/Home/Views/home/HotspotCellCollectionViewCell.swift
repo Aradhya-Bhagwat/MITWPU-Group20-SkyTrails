@@ -31,13 +31,10 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+     
     }
-    // Inside HotspotCellCollectionViewCell.swift
     func configure(with prediction: HotspotPrediction) {
-            // This is where all the data is set and map drawing is triggered
             
-            // 1. UI Setup
         containerview.layer.cornerRadius = 16
         containerview.layer.masksToBounds = true
         
@@ -59,10 +56,7 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             PlaceImage.layer.cornerRadius = 8
             PlaceImage.layer.masksToBounds = true
             PlaceImage.contentMode = .scaleAspectFill
-            // The birdImage needs to be set up here, but that data isn't in HotspotPrediction
-            // (You might need to adjust your data model or skip it for now, as per the target image).
             
-            // 2. Map Setup
             mapView.delegate = self
             mapView.removeOverlays(mapView.overlays)
             mapView.removeAnnotations(mapView.annotations)
@@ -108,7 +102,6 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         for hotspot in prediction.hotspots {
             let annotation = HotspotBirdAnnotation()
             annotation.coordinate = hotspot.coordinate
-            // The custom pin icon will be loaded using this image name in the delegate method
             annotation.imageName = hotspot.birdImageName
             annotation.title = "Bird Sighting"
             annotationsToAdd.append(annotation)
@@ -123,7 +116,7 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         mapView.setVisibleMapRect(rect, edgePadding: edgePadding, animated: false)
     }
 }
-// Inside HotspotCellCollectionViewCell.swift
+
 
 // MARK: - Map Delegate (Styling Hotspots)
 
@@ -151,8 +144,6 @@ extension HotspotCellCollectionViewCell {
         return MKOverlayRenderer(overlay: overlay)
     }
     
-    // View for Annotations (Custom Image Icons)
-    // In HotspotCellCollectionViewCell.swift -> extension HotspotCellCollectionViewCell
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
@@ -188,8 +179,6 @@ extension HotspotCellCollectionViewCell {
                 let cgContext = context.cgContext
                 let pinColor = UIColor(red: 12/255, green: 70/255, blue: 156/255, alpha: 0.9).cgColor// Use dark blue for pin body
                 
-                // --- A. DRAW THE PIN BODY (Circle and Tail) ---
-                
                 // Draw the tail part (a triangle)
                 cgContext.beginPath()
                 cgContext.move(to: CGPoint(x: pinBaseSize.width / 2 , y: pinHeight)) // Tip of the pin
@@ -205,14 +194,12 @@ extension HotspotCellCollectionViewCell {
                 cgContext.setFillColor(pinColor)
                 cgContext.fillPath()
                 
-                // --- B. DRAW WHITE BORDER ---
                 // Draw a white circle slightly inside the dark blue base circle
                 let whiteBorderRect = CGRect(x: 2, y: 2, width: outerPinSize - 4, height: outerPinSize - 4)
                 cgContext.addEllipse(in: whiteBorderRect)
                 cgContext.setFillColor(UIColor.white.cgColor)
                 cgContext.fillPath()
-                
-                // --- C. DRAW BIRD IMAGE (Clips and centers the bird) ---
+
                 // Define where the bird image will sit (centered in the white border)
                 let imageRect = CGRect(x: (outerPinSize - innerImageSize) / 2,
                                        y: (outerPinSize - innerImageSize) / 2,
@@ -228,12 +215,7 @@ extension HotspotCellCollectionViewCell {
             }
             
             annotationView?.image = finalPinImage
-            
-            // 2b. Set the anchor point (Crucial: the bottom tip must align with the coordinate)
-            // Set centerOffset Y to half the image height (50/2) plus 10 points to push the tip down.
             annotationView?.centerOffset = CGPoint(x: 0, y: pinHeight / 50 - 4)
-            
-            // Remove circular styling (the image is now the pin shape)
             annotationView?.layer.cornerRadius = 0
             annotationView?.layer.masksToBounds = false
         }

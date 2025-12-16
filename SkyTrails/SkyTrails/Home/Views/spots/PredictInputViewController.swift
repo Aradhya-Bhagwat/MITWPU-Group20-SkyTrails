@@ -80,22 +80,18 @@ class PredictInputViewController: UIViewController {
         
         @IBAction func didTapDone(_ sender: Any) {
 
-                
-                // 1. Process all inputs using the Prediction Engine
                 var allResults: [FinalPredictionResult] = []
                 
                 for (index, input) in inputData.enumerated() {
-                    // Use the PredictionEngine to find birds for this card's criteria
+
                     let resultsForCard = PredictionEngine.shared.predictBirds(for: input, inputIndex: index)
                     allResults.append(contentsOf: resultsForCard)
                 }
                 
-                // 2. Filter to unique birds (in case one bird is predicted by multiple cards)
-                // We use the Hashable conformance implemented in models.swift
+
                 let uniqueResults = Array(Set(allResults))
                 
                 if let parentVC = self.navigationController?.parent as? PredictMapViewController {
-                    // Pass both the original input data (for map circles/labels) and the final predictions
                     parentVC.navigateToOutput(
                         inputs: inputData,
                         predictions: uniqueResults
@@ -113,14 +109,12 @@ class PredictInputViewController: UIViewController {
         private func updatePageControl(forceIndex: Int? = nil) {
             pageControl.numberOfPages = inputData.count
             
-            // 1. If we forced an index (like when adding/deleting), use it immediately
             if let index = forceIndex {
                 pageControl.currentPage = index
                 return
             }
             
-            // 2. Dynamic Math Calculation
-            // Get the layout to ensure we have the real numbers
+
             guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
             
             let itemWidth = layout.itemSize.width
@@ -165,13 +159,7 @@ class PredictInputViewController: UIViewController {
             validateInputs()
         }
     
-//    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-//            let width = scrollView.frame.width
-//        let currentPage = Int(round(scrollView.contentOffset.x / width))
-//            
-//            self.pageControl.currentPage = currentPage
-//    
-//        }
+
         
         // MARK: - Modal Presenters
         
@@ -197,7 +185,17 @@ class PredictInputViewController: UIViewController {
             
             let datePicker = UIDatePicker()
             datePicker.datePickerMode = .date
-            datePicker.preferredDatePickerStyle = .wheels
+            datePicker.preferredDatePickerStyle = .compact
+            
+            if isStartDate {
+                if let existingDate = inputData[index].startDate {
+                    datePicker.date = existingDate
+                }
+            } else {
+                if let existingDate = inputData[index].endDate {
+                    datePicker.date = existingDate
+                }
+            }
             datePicker.frame = CGRect(x: 0, y: 50, width: alert.view.bounds.width - 20, height: 200)
             
             alert.view.heightAnchor.constraint(equalToConstant: 300).isActive = true
@@ -246,14 +244,7 @@ class PredictInputViewController: UIViewController {
                 self?.openSearchModal(forIndex: indexPath.row)
             }
             
-            // 3. Wire up Dates
-            cell.onStartDateTap = { [weak self] in
-                self?.openDatePicker(forIndex: indexPath.row, isStartDate: true)
-            }
-            
-            cell.onEndDateTap = { [weak self] in
-                self?.openDatePicker(forIndex: indexPath.row, isStartDate: false)
-            }
+ 
             
             // 4. Wire up Area
             cell.onAreaChange = { [weak self] newVal in
@@ -290,7 +281,7 @@ extension PredictInputViewController: SearchLocationDelegate {
         collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
         validateInputs()
         
-        // ⭐️ FIX: Call the live map update here ⭐️
+
         if let mapVC = self.navigationController?.parent as? PredictMapViewController {
             mapVC.updateMapWithCurrentInputs(inputs: inputData)
         }

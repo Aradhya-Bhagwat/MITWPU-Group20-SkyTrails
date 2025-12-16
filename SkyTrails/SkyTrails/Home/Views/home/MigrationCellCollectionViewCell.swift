@@ -22,10 +22,6 @@ class CurrentLocationAnnotation: MKPointAnnotation {}
 
 extension Array where Element == CLLocationCoordinate2D {
     
-    /**
-     Calculates a precise coordinate located at a specific percentage along the path (distance-based interpolation).
-     Returns the coordinates that form the completed segment up to that point.
-     */
     func interpolatedProgress(at percentage: Double) -> (progressCoords: [CLLocationCoordinate2D], currentCoord: CLLocationCoordinate2D) {
         
         // Handle edge cases where path has less than 2 points
@@ -62,34 +58,24 @@ extension Array where Element == CLLocationCoordinate2D {
             // Check if the target distance falls within this segment
             if (currentDistance + segmentLength) >= targetDistance {
                 let remainingDistanceInSegment = targetDistance - currentDistance
-                
-                // Calculate the ratio of how far into this specific segment we need to go
                 let ratio = remainingDistanceInSegment / segmentLength
-                
-                // --- LINEAR INTERPOLATION (Accurate Calculation) ---
                 let interpolatedLatitude = startCoord.latitude + (endCoord.latitude - startCoord.latitude) * ratio
                 let interpolatedLongitude = startCoord.longitude + (endCoord.longitude - startCoord.longitude) * ratio
                 
                 let interpolatedCoord = CLLocationCoordinate2D(latitude: interpolatedLatitude, longitude: interpolatedLongitude)
                 
                 segmentCoords.append(interpolatedCoord)
-                
-                // Return the completed path segment (ending with the accurate interpolated coordinate)
+  
                 return (segmentCoords, interpolatedCoord)
             }
-            
-            // If the target is past this segment, add the entire segment's endpoint and continue
+
             currentDistance += segmentLength
             segmentCoords.append(endCoord)
         }
-        
-        // Fallback (should not be reached if totalLength is > 0 and percentage < 1.0)
+
         return (self, self.last ?? CLLocationCoordinate2D())
     }
     
-    /**
-     Calculates the total length of the polyline in meters using geodesic distance.
-     */
     private func totalLength() -> Double {
         guard self.count > 1 else { return 0 }
         var totalLength: Double = 0
@@ -124,12 +110,9 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
-        // --- Cell/Map Styling ---
+
         contentView.backgroundColor = .clear
                 
-//            cardContainerView.layer.cornerRadius = 16
-//            cardContainerView.layer.masksToBounds = true
             cardContainerView?.layer.cornerRadius = 16
             cardContainerView?.layer.masksToBounds = true
         
@@ -145,15 +128,10 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         mapView?.isZoomEnabled = false
         mapView?.isScrollEnabled = false
         
-        // --- Overlay Card Styling ---
-        
         birdImageView?.layer.cornerRadius = 8 // Example
         birdImageView?.layer.masksToBounds = true
         birdImageView?.contentMode = .scaleAspectFill
         
-        // Set up progress view appearance
-//        progressView.trackColor = UIColor.lightGray.withAlphaComponent(0.5)
-//        progressView.progressColor = UIColor.systemBlue
     }
     
     override func prepareForReuse() {
@@ -171,13 +149,11 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
     }
     func configure(with prediction: MigrationPrediction) {
         
-        // --- Existing UI Setup (No Change) ---
         birdNameLabel.text = prediction.birdName
         birdNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         startLocationLabel.text = prediction.startLocation
         endLocationLabel.text = prediction.endLocation
         
-        // Date formatting (using existing partial logic)
         let dateRangePrefixLength = prediction.dateRange.count / 2
         startDateLabel.text = prediction.dateRange.prefix(dateRangePrefixLength).trimmingCharacters(in: .whitespacesAndNewlines)
         endDateLabel.text = prediction.dateRange.suffix(dateRangePrefixLength).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -185,7 +161,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         progressView.progress = prediction.currentProgress
         birdImageView.image = UIImage(named: prediction.birdImageName)
         
-        // 1. CLEAR THE MAP (Crucial for cell reuse)
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
         
@@ -194,7 +169,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         
         var annotationsToAdd: [MKAnnotation] = []
         
-        // --- 2. ACCURATE PATH CALCULATION using Interpolation ---
         
         var progressCoordinates: [CLLocationCoordinate2D] = []
         var currentLocation: CLLocationCoordinate2D?
@@ -202,8 +176,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         if totalPoints > 1 {
             // Convert Float progress to Double
             let progressPercentage = Double(prediction.currentProgress)
-            
-            // This helper function accurately calculates the progress based on distance
             let result = fullCoordinates.interpolatedProgress(at: progressPercentage)
             
             progressCoordinates = result.progressCoords
@@ -215,9 +187,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
             progressCoordinates = fullCoordinates
         }
         
-        // --- 3. DRAW THE TWO LINES (Overlays) ---
-        
-        // A. Predicted Path (Pale Blue, Full Route) - Draw this FIRST (bottom layer)
         let predictedPath = PredictedPathPolyline(coordinates: fullCoordinates, count: totalPoints)
         mapView.addOverlay(predictedPath)
 
@@ -226,8 +195,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
             let progressPath = ProgressPathPolyline(coordinates: progressCoordinates, count: progressCoordinates.count)
             mapView.addOverlay(progressPath)
         }
-        
-        // --- 4. ADD ANNOTATIONS (Pins) ---
         
         // Start/End Annotations
         if let startCoord = fullCoordinates.first,
@@ -255,7 +222,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         
         mapView.addAnnotations(annotationsToAdd)
         
-        // 5. Zoom (Fit the entire predicted path)
         let fullPathLine = MKPolyline(coordinates: fullCoordinates, count: fullCoordinates.count)
         zoomToFitOverlays(for: fullPathLine)
     }
@@ -276,7 +242,6 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
             renderer.lineWidth = 4
             renderer.lineCap = .round
             
-            // CORRECT: Checks the custom class for color assignment
             if polyline is PredictedPathPolyline {
                 // Pale Blue/Faded Color for the full predicted route
                 renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.35)
@@ -294,7 +259,6 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
     // Defines how to display annotations (Pins)
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
-        // --- 1. HANDLE CURRENT LOCATION PIN (Custom Styling) ---
         if annotation is CurrentLocationAnnotation {
             let identifier = "CurrentPin"
             var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKPinAnnotationView
@@ -309,8 +273,7 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
             }
             return annotationView
         }
-        
-        // --- 2. HANDLE START/END PINS (Default Red Styling) ---
+
         guard annotation is MKPointAnnotation else { return nil }
         
         let identifier = "MigrationPin"
@@ -319,7 +282,7 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
         if annotationView == nil {
             annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             annotationView?.canShowCallout = true
-            annotationView?.pinTintColor = .systemRed // Highlight start/end points
+            annotationView?.pinTintColor = .systemRed 
         } else {
             annotationView?.annotation = annotation
         }

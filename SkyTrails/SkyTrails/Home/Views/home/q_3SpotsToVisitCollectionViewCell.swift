@@ -22,40 +22,33 @@ class q_3SpotsToVisitCollectionViewCell: UICollectionViewCell {
     }
     private func setupUI() {
         self.backgroundColor = .clear
-            contentView.backgroundColor = .systemBackground
-                
-                // Round the corners of the card
+                contentView.backgroundColor = .systemBackground
+
                 contentView.layer.cornerRadius = 16
-                
-                // IMPORTANT: Allow the shadow to spill outside the bounds
                 contentView.layer.masksToBounds = false
                 
                 // Add the Shadow
                 contentView.layer.shadowColor = UIColor.black.cgColor
-                contentView.layer.shadowOpacity = 0.15  // Adjust for darkness (0.1 to 0.2 is good)
-                contentView.layer.shadowOffset = CGSize(width: 0, height: 4) // Shadow moves down slightly
-                contentView.layer.shadowRadius = 8 // Softness of the shadow
-                
-                // Optimization: improves scrolling performance
+                contentView.layer.shadowOpacity = 0.15
+                contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
+                contentView.layer.shadowRadius = 8
                 contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
-        cardContainerView2.backgroundColor = .systemBackground
+            cardContainerView2.backgroundColor = .systemBackground
             cardContainerView2.layer.cornerRadius = 16
-            
-            // This view MUST clip its content (the image) to keep the corners clean.
             cardContainerView2.layer.masksToBounds = true
 
-        // Image styling
+
            birdImageView2.contentMode = .scaleAspectFill
            birdImageView2.clipsToBounds = true
            birdImageView2.layer.cornerRadius = 12
            
-           // Title label
+  
            titleLabel2.numberOfLines = 1
            titleLabel2.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
            titleLabel2.textColor = .label
            
-           // Date label
+
            dateLabel2.font = UIFont.systemFont(ofSize: 12, weight: .regular)
            dateLabel2.textColor = .secondaryLabel
            
@@ -84,7 +77,6 @@ class q_3SpotsToVisitCollectionViewCell: UICollectionViewCell {
             attachment.bounds = CGRect(x: 0, y: yOffset, width: icon.size.width, height: icon.size.height)
             
             let completeString = NSMutableAttributedString(attachment: attachment)
-            // Add a space after the icon by adding a space character to the text
             completeString.append(NSAttributedString(string: " " + text, attributes: [.foregroundColor: color]))
             
             return completeString
