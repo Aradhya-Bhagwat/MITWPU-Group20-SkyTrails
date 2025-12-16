@@ -39,7 +39,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		setupLeftResetButton()
 		setupRightTickButton()
 		
-			// MARK: - 1. Bind to ViewModel Updates
+			
 			// This ensures the table reloads whenever the filter finishes
 		viewModel.onResultsUpdated = { [weak self] in
 			DispatchQueue.main.async {
@@ -47,7 +47,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 			}
 		}
 		
-			// MARK: - 2. Initial Setup
+			
 			// If editing history, pre-select the bird
 		if let history = historyItem {
 			// Find the bird in the FULL database first, not just filtered results
@@ -78,7 +78,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		}
 	}
 	
-		// MARK: - UI Configuration
+		
 	
 	func styleTableContainer() {
 		tableContainerView.backgroundColor = .white
@@ -120,7 +120,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		navigationItem.leftBarButtonItem = UIBarButtonItem(customView: button)
 	}
 	
-		// MARK: - Actions
+		
 	
 	@objc private func nextTapped() {
 		guard let result = selectedResult else {
@@ -135,11 +135,11 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 			date: today()
 		)
 		
-			// FLOW B: If editing existing history -> replace
+			
 		if let index = historyIndex {
 			viewModel.histories[index] = entry
 		}
-			// FLOW A: Normal case -> add new history
+			
 		else {
 			viewModel.addToHistory(entry)
 		}
@@ -194,7 +194,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		return cell
 	}
 	
-		// MARK: - TableView Delegate
+		
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 			// Update selection
@@ -202,7 +202,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		tableView.reloadData() // Refresh to show grey background on selected row
 	}
 	
-		// MARK: - ResultCellDelegate
+		
 	
 	    func didTapPredict(for cell: ResultTableViewCell) {
 	        print("Predict species on map tapped")
@@ -236,9 +236,9 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
         // Use WatchlistManager shared instance
         let manager = WatchlistManager.shared
         
-        // Find "My Watchlist" (assuming it's the first one or finding by title)
+       
         if let defaultWatchlist = manager.watchlists.first {
-            // Add to "To Observe" list by default
+            
             manager.addBirds([bird], to: defaultWatchlist.id, asObserved: false)
             
             // Show Alert

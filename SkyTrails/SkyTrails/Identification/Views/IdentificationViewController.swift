@@ -254,7 +254,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
                 }
             }
             
-            // Logic for GUI step
+            
             if selected.contains(where: { $0.fieldMarkName == "Field Marks" }) {
                 flowSteps.append(.gui)
             }
@@ -289,7 +289,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             case .dateLocation:
                 let nextVC = storyboard.instantiateViewController(withIdentifier: "DateandLocationViewController") as! DateandLocationViewController
                 nextVC.viewModel = self.model
-                nextVC.delegate = self // MVC: WE are the delegate now
+                nextVC.delegate = self
                 vc = nextVC
                 
             case .size:
@@ -375,12 +375,12 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
     }
     
     func didTapLeftButton() {
-        // Reset or Pop
+        
         navigationController?.popToRootViewController(animated: true)
     }
     
     func openMapScreen() {
-        // MVC style map opening
+        
         let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
         if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
             navigationController?.pushViewController(mapVC, animated: true)

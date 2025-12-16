@@ -13,7 +13,7 @@ class VariationCell: UICollectionViewCell {
 		
 		imageView.image = image ?? UIImage(named: "icn_field_marks")
 		
-			// 3. Styling
+			
 		variationImageView.contentMode = .scaleAspectFit
 		layer.cornerRadius = frame.width / 2
 		
