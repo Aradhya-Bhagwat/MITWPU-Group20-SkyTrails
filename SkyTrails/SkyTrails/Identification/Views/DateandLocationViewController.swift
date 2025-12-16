@@ -23,7 +23,7 @@ class DateandLocationViewController: UIViewController {
     private let geocoder = CLGeocoder()
     private var completer = MKLocalSearchCompleter()
     
-    // MARK: - Lifecycle
+   
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -54,9 +54,6 @@ class DateandLocationViewController: UIViewController {
         let nib = UINib(nibName: "DateInputCell", bundle: nil)
         dateandlocationTableView.register(nib, forCellReuseIdentifier: "DateInputCell")
         
-        // Assuming SearchCell is defined in Storyboard or registered here
-        // dateandlocationTableView.register(UINib(nibName: "SearchCell", bundle: nil), forCellReuseIdentifier: "SearchCell")
-        
         dateandlocationTableView.delegate = self
         dateandlocationTableView.dataSource = self
         
@@ -66,8 +63,6 @@ class DateandLocationViewController: UIViewController {
     
     private func setupCompleter() {
         completer.delegate = self
-        // Optional: Limit region if needed
-        // completer.region = ...
     }
     private func setupRightTickButton() {
         let button = UIButton(type: .system)
@@ -82,14 +77,14 @@ class DateandLocationViewController: UIViewController {
         button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
-    // MARK: - Actions
+
     @objc private func nextTapped() {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd MMM yyyy"
         let formattedDate = formatter.string(from: selectedDate ?? Date())
         
         viewModel.data.date = formattedDate
-        // Location is already in viewModel.selectedLocation / viewModel.data.location
+     
         
         viewModel.filterBirds(
             shape: viewModel.selectedShapeId,
@@ -102,7 +97,7 @@ class DateandLocationViewController: UIViewController {
     }
     
     private func updateLocationSelection(_ name: String) {
-        // Update Model
+ 
         viewModel.selectedLocation = name
         viewModel.data.location = name
         
@@ -140,7 +135,7 @@ class DateandLocationViewController: UIViewController {
     }
 }
 
-// MARK: - UITableView DataSource & Delegate
+
 extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {

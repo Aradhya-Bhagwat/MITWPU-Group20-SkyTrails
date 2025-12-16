@@ -130,11 +130,12 @@ class MapViewController: UIViewController {
     func reverseGeocode(_ coord: CLLocationCoordinate2D) {
         let location = CLLocation(latitude: coord.latitude,
                                   longitude: coord.longitude)
-
+        //concurent view it does not block ui
         Task { [weak self] in
             guard let self else { return }
 
             do {
+             
                 guard let request = MKReverseGeocodingRequest(location: location) else {
                     await MainActor.run {
                         self.selectedLocationName = "Location"
@@ -142,6 +143,7 @@ class MapViewController: UIViewController {
                     }
                     return
                 }
+                //sends request to map and return mkmapItem
                 let response = try await request.mapItems
                 let item = response.first
 
@@ -185,32 +187,7 @@ class MapViewController: UIViewController {
 
 
 extension MapViewController: MKMapViewDelegate, CLLocationManagerDelegate {
-//    func mapView(_ mapView: MKMapView,
-//                 viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-//
-//        if annotation is MKUserLocation { return nil }
-//
-//        let id = "marker"
-//        var marker = mapView.dequeueReusableAnnotationView(
-//            withIdentifier: id
-//        ) as? MKMarkerAnnotationView
-//
-//        if marker == nil {
-//            marker = MKMarkerAnnotationView(annotation: annotation,
-//                                            reuseIdentifier: id)
-//            marker?.canShowCallout = true
-//            marker?.markerTintColor = .red
-//            marker?.glyphImage = nil
-//            marker?.glyphText = nil
-//        } else {
-//            marker?.annotation = annotation
-//        }
-//
-//        return marker
-//    }
 
-
-    
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         if manager.authorizationStatus == .authorizedWhenInUse {
             mapView.showsUserLocation = true
