@@ -27,10 +27,10 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     var currentWatchlistId: UUID?
     
     // Data Source
-    private var allWatchlists: [Watchlist] = []
+    public var allWatchlists: [Watchlist] = []
     private var filteredSections: [[Bird]] = []
-    private var observedBirds: [Bird] = []
-    private var toObserveBirds: [Bird] = []
+    public var observedBirds: [Bird] = []
+    public var toObserveBirds: [Bird] = []
     private var currentList: [Bird] = []
     
     // State
