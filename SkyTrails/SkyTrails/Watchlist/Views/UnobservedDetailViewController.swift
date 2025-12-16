@@ -11,7 +11,7 @@ class UnobservedDetailViewController: UIViewController {
     
     // MARK: - Private Properties
     private let locationManager = CLLocationManager()
-    private let geocoder = CLGeocoder()
+
     private var searchCompleter = MKLocalSearchCompleter()
     private var locationResults: [MKLocalSearchCompletion] = []
     
@@ -220,24 +220,29 @@ extension UnobservedDetailViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
-        // Modern Async Geocoding
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
+
             do {
-                let placemarks = try await geocoder.reverseGeocodeLocation(location)
-                if let placemark = placemarks.first {
-                    let city = placemark.locality ?? ""
-                    let area = placemark.subLocality ?? ""
-                    let country = placemark.country ?? ""
-                    
-                    let parts = [area, city, country].filter { !$0.isEmpty }
-                    let address = parts.joined(separator: ", ")
-                    
+                guard let request = MKReverseGeocodingRequest(location: location) else {
                     await MainActor.run {
-                        self.updateLocationSelection(address)
+                        self.updateLocationSelection("Location")
                     }
+                    return
                 }
+                let response = try await request.mapItems
+                let item = response.first
+
+                let name = item?.name ?? "Location"
+
+                await MainActor.run {
+                    self.updateLocationSelection(name)
+                }
+
             } catch {
-                print("Reverse geocoding failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.updateLocationSelection("Location")
+                }
             }
         }
     }

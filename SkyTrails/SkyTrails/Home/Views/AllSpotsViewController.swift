@@ -75,10 +75,10 @@ class AllSpotsViewController: UIViewController {
                     
                     // Use the smallest dimension of the screen to calculate the "Base" layout
                     // This simulates "Portrait" width even if we launched in Landscape.
-                    let screenMinDimension = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+                    let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
+                    let screenMinDimension = min(screenBounds.width, screenBounds.height)
                     
                     // Logic: Fit at least 2 columns in that min dimension, max width 400
-                    let padding: CGFloat = 16.0 // Total padding (8 left + 8 right)
                     let spacing: CGFloat = 16.0 // Inter-item spacing
                     
                     let maxCardWidth: CGFloat = 400.0

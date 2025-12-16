@@ -56,21 +56,25 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
             containerView.layer.shadowRadius = 8
             
             // Search Button Style
-            styleButton(searchButton, placeholder: "Search Location")
+            styleButton(searchButton)
         }
         
         // ⭐️ NEW: Consistent styling for buttons
         private func setupDateButtons() {
-            styleButton(startDateButton, placeholder: "Start Date")
-            styleButton(endDateButton, placeholder: "End Date")
+            styleButton(startDateButton)
+            styleButton(endDateButton)
         }
         
-        private func styleButton(_ button: UIButton, placeholder: String) {
+        private func styleButton(_ button: UIButton) {
+            var config = UIButton.Configuration.plain()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 0)
+            config.baseBackgroundColor = .systemGray6
+            config.baseForegroundColor = .label
+            config.titleAlignment = .leading
+
+            button.configuration = config
             button.layer.cornerRadius = 8
-            button.backgroundColor = .systemGray6
-            button.setTitleColor(.label, for: .normal)
-            button.contentHorizontalAlignment = .left
-            button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 0)
+            button.clipsToBounds = true
         }
         
         private func setupStepper() {
