@@ -314,30 +314,43 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
 // MARK: - CLLocationManagerDelegate
 extension DateandLocationViewController: CLLocationManagerDelegate {
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    func locationManager(_ manager: CLLocationManager,
+                         didUpdateLocations locations: [CLLocation]) {
+
         guard let location = locations.last else { return }
-        
-        // Modern Async Geocoding
-        Task {
+
+        Task { [weak self] in
+            guard let self else { return }
+
             do {
-                let placemarks = try await geocoder.reverseGeocodeLocation(location)
-                if let placemark = placemarks.first {
-                    let city = placemark.locality ?? ""
-                    let area = placemark.subLocality ?? ""
-                    let country = placemark.country ?? ""
-                    
-                    let parts = [area, city, country].filter { !$0.isEmpty }
-                    let address = parts.joined(separator: ", ")
-                    
+                // Create MapKit reverse geocoding request
+                guard let request = MKReverseGeocodingRequest(location: location) else {
                     await MainActor.run {
-                        self.updateLocationSelection(address)
+                        self.updateLocationSelection("Location")
                     }
+                    return
                 }
+
+                // Perform reverse geocoding
+                let response = try await request.mapItems
+                let item = response.first
+
+                let name = item?.name ?? "Location"
+
+                // Update UI + model on main thread
+                await MainActor.run {
+                    self.updateLocationSelection(name)
+                }
+
             } catch {
+                await MainActor.run {
+                    self.updateLocationSelection("Location")
+                }
                 print("Reverse geocoding failed: \(error.localizedDescription)")
             }
         }
     }
+
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager failed: \(error.localizedDescription)")
