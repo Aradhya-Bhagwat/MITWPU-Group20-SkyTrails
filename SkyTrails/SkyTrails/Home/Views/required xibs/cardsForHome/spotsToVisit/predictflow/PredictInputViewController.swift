@@ -17,36 +17,22 @@ class PredictInputViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Temporary Test Code in PredictInputViewController.swift
-        let storyboard = UIStoryboard(name: "Home", bundle: nil)
-        let testVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputViewController")
-
-        // The line above should print "PredictOutputViewController" if it's found.
        
         setupPageControl()
         setupCollectionView()
         validateInputs()
         applyHeightConstraint()
-        // Do any additional setup after loading the view.
     }
     
     private func applyHeightConstraint() {
-            // 1. Disable the auto-resizing mask translation
+    
             collectionView.translatesAutoresizingMaskIntoConstraints = false
-            
-            // 2. Calculate needed height: Card Height (320) + Shadow/Padding (40)
             let neededHeight: CGFloat = 324
-            
-            // 3. Add a hard height constraint
             let heightConstraint = collectionView.heightAnchor.constraint(equalToConstant: neededHeight)
             heightConstraint.isActive = true
             
-            // Note: If you have a 'Bottom' constraint in Storyboard connecting the
-            // CollectionView to the bottom of the screen, you might get a constraint warning.
-            // If so, you should lower the priority of that storyboard constraint or remove it.
         }
     private func setupCollectionView() {
-            // ⭐️ USE STANDARD LAYOUT
             let layout = UICollectionViewFlowLayout()
             
             layout.scrollDirection = .horizontal
@@ -57,14 +43,10 @@ class PredictInputViewController: UIViewController {
             layout.itemSize = CGSize(width: screenWidth - 48, height: 320)
             
             collectionView.collectionViewLayout = layout
-            
-            // Standard scroll settings
-            collectionView.isPagingEnabled = false // Adjust based on preference, false for free scroll + snapping
-            collectionView.decelerationRate = .fast // Keeps the snappy feel if we implement targetContentOffset in subclass, but for standard flow layout, normal is fine.
+            collectionView.isPagingEnabled = false
+            collectionView.decelerationRate = .fast
             collectionView.showsHorizontalScrollIndicator = false
             collectionView.backgroundColor = .clear
-            
-            // Register Cell
             collectionView.register(
                 UINib(nibName: PredictionInputCellCollectionViewCell.identifier, bundle: nil),
                 forCellWithReuseIdentifier: PredictionInputCellCollectionViewCell.identifier
@@ -77,17 +59,13 @@ class PredictInputViewController: UIViewController {
             pageControl.numberOfPages = inputData.count
             pageControl.currentPage = 0
             pageControl.hidesForSinglePage = true
-            // Add target for tap interaction (optional)
             pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
         }
 
         // MARK: - Navigation Actions
         
         @IBAction func didTapAdd(_ sender: Any) {
-            // Limit to 5 inputs
             guard inputData.count < 5 else { return }
-            
-            // Add new empty data model
             inputData.append(PredictionInputData())
             
             // Update Collection View
