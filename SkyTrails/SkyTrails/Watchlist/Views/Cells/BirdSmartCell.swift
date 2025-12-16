@@ -18,14 +18,13 @@ class BirdSmartCell: UITableViewCell {
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var locationLabel: UILabel!
     
-    @IBOutlet var avatarImageViews: [UIImageView]! // Collection
+    @IBOutlet var avatarImageViews: [UIImageView]! 
     @IBOutlet weak var overflowBadgeView: UIView!
     @IBOutlet weak var overflowLabel: UILabel!
-    @IBOutlet weak var avatarStackView: UIStackView! // Existing, now connected to Storyboard
+    @IBOutlet weak var avatarStackView: UIStackView!
 
     var shouldShowAvatars: Bool = true {
         didSet {
-            // Updated to use the new avatarStackView outlet
             avatarStackView.isHidden = !shouldShowAvatars
         }
     }
@@ -33,19 +32,15 @@ class BirdSmartCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         setupUI()
-        // setupAvatarStackView() - Removed, UI is now in Storyboard
-        // avatarStackView.isHidden = !shouldShowAvatars - Initial state handled by new setupAvatars
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        // Configure the view for the selected state
     }
 
     private func setupUI() {
         // Container Styling
         containerView.layer.cornerRadius = 12
-        // Shadow can be added here or in the storyboard if preferred, similar to the reference cell
         
         // Image Styling
         birdImageView.layer.cornerRadius = 12
@@ -65,7 +60,7 @@ class BirdSmartCell: UITableViewCell {
 
         // Configure all avatar image views initially
         avatarImageViews.forEach {
-            $0.layer.cornerRadius = 15 // imageSize / 2 where imageSize = 30
+            $0.layer.cornerRadius = 15
             $0.clipsToBounds = true
             $0.layer.borderWidth = 2
             $0.layer.borderColor = UIColor.white.cgColor
@@ -81,8 +76,6 @@ class BirdSmartCell: UITableViewCell {
         overflowLabel.font = .systemFont(ofSize: 12, weight: .bold)
         overflowLabel.textAlignment = .center
     }
-    
-    // setupAvatarStackView() removed
     
     func configure(with bird: Bird) {
         titleLabel.text = bird.name
@@ -122,11 +115,10 @@ class BirdSmartCell: UITableViewCell {
             locationLabel.isHidden = true
         }
         
-        // Avatars - only show if `shouldShowAvatars` is true for this cell
+        // Avatars
         if shouldShowAvatars {
             setupAvatars(images: bird.observedBy ?? [])
         } else {
-            // Ensure avatars are hidden and cleared if not supposed to be shown
             avatarStackView.isHidden = true
             avatarImageViews.forEach { $0.isHidden = true }
             overflowBadgeView.isHidden = true
@@ -134,7 +126,6 @@ class BirdSmartCell: UITableViewCell {
     }
     
     private func setupAvatars(images: [String]) {
-        // Reset
         avatarImageViews.forEach { $0.isHidden = true }
         overflowBadgeView.isHidden = true
         
@@ -164,7 +155,6 @@ class BirdSmartCell: UITableViewCell {
         }
     }
     
-    // Helper
     private func addIconToLabel(label: UILabel, text: String, iconName: String) {
         let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
         let image = UIImage(systemName: iconName, withConfiguration: config)?
@@ -180,7 +170,7 @@ class BirdSmartCell: UITableViewCell {
         attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
         
         let attrString = NSMutableAttributedString(attachment: attachment)
-        attrString.append(NSAttributedString(string: "  " + text)) // Extra space after icon
+        attrString.append(NSAttributedString(string: "  " + text))
         
         label.attributedText = attrString
     }

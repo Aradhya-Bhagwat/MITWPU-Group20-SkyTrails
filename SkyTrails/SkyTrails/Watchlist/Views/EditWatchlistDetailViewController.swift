@@ -9,13 +9,13 @@ import UIKit
 import CoreLocation
 import MapKit
 
-// Local helper struct for the UI
+// MARK: - Helper Models
 struct Participant {
     let name: String
     let imageName: String
 }
 
-class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDelegate {
+class EditWatchlistDetailViewController: UIViewController {
     
     // MARK: - Outlets
     @IBOutlet weak var titleTextField: UITextField!
@@ -24,187 +24,144 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
     @IBOutlet weak var startDatePicker: UIDatePicker!
     @IBOutlet weak var endDatePicker: UIDatePicker!
     @IBOutlet weak var inviteContactsView: UIView!
+    @IBOutlet weak var suggestionsTableView: UITableView!
+    @IBOutlet weak var participantsTableView: UITableView!
     
     // MARK: - Properties
-    // var viewModel: WatchlistViewModel? // Removed
     var watchlistType: WatchlistType = .custom
     
-    // Edit Mode Properties
+    // Edit Mode Data
     var watchlistToEdit: Watchlist?
     var sharedWatchlistToEdit: SharedWatchlist?
     
+    // Location & Search
     private let locationManager = CLLocationManager()
-    
-    // Autocomplete
+    private let geocoder = CLGeocoder()
     private var searchCompleter = MKLocalSearchCompleter()
     private var searchResults: [MKLocalSearchCompletion] = []
-    @IBOutlet weak var suggestionsTableView: UITableView!
     
     // Internal State
     private var participants: [Participant] = []
-    @IBOutlet weak var participantsTableView: UITableView!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        configureViewBasedOnType()
-        
-        // Initialize Data
-        initializeParticipants()
-        populateDataForEdit()
-        
-        // Add Save Button
+        setupLocationServices()
+        configureInitialData()
+    }
+    
+    // MARK: - Setup & Configuration
+    private func setupUI() {
+        // Navigation
         let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
         navigationItem.rightBarButtonItem = saveButton
+        self.title = (watchlistToEdit == nil && sharedWatchlistToEdit == nil) ? "New Watchlist" : "Edit Watchlist"
         
-        setupLocationManager()
-        setupSearch()
+        // Background & Styling
+        view.backgroundColor = .systemGray6
+        
+        if let inviteView = inviteContactsView {
+            inviteView.layer.cornerRadius = 12
+            inviteView.backgroundColor = .white
+            inviteView.applyShadow(radius: 8, opacity: 0.05, offset: CGSize(width: 0, height: 2))
+        }
+        
+        // Visibility Logic
+        inviteContactsView.isHidden = (watchlistType != .shared)
+        suggestionsTableView.isHidden = true
+        
+        // Delegates
+        participantsTableView.delegate = self
+        participantsTableView.dataSource = self
+        suggestionsTableView.delegate = self
+        suggestionsTableView.dataSource = self
+        locationSearchBar.delegate = self
+        
         setupLocationOptionsInteractions()
+    }
+    
+    private func setupLocationServices() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        searchCompleter.delegate = self
+    }
+    
+    private func configureInitialData() {
+        initializeParticipants()
+        populateDataForEdit()
     }
     
     private func initializeParticipants() {
         if let shared = sharedWatchlistToEdit {
             self.participants = shared.userImages.enumerated().map { (index, img) in
-                if index == 0 { return Participant(name: "You", imageName: img) }
-                return Participant(name: "Bird Enthusiast \(index)", imageName: img)
+                index == 0 ? Participant(name: "You", imageName: img) : Participant(name: "Bird Enthusiast \(index)", imageName: img)
             }
         } else {
             self.participants = [Participant(name: "You", imageName: "person.circle.fill")]
         }
-    }
-    
-    private func setupLocationManager() {
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.requestWhenInUseAuthorization()
-    }
-    
-    private func setupSearch() {
-        searchCompleter.delegate = self
-        locationSearchBar.delegate = self
-    }
-    
-    private func setupLocationOptionsInteractions() {
-        guard let container = locationOptionsContainer else { return }
-        
-        // Assuming the structure: StackView -> [CurrentLocationStack, Separator, MapStack]
-        // We will try to find the clickable views.
-        // Based on storyboard structure, the container has one subview (Main Stack).
-        // That Main Stack has 3 subviews.
-        
-        if let mainStack = container.subviews.first as? UIStackView, mainStack.arrangedSubviews.count >= 3 {
-            let currentLocationView = mainStack.arrangedSubviews[0]
-            let mapView = mainStack.arrangedSubviews[2]
-            
-            let locationTap = UITapGestureRecognizer(target: self, action: #selector(didTapCurrentLocation))
-            currentLocationView.isUserInteractionEnabled = true
-            currentLocationView.addGestureRecognizer(locationTap)
-            
-            let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapMap))
-            mapView.isUserInteractionEnabled = true
-            mapView.addGestureRecognizer(mapTap)
-        }
-    }
-    
-    // MARK: - Location Logic
-    @objc private func didTapCurrentLocation() {
-        locationManager.requestLocation()
-    }
-    
-    @objc private func didTapMap() {
-        let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
-        if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
-            mapVC.delegate = self
-            navigationController?.pushViewController(mapVC, animated: true)
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            guard let self = self else { return }
-            if let error = error {
-                print("Reverse geocoding failed: \(error.localizedDescription)")
-                return
-            }
-            
-            if let placemark = placemarks?.first {
-                let city = placemark.locality ?? ""
-                let area = placemark.subLocality ?? ""
-                let country = placemark.country ?? ""
-                
-                var address = ""
-                if !area.isEmpty { address += area + ", " }
-                if !city.isEmpty { address += city + ", " }
-                address += country
-                
-                DispatchQueue.main.async {
-                    self.updateLocationSelection(address)
-                }
-            }
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed: \(error.localizedDescription)")
-    }
-    
-    private func updateLocationSelection(_ name: String) {
-        locationSearchBar.text = name
-        suggestionsTableView.isHidden = true
-        locationSearchBar.resignFirstResponder()
+        participantsTableView.reloadData()
     }
     
     private func populateDataForEdit() {
         if let watchlist = watchlistToEdit {
-            self.title = "Edit Watchlist"
             titleTextField.text = watchlist.title
             locationSearchBar.text = watchlist.location
             startDatePicker.date = watchlist.startDate
             endDatePicker.date = watchlist.endDate
         } else if let shared = sharedWatchlistToEdit {
-            self.title = "Edit Shared Watchlist"
             titleTextField.text = shared.title
             locationSearchBar.text = shared.location
+            // Parsing date strings back to Date objects would happen here if needed
         }
     }
     
-    private func setupUI() {
-        if watchlistToEdit == nil && sharedWatchlistToEdit == nil {
-            self.title = "New Watchlist"
-        }
-        view.backgroundColor = .systemGray6
+    // MARK: - Gesture Setup
+    private func setupLocationOptionsInteractions() {
+        guard let container = locationOptionsContainer,
+              let mainStack = container.subviews.first as? UIStackView else { return }
         
-        // Connect tables
-        participantsTableView.delegate = self
-        participantsTableView.dataSource = self
-        suggestionsTableView.delegate = self
-        suggestionsTableView.dataSource = self
+        // Safety check to ensure the stackview has the expected children
+        guard mainStack.arrangedSubviews.count >= 3 else {
+            print("Warning: locationOptionsContainer stack view structure mismatch.")
+            return
+        }
         
-        // InviteContactsView Styling
-        if let inviteView = inviteContactsView {
-            inviteView.layer.cornerRadius = 12
-            inviteView.backgroundColor = .white
-            inviteView.layer.shadowColor = UIColor.black.cgColor
-            inviteView.layer.shadowOpacity = 0.05
-            inviteView.layer.shadowOffset = CGSize(width: 0, height: 2)
-            inviteView.layer.shadowRadius = 8
+        let currentLocationView = mainStack.arrangedSubviews[0]
+        let mapView = mainStack.arrangedSubviews[2]
+        
+        let locationTap = UITapGestureRecognizer(target: self, action: #selector(didTapCurrentLocation))
+        currentLocationView.isUserInteractionEnabled = true
+        currentLocationView.addGestureRecognizer(locationTap)
+        
+        let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapMap))
+        mapView.isUserInteractionEnabled = true
+        mapView.addGestureRecognizer(mapTap)
+    }
+    
+    // MARK: - Actions
+    @objc private func didTapCurrentLocation() {
+        let authStatus = locationManager.authorizationStatus
+        
+        switch authStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            presentAlert(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.")
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.requestLocation()
+        @unknown default:
+            break
         }
     }
     
-    private func configureViewBasedOnType() {
-        switch watchlistType {
-            case .custom, .myWatchlist:
-                inviteContactsView.isHidden = true
-            case .shared:
-                inviteContactsView.isHidden = false
-        }
+    @objc private func didTapMap() {
+        let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
+        guard let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController else { return }
+        mapVC.delegate = self
+        navigationController?.pushViewController(mapVC, animated: true)
     }
     
-    // MARK: - Invite Logic
     @IBAction func didTapInvite(_ sender: Any) {
         let titleToShare = titleTextField.text ?? "New Watchlist"
         let shareText = "Hey! Join my Bird Watchlist: \(titleToShare) on SkyTrails!"
@@ -216,17 +173,22 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
             popover.sourceRect = inviteContactsView.bounds
         }
         
-        activityVC.completionWithItemsHandler = { [weak self] (activityType, completed, returnedItems, error) in
-            if completed {
-                self?.simulateAddingParticipants()
-            }
+        activityVC.completionWithItemsHandler = { [weak self] (_, completed, _, _) in
+            if completed { self?.simulateAddingParticipants() }
         }
         
         present(activityVC, animated: true)
     }
     
+    // MARK: - Logic Implementation
+    private func updateLocationSelection(_ name: String) {
+        locationSearchBar.text = name
+        suggestionsTableView.isHidden = true
+        locationSearchBar.resignFirstResponder()
+    }
+    
     private func simulateAddingParticipants() {
-        if participants.contains(where: { $0.name == "Aradhya" }) { return }
+        guard !participants.contains(where: { $0.name == "Aradhya" }) else { return }
         
         let p1 = Participant(name: "Aradhya", imageName: "person.crop.circle")
         let p2 = Participant(name: "Disha", imageName: "person.crop.circle.fill")
@@ -234,58 +196,55 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
         participants.append(contentsOf: [p1, p2])
         participantsTableView.reloadData()
         
-        let alert = UIAlertController(title: "Invites Sent", message: "Aradhya and Disha have been added.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        presentAlert(title: "Invites Sent", message: "Aradhya and Disha have been added.")
     }
     
     // MARK: - Save Logic
     @objc private func didTapSave() {
         guard let title = titleTextField.text, !title.isEmpty else {
-            let alert = UIAlertController(title: "Missing Info", message: "Please enter a title.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
+            presentAlert(title: "Missing Info", message: "Please enter a title.")
             return
         }
         
         let location = locationSearchBar.text ?? "Unknown"
         let startDate = startDatePicker.date
         let endDate = endDatePicker.date
-        
         let finalUserImages = participants.map { $0.imageName }
         let manager = WatchlistManager.shared
         
+        // 1. Update Existing Custom Watchlist
         if let watchlist = watchlistToEdit {
             manager.updateWatchlist(id: watchlist.id, title: title, location: location, startDate: startDate, endDate: endDate)
             navigationController?.popViewController(animated: true)
             return
         }
         
+        // 2. Update Existing Shared Watchlist
         if let shared = sharedWatchlistToEdit {
-            let dr = formatDateRange(start: startDate, end: endDate)
+            let dateRange = formatDateRange(start: startDate, end: endDate)
+            
+            // Sync local participant changes if necessary
             if let index = manager.sharedWatchlists.firstIndex(where: { $0.id == shared.id }) {
                 manager.sharedWatchlists[index].userImages = finalUserImages
             }
-            manager.updateSharedWatchlist(id: shared.id, title: title, location: location, dateRange: dr)
+            
+            manager.updateSharedWatchlist(id: shared.id, title: title, location: location, dateRange: dateRange)
             navigationController?.popViewController(animated: true)
             return
         }
         
+        // 3. Create New Custom Watchlist
         if watchlistType == .custom {
             let newWatchlist = Watchlist(
-                title: title,
-                location: location,
-                startDate: startDate,
-                endDate: endDate,
-                observedBirds: [],
-                toObserveBirds: []
+                title: title, location: location, startDate: startDate, endDate: endDate,
+                observedBirds: [], toObserveBirds: []
             )
             manager.addWatchlist(newWatchlist)
             
+        // 4. Create New Shared Watchlist
         } else if watchlistType == .shared {
             let newShared = SharedWatchlist(
-                title: title,
-                location: location,
+                title: title, location: location,
                 dateRange: formatDateRange(start: startDate, end: endDate),
                 mainImageName: "bird_placeholder",
                 stats: SharedWatchlistStats(greenValue: 0, blueValue: 0),
@@ -297,43 +256,81 @@ class EditWatchlistDetailViewController: UIViewController, CLLocationManagerDele
         navigationController?.popViewController(animated: true)
     }
     
+    // MARK: - Helpers
     private func formatDateRange(start: Date, end: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMM"
         return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
     }
+    
+    private func presentAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
 }
 
-// MARK: - Delegates
+// MARK: - CoreLocation Delegate
+extension EditWatchlistDetailViewController: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        
+        // Modern Async Geocoding
+        Task {
+            do {
+                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                if let placemark = placemarks.first {
+                    let city = placemark.locality ?? ""
+                    let area = placemark.subLocality ?? ""
+                    let country = placemark.country ?? ""
+                    
+                    let parts = [area, city, country].filter { !$0.isEmpty }
+                    let address = parts.joined(separator: ", ")
+                    
+                    await MainActor.run {
+                        self.updateLocationSelection(address)
+                    }
+                }
+            } catch {
+                print("Reverse geocoding failed: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location manager failed: \(error.localizedDescription)")
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            manager.requestLocation()
+        }
+    }
+}
+
+// MARK: - TableView Delegate & DataSource
 extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if tableView == participantsTableView {
-            return participants.count
-        } else {
-            return searchResults.count
-        }
+        return tableView == participantsTableView ? participants.count : searchResults.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if tableView == participantsTableView {
             let cell = tableView.dequeueReusableCell(withIdentifier: "ParticipantCell", for: indexPath)
             let participant = participants[indexPath.row]
-            cell.textLabel?.text = participant.name
-            cell.textLabel?.font = .systemFont(ofSize: 15, weight: .medium)
-            if let image = UIImage(systemName: participant.imageName) {
-                cell.imageView?.image = image
-            } else {
-                cell.imageView?.image = UIImage(systemName: "person.circle")
-            }
-            cell.imageView?.tintColor = .systemBlue
+            
+            var content = cell.defaultContentConfiguration()
+            content.text = participant.name
+            content.image = UIImage(systemName: participant.imageName) ?? UIImage(systemName: "person.circle")
+            content.imageProperties.tintColor = .systemBlue
+            cell.contentConfiguration = content
             cell.selectionStyle = .none
             return cell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
-            cell.backgroundColor = .white
-            cell.textLabel?.textColor = .black
             let item = searchResults[indexPath.row]
-            cell.textLabel?.text = item.title + " " + item.subtitle
+            cell.textLabel?.text = "\(item.title) \(item.subtitle)"
             return cell
         }
     }
@@ -341,22 +338,31 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if tableView == suggestionsTableView {
             let item = searchResults[indexPath.row]
-            let request = MKLocalSearch.Request(completion: item)
-            let search = MKLocalSearch(request: request)
-            search.start { [weak self] response, _ in
-                guard let self = self, let place = response?.mapItems.first else { return }
-                let name = place.name ?? item.title
-                self.updateLocationSelection(name)
+            
+            // Modern Async Search
+            Task {
+                let request = MKLocalSearch.Request()
+                request.naturalLanguageQuery = item.title + " " + item.subtitle
+                let search = MKLocalSearch(request: request)
+                
+                do {
+                    let response = try await search.start()
+                    if let place = response.mapItems.first {
+                        let name = place.name ?? item.title
+                        await MainActor.run {
+                            self.updateLocationSelection(name)
+                        }
+                    }
+                } catch {
+                    print("Search failed: \(error.localizedDescription)")
+                }
             }
         }
     }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 44
-    }
 }
 
-extension EditWatchlistDetailViewController: UISearchBarDelegate {
+// MARK: - Search Delegates
+extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText.isEmpty {
             searchResults = []
@@ -367,26 +373,38 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate {
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        // updateSuggestionsLayout() - Removed
-        suggestionsTableView.isHidden = false
+        suggestionsTableView.isHidden = searchResults.isEmpty
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
         suggestionsTableView.isHidden = true
     }
-}
-
-extension EditWatchlistDetailViewController: MKLocalSearchCompleterDelegate {
+    
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         self.searchResults = completer.results
         suggestionsTableView.isHidden = searchResults.isEmpty
         suggestionsTableView.reloadData()
     }
+    
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        print("Completer error: \(error.localizedDescription)")
+    }
 }
 
+// MARK: - MapSelectionDelegate
 extension EditWatchlistDetailViewController: MapSelectionDelegate {
     func didSelectMapLocation(_ locationName: String) {
         updateLocationSelection(locationName)
+    }
+}
+
+// MARK: - UI Utilities
+extension UIView {
+    func applyShadow(radius: CGFloat, opacity: Float, offset: CGSize, color: UIColor = .black) {
+        self.layer.shadowColor = color.cgColor
+        self.layer.shadowOpacity = opacity
+        self.layer.shadowOffset = offset
+        self.layer.shadowRadius = radius
     }
 }
