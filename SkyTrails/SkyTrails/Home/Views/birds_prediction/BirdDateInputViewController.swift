@@ -45,7 +45,7 @@ class BirdDateInputViewController: UIViewController {
     private func setupNavigationBar() {
 
         let nextTitle = (currentIndex == speciesList.count - 1) ? "Done" : "Next"
-        let nextButton = UIBarButtonItem(title: nextTitle, style: .done, target: self, action: #selector(didTapNext))
+        let nextButton = UIBarButtonItem(title: nextTitle, style: .plain  , target: self, action: #selector(didTapNext))
         
         let deleteButton = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(didTapDelete))
         

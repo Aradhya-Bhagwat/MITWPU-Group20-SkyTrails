@@ -29,7 +29,7 @@ class BirdSelectionViewController: UIViewController {
     
     private func setupNavigationBar() {
 
-        let nextButton = UIBarButtonItem(title: "Next", style: .done, target: self, action: #selector(didTapNext))
+        let nextButton = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(didTapNext))
         navigationItem.rightBarButtonItem = nextButton
         
     }
