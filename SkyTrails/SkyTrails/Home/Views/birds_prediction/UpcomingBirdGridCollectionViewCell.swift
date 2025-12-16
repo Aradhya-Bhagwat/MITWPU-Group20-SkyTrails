@@ -18,7 +18,7 @@ class UpcomingBirdGridCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+     
         setupStyle()
     }
     private func setupStyle() {
@@ -29,28 +29,24 @@ class UpcomingBirdGridCollectionViewCell: UICollectionViewCell {
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
         contentView.layer.shadowColor = UIColor.black.cgColor
-        contentView.layer.shadowOpacity = 0.15  // Adjust for darkness (0.1 to 0.2 is good)
-        contentView.layer.shadowOffset = CGSize(width: 0, height: 4) // Shadow moves down slightly
-        contentView.layer.shadowRadius = 8 // Softness of the shadow
+        contentView.layer.shadowOpacity = 0.15
+        contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        contentView.layer.shadowRadius = 8
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
-        // Round Corners
         self.layer.cornerRadius = 12
         
         birImage.contentMode = .scaleAspectFill
         birImage.clipsToBounds = true
         birImage.layer.cornerRadius = 12
-        
-        // Optional: Add shadow to containerView if you used one
-         containerView.backgroundColor = .systemBackground
-         containerView.layer.cornerRadius = 12
-        
+
+        containerView.backgroundColor = .systemBackground
+        containerView.layer.cornerRadius = 12
         
         titleLabel.numberOfLines = 1
         titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         titleLabel.textColor = .label
         
-        // Date label
         DateLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         DateLabel.textColor = .secondaryLabel
     }
@@ -59,7 +55,7 @@ class UpcomingBirdGridCollectionViewCell: UICollectionViewCell {
             super.layoutSubviews()
             contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         }
-    // Configure the cell with data
+
     func configure(with spot: UpcomingBird) {
         birImage.image = UIImage(named: spot.imageName)
         titleLabel.text = spot.title

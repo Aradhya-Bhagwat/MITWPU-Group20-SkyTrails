@@ -14,7 +14,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var locationImage: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var locationLabel: UILabel!
-    @IBOutlet weak var containerView: UIView! // If you added a wrapper view
+    @IBOutlet weak var containerView: UIView! 
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -29,8 +29,8 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
         contentView.layer.shadowColor = UIColor.black.cgColor
-        contentView.layer.shadowOpacity = 0.15  // Adjust for darkness (0.1 to 0.2 is good)
-        contentView.layer.shadowOffset = CGSize(width: 0, height: 4) // Shadow moves down slightly
+        contentView.layer.shadowOpacity = 0.15
+        contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
         contentView.layer.shadowRadius = 8 // Softness of the shadow
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
@@ -41,16 +41,13 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         locationImage.clipsToBounds = true
         locationImage.layer.cornerRadius = 12
         
-        // Optional: Add shadow to containerView if you used one
          containerView.backgroundColor = .systemBackground
          containerView.layer.cornerRadius = 12
-        
         
         titleLabel.numberOfLines = 1
         titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         titleLabel.textColor = .label
         
-        // Date label
         locationLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         locationLabel.textColor = .secondaryLabel
     }
@@ -58,7 +55,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
             super.layoutSubviews()
             contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         }
-    // Configure the cell with data
+ 
     func configure(with spot: PopularSpot) {
         locationImage.image = UIImage(named: spot.imageName)
         titleLabel.text = spot.title

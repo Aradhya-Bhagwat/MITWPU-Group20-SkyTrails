@@ -20,7 +20,7 @@ class SearchLocationViewController: UIViewController {
     weak var delegate: SearchLocationDelegate?
     var cellIndex: Int = 0
     
-    // ⭐️ SEARCH ENGINE VARIABLES
+    // search engine variables
     private var searchCompleter = MKLocalSearchCompleter()
     private var searchResults = [MKLocalSearchCompletion]()
 
@@ -29,12 +29,9 @@ class SearchLocationViewController: UIViewController {
         
         setupUI()
         setupSearch()
-
-        // Do any additional setup after loading the view.
     }
     
     private func isCoordinatePair(_ query: String) -> (lat: Double, lon: Double)? {
-        // Basic regex or simple split logic to check for pattern "XX.XXX, YY.YYY"
         
         let components = query.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         
@@ -54,16 +51,12 @@ class SearchLocationViewController: UIViewController {
     private func searchByCoordinate(_ coordinate: (lat: Double, lon: Double)) {
         let geocoder = CLGeocoder()
         let location = CLLocation(latitude: coordinate.lat, longitude: coordinate.lon)
-        
-        // We clear existing results and temporarily show the coordinate pair as the only result.
-        // In a final app, you'd show a "Looking up location..." message here.
         searchResults.removeAll()
         
         // Use geocoder to get place name, or just use the coordinate text if the geocoder fails
         geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
             guard let self = self else { return }
             
-            // This is a mock result to display in the table view
             let coordinateTitle = "\(coordinate.lat), \(coordinate.lon)"
             let placeName = placemarks?.first?.locality ?? "Geographic Location"
             
@@ -123,7 +116,7 @@ class SearchLocationViewController: UIViewController {
             return
         }
         
-        // ⭐️ NEW LOGIC: Check if the query is a coordinate pair
+        //  Check if the query is a coordinate pair
         if let coordinate = isCoordinatePair(query) {
             // If it is coordinates, bypass the MapKit completer and perform immediate lookup
             searchByCoordinate(coordinate)
@@ -178,7 +171,6 @@ class SearchLocationViewController: UIViewController {
             
             let selectedResult = searchResults[indexPath.row]
             
-            // ⭐️ CONVERT SELECTION TO COORDINATES
             // The completer only gives text. We need 'MKLocalSearch' to get Lat/Lon.
             let searchRequest = MKLocalSearch.Request(completion: selectedResult)
             let search = MKLocalSearch(request: searchRequest)
@@ -204,15 +196,4 @@ class SearchLocationViewController: UIViewController {
             }
         }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

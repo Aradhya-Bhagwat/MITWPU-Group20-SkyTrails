@@ -27,7 +27,7 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
             sectionTitle.textColor = .label
             sectionTitle.font = UIFont.systemFont(ofSize: 20, weight: .bold)
             
-            // Configure Chevron Style
+
             let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
             let image = UIImage(systemName: "chevron.right", withConfiguration: config)
             chevronButton.setImage(image, for: .normal)
@@ -38,11 +38,11 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
             sectionTitle.text = title
             onChevronTap = tapAction
             
-            // Optional: Hide chevron if no action is provided
+
             chevronButton.isHidden = (tapAction == nil)
         }
         
-        // 3. Connect this IBAction to the button in XIB (Touch Up Inside)
+
         @IBAction func didTapChevron(_ sender: Any) {
 
             onChevronTap?()

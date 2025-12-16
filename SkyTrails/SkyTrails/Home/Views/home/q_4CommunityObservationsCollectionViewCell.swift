@@ -20,26 +20,24 @@ class q_4CommunityObservationsCollectionViewCell: UICollectionViewCell {
         @IBOutlet weak var birdNameLabel: UILabel!
         @IBOutlet weak var locationLabel: UILabel!
         
-        // Variable to hold the gradient layer
+
         private var gradientLayer: CAGradientLayer?
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+
         cardContainerView.layer.cornerRadius = 16
                 cardContainerView.clipsToBounds = true
         
-        birdImageView.contentMode = .scaleAspectFill // Ensures the image completely fills the bounds (cropping if necessary)
+        birdImageView.contentMode = .scaleAspectFill
                birdImageView.clipsToBounds = true
-                // 💡 NEW: Make the profile image view circular
                 userProfileImageView.clipsToBounds = true
                 userProfileImageView.contentMode = .scaleAspectFill
     }
     override func layoutSubviews() {
             super.layoutSubviews()
-            // Ensure gradient is resized/reapplied
+        
             applyGradientLayer()
-            // Ensure circularity is maintained when the view size loads or rotates
             userProfileImageView.layer.cornerRadius = userProfileImageView.frame.height / 2
         }
     func configure(with observation: CommunityObservation, birdImage: UIImage?) {
@@ -62,25 +60,20 @@ class q_4CommunityObservationsCollectionViewCell: UICollectionViewCell {
             locationLabel.text = observation.location
             locationLabel.textColor = .white
         locationLabel.font = UIFont.systemFont(ofSize: 11.5, weight: .medium)
-            
-            // --- 💡 NEW: User Profile Image Logic ---
+        
             // 1. Try to load the user's custom profile image
             if let profileImage = UIImage(named: observation.user.profileImageName) {
                 userProfileImageView.image = profileImage
             } else {
-                // 2. Use a default account icon if the specific image is not found
-                // You must have an asset named "default_profile_icon" or similar.
                 userProfileImageView.image = UIImage(systemName: "person.circle.fill")
-                userProfileImageView.tintColor = .systemGray4 // Use a tint color for system icons
+                userProfileImageView.tintColor = .systemGray4 
             }
-            // --- End New Logic ---
-            
-            // Ensure text is brought to the front
+             
             cardContainerView.bringSubviewToFront(userNameLabel)
             cardContainerView.bringSubviewToFront(observationCountLabel)
             cardContainerView.bringSubviewToFront(birdNameLabel)
             cardContainerView.bringSubviewToFront(locationLabel)
-            cardContainerView.bringSubviewToFront(userProfileImageView) // Ensure profile icon is also on top
+            cardContainerView.bringSubviewToFront(userProfileImageView) // Ensure
         }
 
         // MARK: - Gradient Logic

@@ -14,7 +14,6 @@ class AllSpotsViewController: UIViewController {
     
     private var cachedItemSize: NSCollectionLayoutSize?
     
-    // MARK: - UI Elements
     @IBOutlet weak var collectionView: UICollectionView!
     
     override func viewDidLoad() {
@@ -26,30 +25,27 @@ class AllSpotsViewController: UIViewController {
     }
     
     
-    // MARK: - 2. Setup Collection View
     private func setupCollectionView() {
-        // Initialize with Compositional Layout
+
         collectionView.collectionViewLayout = createLayout()
         
-        // Register Cell
+
         collectionView.register(
             UINib(nibName: SpotsToVisitCollectionViewCell.identifier, bundle: nil),
             forCellWithReuseIdentifier: SpotsToVisitCollectionViewCell.identifier
         )
         
-        // Register Header
         collectionView.register(
             UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil),
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
         )
         
-        // Set Delegates
         collectionView.dataSource = self
         collectionView.delegate = self
     }
     private func setupNavigationBar() {
-        // Add "Predict" button to Top Right
+
         let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
         self.navigationItem.rightBarButtonItem = predictButton
     }
@@ -57,49 +53,31 @@ class AllSpotsViewController: UIViewController {
     @objc private func didTapPredict() {
         self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
 
-        // TODO: Navigation to Prediction Page goes here
     }
     
-    // MARK: - 3. Dynamic Ratio Layout Logic
-    // MARK: - 3. Smart Grid Layout (Fixed Size per Device)
+
     private func createLayout() -> UICollectionViewLayout {
             return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
                 guard let self = self else { return nil }
                 
-                // Current available width of the screen
                 let containerWidth = layoutEnvironment.container.effectiveContentSize.width
-                
-                // 1. Calculate the Fixed Card Size (Only once!)
-                // We base this on the screen's "Portrait" width (narrowest dimension) to ensure consistency.
+
                 if self.cachedItemSize == nil {
-                    
-                    // Use the smallest dimension of the screen to calculate the "Base" layout
-                    // This simulates "Portrait" width even if we launched in Landscape.
+
                     let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
                     let screenMinDimension = min(screenBounds.width, screenBounds.height)
-                    
-                    // Logic: Fit at least 2 columns in that min dimension, max width 400
-                    let spacing: CGFloat = 16.0 // Inter-item spacing
-                    
+                    let spacing: CGFloat = 16.0
                     let maxCardWidth: CGFloat = 400.0
                     let minColumns = 2
                     
                     var columnCount = minColumns
-                    
-                    // Calculate width per item excluding spacing
-                    // Available Space = ScreenWidth - (Spacing * (Columns - 1)) - OuterPadding
-                    // ItemWidth = AvailableSpace / Columns
-                    
-                    // Simplified calculation for sizing:
                     var calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
                     
-                    // If cards are too big, add columns until they fit under maxWidth
                     while calculatedWidth > maxCardWidth {
                         columnCount += 1
                         calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
                     }
                     
-                    // Fixed Aspect Ratio: 176 : 195
                     let heightMultiplier: CGFloat = 195.0 / 176.0
                     let calculatedHeight = calculatedWidth * heightMultiplier
                     
@@ -111,22 +89,16 @@ class AllSpotsViewController: UIViewController {
 
                 }
                 
-                // 2. Use Fixed Size to Layout Current Screen
                 guard let fixedSize = self.cachedItemSize else { return nil }
                 
-                // Determine how many of these "Fixed Cards" fit in the CURRENT width
-                // (In Landscape, containerWidth is huge, so more columns will fit)
+
                 let itemWidth = fixedSize.widthDimension.dimension
                 let interItemSpacing: CGFloat = 8
                 
                 // Math: How many (Item + Spacing) fit?
                 // Estimate columns
                 let estimatedColumns = Int((containerWidth + interItemSpacing) / (itemWidth + interItemSpacing))
-                let actualColumns = max(1, estimatedColumns) // Ensure at least 1 column
-                
-                // 3. Build Layout Group
-                
-                // We use a "fractional" approach for the group to ensure the grid is solid
+                let actualColumns = max(1, estimatedColumns)
                 let groupItemSize = NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1.0/CGFloat(actualColumns)),
                     heightDimension: .fractionalHeight(1.0)
@@ -137,7 +109,7 @@ class AllSpotsViewController: UIViewController {
                 let groupHeight = fixedSize.heightDimension.dimension
                 let groupSize = NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1.0),
-                    heightDimension: .absolute(groupHeight) // Keep height fixed
+                    heightDimension: .absolute(groupHeight)
                 )
                 
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
@@ -251,8 +223,6 @@ class AllSpotsViewController: UIViewController {
                 // Push to the map view
                 self.navigationController?.pushViewController(predictMapVC, animated: true)
                 
-                // 3. Immediately transition to the Output state (bypass input wizard)
-                // We need the view to load first so the map and modal container are set up
                 predictMapVC.loadViewIfNeeded()
                 
                 // Execute the navigation to the bottom sheet output
