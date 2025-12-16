@@ -129,7 +129,7 @@ class DateandLocationViewController: UIViewController {
             present(alert, animated: true)
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
-        @unknown default:
+        default:
             break
         }
     }
@@ -143,33 +143,33 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 { return 1 } // Date
-        if section == 1 { return 1 + searchResults.count } // Search Bar + Suggestions
-        if section == 2 { return 2 } // Map & Current Location
+        if section == 0 { return 1 }
+        if section == 1 { return 1 + searchResults.count }
+        if section == 2 { return 2 }
         return 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        // Section 0: Date
+       
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
             cell.delegate = self
-            // Configure date cell...
+           
             return cell
         }
         
-        // Section 1: Search
+        
         if indexPath.section == 1 {
-            // Row 0: The Search Bar
+            
             if indexPath.row == 0 {
                 let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as! SearchCell
                 cell.searchBar.delegate = self
-                cell.searchBar.text = searchQuery // Always reflect the State variable
+                cell.searchBar.text = searchQuery
                 return cell
             }
             
-            // Remaining Rows: Suggestions
+            
             let suggestionIndex = indexPath.row - 1
             if suggestionIndex < searchResults.count {
                 let item = searchResults[suggestionIndex]
