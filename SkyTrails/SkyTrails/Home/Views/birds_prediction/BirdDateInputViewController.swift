@@ -20,11 +20,9 @@ class BirdDateInputViewController: UIViewController {
     var currentIndex: Int = 0
     var collectedData: [BirdDateInput] = []
     
-    // Local state for the current bird
     private var currentStartDate: Date = Date()
     private var currentEndDate: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
     
-    // MARK: - UI Elements
     private let imageView = UIImageView()
     private let tableView = UITableView(frame: .zero, style: .plain)
     
@@ -45,7 +43,7 @@ class BirdDateInputViewController: UIViewController {
     // MARK: - Setup
     
     private func setupNavigationBar() {
-        // Right: Next (or Done) and Delete
+
         let nextTitle = (currentIndex == speciesList.count - 1) ? "Done" : "Next"
         let nextButton = UIBarButtonItem(title: nextTitle, style: .done, target: self, action: #selector(didTapNext))
         
@@ -55,7 +53,7 @@ class BirdDateInputViewController: UIViewController {
     }
     
     private func setupUI() {
-        // 1. Image View (Middle Aligned)
+
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
@@ -64,24 +62,19 @@ class BirdDateInputViewController: UIViewController {
         
         view.addSubview(imageView)
         
-        // 2. Table View
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DateCell")
-        tableView.isScrollEnabled = false // It's just 2 rows, keep it static
+        tableView.isScrollEnabled = false
         view.addSubview(tableView)
         
         NSLayoutConstraint.activate([
-            // Image: Centered horizontally, Top margin
+
             imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             imageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // REVERSED DIMENSIONS: Width 240, Height 160 (Landscape-ish)
             imageView.widthAnchor.constraint(equalToConstant: 240),
             imageView.heightAnchor.constraint(equalToConstant: 160),
-            
-            // Table: Below Image, fill rest
             tableView.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 30),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -104,15 +97,11 @@ class BirdDateInputViewController: UIViewController {
     @objc private func didTapNext() {
         let bird = speciesList[currentIndex]
         let input = BirdDateInput(species: bird, startDate: currentStartDate, endDate: currentEndDate)
-        
-
-        
-        // Append to our collection
         var newCollection = collectedData
         newCollection.append(input)
         
         if currentIndex < speciesList.count - 1 {
-            // Go to Next Bird
+
             let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
             guard let nextVC = storyboard.instantiateViewController(withIdentifier: "BirdDateInputViewController") as? BirdDateInputViewController else { return }
             
@@ -123,8 +112,7 @@ class BirdDateInputViewController: UIViewController {
             navigationController?.pushViewController(nextVC, animated: true)
             
         } else {
-            // Finished! Go to Map
-
+            
             let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
             guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
             
@@ -136,22 +124,16 @@ class BirdDateInputViewController: UIViewController {
     
     @objc private func didTapDelete() {
 
-        
-        // We create a NEW list without this bird
         var newSpeciesList = speciesList
         newSpeciesList.remove(at: currentIndex)
         
         if newSpeciesList.isEmpty {
-            // Nothing left, go back to selection
 
             navigationController?.popToRootViewController(animated: true)
             return
         }
         
         if currentIndex < newSpeciesList.count {
-            // Case: We deleted a bird in the middle or start.
-            // The 'currentIndex' now points to the *next* bird in the shifted array.
-            // We push a new VC for that next bird.
             
             let nextBird = newSpeciesList[currentIndex]
 
@@ -161,13 +143,11 @@ class BirdDateInputViewController: UIViewController {
             
             nextVC.speciesList = newSpeciesList
             nextVC.currentIndex = currentIndex
-            nextVC.collectedData = collectedData // Pass existing data, do NOT add current
+            nextVC.collectedData = collectedData
             
             navigationController?.pushViewController(nextVC, animated: true)
             
         } else {
-            // Case: We deleted the *last* bird in the list.
-            // We should either finish (if we have data) or go back.
             
             if !collectedData.isEmpty {
 
@@ -194,19 +174,17 @@ class BirdDateInputViewController: UIViewController {
 extension BirdDateInputViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 2 // Start, End
+        return 2
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "DateCell")
         cell.selectionStyle = .none
         
-        // Setup Date Picker
         let datePicker = UIDatePicker()
         datePicker.datePickerMode = .date
         datePicker.preferredDatePickerStyle = .compact
         
-        // Add row label
         if indexPath.row == 0 {
             cell.textLabel?.text = "Start Date"
             datePicker.date = currentStartDate
@@ -216,8 +194,7 @@ extension BirdDateInputViewController: UITableViewDataSource, UITableViewDelegat
             datePicker.date = currentEndDate
             datePicker.addTarget(self, action: #selector(endDateChanged(_:)), for: .valueChanged)
         }
-        
-        // Use accessoryView for the picker
+
         cell.accessoryView = datePicker
         
         return cell

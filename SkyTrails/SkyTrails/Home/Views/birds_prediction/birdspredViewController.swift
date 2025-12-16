@@ -9,26 +9,20 @@ import UIKit
 import MapKit
 
 class birdspredViewController: UIViewController {
-
-    @IBOutlet weak var mapView: MKMapView!
     
-    // Floating UI Outlets (Linked from Storyboard)
+    @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var pillView: UIView!
     @IBOutlet weak var pillLabel: UILabel!
-    
     @IBOutlet weak var infoCardView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var pageControl: UIPageControl!
     
-    // Logic: Received processed inputs
     var predictionInputs: [BirdDateInput] = []
     
-    // State Manager for selected species index
     private var currentSpeciesIndex: Int = 0 {
         didSet {
-            // Update UI and Map whenever index changes
             updateCardForCurrentIndex()
             updateMapForCurrentBird()
         }
@@ -39,9 +33,8 @@ class birdspredViewController: UIViewController {
         setupUI()
         setupMap()
         
-        // Initial State
         if !predictionInputs.isEmpty {
-            currentSpeciesIndex = 0 // Triggers updates
+            currentSpeciesIndex = 0
             showCardState()
         } else {
             pillView.isHidden = true
@@ -50,44 +43,38 @@ class birdspredViewController: UIViewController {
     }
     
     private func setupUI() {
-        self.title = "" // Remove title
+        self.title = ""
         
-        // Add "Add to Watchlist" button
         let addIcon = UIImage(systemName: "plus.circle.fill")
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: addIcon, style: .plain, target: self, action: #selector(didTapAddToWatchlist))
         
-        // --- 1. Pill Style (Liquid Glass) ---
         pillView.backgroundColor = .clear
         let pillBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
         pillBlur.frame = pillView.bounds
         pillBlur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         pillBlur.layer.cornerRadius = 20
         pillBlur.layer.masksToBounds = true
-        pillBlur.isUserInteractionEnabled = false // Allow touches to pass to view
-        pillView.insertSubview(pillBlur, at: 0)
+        pillBlur.isUserInteractionEnabled = false
         
-        // Shadow for Pill
+        pillView.insertSubview(pillBlur, at: 0)
         pillView.layer.shadowColor = UIColor.black.cgColor
         pillView.layer.shadowOpacity = 0.2
         pillView.layer.shadowOffset = CGSize(width: 0, height: 4)
         pillView.layer.shadowRadius = 8
         pillView.layer.masksToBounds = false
-        
-        // Gesture
         let pillTap = UITapGestureRecognizer(target: self, action: #selector(didTapPill))
         pillView.addGestureRecognizer(pillTap)
         
-        // --- 2. Card Style (Liquid Glass) ---
-        infoCardView.backgroundColor = .clear
+        
         let cardBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
         cardBlur.frame = infoCardView.bounds
         cardBlur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         cardBlur.layer.cornerRadius = 24 // More rounded
         cardBlur.layer.masksToBounds = true
         cardBlur.isUserInteractionEnabled = false
-        infoCardView.insertSubview(cardBlur, at: 0)
         
-        // Shadow for Card
+        infoCardView.backgroundColor = .clear
+        infoCardView.insertSubview(cardBlur, at: 0)
         infoCardView.layer.cornerRadius = 24
         infoCardView.layer.shadowColor = UIColor.black.cgColor
         infoCardView.layer.shadowOpacity = 0.25
@@ -95,12 +82,10 @@ class birdspredViewController: UIViewController {
         infoCardView.layer.shadowRadius = 12
         infoCardView.layer.masksToBounds = false
         
-        // Image Styling
         birdImageView.layer.cornerRadius = 16
         birdImageView.clipsToBounds = true
         birdImageView.contentMode = .scaleAspectFill
         
-        // Gestures for Card
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
         swipeLeft.direction = .left
         infoCardView.addGestureRecognizer(swipeLeft)
@@ -109,14 +94,13 @@ class birdspredViewController: UIViewController {
         swipeRight.direction = .right
         infoCardView.addGestureRecognizer(swipeRight)
         
-        // Tap to collapse
         let cardTap = UITapGestureRecognizer(target: self, action: #selector(didTapCard))
         infoCardView.addGestureRecognizer(cardTap)
     }
     
     private func setupMap() {
         mapView.delegate = self
-        // Default center
+        
         let center = CLLocationCoordinate2D(latitude: 22.0, longitude: 78.0)
         let span = MKCoordinateSpan(latitudeDelta: 25.0, longitudeDelta: 25.0)
         let region = MKCoordinateRegion(center: center, span: span)
@@ -149,7 +133,7 @@ class birdspredViewController: UIViewController {
     }
     
     private func updateMapForCurrentBird() {
-        // 1. Clear Map
+        
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         
@@ -161,26 +145,22 @@ class birdspredViewController: UIViewController {
         let startWeek = Calendar.current.component(.weekOfYear, from: start)
         let endWeek = Calendar.current.component(.weekOfYear, from: end)
         
-        // 2. Filter & Collect Sightings
         var relevantSightings: [Sighting] = []
         
         for sighting in input.species.sightings {
             var isMatch = false
             
-            // Check logic (handling year wrap)
             if startWeek <= endWeek {
                 if sighting.week >= startWeek && sighting.week <= endWeek { isMatch = true }
             } else {
                 if sighting.week >= startWeek || sighting.week <= endWeek { isMatch = true }
             }
             
-            // Flexibility window (+/- 2 weeks)
             if !isMatch {
                 let s = sighting.week
                 let sStart = startWeek
                 let sEnd = endWeek
                 
-                // Simple distance check in a cyclic 52-week system
                 let distToStart = min(abs(s - sStart), 52 - abs(s - sStart))
                 let distToEnd = min(abs(s - sEnd), 52 - abs(s - sEnd))
                 
@@ -192,11 +172,8 @@ class birdspredViewController: UIViewController {
             }
         }
         
-        // 3. Sort Sightings by Week (for logical path flow)
-        // Handle year wrap (e.g., Nov to Feb) for correct path drawing
         if startWeek > endWeek {
             relevantSightings.sort { s1, s2 in
-                // If a week is small (e.g., 2), treat it as 54 (2+52) so it comes after 48
                 let w1 = s1.week < startWeek ? s1.week + 52 : s1.week
                 let w2 = s2.week < startWeek ? s2.week + 52 : s2.week
                 return w1 < w2
@@ -205,7 +182,6 @@ class birdspredViewController: UIViewController {
             relevantSightings.sort { $0.week < $1.week }
         }
         
-        // 4. Add Annotations (Pins)
         var annotations: [MKPointAnnotation] = []
         var coordinates: [CLLocationCoordinate2D] = []
         
@@ -222,15 +198,12 @@ class birdspredViewController: UIViewController {
         
         mapView.addAnnotations(annotations)
         
-        // 5. Add Polyline (Blue Line)
         if coordinates.count > 1 {
             let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
             mapView.addOverlay(polyline)
         }
         
-        // 6. Zoom to Fit
         if !coordinates.isEmpty {
-            // Calculate bounding box
             var zoomRect = MKMapRect.null
             for annotation in annotations {
                 let annotationPoint = MKMapPoint(annotation.coordinate)
@@ -264,13 +237,10 @@ class birdspredViewController: UIViewController {
         } else if gesture.direction == .right {
             if currentSpeciesIndex > 0 {
                 currentSpeciesIndex -= 1
-            } else {
-                // Optional: Loop to end?
-                // currentSpeciesIndex = predictionInputs.count - 1
             }
         }
     }
-    
+
     @objc private func didTapAddToWatchlist() {
         let name = predictionInputs[currentSpeciesIndex].species.name
         let alert = UIAlertController(title: "Watchlist", message: "\(name) added to your watchlist.", preferredStyle: .alert)
