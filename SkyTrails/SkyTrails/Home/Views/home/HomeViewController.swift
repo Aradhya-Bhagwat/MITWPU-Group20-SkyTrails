@@ -568,6 +568,28 @@ extension HomeViewController {
                 predictMapVC.loadViewIfNeeded()
                 predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
             }
+        } else if indexPath.section == 3 {
+            let observation = homeData.communityObservations[indexPath.row]
+            
+            // Create a Bird object from CommunityObservation data
+            let bird = Bird(
+                id: UUID(), // Generate a new UUID for the bird
+                name: observation.birdName,
+                scientificName: "Unknown", // Scientific name is not available in CommunityObservation
+                images: [observation.imageName],
+                rarity: [.common], // Default to common rarity
+                location: [observation.location],
+                date: [Date()], // Use current date as observation date is not available
+                observedBy: [observation.user.profileImageName],
+                notes: nil // No notes available in CommunityObservation
+            )
+            
+            let watchlistStoryboard = UIStoryboard(name: "Watchlist", bundle: nil)
+            if let observedDetailVC = watchlistStoryboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController {
+                observedDetailVC.bird = bird
+                observedDetailVC.watchlistId = nil // Community observations are not tied to a specific watchlist ID here
+                navigationController?.pushViewController(observedDetailVC, animated: true)
+            }
         }
     }
 
