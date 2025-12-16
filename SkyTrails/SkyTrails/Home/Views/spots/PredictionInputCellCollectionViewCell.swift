@@ -14,29 +14,20 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         @IBOutlet weak var containerView: UIView!
         @IBOutlet weak var titleLabel: UILabel!
         @IBOutlet weak var deleteButton: UIButton!
-        
-        // Search
         @IBOutlet weak var searchButton: UIButton!
-        
-        // Dates ⭐️ NEW
         @IBOutlet weak var startDateButton: UIButton!
         @IBOutlet weak var endDateButton: UIButton!
-        
-        // Area
         @IBOutlet weak var areaTextField: UITextField!
         @IBOutlet weak var areaStepper: UIStepper!
     
     var onDelete: (() -> Void)?
         var onSearchTap: (() -> Void)?
         var onAreaChange: ((Int) -> Void)?
-        
-        // ⭐️ NEW Callbacks for Dates
         var onStartDateTap: (() -> Void)?
         var onEndDateTap: (() -> Void)?
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
         
         setupStyle()
         setupStepper()
@@ -54,12 +45,10 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
             containerView.layer.shadowOpacity = 0.1
             containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
             containerView.layer.shadowRadius = 8
-            
-            // Search Button Style
+        
             styleButton(searchButton)
         }
         
-        // ⭐️ NEW: Consistent styling for buttons
         private func setupDateButtons() {
             styleButton(startDateButton)
             styleButton(endDateButton)
@@ -87,7 +76,7 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     private func setupTextField() {
             areaTextField.keyboardType = .numberPad
             areaTextField.addTarget(self, action: #selector(textFieldChanged), for: .editingDidEnd)
-        areaTextField.borderStyle = .none //Turn off default style first
+        areaTextField.borderStyle = .none
         areaTextField.layer.cornerRadius = 8
         areaTextField.backgroundColor = .systemGray6
         areaTextField.layer.borderWidth = 1
@@ -104,7 +93,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
             onSearchTap?()
         }
         
-        // ⭐️ NEW Date Actions
         @IBAction func didTapStartDate(_ sender: Any) {
             onStartDateTap?()
         }
@@ -133,7 +121,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         func configure(data: PredictionInputData, index: Int) {
             titleLabel.text = "Input \(index + 1)"
             
-            // 1. Search Button
             if let location = data.locationName {
                 searchButton.setTitle(location, for: .normal)
                 searchButton.setTitleColor(.label, for: .normal)
@@ -142,7 +129,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
                 searchButton.setTitleColor(.secondaryLabel, for: .normal)
             }
             
-            // 2. ⭐️ Date Buttons
             let formatter = DateFormatter()
             formatter.dateStyle = .medium // e.g. "Oct 12, 2025"
             formatter.timeStyle = .none

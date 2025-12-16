@@ -21,7 +21,6 @@ class BirdSelectionViewController: UIViewController {
         setupTableView()
         setupNavigationBar()
         
-        // Ensure data is loaded
         if allSpecies.isEmpty {
             let wrapper = DataLoader.load("prediction_data", as: PredictionDataWrapper.self)
             self.allSpecies = wrapper.species_data
@@ -29,11 +28,10 @@ class BirdSelectionViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        // "Next" button instead of Done
+
         let nextButton = UIBarButtonItem(title: "Next", style: .done, target: self, action: #selector(didTapNext))
         navigationItem.rightBarButtonItem = nextButton
         
-        // Optional Back/Cancel if needed, but if it's pushed, default back is fine.
     }
     
     private func setupTableView() {
@@ -54,7 +52,7 @@ class BirdSelectionViewController: UIViewController {
     }
     
     @objc private func didTapNext() {
-        // Get the actual data objects for the selected IDs
+
         let selectedObjects = allSpecies.filter { selectedSpecies.contains($0.id) }
         
         guard !selectedObjects.isEmpty else {
@@ -64,14 +62,13 @@ class BirdSelectionViewController: UIViewController {
             return
         }
         
-        // Start the Wizard Flow
+
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         guard let dateInputVC = storyboard.instantiateViewController(withIdentifier: "BirdDateInputViewController") as? BirdDateInputViewController else { return }
         
-        // Configure for the first bird
         dateInputVC.speciesList = selectedObjects
         dateInputVC.currentIndex = 0
-        dateInputVC.collectedData = [] // Start fresh
+        dateInputVC.collectedData = []
         
         navigationController?.pushViewController(dateInputVC, animated: true)
     }
