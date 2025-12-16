@@ -2,7 +2,7 @@
 import Foundation
 import CoreLocation
 
-// MARK: - 1. JSON LOADING HELPER
+
 class DataLoader {
     static func load<T: Decodable>(_ filename: String, as type: T.Type) -> T {
         guard let url = Bundle.main.url(forResource: filename, withExtension: "json") else {
@@ -21,7 +21,7 @@ class DataLoader {
     }
 }
 
-// MARK: - 2. JSON RESPONSE WRAPPERS
+
 
 // Wrapper for 'home_data.json'
 struct CoreHomeData: Codable {
