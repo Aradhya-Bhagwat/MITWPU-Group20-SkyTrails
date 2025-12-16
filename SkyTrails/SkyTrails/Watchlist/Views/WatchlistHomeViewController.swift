@@ -69,7 +69,7 @@ class WatchlistHomeViewController: UIViewController {
         summaryCardCollectionView.register(
             UINib(nibName: WatchlistSectionHeaderCollectionReusableView.reuseIdentifier, bundle: nil),
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-            withReuseIdentifier: WatchlistSectionHeaderCollectionReusableView.reuseIdentifier
+            withReuseIdentifier: "WatchlistSectionHeaderCollectionReusableView"
         )
 
         // Cells

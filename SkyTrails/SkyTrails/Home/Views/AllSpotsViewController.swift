@@ -221,7 +221,7 @@ class AllSpotsViewController: UIViewController {
             
             // 1. Prepare Data for Prediction Map
             guard let lat = item.latitude, let lon = item.longitude else {
-                print( \(item.title))
+                print("Missing latitude or longitude for spot: \(item.title)")
                 return
             }
             
