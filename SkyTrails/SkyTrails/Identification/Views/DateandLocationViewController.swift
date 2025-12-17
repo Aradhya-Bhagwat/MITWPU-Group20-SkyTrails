@@ -20,7 +20,6 @@ class DateandLocationViewController: UIViewController {
     
     
     private let locationManager = CLLocationManager()
-    private let geocoder = CLGeocoder()
     private var completer = MKLocalSearchCompleter()
     
    
