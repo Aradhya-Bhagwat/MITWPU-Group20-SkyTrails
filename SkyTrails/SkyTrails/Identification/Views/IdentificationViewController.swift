@@ -29,6 +29,12 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         applyCardShadow(to: startButton)
         startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
     }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        history = model.histories
+        collectionView.reloadData()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
        
@@ -42,7 +48,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         collectionView.setCollectionViewLayout(layout, animated: true)
         collectionView.dataSource = self
         collectionView.delegate = self
-        history = model.histories
 
         updateSelectionState()
 
