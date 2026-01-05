@@ -28,7 +28,7 @@ class WatchlistHomeViewController: UIViewController {
 
     private struct LayoutConstants {
         static let summaryHeight: CGFloat = 110
-        static let myWatchlistHeight: CGFloat = 180
+        static let myWatchlistHeight: CGFloat = 320
         static let customWatchlistHeight: CGFloat = 184
         static let sharedWatchlistHeight: CGFloat = 140
         static let headerHeight: CGFloat = 40
@@ -308,24 +308,24 @@ extension WatchlistHomeViewController {
         if let watchlist = manager.watchlists.first {
             let observedCount = watchlist.observedCount
             let totalCount = watchlist.birds.count
-            let coverImage = watchlist.birds.first?.images.first.flatMap { UIImage(named: $0) }
+            let toObserveCount = totalCount - observedCount
+            
+            // Get up to 4 images for the collage
+            let images = watchlist.birds.prefix(4).compactMap { bird -> UIImage? in
+                guard let imageName = bird.images.first else { return nil }
+                return UIImage(named: imageName)
+            }
             
             cell.configure(
-                discoveredText: "\(observedCount) species",
-                upcomingText: "\(totalCount - observedCount) species",
-                dateText: "This Month",
                 observedCount: observedCount,
-                watchlistCount: totalCount,
-                image: coverImage
+                toObserveCount: toObserveCount,
+                images: images
             )
         } else {
             cell.configure(
-                discoveredText: "0 species",
-                upcomingText: "0 species",
-                dateText: "N/A",
                 observedCount: 0,
-                watchlistCount: 0,
-                image: nil
+                toObserveCount: 0,
+                images: []
             )
         }
         return cell
