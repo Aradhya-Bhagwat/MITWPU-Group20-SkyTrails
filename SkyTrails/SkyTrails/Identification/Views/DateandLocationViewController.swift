@@ -279,23 +279,30 @@ extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
     // Helper to reload strictly the suggestion rows, NOT the search bar row.
     // This prevents the search bar from resigning first responder.
     private func reloadSuggestionsOnly() {
-        // Section 1 is the search section
         let sectionIndex = 1
         
-        // Current number of rows in table for this section (including search bar)
-        let currentRows = dateandlocationTableView.numberOfRows(inSection: sectionIndex)
-        let newRows = 1 + searchResults.count // 1 for SearchBar
-        print("\(currentRows) \(newRows)")
-        // If we just do reloadData(), it kills the keyboard.
-        // We can just reload the section, but `reloadSections` often resigns responder too.
-        // A simple reloadData() works IF cellForRow sets text correctly,
-        // BUT it is better to not touch the SearchBar row if possible.
+        // 1. Calculate how many suggestion rows we currently have
+        let currentTotalRows = dateandlocationTableView.numberOfRows(inSection: sectionIndex)
+        let currentSuggestionCount = currentTotalRows - 1 // Subtract the SearchBar row
         
-        dateandlocationTableView.reloadData()
-        
-        // Note: Because we sync `cell.searchBar.text = searchQuery` in cellForRowAt,
-        // `reloadData` is actually safe here. The cursor might jump to end,
-        // but it won't clear the text.
+        // 2. Perform updates without touching Row 0
+        dateandlocationTableView.performBatchUpdates({
+            // Remove old suggestions
+            if currentSuggestionCount > 0 {
+                let indexPathsToDelete = (1...currentSuggestionCount).map {
+                    IndexPath(row: $0, section: sectionIndex)
+                }
+                dateandlocationTableView.deleteRows(at: indexPathsToDelete, with: .none)
+            }
+            
+            // Insert new suggestions
+            if !searchResults.isEmpty {
+                let indexPathsToInsert = (1...searchResults.count).map {
+                    IndexPath(row: $0, section: sectionIndex)
+                }
+                dateandlocationTableView.insertRows(at: indexPathsToInsert, with: .none)
+            }
+        }, completion: nil)
     }
 }
 

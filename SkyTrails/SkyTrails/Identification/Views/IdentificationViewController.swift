@@ -17,6 +17,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var collectionView: UICollectionView!
  
+    @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
     var model: IdentificationModels = IdentificationModels()
 
@@ -27,7 +28,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         super.viewDidLayoutSubviews()
        
         applyCardShadow(to: startButton)
-        startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
+//        startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -42,8 +43,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         tableView.delegate = self
         tableView.dataSource = self
     
-        applyCardShadow(to: tableView)
-
+//        applyCardShadow(to: tableView)
+        styleTableContainer()
         let layout = generateLayout()
         collectionView.setCollectionViewLayout(layout, animated: true)
         collectionView.dataSource = self
@@ -52,6 +53,15 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         updateSelectionState()
 
   }
+    func styleTableContainer() {
+        containerView.layer.cornerRadius = 12
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOpacity = 0.1
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        containerView.layer.shadowRadius = 8
+        containerView.layer.masksToBounds = false
+        
+    }
     func updateSelectionState() {
             let selectedCount = model.fieldMarkOptions.filter { $0.isSelected ?? false }.count
             let isValid = selectedCount >= 2
