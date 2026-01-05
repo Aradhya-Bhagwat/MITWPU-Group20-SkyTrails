@@ -62,6 +62,9 @@ class ObservedDetailViewController: UIViewController {
         setupData()
         setupInteractions()
         
+        // Ensure date picker doesn't allow future dates for both new and existing entries
+        dateTimePicker.maximumDate = Date()
+        
         // Load data if editing existing
         if let birdData = bird {
             configure(with: birdData)
