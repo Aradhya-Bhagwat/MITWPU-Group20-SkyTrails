@@ -135,7 +135,7 @@ class BirdDateInputViewController: UIViewController {
         
         if currentIndex < newSpeciesList.count {
             
-            let nextBird = newSpeciesList[currentIndex]
+
 
             
             let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
