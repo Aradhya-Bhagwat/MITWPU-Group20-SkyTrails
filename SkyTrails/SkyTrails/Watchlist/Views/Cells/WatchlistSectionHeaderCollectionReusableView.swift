@@ -37,6 +37,7 @@ class WatchlistSectionHeaderCollectionReusableView: UICollectionReusableView {
         self.sectionIndex = sectionIndex
         self.delegate = delegate
         self.seeAllButton.isHidden = !showSeeAll
+        self.isUserInteractionEnabled = showSeeAll
     }
     
     @objc private func headerTapped() {
