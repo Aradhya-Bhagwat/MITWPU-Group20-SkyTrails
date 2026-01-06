@@ -28,7 +28,7 @@ class WatchlistHomeViewController: UIViewController {
 
     private struct LayoutConstants {
         static let summaryHeight: CGFloat = 110
-        static let myWatchlistHeight: CGFloat = 320
+        static let myWatchlistHeight: CGFloat = 190
         static let customWatchlistHeight: CGFloat = 184
         static let sharedWatchlistHeight: CGFloat = 140
         static let headerHeight: CGFloat = 40
@@ -454,7 +454,7 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
         ) as! WatchlistSectionHeaderCollectionReusableView
         
         if let sectionType = WatchlistSection(rawValue: indexPath.section) {
-            let showChevron = (sectionType != .summary)
+            let showChevron = (sectionType != .summary && sectionType != .myWatchlist)
             header.configure(title: sectionType.title, sectionIndex: indexPath.section, showSeeAll: showChevron, delegate: self)
         }
         

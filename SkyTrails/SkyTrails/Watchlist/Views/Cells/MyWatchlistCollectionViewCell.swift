@@ -14,19 +14,17 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var titleLabel: UILabel!
     
-    // Collage Outlets
-    @IBOutlet weak var collageContainerView: UIView!
-    @IBOutlet weak var stackViewMain: UIStackView!
-    @IBOutlet weak var stackViewTop: UIStackView!
-    @IBOutlet weak var stackViewBottom: UIStackView!
+
+    @IBOutlet weak var imagesStackView: UIStackView!
     @IBOutlet weak var imageView1: UIImageView!
     @IBOutlet weak var imageView2: UIImageView!
     @IBOutlet weak var imageView3: UIImageView!
-    @IBOutlet weak var imageView4: UIImageView!
     
-    // Stats Outlets
-    @IBOutlet weak var observedLabel: UILabel!
-    @IBOutlet weak var toObserveLabel: UILabel!
+    // Badges Outlets
+    @IBOutlet weak var greenBadgeView: UIView!
+    @IBOutlet weak var greenBadgeLabel: UILabel!
+    @IBOutlet weak var blueBadgeView: UIView!
+    @IBOutlet weak var blueBadgeLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -46,12 +44,14 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         containerView.layer.shadowRadius = 8
         containerView.layer.masksToBounds = false
         
-        // Collage Styling
-        collageContainerView.layer.cornerRadius = 16
-        collageContainerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        collageContainerView.clipsToBounds = true
+        // Images Container Styling (Masking top corners)
+        imagesStackView.layer.cornerRadius = 16
+        imagesStackView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        imagesStackView.clipsToBounds = true
+        imagesStackView.backgroundColor = .secondarySystemBackground
         
-        [imageView1, imageView2, imageView3, imageView4].forEach {
+        // Images Styling
+        [imageView1, imageView2, imageView3].forEach {
             $0?.contentMode = .scaleAspectFill
             $0?.clipsToBounds = true
         }
@@ -60,98 +60,70 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
         titleLabel.textColor = .label
         
-        observedLabel.font = .systemFont(ofSize: 14)
-        observedLabel.numberOfLines = 2
-        
-        toObserveLabel.font = .systemFont(ofSize: 14)
-        toObserveLabel.numberOfLines = 2
+        // Badges Styling
+        setupBadge(greenBadgeView, label: greenBadgeLabel, color: .systemGreen)
+        setupBadge(blueBadgeView, label: blueBadgeLabel, color: .systemBlue)
+    }
+    
+    private func setupBadge(_ view: UIView, label: UILabel, color: UIColor) {
+        view.layer.cornerRadius = 8
+        view.backgroundColor = color.withAlphaComponent(0.15)
+        view.layer.masksToBounds = true
+        label.textColor = color
+        label.font = .systemFont(ofSize: 12, weight: .bold)
     }
     
     func configure(observedCount: Int, toObserveCount: Int, images: [UIImage?]) {
-        setupCollage(with: images.compactMap { $0 })
+        // Configure Images
+        let availableImages = images.compactMap { $0 }
+        let count = min(availableImages.count, 3)
         
-        // Observed Label
-        let observedText = " \(observedCount) new birds observed this month"
-        observedLabel.attributedText = createAttributedText(
-            text: observedText,
-            iconName: "bird.fill",
-            color: .systemBlue
-        )
-        
-        // To Observe Label
-        let toObserveText = " \(toObserveCount) birds added to observe this month"
-        toObserveLabel.attributedText = createAttributedText(
-            text: toObserveText,
-            iconName: "bird",
-            color: .systemGreen
-        )
-    }
-    
-    private func setupCollage(with images: [UIImage]) {
-        // Reset state
-        [imageView1, imageView2, imageView3, imageView4].forEach {
-            $0?.isHidden = true
-            $0?.image = nil
-        }
-        stackViewTop.isHidden = true
-        stackViewBottom.isHidden = true
-        
-        let count = min(images.count, 4)
+        [imageView1, imageView2, imageView3].forEach { $0?.isHidden = true }
         
         if count == 0 {
-            // Placeholder state
-            stackViewTop.isHidden = false
-            imageView1.isHidden = false
-            imageView1.image = UIImage(systemName: "photo")?.withTintColor(.tertiaryLabel, renderingMode: .alwaysOriginal)
-            imageView1.contentMode = .center
-            imageView1.backgroundColor = .secondarySystemBackground
+             imageView1.isHidden = false
+             imageView1.image = nil
+             imageView1.backgroundColor = .systemGray6
+        } else {
+             if count >= 1 {
+                 imageView1.isHidden = false
+                 imageView1.image = availableImages[0]
+             }
+             if count >= 2 {
+                 imageView2.isHidden = false
+                 imageView2.image = availableImages[1]
+             }
+             if count >= 3 {
+                 imageView3.isHidden = false
+                 imageView3.image = availableImages[2]
+             }
+        }
+        
+        // Configure Badges
+        // Green: To Observe (birds added/not yet observed)
+        addIconToLabel(label: greenBadgeLabel, text: "\(toObserveCount)", iconName: "bird")
+        
+        // Blue: Observed
+        addIconToLabel(label: blueBadgeLabel, text: "\(observedCount)", iconName: "bird.fill")
+    }
+    
+    private func addIconToLabel(label: UILabel, text: String, iconName: String) {
+        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        let image = UIImage(systemName: iconName, withConfiguration: config)?
+            .withTintColor(label.textColor, renderingMode: .alwaysOriginal)
+        
+        guard let safeImage = image else {
+            label.text = text
             return
         }
         
-        // Restore content mode
-        [imageView1, imageView2, imageView3, imageView4].forEach { $0?.contentMode = .scaleAspectFill }
+        let attachment = NSTextAttachment(image: safeImage)
+        let yOffset = (label.font.capHeight - safeImage.size.height).rounded() / 2
+        attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
         
-        // Populate images
-        if count >= 1 {
-            imageView1.image = images[0]
-            imageView1.isHidden = false
-            stackViewTop.isHidden = false
-        }
-        if count >= 2 {
-            imageView2.image = images[1]
-            imageView2.isHidden = false
-        }
-        if count >= 3 {
-            imageView3.image = images[2]
-            imageView3.isHidden = false
-            stackViewBottom.isHidden = false
-        }
-        if count >= 4 {
-            imageView4.image = images[3]
-            imageView4.isHidden = false
-        }
-    }
-    
-    private func createAttributedText(text: String, iconName: String, color: UIColor) -> NSAttributedString {
-        let fontSize: CGFloat = 14
-        let config = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .regular)
+        let attrString = NSMutableAttributedString(attachment: attachment)
+        attrString.append(NSAttributedString(string: "  " + text))
         
-        guard let icon = UIImage(systemName: iconName, withConfiguration: config)?
-            .withTintColor(color, renderingMode: .alwaysOriginal) else { return NSAttributedString(string: text) }
-        
-        let attachment = NSTextAttachment(image: icon)
-        let yOffset = (fontSize - icon.size.height) / 2.0 - 2
-        attachment.bounds = CGRect(x: 0, y: yOffset, width: icon.size.width, height: icon.size.height)
-        
-        let completeString = NSMutableAttributedString(attachment: attachment)
-        
-        let textAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.label,
-            .font: UIFont.systemFont(ofSize: fontSize)
-        ]
-        
-        completeString.append(NSAttributedString(string: text, attributes: textAttributes))
-        
-        return completeString
+        label.attributedText = attrString
     }
 }
