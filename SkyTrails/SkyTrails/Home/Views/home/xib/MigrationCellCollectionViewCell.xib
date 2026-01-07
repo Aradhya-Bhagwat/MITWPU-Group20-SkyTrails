@@ -24,8 +24,11 @@
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="82c-Q0-Lr4">
                                 <rect key="frame" x="8" y="8" width="345" height="203"/>
                                 <standardMapConfiguration key="preferredConfiguration"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="203" id="mapViewHeightConstraint"/>
+                                </constraints>
                             </mapView>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6l2-Au-Bgk" customClass="MigrationCellCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6l2-Au-Bgk">
                                 <rect key="frame" x="0.0" y="211" width="361" height="110"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="w5T-1I-zVn">
@@ -106,13 +109,12 @@
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
-            <constraints>
-                <constraint firstItem="575-Tl-Tet" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="22P-yB-4DP"/>
-                <constraint firstItem="575-Tl-Tet" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="a7l-Es-2uz"/>
-                <constraint firstAttribute="bottom" secondItem="575-Tl-Tet" secondAttribute="bottom" id="nTF-gq-BAM"/>
-                <constraint firstAttribute="trailing" secondItem="575-Tl-Tet" secondAttribute="trailing" id="pbd-Sd-yju"/>
-            </constraints>
-            <size key="customSize" width="331" height="353"/>
+                <constraints>
+                    <constraint firstItem="575-Tl-Tet" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="22P-yB-4DP"/>
+                    <constraint firstItem="575-Tl-Tet" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="a7l-Es-2uz"/>
+                    <constraint firstAttribute="bottom" secondItem="575-Tl-Tet" secondAttribute="bottom" id="nTF-gq-BAM"/>
+                    <constraint firstAttribute="trailing" secondItem="575-Tl-Tet" secondAttribute="trailing" id="pbd-Sd-yju"/>
+                </constraints>            <size key="customSize" width="331" height="353"/>
             <connections>
                 <outlet property="birdImageView" destination="w5T-1I-zVn" id="wtw-hB-0fS"/>
                 <outlet property="birdNameLabel" destination="TIR-fd-JJ2" id="7C6-vW-IcB"/>
