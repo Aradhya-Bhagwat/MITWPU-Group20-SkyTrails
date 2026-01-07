@@ -134,6 +134,32 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         
     }
     
+    // MARK: - Self Sizing & Layout Fixes
+    override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
+        
+        // 1. Force the Width to match the Layout's requirement (Screen Width - Margins)
+        // This ensures the cell stretches horizontally as requested.
+        var targetFrame = layoutAttributes.frame
+        targetFrame.size.width = layoutAttributes.frame.width
+        
+        let targetSize = CGSize(width: targetFrame.width, height: UIView.layoutFittingCompressedSize.height)
+        
+        // 2. Ensure layout is up-to-date before calculating size
+        self.layoutIfNeeded()
+        
+        let autoLayoutSize = contentView.systemLayoutSizeFitting(
+            targetSize,
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        
+        // 3. Update the attributes with the calculated height
+        var newAttributes = layoutAttributes.copy() as! UICollectionViewLayoutAttributes
+        newAttributes.frame = CGRect(origin: targetFrame.origin, size: CGSize(width: targetFrame.width, height: autoLayoutSize.height))
+        
+        return newAttributes
+    }
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         // Clear all dynamic data when the cell is reused
