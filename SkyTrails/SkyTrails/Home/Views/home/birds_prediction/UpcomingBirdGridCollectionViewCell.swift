@@ -44,18 +44,32 @@ class UpcomingBirdGridCollectionViewCell: UICollectionViewCell {
         containerView.layer.cornerRadius = 12
         
         titleLabel.numberOfLines = 1
-        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         titleLabel.textColor = .label
         
-        DateLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         DateLabel.textColor = .secondaryLabel
     }
     
-    override func layoutSubviews() {
-            super.layoutSubviews()
-            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
-        }
 
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        
+        let currentWidth = self.bounds.width
+        let titleRatio: CGFloat = 17.0 / 200.0
+        let locationRatio: CGFloat = 12.0 / 200.0
+        
+        titleLabel.font = UIFont.systemFont(
+            ofSize: currentWidth * titleRatio,
+            weight: .semibold
+        )
+        
+        DateLabel.font = UIFont.systemFont(
+            ofSize: currentWidth * locationRatio,
+            weight: .regular
+        )
+    }
     func configure(with spot: UpcomingBird) {
         birImage.image = UIImage(named: spot.imageName)
         titleLabel.text = spot.title

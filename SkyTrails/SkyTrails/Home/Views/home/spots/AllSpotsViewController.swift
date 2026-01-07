@@ -24,6 +24,18 @@ class AllSpotsViewController: UIViewController {
         setupCollectionView()
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        // Clear the cache so the layout recalculates for the new width
+        self.cachedItemSize = nil
+        
+        coordinator.animate(alongsideTransition: { _ in
+            // Invalidate the layout to trigger cell resizing
+            self.collectionView.collectionViewLayout.invalidateLayout()
+        }, completion: nil)
+    }
+    
     
     private func setupCollectionView() {
 
@@ -67,7 +79,7 @@ class AllSpotsViewController: UIViewController {
                     let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
                     let screenMinDimension = min(screenBounds.width, screenBounds.height)
                     let spacing: CGFloat = 16.0
-                    let maxCardWidth: CGFloat = 400.0
+                    let maxCardWidth: CGFloat = 300.0
                     let minColumns = 2
                     
                     var columnCount = minColumns

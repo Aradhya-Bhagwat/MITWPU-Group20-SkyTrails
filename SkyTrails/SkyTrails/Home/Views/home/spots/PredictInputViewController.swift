@@ -150,7 +150,6 @@ class PredictInputViewController: UIViewController {
             inputData.remove(at: index)
             collectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
             
-            // ⭐️ Update Page Control
             pageControl.numberOfPages = inputData.count
             // Ensure current page is valid
             pageControl.currentPage = min(pageControl.currentPage, inputData.count - 1)

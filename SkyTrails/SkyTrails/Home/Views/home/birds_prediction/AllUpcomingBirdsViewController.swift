@@ -78,7 +78,7 @@ class AllUpcomingBirdsViewController: UIViewController {
                     let layoutWidth = layoutEnvironment.container.effectiveContentSize.width
                     let padding: CGFloat = 16.0
                     let spacing: CGFloat = 16.0
-                    let maxCardWidth: CGFloat = 400.0
+                    let maxCardWidth: CGFloat = 300.0
                     let minColumns = 2
                     
                     var columnCount = minColumns

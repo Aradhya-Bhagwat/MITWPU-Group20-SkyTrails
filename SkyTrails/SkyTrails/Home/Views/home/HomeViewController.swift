@@ -24,6 +24,8 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     }
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
             super.viewWillTransition(to: size, with: coordinator)
+            cachedUpcomingBirdCardWidth = nil
+            cachedSpotsCardWidth = nil
             coordinator.animate(alongsideTransition: { _ in
                 self.homeCollectionView.collectionViewLayout.invalidateLayout()
             }, completion: nil)
@@ -149,7 +151,8 @@ extension HomeViewController {
             let numberOfSpacings = floor(visibleCardProportion)
             let totalSpacing = (numberOfSpacings * interGroupSpacing) + outerPadding
             
-            cardWidth = (screenWidth - totalSpacing) / visibleCardProportion
+            let calculatedWidth = (screenWidth - totalSpacing) / visibleCardProportion
+            cardWidth = min(calculatedWidth, 230)
             
             cachedUpcomingBirdCardWidth = cardWidth
         }
@@ -171,7 +174,7 @@ extension HomeViewController {
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .groupPaging
+        section.orthogonalScrollingBehavior = .continuous
         section.interGroupSpacing = 16
         
         // header
@@ -203,7 +206,8 @@ extension HomeViewController {
                 let numberOfSpacings = floor(visibleCardProportion)
                 let totalSpacing = ((numberOfSpacings) * interGroupSpacing) + outerPadding
                 
-                cardWidth = (screenWidth - totalSpacing) / visibleCardProportion
+                let calculatedWidth = (screenWidth - totalSpacing) / visibleCardProportion
+                cardWidth = min(calculatedWidth, 230)
                 
                 cachedSpotsCardWidth = cardWidth
             }
