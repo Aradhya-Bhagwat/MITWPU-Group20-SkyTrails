@@ -10,7 +10,7 @@ import CoreLocation
 
 
 protocol MapSelectionDelegate: AnyObject {
-    func didSelectMapLocation(_ name: String)
+    func didSelectMapLocation(name: String, lat: Double, lon: Double)
 }
 
 class MapViewController: UIViewController {
@@ -30,6 +30,7 @@ class MapViewController: UIViewController {
     
     weak var delegate: MapSelectionDelegate?
     var selectedLocationName: String?
+    var selectedCoordinate: CLLocationCoordinate2D?
 
     
     override func viewDidLoad() {
@@ -108,6 +109,7 @@ class MapViewController: UIViewController {
     
     func updateLocationOnMap(coord: CLLocationCoordinate2D, name: String? = nil) {
         // 1. Add Pin
+        self.selectedCoordinate = coord
         mapView.removeAnnotations(mapView.annotations)
         let annotation = MKPointAnnotation()
         annotation.coordinate = coord
@@ -179,8 +181,8 @@ class MapViewController: UIViewController {
 
 
     @objc private func nextTapped() {
-        guard let name = selectedLocationName else { return }
-        delegate?.didSelectMapLocation(name)
+        guard let name = selectedLocationName, let coord = selectedCoordinate else { return }
+        delegate?.didSelectMapLocation(name: name, lat: coord.latitude, lon: coord.longitude)
         navigationController?.popViewController(animated: true)
     }
 }
