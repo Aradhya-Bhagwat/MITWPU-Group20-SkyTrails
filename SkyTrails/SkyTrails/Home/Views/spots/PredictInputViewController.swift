@@ -7,7 +7,7 @@
 
 import UIKit
 
-class PredictInputViewController: UIViewController {
+class PredictInputViewController: UIViewController, SearchLocationDelegate {
     var inputData: [PredictionInputData] = [PredictionInputData()]
     private var cardWidth: CGFloat = 0
         private let spacing: CGFloat = 16.0
@@ -27,12 +27,12 @@ class PredictInputViewController: UIViewController {
     private func applyHeightConstraint() {
     
             collectionView.translatesAutoresizingMaskIntoConstraints = false
-            let neededHeight: CGFloat = 324
+            let neededHeight: CGFloat = 420 // Increased height
             let heightConstraint = collectionView.heightAnchor.constraint(equalToConstant: neededHeight)
             heightConstraint.isActive = true
             
         }
-    private func setupCollectionView() {
+    private func setupCollectionView()  {
             let layout = UICollectionViewFlowLayout()
             
             layout.scrollDirection = .horizontal
@@ -40,7 +40,7 @@ class PredictInputViewController: UIViewController {
             layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
             
             let screenWidth = self.view.bounds.width
-            layout.itemSize = CGSize(width: screenWidth - 48, height: 320)
+            layout.itemSize = CGSize(width: screenWidth - 48, height: 400) // Increased height
             
             collectionView.collectionViewLayout = layout
             collectionView.isPagingEnabled = false
@@ -60,6 +60,27 @@ class PredictInputViewController: UIViewController {
             pageControl.currentPage = 0
             pageControl.hidesForSinglePage = true
             pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
+        }
+        
+        // MARK: - SearchLocationDelegate
+        func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
+            guard index < inputData.count else { return }
+            
+            // Update Data Model
+            inputData[index].locationName = name
+            inputData[index].latitude = lat
+            inputData[index].longitude = lon
+            
+            // Refresh specific cell
+            let indexPath = IndexPath(item: index, section: 0)
+            collectionView.reloadItems(at: [indexPath])
+            
+            validateInputs()
+            
+            // Notify Map if needed
+            if let mapVC = self.navigationController?.parent as? PredictMapViewController {
+                mapVC.updateMapWithCurrentInputs(inputs: inputData)
+            }
         }
 
         // MARK: - Navigation Actions
@@ -158,68 +179,6 @@ class PredictInputViewController: UIViewController {
             collectionView.reloadData()
             validateInputs()
         }
-    
-
-        
-        // MARK: - Modal Presenters
-        
-        func openSearchModal(forIndex index: Int) {
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-            
-            // Wrap in Nav Controller for the header bar
-            guard let navVC = storyboard.instantiateViewController(withIdentifier: "SearchNavigationController") as? UINavigationController,
-                  let searchVC = navVC.viewControllers.first as? SearchLocationViewController else {
-                return
-            }
-            
-            searchVC.delegate = self
-            searchVC.cellIndex = index
-            navVC.modalPresentationStyle = .fullScreen // Full focus
-            
-            self.present(navVC, animated: true)
-        }
-        
-        func openDatePicker(forIndex index: Int, isStartDate: Bool) {
-            // Simple Alert with DatePicker for MVP
-            let alert = UIAlertController(title: isStartDate ? "Select Start Date" : "Select End Date", message: nil, preferredStyle: .actionSheet)
-            
-            let datePicker = UIDatePicker()
-            datePicker.datePickerMode = .date
-            datePicker.preferredDatePickerStyle = .compact
-            
-            if isStartDate {
-                if let existingDate = inputData[index].startDate {
-                    datePicker.date = existingDate
-                }
-            } else {
-                if let existingDate = inputData[index].endDate {
-                    datePicker.date = existingDate
-                }
-            }
-            datePicker.frame = CGRect(x: 0, y: 50, width: alert.view.bounds.width - 20, height: 200)
-            
-            alert.view.heightAnchor.constraint(equalToConstant: 300).isActive = true
-            alert.view.addSubview(datePicker)
-            
-            let selectAction = UIAlertAction(title: "Select", style: .default) { [weak self] _ in
-                guard let self = self else { return }
-                let date = datePicker.date
-                
-                if isStartDate {
-                    self.inputData[index].startDate = date
-                } else {
-                    self.inputData[index].endDate = date
-                }
-                self.collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
-            }
-            
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-            
-            alert.addAction(selectAction)
-            alert.addAction(cancelAction)
-            
-            self.present(alert, animated: true)
-        }
     }
 
     // MARK: - Collection View DataSource
@@ -239,12 +198,30 @@ class PredictInputViewController: UIViewController {
             // 1. Configure UI
             cell.configure(data: data, index: indexPath.row)
             
-            // 2. Wire up Search
+            // 2. Wire up Search Tap
             cell.onSearchTap = { [weak self] in
-                self?.openSearchModal(forIndex: indexPath.row)
+                guard let self = self else { return }
+                
+                // Instantiate Search VC from Storyboard
+                let storyboard = UIStoryboard(name: "Home", bundle: nil)
+                if let nav = storyboard.instantiateViewController(withIdentifier: "SearchNavigationController") as? UINavigationController,
+                   let searchVC = nav.viewControllers.first as? SearchLocationViewController {
+                    
+                    searchVC.delegate = self
+                    searchVC.cellIndex = indexPath.row
+                    
+                    self.present(nav, animated: true)
+                }
             }
             
- 
+            // 3. Wire up Date Changes
+            cell.onStartDateChange = { [weak self] date in
+                self?.inputData[indexPath.row].startDate = date
+            }
+            
+            cell.onEndDateChange = { [weak self] date in
+                self?.inputData[indexPath.row].endDate = date
+            }
             
             // 4. Wire up Area
             cell.onAreaChange = { [weak self] newVal in
@@ -266,25 +243,4 @@ class PredictInputViewController: UIViewController {
                 updatePageControl()
             }
     }
-
-    // MARK: - Search Delegate
-// In PredictInputViewController.swift
-
-extension PredictInputViewController: SearchLocationDelegate {
-    func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
-        // ... (data update logic)
-        
-        inputData[index].locationName = name
-        inputData[index].latitude = lat
-        inputData[index].longitude = lon
-        
-        collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
-        validateInputs()
-        
-
-        if let mapVC = self.navigationController?.parent as? PredictMapViewController {
-            mapVC.updateMapWithCurrentInputs(inputs: inputData)
-        }
-    }
-}
 
