@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -35,8 +35,8 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="o3N-Gw-90K">
-                                <rect key="frame" x="8" y="155" width="160" height="12"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="o3N-Gw-90K">
+                                <rect key="frame" x="8" y="155" width="160" height="20.333333333333343"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="10" id="5KM-Pn-Vfo"/>
                                 </constraints>
@@ -56,6 +56,7 @@
                             <constraint firstItem="TY3-4C-qqx" firstAttribute="top" secondItem="WYq-28-ygp" secondAttribute="top" constant="8" id="dtZ-JL-THh"/>
                             <constraint firstAttribute="trailing" secondItem="o3N-Gw-90K" secondAttribute="trailing" constant="8" id="gEF-dp-S6s"/>
                             <constraint firstAttribute="trailing" secondItem="TsQ-3Q-w1s" secondAttribute="trailing" constant="8" id="ok9-50-McT"/>
+                            <constraint firstAttribute="width" secondItem="WYq-28-ygp" secondAttribute="height" multiplier="88:91" id="wMc-cO-wae"/>
                         </constraints>
                     </view>
                 </subviews>

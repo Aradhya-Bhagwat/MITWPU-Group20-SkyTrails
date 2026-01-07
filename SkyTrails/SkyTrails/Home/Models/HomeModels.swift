@@ -70,8 +70,8 @@ struct PredictionInputData {
     var locationName: String?
     var latitude: Double?
     var longitude: Double?
-    var startDate: Date?
-    var endDate: Date?
+    var startDate: Date? = Date()
+    var endDate: Date? = Date()
     var areaValue: Int = 2 // Default 2 km
 }
 

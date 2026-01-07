@@ -21,10 +21,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="176" height="176"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Me4-1Z-mq4">
-                                <rect key="frame" x="8" y="8" width="160" height="105.66666666666667"/>
+                                <rect key="frame" x="8" y="8" width="160" height="105"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="Me4-1Z-mq4" secondAttribute="height" multiplier="32:21" id="lCH-Zh-wlC"/>
+                                </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DNf-tn-gH1">
-                                <rect key="frame" x="8" y="121.66666666666669" width="160" height="20"/>
+                                <rect key="frame" x="8" y="121" width="160" height="20"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="20" id="S9U-Kv-8jU"/>
                                 </constraints>
@@ -33,7 +36,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MiX-cX-INw">
-                                <rect key="frame" x="8" y="149.66666666666666" width="160" height="21"/>
+                                <rect key="frame" x="8" y="149" width="160" height="21"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="10" id="gaJ-ou-TkI"/>
                                 </constraints>
@@ -44,11 +47,11 @@
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="Me4-1Z-mq4" firstAttribute="height" secondItem="6eT-zn-fgG" secondAttribute="height" multiplier="0.6" id="9WL-vb-QdR"/>
                             <constraint firstItem="MiX-cX-INw" firstAttribute="top" secondItem="DNf-tn-gH1" secondAttribute="bottom" constant="8" id="BAx-ej-haQ"/>
                             <constraint firstAttribute="trailing" secondItem="Me4-1Z-mq4" secondAttribute="trailing" constant="8" id="CcJ-sS-0lP"/>
                             <constraint firstItem="DNf-tn-gH1" firstAttribute="top" secondItem="Me4-1Z-mq4" secondAttribute="bottom" constant="8" id="Hbu-KU-gp2"/>
                             <constraint firstItem="MiX-cX-INw" firstAttribute="leading" secondItem="6eT-zn-fgG" secondAttribute="leading" constant="8" id="MSs-3p-Aun"/>
+                            <constraint firstAttribute="width" secondItem="6eT-zn-fgG" secondAttribute="height" multiplier="1:1" id="NQx-p1-Lfz"/>
                             <constraint firstAttribute="trailing" secondItem="MiX-cX-INw" secondAttribute="trailing" constant="8" id="Omp-nR-PgJ"/>
                             <constraint firstAttribute="trailing" secondItem="DNf-tn-gH1" secondAttribute="trailing" constant="8" id="bYK-Jo-1O2"/>
                             <constraint firstItem="Me4-1Z-mq4" firstAttribute="top" secondItem="6eT-zn-fgG" secondAttribute="top" constant="8" id="ofb-ox-LLu"/>

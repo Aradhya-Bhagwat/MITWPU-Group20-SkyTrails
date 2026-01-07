@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -23,7 +23,7 @@
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="FFH-mR-4Bq">
                                 <rect key="frame" x="8" y="8" width="160" height="114"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" secondItem="FFH-mR-4Bq" secondAttribute="height" multiplier="80:57" id="n9J-sL-TKt"/>
+                                    <constraint firstAttribute="width" secondItem="FFH-mR-4Bq" secondAttribute="height" multiplier="80:57" id="X2x-5c-8Vl"/>
                                 </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iHJ-IX-WTJ">
@@ -45,6 +45,7 @@
                             <constraint firstAttribute="trailing" secondItem="Ode-7X-k5r" secondAttribute="trailing" constant="8" id="7IC-gs-EL7"/>
                             <constraint firstAttribute="trailing" secondItem="iHJ-IX-WTJ" secondAttribute="trailing" constant="8" id="IHS-nD-FsB"/>
                             <constraint firstItem="iHJ-IX-WTJ" firstAttribute="leading" secondItem="4rG-nK-Pnt" secondAttribute="leading" constant="8" id="Jfo-co-rlL"/>
+                            <constraint firstAttribute="width" secondItem="4rG-nK-Pnt" secondAttribute="height" multiplier="88:91" id="Wti-NS-4xU"/>
                             <constraint firstItem="FFH-mR-4Bq" firstAttribute="top" secondItem="4rG-nK-Pnt" secondAttribute="top" constant="8" id="YBf-ke-Fe3"/>
                             <constraint firstItem="Ode-7X-k5r" firstAttribute="leading" secondItem="4rG-nK-Pnt" secondAttribute="leading" constant="8" id="g02-hB-kxW"/>
                             <constraint firstItem="FFH-mR-4Bq" firstAttribute="leading" secondItem="4rG-nK-Pnt" secondAttribute="leading" constant="8" id="kIM-Ky-gDQ"/>

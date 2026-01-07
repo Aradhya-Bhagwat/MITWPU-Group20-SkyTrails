@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="ckt-qD-EsR">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="ckt-qD-EsR">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Map view configurations" minToolsVersion="14.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -19,7 +19,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="HW6-l3-VNR">
-                                <rect key="frame" x="0.0" y="172" width="393" height="612"/>
+                                <rect key="frame" x="0.0" y="172" width="393" height="680"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="AY8-TT-BZZ">
                                     <size key="itemSize" width="195" height="180"/>
@@ -43,7 +43,7 @@
                         <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="HW6-l3-VNR" secondAttribute="bottom" id="9MC-3Y-Cg6"/>
+                            <constraint firstAttribute="bottom" secondItem="HW6-l3-VNR" secondAttribute="bottom" id="9MC-3Y-Cg6"/>
                             <constraint firstItem="HW6-l3-VNR" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="DMx-2w-18I"/>
                             <constraint firstItem="HW6-l3-VNR" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" id="cSG-uR-d13"/>
                             <constraint firstItem="HW6-l3-VNR" firstAttribute="trailing" secondItem="vDu-zF-Fre" secondAttribute="trailing" id="wmX-Cg-eRQ"/>
@@ -106,7 +106,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="7pr-OD-1Yg" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1930.534351145038" y="-658.45070422535218"/>
+            <point key="canvasLocation" x="1932" y="-657"/>
         </scene>
         <!--All Spots View Controller-->
         <scene sceneID="g2K-9t-XII">
