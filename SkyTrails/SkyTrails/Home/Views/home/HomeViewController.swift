@@ -552,21 +552,27 @@ extension HomeViewController {
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         
         // 1. Item Definition (Card Size)
+        // Use estimated height to allow cell self-sizing if needed
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .fractionalHeight(1.0)
+            heightDimension: .estimated(320)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupWidth = 0.9
-        let groupHeight: CGFloat = 320
+        
+        // Group Width: 1.0 (Full Width of Section)
+        // We rely on Section Insets to provide the horizontal margins.
         let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(groupWidth),
-            heightDimension: .absolute(groupHeight)
+            widthDimension: .fractionalWidth(1.0),
+            heightDimension: .estimated(320)
         )
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 
         let section = NSCollectionLayoutSection(group: group)
+        
+        // Using 'groupPaging' or 'groupPagingCentered' depending on desired snap behavior.
+        // With fractionalWidth(1.0), Centered and Paging behave similarly for single items per page.
         section.orthogonalScrollingBehavior = .groupPagingCentered
+        
         let migrationPageControlFooterKind = "MigrationPageControlFooter"
         
         let pageControlFooterSize = NSCollectionLayoutSize(
@@ -586,8 +592,10 @@ extension HomeViewController {
         header.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         section.boundarySupplementaryItems = [header, pageControlFooter]
         
-        section.interGroupSpacing = 20
-        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
+        section.interGroupSpacing = 16
+        
+        // Define margins here: 16pt on Leading and Trailing
+        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
         
         return section
     }
