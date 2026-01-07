@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEL-VC-001">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
+        <capability name="Map view configurations" minToolsVersion="14.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="collection view cell content view" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Bird Selection View Controller-->
+        <scene sceneID="sel-12-bird">
+            <objects>
+                <viewController storyboardIdentifier="birdspredViewController" id="SEL-VC-001" customClass="BirdSelectionViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="SEL-VIEW-001">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="SEL-SAFE-001"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="SEL-RESP-001" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1000" y="39"/>
+        </scene>
+        <!--Bird Date Input View Controller-->
+        <scene sceneID="inp-date-001">
+            <objects>
+                <viewController storyboardIdentifier="BirdDateInputViewController" id="INP-VC-001" customClass="BirdDateInputViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="INP-VIEW-001">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="INP-SAFE-001"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="INP-RESP-001" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-200" y="39"/>
+        </scene>
+        <!--Birdspred View Controller-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="BirdMapResultViewController" id="Y6W-OH-hqX" customClass="birdspredViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="8Zk-9u-3tq">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <standardMapConfiguration key="preferredConfiguration"/>
+                            </mapView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="PILL-VIEW-ID">
+                                <rect key="frame" x="116.66666666666669" y="714" width="160" height="40"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="X Species" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PILL-LBL-ID">
+                                        <rect key="frame" x="8" y="9.6666666666666288" width="144" height="21"/>
+                                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="PILL-LBL-ID" secondAttribute="trailing" constant="8" id="P1"/>
+                                    <constraint firstAttribute="height" constant="40" id="P2"/>
+                                    <constraint firstItem="PILL-LBL-ID" firstAttribute="leading" secondItem="PILL-VIEW-ID" secondAttribute="leading" constant="8" id="P3"/>
+                                    <constraint firstItem="PILL-LBL-ID" firstAttribute="centerY" secondItem="PILL-VIEW-ID" secondAttribute="centerY" id="P4"/>
+                                    <constraint firstAttribute="width" constant="160" id="P5"/>
+                                </constraints>
+                            </view>
+                            <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-VIEW-ID">
+                                <rect key="frame" x="24" y="634" width="345" height="120"/>
+                                <subviews>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-IMG-ID">
+                                        <rect key="frame" x="16" y="16" width="60" height="60"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="60" id="C1"/>
+                                            <constraint firstAttribute="height" constant="60" id="C2"/>
+                                        </constraints>
+                                    </imageView>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-TITLE-ID">
+                                        <rect key="frame" x="88" y="16" width="241" height="24"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date Range" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-SUB-ID">
+                                        <rect key="frame" x="88" y="44" width="241" height="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <color key="textColor" systemColor="secondaryLabelColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" translatesAutoresizingMaskIntoConstraints="NO" id="PAGE-CTRL-ID">
+                                        <rect key="frame" x="16" y="86" width="313" height="26"/>
+                                        <color key="pageIndicatorTintColor" systemColor="systemGray4Color"/>
+                                        <color key="currentPageIndicatorTintColor" systemColor="labelColor"/>
+                                    </pageControl>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstItem="CARD-SUB-ID" firstAttribute="top" secondItem="CARD-TITLE-ID" secondAttribute="bottom" constant="4" id="C10"/>
+                                    <constraint firstAttribute="trailing" secondItem="CARD-SUB-ID" secondAttribute="trailing" constant="16" id="C11"/>
+                                    <constraint firstAttribute="height" constant="120" id="C3"/>
+                                    <constraint firstItem="CARD-IMG-ID" firstAttribute="leading" secondItem="CARD-VIEW-ID" secondAttribute="leading" constant="16" id="C4"/>
+                                    <constraint firstItem="CARD-TITLE-ID" firstAttribute="leading" secondItem="CARD-IMG-ID" secondAttribute="trailing" constant="12" id="C5"/>
+                                    <constraint firstItem="CARD-IMG-ID" firstAttribute="top" secondItem="CARD-VIEW-ID" secondAttribute="top" constant="16" id="C6"/>
+                                    <constraint firstAttribute="trailing" secondItem="CARD-TITLE-ID" secondAttribute="trailing" constant="16" id="C7"/>
+                                    <constraint firstItem="CARD-TITLE-ID" firstAttribute="top" secondItem="CARD-VIEW-ID" secondAttribute="top" constant="16" id="C8"/>
+                                    <constraint firstItem="CARD-SUB-ID" firstAttribute="leading" secondItem="CARD-IMG-ID" secondAttribute="trailing" constant="12" id="C9"/>
+                                    <constraint firstItem="PAGE-CTRL-ID" firstAttribute="leading" secondItem="CARD-VIEW-ID" secondAttribute="leading" constant="16" id="PG1"/>
+                                    <constraint firstAttribute="trailing" secondItem="PAGE-CTRL-ID" secondAttribute="trailing" constant="16" id="PG2"/>
+                                    <constraint firstAttribute="bottom" secondItem="PAGE-CTRL-ID" secondAttribute="bottom" constant="8" id="PG3"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="8Zk-9u-3tq" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="1a2-b3-c4d"/>
+                            <constraint firstAttribute="bottom" secondItem="8Zk-9u-3tq" secondAttribute="bottom" id="9i0-j1-k2l"/>
+                            <constraint firstItem="8Zk-9u-3tq" firstAttribute="trailing" secondItem="vDu-zF-Fre" secondAttribute="trailing" id="Blm-nO-pAq"/>
+                            <constraint firstItem="8Zk-9u-3tq" firstAttribute="top" secondItem="5EZ-qb-Rvc" secondAttribute="top" id="Efg-h1-i2j"/>
+                            <constraint firstItem="PILL-VIEW-ID" firstAttribute="centerX" secondItem="vDu-zF-Fre" secondAttribute="centerX" id="H1"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="PILL-VIEW-ID" secondAttribute="bottom" constant="30" id="H2"/>
+                            <constraint firstItem="CARD-VIEW-ID" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="24" id="H3"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="CARD-VIEW-ID" secondAttribute="trailing" constant="24" id="H4"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="CARD-VIEW-ID" secondAttribute="bottom" constant="30" id="H5"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="birdImageView" destination="CARD-IMG-ID" id="out-img"/>
+                        <outlet property="infoCardView" destination="CARD-VIEW-ID" id="out-card"/>
+                        <outlet property="mapView" destination="8Zk-9u-3tq" id="conn-3"/>
+                        <outlet property="pageControl" destination="PAGE-CTRL-ID" id="out-pg"/>
+                        <outlet property="pillLabel" destination="PILL-LBL-ID" id="out-pill-lbl"/>
+                        <outlet property="pillView" destination="PILL-VIEW-ID" id="out-pill"/>
+                        <outlet property="subtitleLabel" destination="CARD-SUB-ID" id="out-sub"/>
+                        <outlet property="titleLabel" destination="CARD-TITLE-ID" id="out-title"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="600" y="39"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="UCu-Qb-0hi">
+            <objects>
+                <viewController id="7eL-4j-FfY" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="h7j-IH-Plw">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hzS-oY-fF6">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <standardMapConfiguration key="preferredConfiguration"/>
+                            </mapView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="rtt-O1-vPH"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="hzS-oY-fF6" firstAttribute="leading" secondItem="h7j-IH-Plw" secondAttribute="leading" id="BTB-6j-sqr"/>
+                            <constraint firstAttribute="bottom" secondItem="hzS-oY-fF6" secondAttribute="bottom" id="BTs-D3-XWB"/>
+                            <constraint firstAttribute="trailing" secondItem="hzS-oY-fF6" secondAttribute="trailing" id="FmC-uS-mmY"/>
+                            <constraint firstItem="hzS-oY-fF6" firstAttribute="top" secondItem="h7j-IH-Plw" secondAttribute="top" id="WNh-D5-sgr"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="m3y-yc-aYe"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ftw-ZN-jB4" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3089.3129770992364" y="38.732394366197184"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="ikX-PV-KJ1">
+            <objects>
+                <viewController id="Uld-NQ-aUB" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="wWF-HW-1Lp">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="bGR-uD-X07">
+                                <rect key="frame" x="0.0" y="172" width="393" height="612"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="ih0-12-JGw">
+                                    <size key="itemSize" width="128" height="128"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells>
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="9Uq-AF-JRI">
+                                        <rect key="frame" x="0.0" y="0.0" width="127.99999999999997" height="128"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="LFj-4L-ehl">
+                                            <rect key="frame" x="0.0" y="0.0" width="127.99999999999997" height="128"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </collectionViewCellContentView>
+                                    </collectionViewCell>
+                                </cells>
+                            </collectionView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="XRh-oa-Fsx"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="bGR-uD-X07" firstAttribute="leading" secondItem="XRh-oa-Fsx" secondAttribute="leading" id="1NK-Qr-Cnw"/>
+                            <constraint firstItem="XRh-oa-Fsx" firstAttribute="trailing" secondItem="bGR-uD-X07" secondAttribute="trailing" id="dHg-wW-uyD"/>
+                            <constraint firstItem="bGR-uD-X07" firstAttribute="top" secondItem="XRh-oa-Fsx" secondAttribute="top" id="jQh-89-brp"/>
+                            <constraint firstItem="XRh-oa-Fsx" firstAttribute="bottom" secondItem="bGR-uD-X07" secondAttribute="bottom" id="wta-Wv-8fM"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="M7f-SJ-cwG">
+                        <barButtonItem key="leftBarButtonItem" systemItem="redo" id="1fY-BJ-vPx"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="hML-iN-OVf"/>
+                    </navigationItem>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ki6-3u-zt1" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4013" y="803"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="lPu-IO-H5o">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="pym-As-qnW" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="Xkx-uo-prB">
+                        <rect key="frame" x="0.0" y="118" width="393" height="54"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="7eL-4j-FfY" kind="relationship" relationship="rootViewController" id="4QL-ir-EH1"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="OmI-UH-g7y" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2162.5954198473282" y="38.732394366197184"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="TVQ-Bh-egD">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="pe9-ly-ZRK" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="O2D-rZ-D21">
+                        <rect key="frame" x="0.0" y="118" width="393" height="54"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="Uld-NQ-aUB" kind="relationship" relationship="rootViewController" id="stz-aA-Yr8"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PKq-pZ-qWR" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3123" y="803"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="labelColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="secondaryLabelColor">
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGray4Color">
+            <color red="0.81960784310000001" green="0.81960784310000001" blue="0.83921568629999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>
