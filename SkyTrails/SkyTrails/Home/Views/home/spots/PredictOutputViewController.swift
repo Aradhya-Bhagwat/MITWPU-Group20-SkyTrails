@@ -66,7 +66,7 @@ class PredictOutputViewController: UIViewController {
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
         
-        let screenWidth = UIScreen.main.bounds.width
+        let screenWidth = view.bounds.width
        
         layout.itemSize = CGSize(width: screenWidth - 48, height: 320)
         

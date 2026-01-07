@@ -11,16 +11,20 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "MyWatchlistCollectionViewCell"
 
-    @IBOutlet weak var mainImage: UIImageView!
-    @IBOutlet weak var upcomingLabel: UILabel!
-    @IBOutlet weak var discoveredLabel: UILabel!
-    @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var containerView: UIView!
-    @IBOutlet weak var observedBadgeView: UIView!
-    @IBOutlet weak var watchlistBadgeView: UIView!
+    @IBOutlet weak var titleLabel: UILabel!
     
-    @IBOutlet weak var observedSpeicesCountLabel: UILabel!
-    @IBOutlet weak var watchlistSpeciesCountLabel: UILabel!
+
+    @IBOutlet weak var imagesStackView: UIStackView!
+    @IBOutlet weak var imageView1: UIImageView!
+    @IBOutlet weak var imageView2: UIImageView!
+    @IBOutlet weak var imageView3: UIImageView!
+    
+    // Badges Outlets
+    @IBOutlet weak var greenBadgeView: UIView!
+    @IBOutlet weak var greenBadgeLabel: UILabel!
+    @IBOutlet weak var blueBadgeView: UIView!
+    @IBOutlet weak var blueBadgeLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -32,7 +36,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
     
     private func setupUI() {
         // Container Styling
-        containerView.backgroundColor = .white
+        containerView.backgroundColor = .secondarySystemGroupedBackground
         containerView.layer.cornerRadius = 16
         containerView.layer.shadowColor = UIColor.black.cgColor
         containerView.layer.shadowOpacity = 0.1
@@ -40,73 +44,86 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         containerView.layer.shadowRadius = 8
         containerView.layer.masksToBounds = false
         
-        // Image Styling
-        mainImage.contentMode = .scaleAspectFill
-        mainImage.clipsToBounds = true
-        mainImage.layer.cornerRadius = 16
-        mainImage.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+        // Images Container Styling (Masking top corners)
+        imagesStackView.layer.cornerRadius = 16
+        imagesStackView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        imagesStackView.clipsToBounds = true
+        imagesStackView.backgroundColor = .secondarySystemBackground
         
-        // Badge Backgrounds
-        observedBadgeView.layer.cornerRadius = 8
-        observedBadgeView.layer.masksToBounds = true
-        observedBadgeView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.15)
+        // Images Styling
+        [imageView1, imageView2, imageView3].forEach {
+            $0?.contentMode = .scaleAspectFill
+            $0?.clipsToBounds = true
+        }
         
-        watchlistBadgeView.layer.cornerRadius = 8
-        watchlistBadgeView.layer.masksToBounds = true
-        watchlistBadgeView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
+        // Labels Styling
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.textColor = .label
         
-        // Badge Text Colors
-        observedSpeicesCountLabel.textColor = UIColor.systemBlue
-        observedSpeicesCountLabel.alpha = 1
-        
-        watchlistSpeciesCountLabel.textColor = UIColor.systemGreen
-        watchlistSpeciesCountLabel.alpha = 1
+        // Badges Styling
+        setupBadge(greenBadgeView, label: greenBadgeLabel, color: .systemGreen)
+        setupBadge(blueBadgeView, label: blueBadgeLabel, color: .systemBlue)
     }
     
-    func configure(discoveredText: String,
-                   upcomingText: String,
-                   dateText: String,
-                   observedCount: Int,
-                   watchlistCount: Int,
-                   image: UIImage?) {
-        
-        discoveredLabel.text = discoveredText
-        upcomingLabel.text = upcomingText
-        dateLabel.text = dateText
-        mainImage.image = image
-        
-        // Observed Badge
-        let observedString = createIconString(
-            text: " \(observedCount)",
-            iconName: "bird.fill",
-            color: .systemBlue,
-            fontSize: observedSpeicesCountLabel.font.pointSize
-        )
-        observedSpeicesCountLabel.attributedText = observedString
-        
-        // Watchlist Badge
-        let watchlistString = createIconString(
-            text: " \(watchlistCount)",
-            iconName: "bird",
-            color: .systemGreen,
-            fontSize: watchlistSpeciesCountLabel.font.pointSize
-        )
-        watchlistSpeciesCountLabel.attributedText = watchlistString
+    private func setupBadge(_ view: UIView, label: UILabel, color: UIColor) {
+        view.layer.cornerRadius = 8
+        view.backgroundColor = color.withAlphaComponent(0.15)
+        view.layer.masksToBounds = true
+        label.textColor = color
+        label.font = .systemFont(ofSize: 12, weight: .bold)
     }
     
-    private func createIconString(text: String, iconName: String, color: UIColor, fontSize: CGFloat) -> NSAttributedString {
-        let config = UIImage.SymbolConfiguration(pointSize: fontSize * 0.9, weight: .semibold)
+    func configure(observedCount: Int, toObserveCount: Int, images: [UIImage?]) {
+        // Configure Images
+        let availableImages = images.compactMap { $0 }
+        let count = min(availableImages.count, 3)
         
-        guard let icon = UIImage(systemName: iconName, withConfiguration: config)?
-            .withTintColor(color, renderingMode: .alwaysOriginal) else { return NSAttributedString(string: text) }
+        [imageView1, imageView2, imageView3].forEach { $0?.isHidden = true }
         
-        let attachment = NSTextAttachment(image: icon)
-        let yOffset = (fontSize - icon.size.height) / 2.0 - 2
-        attachment.bounds = CGRect(x: 0, y: yOffset, width: icon.size.width, height: icon.size.height)
+        if count == 0 {
+             imageView1.isHidden = false
+             imageView1.image = nil
+             imageView1.backgroundColor = .systemGray6
+        } else {
+             if count >= 1 {
+                 imageView1.isHidden = false
+                 imageView1.image = availableImages[0]
+             }
+             if count >= 2 {
+                 imageView2.isHidden = false
+                 imageView2.image = availableImages[1]
+             }
+             if count >= 3 {
+                 imageView3.isHidden = false
+                 imageView3.image = availableImages[2]
+             }
+        }
         
-        let completeString = NSMutableAttributedString(attachment: attachment)
-        completeString.append(NSAttributedString(string: text, attributes: [.foregroundColor: color]))
+        // Configure Badges
+        // Green: To Observe (birds added/not yet observed)
+        addIconToLabel(label: greenBadgeLabel, text: "\(toObserveCount)", iconName: "bird")
         
-        return completeString
+        // Blue: Observed
+        addIconToLabel(label: blueBadgeLabel, text: "\(observedCount)", iconName: "bird.fill")
+    }
+    
+    private func addIconToLabel(label: UILabel, text: String, iconName: String) {
+        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        let image = UIImage(systemName: iconName, withConfiguration: config)?
+            .withTintColor(label.textColor, renderingMode: .alwaysOriginal)
+        
+        guard let safeImage = image else {
+            label.text = text
+            return
+        }
+        
+        let attachment = NSTextAttachment(image: safeImage)
+        let yOffset = (label.font.capHeight - safeImage.size.height).rounded() / 2
+        attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
+        
+        let attrString = NSMutableAttributedString(attachment: attachment)
+        attrString.append(NSAttributedString(string: "  " + text))
+        
+        label.attributedText = attrString
     }
 }

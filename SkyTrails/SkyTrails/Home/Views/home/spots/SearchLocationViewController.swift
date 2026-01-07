@@ -49,37 +49,31 @@ class SearchLocationViewController: UIViewController {
     }
 
     private func searchByCoordinate(_ coordinate: (lat: Double, lon: Double)) {
-        let geocoder = CLGeocoder()
         let location = CLLocation(latitude: coordinate.lat, longitude: coordinate.lon)
         searchResults.removeAll()
         
-        // Use geocoder to get place name, or just use the coordinate text if the geocoder fails
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            guard let self = self else { return }
-            
-            let coordinateTitle = "\(coordinate.lat), \(coordinate.lon)"
-            let placeName = placemarks?.first?.locality ?? "Geographic Location"
-            
-            // We create a custom result object that mimics MKLocalSearchCompletion,
-            // but since we can't instantiate it, we'll store the raw data and update
-            // the delegate call directly in didSelectRowAt.
-            
-            // **CRITICAL:** To display the result, we must invent a way to store coordinate data
-            // in a temporary mock result, since MKLocalSearchCompletion cannot be instantiated.
-            
-            // --- TEMPORARY WORKAROUND for Table View ---
-            // For simplicity and immediate fix: We'll just call the delegate immediately
-            // upon successful parsing, skipping the table view.
-            
-            self.delegate?.didSelectLocation(
-                name: placeName, // Use the resolved place name
-                lat: coordinate.lat,
-                lon: coordinate.lon,
-                forIndex: self.cellIndex
-            )
-            self.dismiss(animated: true)
+        Task {
+            do {
+                guard let request = MKReverseGeocodingRequest(location: location) else { return }
+                let mapItems = try await request.mapItems
+                
+                let placeName = mapItems.first?.name ?? "Geographic Location"
+                
+                await MainActor.run {
+                     self.delegate?.didSelectLocation(
+                        name: placeName,
+                        lat: coordinate.lat,
+                        lon: coordinate.lon,
+                        forIndex: self.cellIndex
+                    )
+                    self.dismiss(animated: true)
+                }
+            } catch {
+                print("Reverse geocoding failed: \(error.localizedDescription)")
+            }
         }
     }
+
     private func setupUI() {
             self.view.backgroundColor = .systemBackground
             
@@ -178,7 +172,7 @@ class SearchLocationViewController: UIViewController {
             search.start { [weak self] (response, error) in
                 guard let self = self else { return }
                 
-                if let coordinate = response?.mapItems.first?.placemark.coordinate {
+                if let coordinate = response?.mapItems.first?.location.coordinate {
 
                     
                     // Send real data back to the Card

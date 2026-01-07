@@ -75,17 +75,17 @@ class AllUpcomingBirdsViewController: UIViewController {
             
                 let containerWidth = layoutEnvironment.container.effectiveContentSize.width
                 if self.cachedItemSize == nil {
-                    let screenMinDimension = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+                    let layoutWidth = layoutEnvironment.container.effectiveContentSize.width
                     let padding: CGFloat = 16.0
                     let spacing: CGFloat = 16.0
                     let maxCardWidth: CGFloat = 400.0
                     let minColumns = 2
                     
                     var columnCount = minColumns
-                    var calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
+                    var calculatedWidth = (layoutWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                     while calculatedWidth > maxCardWidth {
                         columnCount += 1
-                        calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
+                        calculatedWidth = (layoutWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                     }
                     
                     let heightMultiplier: CGFloat = 195.0 / 176.0
@@ -181,11 +181,6 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
 
 extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item: UpcomingBird
-        if indexPath.section == 0 {
-            item = watchlistData[indexPath.row]
-        } else {
-            item = recommendationsData[indexPath.row]
-        }
+
     }
 }

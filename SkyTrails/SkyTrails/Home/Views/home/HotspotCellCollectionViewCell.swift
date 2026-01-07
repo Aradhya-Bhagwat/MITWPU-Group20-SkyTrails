@@ -85,13 +85,12 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             
         } else if !prediction.areaBoundary.isEmpty {
             // Case B: Polygon Hotspot (Legacy support)
-            let smoothedBoundary = prediction.areaBoundary.generateSmoothedPath()
             let polygon = HotspotBoundaryPolygon(coordinates: prediction.areaBoundary,
                                                  count: prediction.areaBoundary.count)
             mapView.addOverlay(polygon)
             
             // Zoom to Fit the Polygon Area
-            if let firstCoord = prediction.areaBoundary.first {
+			if prediction.areaBoundary.first != nil {
                 let zoomPolyline = MKPolyline(coordinates: prediction.areaBoundary,
                                               count: prediction.areaBoundary.count)
                 zoomToFitOverlays(for: zoomPolyline)
@@ -169,7 +168,6 @@ extension HotspotCellCollectionViewCell {
             let outerPinSize: CGFloat = 40.0 // Width/Height of the outer circle
             let innerImageSize: CGFloat = 32.0 // Size of the bird image inside the border
             let pinHeight: CGFloat = 50.0
-            let tailBaseMargin: CGFloat = 12.0// Total height of the image (circle + tail)
             
             let pinBaseSize = CGSize(width: outerPinSize, height: pinHeight)
             let renderer = UIGraphicsImageRenderer(size: pinBaseSize)

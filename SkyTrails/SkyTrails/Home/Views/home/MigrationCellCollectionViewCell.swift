@@ -261,13 +261,13 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
         
         if annotation is CurrentLocationAnnotation {
             let identifier = "CurrentPin"
-            var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKPinAnnotationView
+            var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
             
             if annotationView == nil {
-                annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
                 annotationView?.canShowCallout = true
-                annotationView?.pinTintColor = .systemOrange // 👈 Distinct color (e.g., Orange)
-                annotationView?.animatesDrop = true
+                annotationView?.markerTintColor = .systemOrange // 👈 Distinct color (e.g., Orange)
+    
             } else {
                 annotationView?.annotation = annotation
             }
@@ -277,12 +277,12 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
         guard annotation is MKPointAnnotation else { return nil }
         
         let identifier = "MigrationPin"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKPinAnnotationView
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
         
         if annotationView == nil {
-            annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+            annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             annotationView?.canShowCallout = true
-            annotationView?.pinTintColor = .systemRed 
+            annotationView?.markerTintColor = .systemRed
         } else {
             annotationView?.annotation = annotation
         }
