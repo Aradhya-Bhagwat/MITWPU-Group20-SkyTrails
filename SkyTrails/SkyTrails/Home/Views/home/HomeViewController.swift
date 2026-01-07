@@ -491,7 +491,34 @@ extension HomeViewController {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        if indexPath.section == 2 {
+        if indexPath.section == 1 {
+            let item = homeData.homeScreenBirds[indexPath.row]
+            
+            // 1. Find matching SpeciesData
+            if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
+                
+                // 2. Parse Date
+                let (start, end) = parseDateRange(item.date)
+                
+                // 3. Create Input
+                let input = BirdDateInput(
+                    species: species,
+                    startDate: start ?? Date(),
+                    endDate: end ?? Date()
+                )
+                
+                // 4. Navigate
+                let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+                if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+                    mapVC.predictionInputs = [input]
+                    self.navigationController?.pushViewController(mapVC, animated: true)
+                }
+            } else {
+                print("Species data not found for: \(item.title)")
+                // Fallback or error handling if needed
+            }
+            
+        } else if indexPath.section == 2 {
             let item = homeData.homeScreenSpots[indexPath.row]
 
             
@@ -548,6 +575,26 @@ extension HomeViewController {
             }
         }
     }
+    
+    private func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
+        // Expected format: "17 Nov ’25 – 02 Dec ’25"
+        // Also handle standard hyphen just in case
+        let separators = [" – ", " - "]
+        
+        for separator in separators {
+            let components = dateString.components(separatedBy: separator)
+            if components.count == 2 {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "dd MMM ’yy"
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                
+                let start = formatter.date(from: components[0])
+                let end = formatter.date(from: components[1])
+                return (start, end)
+            }
+        }
+        return (nil, nil)
+    }
 }
 
 // MARK: - Layout Helpers
@@ -556,21 +603,27 @@ extension HomeViewController {
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         
         // 1. Item Definition (Card Size)
+        // Use estimated height to allow cell self-sizing if needed
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .fractionalHeight(1.0)
+            heightDimension: .estimated(320)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        let groupWidth = 0.9
-        let groupHeight: CGFloat = 320
+        
+        // Group Width: 1.0 (Full Width of Section)
+        // We rely on Section Insets to provide the horizontal margins.
         let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(groupWidth),
-            heightDimension: .absolute(groupHeight)
+            widthDimension: .fractionalWidth(1.0),
+            heightDimension: .estimated(320)
         )
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 
         let section = NSCollectionLayoutSection(group: group)
+        
+        // Using 'groupPaging' or 'groupPagingCentered' depending on desired snap behavior.
+        // With fractionalWidth(1.0), Centered and Paging behave similarly for single items per page.
         section.orthogonalScrollingBehavior = .groupPagingCentered
+        
         let migrationPageControlFooterKind = "MigrationPageControlFooter"
         
         let pageControlFooterSize = NSCollectionLayoutSize(
@@ -590,8 +643,10 @@ extension HomeViewController {
         header.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         section.boundarySupplementaryItems = [header, pageControlFooter]
         
-        section.interGroupSpacing = 20
-        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
+        section.interGroupSpacing = 16
+        
+        // Define margins here: 16pt on Leading and Trailing
+        section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
         
         return section
     }

@@ -400,11 +400,10 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchC
 
 // MARK: - MapSelectionDelegate
 extension EditWatchlistDetailViewController: MapSelectionDelegate {
-	func didSelectMapLocation(_ locationName: String) {
-		updateLocationSelection(locationName)
-	}
+    func didSelectMapLocation(name: String, lat: Double, lon: Double) {
+        updateLocationSelection(name)
+    }
 }
-
 // MARK: - UI Utilities
 extension UIView {
 	func applyShadow(radius: CGFloat, opacity: Float, offset: CGSize, color: UIColor = .black) {

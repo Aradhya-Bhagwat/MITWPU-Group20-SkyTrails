@@ -506,8 +506,8 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
 }
 
 extension ObservedDetailViewController: MapSelectionDelegate {
-    func didSelectMapLocation(_ locationName: String) {
-        updateLocationSelection(locationName)
+    func didSelectMapLocation(name: String, lat: Double, lon: Double) {
+        updateLocationSelection(name)
     }
 }
 
