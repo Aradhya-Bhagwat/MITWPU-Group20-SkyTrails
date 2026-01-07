@@ -17,9 +17,19 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
     @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
+		
+		collectionView.register(
+			UINib(nibName: PredictionInputCellCollectionViewCell.identifier, bundle: nil),
+			forCellWithReuseIdentifier: PredictionInputCellCollectionViewCell.identifier
+		)
+		
+		collectionView.dataSource = self
+		collectionView.delegate = self
+		
+		collectionView.setCollectionViewLayout(generateLayout(), animated: false)
        
         setupPageControl()
-        setupCollectionView()
+        //setupCollectionView()
         validateInputs()
         applyHeightConstraint()
     }
@@ -32,29 +42,50 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             heightConstraint.isActive = true
             
         }
-    private func setupCollectionView()  {
-            let layout = UICollectionViewFlowLayout()
-            
-            layout.scrollDirection = .horizontal
-            layout.minimumLineSpacing = 16
-            layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
-            
-            let screenWidth = self.view.bounds.width
-            layout.itemSize = CGSize(width: screenWidth - 48, height: 400) // Increased height
-            
-            collectionView.collectionViewLayout = layout
-            collectionView.isPagingEnabled = false
-            collectionView.decelerationRate = .fast
-            collectionView.showsHorizontalScrollIndicator = false
-            collectionView.backgroundColor = .clear
-            collectionView.register(
-                UINib(nibName: PredictionInputCellCollectionViewCell.identifier, bundle: nil),
-                forCellWithReuseIdentifier: PredictionInputCellCollectionViewCell.identifier
-            )
-            
-            collectionView.dataSource = self
-            collectionView.delegate = self
-        }
+	func generateLayout() -> UICollectionViewLayout {
+		return UICollectionViewCompositionalLayout { [weak self] sectionIndex, env -> NSCollectionLayoutSection? in
+			guard let self = self else { return nil }
+			
+				// 1. Item
+			let itemSize = NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(1.0),
+				heightDimension: .fractionalHeight(1.0)
+			)
+			let item = NSCollectionLayoutItem(layoutSize: itemSize)
+			
+				// 2. Group
+				// Calculate width: screen width minus 48 (24 leading + 24 trailing)
+			let containerWidth = env.container.contentSize.width
+			let groupWidth = containerWidth > 48 ? containerWidth - 48 : containerWidth
+			
+			let groupSize = NSCollectionLayoutSize(
+				widthDimension: .absolute(groupWidth),
+				heightDimension: .fractionalHeight(1.0)
+			)
+			let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+			
+				// 3. Section
+			let section = NSCollectionLayoutSection(group: group)
+			section.orthogonalScrollingBehavior = .groupPagingCentered
+			section.interGroupSpacing = 16
+			section.contentInsets = NSDirectionalEdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24)
+			
+				// 4. Page Control Update (The only "extra" logic)
+			section.visibleItemsInvalidationHandler = { visibleItems, point, environment in
+				let centerX = point.x + environment.container.contentSize.width / 2
+				
+				let closestIndex = visibleItems
+					.min(by: { abs($0.frame.midX - centerX) < abs($1.frame.midX - centerX) })?
+					.indexPath.item ?? 0
+				
+				if self.pageControl.currentPage != closestIndex {
+					self.pageControl.currentPage = closestIndex
+				}
+			}
+			
+			return section
+		}
+	}
     private func setupPageControl() {
             pageControl.numberOfPages = inputData.count
             pageControl.currentPage = 0
@@ -123,39 +154,6 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             // Allow user to tap dots to scroll
             let indexPath = IndexPath(item: sender.currentPage, section: 0)
             collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        }
-    
-    // MARK: - Page Control Helper (Geometry Based)
-    // MARK: - Page Control Helper (Math Based)
-        private func updatePageControl(forceIndex: Int? = nil) {
-            pageControl.numberOfPages = inputData.count
-            
-            if let index = forceIndex {
-                pageControl.currentPage = index
-                return
-            }
-            
-
-            guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
-            
-            let itemWidth = layout.itemSize.width
-            let spacing = layout.minimumLineSpacing
-            let stride = itemWidth + spacing
-            
-            // Use current scroll offset to find the decimal page index
-            let offset = collectionView.contentOffset.x
-            
-            // Logic: Offset 0 = Index 0. Offset 'Stride' = Index 1.
-            // We round to the nearest whole number to "snap" the dot.
-            let index = Int(round(offset / stride))
-            
-            // 3. Safety Clamp (Prevent crashes or invalid dots)
-            // Ensure we don't go below 0 or above the last index
-            let safeIndex = max(0, min(index, inputData.count - 1))
-            
-            if pageControl.currentPage != safeIndex {
-                pageControl.currentPage = safeIndex
-            }
         }
         
         // MARK: - Logic
@@ -239,8 +237,5 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
                 }
             return cell
         }
-        func scrollViewDidScroll(_ scrollView: UIScrollView) {
-                updatePageControl()
-            }
     }
 
