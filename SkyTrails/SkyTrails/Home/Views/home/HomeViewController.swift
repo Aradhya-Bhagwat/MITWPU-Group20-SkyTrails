@@ -487,7 +487,34 @@ extension HomeViewController {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        if indexPath.section == 2 {
+        if indexPath.section == 1 {
+            let item = homeData.homeScreenBirds[indexPath.row]
+            
+            // 1. Find matching SpeciesData
+            if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
+                
+                // 2. Parse Date
+                let (start, end) = parseDateRange(item.date)
+                
+                // 3. Create Input
+                let input = BirdDateInput(
+                    species: species,
+                    startDate: start ?? Date(),
+                    endDate: end ?? Date()
+                )
+                
+                // 4. Navigate
+                let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+                if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+                    mapVC.predictionInputs = [input]
+                    self.navigationController?.pushViewController(mapVC, animated: true)
+                }
+            } else {
+                print("Species data not found for: \(item.title)")
+                // Fallback or error handling if needed
+            }
+            
+        } else if indexPath.section == 2 {
             let item = homeData.homeScreenSpots[indexPath.row]
 
             
@@ -543,6 +570,26 @@ extension HomeViewController {
                 navigationController?.pushViewController(observedDetailVC, animated: true)
             }
         }
+    }
+    
+    private func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
+        // Expected format: "17 Nov ’25 – 02 Dec ’25"
+        // Also handle standard hyphen just in case
+        let separators = [" – ", " - "]
+        
+        for separator in separators {
+            let components = dateString.components(separatedBy: separator)
+            if components.count == 2 {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "dd MMM ’yy"
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                
+                let start = formatter.date(from: components[0])
+                let end = formatter.date(from: components[1])
+                return (start, end)
+            }
+        }
+        return (nil, nil)
     }
 }
 
