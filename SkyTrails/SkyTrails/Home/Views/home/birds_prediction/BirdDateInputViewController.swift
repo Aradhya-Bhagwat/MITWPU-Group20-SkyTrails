@@ -169,6 +169,7 @@ class BirdDateInputViewController: UIViewController {
                 navigationController?.pushViewController(mapVC, animated: true)
             } else {
 
+                
                 navigationController?.popToRootViewController(animated: true)
             }
         }
