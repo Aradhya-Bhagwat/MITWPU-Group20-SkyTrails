@@ -145,7 +145,7 @@ extension HomeViewController {
             let outerPadding: CGFloat = 16 * 2
             let visibleCardProportion: CGFloat = 2.1
             
-            let screenWidth = UIScreen.main.bounds.width
+            let screenWidth = self.view.bounds.width
             let numberOfSpacings = floor(visibleCardProportion)
             let totalSpacing = (numberOfSpacings * interGroupSpacing) + outerPadding
             
@@ -199,7 +199,7 @@ extension HomeViewController {
                 let outerPadding: CGFloat = 16 * 2
                 let visibleCardProportion: CGFloat = 2.1
                 
-                let screenWidth = UIScreen.main.bounds.width
+                let screenWidth = self.view.bounds.width
                 let numberOfSpacings = floor(visibleCardProportion)
                 let totalSpacing = ((numberOfSpacings) * interGroupSpacing) + outerPadding
                 
@@ -565,7 +565,7 @@ extension HomeViewController {
         )
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 
-        let section = NSCollectionLayoutSection(group: group as! NSCollectionLayoutGroup)
+        let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered
         let migrationPageControlFooterKind = "MigrationPageControlFooter"
         
