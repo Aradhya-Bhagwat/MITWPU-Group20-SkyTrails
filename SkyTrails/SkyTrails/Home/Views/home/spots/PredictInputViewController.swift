@@ -212,16 +212,7 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
                 }
             }
             
-<<<<<<< HEAD:SkyTrails/SkyTrails/Home/Views/home/spots/PredictInputViewController.swift
-            // 3. Wire up Dates
-             cell.onStartDateChange = { [weak self] newDate in
-                 self?.inputData[indexPath.row].startDate = newDate
-             }
-             
-             cell.onEndDateChange = { [weak self] newDate in
-                 self?.inputData[indexPath.row].endDate = newDate
-             }
-=======
+
             // 3. Wire up Date Changes
             cell.onStartDateChange = { [weak self] date in
                 self?.inputData[indexPath.row].startDate = date
@@ -230,7 +221,7 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             cell.onEndDateChange = { [weak self] date in
                 self?.inputData[indexPath.row].endDate = date
             }
->>>>>>> 4cef32e (minor changes):SkyTrails/SkyTrails/Home/Views/spots/PredictInputViewController.swift
+
             
             // 4. Wire up Area
             cell.onAreaChange = { [weak self] newVal in
