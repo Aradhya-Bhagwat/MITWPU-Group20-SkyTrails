@@ -36,7 +36,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GKU-DI-mdQ">
-                                <rect key="frame" x="8" y="153" width="160" height="21"/>
+                                <rect key="frame" x="8" y="160.33333333333334" width="160" height="21"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="10" id="gif-GZ-Zs3"/>
                                 </constraints>
@@ -47,9 +47,9 @@
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="GKU-DI-mdQ" firstAttribute="top" secondItem="cMx-fJ-sDG" secondAttribute="bottom" constant="10" id="6br-n5-qBs"/>
                             <constraint firstItem="Kij-E6-j0P" firstAttribute="top" secondItem="rXF-fC-hbX" secondAttribute="top" constant="8" id="997-8s-hh3"/>
                             <constraint firstItem="Kij-E6-j0P" firstAttribute="leading" secondItem="rXF-fC-hbX" secondAttribute="leading" constant="8" id="AOa-TB-Jau"/>
-                            <constraint firstAttribute="bottom" secondItem="GKU-DI-mdQ" secondAttribute="bottom" constant="8" id="DQG-CW-Svm"/>
                             <constraint firstAttribute="width" secondItem="rXF-fC-hbX" secondAttribute="height" multiplier="88:91" id="DsI-vQ-ZQF"/>
                             <constraint firstAttribute="trailing" secondItem="cMx-fJ-sDG" secondAttribute="trailing" constant="8" id="QUJ-nG-IWV"/>
                             <constraint firstAttribute="trailing" secondItem="GKU-DI-mdQ" secondAttribute="trailing" constant="8" id="ST3-PF-fbL"/>

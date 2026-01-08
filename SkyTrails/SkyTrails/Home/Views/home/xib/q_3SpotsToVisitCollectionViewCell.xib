@@ -36,7 +36,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="o3N-Gw-90K">
-                                <rect key="frame" x="8" y="155" width="160" height="20.333333333333343"/>
+                                <rect key="frame" x="8" y="157" width="160" height="20.333333333333343"/>
                                 <constraints>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="10" id="5KM-Pn-Vfo"/>
                                 </constraints>
@@ -50,7 +50,7 @@
                             <constraint firstItem="o3N-Gw-90K" firstAttribute="leading" secondItem="WYq-28-ygp" secondAttribute="leading" constant="8" id="8DO-rP-9sv"/>
                             <constraint firstItem="TsQ-3Q-w1s" firstAttribute="leading" secondItem="WYq-28-ygp" secondAttribute="leading" constant="8" id="8iE-d2-KdW"/>
                             <constraint firstItem="TY3-4C-qqx" firstAttribute="leading" secondItem="WYq-28-ygp" secondAttribute="leading" constant="8" id="Ayq-ze-m4Y"/>
-                            <constraint firstItem="o3N-Gw-90K" firstAttribute="top" secondItem="TsQ-3Q-w1s" secondAttribute="bottom" constant="8" id="FnP-nP-MTO"/>
+                            <constraint firstItem="o3N-Gw-90K" firstAttribute="top" secondItem="TsQ-3Q-w1s" secondAttribute="bottom" constant="10" id="FnP-nP-MTO"/>
                             <constraint firstAttribute="trailing" secondItem="TY3-4C-qqx" secondAttribute="trailing" constant="8" id="TfP-4B-PcW"/>
                             <constraint firstItem="TsQ-3Q-w1s" firstAttribute="top" secondItem="TY3-4C-qqx" secondAttribute="bottom" constant="4" id="cjC-6f-Hsx"/>
                             <constraint firstItem="TY3-4C-qqx" firstAttribute="top" secondItem="WYq-28-ygp" secondAttribute="top" constant="8" id="dtZ-JL-THh"/>

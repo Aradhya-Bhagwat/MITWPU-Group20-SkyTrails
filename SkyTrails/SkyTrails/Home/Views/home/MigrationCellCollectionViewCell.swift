@@ -173,6 +173,29 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         progressView.progress = 0
         birdImageView.image = nil
     }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // 1. Shadow Path Update
+        // Always update the shadow path when layout changes to maintain performance.
+        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        
+        // 2. Proportional Font Scaling
+        // Your Ratio: 17/200 = 0.085. Let's apply it to your current base sizes.
+        let currentWidth = self.bounds.width
+        let baseWidth: CGFloat = 700.0
+        let titleRatio: CGFloat = 20.0 / baseWidth // Scaling based on your 20pt starting point
+        let detailRatio: CGFloat = 12.0 / baseWidth // Scaling based on your 12pt starting point
+        
+        // Apply calculated sizes
+        birdNameLabel.font = UIFont.systemFont(ofSize: currentWidth * titleRatio, weight: .semibold)
+        
+        let detailSize = currentWidth * detailRatio
+        startLocationLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+        endLocationLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+        startDateLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+        endDateLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+    }
     func configure(with prediction: MigrationPrediction) {
         
         birdNameLabel.text = prediction.birdName

@@ -55,9 +55,34 @@ class q_3SpotsToVisitCollectionViewCell: UICollectionViewCell {
          
        }
     override func layoutSubviews() {
-            super.layoutSubviews()
-            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        super.layoutSubviews()
+        
+  
+        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        
+    
+        let currentWidth = self.bounds.width
+        let titleRatio: CGFloat = 17.0 / 200.0
+        let dateRatio: CGFloat = 12.0 / 200.0
+        
+    
+        titleLabel2.font = UIFont.systemFont(
+            ofSize: currentWidth * titleRatio,
+            weight: .semibold
+        )
+        
+        let dynamicDateSize = currentWidth * dateRatio
+            dateLabel2.font = UIFont.systemFont(ofSize: dynamicDateSize, weight: .regular)
+        
+        if let text = dateLabel2.text {
+            dateLabel2.attributedText = createIconString(
+                text: text,
+                iconName: "mappin.and.ellipse",
+                color: .secondaryLabel,
+                fontSize: dynamicDateSize
+            )
         }
+    }
     
     override func prepareForReuse() {
            super.prepareForReuse()
