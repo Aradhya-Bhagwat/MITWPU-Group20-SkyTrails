@@ -27,8 +27,8 @@ class GUIViewController: UIViewController {
 		// Adjust this based on your specific bird art (e.g., Wings usually go on top of Body)
 	private let layerOrder = [
 		"Tail", "Leg", "Thigh",         // Background parts
-		"Back", "Belly", "Nape",        // Main body
-		"Throat", "Crown",              // Head base
+		"Back", "Belly","Chest",
+        "Nape","Throat", "Crown",              // Head base
 		"Beak", "Eye",                  // Face details
 		"Wings"                         // Foreground
 	]
@@ -150,6 +150,7 @@ class GUIViewController: UIViewController {
                 partLayers[cat.name] = imgView
             }
         }
+   
 	private func setupRightTickButton() {
 		let button = UIButton(type: .system)
 		button.backgroundColor = .white
@@ -202,7 +203,7 @@ class GUIViewController: UIViewController {
 			}
 		}
 	}
-	
+   
 	private func compositePreviewImage(base: UIImage, overlay: UIImage) -> UIImage {
 		let renderer = UIGraphicsImageRenderer(size: base.size)
 		return renderer.image { _ in
