@@ -50,7 +50,9 @@ struct NewsResponse: Codable {
 struct NewsItem: Codable {
     let title: String
     let description: String
+    let summary: String
     let imageName: String
+    let link: String
 }
 
 // --- Dynamic Map Card Models (Raw) ---
