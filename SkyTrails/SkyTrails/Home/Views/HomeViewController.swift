@@ -66,12 +66,12 @@ extension HomeViewController {
                 withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier
             )
             homeCollectionView.register(
-                UINib(nibName: "q_2UpcomingBirdsCollectionViewCell", bundle: nil),
-                forCellWithReuseIdentifier: "q_2UpcomingBirdsCollectionViewCell"
+                UINib(nibName: "UpcomingBirdsCollectionViewCell", bundle: nil),
+                forCellWithReuseIdentifier: "UpcomingBirdsCollectionViewCell"
             )
             homeCollectionView.register(
-                UINib(nibName: "q_3SpotsToVisitCollectionViewCell", bundle: nil),
-                forCellWithReuseIdentifier: "q_3SpotsToVisitCollectionViewCell"
+                UINib(nibName: "SpotsToVisitCollectionViewCell", bundle: nil),
+                forCellWithReuseIdentifier: "SpotsToVisitCollectionViewCell"
             )
         
             homeCollectionView.register(
@@ -329,7 +329,7 @@ extension HomeViewController: UICollectionViewDataSource {
         } else if indexPath.section == 1 {
 
             let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "q_2UpcomingBirdsCollectionViewCell",
+                withReuseIdentifier: "UpcomingBirdsCollectionViewCell",
                 for: indexPath
             ) as! UpcomingBirdsCollectionViewCell
             
@@ -344,7 +344,7 @@ extension HomeViewController: UICollectionViewDataSource {
         } else if indexPath.section == 2 {
 
             let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "q_3SpotsToVisitCollectionViewCell",
+                withReuseIdentifier: "SpotsToVisitCollectionViewCell",
                 for: indexPath
             ) as! SpotsToVisitCollectionViewCell
             
