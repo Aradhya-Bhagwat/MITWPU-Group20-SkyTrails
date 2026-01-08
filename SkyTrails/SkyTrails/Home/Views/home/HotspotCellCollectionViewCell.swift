@@ -33,6 +33,31 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         super.awakeFromNib()
      
     }
+    
+    // Inside HotspotCellCollectionViewCell.swift
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // 1. Shadow Path Update
+        // Always update the shadow path when layout changes to maintain performance.
+        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        
+        // 2. Proportional Font Scaling
+        // Your Ratio: 17/200 = 0.085. Let's apply it to your current base sizes.
+        let currentWidth = self.bounds.width
+        let baseWidth: CGFloat = 700.0
+        let titleRatio: CGFloat = 20.0 / baseWidth // Scaling based on your 20pt starting point
+        let detailRatio: CGFloat = 12.0 / baseWidth // Scaling based on your 12pt starting point
+        
+        // Apply calculated sizes
+        PlaceName.font = UIFont.systemFont(ofSize: currentWidth * titleRatio, weight: .semibold)
+        
+        let detailSize = currentWidth * detailRatio
+        NoSpecies.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+        Distance.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+        Date.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+    }
     func configure(with prediction: HotspotPrediction) {
             
         containerview.layer.cornerRadius = 16
@@ -115,6 +140,7 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         mapView.setVisibleMapRect(rect, edgePadding: edgePadding, animated: false)
     }
 }
+
 
 
 // MARK: - Map Delegate (Styling Hotspots)

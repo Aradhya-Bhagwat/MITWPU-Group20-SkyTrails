@@ -42,19 +42,43 @@ class q_2UpcomingBirdsCollectionViewCell: UICollectionViewCell {
            
 
            titleLabel.numberOfLines = 1
-           titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-           titleLabel.textColor = .label
+           titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)         
            
-
-           dateLabel.font = UIFont.systemFont(ofSize: 11, weight: .regular)
            dateLabel.textColor = .secondaryLabel
            
          
        }
+    // Inside q_2UpcomingBirdsCollectionViewCell.swift
+
     override func layoutSubviews() {
-            super.layoutSubviews()
-            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        super.layoutSubviews()
+        
+  
+        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        
+    
+        let currentWidth = self.bounds.width
+        let titleRatio: CGFloat = 17.0 / 200.0
+        let dateRatio: CGFloat = 12.0 / 200.0
+        
+    
+        titleLabel.font = UIFont.systemFont(
+            ofSize: currentWidth * titleRatio,
+            weight: .semibold
+        )
+        
+        let dynamicDateSize = currentWidth * dateRatio
+            dateLabel.font = UIFont.systemFont(ofSize: dynamicDateSize, weight: .regular)
+        
+        if let text = dateLabel.text {
+            dateLabel.attributedText = createIconString(
+                text: text,
+                iconName: "calendar",
+                color: .secondaryLabel,
+                fontSize: dynamicDateSize
+            )
         }
+    }
     
     override func prepareForReuse() {
            super.prepareForReuse()

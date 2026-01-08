@@ -248,7 +248,7 @@ extension HomeViewController {
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
             
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(159))
+            let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(159))
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
             
@@ -577,8 +577,6 @@ extension HomeViewController {
     }
     
     private func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
-        // Expected format: "17 Nov ’25 – 02 Dec ’25"
-        // Also handle standard hyphen just in case
         let separators = [" – ", " - "]
         
         for separator in separators {
@@ -600,32 +598,33 @@ extension HomeViewController {
 // MARK: - Layout Helpers
 extension HomeViewController {
     
+    // Inside HomeViewController.swift
+
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         
-        // 1. Item Definition (Card Size)
-        // Use estimated height to allow cell self-sizing if needed
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(320)
+            heightDimension: .fractionalHeight(1.0)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
-        // Group Width: 1.0 (Full Width of Section)
-        // We rely on Section Insets to provide the horizontal margins.
+        let screenWidth = self.view.bounds.width
+        let idealHeight = screenWidth * 0.8
+        let clampedHeight = min(max(idealHeight, 320), 550)
+        
         let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(320)
+            widthDimension: .fractionalWidth(0.92),
+            heightDimension: .absolute(clampedHeight) 
         )
+        
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 
         let section = NSCollectionLayoutSection(group: group)
-        
-        // Using 'groupPaging' or 'groupPagingCentered' depending on desired snap behavior.
-        // With fractionalWidth(1.0), Centered and Paging behave similarly for single items per page.
         section.orthogonalScrollingBehavior = .groupPagingCentered
+        section.interGroupSpacing = 12
         
+        // Section and Header configuration
         let migrationPageControlFooterKind = "MigrationPageControlFooter"
-        
         let pageControlFooterSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
             heightDimension: .absolute(30)
@@ -636,16 +635,11 @@ extension HomeViewController {
             elementKind: migrationPageControlFooterKind,
             alignment: .bottom
         )
-
-        section.boundarySupplementaryItems = [pageControlFooter]
         
         let header = createSectionHeaderLayout()
         header.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        
         section.boundarySupplementaryItems = [header, pageControlFooter]
-        
-        section.interGroupSpacing = 16
-        
-        // Define margins here: 16pt on Leading and Trailing
         section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
         
         return section

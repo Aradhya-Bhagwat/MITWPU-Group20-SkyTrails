@@ -23,10 +23,10 @@
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="82c-Q0-Lr4">
                                 <rect key="frame" x="8" y="8" width="345" height="203"/>
-                                <standardMapConfiguration key="preferredConfiguration"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="203" id="mapViewHeightConstraint"/>
                                 </constraints>
+                                <standardMapConfiguration key="preferredConfiguration"/>
                             </mapView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6l2-Au-Bgk">
                                 <rect key="frame" x="0.0" y="211" width="361" height="110"/>
@@ -100,6 +100,7 @@
                             <constraint firstAttribute="bottom" secondItem="82c-Q0-Lr4" secondAttribute="bottom" constant="110" id="8Vu-8S-jnb"/>
                             <constraint firstAttribute="trailing" secondItem="6l2-Au-Bgk" secondAttribute="trailing" id="9dl-Bv-aJW"/>
                             <constraint firstAttribute="bottom" secondItem="6l2-Au-Bgk" secondAttribute="bottom" id="9wE-eJ-Dmq"/>
+                            <constraint firstAttribute="width" secondItem="575-Tl-Tet" secondAttribute="height" multiplier="361:321" id="Em7-m2-avt"/>
                             <constraint firstItem="6l2-Au-Bgk" firstAttribute="leading" secondItem="575-Tl-Tet" secondAttribute="leading" id="HWa-rU-aXY"/>
                             <constraint firstAttribute="trailing" secondItem="82c-Q0-Lr4" secondAttribute="trailing" constant="8" id="J0L-7n-N6B"/>
                             <constraint firstItem="6l2-Au-Bgk" firstAttribute="top" secondItem="82c-Q0-Lr4" secondAttribute="bottom" id="owe-v5-acl"/>
@@ -109,12 +110,13 @@
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
-                <constraints>
-                    <constraint firstItem="575-Tl-Tet" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="22P-yB-4DP"/>
-                    <constraint firstItem="575-Tl-Tet" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="a7l-Es-2uz"/>
-                    <constraint firstAttribute="bottom" secondItem="575-Tl-Tet" secondAttribute="bottom" id="nTF-gq-BAM"/>
-                    <constraint firstAttribute="trailing" secondItem="575-Tl-Tet" secondAttribute="trailing" id="pbd-Sd-yju"/>
-                </constraints>            <size key="customSize" width="331" height="353"/>
+            <constraints>
+                <constraint firstItem="575-Tl-Tet" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="22P-yB-4DP"/>
+                <constraint firstItem="575-Tl-Tet" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="a7l-Es-2uz"/>
+                <constraint firstAttribute="bottom" secondItem="575-Tl-Tet" secondAttribute="bottom" id="nTF-gq-BAM"/>
+                <constraint firstAttribute="trailing" secondItem="575-Tl-Tet" secondAttribute="trailing" id="pbd-Sd-yju"/>
+            </constraints>
+            <size key="customSize" width="331" height="353"/>
             <connections>
                 <outlet property="birdImageView" destination="w5T-1I-zVn" id="wtw-hB-0fS"/>
                 <outlet property="birdNameLabel" destination="TIR-fd-JJ2" id="7C6-vW-IcB"/>
@@ -132,7 +134,7 @@
     </objects>
     <resources>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
