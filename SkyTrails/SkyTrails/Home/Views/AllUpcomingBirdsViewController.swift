@@ -32,7 +32,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         collectionView.collectionViewLayout = createLayout()
         
         collectionView.register(
-            UINib(nibName: GridUpcomingGridCollectionViewCell.identifier, bundle: nil),
+            UINib(nibName: "GridUpcomingBirdCollectionViewCell", bundle: nil),
             forCellWithReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier
         )
         

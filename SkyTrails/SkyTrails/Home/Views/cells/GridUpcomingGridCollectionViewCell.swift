@@ -9,7 +9,7 @@ import UIKit
 
 class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
     
-    static let identifier = "UpcomingBirdGridCollectionViewCell"
+    static let identifier = "GridUpcomingGridCollectionViewCell"
     
     @IBOutlet weak var birImage: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
