@@ -129,7 +129,51 @@
       {
         "area": "Wings",
         "variants": ["Solid", "Bar", "Striped", "Patch", "Broad"]
-      }
+      },
+      {
+        "area": "Head",
+        "variants": [
+          "Plain", "Flat", "Rounded", "Slightly-Peaked", "Crested", "Cap",
+          "Masked", "Spectacled", "Eyeline", "Moustached", "Lore-Pointed"
+        ]
+      },
+      {
+        "area": "Neck",
+        "variants": [
+          "Short",
+          "Compact",
+          "Slim",
+          "Stocky",
+          "Bull",
+          "Tapered",
+          "Seamless",
+          "Extended",
+          "Collared",
+          "Ringed",
+          "Bibbed",
+          "Naped"
+        ]
+      },
+      {
+         "area": "Chest",
+         "variants": [
+           "Solid",
+           "Banded",
+           "Barred",
+           "Mottled",
+           "Scaled",
+           "Spotted",
+           "Streaked",
+           "Bibbed",
+           "Shield",
+           "V-Band",
+           "Puffed",
+           "Flat"
+         ]
+       },
+
+
+
     ]
   },
   "birds": [
