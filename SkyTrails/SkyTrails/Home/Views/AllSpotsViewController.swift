@@ -43,8 +43,8 @@ class AllSpotsViewController: UIViewController {
         
 
         collectionView.register(
-            UINib(nibName: SpotsToVisitCollectionViewCell.identifier, bundle: nil),
-            forCellWithReuseIdentifier: SpotsToVisitCollectionViewCell.identifier
+            UINib(nibName: GridSpotsToVisitCollectionViewCell.identifier, bundle: nil),
+            forCellWithReuseIdentifier: GridSpotsToVisitCollectionViewCell.identifier
         )
         
         collectionView.register(
@@ -161,9 +161,9 @@ class AllSpotsViewController: UIViewController {
         func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
                 
             guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: SpotsToVisitCollectionViewCell.identifier,
+                withReuseIdentifier: GridSpotsToVisitCollectionViewCell.identifier,
                 for: indexPath
-            ) as? SpotsToVisitCollectionViewCell else {
+            ) as? GridSpotsToVisitCollectionViewCell else {
                 return UICollectionViewCell()
             }
 

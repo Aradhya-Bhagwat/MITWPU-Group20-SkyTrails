@@ -1,5 +1,5 @@
 //
-//  UpcomingBirdGridCollectionViewCell.swift
+//  SpotsToVisitCollectionViewCell.swift
 //  SkyTrails
 //
 //  Created by SDC-USER on 10/12/25.
@@ -7,20 +7,20 @@
 
 import UIKit
 
-class UpcomingBirdGridCollectionViewCell: UICollectionViewCell {
-    
-    static let identifier = "UpcomingBirdGridCollectionViewCell"
-    
-    @IBOutlet weak var birImage: UIImageView!
+class GridSpotsToVisitCollectionViewCell: UICollectionViewCell {
+
+    static let identifier = "SpotsToVisitCollectionViewCell"
+
+    @IBOutlet weak var locationImage: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
-    @IBOutlet weak var DateLabel: UILabel!
-    @IBOutlet weak var containerView: UIView!
+    @IBOutlet weak var locationLabel: UILabel!
+    @IBOutlet weak var containerView: UIView! 
 
     override func awakeFromNib() {
         super.awakeFromNib()
-     
         setupStyle()
     }
+
     private func setupStyle() {
         
         self.backgroundColor = .clear
@@ -31,49 +31,48 @@ class UpcomingBirdGridCollectionViewCell: UICollectionViewCell {
         contentView.layer.shadowColor = UIColor.black.cgColor
         contentView.layer.shadowOpacity = 0.15
         contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        contentView.layer.shadowRadius = 8
+        contentView.layer.shadowRadius = 8 // Softness of the shadow
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
+        // Round Corners
         self.layer.cornerRadius = 12
         
-        birImage.contentMode = .scaleAspectFill
-        birImage.clipsToBounds = true
-        birImage.layer.cornerRadius = 12
-
-        containerView.backgroundColor = .systemBackground
-        containerView.layer.cornerRadius = 12
+        locationImage.contentMode = .scaleAspectFill
+        locationImage.clipsToBounds = true
+        locationImage.layer.cornerRadius = 12
+        
+         containerView.backgroundColor = .systemBackground
+         containerView.layer.cornerRadius = 12
         
         titleLabel.numberOfLines = 1
         titleLabel.textColor = .label
         
-        DateLabel.textColor = .secondaryLabel
+        locationLabel.textColor = .secondaryLabel
     }
-    
-
 
     override func layoutSubviews() {
         super.layoutSubviews()
         
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
-        
+
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0
         let locationRatio: CGFloat = 12.0 / 200.0
-        
+
         titleLabel.font = UIFont.systemFont(
             ofSize: currentWidth * titleRatio,
             weight: .semibold
         )
         
-        DateLabel.font = UIFont.systemFont(
+        locationLabel.font = UIFont.systemFont(
             ofSize: currentWidth * locationRatio,
             weight: .regular
         )
     }
-    func configure(with spot: UpcomingBird) {
-        birImage.image = UIImage(named: spot.imageName)
+ 
+    func configure(with spot: PopularSpot) {
+        locationImage.image = UIImage(named: spot.imageName)
         titleLabel.text = spot.title
-        DateLabel.text = spot.date
+        locationLabel.text = spot.location
     }
-
 }
