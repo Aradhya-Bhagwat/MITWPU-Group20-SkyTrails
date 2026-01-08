@@ -75,8 +75,8 @@ extension HomeViewController {
             )
         
             homeCollectionView.register(
-                    UINib(nibName: q_4CommunityObservationsCollectionViewCell.identifier, bundle: nil),
-                    forCellWithReuseIdentifier: q_4CommunityObservationsCollectionViewCell.identifier
+                    UINib(nibName: CommunityObservationsCollectionViewCell.identifier, bundle: nil),
+                    forCellWithReuseIdentifier: CommunityObservationsCollectionViewCell.identifier
                 )
         
         homeCollectionView.register(
@@ -346,7 +346,7 @@ extension HomeViewController: UICollectionViewDataSource {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "q_3SpotsToVisitCollectionViewCell",
                 for: indexPath
-            ) as! q_3SpotsToVisitCollectionViewCell
+            ) as! SpotsToVisitCollectionViewCell
             
             let item = homeData.homeScreenSpots[indexPath.row]
             cell.configure(
@@ -358,9 +358,9 @@ extension HomeViewController: UICollectionViewDataSource {
             
         } else if indexPath.section == 3 {
             let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: q_4CommunityObservationsCollectionViewCell.identifier,
+                withReuseIdentifier: CommunityObservationsCollectionViewCell.identifier,
                 for: indexPath
-            ) as! q_4CommunityObservationsCollectionViewCell
+            ) as! CommunityObservationsCollectionViewCell
             
             let item = homeData.communityObservations[indexPath.row]
             cell.configure(

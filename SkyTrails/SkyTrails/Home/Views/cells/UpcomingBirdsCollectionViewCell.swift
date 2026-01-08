@@ -7,7 +7,7 @@
 
 import UIKit
 
-class q_2UpcomingBirdsCollectionViewCell: UICollectionViewCell {
+class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var cardContainerView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!

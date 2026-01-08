@@ -7,7 +7,7 @@
 
 import UIKit
 
-class q_4NewsCollectionViewCell: UICollectionViewCell {
+class NewsCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class q_4CommunityObservationsCollectionViewCell: UICollectionViewCell {
+class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "q_4CommunityObservationsCollectionViewCell"
         

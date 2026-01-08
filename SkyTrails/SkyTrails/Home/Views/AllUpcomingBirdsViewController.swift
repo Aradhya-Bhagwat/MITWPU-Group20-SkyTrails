@@ -32,8 +32,8 @@ class AllUpcomingBirdsViewController: UIViewController {
         collectionView.collectionViewLayout = createLayout()
         
         collectionView.register(
-            UINib(nibName: UpcomingBirdGridCollectionViewCell.identifier, bundle: nil),
-            forCellWithReuseIdentifier: UpcomingBirdGridCollectionViewCell.identifier
+            UINib(nibName: GridUpcomingGridCollectionViewCell.identifier, bundle: nil),
+            forCellWithReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier
         )
         
 
@@ -149,9 +149,9 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
             
         guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: UpcomingBirdGridCollectionViewCell.identifier,
+            withReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier,
             for: indexPath
-        ) as? UpcomingBirdGridCollectionViewCell else {
+        ) as? GridUpcomingGridCollectionViewCell else {
             return UICollectionViewCell()
         }
 
