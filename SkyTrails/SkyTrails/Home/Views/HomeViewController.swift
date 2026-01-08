@@ -331,7 +331,7 @@ extension HomeViewController: UICollectionViewDataSource {
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "q_2UpcomingBirdsCollectionViewCell",
                 for: indexPath
-            ) as! q_2UpcomingBirdsCollectionViewCell
+            ) as! UpcomingBirdsCollectionViewCell
             
             let item = homeData.homeScreenBirds[indexPath.row]
             cell.configure(
