@@ -1,16 +1,18 @@
-
-
 {
     "latest_news": [
       {
         "title": "Rare Migratory Bird Spotted",
         "description": "A rare Siberian species was seen near the wetlands.",
-        "imageName": "news_rare_migratory"
+        "summary": "Birdwatchers are flocking to the local wetlands after a confirmed sighting of the elusive Siberian Crane.",
+        "imageName": "news_rare_migratory",
+        "link": "https://ebird.org/species/grswoo"
       },
       {
         "title": "Climate Impact on Birds",
-        "description": "Researchers predict altered migration routes. No.",
-        "imageName": "news_climate_change"
+        "description": "Researchers predict altered migration routes.",
+        "summary": "New studies suggest rising global temperatures are forcing migratory birds to change their traditional paths.",
+        "imageName": "news_climate_change",
+        "link": "https://www.un.org/en/climatechange/what-is-climate-change"
       }
     ]
 }
