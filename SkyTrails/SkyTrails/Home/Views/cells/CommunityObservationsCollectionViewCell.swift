@@ -9,7 +9,7 @@ import UIKit
 
 class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     
-    static let identifier = "q_4CommunityObservationsCollectionViewCell"
+    static let identifier = "CommunityObservationsCollectionViewCell"
         
         // MARK: - Outlets (Connect these from your XIB)
         @IBOutlet weak var cardContainerView: UIView!
