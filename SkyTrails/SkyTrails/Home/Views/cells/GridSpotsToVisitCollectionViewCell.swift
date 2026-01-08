@@ -9,7 +9,7 @@ import UIKit
 
 class GridSpotsToVisitCollectionViewCell: UICollectionViewCell {
 
-    static let identifier = "SpotsToVisitCollectionViewCell"
+    static let identifier = "GridSpotsToVisitCollectionViewCell"
 
     @IBOutlet weak var locationImage: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!

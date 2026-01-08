@@ -62,7 +62,7 @@ extension HomeViewController {
         )
         homeCollectionView.register(
                 UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil),
-                forSupplementaryViewOfKind: "MigrationPageControlFooter", // ⬅️ THIS IS THE ELEMENT KIND
+                forSupplementaryViewOfKind: "MigrationPageControlFooter", 
                 withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier
             )
             homeCollectionView.register(

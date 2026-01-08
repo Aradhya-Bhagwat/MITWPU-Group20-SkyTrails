@@ -86,9 +86,11 @@ extension BirdSelectionViewController: UITableViewDataSource, UITableViewDelegat
         content.text = species.name
         content.image = UIImage(named: species.imageName)
         
+        
         let imageSize = CGSize(width: 40, height: 40)
         content.imageProperties.maximumSize = imageSize
         content.imageProperties.cornerRadius = 4
+        
         
         cell.contentConfiguration = content
         
