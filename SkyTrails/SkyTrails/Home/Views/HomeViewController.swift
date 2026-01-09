@@ -700,21 +700,22 @@ extension HomeViewController {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
         let screenWidth = self.view.bounds.width
+        let absoluteCardWidth = screenWidth - 32
         let idealHeight = screenWidth * 0.8
-        let clampedHeight = min(max(idealHeight, 320), 550)
+        let clampedHeight = min(max(idealHeight, 320), 450)
         
         let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(0.92),
-            heightDimension: .absolute(clampedHeight) 
+            widthDimension: .absolute(absoluteCardWidth),
+            heightDimension: .absolute(clampedHeight)
         )
         
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered
-        section.interGroupSpacing = 12
+        section.interGroupSpacing = 40
         
-        // Section and Header configuration
+        
         let migrationPageControlFooterKind = "MigrationPageControlFooter"
         let pageControlFooterSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),

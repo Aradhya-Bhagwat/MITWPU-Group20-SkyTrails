@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import MapKit // CRITICAL: For map view, overlays, and annotations
+import MapKit
 import CoreLocation
 
 // MARK: - Custom Map Overlays (The "Stickers")
@@ -24,7 +24,6 @@ extension Array where Element == CLLocationCoordinate2D {
     
     func interpolatedProgress(at percentage: Double) -> (progressCoords: [CLLocationCoordinate2D], currentCoord: CLLocationCoordinate2D) {
         
-        // Handle edge cases where path has less than 2 points
         guard self.count > 1 else {
             if let singleCoord = self.first {
                 return ([singleCoord], singleCoord)
@@ -41,21 +40,17 @@ extension Array where Element == CLLocationCoordinate2D {
         var currentDistance: Double = 0
         var segmentCoords: [CLLocationCoordinate2D] = [self.first!] // Start with the first point
         
-        // If progress is 100%, return the full path
         if boundedPercentage >= 1.0 {
             return (self, self.last!)
         }
         
-        // Iterate through all segments (pairs of coordinates)
         for i in 0..<(self.count - 1) {
             let startCoord = self[i]
             let endCoord = self[i+1]
             
-            // Calculate the length of the current segment using CLLocations
             let segmentLength = CLLocation(latitude: startCoord.latitude, longitude: startCoord.longitude)
                                           .distance(from: CLLocation(latitude: endCoord.latitude, longitude: endCoord.longitude))
-            
-            // Check if the target distance falls within this segment
+        
             if (currentDistance + segmentLength) >= targetDistance {
                 let remainingDistanceInSegment = targetDistance - currentDistance
                 let ratio = remainingDistanceInSegment / segmentLength
@@ -136,15 +131,13 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
     
     // MARK: - Self Sizing & Layout Fixes
     override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
-        
-        // 1. Force the Width to match the Layout's requirement (Screen Width - Margins)
-        // This ensures the cell stretches horizontally as requested.
+       
         var targetFrame = layoutAttributes.frame
         targetFrame.size.width = layoutAttributes.frame.width
         
         let targetSize = CGSize(width: targetFrame.width, height: UIView.layoutFittingCompressedSize.height)
         
-        // 2. Ensure layout is up-to-date before calculating size
+        
         self.layoutIfNeeded()
         
         let autoLayoutSize = contentView.systemLayoutSizeFitting(
@@ -175,26 +168,26 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
     }
     override func layoutSubviews() {
         super.layoutSubviews()
-        
-        // 1. Shadow Path Update
-        // Always update the shadow path when layout changes to maintain performance.
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
         
-        // 2. Proportional Font Scaling
-        // Your Ratio: 17/200 = 0.085. Let's apply it to your current base sizes.
         let currentWidth = self.bounds.width
-        let baseWidth: CGFloat = 700.0
-        let titleRatio: CGFloat = 20.0 / baseWidth // Scaling based on your 20pt starting point
-        let detailRatio: CGFloat = 12.0 / baseWidth // Scaling based on your 12pt starting point
+        let baseWidth: CGFloat = 361.0
+        let titleRatio: CGFloat = 20.0 / baseWidth
+        let detailRatio: CGFloat = 12.0 / baseWidth
+        let calculatedTitleSize = currentWidth * titleRatio
+        birdNameLabel.font = UIFont.systemFont(
+            ofSize: min(calculatedTitleSize, 30.0),
+            weight: .semibold
+        )
+        let calculatedDetailSize = currentWidth * detailRatio
+        let cappedDetailSize = min(calculatedDetailSize, 18.0)
         
-        // Apply calculated sizes
-        birdNameLabel.font = UIFont.systemFont(ofSize: currentWidth * titleRatio, weight: .semibold)
+        let detailFont = UIFont.systemFont(ofSize: cappedDetailSize, weight: .regular)
         
-        let detailSize = currentWidth * detailRatio
-        startLocationLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
-        endLocationLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
-        startDateLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
-        endDateLabel.font = UIFont.systemFont(ofSize: detailSize, weight: .regular)
+        startLocationLabel.font = detailFont
+        endLocationLabel.font = detailFont
+        startDateLabel.font = detailFont
+        endDateLabel.font = detailFont
     }
     func configure(with prediction: MigrationPrediction) {
         
