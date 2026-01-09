@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
-        <capability name="Named colors" minToolsVersion="9.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -17,28 +16,19 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="BrandLogo" translatesAutoresizingMaskIntoConstraints="NO" id="DNc-Ut-xAe">
-                                <rect key="frame" x="96.666666666666686" y="268" width="200" height="200"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="BrandLogo" translatesAutoresizingMaskIntoConstraints="NO" id="2gH-xH-IVy">
+                                <rect key="frame" x="71.666666666666686" y="301" width="250" height="250"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="200" id="Zvw-9Z-6Ur"/>
-                                    <constraint firstAttribute="width" constant="200" id="k0g-No-j52"/>
+                                    <constraint firstAttribute="height" constant="250" id="Vpk-gI-5pB"/>
+                                    <constraint firstAttribute="width" constant="250" id="vAo-Su-z8S"/>
                                 </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="SkyTrails" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sEO-50-FBV">
-                                <rect key="frame" x="148" y="488" width="97" height="28.666666666666629"/>
-                                <color key="tintColor" name="AccentColor"/>
-                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="24"/>
-                                <color key="textColor" name="AccentColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="sEO-50-FBV" firstAttribute="top" secondItem="DNc-Ut-xAe" secondAttribute="bottom" constant="20" id="2NX-OF-Izk"/>
-                            <constraint firstItem="DNc-Ut-xAe" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="agM-ed-XHK"/>
-                            <constraint firstItem="sEO-50-FBV" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="nVb-Ut-VOo"/>
-                            <constraint firstItem="DNc-Ut-xAe" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="150" id="w7u-su-Kmb"/>
+                            <constraint firstItem="2gH-xH-IVy" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="0oR-y7-fja"/>
+                            <constraint firstItem="2gH-xH-IVy" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="jtY-Ah-eCP"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -49,9 +39,6 @@
     </scenes>
     <resources>
         <image name="BrandLogo" width="1024" height="1536"/>
-        <namedColor name="AccentColor">
-            <color red="0.0" green="0.46000000000000002" blue="0.89000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </namedColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
