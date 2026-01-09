@@ -33,7 +33,6 @@ class NewsCollectionViewCell: UICollectionViewCell {
     
     func configure(with news: NewsItem) {
         titleLabel.text = news.title
-        // Using system font with bold weight as in the XIB, forcing white color for visibility over image
         titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
         titleLabel.textColor = .white
         titleLabel.numberOfLines = 0

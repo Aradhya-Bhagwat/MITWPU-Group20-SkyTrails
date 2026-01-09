@@ -14,26 +14,20 @@ struct BirdDateInput {
 }
 
 class BirdDateInputViewController: UIViewController {
-
+    
     // MARK: - Data
     var speciesList: [SpeciesData] = []
-    var currentIndex: Int = 0
     var collectedData: [BirdDateInput] = []
-    
-    private var currentStartDate: Date = Date()
-    private var currentEndDate: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+    var currentIndex: Int = 0
     
     private let imageView = UIImageView()
     private let tableView = UITableView(frame: .zero, style: .plain)
+    private let pageControl = UIPageControl()
+    private let containerView = UIView() // New container view
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .systemBackground
-        
-
-        if !collectedData.isEmpty {
-
-        }
         
         setupNavigationBar()
         setupUI()
@@ -43,29 +37,54 @@ class BirdDateInputViewController: UIViewController {
     // MARK: - Setup
     
     private func setupNavigationBar() {
-
-        let nextTitle = (currentIndex == speciesList.count - 1) ? "Done" : "Next"
-        let nextButton = UIBarButtonItem(title: nextTitle, style: .plain  , target: self, action: #selector(didTapNext))
+        // "Add" button to select more species
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
         
+        // "Done" button to proceed to map visualization
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(didTapDone))
+        doneButton.tintColor = .white // Set the Done button's tint color to white
+        
+        // "Delete" button to remove current species
         let deleteButton = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(didTapDelete))
         
-        navigationItem.rightBarButtonItems = [nextButton, deleteButton]
+        // Right bar items: Done, Add, Delete
+        navigationItem.rightBarButtonItems = [doneButton, addButton, deleteButton]
     }
     
     private func setupUI() {
-
+        // Add containerView first
+        view.addSubview(containerView)
+        
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
-        imageView.backgroundColor = .systemGray6
+        imageView.backgroundColor = .systemGray
         
-        view.addSubview(imageView)
+        // Add imageView and tableView to containerView
+        containerView.addSubview(imageView)
         
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DateCell")
         tableView.isScrollEnabled = false
-        view.addSubview(tableView)
+        containerView.addSubview(tableView) // Add to containerView
+        
+        // Page Control Setup
+        pageControl.numberOfPages = collectedData.count
+        pageControl.currentPage = currentIndex
+        pageControl.pageIndicatorTintColor = .systemGray4
+        pageControl.currentPageIndicatorTintColor = .black // Changed to black
+        pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
+        view.addSubview(pageControl) // pageControl remains a direct subview of self.view
+        
+        // Swipe Gestures
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeLeft.direction = .left
+        view.addGestureRecognizer(swipeLeft)
+        
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
     }
     
     override func viewDidLayoutSubviews() {
@@ -75,113 +94,157 @@ class BirdDateInputViewController: UIViewController {
         let viewWidth = view.bounds.width
         let viewHeight = view.bounds.height
         
-        // ImageView layout
+        // PageControl layout - at the bottom
+        let pageControlHeight: CGFloat = 50
+        pageControl.frame = CGRect(
+            x: 0,
+            y: viewHeight - pageControlHeight - view.safeAreaInsets.bottom - 20,
+            width: viewWidth,
+            height: pageControlHeight
+        )
+        
+        // ContainerView layout - fills the space above page control
+        let containerViewY = safeAreaTop + 20
+        let containerViewHeight = pageControl.frame.minY - containerViewY - 30 // 30 is spacing to imageview
+        containerView.frame = CGRect(
+            x: 0,
+            y: containerViewY,
+            width: viewWidth,
+            height: containerViewHeight
+        )
+        
+        // ImageView layout (relative to containerView)
         let imageViewWidth: CGFloat = 240
         let imageViewHeight: CGFloat = 160
         imageView.frame = CGRect(
-            x: (viewWidth - imageViewWidth) / 2,
-            y: safeAreaTop + 20,
+            x: (containerView.bounds.width - imageViewWidth) / 2,
+            y: 0, // Relative to containerView's top
             width: imageViewWidth,
             height: imageViewHeight
         )
         
-        // TableView layout
+        // TableView layout (relative to containerView)
         let tableViewY = imageView.frame.maxY + 30
         tableView.frame = CGRect(
             x: 0,
             y: tableViewY,
-            width: viewWidth,
-            height: viewHeight - tableViewY
+            width: containerView.bounds.width,
+            height: containerView.bounds.height - tableViewY
         )
     }
     
     private func loadCurrentBird() {
-        guard currentIndex < speciesList.count else { return }
-        let bird = speciesList[currentIndex]
+        guard currentIndex < collectedData.count else { return }
+        let data = collectedData[currentIndex]
         
-        self.title = bird.name
-        imageView.image = UIImage(named: bird.imageName)
+        self.title = data.species.name
+        imageView.image = UIImage(named: data.species.imageName)
+        
+        pageControl.numberOfPages = collectedData.count // Update in case it changed
+        pageControl.currentPage = currentIndex
         
         tableView.reloadData()
     }
     
     // MARK: - Actions
     
-    @objc private func didTapNext() {
-        let bird = speciesList[currentIndex]
-        let input = BirdDateInput(species: bird, startDate: currentStartDate, endDate: currentEndDate)
-        var newCollection = collectedData
-        newCollection.append(input)
+    @objc private func didTapAdd() {
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else { return }
         
-        if currentIndex < speciesList.count - 1 {
-
-            let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "BirdDateInputViewController") as? BirdDateInputViewController else { return }
-            
-            nextVC.speciesList = self.speciesList
-            nextVC.currentIndex = self.currentIndex + 1
-            nextVC.collectedData = newCollection
-            
-            navigationController?.pushViewController(nextVC, animated: true)
-            
-        } else {
-            
-            let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-            guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
-            
-            mapVC.predictionInputs = newCollection
-            
-            navigationController?.pushViewController(mapVC, animated: true)
-        }
+        // Pass existing data so it can be merged/preserved
+        selectionVC.selectedSpecies = Set(collectedData.map { $0.species.id })
+        selectionVC.existingInputs = collectedData
+        
+        navigationController?.pushViewController(selectionVC, animated: true)
+    }
+    
+    @objc private func didTapDone() {
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
+        
+        mapVC.predictionInputs = collectedData
+        
+        navigationController?.pushViewController(mapVC, animated: true)
     }
     
     @objc private func didTapDelete() {
-
-        var newSpeciesList = speciesList
-        newSpeciesList.remove(at: currentIndex)
+        guard currentIndex < collectedData.count else { return }
         
-        if newSpeciesList.isEmpty {
-
-            navigationController?.popToRootViewController(animated: true)
-            return
-        }
+        collectedData.remove(at: currentIndex)
         
-        if currentIndex < newSpeciesList.count {
-
-
-            
-            let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "BirdDateInputViewController") as? BirdDateInputViewController else { return }
-            
-            nextVC.speciesList = newSpeciesList
-            nextVC.currentIndex = currentIndex
-            nextVC.collectedData = collectedData
-            
-            navigationController?.pushViewController(nextVC, animated: true)
-            
+        if collectedData.isEmpty {
+            navigationController?.popViewController(animated: true)
         } else {
-            
-            if !collectedData.isEmpty {
-
-                let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-                guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
-                mapVC.predictionInputs = collectedData
-                navigationController?.pushViewController(mapVC, animated: true)
-            } else {
-
-                
-                navigationController?.popToRootViewController(animated: true)
+            // Adjust index if we deleted the last item
+            if currentIndex >= collectedData.count {
+                currentIndex = collectedData.count - 1
             }
+            loadCurrentBird()
         }
+    }
+    
+    @objc private func pageControlChanged(_ sender: UIPageControl) {
+        let previousIndex = currentIndex
+        currentIndex = sender.currentPage
+        
+        let transition = CATransition()
+        transition.type = .push
+        transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        transition.duration = 0.3
+        
+        if currentIndex > previousIndex {
+            transition.subtype = .fromRight
+        } else {
+            transition.subtype = .fromLeft
+        }
+        
+        containerView.layer.add(transition, forKey: nil) // Apply transition to containerView
+        loadCurrentBird()
     }
     
     @objc private func startDateChanged(_ sender: UIDatePicker) {
-        currentStartDate = sender.date
+        if currentIndex < collectedData.count {
+            collectedData[currentIndex].startDate = sender.date
+        }
     }
     
     @objc private func endDateChanged(_ sender: UIDatePicker) {
-        currentEndDate = sender.date
+        if currentIndex < collectedData.count {
+            collectedData[currentIndex].endDate = sender.date
+        }
     }
+    
+    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        let previousIndex = currentIndex
+        
+        if gesture.direction == .left {
+            if currentIndex < collectedData.count - 1 {
+                currentIndex += 1
+            }
+        } else if gesture.direction == .right {
+            if currentIndex > 0 {
+                currentIndex -= 1
+            }
+        }
+        
+        if currentIndex != previousIndex {
+            let transition = CATransition()
+            transition.type = .push
+            transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            transition.duration = 0.3
+            
+            if currentIndex > previousIndex {
+                transition.subtype = .fromRight
+            } else {
+                transition.subtype = .fromLeft
+            }
+            
+            containerView.layer.add(transition, forKey: nil) // Apply transition to containerView
+            loadCurrentBird()
+        }
+    }
+
 }
 
 extension BirdDateInputViewController: UITableViewDataSource, UITableViewDelegate {
@@ -194,17 +257,20 @@ extension BirdDateInputViewController: UITableViewDataSource, UITableViewDelegat
         let cell = UITableViewCell(style: .default, reuseIdentifier: "DateCell")
         cell.selectionStyle = .none
         
+        guard currentIndex < collectedData.count else { return cell }
+        let data = collectedData[currentIndex]
+        
         let datePicker = UIDatePicker()
         datePicker.datePickerMode = .date
         datePicker.preferredDatePickerStyle = .compact
         
         if indexPath.row == 0 {
             cell.textLabel?.text = "Start Date"
-            datePicker.date = currentStartDate
+            datePicker.date = data.startDate ?? Date()
             datePicker.addTarget(self, action: #selector(startDateChanged(_:)), for: .valueChanged)
         } else {
             cell.textLabel?.text = "End Date"
-            datePicker.date = currentEndDate
+            datePicker.date = data.endDate ?? Date()
             datePicker.addTarget(self, action: #selector(endDateChanged(_:)), for: .valueChanged)
         }
 

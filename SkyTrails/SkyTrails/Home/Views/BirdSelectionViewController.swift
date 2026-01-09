@@ -11,6 +11,7 @@ class BirdSelectionViewController: UIViewController {
 
     var allSpecies: [SpeciesData] = []
     var selectedSpecies: Set<String> = [] // IDs of selected species
+    var existingInputs: [BirdDateInput] = [] // Data from previous input screen if any
     
     private let tableView = UITableView(frame: .zero, style: .plain)
     
@@ -65,8 +66,21 @@ class BirdSelectionViewController: UIViewController {
         guard let dateInputVC = storyboard.instantiateViewController(withIdentifier: "BirdDateInputViewController") as? BirdDateInputViewController else { return }
         
         dateInputVC.speciesList = selectedObjects
-        dateInputVC.currentIndex = 0
-        dateInputVC.collectedData = []
+        dateInputVC.currentIndex = 0 // Will serve as the initial page
+        
+        // Merge existing inputs with new selections
+        var newCollectedData: [BirdDateInput] = []
+        for species in selectedObjects {
+            if let existing = existingInputs.first(where: { $0.species.id == species.id }) {
+                newCollectedData.append(existing)
+            } else {
+                // Initialize with default dates
+                let start = Date()
+                let end = Calendar.current.date(byAdding: .month, value: 1, to: start) ?? start
+                newCollectedData.append(BirdDateInput(species: species, startDate: start, endDate: end))
+            }
+        }
+        dateInputVC.collectedData = newCollectedData
         
         navigationController?.pushViewController(dateInputVC, animated: true)
     }
