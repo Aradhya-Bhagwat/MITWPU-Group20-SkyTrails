@@ -31,9 +31,16 @@ struct BirdShape: Codable {
     let id: String
     let name: String
     let icon: String
+  
+    let neck_variations: [NeckVariation]?
+    
     var imageView: String { return icon }
 }
 
+struct NeckVariation: Codable {
+    let id: String
+    let head_offset_y: Int
+}
 struct ReferenceBird: Codable, Identifiable {
     let id: String
     let commonName: String
