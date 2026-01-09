@@ -24,13 +24,13 @@
                                 <rect key="frame" x="0.0" y="0.0" width="1025" height="642"/>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Title Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gJv-DV-0gG">
-                                <rect key="frame" x="16" y="16" width="993" height="26.333333333333336"/>
+                                <rect key="frame" x="16" y="15.999999999999998" width="993" height="26.333333333333321"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="22"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Summary Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sMm-Ry-LbL">
-                                <rect key="frame" x="16" y="50.333333333333336" width="993" height="17"/>
+                                <rect key="frame" x="16" y="615" width="993" height="17"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -40,12 +40,12 @@
                         <constraints>
                             <constraint firstItem="TIj-ML-RLm" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" id="4pn-zq-gCM"/>
                             <constraint firstItem="gJv-DV-0gG" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="AQD-VN-KRh"/>
-                            <constraint firstAttribute="trailing" secondItem="gJv-DV-0gG" secondAttribute="trailing" constant="16" id="TRL-VN-New"/>
                             <constraint firstAttribute="bottom" secondItem="TIj-ML-RLm" secondAttribute="bottom" id="Cwn-sl-vga"/>
                             <constraint firstItem="gJv-DV-0gG" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="16" id="Ra3-AK-SYN"/>
                             <constraint firstItem="sMm-Ry-LbL" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="Sml-Ry-New"/>
                             <constraint firstAttribute="trailing" secondItem="sMm-Ry-LbL" secondAttribute="trailing" constant="16" id="Smr-Ry-Trl"/>
-                            <constraint firstItem="sMm-Ry-LbL" firstAttribute="top" secondItem="gJv-DV-0gG" secondAttribute="bottom" constant="8" id="Smt-Ry-Top"/>
+                            <constraint firstAttribute="trailing" secondItem="gJv-DV-0gG" secondAttribute="trailing" constant="16" id="TRL-VN-New"/>
+                            <constraint firstAttribute="bottom" secondItem="sMm-Ry-LbL" secondAttribute="bottom" constant="10" id="bfR-mN-3n5"/>
                             <constraint firstItem="TIj-ML-RLm" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" id="f9J-gw-kH8"/>
                             <constraint firstAttribute="trailing" secondItem="TIj-ML-RLm" secondAttribute="trailing" id="gDG-iH-Zyy"/>
                         </constraints>

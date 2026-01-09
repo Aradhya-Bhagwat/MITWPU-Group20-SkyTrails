@@ -26,11 +26,12 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
 
-        cardContainerView.layer.cornerRadius = 16
+                cardContainerView.layer.cornerRadius = 16
                 cardContainerView.clipsToBounds = true
         
-        birdImageView.contentMode = .scaleAspectFill
-               birdImageView.clipsToBounds = true
+                birdImageView.contentMode = .scaleAspectFill
+                birdImageView.clipsToBounds = true
+        
                 userProfileImageView.clipsToBounds = true
                 userProfileImageView.contentMode = .scaleAspectFill
     }
@@ -42,6 +43,7 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
         }
     func configure(with observation: CommunityObservation, birdImage: UIImage?) {
             birdImageView.image = birdImage
+            birdImageView.tintColor = .systemGray4
         
             userNameLabel.text = observation.user.name
             userNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
@@ -59,21 +61,22 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
         
             locationLabel.text = observation.location
             locationLabel.textColor = .white
-        locationLabel.font = UIFont.systemFont(ofSize: 11.5, weight: .medium)
+            locationLabel.font = UIFont.systemFont(ofSize: 11.5, weight: .medium)
         
             // 1. Try to load the user's custom profile image
             if let profileImage = UIImage(named: observation.user.profileImageName) {
                 userProfileImageView.image = profileImage
             } else {
                 userProfileImageView.image = UIImage(systemName: "person.circle.fill")
-                userProfileImageView.tintColor = .systemGray4 
+                userProfileImageView.tintColor = .systemGray4
+               
             }
              
             cardContainerView.bringSubviewToFront(userNameLabel)
             cardContainerView.bringSubviewToFront(observationCountLabel)
             cardContainerView.bringSubviewToFront(birdNameLabel)
             cardContainerView.bringSubviewToFront(locationLabel)
-            cardContainerView.bringSubviewToFront(userProfileImageView) // Ensure
+            cardContainerView.bringSubviewToFront(userProfileImageView) 
         }
 
         // MARK: - Gradient Logic

@@ -55,7 +55,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         @objc private func didTapPredict() {
         
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-        guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "birdspredViewController") as? BirdSelectionViewController else {
+        guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else {
 
             return
         }
