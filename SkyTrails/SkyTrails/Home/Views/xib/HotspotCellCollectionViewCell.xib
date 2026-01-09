@@ -64,6 +64,7 @@
                                     <constraint firstItem="zIV-2c-njB" firstAttribute="leading" secondItem="aWo-vh-HzE" secondAttribute="trailing" constant="8" id="7yj-wB-ZFo"/>
                                     <constraint firstItem="aWo-vh-HzE" firstAttribute="top" secondItem="DNp-Kv-fUI" secondAttribute="top" constant="8" id="CkL-QO-0A9"/>
                                     <constraint firstItem="1VU-Qj-x9P" firstAttribute="top" secondItem="DNp-Kv-fUI" secondAttribute="top" constant="10" id="Di3-3L-zcI"/>
+                                    <constraint firstItem="aWo-vh-HzE" firstAttribute="width" secondItem="DNp-Kv-fUI" secondAttribute="width" multiplier="0.254848" id="SVM-i3-hPG"/>
                                     <constraint firstItem="vzZ-iM-WM6" firstAttribute="leading" secondItem="aWo-vh-HzE" secondAttribute="trailing" constant="8" id="SWY-lG-Ok7"/>
                                     <constraint firstItem="zIV-2c-njB" firstAttribute="top" secondItem="vzZ-iM-WM6" secondAttribute="bottom" constant="1" id="Vbu-FY-Gb3"/>
                                     <constraint firstItem="vzZ-iM-WM6" firstAttribute="top" secondItem="Dq5-Ci-9Rv" secondAttribute="bottom" constant="1" id="drk-6A-V95"/>
@@ -84,6 +85,7 @@
                             <constraint firstItem="U8L-5V-5bq" firstAttribute="top" secondItem="ucL-c9-fYi" secondAttribute="top" constant="8" id="c44-nG-X2q"/>
                             <constraint firstItem="DNp-Kv-fUI" firstAttribute="leading" secondItem="ucL-c9-fYi" secondAttribute="leading" id="fWj-JK-3Lc"/>
                             <constraint firstAttribute="bottom" secondItem="U8L-5V-5bq" secondAttribute="bottom" constant="110" id="fc7-g7-Urc"/>
+                            <constraint firstItem="DNp-Kv-fUI" firstAttribute="height" secondItem="ucL-c9-fYi" secondAttribute="height" multiplier="0.342679" id="jUQ-Mf-QNN"/>
                             <constraint firstItem="DNp-Kv-fUI" firstAttribute="top" secondItem="U8L-5V-5bq" secondAttribute="bottom" id="yeh-Ub-gBJ"/>
                         </constraints>
                     </view>
@@ -92,6 +94,7 @@
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
             <constraints>
                 <constraint firstAttribute="trailing" secondItem="ucL-c9-fYi" secondAttribute="trailing" id="NFi-w2-gOd"/>
+                <constraint firstItem="ucL-c9-fYi" firstAttribute="height" secondItem="gTV-IL-0wX" secondAttribute="height" id="SVL-Pi-lIv"/>
                 <constraint firstAttribute="bottom" secondItem="ucL-c9-fYi" secondAttribute="bottom" id="TPo-Cd-lnB"/>
                 <constraint firstItem="ucL-c9-fYi" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="TWo-dZ-lQo"/>
                 <constraint firstItem="ucL-c9-fYi" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="ru3-aI-MkE"/>
@@ -112,7 +115,7 @@
     </objects>
     <resources>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
