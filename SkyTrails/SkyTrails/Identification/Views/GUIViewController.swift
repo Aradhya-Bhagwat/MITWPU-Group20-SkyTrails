@@ -25,15 +25,25 @@ class GUIViewController: UIViewController {
 	
 		// Z-Index Order (Bottom to Top)
 		// Adjust this based on your specific bird art (e.g., Wings usually go on top of Body)
-	private let layerOrder = [
-		"Tail", "Leg", "Thigh",         // Background parts
-		"Back", "Belly","Chest",
-        "Nape","Throat", "Crown",              // Head base
-		"Beak", "Eye",                  // Face details
-		"Wings"                         // Foreground
-	]
+//	private let layerOrder = [
+//		"Tail", "Leg", "Thigh",         // Background parts
+//		"Back", "Belly","Chest",
+//        "Nape","Throat", "Crown",              // Head base
+//		"Beak", "Eye",                  // Face details
+//		"Wings"                         // Foreground
+//	]
 	
-		
+    private let layerOrder = [
+        "Tail",                         // 1. Behind the body
+        "Leg",                          // 2. Behind the body
+        "Thigh",                        // 3. Connects Leg to Body
+        "Neck",                         // 4. Structural Anchor (Thin/Long)
+        "Head",                         // 5. Sits on the Neck
+        "Back", "Belly", "Chest",       // 6. Body Patterns
+        "Nape", "Throat", "Crown",      // 7. Head Patterns
+        "Beak", "Eye",                  // 8. Face details
+        "Wings"                         // 9. Top-most (covers Back/Body)
+    ]
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
@@ -70,6 +80,10 @@ class GUIViewController: UIViewController {
 		}
 		
 		print("✅ GUI Loaded: \(self.categories.map { $0.name })")
+        
+        if selectedVariations["Neck"] == nil { selectedVariations["Neck"] = "Default" }
+        if selectedVariations["Head"] == nil { selectedVariations["Head"] = "Default" }
+        setupCanvas()
 	}
 	
 	private func setupUI() {
@@ -90,67 +104,123 @@ class GUIViewController: UIViewController {
 			layout.scrollDirection = .horizontal
 		}
 	}
-    private func setupCanvas() {
-            // Clear any existing subviews if reloading
-            canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
-            partLayers.removeAll()
-            
-            // 1. Determine Base Suffix based on selection
-            // Logic: If a part is selected, we load a base that is MISSING that part
-            // so the user can overlay their choice.
-            
-            let hasTail = categories.contains { $0.name == "Tail" }
-            let hasLeg  = categories.contains { $0.name == "Leg" }
-            
-            let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-            var baseSuffix = "base" // Default: Both are NOT selected
-            
-            if hasTail && hasLeg {
-                // Both selected -> "base_no_leg_tail"
-                baseSuffix = "base_no_leg_tail"
-            } else if hasTail {
-                // Tail only -> "base_no_tail"
-                baseSuffix = "base_no_tail"
-            } else if hasLeg {
-                // Leg only -> "base_no_leg"
-                baseSuffix = "base_no_leg"
-            }
-            
-            let baseImageName = "shape_\(shapeID)_\(baseSuffix)"
-            print("🎨 Loading Base Image: \(baseImageName)")
-            
-            // 2. Add Base Shape Layer
-            baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
-            baseShapeLayer.contentMode = .scaleAspectFit
-            baseShapeLayer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            
-            if let img = UIImage(named: baseImageName) {
-                baseShapeLayer.image = img
-            } else {
-                // Safety: Fallback to standard base if the specific "no_x" image is missing
-                print("⚠️ Image \(baseImageName) not found. Using default.")
-                baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base")
-            }
-            
-            canvasContainerView.addSubview(baseShapeLayer)
-            
-            // 3. Add Feature Layers (Standard Z-Index Logic)
-            let sortedCategories = categories.sorted {
-                let index1 = layerOrder.firstIndex(of: $0.name) ?? 999
-                let index2 = layerOrder.firstIndex(of: $1.name) ?? 999
-                return index1 < index2
-            }
-            
-            for cat in sortedCategories {
-                let imgView = UIImageView(frame: canvasContainerView.bounds)
-                imgView.contentMode = .scaleAspectFit
-                imgView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                
-                canvasContainerView.addSubview(imgView)
-                partLayers[cat.name] = imgView
+//    private func setupCanvas() {
+//            // Clear any existing subviews if reloading
+//            canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
+//            partLayers.removeAll()
+//            
+//            // 1. Determine Base Suffix based on selection
+//            // Logic: If a part is selected, we load a base that is MISSING that part
+//            // so the user can overlay their choice.
+//            
+//            let hasTail = categories.contains { $0.name == "Tail" }
+//            let hasLeg  = categories.contains { $0.name == "Leg" }
+//            
+//            let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+//            var baseSuffix = "base" // Default: Both are NOT selected
+//            
+//            if hasTail && hasLeg {
+//                // Both selected -> "base_no_leg_tail"
+//                baseSuffix = "base_no_leg_tail"
+//            } else if hasTail {
+//                // Tail only -> "base_no_tail"
+//                baseSuffix = "base_no_tail"
+//            } else if hasLeg {
+//                // Leg only -> "base_no_leg"
+//                baseSuffix = "base_no_leg"
+//            }
+//            
+//            let baseImageName = "shape_\(shapeID)_\(baseSuffix)"
+//            print("🎨 Loading Base Image: \(baseImageName)")
+//            
+//            // 2. Add Base Shape Layer
+//            baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
+//            baseShapeLayer.contentMode = .scaleAspectFit
+//            baseShapeLayer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+//            
+//            if let img = UIImage(named: baseImageName) {
+//                baseShapeLayer.image = img
+//            } else {
+//                // Safety: Fallback to standard base if the specific "no_x" image is missing
+//                print("⚠️ Image \(baseImageName) not found. Using default.")
+//                baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base")
+//            }
+//            
+//            canvasContainerView.addSubview(baseShapeLayer)
+//            
+//            // 3. Add Feature Layers (Standard Z-Index Logic)
+//            let sortedCategories = categories.sorted {
+//                let index1 = layerOrder.firstIndex(of: $0.name) ?? 999
+//                let index2 = layerOrder.firstIndex(of: $1.name) ?? 999
+//                return index1 < index2
+//            }
+//            
+//            for cat in sortedCategories {
+//                let imgView = UIImageView(frame: canvasContainerView.bounds)
+//                imgView.contentMode = .scaleAspectFit
+//                imgView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+//                
+//                canvasContainerView.addSubview(imgView)
+//                partLayers[cat.name] = imgView
+//            }
+//        }
+    func applyNeckOffset(variant: String) {
+        let shapeName = viewModel.selectedShapeId ?? "Finch"
+        
+        // 1. Correct the property name to 'birdShapes'
+        guard let shapeData = viewModel.birdShapes.first(where: { $0.name == shapeName }),
+              let variations = shapeData.neck_variations else { return }
+        
+        // 2. Get the Y offset
+        let offsetData = variations.first(where: { $0.id == variant })
+            ?? variations.first(where: { $0.id == "Default" })
+        
+        // MAKE SURE THIS LINE IS ABOVE THE ANIMATION BLOCK
+        let offsetY = CGFloat(offsetData?.head_offset_y ?? 0)
+        
+        let headRelatedLayers = ["Head", "Crown", "Beak", "Eye", "Nape", "Throat"]
+        
+        // 3. Animate using the offsetY variable defined above
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            for layerName in headRelatedLayers {
+                if let layerView = self.partLayers[layerName] {
+                    layerView.transform = CGAffineTransform(translationX: 0, y: offsetY)
+                }
             }
         }
-   
+    }
+    
+    private func setupCanvas() {
+        canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
+        partLayers.removeAll()
+
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+        
+        // 1. Load the Core Torso (Hollow Base)
+        baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
+        baseShapeLayer.contentMode = .scaleAspectFit
+        baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base_Core")
+        canvasContainerView.addSubview(baseShapeLayer)
+
+        // 2. Loop through and CREATE the layers first
+        for catName in layerOrder {
+            let imgView = UIImageView(frame: canvasContainerView.bounds)
+            imgView.contentMode = .scaleAspectFit
+            canvasContainerView.addSubview(imgView)
+            partLayers[catName] = imgView // Store the reference safely
+            
+            // 3. Assign the image
+            if let selectedVariant = selectedVariations[catName] {
+                let imageName = "canvas_\(shapeID)_\(catName)_\(selectedVariant)"
+                imgView.image = UIImage(named: imageName)
+                
+                if catName == "Neck" { applyNeckOffset(variant: selectedVariant) }
+            } else {
+                // Hide unselected parts (Tail, Legs, etc.)
+                imgView.image = nil
+            }
+        }
+    }
 	private func setupRightTickButton() {
 		let button = UIButton(type: .system)
 		button.backgroundColor = .white
@@ -202,6 +272,9 @@ class GUIViewController: UIViewController {
 				print("⚠️ Image not found: \(imageName)")
 			}
 		}
+        if category == "Neck" {
+                applyNeckOffset(variant: variant)
+            }
 	}
    
 	private func compositePreviewImage(base: UIImage, overlay: UIImage) -> UIImage {

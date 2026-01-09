@@ -1,7 +1,8 @@
 {
   "metadata": {
-    "version": "1.0",
-    "total_species": 20
+    "version": "1.1",
+    "total_species": 20,
+    "description": "Integrated structural anchors for dynamic head positioning"
   },
   "reference_data": {
     "locations": [
@@ -27,62 +28,116 @@
       {
         "id": "Auks",
         "name": "Auks",
-        "icon": "bird_auks_shape"
+        "icon": "bird_auks_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Short", "head_offset_y": 10 }
+        ]
       },
       {
         "id": "Chickadees",
         "name": "Chickadees",
-        "icon": "bird_chickadees_shape"
+        "icon": "bird_chickadees_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Compact", "head_offset_y": 5 }
+        ]
       },
       {
         "id": "Owls",
         "name": "Owls",
-        "icon": "bird_owls_shape"
+        "icon": "bird_owls_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Bull", "head_offset_y": 5 }
+        ]
       },
       {
         "id": "Ducks",
         "name": "Ducks",
-        "icon": "bird_ducks_shape"
+        "icon": "bird_ducks_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Long", "head_offset_y": -40 },
+          { "id": "Short", "head_offset_y": 15 }
+        ]
       },
       {
         "id": "Hummingbird",
         "name": "Hummingbird",
-        "icon": "bird_hummingbird_shape"
+        "icon": "bird_hummingbird_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Slim", "head_offset_y": -5 }
+        ]
       },
       {
         "id": "Heron",
         "name": "Heron",
-        "icon": "bird_heron_shape"
+        "icon": "bird_heron_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Long", "head_offset_y": -120 },
+          { "id": "Extended", "head_offset_y": -140 }
+        ]
       },
       {
         "id": "Shorebird",
         "name": "Shorebird",
-        "icon": "bird_shorebird_shape"
+        "icon": "bird_shorebird_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Long", "head_offset_y": -50 },
+          { "id": "Tapered", "head_offset_y": -20 }
+        ]
       },
       {
         "id": "Game bird",
         "name": "Game bird",
-        "icon": "bird_game_bird_shape"
+        "icon": "bird_game_bird_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Stocky", "head_offset_y": 10 },
+          { "id": "Long", "head_offset_y": -45 }
+        ]
       },
       {
         "id": "Finch",
         "name": "Finch",
-        "icon": "bird_finch_shape"
+        "icon": "bird_finch_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Short", "head_offset_y": 15 },
+          { "id": "Long", "head_offset_y": -60 },
+          { "id": "Thin", "head_offset_y": 0 }
+        ]
       },
       {
         "id": "Doves",
         "name": "Doves",
-        "icon": "bird_doves_shape"
+        "icon": "bird_doves_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Small-headed", "head_offset_y": 5 }
+        ]
       },
       {
         "id": "Wrens",
         "name": "Wrens",
-        "icon": "bird_wrens_shape"
+        "icon": "bird_wrens_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Stocky", "head_offset_y": 8 }
+        ]
       },
       {
         "id": "Hawks & falcons",
         "name": "Hawks & falcons",
-        "icon": "bird_hawks_and_falcons_shape"
+        "icon": "bird_hawks_and_falcons_shape",
+        "neck_variations": [
+          { "id": "Default", "head_offset_y": 0 },
+          { "id": "Strong", "head_offset_y": -10 }
+        ]
       }
     ],
     "field_marks": [
@@ -140,40 +195,17 @@
       {
         "area": "Neck",
         "variants": [
-          "Short",
-          "Compact",
-          "Slim",
-          "Stocky",
-          "Bull",
-          "Tapered",
-          "Seamless",
-          "Extended",
-          "Collared",
-          "Ringed",
-          "Bibbed",
-          "Naped"
+          "Short", "Compact", "Slim", "Stocky", "Bull", "Tapered",
+          "Seamless", "Extended", "Collared", "Ringed", "Bibbed", "Naped", "Long"
         ]
       },
       {
-         "area": "Chest",
-         "variants": [
-           "Solid",
-           "Banded",
-           "Barred",
-           "Mottled",
-           "Scaled",
-           "Spotted",
-           "Streaked",
-           "Bibbed",
-           "Shield",
-           "V-Band",
-           "Puffed",
-           "Flat"
-         ]
-       },
-
-
-
+        "area": "Chest",
+        "variants": [
+          "Solid", "Banded", "Barred", "Mottled", "Scaled", "Spotted",
+          "Streaked", "Bibbed", "Shield", "V-Band", "Puffed", "Flat"
+        ]
+      }
     ]
   },
   "birds": [
