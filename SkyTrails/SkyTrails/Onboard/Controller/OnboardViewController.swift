@@ -22,9 +22,9 @@ class OnboardViewController: UIViewController {
     
     @IBAction func segmentChanged(_ sender: UISegmentedControl) {
         switch sender.selectedSegmentIndex {
-        case 0:
-            self.view.bringSubviewToFront(loginSegmentView)
         case 1:
+            self.view.bringSubviewToFront(loginSegmentView)
+        case 0:
             self.view.bringSubviewToFront(signupSegmentView)
         default:
             break
