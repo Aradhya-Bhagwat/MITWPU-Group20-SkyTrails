@@ -188,7 +188,7 @@
       {
         "area": "Head",
         "variants": [
-          "Plain", "Flat", "Rounded", "Slightly-Peaked", "Crested", "Cap",
+          "Plain",  "Rounded",
           "Masked", "Spectacled", "Eyeline", "Moustached", "Lore-Pointed"
         ]
       },
@@ -196,7 +196,7 @@
         "area": "Neck",
         "variants": [
           "Short", "Compact", "Slim", "Stocky", "Bull", "Tapered",
-          "Seamless", "Extended", "Collared", "Ringed", "Bibbed", "Naped", "Long"
+          "Seamless", "Extended", "Collared",  "Bibbed", "Naped", "Long"
         ]
       },
       {
