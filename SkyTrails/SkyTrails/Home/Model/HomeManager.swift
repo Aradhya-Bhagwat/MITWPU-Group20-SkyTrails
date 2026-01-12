@@ -152,63 +152,68 @@ class HomeManager {
 		}
 	}
     
-    func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
-        guard let lat = input.latitude,
-              let lon = input.longitude,
-              let weekRange = input.weekRange,
-              let allSpecies = predictionData?.speciesData else {
-            return []
-        }
-        
-        let radiusKM = Double(input.areaValue)
-        let searchLoc = CLLocation(latitude: lat, longitude: lon)
-        
-        var matchingBirds: [FinalPredictionResult] = []
-        
-        for species in allSpecies {
-            
-            var speciesFoundForThisInput = false
-            
-            for sighting in species.sightings {
-                
-                let sightingWeek = sighting.week
-                var isWeekMatch = false
-                
-                if weekRange.start <= weekRange.end {
-                    isWeekMatch = (sightingWeek >= weekRange.start) && (sightingWeek <= weekRange.end)
-                } else {
-                    let checkWeek = sightingWeek > weekRange.start ? sightingWeek : sightingWeek + 52
-                    isWeekMatch = (checkWeek >= weekRange.start) && (checkWeek <= weekRange.end)
-                }
-                
-                if !isWeekMatch {
-                    let startBound = weekRange.start - 2
-                    let endBound = weekRange.end + 2
-                    isWeekMatch = (sightingWeek >= startBound && sightingWeek <= endBound)
-                }
-                
-                if !isWeekMatch { continue }
-                
-                let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
-                let distanceKM = sightingLoc.distance(from: searchLoc) / 1000.0
-                
-                if distanceKM <= radiusKM {
-                    matchingBirds.append(
-                        FinalPredictionResult(
-                            birdName: species.name,
-                            imageName: species.imageName,
-                            matchedInputIndex: inputIndex,
-                            matchedLocation: (lat: sighting.lat, lon: sighting.lon)
-                        )
-                    )
-                    speciesFoundForThisInput = true
-                    break
-                }
-            }
-            if speciesFoundForThisInput { continue }
-        }
-        return matchingBirds
-    }
+	fileprivate func waterfallMatchSpecies(_ allSpecies: [SpeciesData], _ isWeek: (Int, Int, Int, Int) -> Bool, _ weekRange: (start: Int, end: Int), _ lat: Double, _ degreeBuffer: Double, _ lon: Double, _ searchLoc: CLLocation, _ radiusMeters: Double, _ matchingBirds: inout [FinalPredictionResult], _ inputIndex: Int) {
+		for species in allSpecies {
+			
+			if let matched = species.sightings.first(where: { sighting in
+				
+				guard isWeek(sighting.week, weekRange.start, weekRange.end, 0) else { return false }
+				
+				
+				if abs(sighting.lat - lat) > degreeBuffer || abs(sighting.lon - lon) > degreeBuffer {
+					return false
+				}
+				
+				let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
+				return sightingLoc.distance(from: searchLoc) <= radiusMeters
+			}) {
+				matchingBirds.append(
+					FinalPredictionResult(
+						birdName: species.name,
+						imageName: species.imageName,
+						matchedInputIndex: inputIndex,
+						matchedLocation: (lat: matched.lat, lon: matched.lon)
+					)
+				)
+			}
+		}
+	}
+	
+	func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
+		guard let lat = input.latitude,
+			  let lon = input.longitude,
+			  let weekRange = input.weekRange,
+			  let allSpecies = predictionData?.speciesData else {
+			return []
+		}
+		
+		let searchLoc = CLLocation(latitude: lat, longitude: lon)
+		let radiusMeters = Double(input.areaValue) * 1000.0
+		
+
+		let degreeBuffer = radiusMeters / 111_000.0
+		
+
+		func isWeek(_ week: Int, withinStart start: Int, end: Int, tolerance: Int = 2) -> Bool {
+
+			
+			let targetStart = (start - tolerance - 1 + 52) % 52 + 1
+			let targetEnd = (end + tolerance - 1 + 52) % 52 + 1
+
+			if targetStart <= targetEnd {
+				return week >= targetStart && week <= targetEnd
+			} else {
+
+				return week >= targetStart || week <= targetEnd
+			}
+		}
+		
+		var matchingBirds: [FinalPredictionResult] = []
+		
+		waterfallMatchSpecies(allSpecies, isWeek, weekRange, lat, degreeBuffer, lon, searchLoc, radiusMeters, &matchingBirds, inputIndex)
+		
+		return matchingBirds
+	}
     
     func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
         let separators = [" – ", " - "]
