@@ -33,9 +33,7 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         super.awakeFromNib()
      
     }
-    
-
-
+ 
     override func layoutSubviews() {
         super.layoutSubviews()
         
@@ -152,7 +150,7 @@ extension HotspotCellCollectionViewCell {
             return renderer
             
         } else if let circle = overlay as? MKCircle {
-    
+            
             let renderer = MKCircleRenderer(circle: circle)
             renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.2)
             renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.5)
@@ -171,63 +169,34 @@ extension HotspotCellCollectionViewCell {
         }
         
         let identifier = "HotspotBirdPin"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
- 
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+        
         if annotationView == nil {
-            annotationView = MKAnnotationView(annotation: hotspotAnnotation, reuseIdentifier: identifier)
-            annotationView?.canShowCallout = false // Prevent callout conflict with clipping
+            annotationView = MKMarkerAnnotationView(annotation: hotspotAnnotation, reuseIdentifier: identifier)
+            annotationView?.canShowCallout = true
         } else {
             annotationView?.annotation = annotation
         }
-        
-        if let imageName = hotspotAnnotation.imageName,
-           let birdImage = UIImage(named: imageName) {
-            
-            let outerPinSize: CGFloat = 40.0
-            let innerImageSize: CGFloat = 32.0
-            let pinHeight: CGFloat = 50.0
-            
-            let pinBaseSize = CGSize(width: outerPinSize, height: pinHeight)
-            let renderer = UIGraphicsImageRenderer(size: pinBaseSize)
-            
-            
-            let finalPinImage = renderer.image { context in
-                let cgContext = context.cgContext
-                let pinColor = UIColor(red: 12/255, green: 70/255, blue: 156/255, alpha: 0.9).cgColor// Use dark blue for pin body
-                
-                cgContext.beginPath()
-                cgContext.move(to: CGPoint(x: pinBaseSize.width / 2 , y: pinHeight)) 
-                cgContext.addLine(to: CGPoint(x: 12, y: outerPinSize - 4))
-                cgContext.addLine(to: CGPoint(x: pinBaseSize.width - 12, y: outerPinSize - 4))
-                cgContext.closePath()
-                cgContext.setFillColor(pinColor)
-                cgContext.fillPath()
-                
-                let outerCircleRect = CGRect(x: 0, y: 0, width: outerPinSize, height: outerPinSize)
-                cgContext.addEllipse(in: outerCircleRect)
-                cgContext.setFillColor(pinColor)
-                cgContext.fillPath()
-                let whiteBorderRect = CGRect(x: 2, y: 2, width: outerPinSize - 4, height: outerPinSize - 4)
-                cgContext.addEllipse(in: whiteBorderRect)
-                cgContext.setFillColor(UIColor.white.cgColor)
-                cgContext.fillPath()
 
-                let imageRect = CGRect(x: (outerPinSize - innerImageSize) / 2,
-                                       y: (outerPinSize - innerImageSize) / 2,
-                                       width: innerImageSize,
-                                       height: innerImageSize)
-                
-                cgContext.addEllipse(in: imageRect)
-                cgContext.clip()
-                
-                birdImage.draw(in: imageRect)
-            }
-            
-            annotationView?.image = finalPinImage
-            annotationView?.centerOffset = CGPoint(x: 0, y: pinHeight / 50 - 4)
-            annotationView?.layer.cornerRadius = 0
-            annotationView?.layer.masksToBounds = false
+        let colorStack: [UIColor] = [
+            .systemRed,
+            .systemBlue,
+            .systemGreen,
+            .systemOrange,
+            .systemPurple,
+            .systemPink,
+            .systemTeal,
+            .systemIndigo
+        ]
+        
+        if let index = mapView.annotations.firstIndex(where: { $0 === annotation }) {
+            let colorIndex = index % colorStack.count
+            annotationView?.markerTintColor = colorStack[colorIndex]
+        } else {
+            annotationView?.markerTintColor = .systemGray // Fallback
         }
+        
+        annotationView?.glyphImage = UIImage(systemName: "bird.fill")
         
         return annotationView
     }
