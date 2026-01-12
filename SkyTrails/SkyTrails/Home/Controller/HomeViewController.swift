@@ -412,7 +412,7 @@ extension HomeViewController: UICollectionViewDataSource {
             let item = homeData.communityObservations[indexPath.row]
             cell.configure(
                 with: item,
-                birdImage: UIImage(named: item.imageName)
+                birdImage: UIImage(named: item.displayImageName)
             )
             return cell
         } else if indexPath.section == 4 {
@@ -641,23 +641,10 @@ extension HomeViewController {
         } else if indexPath.section == 3 {
             let observation = homeData.communityObservations[indexPath.row]
             
-            let bird = Bird(
-                id: UUID(),
-                name: observation.birdName,
-                scientificName: "Unknown",
-                images: [observation.imageName],
-                rarity: [.common],
-                location: [observation.location],
-                date: [Date()],
-                observedBy: [observation.user.profileImageName],
-                notes: nil
-            )
-            
-            let watchlistStoryboard = UIStoryboard(name: "Watchlist", bundle: nil)
-            if let observedDetailVC = watchlistStoryboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController {
-                observedDetailVC.bird = bird
-                observedDetailVC.watchlistId = nil
-                navigationController?.pushViewController(observedDetailVC, animated: true)
+            let storyboard = UIStoryboard(name: "Home", bundle: nil)
+            if let detailVC = storyboard.instantiateViewController(withIdentifier: "CommunityObservationViewController") as? CommunityObservationViewController {
+                detailVC.observation = observation
+                navigationController?.pushViewController(detailVC, animated: true)
             }
         } else if indexPath.section == 4 {
             let item = homeData.latestNews[indexPath.row]
