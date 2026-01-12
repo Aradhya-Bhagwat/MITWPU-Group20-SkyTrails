@@ -30,7 +30,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
             coordinator.animate(alongsideTransition: { _ in
                 self.homeCollectionView.collectionViewLayout.invalidateLayout()
             }, completion: nil)
-        }
+        } 
    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAllSpots" {
