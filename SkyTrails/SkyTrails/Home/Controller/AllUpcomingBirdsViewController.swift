@@ -187,7 +187,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
         if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
             
             // 2. Parse Date
-            let (start, end) = parseDateRange(item.date)
+            let (start, end) = HomeManager.shared.parseDateRange(item.date)
             
             // 3. Create Input
             let input = BirdDateInput(
@@ -205,22 +205,5 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
         } else {
             print("Species data not found for: \(item.title)")
         }
-    }
-    
-    private func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
-        let separators = [" – ", " - "]
-        for separator in separators {
-            let components = dateString.components(separatedBy: separator)
-            if components.count == 2 {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "dd MMM ’yy"
-                formatter.locale = Locale(identifier: "en_US_POSIX")
-                
-                let start = formatter.date(from: components[0])
-                let end = formatter.date(from: components[1])
-                return (start, end)
-            }
-        }
-        return (nil, nil)
     }
 }

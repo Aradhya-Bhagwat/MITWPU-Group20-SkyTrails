@@ -6,12 +6,15 @@
 //
 
 import UIKit
+import CoreLocation
 
 class PredictInputViewController: UIViewController, SearchLocationDelegate {
     var inputData: [PredictionInputData] = [PredictionInputData()]
+	
     private var cardWidth: CGFloat = 0
-        private let spacing: CGFloat = 16.0
-        private let sideMargin: CGFloat = 24.0
+	private let spacing: CGFloat = 16.0
+	private let sideMargin: CGFloat = 24.0
+	
     @IBOutlet weak var pageControl: UIPageControl!
     @IBOutlet weak var doneButton: UIBarButtonItem!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -136,7 +139,7 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
                 
                 for (index, input) in inputData.enumerated() {
 
-                    let resultsForCard = PredictionEngine.shared.predictBirds(for: input, inputIndex: index)
+                    let resultsForCard = HomeManager.shared.predictBirds(for: input, inputIndex: index)
                     allResults.append(contentsOf: resultsForCard)
                 }
                 

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreLocation
 
 class HomeViewController: UIViewController, UICollectionViewDelegate {
 
@@ -333,7 +334,7 @@ extension HomeViewController: UICollectionViewDataSource {
                         numberOfItemsInSection section: Int) -> Int {
 
         if section == 0 {
-            return homeData.getDynamicMapCards().count
+            return HomeManager.shared.getDynamicMapCards().count
         } else if section == 1 {
             return homeData.homeScreenBirds.count
         } else if section == 2 {
@@ -351,7 +352,7 @@ extension HomeViewController: UICollectionViewDataSource {
         
         if indexPath.section == 0 {
             
-            let mapCard = homeData.getDynamicMapCards()[indexPath.row]
+            let mapCard = HomeManager.shared.getDynamicMapCards()[indexPath.row]
             
             switch mapCard {
             
@@ -445,7 +446,7 @@ extension HomeViewController: UICollectionViewDataSource {
              ) as! PageControlReusableViewCollectionReusableView
              
      
-             let totalMapCardCount = homeData.getDynamicMapCards().count
+             let totalMapCardCount = HomeManager.shared.getDynamicMapCards().count
    
              footer.configure(numberOfPages: totalMapCardCount, currentPage: 0)
              return footer
@@ -540,7 +541,7 @@ extension HomeViewController {
                 at: IndexPath(item: 0, section: 0)
             ) as? PageControlReusableViewCollectionReusableView {
                 
-                let totalCount = homeData.getDynamicMapCards().count
+                let totalCount = HomeManager.shared.getDynamicMapCards().count
                 
                 footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
             }
@@ -584,7 +585,7 @@ extension HomeViewController {
             if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
                 
                 // 2. Parse Date
-                let (start, end) = parseDateRange(item.date)
+                let (start, end) = HomeManager.shared.parseDateRange(item.date)
                 
                 // 3. Create Input
                 let input = BirdDateInput(
@@ -654,23 +655,6 @@ extension HomeViewController {
         }
     }
     
-    private func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
-        let separators = [" – ", " - "]
-        
-        for separator in separators {
-            let components = dateString.components(separatedBy: separator)
-            if components.count == 2 {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "dd MMM ’yy"
-                formatter.locale = Locale(identifier: "en_US_POSIX")
-                
-                let start = formatter.date(from: components[0])
-                let end = formatter.date(from: components[1])
-                return (start, end)
-            }
-        }
-        return (nil, nil)
-    }
 }
 
 // MARK: - Layout Helpers
@@ -722,4 +706,5 @@ extension HomeViewController {
         
         return section
     }
+	
 }

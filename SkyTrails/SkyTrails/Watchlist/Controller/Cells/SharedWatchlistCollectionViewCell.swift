@@ -128,11 +128,7 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
             
             badgeView.addSubview(badgeLabel)
             badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                badgeLabel.centerXAnchor.constraint(equalTo: badgeView.centerXAnchor),
-                badgeLabel.centerYAnchor.constraint(equalTo: badgeView.centerYAnchor)
-            ])
-            
+
             badgeView.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
             badgeView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
             

@@ -140,47 +140,7 @@ class birdspredViewController: UIViewController {
         guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
         
         let input = predictionInputs[currentSpeciesIndex]
-        guard let start = input.startDate, let end = input.endDate else { return }
-        
-        let startWeek = Calendar.current.component(.weekOfYear, from: start)
-        let endWeek = Calendar.current.component(.weekOfYear, from: end)
-        
-        var relevantSightings: [Sighting] = []
-        
-        for sighting in input.species.sightings {
-            var isMatch = false
-            
-            if startWeek <= endWeek {
-                if sighting.week >= startWeek && sighting.week <= endWeek { isMatch = true }
-            } else {
-                if sighting.week >= startWeek || sighting.week <= endWeek { isMatch = true }
-            }
-            
-            if !isMatch {
-                let s = sighting.week
-                let sStart = startWeek
-                let sEnd = endWeek
-                
-                let distToStart = min(abs(s - sStart), 52 - abs(s - sStart))
-                let distToEnd = min(abs(s - sEnd), 52 - abs(s - sEnd))
-                
-                if distToStart <= 2 || distToEnd <= 2 { isMatch = true }
-            }
-            
-            if isMatch {
-                relevantSightings.append(sighting)
-            }
-        }
-        
-        if startWeek > endWeek {
-            relevantSightings.sort { s1, s2 in
-                let w1 = s1.week < startWeek ? s1.week + 52 : s1.week
-                let w2 = s2.week < startWeek ? s2.week + 52 : s2.week
-                return w1 < w2
-            }
-        } else {
-            relevantSightings.sort { $0.week < $1.week }
-        }
+        let relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
         
         var annotations: [MKPointAnnotation] = []
         var coordinates: [CLLocationCoordinate2D] = []

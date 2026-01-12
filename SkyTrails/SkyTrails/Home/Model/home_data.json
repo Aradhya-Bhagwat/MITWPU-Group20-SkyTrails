@@ -1,311 +1,496 @@
 {
-  "predicted_migrations": [
+	"predictedMigrations": [
+		{
+			"title": "Migrating Soon",
+			"subtitle": "Expected Movement in Winter",
+			"imageName": "migration_soon_1"
+		},
+		{
+			"title": "Winter Migration",
+			"subtitle": "Birds Traveling Across Regions",
+			"imageName": "migration_soon_2"
+		}
+	],
+	"watchlistBirds": [
+		{
+			"imageName": "arctic_tern",
+			"title": "Arctic Tern",
+			"date": "17 Nov ’25 – 02 Dec ’25"
+		},
+		{
+			"imageName": "browna_headed_barbet",
+			"title": "Brown Headed Barbet",
+			"date": "20 Oct ’25 – 02 Dec ’25"
+		},
+		{
+			"imageName": "eurasian_wigeon",
+			"title": "Eurasian Wigeon",
+			"date": "05 Nov ’25 – 15 Dec ’25"
+		},
+		{
+			"imageName": "bird_rosy_starling",
+			"title": "Rosy Starling",
+			"date": "01 Dec ’25 – 15 Jan ’26"
+		},
+		{
+			"imageName": "bird_demosielle_crane",
+			"title": "Demoiselle Crane",
+			"date": "10 Dec ’25 – 20 Feb ’26"
+		}
+	],
+	"recommendedBirds": [
+		{
+			"imageName": "bird_northern_pintail",
+			"title": "Northern Pintail",
+			"date": "15 Dec ’25 – 28 Feb ’26"
+		},
+		{
+			"imageName": "bird_bar_headed_goose",
+			"title": "Bar-headed Goose",
+			"date": "20 Dec ’25 – 10 Mar ’26"
+		},
+		{
+			"imageName": "bird_black_winged_stilt",
+			"title": "Black-winged Stilt",
+			"date": "01 Jan ’26 – 30 Mar ’26"
+		},
+		{
+			"imageName": "bird_pied_cuckoo",
+			"title": "Pied Cuckoo",
+			"date": "15 May ’26 – 30 Jul ’26"
+		},
+		{
+			"imageName": "bird_blue_tailed_bee_eater",
+			"title": "Blue-tailed Bee-eater",
+			"date": "01 Apr ’26 – 30 Jun ’26"
+		}
+	],
+	"birdCategories": [
+		{
+			"icon": "shorebirds_icon",
+			"title": "Shorebirds"
+		},
+		{
+			"icon": "forest_icon",
+			"title": "Forest Birds"
+		},
+		{
+			"icon": "raptors_icon",
+			"title": "Raptors"
+		},
+		{
+			"icon": "songbirds_icon",
+			"title": "Songbirds"
+		}
+	],
+	"watchlistSpots": [
+		{
+			"imageName": "spot_kashmir",
+			"title": "Kashmir Valley",
+			"location": "Jammu & Kashmir",
+			"latitude": 34.1,
+			"longitude": 74.8,
+			"radius": 5,
+			"birds": [
+				{"name": "Bar-headed Goose", "imageName": "bird_bar_headed_goose", "lat": 34.102, "lon": 74.805},
+				{"name": "Paradise Flycatcher", "imageName": "paradise_flycatcher", "lat": 34.098, "lon": 74.795}
+			]
+		},
+		{
+			"imageName": "spot_bharatpur",
+			"title": "Keoladeo Sanctuary",
+			"location": "Rajasthan",
+			"latitude": 27.17,
+			"longitude": 77.52,
+			"radius": 5,
+			"birds": [
+				{"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 27.175, "lon": 77.525},
+				{"name": "Painted Stork", "imageName": "painted_stork", "lat": 27.165, "lon": 77.515}
+			]
+		},
+		{
+			"imageName": "spot_sundarbans",
+			"title": "Sundarbans Delta",
+			"location": "West Bengal",
+			"latitude": 21.94,
+			"longitude": 88.89,
+			"radius": 5,
+			"birds": [
+				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 21.945, "lon": 88.895},
+				{"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 21.935, "lon": 88.885}
+			]
+		},
+		{
+			"imageName": "spot_chilika",
+			"title": "Chilika Lake",
+			"location": "Odisha",
+			"latitude": 19.60,
+			"longitude": 85.35,
+			"radius": 5,
+			"birds": [
+				{"name": "Greater Flamingo", "imageName": "flamingo", "lat": 19.605, "lon": 85.355},
+				{"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 19.595, "lon": 85.345}
+			]
+		},
+		{
+			"imageName": "spot_ranganathittu",
+			"title": "Ranganathittu",
+			"location": "Karnataka",
+			"latitude": 12.42,
+			"longitude": 76.68,
+			"radius": 5,
+			"birds": [
+				{"name": "Painted Stork", "imageName": "painted_stork", "lat": 12.425, "lon": 76.685},
+				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 12.415, "lon": 76.675}
+			]
+		}
+	],
+	"recommendedSpots": [
+		{
+			"imageName": "spot_thattekkad",
+			"title": "Thattekkad",
+			"location": "Kerala",
+			"latitude": 10.12,
+			"longitude": 76.69,
+			"radius": 5,
+			"birds": [
+				{"name": "Malabar Trogon", "imageName": "malabar_trogon", "lat": 10.125, "lon": 76.695},
+				{"name": "Indian Pitta", "imageName": "indian_pitta", "lat": 10.115, "lon": 76.685}
+			]
+		},
+		{
+			"imageName": "spot_nalsarovar",
+			"title": "Nalsarovar",
+			"location": "Gujarat",
+			"latitude": 22.80,
+			"longitude": 72.05,
+			"radius": 5,
+			"birds": [
+				{"name": "Greater Flamingo", "imageName": "flamingo", "lat": 22.805, "lon": 72.055},
+				{"name": "Rosy Starling", "imageName": "bird_rosy_starling", "lat": 22.795, "lon": 72.045}
+			]
+		},
+		{
+			"imageName": "spot_kaziranga",
+			"title": "Kaziranga",
+			"location": "Assam",
+			"latitude": 26.65,
+			"longitude": 93.35,
+			"radius": 5,
+			"birds": [
+				{"name": "Great Hornbill", "imageName": "great_hornbill", "lat": 26.655, "lon": 93.355},
+				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 26.645, "lon": 93.345}
+			]
+		},
+		{
+			"imageName": "spot_kumarakom",
+			"title": "Kumarakom",
+			"location": "Kerala",
+			"latitude": 9.61,
+			"longitude": 76.43,
+			"radius": 5,
+			"birds": [
+				{"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 9.615, "lon": 76.435},
+				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 9.605, "lon": 76.425}
+			]
+		},
+		{
+			"imageName": "spot_salimali",
+			"title": "Salim Ali Sanctuary",
+			"location": "Goa",
+			"latitude": 15.51,
+			"longitude": 73.91,
+			"radius": 5,
+			"birds": [
+				{"name": "Little Bittern", "imageName": "little_bittern", "lat": 15.515, "lon": 73.915},
+				{"name": "Striated Heron", "imageName": "striated_heron", "lat": 15.505, "lon": 73.905}
+			]
+		}
+	],
+	"dynamicCards": [
+		{
+			"cardType": "migration",
+			"birdName": "Wire-tailed Swallow",
+			"birdImageName": "wire_tailed_swallow",
+			"startLocation": "Ayodhya",
+			"endLocation": "Pune",
+			"dateRange": "05 March '26   09 June '26",
+			"currentProgress": 0.65,
+			"pathPoints": [
+				{"lat": 11.7906, "lon": 82.1996},
+				{"lat": 12.1000, "lon": 79.8300},
+				{"lat": 13.1000, "lon": 76.8000},
+				{"lat": 15.5204, "lon": 73.8567}
+			]
+		},
+		{
+			"cardType": "hotspot",
+			"placeName": "Khadakwasla Backwaters",
+			"placeImage": "Khadakwasla",
+			"speciesCount": 5,
+			"distanceString": "12.6 km away",
+			"dateRange": "28 Nov '25 - 06 Jan '26",
+			"areaBoundary": [
+				{"lat": 18.4200, "lon": 73.7600}
+			],
+			"radius": 2500,
+			"hotspots": [
+				{"lat": 18.4300, "lon": 73.7400, "birdImageName": "flamingo"},
+				{"lat": 18.4220, "lon": 73.7550, "birdImageName": "kingfisher"},
+				{"lat": 18.4100, "lon": 73.7600, "birdImageName": "crow"}
+			]
+		}
+	],
+	"communityObservations": [
+		{
+			"observationId": "obs_001",
+			"username": "BirdWatcher_Pro",
+			"userAvatar": "appleUserProfile 1",
+			"birdName": "Kingfisher",
+			"observationTitle": "Spotted a Rare Kingfisher!",
+			"observationDescription": "I was waiting by the riverbank for hours and finally saw this beauty diving for fish. The colors were incredible in the morning light.",
+			"observationImage": "kingfisher",
+			"location": "Sundarbans Delta, West Bengal",
+			"timestamp": "2025-12-15T08:30:00Z",
+			"likesCount": 124,
+			"commentsCount": 18
+		},
+		{
+			"observationId": "obs_002",
+			"username": "NatureLover99",
+			"userAvatar": "appleUserProfile 2",
+			"birdName": "Flamingo",
+			"observationTitle": "Flamingos in Mumbai",
+			"observationDescription": "Thousands of flamingos have arrived at the creek. It's a sea of pink! Truly a mesmerizing sight.",
+			"observationImage": "flamingo",
+			"location": "Thane Creek, Mumbai",
+			"timestamp": "2025-12-20T16:45:00Z",
+			"likesCount": 256,
+			"commentsCount": 42
+		},
+		{
+			"observationId": "obs_003",
+			"username": "AvianExplorer",
+			"userAvatar": "appleUserProfile",
+			"birdName": "Great Hornbill",
+			"observationTitle": "Great Hornbill Sighting",
+			"observationDescription": "Heard the distinctive whooshing sound of its wings before I saw it land on a high branch. Majestic bird.",
+			"observationImage": "GreatHornbill",
+			"location": "Kaziranga, Assam",
+			"timestamp": "2026-01-02T10:15:00Z",
+			"likesCount": 89,
+			"commentsCount": 12
+		},
+		{
+			"observationId": "obs_004",
+			"username": "CityBirder",
+			"userAvatar": "appleUserProfile 1",
+			"birdName": "Coppersmith Barbet",
+			"observationTitle": "Coppersmith Barbet Call",
+			"observationDescription": "Finally managed to spot the bird making that 'tuk-tuk' sound outside my window. It's so small but loud!",
+			"observationImage": "coppersmith_barbet",
+			"location": "Pune, Maharashtra",
+			"timestamp": "2026-01-05T07:00:00Z",
+			"likesCount": 45,
+			"commentsCount": 5
+		},
+		{
+			"observationId": "obs_005",
+			"username": "WildSoul",
+			"userAvatar": "appleUserProfile 2",
+			"birdName": "Indian Peafowl",
+			"observationTitle": "Indian Peafowl Dance",
+			"observationDescription": "Caught this peacock displaying its feathers. The rainy weather seems to have put it in a good mood.",
+			"observationImage": "IndianPeafowl",
+			"location": "Ranthambore, Rajasthan",
+			"timestamp": "2025-11-28T14:20:00Z",
+			"likesCount": 310,
+			"commentsCount": 55
+		}
+	],
+	"latestNews": [
+		{
+			"title": "Rare Migratory Bird Spotted",
+			"description": "A rare Siberian species was seen near the wetlands.",
+			"summary": "Birdwatchers are flocking to the local wetlands after a confirmed sighting of the elusive Siberian Crane.",
+			"imageName": "news_rare_migratory",
+			"link": "https://ebird.org/species/grswoo"
+		},
+		{
+			"title": "Climate Impact on Birds",
+			"description": "Researchers predict altered migration routes.",
+			"summary": "New studies suggest rising global temperatures are forcing migratory birds to change their traditional paths.",
+			"imageName": "news_climate_change",
+			"link": "https://www.un.org/en/climatechange/what-is-climate-change"
+		}
+	],
+	"speciesData": [
     {
-      "title": "Migrating Soon",
-      "subtitle": "Expected Movement in Winter",
-      "imageName": "migration_soon_1"
-    },
-    {
-      "title": "Winter Migration",
-      "subtitle": "Birds Traveling Across Regions",
-      "imageName": "migration_soon_2"
-    }
-  ],
-  "watchlist_birds": [
-      {
-        "imageName": "arctic_tern",
-        "title": "Arctic Tern",
-        "date": "17 Nov ’25 – 02 Dec ’25"
-      },
-      {
-        "imageName": "brown_headed_barbet",
-        "title": "Brown Headed Barbet",
-        "date": "20 Oct ’25 – 02 Dec ’25"
-      },
-      {
-        "imageName": "eurasian_wigeon",
-        "title": "Eurasian Wigeon",
-        "date": "05 Nov ’25 – 15 Dec ’25"
-      },
-      {
-        "imageName": "bird_rosy_starling",
-        "title": "Rosy Starling",
-        "date": "01 Dec ’25 – 15 Jan ’26"
-      },
-      {
-        "imageName": "bird_demosielle_crane",
-        "title": "Demoiselle Crane",
-        "date": "10 Dec ’25 – 20 Feb ’26"
-      }
-    ],
-    "recommended_birds": [
-      {
-        "imageName": "bird_northern_pintail",
-        "title": "Northern Pintail",
-        "date": "15 Dec ’25 – 28 Feb ’26"
-      },
-      {
-        "imageName": "bird_bar_headed_goose",
-        "title": "Bar-headed Goose",
-        "date": "20 Dec ’25 – 10 Mar ’26"
-      },
-      {
-        "imageName": "bird_black_winged_stilt",
-        "title": "Black-winged Stilt",
-        "date": "01 Jan ’26 – 30 Mar ’26"
-      },
-      {
-        "imageName": "bird_pied_cuckoo",
-        "title": "Pied Cuckoo",
-        "date": "15 May ’26 – 30 Jul ’26"
-      },
-      {
-        "imageName": "bird_blue_tailed_bee_eater",
-        "title": "Blue-tailed Bee-eater",
-        "date": "01 Apr ’26 – 30 Jun ’26"
-      }
-    ],
-  "bird_categories": [
-    {
-      "icon": "shorebirds_icon",
-      "title": "Shorebirds"
-    },
-    {
-      "icon": "forest_icon",
-      "title": "Forest Birds"
-    },
-    {
-      "icon": "raptors_icon",
-      "title": "Raptors"
-    },
-    {
-      "icon": "songbirds_icon",
-      "title": "Songbirds"
-    }
-  ],
-  "watchlist_spots": [
-      {
-        "imageName": "spot_kashmir",
-        "title": "Kashmir Valley",
-        "location": "Jammu & Kashmir",
-        "latitude": 34.1,
-        "longitude": 74.8,
-        "radius": 5,
-        "birds": [
-            {"name": "Bar-headed Goose", "imageName": "bird_bar_headed_goose", "lat": 34.102, "lon": 74.805},
-            {"name": "Paradise Flycatcher", "imageName": "paradise_flycatcher", "lat": 34.098, "lon": 74.795}
-        ]
-      },
-      {
-        "imageName": "spot_bharatpur",
-        "title": "Keoladeo Sanctuary",
-        "location": "Rajasthan",
-        "latitude": 27.17,
-        "longitude": 77.52,
-        "radius": 5,
-        "birds": [
-            {"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 27.175, "lon": 77.525},
-            {"name": "Painted Stork", "imageName": "painted_stork", "lat": 27.165, "lon": 77.515}
-        ]
-      },
-      {
-        "imageName": "spot_sundarbans",
-        "title": "Sundarbans Delta",
-        "location": "West Bengal",
-        "latitude": 21.94,
-        "longitude": 88.89,
-        "radius": 5,
-        "birds": [
-            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 21.945, "lon": 88.895},
-            {"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 21.935, "lon": 88.885}
-        ]
-      },
-      {
-        "imageName": "spot_chilika",
-        "title": "Chilika Lake",
-        "location": "Odisha",
-        "latitude": 19.60,
-        "longitude": 85.35,
-        "radius": 5,
-        "birds": [
-            {"name": "Greater Flamingo", "imageName": "flamingo", "lat": 19.605, "lon": 85.355},
-            {"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 19.595, "lon": 85.345}
-        ]
-      },
-      {
-        "imageName": "spot_ranganathittu",
-        "title": "Ranganathittu",
-        "location": "Karnataka",
-        "latitude": 12.42,
-        "longitude": 76.68,
-        "radius": 5,
-        "birds": [
-            {"name": "Painted Stork", "imageName": "painted_stork", "lat": 12.425, "lon": 76.685},
-            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 12.415, "lon": 76.675}
-        ]
-      }
-    ],
-    "recommended_spots": [
-      {
-        "imageName": "spot_thattekkad",
-        "title": "Thattekkad",
-        "location": "Kerala",
-        "latitude": 10.12,
-        "longitude": 76.69,
-        "radius": 5,
-        "birds": [
-            {"name": "Malabar Trogon", "imageName": "malabar_trogon", "lat": 10.125, "lon": 76.695},
-            {"name": "Indian Pitta", "imageName": "indian_pitta", "lat": 10.115, "lon": 76.685}
-        ]
-      },
-      {
-        "imageName": "spot_nalsarovar",
-        "title": "Nalsarovar",
-        "location": "Gujarat",
-        "latitude": 22.80,
-        "longitude": 72.05,
-        "radius": 5,
-        "birds": [
-            {"name": "Greater Flamingo", "imageName": "flamingo", "lat": 22.805, "lon": 72.055},
-            {"name": "Rosy Starling", "imageName": "bird_rosy_starling", "lat": 22.795, "lon": 72.045}
-        ]
-      },
-      {
-        "imageName": "spot_kaziranga",
-        "title": "Kaziranga",
-        "location": "Assam",
-        "latitude": 26.65,
-        "longitude": 93.35,
-        "radius": 5,
-        "birds": [
-            {"name": "Great Hornbill", "imageName": "great_hornbill", "lat": 26.655, "lon": 93.355},
-            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 26.645, "lon": 93.345}
-        ]
-      },
-      {
-        "imageName": "spot_kumarakom",
-        "title": "Kumarakom",
-        "location": "Kerala",
-        "latitude": 9.61,
-        "longitude": 76.43,
-        "radius": 5,
-        "birds": [
-            {"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 9.615, "lon": 76.435},
-            {"name": "Kingfisher", "imageName": "kingfisher", "lat": 9.605, "lon": 76.425}
-        ]
-      },
-      {
-        "imageName": "spot_salimali",
-        "title": "Salim Ali Sanctuary",
-        "location": "Goa",
-        "latitude": 15.51,
-        "longitude": 73.91,
-        "radius": 5,
-        "birds": [
-            {"name": "Little Bittern", "imageName": "little_bittern", "lat": 15.515, "lon": 73.915},
-            {"name": "Striated Heron", "imageName": "striated_heron", "lat": 15.505, "lon": 73.905}
-        ]
-      }
-    ],
-  "dynamic_predictions": [
-    {
-      "card_type": "migration",
-      "bird_name": "Wire-tailed Swallow",
-      "bird_image_name": "wire_tailed_swallow",
-      "start_location": "Ayodhya",
-      "end_location": "Pune",
-      "date_range": "05 March '26   09 June '26",
-      "current_progress": 0.65,
-      "path_points": [
-        {"lat": 11.7906, "lon": 82.1996},
-        {"lat": 12.1000, "lon": 79.8300},
-        {"lat": 13.1000, "lon": 76.8000},
-        {"lat": 15.5204, "lon": 73.8567}
+      "id": "bird_001",
+      "name": "Arctic Tern",
+      "imageName": "arctic_tern",
+      "sightings": [
+        { "week": 44, "lat": 28.7041, "lon": 77.1025, "locationName": "Delhi" },
+        { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur" },
+        { "week": 46, "lat": 19.0760, "lon": 72.8777, "locationName": "Mumbai" },
+        { "week": 47, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune" },
+        { "week": 48, "lat": 15.2993, "lon": 74.1240, "locationName": "Goa" }
       ]
     },
     {
-      "card_type": "hotspot",
-      "place_name": "Khadakwasla Backwaters",
-      "place_image": "Khadakwasla",
-      "species_count": 5,
-      "distance_string": "12.6 km away",
-      "date_range": "28 Nov '25 - 06 Jan '26",
-      "area_boundary": [
-        {"lat": 18.4200, "lon": 73.7600}
-      ],
-      "radius": 2500,
-      "hotspots": [
-        {"lat": 18.4300, "lon": 73.7400, "bird_image_name": "flamingo"},
-        {"lat": 18.4220, "lon": 73.7550, "bird_image_name": "kingfisher"},
-        {"lat": 18.4100, "lon": 73.7600, "bird_image_name": "crow"}
+      "id": "bird_002",
+      "name": "Greater Flamingo",
+      "imageName": "flamingo",
+      "sightings": [
+        { "week": 1, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)" },
+        { "week": 5, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)" },
+        { "week": 10, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad (Nalsarovar)" },
+        { "week": 15, "lat": 23.7337, "lon": 69.8597, "locationName": "Kutch" },
+        { "week": 45, "lat": 18.5000, "lon": 73.8800, "locationName": "Pune (Bhigwan)" }
       ]
-    }
-  ],
-  "community_observations": [
-    {
-      "observationId": "obs_001",
-      "username": "BirdWatcher_Pro",
-      "userAvatar": "appleUserProfile 1",
-      "birdName": "Kingfisher",
-      "observationTitle": "Spotted a Rare Kingfisher!",
-      "observationDescription": "I was waiting by the riverbank for hours and finally saw this beauty diving for fish. The colors were incredible in the morning light.",
-      "observationImage": "kingfisher",
-      "location": "Sundarbans Delta, West Bengal",
-      "timestamp": "2025-12-15T08:30:00Z",
-      "likesCount": 124,
-      "commentsCount": 18
     },
     {
-      "observationId": "obs_002",
-      "username": "NatureLover99",
-      "userAvatar": "appleUserProfile 2",
-      "birdName": "Flamingo",
-      "observationTitle": "Flamingos in Mumbai",
-      "observationDescription": "Thousands of flamingos have arrived at the creek. It's a sea of pink! Truly a mesmerizing sight.",
-      "observationImage": "flamingo",
-      "location": "Thane Creek, Mumbai",
-      "timestamp": "2025-12-20T16:45:00Z",
-      "likesCount": 256,
-      "commentsCount": 42
+      "id": "bird_003",
+      "name": "Siberian Crane",
+      "imageName": "siberian_crane",
+      "sightings": [
+        { "week": 48, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi" },
+        { "week": 50, "lat": 27.1767, "lon": 78.0081, "locationName": "Agra" },
+        { "week": 52, "lat": 26.1584, "lon": 94.5624, "locationName": "Assam Wetlands" },
+        { "week": 2, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi" }
+      ]
     },
     {
-      "observationId": "obs_003",
-      "username": "AvianExplorer",
-      "userAvatar": "appleUserProfile",
-      "birdName": "Great Hornbill",
-      "observationTitle": "Great Hornbill Sighting",
-      "observationDescription": "Heard the distinctive whooshing sound of its wings before I saw it land on a high branch. Majestic bird.",
-      "observationImage": "GreatHornbill",
-      "location": "Kaziranga, Assam",
-      "timestamp": "2026-01-02T10:15:00Z",
-      "likesCount": 89,
-      "commentsCount": 12
+      "id": "bird_004",
+      "name": "Amur Falcon",
+      "imageName": "amur_falcon",
+      "sightings": [
+        { "week": 40, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland (Doyang)" },
+        { "week": 41, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland" },
+        { "week": 42, "lat": 25.5788, "lon": 91.8933, "locationName": "Meghalaya" },
+        { "week": 44, "lat": 18.5400, "lon": 73.8200, "locationName": "Pune (Passage)" }
+      ]
     },
     {
-      "observationId": "obs_004",
-      "username": "CityBirder",
-      "userAvatar": "appleUserProfile 1",
-      "birdName": "Coppersmith Barbet",
-      "observationTitle": "Coppersmith Barbet Call",
-      "observationDescription": "Finally managed to spot the bird making that 'tuk-tuk' sound outside my window. It's so small but loud!",
-      "observationImage": "coppersmith_barbet",
-      "location": "Pune, Maharashtra",
-      "timestamp": "2026-01-05T07:00:00Z",
-      "likesCount": 45,
-      "commentsCount": 5
+      "id": "bird_005",
+      "name": "Rosy Starling",
+      "imageName": "bird_rosy_starling",
+      "sightings": [
+        { "week": 4, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune" },
+        { "week": 5, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune" },
+        { "week": 6, "lat": 19.0600, "lon": 72.8600, "locationName": "Mumbai" },
+        { "week": 8, "lat": 22.7196, "lon": 75.8577, "locationName": "Indore" }
+      ]
     },
     {
-      "observationId": "obs_005",
-      "username": "WildSoul",
-      "userAvatar": "appleUserProfile 2",
-      "birdName": "Indian Peafowl",
-      "observationTitle": "Indian Peafowl Dance",
-      "observationDescription": "Caught this peacock displaying its feathers. The rainy weather seems to have put it in a good mood.",
-      "observationImage": "IndianPeafowl",
-      "location": "Ranthambore, Rajasthan",
-      "timestamp": "2025-11-28T14:20:00Z",
-      "likesCount": 310,
-      "commentsCount": 55
+      "id": "bird_006",
+      "name": "Bar-headed Goose",
+      "imageName": "bird_bar_headed_goose",
+      "sightings": [
+        { "week": 45, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore" },
+        { "week": 48, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore (Karanji)" },
+        { "week": 50, "lat": 15.3173, "lon": 75.7139, "locationName": "Hubli" },
+        { "week": 2, "lat": 34.1526, "lon": 77.5770, "locationName": "Ladakh (Summer)" }
+      ]
+    },
+    {
+      "id": "bird_007",
+      "name": "Demoiselle Crane",
+      "imageName": "bird_demosielle_crane",
+      "sightings": [
+        { "week": 1, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur (Khichan)" },
+        { "week": 2, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur" },
+        { "week": 10, "lat": 26.9300, "lon": 75.8000, "locationName": "Jaipur" },
+        { "week": 45, "lat": 24.5854, "lon": 73.7125, "locationName": "Udaipur" }
+      ]
+    },
+    {
+      "id": "bird_008",
+      "name": "Northern Pintail",
+      "imageName": "bird_northern_pintail",
+      "sightings": [
+        { "week": 50, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata (Santragachi)" },
+        { "week": 52, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata" },
+        { "week": 4, "lat": 19.8157, "lon": 85.8315, "locationName": "Chilika Lake" },
+        { "week": 8, "lat": 13.0827, "lon": 80.2707, "locationName": "Chennai (Pulicat)" }
+      ]
+    },
+    {
+      "id": "bird_009",
+      "name": "Black-winged Stilt",
+      "imageName": "bird_black_winged_stilt",
+      "sightings": [
+        { "week": 15, "lat": 13.0600, "lon": 80.2500, "locationName": "Chennai" },
+        { "week": 20, "lat": 12.9716, "lon": 77.5946, "locationName": "Bangalore" },
+        { "week": 25, "lat": 18.5100, "lon": 73.8700, "locationName": "Pune" },
+        { "week": 30, "lat": 19.0900, "lon": 72.8900, "locationName": "Mumbai" }
+      ]
+    },
+    {
+      "id": "bird_010",
+      "name": "Pied Cuckoo",
+      "imageName": "bird_pied_cuckoo",
+      "sightings": [
+        { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)" },
+        { "week": 24, "lat": 19.0500, "lon": 72.8500, "locationName": "Mumbai" },
+        { "week": 26, "lat": 23.0400, "lon": 72.5900, "locationName": "Ahmedabad" },
+        { "week": 28, "lat": 28.7200, "lon": 77.0800, "locationName": "Delhi" }
+      ]
+    },
+    {
+      "id": "bird_011",
+      "name": "Indian Peafowl",
+      "imageName": "peafowl",
+      "sightings": [
+        { "week": 5, "lat": 28.6900, "lon": 77.1300, "locationName": "Delhi (Ridge)" },
+        { "week": 15, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur" },
+        { "week": 25, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur" },
+        { "week": 35, "lat": 18.4900, "lon": 73.8300, "locationName": "Pune (Sinhagad)" }
+      ]
+    },
+    {
+      "id": "bird_012",
+      "name": "Coppersmith Barbet",
+      "imageName": "coppersmith_barbet",
+      "sightings": [
+        { "week": 10, "lat": 19.1000, "lon": 72.9000, "locationName": "Mumbai (SNGP)" },
+        { "week": 20, "lat": 18.5600, "lon": 73.8800, "locationName": "Pune" },
+        { "week": 30, "lat": 12.9900, "lon": 77.6100, "locationName": "Bangalore" },
+        { "week": 40, "lat": 13.1000, "lon": 80.2900, "locationName": "Chennai" }
+      ]
+    },
+    {
+      "id": "bird_013",
+      "name": "White-throated Kingfisher",
+      "imageName": "kingfisher",
+      "sightings": [
+        { "week": 12, "lat": 15.3200, "lon": 74.1400, "locationName": "Goa" },
+        { "week": 24, "lat": 9.9312, "lon": 76.2673, "locationName": "Kochi" },
+        { "week": 36, "lat": 22.5600, "lon": 88.3500, "locationName": "Kolkata" },
+        { "week": 48, "lat": 18.5700, "lon": 73.8900, "locationName": "Pune (Mula-Mutha)" }
+      ]
+    },
+    {
+      "id": "bird_014",
+      "name": "Indian Paradise Flycatcher",
+      "imageName": "paradise_flycatcher",
+      "sightings": [
+        { "week": 42, "lat": 22.7300, "lon": 75.8700, "locationName": "Indore" },
+        { "week": 45, "lat": 18.5800, "lon": 73.8100, "locationName": "Pune" },
+        { "week": 48, "lat": 15.2800, "lon": 74.1000, "locationName": "Goa (Winter)" },
+        { "week": 10, "lat": 32.2190, "lon": 76.3234, "locationName": "Dharamshala (Summer)" }
+      ]
+    },
+    {
+      "id": "bird_015",
+      "name": "Purple Sunbird",
+      "imageName": "purple_sunbird",
+      "sightings": [
+        { "week": 8, "lat": 28.7300, "lon": 77.0900, "locationName": "Delhi" },
+        { "week": 16, "lat": 26.8467, "lon": 80.9462, "locationName": "Lucknow" },
+        { "week": 24, "lat": 25.3176, "lon": 82.9739, "locationName": "Varanasi" },
+        { "week": 32, "lat": 18.5900, "lon": 73.8000, "locationName": "Pune" }
+      ]
     }
   ]
 }

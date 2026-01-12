@@ -69,8 +69,7 @@ class CommunityObservationViewController: UIViewController {
     
     /// Loads data from local JSON file as requested
     func loadData(for id: String) {
-        let coreData = DataLoader.load("home_data", as: CoreHomeData.self)
-        if let found = coreData.community_observations?.first(where: { $0.observationId == id }) {
+        if let found = HomeManager.shared.coreHomeData?.communityObservations?.first(where: { $0.observationId == id }) {
             self.observation = found
             configureView(with: found)
         } else {

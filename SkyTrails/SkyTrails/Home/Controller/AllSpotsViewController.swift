@@ -68,80 +68,76 @@ class AllSpotsViewController: UIViewController {
     }
     
 
-    private func createLayout() -> UICollectionViewLayout {
-            return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
-                guard let self = self else { return nil }
-                
-                let containerWidth = layoutEnvironment.container.effectiveContentSize.width
-
-                if self.cachedItemSize == nil {
-
-                    let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
-                    let screenMinDimension = min(screenBounds.width, screenBounds.height)
-                    let spacing: CGFloat = 16.0
-                    let maxCardWidth: CGFloat = 300.0
-                    let minColumns = 2
-                    
-                    var columnCount = minColumns
-                    var calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
-                    
-                    while calculatedWidth > maxCardWidth {
-                        columnCount += 1
-                        calculatedWidth = (screenMinDimension - (spacing * CGFloat(columnCount - 1)) - 16) / CGFloat(columnCount)
-                    }
-                    
-                    let heightMultiplier: CGFloat = 195.0 / 176.0
-                    let calculatedHeight = calculatedWidth * heightMultiplier
-                    
-                    // Store this "ideal" size
-                    self.cachedItemSize = NSCollectionLayoutSize(
-                        widthDimension: .absolute(calculatedWidth),
-                        heightDimension: .absolute(calculatedHeight)
-                    )
-
-                }
-                
-                guard let fixedSize = self.cachedItemSize else { return nil }
-                
-
-                let itemWidth = fixedSize.widthDimension.dimension
-                let interItemSpacing: CGFloat = 8
-                
-                // Math: How many (Item + Spacing) fit?
-                // Estimate columns
-                let estimatedColumns = Int((containerWidth + interItemSpacing) / (itemWidth + interItemSpacing))
-                let actualColumns = max(1, estimatedColumns)
-                let groupItemSize = NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1.0/CGFloat(actualColumns)),
-                    heightDimension: .fractionalHeight(1.0)
-                )
-                let item = NSCollectionLayoutItem(layoutSize: groupItemSize)
-                item.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
-                
-                let groupHeight = fixedSize.heightDimension.dimension
-                let groupSize = NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1.0),
-                    heightDimension: .absolute(groupHeight)
-                )
-                
-                let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-                
-                let section = NSCollectionLayoutSection(group: group)
-                section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
-                
-                // Header
-                let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(44))
-                let header = NSCollectionLayoutBoundarySupplementaryItem(
-                    layoutSize: headerSize,
-                    elementKind: UICollectionView.elementKindSectionHeader,
-                    alignment: .top
-                )
-                section.boundarySupplementaryItems = [header]
-                
-                return section
-            }
-        }
-    }
+	private func createLayout() -> UICollectionViewLayout {
+		UICollectionViewCompositionalLayout { _, layoutEnvironment -> NSCollectionLayoutSection? in
+			
+				// MARK: - Constants
+			let sectionInsets: CGFloat = 8
+			let interItemSpacing: CGFloat = 8
+			let maxCardWidth: CGFloat = 300
+			let minColumns: Int = 2
+			let aspectRatio: CGFloat = 195.0 / 176.0
+			
+				// MARK: - Container width (iPad safe)
+			let containerWidth = layoutEnvironment.container.effectiveContentSize.width
+			let availableWidth = containerWidth - (sectionInsets * 2)
+			
+				// MARK: - Determine column count based on max width
+			var columns = Int(
+				(availableWidth + interItemSpacing) /
+				(maxCardWidth + interItemSpacing)
+			)
+			columns = max(columns, minColumns)
+			
+				// MARK: - Calculate actual item size
+			let totalSpacing = interItemSpacing * CGFloat(columns - 1)
+			let itemWidth = (availableWidth - totalSpacing) / CGFloat(columns)
+			let itemHeight = itemWidth * aspectRatio
+			
+				// MARK: - Item
+			let itemSize = NSCollectionLayoutSize(
+				widthDimension: .absolute(itemWidth),
+				heightDimension: .absolute(itemHeight)
+			)
+			let item = NSCollectionLayoutItem(layoutSize: itemSize)
+			item.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+			
+				// MARK: - Group
+			let groupSize = NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(1.0),
+				heightDimension: .absolute(itemHeight)
+			)
+			let group = NSCollectionLayoutGroup.horizontal(
+				layoutSize: groupSize,
+				subitem: item,
+				count: columns
+			)
+			group.interItemSpacing = .fixed(interItemSpacing)
+			
+				// MARK: - Section
+			let section = NSCollectionLayoutSection(group: group)
+			section.contentInsets = NSDirectionalEdgeInsets(
+				top: sectionInsets,
+				leading: sectionInsets,
+				bottom: 24,
+				trailing: sectionInsets
+			)
+			
+				// MARK: - Header
+			let headerSize = NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(1.0),
+				heightDimension: .absolute(44)
+			)
+			let header = NSCollectionLayoutBoundarySupplementaryItem(
+				layoutSize: headerSize,
+				elementKind: UICollectionView.elementKindSectionHeader,
+				alignment: .top
+			)
+			section.boundarySupplementaryItems = [header]
+			
+			return section
+		}
+	}    }
 
 // MARK: - DataSource
     extension AllSpotsViewController: UICollectionViewDataSource {
@@ -219,14 +215,7 @@ class AllSpotsViewController: UIViewController {
             inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
             
             // Create Prediction Results (The Birds at that spot)
-            let predictions: [FinalPredictionResult] = (item.birds ?? []).map { bird in
-                return FinalPredictionResult(
-                    birdName: bird.name,
-                    imageName: bird.imageName,
-                    matchedInputIndex: 0, // All match this single input
-                    matchedLocation: (lat: bird.lat, lon: bird.lon)
-                )
-            }
+            let predictions = HomeManager.shared.getPredictions(for: item)
             
             // 2. Instantiate and Navigate
             let storyboard = UIStoryboard(name: "Home", bundle: nil)
