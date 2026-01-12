@@ -19,10 +19,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
  
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
-    var model: IdentificationModels = IdentificationModels()
+    var model: IdentificationManager = IdentificationManager()
 
 
-    var history: [History] = []
+   // var history: [History] = []
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -30,29 +30,36 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         applyCardShadow(to: startButton)
 //        startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
     }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        history = model.histories
-        collectionView.reloadData()
-    }
+//    override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated)
+//
+//        print("🟢 fieldMarkOptions count:", model.fieldMarkOptions.count)
+//
+//        DispatchQueue.main.async {
+//            self.tableView.reloadData()
+//            self.tableView.layoutIfNeeded()
+//        }
+//    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-       
+
+        styleTableContainer()
 
         tableView.delegate = self
         tableView.dataSource = self
-    
-//        applyCardShadow(to: tableView)
-        styleTableContainer()
-        let layout = generateLayout()
-        collectionView.setCollectionViewLayout(layout, animated: true)
-        collectionView.dataSource = self
+        tableView.backgroundColor = .white   
         collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.collectionViewLayout = generateLayout()
+        tableView.rowHeight = 56
+        tableView.estimatedRowHeight = 56
 
+        tableView.reloadData()
         updateSelectionState()
+    }
 
-  }
+
     func styleTableContainer() {
         containerView.layer.cornerRadius = 12
         containerView.layer.shadowColor = UIColor.black.cgColor
@@ -90,7 +97,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             }
         }
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return max(history.count, 1)
+        return max(model.histories.count, 1)
 
     }
 
@@ -102,7 +109,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
               return cell
           }
 
-        if history.isEmpty {
+        if model.histories.isEmpty {
            
             historyCell.historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
             historyCell.historyImageView.tintColor = .lightGray
@@ -122,7 +129,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             return historyCell
         }
 
-        let historyItems = history[indexPath.row]
+        let historyItems = model.histories[indexPath.row]
         historyCell.configureCell(historyItem: historyItems)
 
         historyCell.layer.backgroundColor = UIColor.white.cgColor
@@ -166,7 +173,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
        
 
         let item = model.fieldMarkOptions[indexPath.row]
-        cell.textLabel?.text = item.fieldMarkName
+        cell.textLabel?.text = item.fieldMarkName.rawValue
       
         if let img = UIImage(named: item.symbols) {
     
@@ -196,14 +203,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             let tappedItemName = model.fieldMarkOptions[indexPath.row].fieldMarkName
             let isNowSelected = model.fieldMarkOptions[indexPath.row].isSelected ?? false
             
-     
-            if tappedItemName == "Field Marks" && isNowSelected {
-                
-                if let shapeIndex = model.fieldMarkOptions.firstIndex(where: { $0.fieldMarkName == "Shape" }) {
-             
-                    model.fieldMarkOptions[shapeIndex].isSelected = true
-                }
+        if tappedItemName == .fieldMarks && isNowSelected {
+            if let shapeIndex = model.fieldMarkOptions.firstIndex(where: {
+                $0.fieldMarkName == .shape
+            }) {
+                model.fieldMarkOptions[shapeIndex].isSelected = true
             }
+        }
+
             
           
             tableView.reloadData()
@@ -240,8 +247,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-            guard !history.isEmpty else { return }
-            let selectedHistory = history[indexPath.row]
+            guard !model.histories.isEmpty else { return }
+            let selectedHistory = model.histories[indexPath.row]
     
             let storyboard = UIStoryboard(name: "Identification", bundle: nil)
             if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
@@ -261,18 +268,19 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             let selected = options.filter { $0.isSelected ?? false }
             for option in selected {
                 switch option.fieldMarkName {
-                case "Location & Date": flowSteps.append(.dateLocation)
-                case "Size":            flowSteps.append(.size)
-                case "Shape":           flowSteps.append(.shape)
-                case "Field Marks":     flowSteps.append(.fieldMarks)
-                default: break
+                case .locationDate: flowSteps.append(.dateLocation)
+                case .size:         flowSteps.append(.size)
+                case .shape:        flowSteps.append(.shape)
+                case .fieldMarks:   flowSteps.append(.fieldMarks)
                 }
+
             }
             
             
-            if selected.contains(where: { $0.fieldMarkName == "Field Marks" }) {
+            if selected.contains(where: { $0.fieldMarkName == .fieldMarks }) {
                 flowSteps.append(.gui)
             }
+
             
             flowSteps.append(.result)
             
@@ -357,8 +365,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
    
         func handleShapeStepCompletion() {
             let fieldMarksSelected = model.fieldMarkOptions.contains {
-                $0.fieldMarkName == "Field Marks" && ($0.isSelected ?? false)
+                $0.fieldMarkName == .fieldMarks && ($0.isSelected ?? false)
             }
+
             
             let isLastDecisionStep = !flowSteps.contains(.fieldMarks) && !flowSteps.contains(.gui)
 

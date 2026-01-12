@@ -16,7 +16,7 @@ class IdentificationSizeViewController: UIViewController {
     @IBOutlet weak var progressView: UIProgressView!
     var selectedSize: String?
 
-    var viewModel: IdentificationModels!
+    var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
 
     override func viewDidLoad() {

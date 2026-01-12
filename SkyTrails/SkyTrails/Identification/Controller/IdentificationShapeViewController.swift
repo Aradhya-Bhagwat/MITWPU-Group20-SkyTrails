@@ -15,7 +15,7 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     
     @IBOutlet weak var progressView: UIProgressView!
 
-    var viewModel: IdentificationModels!
+    var viewModel: IdentificationManager!
     var selectedSizeIndex: Int?
     var filteredShapes: [BirdShape] = []
 
@@ -86,7 +86,8 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     override func viewDidLoad() {
         super.viewDidLoad()
         styleTableContainer()
-        applySizeFilter()
+      //  applySizeFilter()
+        viewModel.selectedSizeCategory = selectedSizeIndex
         shapeTableView.delegate = self
         shapeTableView.dataSource = self
         setupRightTickButton()
@@ -116,11 +117,10 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
    
     func applySizeFilter() {
-        // New database shapes don't currently have size categories mapped in the struct.
-        // Showing all shapes to prevent empty screen.
-        // Future improvement: derive valid shapes from birds that match the selected size.
-        filteredShapes = viewModel.birdShapes
+        filteredShapes = viewModel.availableShapesForSelectedSize()
+        shapeTableView.reloadData()
     }
+
 
   
 
