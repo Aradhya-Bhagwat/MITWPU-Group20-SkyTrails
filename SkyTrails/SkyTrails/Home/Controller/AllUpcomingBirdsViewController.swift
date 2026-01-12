@@ -95,7 +95,7 @@ class AllUpcomingBirdsViewController: UIViewController {
                     }
                     
                     // 4. Set the fixed Aspect Ratio (195/176)
-                    let heightMultiplier: CGFloat = 195.0 / 176.0
+                    let heightMultiplier: CGFloat = 91.0 / 88.0
                     let calculatedHeight = calculatedWidth * heightMultiplier
                     
                     // 5. Cache this size forever for this session
