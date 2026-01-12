@@ -37,14 +37,10 @@ class SearchLocationViewController: UIViewController {
     
     private func setupUI() {
             self.view.backgroundColor = .systemBackground
-            
-            // Setup TableView
+        
             tableView.delegate = self
             tableView.dataSource = self
-            // Note: Cells are now registered via Storyboard Prototypes ("SearchCell", "ResultCell")
-            // Remove manual register if using storyboard prototypes, or keep if needed.
-            // But here we rely on Storyboard prototypes.
-            tableView.tableFooterView = UIView() // Hide empty rows
+            tableView.tableFooterView = UIView()
         }
         
     private func setupSearch() {
@@ -104,12 +100,12 @@ class SearchLocationViewController: UIViewController {
         let currentTotalRows = tableView.numberOfRows(inSection: sectionIndex)
         
         tableView.performBatchUpdates({
-            // Delete old
+           
             if currentTotalRows > 0 {
                 let paths = (0..<currentTotalRows).map { IndexPath(row: $0, section: sectionIndex) }
                 tableView.deleteRows(at: paths, with: .none)
             }
-            // Insert new
+          
             if !searchResults.isEmpty {
                 let paths = (0..<searchResults.count).map { IndexPath(row: $0, section: sectionIndex) }
                 tableView.insertRows(at: paths, with: .none)
@@ -136,13 +132,13 @@ class SearchLocationViewController: UIViewController {
     extension SearchLocationViewController: UITableViewDataSource, UITableViewDelegate {
         
         func numberOfSections(in tableView: UITableView) -> Int {
-            return 3 // 0: SearchBar, 1: Suggestions, 2: Options (Current Location)
+            return 3
         }
         
         func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
             if section == 0 { return 1 }
             if section == 1 { return searchResults.count }
-            if section == 2 { return 1 } // Just "Current Location"
+            if section == 2 { return 1 }
             return 0
         }
         
@@ -155,9 +151,8 @@ class SearchLocationViewController: UIViewController {
                 }
                 cell.searchBar.delegate = self
                 cell.searchBar.text = searchQuery
-                // Ensure keyboard comes up if it's the first time
+                
                 if searchQuery.isEmpty && !cell.searchBar.isFirstResponder {
-                    // Optionally make it first responder if desired
                     cell.searchBar.becomeFirstResponder()
                 }
                 return cell
@@ -246,18 +241,22 @@ class SearchLocationViewController: UIViewController {
     }
 
     // MARK: - CLLocationManagerDelegate
-    extension SearchLocationViewController: CLLocationManagerDelegate {
-        func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-            guard let location = locations.last else { return }
-            
-            CLGeocoder().reverseGeocodeLocation(location) { [weak self] placemarks, error in
-                guard let self = self else { return }
-                
-                let name = placemarks?.first?.name ?? "Current Location"
-                self.finalizeSelection(name: name, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
-            }
-        }
+// MARK: - CLLocationManagerDelegate
+extension SearchLocationViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
         
+        let request = MKLocalSearch.Request()
+        request.region = MKCoordinateRegion(center: location.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+        
+        let search = MKLocalSearch(request: request)
+        search.start { [weak self] response, error in
+            guard let self = self else { return }
+            
+            let name = response?.mapItems.first?.name ?? "Current Location"
+            self.finalizeSelection(name: name, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
+        }
+    }
         func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
             if manager.authorizationStatus == .authorizedWhenInUse {
                 manager.requestLocation()

@@ -30,15 +30,10 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     var onDelete: (() -> Void)?
     var onLocationSelected: ((String, Double, Double) -> Void)?
     var onAreaChange: ((Int) -> Void)?
-    var onSearchTap: (() -> Void)? // New closure for search navigation
-    
-    // Updated closures to pass the new Date value
+    var onSearchTap: (() -> Void)?
     var onStartDateChange: ((Date) -> Void)?
     var onEndDateChange: ((Date) -> Void)?
     
-    // Search State
-    // private var searchCompleter = MKLocalSearchCompleter() // Removed
-    // private var searchResults: [MKLocalSearchCompletion] = [] // Removed
     private let locationManager = CLLocationManager()
     
     override func awakeFromNib() {
@@ -52,7 +47,7 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupStyle() {
-        // Container Card Style
+       
         self.backgroundColor = .clear
         contentView.backgroundColor = .clear
         containerView.backgroundColor = .systemBackground
@@ -65,20 +60,10 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         searchBar.searchBarStyle = .minimal
         searchBar.placeholder = "Search Location"
         
-        // suggestionsTableView.layer.cornerRadius = 8 // Removed
-        // suggestionsTableView.layer.borderWidth = 1 // Removed
-        // suggestionsTableView.layer.borderColor = UIColor.systemGray5.cgColor // Removed
-        // suggestionsTableView.isHidden = true // Removed
     }
     
     private func setupSearch() {
         searchBar.delegate = self
-        // searchCompleter.delegate = self // Removed
-        // searchCompleter.resultTypes = .pointOfInterest // Removed
-        
-        // suggestionsTableView.delegate = self // Removed
-        // suggestionsTableView.dataSource = self // Removed
-        // suggestionsTableView.register(UITableViewCell.self, forCellReuseIdentifier: "SuggestionCell") // Removed
     }
     
     private func setupLocationServices() {
@@ -87,12 +72,11 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupDatePickers() {
-        // Configure Start Date Picker
+      
         startDatePicker.datePickerMode = .date
         startDatePicker.preferredDatePickerStyle = .compact
         startDatePicker.addTarget(self, action: #selector(startDateChanged(_:)), for: .valueChanged)
         
-        // Configure End Date Picker
         endDatePicker.datePickerMode = .date
         endDatePicker.preferredDatePickerStyle = .compact
         endDatePicker.addTarget(self, action: #selector(endDateChanged(_:)), for: .valueChanged)
@@ -133,23 +117,19 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     // MARK: - Configuration
     func configure(data: PredictionInputData, index: Int) {
         titleLabel.text = "Input \(index + 1)"
-        
-        // 1. Location Search Bar
+
         if let location = data.locationName {
             searchBar.text = location
         } else {
             searchBar.text = ""
         }
         
-        // 2. Date Pickers
         startDatePicker.date = data.startDate ?? Date()
         endDatePicker.date = data.endDate ?? Date()
         
-        // 3. Area
         areaStepper.value = Double(data.areaValue)
         areaLabel.text = "\(data.areaValue) km"
         
-        // 4. Delete Logic
         deleteButton.isHidden = (index == 0)
     }
     
@@ -161,7 +141,7 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
-            print("Location Access Denied") // Handle properly in a real app
+            print("Location Access Denied")
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
@@ -171,7 +151,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     
     private func updateSelection(name: String, lat: Double, lon: Double) {
         searchBar.text = name
-        // suggestionsTableView.isHidden = true // Removed
         searchBar.resignFirstResponder()
         onLocationSelected?(name, lat, lon)
     }
@@ -180,9 +159,8 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
 // MARK: - UISearchBarDelegate
 extension PredictionInputCellCollectionViewCell: UISearchBarDelegate {
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
-        // Intercept tap and trigger navigation
         onSearchTap?()
-        return false // Prevent keyboard from showing
+        return false
     }
 }
 
@@ -191,11 +169,20 @@ extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
-        CLGeocoder().reverseGeocodeLocation(location) { [weak self] placemarks, error in
+        let searchRequest = MKLocalSearch.Request()
+        searchRequest.region = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: 100, longitudinalMeters: 100)
+        
+        let search = MKLocalSearch(request: searchRequest)
+        search.start { [weak self] response, error in
             guard let self = self else { return }
+
+            let name = response?.mapItems.first?.name ?? "Current Location"
             
-            let name = placemarks?.first?.name ?? "Current Location"
-            self.updateSelection(name: name, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
+            self.updateSelection(
+                name: name,
+                lat: location.coordinate.latitude,
+                lon: location.coordinate.longitude
+            )
         }
     }
     
