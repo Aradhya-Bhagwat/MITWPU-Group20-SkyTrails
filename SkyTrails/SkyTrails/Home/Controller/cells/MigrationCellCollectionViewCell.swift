@@ -11,13 +11,8 @@ import CoreLocation
 
 // MARK: - Custom Map Overlays (The "Stickers")
 
-// Tag for the Full Predicted Path (Pale Blue)
 class PredictedPathPolyline: MKPolyline {}
-
-// Tag for the Progress Completed Path (Dark Blue)
 class ProgressPathPolyline: MKPolyline {}
-
-// Tag for the Current Location Pin (We will use this later)
 class CurrentLocationAnnotation: MKPointAnnotation {}
 
 extension Array where Element == CLLocationCoordinate2D {
@@ -30,15 +25,13 @@ extension Array where Element == CLLocationCoordinate2D {
             }
             return ([], CLLocationCoordinate2D())
         }
-        
-        // Ensure percentage is bounded between 0 and 1
         let boundedPercentage = Swift.min(1.0, Swift.max(0.0, percentage))
         
         let totalPathLength = self.totalLength()
         let targetDistance = boundedPercentage * totalPathLength
         
         var currentDistance: Double = 0
-        var segmentCoords: [CLLocationCoordinate2D] = [self.first!] // Start with the first point
+        var segmentCoords: [CLLocationCoordinate2D] = [self.first!]
         
         if boundedPercentage >= 1.0 {
             return (self, self.last!)
@@ -89,11 +82,8 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "MigrationCellCollectionViewCell"
     
-    // 1. Map View
     @IBOutlet private weak var cardContainerView: UIView!
     @IBOutlet private weak var mapView: MKMapView!
-    
-    // 2. Overlay View Elements (The bottom white card area)
     @IBOutlet private weak var overlayContentView: UIView!
     @IBOutlet private weak var birdImageView: UIImageView!
     @IBOutlet private weak var birdNameLabel: UILabel!
@@ -145,8 +135,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel
         )
-        
-        // 3. Update the attributes with the calculated height
         let newAttributes = layoutAttributes.copy() as! UICollectionViewLayoutAttributes
         newAttributes.frame = CGRect(origin: targetFrame.origin, size: CGSize(width: targetFrame.width, height: autoLayoutSize.height))
         
@@ -155,7 +143,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        // Clear all dynamic data when the cell is reused
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         birdNameLabel.text = nil
@@ -206,17 +193,14 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
         
-        let fullCoordinates = prediction.pathCoordinates // The full list of coordinates
+        let fullCoordinates = prediction.pathCoordinates
         let totalPoints = fullCoordinates.count
         
         var annotationsToAdd: [MKAnnotation] = []
-        
-        
         var progressCoordinates: [CLLocationCoordinate2D] = []
         var currentLocation: CLLocationCoordinate2D?
         
         if totalPoints > 1 {
-            // Convert Float progress to Double
             let progressPercentage = Double(prediction.currentProgress)
             let result = fullCoordinates.interpolatedProgress(at: progressPercentage)
             
@@ -224,21 +208,17 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
             currentLocation = result.currentCoord
             
         } else if totalPoints == 1 {
-            // Handle case where path is just a single point
             currentLocation = fullCoordinates.first
             progressCoordinates = fullCoordinates
         }
         
         let predictedPath = PredictedPathPolyline(coordinates: fullCoordinates, count: totalPoints)
         mapView.addOverlay(predictedPath)
-
-        // B. Progress Path (Default Blue, Traveled Segment) - Draw this SECOND (top layer)
         if progressCoordinates.count >= 1 {
             let progressPath = ProgressPathPolyline(coordinates: progressCoordinates, count: progressCoordinates.count)
             mapView.addOverlay(progressPath)
         }
-        
-        // Start/End Annotations
+ 
         if let startCoord = fullCoordinates.first,
            let endCoord = fullCoordinates.last {
             
@@ -253,9 +233,7 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
             annotationsToAdd.append(endAnnotation)
         }
 
-        // Current Location Annotation (Pin)
         if let currentCoord = currentLocation {
-            // We use the custom class here to style the pin uniquely (e.g., orange color)
             let currentAnnotation = CurrentLocationAnnotation()
             currentAnnotation.coordinate = currentCoord
             currentAnnotation.title = "Current Predicted Location"
@@ -275,8 +253,6 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
 }
 
 extension MigrationCellCollectionViewCell: MKMapViewDelegate {
-    
-    // Defines how to render the path line (Coloring Logic)
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         
         if let polyline = overlay as? MKPolyline {
@@ -285,20 +261,14 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
             renderer.lineCap = .round
             
             if polyline is PredictedPathPolyline {
-                // Pale Blue/Faded Color for the full predicted route
                 renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.35)
             } else if polyline is ProgressPathPolyline {
-                // Default/Darker Blue for the traveled segment (on top)
                 renderer.strokeColor = UIColor.systemBlue
             }
             return renderer
         }
-        
-        // Fallback for other overlays
         return MKOverlayRenderer(overlay: overlay)
     }
-    
-    // Defines how to display annotations (Pins)
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
         if annotation is CurrentLocationAnnotation {

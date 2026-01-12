@@ -2,7 +2,6 @@ import UIKit
 
 class CurvedProgressView: UIView {
     
-    // MARK: - Layer Properties
     private let trackLayer = CAShapeLayer()
     private let progressLayer = CAShapeLayer()
     private let startOuterCircleLayer = CAShapeLayer()
@@ -22,7 +21,6 @@ class CurvedProgressView: UIView {
         }
     }
     
-    // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayers()
@@ -55,7 +53,6 @@ class CurvedProgressView: UIView {
         progressLayer.strokeEnd = 0.0
     }
     
-    // MARK: - Drawing the Curve
     override func layoutSubviews() {
         super.layoutSubviews()
 

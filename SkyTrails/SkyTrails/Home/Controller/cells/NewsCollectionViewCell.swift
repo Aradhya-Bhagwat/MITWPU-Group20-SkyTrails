@@ -48,8 +48,6 @@ class NewsCollectionViewCell: UICollectionViewCell {
             newsImageView.image = UIImage(systemName: "photo")
             newsImageView.tintColor = .systemGray
         }
-        
-        // Ensure labels are on top
         containerView.bringSubviewToFront(titleLabel)
         containerView.bringSubviewToFront(summaryLabel)
     }
@@ -59,8 +57,6 @@ class NewsCollectionViewCell: UICollectionViewCell {
         
         let gradient = CAGradientLayer()
         self.gradientLayer = gradient
-        
-        // Dark gradient similar to community cell for readability
         gradient.colors = [
             UIColor.black.withAlphaComponent(0.2).cgColor,
             UIColor.black.withAlphaComponent(0.7).cgColor

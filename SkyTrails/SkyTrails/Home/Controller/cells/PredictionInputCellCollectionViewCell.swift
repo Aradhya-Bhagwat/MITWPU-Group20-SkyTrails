@@ -17,16 +17,11 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var deleteButton: UIButton!
     @IBOutlet weak var searchBar: UISearchBar!
-    // @IBOutlet weak var suggestionsTableView: UITableView! // Removed
-    
     @IBOutlet weak var areaLabel: UILabel!
     @IBOutlet weak var areaStepper: UIStepper!
-    
-    // MARK: - Date Pickers
     @IBOutlet weak var startDatePicker: UIDatePicker!
     @IBOutlet weak var endDatePicker: UIDatePicker!
     
-    // MARK: - Closures
     var onDelete: (() -> Void)?
     var onLocationSelected: ((String, Double, Double) -> Void)?
     var onAreaChange: ((Int) -> Void)?
@@ -90,13 +85,9 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         areaStepper.addTarget(self, action: #selector(stepperChanged), for: .valueChanged)
     }
 
-    // MARK: - Actions
-    
     @IBAction func didTapDelete(_ sender: Any) {
         onDelete?()
     }
-    
-    // MARK: - Date Actions
     
     @objc func startDateChanged(_ sender: UIDatePicker) {
         onStartDateChange?(sender.date)
@@ -106,15 +97,12 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         onEndDateChange?(sender.date)
     }
     
-    // MARK: - Area Actions
-    
     @objc func stepperChanged(_ sender: UIStepper) {
         let value = Int(sender.value)
         areaLabel.text = "\(value) km"
         onAreaChange?(value)
     }
-
-    // MARK: - Configuration
+    
     func configure(data: PredictionInputData, index: Int) {
         titleLabel.text = "Input \(index + 1)"
 
@@ -133,7 +121,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         deleteButton.isHidden = (index == 0)
     }
     
-    // MARK: - Helper Methods
     private func fetchCurrentLocation() {
         let authStatus = locationManager.authorizationStatus
         
@@ -156,7 +143,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     }
 }
 
-// MARK: - UISearchBarDelegate
 extension PredictionInputCellCollectionViewCell: UISearchBarDelegate {
     func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
         onSearchTap?()
@@ -164,7 +150,6 @@ extension PredictionInputCellCollectionViewCell: UISearchBarDelegate {
     }
 }
 
-// MARK: - CLLocationManagerDelegate
 extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }

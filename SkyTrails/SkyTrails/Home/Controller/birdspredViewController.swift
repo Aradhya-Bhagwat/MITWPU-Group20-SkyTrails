@@ -69,7 +69,7 @@ class birdspredViewController: UIViewController {
         let cardBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
         cardBlur.frame = infoCardView.bounds
         cardBlur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        cardBlur.layer.cornerRadius = 24 // More rounded
+        cardBlur.layer.cornerRadius = 24
         cardBlur.layer.masksToBounds = true
         cardBlur.isUserInteractionEnabled = false
         
@@ -106,8 +106,6 @@ class birdspredViewController: UIViewController {
         let region = MKCoordinateRegion(center: center, span: span)
         mapView.setRegion(region, animated: false)
     }
-    
-    // MARK: - Update Logic
     
     private func updateCardForCurrentIndex() {
         guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
@@ -174,8 +172,6 @@ class birdspredViewController: UIViewController {
         }
     }
     
-    // MARK: - Interaction Handlers
-    
     @objc private func didTapPill() {
         showCardState()
     }
@@ -191,8 +187,7 @@ class birdspredViewController: UIViewController {
             if currentSpeciesIndex < predictionInputs.count - 1 {
                 currentSpeciesIndex += 1
             } else {
-                // Optional: Loop back to start?
-                // currentSpeciesIndex = 0
+                
             }
         } else if gesture.direction == .right {
             if currentSpeciesIndex > 0 {
@@ -207,8 +202,6 @@ class birdspredViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
-    
-    // MARK: - State Transitions
     
     private func showCardState() {
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
@@ -236,8 +229,6 @@ class birdspredViewController: UIViewController {
         }
     }
 }
-
-// MARK: - MapView Delegate
 
 extension birdspredViewController: MKMapViewDelegate {
     

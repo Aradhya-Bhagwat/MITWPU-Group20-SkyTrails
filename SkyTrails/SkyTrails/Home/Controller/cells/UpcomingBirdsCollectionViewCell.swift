@@ -17,7 +17,7 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         self.backgroundColor = .clear
-        setupUI()        // Initialization code
+        setupUI()
     }
     
     private func setupUI() {
@@ -48,20 +48,16 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
            
          
        }
-    // Inside q_2UpcomingBirdsCollectionViewCell.swift
-
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         
-  
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
-        
     
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0
         let dateRatio: CGFloat = 12.0 / 200.0
         
-    
         titleLabel.font = UIFont.systemFont(
             ofSize: currentWidth * titleRatio,
             weight: .semibold

@@ -16,7 +16,6 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
         self.backgroundColor = .clear
         setupUI()   
     }
@@ -106,8 +105,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
             
             return completeString
         }
-       
-    // MARK: - Configuration Method
+    
     func configure(image: UIImage?, title: String, date: String) {
         birdImageView2.image = image
         titleLabel2.text = title
@@ -116,7 +114,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
                 
                 dateLabel2.attributedText = createIconString(
                     text: date,
-                    iconName: "mappin.and.ellipse", // Use map pin icon for location
+                    iconName: "mappin.and.ellipse",
                     color: locationColor,
                     fontSize: locationFontSize
                 )

@@ -115,15 +115,15 @@ extension HomeViewController {
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
             
             switch sectionIndex {
-            case 0: // Migration Map Carousel
+            case 0: 
                 return self.createMigrationCarouselSection()
-            case 1: // Upcoming Birds
+            case 1:
                 return self.createUpcomingBirdsSection()
-            case 2: // Spots to Visit
+            case 2:
                 return self.createSpotsToVisitSection()
-            case 3: // Community
+            case 3:
                 return self.createCommunityObservationsSection()
-            case 4: // Latest News
+            case 4:
                 return self.createNewsSection()
             default:
                 return nil
@@ -156,23 +156,19 @@ extension HomeViewController {
         if let cached = cachedUpcomingBirdCardWidth {
             cardWidth = cached
         } else {
-            // 1. Get Portrait Width through the window scene (iOS 26.0 compliant)
+            
             let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
             let portraitWidth = min(screenBounds.width, screenBounds.height)
-            
-            // 2. Constants for layout
             let interGroupSpacing: CGFloat = 16
             let outerPadding: CGFloat = 16 * 2
             let visibleCardProportion: CGFloat = 2.1
-            
-            // 3. Calculate width based ONLY on portrait dimensions
             let numberOfSpacings = floor(visibleCardProportion)
             let totalSpacing = (numberOfSpacings * interGroupSpacing) + outerPadding
-            
             let calculatedWidth = (portraitWidth - totalSpacing) / visibleCardProportion
             cardWidth = min(calculatedWidth, 230)
             
             cachedUpcomingBirdCardWidth = cardWidth
+            
         }
        
         let itemSize = NSCollectionLayoutSize(
@@ -180,8 +176,6 @@ extension HomeViewController {
             heightDimension: .fractionalHeight(1.0)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        
-        // 4. Height is strictly based on the calculated portrait width
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .absolute(cardWidth),
             heightDimension: .absolute(cardWidth * 1.034)
@@ -204,7 +198,6 @@ extension HomeViewController {
         if let cached = cachedSpotsCardWidth {
             cardWidth = cached
         } else {
-            // Use the same windowScene logic for consistency
             let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
             let portraitWidth = min(screenBounds.width, screenBounds.height)
             
@@ -308,8 +301,6 @@ extension HomeViewController {
         }
 }
 
-
-// MARK: - UICollectionView DataSource
 extension HomeViewController: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -520,8 +511,6 @@ extension HomeViewController {
 
         if indexPath.section == 0 {
             let footerKind = "MigrationPageControlFooter"
-            
-            // Try to retrieve the visible footer for Section 0
             if let footer = collectionView.supplementaryView(
                 forElementKind: footerKind,
                 at: IndexPath(item: 0, section: 0)
@@ -566,21 +555,16 @@ extension HomeViewController {
         
         if indexPath.section == 1 {
             let item = homeData.homeScreenBirds[indexPath.row]
-            
-            // 1. Find matching SpeciesData
             if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
                 
-                // 2. Parse Date
                 let (start, end) = HomeManager.shared.parseDateRange(item.date)
-                
-                // 3. Create Input
                 let input = BirdDateInput(
                     species: species,
                     startDate: start ?? Date(),
                     endDate: end ?? Date()
+                    
                 )
                 
-                // 4. Navigate
                 let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
                 if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
                     mapVC.predictionInputs = [input]
@@ -588,7 +572,6 @@ extension HomeViewController {
                 }
             } else {
                 print("Species data not found for: \(item.title)")
-                // Fallback or error handling if needed
             }
             
         } else if indexPath.section == 2 {
@@ -646,8 +629,6 @@ extension HomeViewController {
 // MARK: - Layout Helpers
 extension HomeViewController {
     
-    // Inside HomeViewController.swift
-
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         
         let itemSize = NSCollectionLayoutSize(

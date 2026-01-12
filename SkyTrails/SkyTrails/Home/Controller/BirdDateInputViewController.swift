@@ -15,7 +15,6 @@ struct BirdDateInput {
 
 class BirdDateInputViewController: UIViewController {
     
-    // MARK: - Data
     var speciesList: [SpeciesData] = []
     var collectedData: [BirdDateInput] = []
     var currentIndex: Int = 0
@@ -23,7 +22,7 @@ class BirdDateInputViewController: UIViewController {
     private let imageView = UIImageView()
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let pageControl = UIPageControl()
-    private let containerView = UIView() // New container view
+    private let containerView = UIView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,25 +33,16 @@ class BirdDateInputViewController: UIViewController {
         loadCurrentBird()
     }
     
-    // MARK: - Setup
-    
     private func setupNavigationBar() {
-        // "Add" button to select more species
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
-        
-        // "Done" button to proceed to map visualization
         let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(didTapDone))
-        doneButton.tintColor = .white // Set the Done button's tint color to white
-        
-        // "Delete" button to remove current species
+        doneButton.tintColor = .white
         let deleteButton = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(didTapDelete))
-        
-        // Right bar items: Done, Add, Delete
         navigationItem.rightBarButtonItems = [doneButton, addButton, deleteButton]
     }
     
     private func setupUI() {
-        // Add containerView first
+      
         view.addSubview(containerView)
         
         imageView.contentMode = .scaleAspectFill
@@ -60,24 +50,21 @@ class BirdDateInputViewController: UIViewController {
         imageView.layer.cornerRadius = 12
         imageView.backgroundColor = .systemGray
         
-        // Add imageView and tableView to containerView
         containerView.addSubview(imageView)
+        containerView.addSubview(tableView)
         
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DateCell")
         tableView.isScrollEnabled = false
-        containerView.addSubview(tableView) // Add to containerView
         
-        // Page Control Setup
         pageControl.numberOfPages = collectedData.count
         pageControl.currentPage = currentIndex
         pageControl.pageIndicatorTintColor = .systemGray4
-        pageControl.currentPageIndicatorTintColor = .black // Changed to black
+        pageControl.currentPageIndicatorTintColor = .black
         pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
-        view.addSubview(pageControl) // pageControl remains a direct subview of self.view
+        view.addSubview(pageControl)
         
-        // Swipe Gestures
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
         swipeLeft.direction = .left
         view.addGestureRecognizer(swipeLeft)
@@ -93,8 +80,6 @@ class BirdDateInputViewController: UIViewController {
         let safeAreaTop = view.safeAreaInsets.top
         let viewWidth = view.bounds.width
         let viewHeight = view.bounds.height
-        
-        // PageControl layout - at the bottom
         let pageControlHeight: CGFloat = 50
         pageControl.frame = CGRect(
             x: 0,
@@ -103,9 +88,8 @@ class BirdDateInputViewController: UIViewController {
             height: pageControlHeight
         )
         
-        // ContainerView layout - fills the space above page control
         let containerViewY = safeAreaTop + 20
-        let containerViewHeight = pageControl.frame.minY - containerViewY - 30 // 30 is spacing to imageview
+        let containerViewHeight = pageControl.frame.minY - containerViewY - 30 
         containerView.frame = CGRect(
             x: 0,
             y: containerViewY,
@@ -113,17 +97,15 @@ class BirdDateInputViewController: UIViewController {
             height: containerViewHeight
         )
         
-        // ImageView layout (relative to containerView)
         let imageViewWidth: CGFloat = 240
         let imageViewHeight: CGFloat = 160
         imageView.frame = CGRect(
             x: (containerView.bounds.width - imageViewWidth) / 2,
-            y: 0, // Relative to containerView's top
+            y: 0,
             width: imageViewWidth,
             height: imageViewHeight
         )
         
-        // TableView layout (relative to containerView)
         let tableViewY = imageView.frame.maxY + 30
         tableView.frame = CGRect(
             x: 0,
@@ -140,19 +122,15 @@ class BirdDateInputViewController: UIViewController {
         self.title = data.species.name
         imageView.image = UIImage(named: data.species.imageName)
         
-        pageControl.numberOfPages = collectedData.count // Update in case it changed
+        pageControl.numberOfPages = collectedData.count
         pageControl.currentPage = currentIndex
         
         tableView.reloadData()
     }
     
-    // MARK: - Actions
-    
     @objc private func didTapAdd() {
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else { return }
-        
-        // Pass existing data so it can be merged/preserved
         selectionVC.selectedSpecies = Set(collectedData.map { $0.species.id })
         selectionVC.existingInputs = collectedData
         
@@ -176,7 +154,6 @@ class BirdDateInputViewController: UIViewController {
         if collectedData.isEmpty {
             navigationController?.popViewController(animated: true)
         } else {
-            // Adjust index if we deleted the last item
             if currentIndex >= collectedData.count {
                 currentIndex = collectedData.count - 1
             }
@@ -199,7 +176,7 @@ class BirdDateInputViewController: UIViewController {
             transition.subtype = .fromLeft
         }
         
-        containerView.layer.add(transition, forKey: nil) // Apply transition to containerView
+        containerView.layer.add(transition, forKey: nil)
         loadCurrentBird()
     }
     
@@ -240,7 +217,7 @@ class BirdDateInputViewController: UIViewController {
                 transition.subtype = .fromLeft
             }
             
-            containerView.layer.add(transition, forKey: nil) // Apply transition to containerView
+            containerView.layer.add(transition, forKey: nil)
             loadCurrentBird()
         }
     }

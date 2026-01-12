@@ -29,22 +29,18 @@ class CommunityObservationViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // UI Setup
         view.backgroundColor = .systemGray6
         navigationItem.largeTitleDisplayMode = .never
         
         birdImageView.layer.cornerRadius = 24
         birdImageView.clipsToBounds = true
         
-        // 1. Date Card Styling
         styleCard(dateCardView)
         
-        // 2. Location Card Styling
         locationStackView.isLayoutMarginsRelativeArrangement = true
         locationStackView.layoutMargins = UIEdgeInsets(top: 20, left: 16, bottom: 20, right: 16)
         locationStackView.addBackground(color: .white, cornerRadius: 20)
         
-        // 3. Observation Notes Card Styling
         notesStackView.isLayoutMarginsRelativeArrangement = true
         notesStackView.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         notesStackView.addBackground(color: .white, cornerRadius: 20)
@@ -67,7 +63,6 @@ class CommunityObservationViewController: UIViewController {
         view.layer.masksToBounds = false
     }
     
-    /// Loads data from local JSON file as requested
     func loadData(for id: String) {
         if let found = HomeManager.shared.coreHomeData?.communityObservations?.first(where: { $0.observationId == id }) {
             self.observation = found
@@ -87,28 +82,18 @@ class CommunityObservationViewController: UIViewController {
         }
         
         userNameLabel.text = "by \(observation.username ?? "Unknown")"
-        
-        // Enable multiline for location
         locationNameLabel.numberOfLines = 0
         locationNameLabel.text = observation.location
-        
-        // Assuming subtitle could be coordinates or region, keeping it simple for now
-
-		
-        
         notesLabel.numberOfLines = 0
         notesLabel.text = observation.observationDescription ?? "No description available."
         
         if let dateString = observation.timestamp {
-            // ISO8601 Parser
             let formatter = ISO8601DateFormatter()
             if let date = formatter.date(from: dateString) {
                 datePicker.date = date
                 timePicker.date = date
             }
         }
-        
-        // Disable user interaction for detail view mode
         datePicker.isUserInteractionEnabled = false
         timePicker.isUserInteractionEnabled = false
     }
@@ -121,8 +106,6 @@ extension UIStackView {
         subView.layer.cornerRadius = cornerRadius
         subView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         insertSubview(subView, at: 0)
-        
-        // Shadow for the stack view's background
         subView.layer.shadowColor = UIColor.black.cgColor
         subView.layer.shadowOpacity = 0.08
         subView.layer.shadowOffset = CGSize(width: 0, height: 4)

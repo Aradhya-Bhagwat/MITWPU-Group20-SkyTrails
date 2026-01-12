@@ -15,7 +15,6 @@ class PageControlReusableViewCollectionReusableView: UICollectionReusableView {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
         pageControl.pageIndicatorTintColor = UIColor.systemGray4
                 pageControl.currentPageIndicatorTintColor = UIColor.black
                 pageControl.hidesForSinglePage = true
