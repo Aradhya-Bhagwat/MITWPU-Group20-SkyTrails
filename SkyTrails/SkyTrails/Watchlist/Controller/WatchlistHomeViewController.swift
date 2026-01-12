@@ -167,6 +167,28 @@ extension WatchlistHomeViewController {
         }
         present(alert, animated: true)
     }
+
+    // MARK: - Floating Action Button
+    @IBAction func addFloatingButtonTapped(_ sender: UIButton) {
+        let alert = UIAlertController(title: "Add to watchlist", message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Add to observed", style: .default) { _ in
+            // TODO: Handle Add to observed
+        })
+        
+        alert.addAction(UIAlertAction(title: "Add to unobserved", style: .default) { _ in
+            // TODO: Handle Add to unobserved
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = sender
+            popover.sourceRect = sender.bounds
+        }
+        
+        present(alert, animated: true)
+    }
 }
 
 // MARK: - Navigation
