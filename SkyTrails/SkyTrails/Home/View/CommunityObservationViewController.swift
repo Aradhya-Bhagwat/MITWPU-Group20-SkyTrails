@@ -13,7 +13,7 @@ class CommunityObservationViewController: UIViewController {
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var userNameLabel: UILabel!
     @IBOutlet weak var locationNameLabel: UILabel!
-    @IBOutlet weak var locationSubtitleLabel: UILabel!
+
     @IBOutlet weak var notesLabel: UILabel!
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var timePicker: UIDatePicker!
@@ -94,7 +94,8 @@ class CommunityObservationViewController: UIViewController {
         locationNameLabel.text = observation.location
         
         // Assuming subtitle could be coordinates or region, keeping it simple for now
-        locationSubtitleLabel.text = "Lat: --, Lon: --" 
+
+		
         
         notesLabel.numberOfLines = 0
         notesLabel.text = observation.observationDescription ?? "No description available."
