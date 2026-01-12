@@ -29,8 +29,6 @@ class PredictOutputViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        
-        // Manual Layout
         let topPadding = view.safeAreaInsets.top - 40
         collectionView.frame = CGRect(x: 0, y: topPadding, width: view.bounds.width, height: 420)
         
@@ -60,7 +58,6 @@ class PredictOutputViewController: UIViewController {
     }
     
     private func setupCollectionView() {
-        // Standard Flow Layout
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumLineSpacing = 16
@@ -74,10 +71,7 @@ class PredictOutputViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.decelerationRate = .fast
         collectionView.showsHorizontalScrollIndicator = false
-        
-        // Register Cell from XIB
         collectionView.register(UINib(nibName: PredictionOutputCardCell.identifier, bundle: nil), forCellWithReuseIdentifier: PredictionOutputCardCell.identifier)
-        
         collectionView.dataSource = self
         collectionView.delegate = self
         
@@ -100,8 +94,6 @@ class PredictOutputViewController: UIViewController {
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
     }
     
-    // MARK: - Navigation Actions
-    
     @objc private func didTapRedo() {
         if let mapVC = self.navigationController?.parent as? PredictMapViewController {
             mapVC.revertToInputScreen(with: inputData)
@@ -113,22 +105,18 @@ class PredictOutputViewController: UIViewController {
     
     private func updatePageControl() {
         guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
-        
         let itemWidth = layout.itemSize.width
         let spacing = layout.minimumLineSpacing
         let stride = itemWidth + spacing
         let offset = collectionView.contentOffset.x
-        
         let index = Int(round(offset / stride))
         let safeIndex = max(0, min(index, inputData.count - 1))
-        
         if pageControl.currentPage != safeIndex {
             pageControl.currentPage = safeIndex
         }
     }
 }
 
-// MARK: - Collection View DataSource & Delegate
 extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -144,10 +132,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         let cardPredictions = organizedPredictions[indexPath.row]
         
         cell.configure(location: locationName, data: cardPredictions)
-        
-        // Handle Bird Selection
         cell.onSelectPrediction = { [weak self] selectedPrediction in
-            // Bubble up to Parent Map VC
             if let mapVC = self?.navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(selectedPrediction)
             }
@@ -161,7 +146,6 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
     }
 }
 
-// MARK: - Bird Result Cell (Reused)
 class BirdResultCell: UITableViewCell {
     
     private let birdImageView = UIImageView()
@@ -172,7 +156,7 @@ class BirdResultCell: UITableViewCell {
         
         birdImageView.contentMode = .scaleAspectFit
         birdImageView.clipsToBounds = true
-        birdImageView.layer.cornerRadius = 8 // Slight roundness
+        birdImageView.layer.cornerRadius = 8
         
         birdNameLabel.font = UIFont.preferredFont(forTextStyle: .headline)
         
@@ -189,12 +173,8 @@ class BirdResultCell: UITableViewCell {
         
         let height = contentView.bounds.height
         let width = contentView.bounds.width
-        
-        // ImageView: 60x60, leading 16, centered vertically
         let imageSize: CGFloat = 60
         birdImageView.frame = CGRect(x: 16, y: (height - imageSize) / 2, width: imageSize, height: imageSize)
-        
-        // Label: leading image.right + 16, trailing 16, centered vertically
         let labelX = birdImageView.frame.maxX + 16
         let labelWidth = width - labelX - 16
         birdNameLabel.frame = CGRect(x: labelX, y: 0, width: labelWidth, height: height)

@@ -43,7 +43,6 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
         tableView.reloadData()
     }
     
-    // MARK: - TableView DataSource
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return predictions.count
     }
@@ -65,7 +64,6 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
         return 80
     }
     
-    // MARK: - TableView Delegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedPrediction = predictions[indexPath.row]
         onSelectPrediction?(selectedPrediction)

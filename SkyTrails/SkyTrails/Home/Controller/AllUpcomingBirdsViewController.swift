@@ -46,7 +46,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
     }
-    // MARK: - 1. Setup Navigation
+
     private func setupNavigationBar() {
             let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
             self.navigationItem.rightBarButtonItem = predictButton
@@ -68,7 +68,6 @@ class AllUpcomingBirdsViewController: UIViewController {
         navigationController?.pushViewController(selectionVC, animated: true)
     }
         
-    // MARK: - 3. Dynamic Ratio Layout Logic (Same as AllSpots)
     private func createLayout() -> UICollectionViewLayout {
             return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
                 guard let self = self else { return nil }
@@ -78,14 +77,11 @@ class AllUpcomingBirdsViewController: UIViewController {
                     guard let windowScene = self.view.window?.windowScene else { return nil }
                     let screenBounds = windowScene.screen.bounds
                     let portraitWidth = min(screenBounds.width, screenBounds.height)
-                    
-                    // 2. Constants used for Portrait Layout
                     let padding: CGFloat = 16.0
                     let spacing: CGFloat = 16.0
                     let maxCardWidth: CGFloat = 300.0
                     let minColumns = 2
-                    
-                    // 3. Calculate what the width WOULD be in Portrait
+            
                     var columnCount = minColumns
                     var calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                     
@@ -94,11 +90,8 @@ class AllUpcomingBirdsViewController: UIViewController {
                         calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                     }
                     
-                    // 4. Set the fixed Aspect Ratio (195/176)
                     let heightMultiplier: CGFloat = 91.0 / 88.0
                     let calculatedHeight = calculatedWidth * heightMultiplier
-                    
-                    // 5. Cache this size forever for this session
                     self.cachedItemSize = NSCollectionLayoutSize(
                         widthDimension: .absolute(calculatedWidth),
                         heightDimension: .absolute(calculatedHeight)
@@ -119,15 +112,12 @@ class AllUpcomingBirdsViewController: UIViewController {
                 let groupHeight = fixedSize.heightDimension.dimension
                 let groupSize = NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1.0),
-                    heightDimension: .absolute(groupHeight) // Keep height fixed
+                    heightDimension: .absolute(groupHeight)
                 )
                 
                 let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-                
                 let section = NSCollectionLayoutSection(group: group)
                 section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
-                
-                // Header
                 let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(44))
                 let header = NSCollectionLayoutBoundarySupplementaryItem(
                     layoutSize: headerSize,
@@ -141,7 +131,6 @@ class AllUpcomingBirdsViewController: UIViewController {
         }
     }
 
-// MARK: - DataSource
 extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -189,21 +178,13 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
 extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-        
-        // 1. Find matching SpeciesData
         if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
-            
-            // 2. Parse Date
             let (start, end) = HomeManager.shared.parseDateRange(item.date)
-            
-            // 3. Create Input
             let input = BirdDateInput(
                 species: species,
                 startDate: start ?? Date(),
                 endDate: end ?? Date()
             )
-            
-            // 4. Navigate
             let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
             if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
                 mapVC.predictionInputs = [input]

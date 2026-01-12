@@ -13,18 +13,13 @@ protocol SearchLocationDelegate: AnyObject {
 }
 
 class SearchLocationViewController: UIViewController {
-    
-    // @IBOutlet weak var searchTextField: UITextField! // Removed
     @IBOutlet weak var tableView: UITableView!
     
     weak var delegate: SearchLocationDelegate?
     var cellIndex: Int = 0
-    
-    // search engine variables
     private var searchCompleter = MKLocalSearchCompleter()
     private var searchResults = [MKLocalSearchCompletion]()
     private let locationManager = CLLocationManager()
-    
     private var searchQuery: String = ""
 
     override func viewDidLoad() {
@@ -93,8 +88,7 @@ class SearchLocationViewController: UIViewController {
     @IBAction func didTapCancel(_ sender: Any) {
         self.dismiss(animated: true)
     }
-    
-    // MARK: - Helper to reload suggestions
+
     private func reloadSuggestionsOnly() {
         let sectionIndex = 1
         let currentTotalRows = tableView.numberOfRows(inSection: sectionIndex)
@@ -128,7 +122,6 @@ class SearchLocationViewController: UIViewController {
     }
 }
 
-    // MARK: - TableView DataSource & Delegate
     extension SearchLocationViewController: UITableViewDataSource, UITableViewDelegate {
         
         func numberOfSections(in tableView: UITableView) -> Int {
@@ -145,7 +138,6 @@ class SearchLocationViewController: UIViewController {
         func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
             
             if indexPath.section == 0 {
-                // Search Bar Cell
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as? SearchCell else {
                     return UITableViewCell()
                 }
@@ -158,7 +150,6 @@ class SearchLocationViewController: UIViewController {
                 return cell
             }
             else if indexPath.section == 1 {
-                // Suggestions
                 let cell = tableView.dequeueReusableCell(withIdentifier: "ResultCell", for: indexPath)
                 let result = searchResults[indexPath.row]
                 var content = cell.defaultContentConfiguration()
@@ -168,7 +159,6 @@ class SearchLocationViewController: UIViewController {
                 return cell
             }
             else {
-                // Options (Current Location)
                 let cell = tableView.dequeueReusableCell(withIdentifier: "ResultCell", for: indexPath)
                 var content = cell.defaultContentConfiguration()
                 content.text = "Current Location"
@@ -180,20 +170,15 @@ class SearchLocationViewController: UIViewController {
         
         func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
             tableView.deselectRow(at: indexPath, animated: true)
-            
-            // Section 1: Suggestions
             if indexPath.section == 1 {
                 let result = searchResults[indexPath.row]
                 let request = MKLocalSearch.Request(completion: result)
                 let search = MKLocalSearch(request: request)
-                
                 search.start { [weak self] (response, error) in
                     guard let self = self, let coordinate = response?.mapItems.first?.location.coordinate else { return }
                     self.finalizeSelection(name: result.title, lat: coordinate.latitude, lon: coordinate.longitude)
                 }
             }
-            
-            // Section 2: Current Location
             if indexPath.section == 2 {
                 fetchCurrentLocation()
             }
@@ -205,7 +190,6 @@ class SearchLocationViewController: UIViewController {
         }
     }
 
-    // MARK: - UISearchBarDelegate
     extension SearchLocationViewController: UISearchBarDelegate {
         func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
             searchQuery = searchText
@@ -228,7 +212,6 @@ class SearchLocationViewController: UIViewController {
         }
     }
 
-    // MARK: - MKLocalSearchCompleterDelegate
     extension SearchLocationViewController: MKLocalSearchCompleterDelegate {
         func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
             searchResults = completer.results
@@ -236,12 +219,9 @@ class SearchLocationViewController: UIViewController {
         }
         
         func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-            // Handle error
         }
     }
 
-    // MARK: - CLLocationManagerDelegate
-// MARK: - CLLocationManagerDelegate
 extension SearchLocationViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }

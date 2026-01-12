@@ -193,7 +193,7 @@ extension HotspotCellCollectionViewCell {
             let colorIndex = index % colorStack.count
             annotationView?.markerTintColor = colorStack[colorIndex]
         } else {
-            annotationView?.markerTintColor = .systemGray // Fallback
+            annotationView?.markerTintColor = .systemGray 
         }
         
         annotationView?.glyphImage = UIImage(systemName: "bird.fill")
