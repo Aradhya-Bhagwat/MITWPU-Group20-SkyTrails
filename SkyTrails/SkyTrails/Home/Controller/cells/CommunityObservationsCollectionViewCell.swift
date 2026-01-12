@@ -45,16 +45,17 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             birdImageView.image = birdImage
             birdImageView.tintColor = .systemGray4
         
-            userNameLabel.text = observation.user.name
+            let displayUser = observation.displayUser
+            userNameLabel.text = displayUser.name
             userNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
             userNameLabel.textColor = .white
         
-            observationCountLabel.text = "\(observation.user.observations) Observations"
+            observationCountLabel.text = "\(displayUser.observations) Observations"
             observationCountLabel.textColor = .white
             observationCountLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         
         
-            birdNameLabel.text = observation.birdName
+            birdNameLabel.text = observation.displayBirdName
             birdNameLabel.textColor = .white
             birdNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
         
@@ -64,7 +65,7 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             locationLabel.font = UIFont.systemFont(ofSize: 11.5, weight: .medium)
         
             // 1. Try to load the user's custom profile image
-            if let profileImage = UIImage(named: observation.user.profileImageName) {
+            if let profileImage = UIImage(named: displayUser.profileImageName) {
                 userProfileImageView.image = profileImage
             } else {
                 userProfileImageView.image = UIImage(systemName: "person.circle.fill")

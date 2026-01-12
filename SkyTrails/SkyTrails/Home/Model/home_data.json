@@ -240,5 +240,72 @@
         {"lat": 18.4100, "lon": 73.7600, "bird_image_name": "crow"}
       ]
     }
+  ],
+  "community_observations": [
+    {
+      "observationId": "obs_001",
+      "username": "BirdWatcher_Pro",
+      "userAvatar": "appleUserProfile 1",
+      "birdName": "Kingfisher",
+      "observationTitle": "Spotted a Rare Kingfisher!",
+      "observationDescription": "I was waiting by the riverbank for hours and finally saw this beauty diving for fish. The colors were incredible in the morning light.",
+      "observationImage": "kingfisher",
+      "location": "Sundarbans Delta, West Bengal",
+      "timestamp": "2025-12-15T08:30:00Z",
+      "likesCount": 124,
+      "commentsCount": 18
+    },
+    {
+      "observationId": "obs_002",
+      "username": "NatureLover99",
+      "userAvatar": "appleUserProfile 2",
+      "birdName": "Flamingo",
+      "observationTitle": "Flamingos in Mumbai",
+      "observationDescription": "Thousands of flamingos have arrived at the creek. It's a sea of pink! Truly a mesmerizing sight.",
+      "observationImage": "flamingo",
+      "location": "Thane Creek, Mumbai",
+      "timestamp": "2025-12-20T16:45:00Z",
+      "likesCount": 256,
+      "commentsCount": 42
+    },
+    {
+      "observationId": "obs_003",
+      "username": "AvianExplorer",
+      "userAvatar": "appleUserProfile",
+      "birdName": "Great Hornbill",
+      "observationTitle": "Great Hornbill Sighting",
+      "observationDescription": "Heard the distinctive whooshing sound of its wings before I saw it land on a high branch. Majestic bird.",
+      "observationImage": "GreatHornbill",
+      "location": "Kaziranga, Assam",
+      "timestamp": "2026-01-02T10:15:00Z",
+      "likesCount": 89,
+      "commentsCount": 12
+    },
+    {
+      "observationId": "obs_004",
+      "username": "CityBirder",
+      "userAvatar": "appleUserProfile 1",
+      "birdName": "Coppersmith Barbet",
+      "observationTitle": "Coppersmith Barbet Call",
+      "observationDescription": "Finally managed to spot the bird making that 'tuk-tuk' sound outside my window. It's so small but loud!",
+      "observationImage": "coppersmith_barbet",
+      "location": "Pune, Maharashtra",
+      "timestamp": "2026-01-05T07:00:00Z",
+      "likesCount": 45,
+      "commentsCount": 5
+    },
+    {
+      "observationId": "obs_005",
+      "username": "WildSoul",
+      "userAvatar": "appleUserProfile 2",
+      "birdName": "Indian Peafowl",
+      "observationTitle": "Indian Peafowl Dance",
+      "observationDescription": "Caught this peacock displaying its feathers. The rainy weather seems to have put it in a good mood.",
+      "observationImage": "IndianPeafowl",
+      "location": "Ranthambore, Rajasthan",
+      "timestamp": "2025-11-28T14:20:00Z",
+      "likesCount": 310,
+      "commentsCount": 55
+    }
   ]
 }

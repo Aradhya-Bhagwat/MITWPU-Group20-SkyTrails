@@ -32,9 +32,10 @@ struct CoreHomeData: Codable {
     let watchlist_spots: [PopularSpot]?
     let recommended_spots: [PopularSpot]?
     let dynamic_predictions: [DynamicCard]?
+    let community_observations: [CommunityObservation]?
 }
 
-// Wrapper for 'community.json'
+// Wrapper for 'community.json' (Deprecated)
 struct CommunityResponse: Codable {
     let community_observations: [CommunityObservation]?
 }
@@ -54,8 +55,53 @@ struct NewsItem: Codable {
     let imageName: String
     let link: String
 }
+// ...
+// (Keep existing structs)
+// ...
+// --- Community Models ---
 
-// --- Dynamic Map Card Models (Raw) ---
+struct CommunityObservation: Codable {
+    let observationId: String?
+    let username: String?
+    let userAvatar: String?
+    let observationTitle: String?
+    let observationDescription: String?
+    let observationImage: String?
+    let location: String
+    let timestamp: String?
+    let likesCount: Int?
+    let commentsCount: Int?
+    
+    // Legacy fields support (if JSON has old format, these might be populated)
+    let user: User?
+    let birdName: String?
+    let imageName: String?
+    
+    // Compatibility Computed Properties
+    var displayBirdName: String {
+        return birdName ?? observationTitle ?? "Unknown Bird"
+    }
+    
+    var displayImageName: String {
+        return observationImage ?? imageName ?? ""
+    }
+    
+    var displayUser: UserCompatibility {
+        if let u = user {
+            return UserCompatibility(name: u.name, observations: u.observations, profileImageName: u.profileImageName)
+        }
+        return UserCompatibility(name: username ?? "Unknown", observations: 0, profileImageName: userAvatar ?? "")
+    }
+}
+
+struct UserCompatibility {
+    let name: String
+    let observations: Int
+    let profileImageName: String
+}
+
+
+// ...
 struct RawCoordinate: Codable {
     let lat: Double
     let lon: Double
@@ -185,18 +231,9 @@ struct User: Codable {
     }
 }
 
-struct CommunityObservation: Codable {
-    let user: User
-    let birdName: String
-    let location: String
-    let imageName: String
-    
-    enum CodingKeys: String, CodingKey {
-        case user, location
-        case birdName = "bird_name"
-        case imageName = "image_name"
-    }
-}
+
+
+
 
 // MARK: - Prediction Models
 
@@ -368,10 +405,7 @@ class HomeModels {
         self.watchlistSpots = coreData.watchlist_spots ?? []
         self.recommendedSpots = coreData.recommended_spots ?? []
         self.dynamicCards = coreData.dynamic_predictions ?? []
-        
-        // 2. Load Community Data (from community.json)
-        let communityData = DataLoader.load("community", as: CommunityResponse.self)
-        self.communityObservations = communityData.community_observations ?? []
+        self.communityObservations = coreData.community_observations ?? []
         
         // 3. Load News Data (from daily_news.json)
         let newsData = DataLoader.load("daily_news", as: NewsResponse.self)
@@ -518,46 +552,5 @@ extension Array where Element == CLLocationCoordinate2D {
         return totalLength
     }
     
-    // ⭐️ RENAMED: Use 'calculateProgressCoordinates' to fix redeclaration error
-    func calculateProgressCoordinates(at percentage: Double) -> (progressCoords: [CLLocationCoordinate2D], currentCoord: CLLocationCoordinate2D) {
-        
-        guard self.count > 1 else {
-            if let singleCoord = self.first { return ([singleCoord], singleCoord) }
-            return ([], CLLocationCoordinate2D())
-        }
-        
-        let boundedPercentage = Swift.min(1.0, Swift.max(0.0, percentage))
-        let totalPathLength = self.calculateTotalLength() // Use renamed function
-        let targetDistance = boundedPercentage * totalPathLength
-        
-        var currentDistance: Double = 0
-        var segmentCoords: [CLLocationCoordinate2D] = [self.first!]
-        
-        if boundedPercentage >= 1.0 { return (self, self.last!) }
-        
-        for i in 0..<(self.count - 1) {
-            let startCoord = self[i]
-            let endCoord = self[i+1]
-            
-            let segmentLength = CLLocation(latitude: startCoord.latitude, longitude: startCoord.longitude)
-                .distance(from: CLLocation(latitude: endCoord.latitude, longitude: endCoord.longitude))
-            
-            if (currentDistance + segmentLength) >= targetDistance {
-                let remainingDistanceInSegment = targetDistance - currentDistance
-                let ratio = remainingDistanceInSegment / segmentLength
-                
-                let interpolatedLatitude = startCoord.latitude + (endCoord.latitude - startCoord.latitude) * ratio
-                let interpolatedLongitude = startCoord.longitude + (endCoord.longitude - startCoord.longitude) * ratio
-                
-                let interpolatedCoord = CLLocationCoordinate2D(latitude: interpolatedLatitude, longitude: interpolatedLongitude)
-                segmentCoords.append(interpolatedCoord)
-                
-                return (segmentCoords, interpolatedCoord)
-            }
-            
-            currentDistance += segmentLength
-            segmentCoords.append(endCoord)
-        }
-        return (self, self.last ?? CLLocationCoordinate2D())
-    }
+
 }
