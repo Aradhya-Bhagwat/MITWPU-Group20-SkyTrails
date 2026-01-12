@@ -10,7 +10,7 @@ class DateandLocationViewController: UIViewController {
     @IBOutlet weak var progressView: UIProgressView!
     
 
-    var viewModel: IdentificationModels!
+    var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
     
     

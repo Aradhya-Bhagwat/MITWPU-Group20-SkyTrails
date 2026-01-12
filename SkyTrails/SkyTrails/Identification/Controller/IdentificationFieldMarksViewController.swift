@@ -14,9 +14,9 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
 	@IBOutlet weak var progressView: UIProgressView!
 	
 	weak var delegate: IdentificationFlowStepDelegate?
-	var selectedFieldMarks: [Int] = [] // Stores indices of selected rows
+	var selectedFieldMarks: [Int] = []
 	
-	var viewModel: IdentificationModels!
+	var viewModel: IdentificationManager!
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()

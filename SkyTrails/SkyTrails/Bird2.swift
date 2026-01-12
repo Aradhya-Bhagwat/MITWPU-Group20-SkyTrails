@@ -25,12 +25,15 @@ struct Bird2: Codable, Identifiable {
 	var validMonths: [Int]?
 	var observationDates: [Date]?
 	var IdentificationShape: String?
-
+    
+    var shapeId: String?
 	var sizeCategory: Int?
 	var rarity: [BirdRarity]?
 	var fieldMarks: [FieldMarkData]?
 	
-	
+    var confidence: Double?
+    var scoreBreakdown: String?
+    
 	var userImages: [String]?
 	var observedBy: String?
 	var notes: String?
@@ -64,25 +67,27 @@ struct Bird2: Codable, Identifiable {
 	}
 	
 		
-	static func fromReferenceBird(_ refBird: ReferenceBird) -> Bird2 {
-		return Bird2(
-			id: UUID(uuidString: refBird.id) ?? UUID(),
-			name: refBird.commonName,
-			scientificName: refBird.scientificName ?? "",
-			staticImageName: refBird.imageName,
-			lat: nil,
-			lon: nil,
-			validLocations: refBird.validLocations,
-			validMonths: refBird.validMonths,
-			observationDates: nil,
-			sizeCategory: refBird.attributes.sizeCategory,
-			rarity: BirdRarity(rawValue: refBird.attributes.rarity.lowercased()).map { [$0] },
-			fieldMarks: refBird.fieldMarks,
-			userImages: nil,
-			observedBy: nil,
-			notes: nil,
-			isUserCreated: refBird.isUserCreated ?? false
-		)
-	}
+    static func fromReferenceBird(_ refBird: ReferenceBird) -> Bird2 {
+        return Bird2(
+            id: UUID(uuidString: refBird.id) ?? UUID(),
+            name: refBird.commonName,
+            scientificName: refBird.scientificName ?? "",
+            staticImageName: refBird.imageName,
+            lat: nil,
+            lon: nil,
+            validLocations: refBird.validLocations,
+            validMonths: refBird.validMonths,
+            observationDates: nil,
+            shapeId: refBird.attributes.shapeId,
+            sizeCategory: refBird.attributes.sizeCategory,
+            rarity: BirdRarity(rawValue: refBird.attributes.rarity.lowercased()).map { [$0] },
+            fieldMarks: refBird.fieldMarks,
+            userImages: nil,
+            observedBy: nil,
+            notes: nil,
+            isUserCreated: refBird.isUserCreated ?? false
+        )
+    }
+
 
 }

@@ -12,7 +12,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	@IBOutlet weak var tableContainerView: UIView!
 	@IBOutlet weak var resultTableView: UITableView!
 	
-	var viewModel: IdentificationModels!
+	var viewModel: IdentificationManager!
 	weak var delegate: IdentificationFlowStepDelegate?
 	
 		// History editing state
@@ -56,12 +56,12 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
             } else if let dbBird = viewModel.getBird(byName: history.specieName) {
                 // Manually construct result if not in current filter
                 selectedResult = IdentificationBird(
-                    id: dbBird.id,
+                    id: dbBird.id.uuidString,
                     name: dbBird.commonName,
-                    scientificName: dbBird.scientificName ?? "",
+                    scientificName: dbBird.scientificName,
                     confidence: 1.0, // Historical item is 100% matched effectively
                     description: "From History",
-                    imageName: dbBird.imageName,
+                    imageName: dbBird.staticImageName,
                     scoreBreakdown: "From History"
                 )
                 // Append to results so table shows it
@@ -220,20 +220,36 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	        
 	        self.navigationController?.pushViewController(birdSelectionVC, animated: true)
 	    }	
-	func didTapAddToWatchlist(for cell: ResultTableViewCell) {
-		guard let indexPath = resultTableView.indexPath(for: cell) else { return }
-		let bird = viewModel.birdResults[indexPath.row]
-		
-			// Logic to add to watchlist
-            // 1. Convert to SavedBird (Bird model)
-		let savedBird = bird.toSavedBird(location: viewModel.selectedLocation)
-        
-            // 2. Add to "My Watchlist" (Default)
+    func didTapAddToWatchlist(for cell: ResultTableViewCell) {
+        guard let indexPath = resultTableView.indexPath(for: cell) else { return }
+
+        let result = viewModel.birdResults[indexPath.row]
+
+        let savedBird = convertToSavedBird(from: result)
         saveToWatchlist(bird: savedBird)
-	}
+    }
+
+    private func convertToSavedBird(
+        from result: IdentificationBird
+    ) -> Bird {
+        return Bird(
+            id: UUID(),
+            name: result.name,
+            scientificName: result.scientificName,
+            images: [result.imageName],
+            rarity: [.common],
+            location: viewModel.selectedLocation != nil
+                ? [viewModel.selectedLocation!]
+                : [],
+            date: [Date()],
+            observedBy: nil,
+            notes: "Identified via Filter: \(result.description)"
+        )
+    }
+
     
     private func saveToWatchlist(bird: Bird) {
-        // Use WatchlistManager shared instance
+        // Use WatchlistManager shared  instance
         let manager = WatchlistManager.shared
         
        

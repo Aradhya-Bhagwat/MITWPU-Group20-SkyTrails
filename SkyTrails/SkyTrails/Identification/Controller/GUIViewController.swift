@@ -9,7 +9,7 @@ class GUIViewController: UIViewController {
 	@IBOutlet weak var categoriesCollectionView: UICollectionView!
 	
 		
-	var viewModel: IdentificationModels!
+	var viewModel: IdentificationManager!
 	weak var delegate: IdentificationFlowStepDelegate?
 	
 		// Data Sources
