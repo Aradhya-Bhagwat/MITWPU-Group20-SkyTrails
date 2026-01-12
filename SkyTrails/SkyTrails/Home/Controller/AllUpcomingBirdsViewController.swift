@@ -75,28 +75,35 @@ class AllUpcomingBirdsViewController: UIViewController {
             
                 let containerWidth = layoutEnvironment.container.effectiveContentSize.width
                 if self.cachedItemSize == nil {
-                    let layoutWidth = layoutEnvironment.container.effectiveContentSize.width
+                    guard let windowScene = self.view.window?.windowScene else { return nil }
+                    let screenBounds = windowScene.screen.bounds
+                    let portraitWidth = min(screenBounds.width, screenBounds.height)
+                    
+                    // 2. Constants used for Portrait Layout
                     let padding: CGFloat = 16.0
                     let spacing: CGFloat = 16.0
                     let maxCardWidth: CGFloat = 300.0
                     let minColumns = 2
                     
+                    // 3. Calculate what the width WOULD be in Portrait
                     var columnCount = minColumns
-                    var calculatedWidth = (layoutWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                    var calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                    
                     while calculatedWidth > maxCardWidth {
                         columnCount += 1
-                        calculatedWidth = (layoutWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                        calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                     }
                     
+                    // 4. Set the fixed Aspect Ratio (195/176)
                     let heightMultiplier: CGFloat = 195.0 / 176.0
                     let calculatedHeight = calculatedWidth * heightMultiplier
+                    
+                    // 5. Cache this size forever for this session
                     self.cachedItemSize = NSCollectionLayoutSize(
                         widthDimension: .absolute(calculatedWidth),
                         heightDimension: .absolute(calculatedHeight)
                     )
-
                 }
-                
                 guard let fixedSize = self.cachedItemSize else { return nil }
                 let itemWidth = fixedSize.widthDimension.dimension
                 let interItemSpacing: CGFloat = 8

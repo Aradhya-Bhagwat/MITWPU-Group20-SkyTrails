@@ -150,22 +150,26 @@ extension HomeViewController {
         
         return header
     }
-    
     private func createUpcomingBirdsSection() -> NSCollectionLayoutSection {
         let cardWidth: CGFloat
         
         if let cached = cachedUpcomingBirdCardWidth {
             cardWidth = cached
         } else {
+            // 1. Get Portrait Width through the window scene (iOS 26.0 compliant)
+            let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
+            let portraitWidth = min(screenBounds.width, screenBounds.height)
+            
+            // 2. Constants for layout
             let interGroupSpacing: CGFloat = 16
             let outerPadding: CGFloat = 16 * 2
             let visibleCardProportion: CGFloat = 2.1
             
-            let screenWidth = self.view.bounds.width
+            // 3. Calculate width based ONLY on portrait dimensions
             let numberOfSpacings = floor(visibleCardProportion)
             let totalSpacing = (numberOfSpacings * interGroupSpacing) + outerPadding
             
-            let calculatedWidth = (screenWidth - totalSpacing) / visibleCardProportion
+            let calculatedWidth = (portraitWidth - totalSpacing) / visibleCardProportion
             cardWidth = min(calculatedWidth, 230)
             
             cachedUpcomingBirdCardWidth = cardWidth
@@ -177,85 +181,67 @@ extension HomeViewController {
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
+        // 4. Height is strictly based on the calculated portrait width
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .absolute(cardWidth),
             heightDimension: .absolute(cardWidth * 1.034)
         )
         
-        let group = NSCollectionLayoutGroup.horizontal(
-            layoutSize: groupSize,
-            subitems: [item]
-        )
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous
         section.interGroupSpacing = 16
-        
-        // header
         section.boundarySupplementaryItems = [createSectionHeaderLayout()]
-        
-        section.contentInsets = NSDirectionalEdgeInsets(
-            top: 8,
-            leading: 16,
-            bottom: 20,
-            trailing: 16
-        )
+        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
         
         return section
     }
 
-    
     private func createSpotsToVisitSection() -> NSCollectionLayoutSection {
-
         let cardWidth: CGFloat
+        
+        if let cached = cachedSpotsCardWidth {
+            cardWidth = cached
+        } else {
+            // Use the same windowScene logic for consistency
+            let screenBounds = self.view.window?.windowScene?.screen.bounds ?? self.view.bounds
+            let portraitWidth = min(screenBounds.width, screenBounds.height)
             
-            if let cached = cachedSpotsCardWidth {
-                cardWidth = cached
-            } else {
-                let interGroupSpacing: CGFloat = 16
-                let outerPadding: CGFloat = 16 * 2
-                let visibleCardProportion: CGFloat = 2.1
-                
-                let screenWidth = self.view.bounds.width
-                let numberOfSpacings = floor(visibleCardProportion)
-                let totalSpacing = ((numberOfSpacings) * interGroupSpacing) + outerPadding
-                
-                let calculatedWidth = (screenWidth - totalSpacing) / visibleCardProportion
-                cardWidth = min(calculatedWidth, 230)
-                
-                cachedSpotsCardWidth = cardWidth
-            }
+            let interGroupSpacing: CGFloat = 16
+            let outerPadding: CGFloat = 16 * 2
+            let visibleCardProportion: CGFloat = 2.1
             
-            let itemSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .fractionalHeight(1.0)
-            )
-            let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            let groupSize = NSCollectionLayoutSize(
-                widthDimension: .absolute(cardWidth),
-                heightDimension: .absolute(cardWidth * 1.034)
-            )
+            let numberOfSpacings = floor(visibleCardProportion)
+            let totalSpacing = (numberOfSpacings * interGroupSpacing) + outerPadding
             
-            let group = NSCollectionLayoutGroup.horizontal(
-                layoutSize: groupSize,
-                subitems: [item]
-            )
+            let calculatedWidth = (portraitWidth - totalSpacing) / visibleCardProportion
+            cardWidth = min(calculatedWidth, 230)
             
-            let section = NSCollectionLayoutSection(group: group)
-            section.orthogonalScrollingBehavior = .continuous
-            section.interGroupSpacing = 16
-            
-            section.boundarySupplementaryItems = [createSectionHeaderLayout()]
-            
-            section.contentInsets = NSDirectionalEdgeInsets(
-                top: 8,
-                leading: 16,
-                bottom: 20,
-                trailing: 16
-            )
-            
-            return section
+            cachedSpotsCardWidth = cardWidth
         }
+        
+        let itemSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1.0),
+            heightDimension: .fractionalHeight(1.0)
+        )
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        
+        let groupSize = NSCollectionLayoutSize(
+            widthDimension: .absolute(cardWidth),
+            heightDimension: .absolute(cardWidth * 1.034)
+        )
+        
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.orthogonalScrollingBehavior = .continuous
+        section.interGroupSpacing = 16
+        section.boundarySupplementaryItems = [createSectionHeaderLayout()]
+        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
+        
+        return section
+    }
 
     private func createCommunityObservationsSection() -> NSCollectionLayoutSection {
             
