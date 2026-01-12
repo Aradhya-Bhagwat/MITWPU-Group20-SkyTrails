@@ -1,6 +1,6 @@
 
 import Foundation
-
+import CoreLocation
 
 struct BirdDatabase: Codable {
     var birds: [ReferenceBird]
@@ -123,6 +123,13 @@ struct IdentificationBird: Codable, Identifiable {
         )
     }
 }
+
+
+
+
+	// Standardized Bird struct (default memberwise initializer used)
+
+
 
 // MARK: - 2. The Smart Model (Merged Logic)
 

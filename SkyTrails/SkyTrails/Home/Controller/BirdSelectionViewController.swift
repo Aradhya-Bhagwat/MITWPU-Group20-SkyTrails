@@ -23,8 +23,9 @@ class BirdSelectionViewController: UIViewController {
         setupNavigationBar()
         
         if allSpecies.isEmpty {
-            let wrapper = DataLoader.load("prediction_data", as: PredictionDataWrapper.self)
-            self.allSpecies = wrapper.species_data
+            if let speciesData = HomeManager.shared.predictionData?.speciesData {
+                self.allSpecies = speciesData
+            }
         }
     }
     

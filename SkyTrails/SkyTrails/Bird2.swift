@@ -5,6 +5,8 @@
 //  Created by SDC-USER on 12/01/26.
 //
 
+import Foundation
+import CoreLocation
 
 
 
@@ -22,6 +24,7 @@ struct Bird2: Codable, Identifiable {
 		
 	var validMonths: [Int]?
 	var observationDates: [Date]?
+	var IdentificationShape: String?
 
 	var sizeCategory: Int?
 	var rarity: [BirdRarity]?
