@@ -147,7 +147,7 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         )
         
         // 3. Update the attributes with the calculated height
-        var newAttributes = layoutAttributes.copy() as! UICollectionViewLayoutAttributes
+        let newAttributes = layoutAttributes.copy() as! UICollectionViewLayoutAttributes
         newAttributes.frame = CGRect(origin: targetFrame.origin, size: CGSize(width: targetFrame.width, height: autoLayoutSize.height))
         
         return newAttributes
