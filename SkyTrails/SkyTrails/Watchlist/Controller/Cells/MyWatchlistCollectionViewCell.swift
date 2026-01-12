@@ -31,6 +31,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         
         self.clipsToBounds = false
         self.contentView.clipsToBounds = false
+		self.contentView.shadow = true
         setupUI()
     }
     
