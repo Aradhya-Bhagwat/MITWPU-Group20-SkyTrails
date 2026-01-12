@@ -17,7 +17,7 @@ class OnboardViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.view.bringSubviewToFront(loginSegmentView)
+        self.view.bringSubviewToFront(signupSegmentView)
     }
     
     @IBAction func segmentChanged(_ sender: UISegmentedControl) {
