@@ -110,6 +110,35 @@ extension HomeViewController {
             homeCollectionView.collectionViewLayout = createLayout()
             
     }
+	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, birds: [SpotBird]) {
+			// 1. Create unified input data
+		var inputData = PredictionInputData()
+		inputData.locationName = name
+		inputData.latitude = lat
+		inputData.longitude = lon
+		inputData.areaValue = Int(radius)
+		inputData.startDate = Date()
+		inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+		
+			// 2. Map birds to the final result type for the map output
+		let predictions: [FinalPredictionResult] = birds.map { bird in
+			return FinalPredictionResult(
+				birdName: bird.name,
+				imageName: bird.imageName,
+				matchedInputIndex: 0,
+				matchedLocation: (lat: bird.lat, lon: bird.lon)
+			)
+		}
+		
+			// 3. Navigate and pass data
+		let storyboard = UIStoryboard(name: "Home", bundle: nil)
+		if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+			self.navigationController?.pushViewController(predictMapVC, animated: true)
+			
+			predictMapVC.loadViewIfNeeded()
+			predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+		}
+	}
     private func createLayout() -> UICollectionViewLayout {
         
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
@@ -550,79 +579,74 @@ extension HomeViewController {
             }
         }
     }
-
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
-        if indexPath.section == 1 {
-            let item = homeData.homeScreenBirds[indexPath.row]
-            if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
-                
-                let (start, end) = HomeManager.shared.parseDateRange(item.date)
-                let input = BirdDateInput(
-                    species: species,
-                    startDate: start ?? Date(),
-                    endDate: end ?? Date()
-                    
-                )
-                
-                let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-                if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-                    mapVC.predictionInputs = [input]
-                    self.navigationController?.pushViewController(mapVC, animated: true)
-                }
-            } else {
-                print("Species data not found for: \(item.title)")
-            }
-            
-        } else if indexPath.section == 2 {
-            let item = homeData.homeScreenSpots[indexPath.row]
-
-            
-            guard let lat = item.latitude, let lon = item.longitude else {
-    
-                return
-            }
-        
-            var inputData = PredictionInputData()
-            inputData.locationName = item.title
-            inputData.latitude = lat
-            inputData.longitude = lon
-            inputData.areaValue = Int(item.radius ?? 5.0)
-            inputData.startDate = Date()
-            inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
-            
-            let predictions: [FinalPredictionResult] = (item.birds ?? []).map { bird in
-                return FinalPredictionResult(
-                    birdName: bird.name,
-                    imageName: bird.imageName,
-                    matchedInputIndex: 0,
-                    matchedLocation: (lat: bird.lat, lon: bird.lon)
-                )
-            }
-            
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-            if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
-                
-                self.navigationController?.pushViewController(predictMapVC, animated: true)
-                
-                predictMapVC.loadViewIfNeeded()
-                predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
-            }
-        } else if indexPath.section == 3 {
-            let observation = homeData.communityObservations[indexPath.row]
-            
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-            if let detailVC = storyboard.instantiateViewController(withIdentifier: "CommunityObservationViewController") as? CommunityObservationViewController {
-                detailVC.observation = observation
-                navigationController?.pushViewController(detailVC, animated: true)
-            }
-        } else if indexPath.section == 4 {
-            let item = homeData.latestNews[indexPath.row]
-            if let url = URL(string: item.link) {
-                UIApplication.shared.open(url)
-            }
-        }
-    }
+	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+		
+		switch indexPath.section {
+			case 0: // Dynamic Cards (Featured)
+				let mapCard = HomeManager.shared.getDynamicMapCards()[indexPath.row]
+				
+				if case .hotspot(let hotspot) = mapCard {
+						// Convert HotspotPrediction data to SpotBird format
+					let mappedBirds = hotspot.hotspots.map {
+						SpotBird(name: "Bird Sighting", imageName: $0.birdImageName, lat: $0.coordinate.latitude, lon: $0.coordinate.longitude)
+					}
+					
+					navigateToSpotDetails(
+						name: hotspot.placeName,
+						lat: hotspot.areaBoundary.first?.latitude ?? 0,
+						lon: hotspot.areaBoundary.first?.longitude ?? 0,
+						radius: hotspot.radius ?? 5.0,
+						birds: mappedBirds
+					)
+				}
+				
+			case 1: // Upcoming Birds
+				let item = homeData.homeScreenBirds[indexPath.row]
+				if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
+					let (start, end) = HomeManager.shared.parseDateRange(item.date)
+					let input = BirdDateInput(
+						species: species,
+						startDate: start ?? Date(),
+						endDate: end ?? Date()
+					)
+					
+					let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+					if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+						mapVC.predictionInputs = [input]
+						self.navigationController?.pushViewController(mapVC, animated: true)
+					}
+				}
+				
+			case 2: // Spots to Visit (Watchlist/Recommended)
+				let item = homeData.homeScreenSpots[indexPath.row]
+				guard let lat = item.latitude, let lon = item.longitude else { return }
+				
+				navigateToSpotDetails(
+					name: item.title,
+					lat: lat,
+					lon: lon,
+					radius: item.radius ?? 5.0,
+					birds: item.birds ?? []
+				)
+				
+			case 3: // Community
+				let observation = homeData.communityObservations[indexPath.row]
+				let storyboard = UIStoryboard(name: "Home", bundle: nil)
+				if let detailVC = storyboard.instantiateViewController(withIdentifier: "CommunityObservationViewController") as? CommunityObservationViewController {
+					detailVC.observation = observation
+					navigationController?.pushViewController(detailVC, animated: true)
+				}
+				
+			case 4: // News
+				let item = homeData.latestNews[indexPath.row]
+				if let url = URL(string: item.link) {
+					UIApplication.shared.open(url)
+				}
+				
+			default:
+				break
+		}
+	}
     
 }
 

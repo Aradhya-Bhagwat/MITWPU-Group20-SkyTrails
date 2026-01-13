@@ -91,41 +91,45 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             setupHotspotMap(with: prediction)
         }
 
-    func setupHotspotMap(with prediction: HotspotPrediction) {
-        
-        var annotationsToAdd: [MKAnnotation] = []
-        
-        if let radius = prediction.radius, let centerCoord = prediction.areaBoundary.first, prediction.areaBoundary.count == 1 {
-        
-            let circle = MKCircle(center: centerCoord, radius: radius)
-            mapView.addOverlay(circle)
-            
-            let padding: CGFloat = 20
-            mapView.setVisibleMapRect(circle.boundingMapRect, edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding), animated: false)
-            
-        } else if !prediction.areaBoundary.isEmpty {
-            let polygon = HotspotBoundaryPolygon(coordinates: prediction.areaBoundary,
-                                                 count: prediction.areaBoundary.count)
-            mapView.addOverlay(polygon)
-
-			if prediction.areaBoundary.first != nil {
-                let zoomPolyline = MKPolyline(coordinates: prediction.areaBoundary,
-                                              count: prediction.areaBoundary.count)
-                zoomToFitOverlays(for: zoomPolyline)
-            }
-        }
-        
-        for hotspot in prediction.hotspots {
-            let annotation = HotspotBirdAnnotation()
-            annotation.coordinate = hotspot.coordinate
-            annotation.imageName = hotspot.birdImageName
-            annotation.title = "Bird Sighting"
-            annotationsToAdd.append(annotation)
-        }
-        
-        mapView.addAnnotations(annotationsToAdd)
-    }
-
+	func setupHotspotMap(with prediction: HotspotPrediction) {
+		var annotationsToAdd: [MKAnnotation] = []
+		var zoomRect = MKMapRect.null 
+		if let centerCoord = prediction.areaBoundary.first, prediction.areaBoundary.count == 1 {
+			let rawRadius = prediction.radius ?? 5.0
+			let radiusInMeters = rawRadius > 100 ? rawRadius : rawRadius * 1000
+			
+			let circle = MKCircle(center: centerCoord, radius: radiusInMeters)
+			mapView.addOverlay(circle)
+			
+			zoomRect = circle.boundingMapRect
+			
+		} else if !prediction.areaBoundary.isEmpty {
+			let polygon = HotspotBoundaryPolygon(coordinates: prediction.areaBoundary, count: prediction.areaBoundary.count)
+			mapView.addOverlay(polygon)
+			zoomRect = polygon.boundingMapRect
+		}
+		
+		for hotspot in prediction.hotspots {
+			let annotation = HotspotBirdAnnotation()
+			annotation.coordinate = hotspot.coordinate
+			annotation.imageName = hotspot.birdImageName
+			annotation.title = "Bird Sighting"
+			annotationsToAdd.append(annotation)
+			let annotationPoint = MKMapPoint(hotspot.coordinate)
+			let pointRect = MKMapRect(x: annotationPoint.x, y: annotationPoint.y, width: 0.1, height: 0.1)
+			zoomRect = zoomRect.union(pointRect) // Ensures this pin is inside the box
+		}
+		
+		mapView.addAnnotations(annotationsToAdd)
+		
+			// 3. Final Zoom with Safety Padding
+		if !zoomRect.isNull {
+			let padding = UIEdgeInsets(top: 30, left: 30, bottom: 30, right: 30)
+				// Use regionThatFits to prevent the "Invalid Region" crash we fixed earlier
+			let fittedRect = mapView.mapRectThatFits(zoomRect, edgePadding: padding)
+			mapView.setVisibleMapRect(fittedRect, animated: false)
+		}
+	}
     private func zoomToFitOverlays(for pathLine: MKPolyline) {
         let rect = pathLine.boundingMapRect
         let edgePadding = UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)

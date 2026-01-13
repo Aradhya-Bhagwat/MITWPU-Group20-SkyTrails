@@ -233,7 +233,7 @@
 			"areaBoundary": [
 				{"lat": 18.4200, "lon": 73.7600}
 			],
-			"radius": 2500,
+			"radius": 5,
 			"hotspots": [
 				{"lat": 18.4300, "lon": 73.7400, "birdImageName": "flamingo"},
 				{"lat": 18.4220, "lon": 73.7550, "birdImageName": "kingfisher"},
