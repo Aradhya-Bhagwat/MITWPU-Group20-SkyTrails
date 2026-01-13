@@ -213,9 +213,7 @@ class EditWatchlistDetailViewController: UIViewController {
 			let dateRange = formatDateRange(start: startDate, end: endDate)
 			
 				// Sync local participant changes if necessary
-			if let index = manager.sharedWatchlists.firstIndex(where: { $0.id == shared.id }) {
-				manager.sharedWatchlists[index].userImages = finalUserImages
-			}
+			manager.updateSharedWatchlistUserImages(id: shared.id, userImages: finalUserImages)
 			
 			manager.updateSharedWatchlist(id: shared.id, title: title, location: location, dateRange: dateRange)
 			navigationController?.popViewController(animated: true)

@@ -40,7 +40,21 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupDataObservers()
         applyFilters()
+    }
+
+    private func setupDataObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDataLoaded(_:)),
+            name: WatchlistManager.didLoadDataNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleDataLoaded(_ notification: Notification) {
+        refreshData()
     }
             
     @IBAction func didTapEdit(_ sender: Any) {
@@ -63,7 +77,11 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        refreshData()
+        WatchlistManager.shared.onDataLoaded { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.refreshData()
+            }
+        }
     }
     
     private func refreshData() {

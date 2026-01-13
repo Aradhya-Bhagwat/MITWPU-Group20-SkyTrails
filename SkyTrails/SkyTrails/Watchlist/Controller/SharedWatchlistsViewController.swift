@@ -32,14 +32,29 @@ class SharedWatchlistsViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupGestures()
-        // initial data populate
-        filteredWatchlists = allSharedWatchlists
-        collectionView.reloadData()
+        setupDataObservers()
+    }
+
+    private func setupDataObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDataLoaded(_:)),
+            name: WatchlistManager.didLoadDataNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleDataLoaded(_ notification: Notification) {
+        refreshData()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        refreshData()
+        WatchlistManager.shared.onDataLoaded { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.refreshData()
+            }
+        }
     }
 
     // MARK: - Setup

@@ -42,11 +42,34 @@ class WatchlistHomeViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupCollectionView()
+        setupDataObservers()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        summaryCardCollectionView.reloadData()
+        refreshDataIfNeeded()
+    }
+
+    private func setupDataObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDataLoaded(_:)),
+            name: WatchlistManager.didLoadDataNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleDataLoaded(_ notification: Notification) {
+        refreshDataIfNeeded()
+    }
+
+    private func refreshDataIfNeeded() {
+        WatchlistManager.shared.onDataLoaded { [weak self] success in
+            guard success else { return }
+            DispatchQueue.main.async {
+                self?.summaryCardCollectionView.reloadData()
+            }
+        }
     }
 
     // MARK: - Setup

@@ -8,27 +8,48 @@
 import Foundation
 import CoreLocation
 
-actor WatchlistManager {
+final class WatchlistManager {
     
     static let shared = WatchlistManager()
     
     private(set) var watchlists: [Watchlist] = []
     private(set) var sharedWatchlists: [SharedWatchlist] = []
     
-    private let encoder: JSONEncoder = {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        return encoder
-    }()
+    private let queue = DispatchQueue(label: "com.skytrails.watchlistmanager", qos: .userInitiated)
+    private let encoder: JSONEncoder
+    private let decoder: JSONDecoder
     
-    private let decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        return decoder
-    }()
+    private var isDataLoaded = false
+    private var loadCompletionHandlers: [(Bool) -> Void] = []
+    
+    static let didLoadDataNotification = Notification.Name("WatchlistManagerDidLoadData")
     
     private init() {
-        Task {
-            await loadData()
+        encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        decoder = JSONDecoder()
+        loadData()
+    }
+    
+    func onDataLoaded(_ handler: @escaping (Bool) -> Void) {
+        if isDataLoaded {
+            handler(isDataLoaded)
+        } else {
+            loadCompletionHandlers.append(handler)
+        }
+    }
+    
+    private func notifyDataLoaded(success: Bool) {
+        isDataLoaded = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            NotificationCenter.default.post(
+                name: WatchlistManager.didLoadDataNotification,
+                object: self,
+                userInfo: ["success": success]
+            )
+            self.loadCompletionHandlers.forEach { $0(success) }
+            self.loadCompletionHandlers.removeAll()
         }
     }
     
@@ -39,36 +60,52 @@ actor WatchlistManager {
     }
     
     private func saveData() {
-        let watchlistsURL = getDocumentsDirectory().appendingPathComponent("watchlists.json")
-        let sharedWatchlistsURL = getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
-        
-        do {
-            let watchlistsData = try encoder.encode(watchlists)
-            try watchlistsData.write(to: watchlistsURL, options: .atomic)
+        queue.async { [weak self] in
+            guard let self = self else { return }
             
-            let sharedData = try encoder.encode(sharedWatchlists)
-            try sharedData.write(to: sharedWatchlistsURL, options: .atomic)
-        } catch {
-            print("Error saving data: \(error)")
+            let watchlistsURL = self.getDocumentsDirectory().appendingPathComponent("watchlists.json")
+            let sharedWatchlistsURL = self.getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
+            
+            do {
+                let watchlistsData = try self.encoder.encode(self.watchlists)
+                try watchlistsData.write(to: watchlistsURL, options: .atomic)
+                
+                let sharedData = try self.encoder.encode(self.sharedWatchlists)
+                try sharedData.write(to: sharedWatchlistsURL, options: .atomic)
+            } catch {
+                print("Error saving data: \(error)")
+            }
         }
     }
     
     private func loadData() {
-        let watchlistsURL = getDocumentsDirectory().appendingPathComponent("watchlists.json")
-        let sharedWatchlistsURL = getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
-        
-        var loadedWatchlists = loadWatchlists(from: watchlistsURL, fallbackBundle: "watchlists")
-        var loadedShared = loadSharedWatchlists(from: sharedWatchlistsURL, fallbackBundle: "sharedWatchlists")
-        
-        if loadedWatchlists.wasLoadedFromBundle || loadedShared.wasLoadedFromBundle {
-            saveData()
+        queue.async { [weak self] in
+            guard let self = self else { return }
+            
+            let watchlistsURL = self.getDocumentsDirectory().appendingPathComponent("watchlists.json")
+            let sharedWatchlistsURL = self.getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
+            
+            let loadedWatchlists = self.loadWatchlists(from: watchlistsURL, fallbackBundle: "watchlists")
+            let loadedShared = self.loadSharedWatchlists(from: sharedWatchlistsURL, fallbackBundle: "sharedWatchlists")
+            
+            DispatchQueue.main.async {
+                let hasData = !loadedWatchlists.watchlists.isEmpty || !loadedShared.watchlists.isEmpty
+                self.watchlists = loadedWatchlists.watchlists
+                self.sharedWatchlists = loadedShared.watchlists
+                
+                if loadedWatchlists.wasLoadedFromBundle || loadedShared.wasLoadedFromBundle {
+                    self.saveData()
+                }
+                
+                self.notifyDataLoaded(success: hasData)
+            }
         }
     }
     
     private func loadWatchlists(from documentsURL: URL, fallbackBundle bundleName: String) -> (watchlists: [Watchlist], wasLoadedFromBundle: Bool) {
         if let data = try? Data(contentsOf: documentsURL) {
             do {
-                let decoded = try decoder.decode([Watchlist].self, from: data)
+                let decoded = try self.decoder.decode([Watchlist].self, from: data)
                 return (decoded, false)
             } catch {
                 print("CRITICAL ERROR: Failed to decode watchlists.json from Documents: \(error)")
@@ -78,7 +115,7 @@ actor WatchlistManager {
         if let bundleURL = Bundle.main.url(forResource: bundleName, withExtension: "json"),
            let data = try? Data(contentsOf: bundleURL) {
             do {
-                let decoded = try decoder.decode([Watchlist].self, from: data)
+                let decoded = try self.decoder.decode([Watchlist].self, from: data)
                 print("Loaded watchlists from Bundle as fallback")
                 return (decoded, true)
             } catch {
@@ -92,7 +129,7 @@ actor WatchlistManager {
     private func loadSharedWatchlists(from documentsURL: URL, fallbackBundle bundleName: String) -> (watchlists: [SharedWatchlist], wasLoadedFromBundle: Bool) {
         if let data = try? Data(contentsOf: documentsURL) {
             do {
-                let decoded = try decoder.decode([SharedWatchlist].self, from: data)
+                let decoded = try self.decoder.decode([SharedWatchlist].self, from: data)
                 return (decoded, false)
             } catch {
                 print("CRITICAL ERROR: Failed to decode sharedWatchlists.json from Documents: \(error)")
@@ -102,7 +139,7 @@ actor WatchlistManager {
         if let bundleURL = Bundle.main.url(forResource: bundleName, withExtension: "json"),
            let data = try? Data(contentsOf: bundleURL) {
             do {
-                let decoded = try decoder.decode([SharedWatchlist].self, from: data)
+                let decoded = try self.decoder.decode([SharedWatchlist].self, from: data)
                 print("Loaded shared watchlists from Bundle as fallback")
                 return (decoded, true)
             } catch {
@@ -128,6 +165,16 @@ actor WatchlistManager {
     private enum WatchlistType {
         case custom
         case shared
+    }
+    
+    // MARK: - Data Access (Thread-safe)
+    
+    func getWatchlist(by id: UUID) -> Watchlist? {
+        watchlists.first { $0.id == id }
+    }
+    
+    func getSharedWatchlist(by id: UUID) -> SharedWatchlist? {
+        sharedWatchlists.first { $0.id == id }
     }
     
     // MARK: - Calculated Stats
@@ -278,6 +325,13 @@ actor WatchlistManager {
             sharedWatchlists[index].title = title
             sharedWatchlists[index].location = location
             sharedWatchlists[index].dateRange = dateRange
+            saveData()
+        }
+    }
+    
+    func updateSharedWatchlistUserImages(id: UUID, userImages: [String]) {
+        if let index = sharedWatchlists.firstIndex(where: { $0.id == id }) {
+            sharedWatchlists[index].userImages = userImages
             saveData()
         }
     }
