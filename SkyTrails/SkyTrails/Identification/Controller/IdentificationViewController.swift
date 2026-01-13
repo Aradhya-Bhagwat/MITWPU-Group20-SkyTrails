@@ -30,16 +30,17 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         applyCardShadow(to: startButton)
 //        startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
     }
-//    override func viewWillAppear(_ animated: Bool) {
-//        super.viewWillAppear(animated)
-//
-//        print("🟢 fieldMarkOptions count:", model.fieldMarkOptions.count)
-//
-//        DispatchQueue.main.async {
-//            self.tableView.reloadData()
-//            self.tableView.layoutIfNeeded()
-//        }
-//    }
+    // In IdentificationViewController.swift
+
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+
+         
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+                self.collectionView.reloadData() 
+            }
+        }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,6 +57,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         tableView.estimatedRowHeight = 56
 
         tableView.reloadData()
+        collectionView.reloadData()
         updateSelectionState()
     }
 

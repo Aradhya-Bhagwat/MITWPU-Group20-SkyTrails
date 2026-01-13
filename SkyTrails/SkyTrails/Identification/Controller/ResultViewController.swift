@@ -20,64 +20,58 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	var historyIndex: Int?
 	
 		// UPDATED: Now uses the new IdentificationBird model
-	var selectedResult: IdentificationBird?
+	var selectedResult: Bird2?
 	
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		
-		resultTableView.register(
-			UINib(nibName: "ResultTableViewCell", bundle: nil),
-			forCellReuseIdentifier: "ResultTableViewCell"
-		)
-		resultTableView.rowHeight = 75
-		resultTableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
-		
-		resultTableView.delegate = self
-		resultTableView.dataSource = self
-		
-		styleTableContainer()
-		setupLeftResetButton()
-		setupRightTickButton()
-		
-			
-			// This ensures the table reloads whenever the filter finishes
-		viewModel.onResultsUpdated = { [weak self] in
-			DispatchQueue.main.async {
-				self?.resultTableView.reloadData()
-			}
-		}
-		
-			
-			// If editing history, pre-select the bird
-		if let history = historyItem {
-			// Find the bird in the FULL database first, not just filtered results
-			if let match = viewModel.birdResults.first(where: { $0.name == history.specieName }) {
-				selectedResult = match
-            } else if let dbBird = viewModel.getBird(byName: history.specieName) {
-                // Manually construct result if not in current filter
-                selectedResult = IdentificationBird(
-                    id: dbBird.id.uuidString,
-                    name: dbBird.commonName,
-                    scientificName: dbBird.scientificName,
-                    confidence: 1.0, // Historical item is 100% matched effectively
-                    description: "From History",
-                    imageName: dbBird.staticImageName,
-                    scoreBreakdown: "From History"
-                )
-                // Append to results so table shows it
-                viewModel.birdResults = [selectedResult!]
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        resultTableView.register(
+            UINib(nibName: "ResultTableViewCell", bundle: nil),
+            forCellReuseIdentifier: "ResultTableViewCell"
+        )
+        resultTableView.rowHeight = 75
+        resultTableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+        
+        resultTableView.delegate = self
+        resultTableView.dataSource = self
+        
+        styleTableContainer()
+        setupLeftResetButton()
+        setupRightTickButton()
+        
+        
+        // This ensures the table reloads whenever the filter finishes
+        viewModel.onResultsUpdated = { [weak self] in
+            DispatchQueue.main.async {
+                self?.resultTableView.reloadData()
             }
-		} else {
-				// If not editing history, run the filter once to ensure data is fresh
-			viewModel.filterBirds(
-				shape: viewModel.selectedShapeId,
-				size: viewModel.selectedSizeCategory,
-				location: viewModel.selectedLocation,
-				fieldMarks: viewModel.selectedFieldMarks
-			)
-		}
-	}
-	
+        }
+        
+        
+        // If editing history, pre-select the bird
+        if let history = historyItem {
+            // Find the bird in the FULL database first
+            if let match = viewModel.birdResults.first(where: { $0.commonName == history.specieName }) {
+                selectedResult = match
+            } else if var dbBird = viewModel.getBird(byName: history.specieName) {
+                
+                
+                dbBird.confidence = 1.0
+                dbBird.scoreBreakdown = "From History"
+                selectedResult = dbBird
+                
+                viewModel.birdResults = [selectedResult!]
+            } else {
+                // If not editing history, run the filter once to ensure data is fresh
+                viewModel.filterBirds(
+                    shape: viewModel.selectedShapeId,
+                    size: viewModel.selectedSizeCategory,
+                    location: viewModel.selectedLocation,
+                    fieldMarks: viewModel.selectedFieldMarks
+                )
+            }
+        }
+    }
 		
 	
 	func styleTableContainer() {
@@ -101,6 +95,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
         
         button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
         button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+        
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
 	
@@ -121,32 +116,35 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	}
 	
 		
-	
-	@objc private func nextTapped() {
-		guard let result = selectedResult else {
-							navigationController?.popToRootViewController(animated: true)
-			return
-		}
-		
-			// Create the History Entry
-		let entry = History(
-			imageView: result.imageName,
-			specieName: result.name,
-			date: today()
-		)
-		
-			
-		if let index = historyIndex {
-			viewModel.histories[index] = entry
-		}
-			
-		else {
-			viewModel.addToHistory(entry)
-		}
-		
-		navigationController?.popToRootViewController(animated: true)
-		delegate?.didFinishStep()
-	}
+    @objc private func nextTapped() {
+        // 1. If user selected a row, use it.
+        // 2. If NOT, try to use the first bird in the results list as a default.
+        let birdToSave = selectedResult ?? viewModel.birdResults.first
+        
+        guard let result = birdToSave else {
+            // If the list is empty and nothing is selected, just return
+            navigationController?.popToRootViewController(animated: true)
+            return
+        }
+        
+        print("Saving bird: \(result.commonName)") // Debugging print
+
+        // Create the History Entry
+        let entry = History(
+            imageView: result.staticImageName, //
+            specieName: result.commonName,     //
+            date: today()
+        )
+        
+        if let index = historyIndex {
+            viewModel.histories[index] = entry
+        } else {
+            viewModel.addToHistory(entry)
+        }
+        
+        navigationController?.popToRootViewController(animated: true)
+        delegate?.didFinishStep()
+    }
 	
 	@objc private func restartTapped() {
 		delegate?.didTapLeftButton()
@@ -172,25 +170,25 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ResultTableViewCell", for: indexPath) as! ResultTableViewCell
 		
 		let result = viewModel.birdResults[indexPath.row]
-		let img = UIImage(named: result.imageName) // Using new imageName property
+		let img = UIImage(named: result.staticImageName) // Using new imageName property
 		
 			// Format confidence: 0.95 -> "95"
-		let percentString = String(Int(result.confidence * 100))
+        let percentString = String(Int((result.confidence ?? 0.0) * 100))
 		
 		cell.configure(
 			image: img,
-			name: result.name,
+			name: result.commonName,
 			percentage: percentString
 		)
 		
 			// Highlight selection
-		if selectedResult?.name == result.name {
-			cell.backgroundColor = UIColor.systemGray5
-		} else {
-			cell.backgroundColor = .white
-		}
-		
-		cell.delegate = self
+        if selectedResult?.id == result.id {
+                    cell.backgroundColor = UIColor.systemGray5
+                } else {
+                    cell.backgroundColor = .white
+                }
+                
+                cell.delegate = self
 		return cell
 	}
 	
@@ -198,7 +196,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 			// Update selection
-		selectedResult = viewModel.birdResults[indexPath.row]
+        selectedResult = viewModel.birdResults[indexPath.row]
 		tableView.reloadData() // Refresh to show grey background on selected row
 	}
 	
@@ -216,7 +214,7 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
 	        }
 	
 	        // Pass the ID of the selected bird to pre-select it in the next screen.
-	        birdSelectionVC.selectedSpecies = [selectedBird.id]
+            birdSelectionVC.selectedSpecies = [selectedBird.id.uuidString]
 	        
 	        self.navigationController?.pushViewController(birdSelectionVC, animated: true)
 	    }	
@@ -229,23 +227,19 @@ class ResultViewController: UIViewController, UITableViewDelegate, UITableViewDa
         saveToWatchlist(bird: savedBird)
     }
 
-    private func convertToSavedBird(
-        from result: IdentificationBird
-    ) -> Bird {
-        return Bird(
-            id: UUID(),
-            name: result.name,
-            scientificName: result.scientificName,
-            images: [result.imageName],
-            rarity: [.common],
-            location: viewModel.selectedLocation != nil
-                ? [viewModel.selectedLocation!]
-                : [],
-            date: [Date()],
-            observedBy: nil,
-            notes: "Identified via Filter: \(result.description)"
-        )
-    }
+    private func convertToSavedBird(from result: Bird2) -> Bird {
+            return Bird(
+                id: UUID(),
+                name: result.commonName, // OLD: result.name
+                scientificName: result.scientificName,
+                images: [result.staticImageName], // OLD: [result.imageName]
+                rarity: [.common],
+                location: viewModel.selectedLocation != nil ? [viewModel.selectedLocation!] : [],
+                date: [Date()],
+                observedBy: nil,
+                notes: "Identified via Filter: \(result.scoreBreakdown ?? "N/A")" // OLD: result.description
+            )
+        }
 
     
     private func saveToWatchlist(bird: Bird) {
