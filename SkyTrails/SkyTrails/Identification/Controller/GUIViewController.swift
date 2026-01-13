@@ -26,16 +26,20 @@ class GUIViewController: UIViewController {
 
 	
     private let layerOrder = [
-        "Tail",                         // 1. Behind the body
-        "Leg",                          // 2. Behind the body
-        "Thigh",                        // 3. Connects Leg to Body
-        "Neck",                         // 4. Structural Anchor (Thin/Long)
-        "Head",                         // 5. Sits on the Neck
-        "Back", "Belly", "Chest",       // 6. Body Patterns
-        "Nape", "Throat", "Crown",      // 7. Head Patterns
-        "Beak", "Eye",                  // 8. Face details
-        "Wings"                         // 9. Top-most (covers Back/Body)
+        "Tail",
+        "Leg",
+        "Thigh",
+
+        "Head",     // draw head first
+        "Neck",     // draw neck AFTER → overlays head
+
+        "Back", "Belly", "Chest",
+        "Nape", "Throat", "Crown",
+        "Beak", "Eye",
+        "Wings"
     ]
+
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
@@ -97,31 +101,31 @@ class GUIViewController: UIViewController {
 		}
 	}
 
-    func applyNeckOffset(variant: String) {
-        let shapeName = viewModel.selectedShapeId ?? "Finch"
-        
-        // 1. Correct the property name to 'birdShapes'
-        guard let shapeData = viewModel.birdShapes.first(where: { $0.name == shapeName }),
-              let variations = shapeData.neck_variations else { return }
-        
-        // 2. Get the Y offset
-        let offsetData = variations.first(where: { $0.id == variant })
-            ?? variations.first(where: { $0.id == "Default" })
-        
-        // MAKE SURE THIS LINE IS ABOVE THE ANIMATION BLOCK
-        let offsetY = CGFloat(offsetData?.head_offset_y ?? 0)
-        
-        let headRelatedLayers = ["Head", "Crown", "Beak", "Eye", "Nape", "Throat"]
-        
-        // 3. Animate using the offsetY variable defined above
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
-            for layerName in headRelatedLayers {
-                if let layerView = self.partLayers[layerName] {
-                    layerView.transform = CGAffineTransform(translationX: 0, y: offsetY)
-                }
-            }
-        }
-    }
+//    func applyNeckOffset(variant: String) {
+//        let shapeName = viewModel.selectedShapeId ?? "Finch"
+//        
+//        // 1. Correct the property name to 'birdShapes'
+//        guard let shapeData = viewModel.birdShapes.first(where: { $0.name == shapeName }),
+//              let variations = shapeData.neck_variations else { return }
+//        
+//        // 2. Get the Y offset
+//        let offsetData = variations.first(where: { $0.id == variant })
+//            ?? variations.first(where: { $0.id == "Default" })
+//        
+//        // MAKE SURE THIS LINE IS ABOVE THE ANIMATION BLOCK
+//        let offsetY = CGFloat(offsetData?.head_offset_y ?? 0)
+//        
+//        let headRelatedLayers = ["Head", "Crown", "Beak", "Eye", "Nape", "Throat"]
+//        
+//        // 3. Animate using the offsetY variable defined above
+//        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+//            for layerName in headRelatedLayers {
+//                if let layerView = self.partLayers[layerName] {
+//                    layerView.transform = CGAffineTransform(translationX: 0, y: offsetY)
+//                }
+//            }
+//        }
+//    }
     
 //    private func setupCanvas() {
 //        canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
@@ -201,10 +205,10 @@ class GUIViewController: UIViewController {
             }
             
             // 4. Handle Neck offsets for whatever version is loaded
-            if catName == "Neck" {
-                let variant = selectedVariations["Neck"] ?? "Default"
-                applyNeckOffset(variant: variant)
-            }
+//            if catName == "Neck" {
+//                let variant = selectedVariations["Neck"] ?? "Default"
+//                applyNeckOffset(variant: variant)
+//            }
         }
     }
 	private func setupRightTickButton() {
@@ -271,9 +275,9 @@ class GUIViewController: UIViewController {
             layer.image = UIImage(named: imageName)
         }
         
-        if category == "Neck" {
-            applyNeckOffset(variant: variant)
-        }
+//        if category == "Neck" {
+//            applyNeckOffset(variant: variant)
+//        }
     }
 	private func compositePreviewImage(base: UIImage, overlay: UIImage) -> UIImage {
 		let renderer = UIGraphicsImageRenderer(size: base.size)
