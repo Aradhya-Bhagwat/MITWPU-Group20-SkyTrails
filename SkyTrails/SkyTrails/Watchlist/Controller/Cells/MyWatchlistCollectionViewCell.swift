@@ -102,29 +102,9 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         
         // Configure Badges
         // Green: To Observe (birds added/not yet observed)
-        addIconToLabel(label: greenBadgeLabel, text: "\(toObserveCount)", iconName: "bird")
-        
+        greenBadgeLabel.addIcon(text: "\(toObserveCount)", iconName: "bird")
+
         // Blue: Observed
-        addIconToLabel(label: blueBadgeLabel, text: "\(observedCount)", iconName: "bird.fill")
-    }
-    
-    private func addIconToLabel(label: UILabel, text: String, iconName: String) {
-        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        let image = UIImage(systemName: iconName, withConfiguration: config)?
-            .withTintColor(label.textColor, renderingMode: .alwaysOriginal)
-        
-        guard let safeImage = image else {
-            label.text = text
-            return
-        }
-        
-        let attachment = NSTextAttachment(image: safeImage)
-        let yOffset = (label.font.capHeight - safeImage.size.height).rounded() / 2
-        attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
-        
-        let attrString = NSMutableAttributedString(attachment: attachment)
-        attrString.append(NSAttributedString(string: "  " + text))
-        
-        label.attributedText = attrString
+        blueBadgeLabel.addIcon(text: "\(observedCount)", iconName: "bird.fill")
     }
 }

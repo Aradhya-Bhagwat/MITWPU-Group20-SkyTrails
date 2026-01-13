@@ -78,12 +78,12 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         
         titleLabel.text = title
         self.mainImageView.image = mainImage
-        
-        addIconToLabel(label: locationLabel, text: location, iconName: "location.fill")
-        addIconToLabel(label: dateLabel, text: dateRange, iconName: "calendar")
-        
-        addIconToLabel(label: greenBadgeLabel, text: "\(stats.greenValue)", iconName: "bird")
-        addIconToLabel(label: blueBadgeLabel, text: "\(stats.blueValue)", iconName: "bird.fill")
+
+        locationLabel.addIcon(text: location, iconName: "location.fill")
+        dateLabel.addIcon(text: dateRange, iconName: "calendar")
+
+        greenBadgeLabel.addIcon(text: "\(stats.greenValue)", iconName: "bird")
+        blueBadgeLabel.addIcon(text: "\(stats.blueValue)", iconName: "bird.fill")
         
         setupAvatars(images: userImages)
     }
@@ -136,23 +136,4 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         }
     }
     
-    private func addIconToLabel(label: UILabel, text: String, iconName: String) {
-        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        let image = UIImage(systemName: iconName, withConfiguration: config)?
-            .withTintColor(label.textColor, renderingMode: .alwaysOriginal)
-        
-        guard let safeImage = image else {
-            label.text = text
-            return
-        }
-        
-        let attachment = NSTextAttachment(image: safeImage)
-        let yOffset = (label.font.capHeight - safeImage.size.height).rounded() / 2
-        attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
-        
-        let attrString = NSMutableAttributedString(attachment: attachment)
-        attrString.append(NSAttributedString(string: "  " + text))
-        
-        label.attributedText = attrString
-    }
 }

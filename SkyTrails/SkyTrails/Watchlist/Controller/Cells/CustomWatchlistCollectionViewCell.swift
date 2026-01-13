@@ -80,26 +80,23 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         titleLabel.text = watchlist.title
         
         // Location
-        addIconToLabel(label: locationLabel, text: watchlist.location, iconName: "location.fill")
+        locationLabel.addIcon(text: watchlist.location, iconName: "location.fill")
         
         // Date
         if isDateValid(start: watchlist.startDate, end: watchlist.endDate) {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "d MMM"
-            
-            let startStr = formatter.string(from: watchlist.startDate)
-            let endStr = formatter.string(from: watchlist.endDate)
+            let startStr = DateFormatters.shortDate.string(from: watchlist.startDate)
+            let endStr = DateFormatters.shortDate.string(from: watchlist.endDate)
             let dateString = "\(startStr) - \(endStr)"
             
-            addIconToLabel(label: dateLabel, text: dateString, iconName: "calendar")
+            dateLabel.addIcon(text: dateString, iconName: "calendar")
             dateLabel.isHidden = false
         } else {
             dateLabel.isHidden = true
         }
         
         // Badges
-        addIconToLabel(label: leftBadgeLabel, text: "\(watchlist.birds.count)", iconName: "bird")
-        addIconToLabel(label: rightBadgeLabel, text: "\(watchlist.observedCount)", iconName: "bird.fill")
+        leftBadgeLabel.addIcon(text: "\(watchlist.birds.count)", iconName: "bird")
+        rightBadgeLabel.addIcon(text: "\(watchlist.observedCount)", iconName: "bird.fill")
         
         // Cover Image
         if let firstBird = watchlist.birds.first, let imageName = firstBird.images.first {
@@ -116,23 +113,4 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         return start != end
     }
     
-    private func addIconToLabel(label: UILabel, text: String, iconName: String) {
-        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        let image = UIImage(systemName: iconName, withConfiguration: config)?
-            .withTintColor(label.textColor, renderingMode: .alwaysOriginal)
-        
-        guard let safeImage = image else {
-            label.text = text
-            return
-        }
-        
-        let attachment = NSTextAttachment(image: safeImage)
-        let yOffset = (label.font.capHeight - safeImage.size.height).rounded() / 2
-        attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
-        
-        let attrString = NSMutableAttributedString(attachment: attachment)
-        attrString.append(NSAttributedString(string: "  " + text))
-        
-        label.attributedText = attrString
-    }
 }

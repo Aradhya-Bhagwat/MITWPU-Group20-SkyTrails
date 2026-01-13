@@ -8,21 +8,34 @@
 import Foundation
 import CoreLocation
 
-class WatchlistManager {
+actor WatchlistManager {
     
     static let shared = WatchlistManager()
     
-    var watchlists: [Watchlist] = []
-    var sharedWatchlists: [SharedWatchlist] = []
+    private(set) var watchlists: [Watchlist] = []
+    private(set) var sharedWatchlists: [SharedWatchlist] = []
+    
+    private let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        return encoder
+    }()
+    
+    private let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        return decoder
+    }()
     
     private init() {
-        loadData()
+        Task {
+            await loadData()
+        }
     }
     
     // MARK: - Persistence
     
     private func getDocumentsDirectory() -> URL {
-        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
     
     private func saveData() {
@@ -30,115 +43,123 @@ class WatchlistManager {
         let sharedWatchlistsURL = getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
         
         do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            
             let watchlistsData = try encoder.encode(watchlists)
-            try watchlistsData.write(to: watchlistsURL)
+            try watchlistsData.write(to: watchlistsURL, options: .atomic)
             
             let sharedData = try encoder.encode(sharedWatchlists)
-            try sharedData.write(to: sharedWatchlistsURL)
-            
+            try sharedData.write(to: sharedWatchlistsURL, options: .atomic)
         } catch {
             print("Error saving data: \(error)")
         }
     }
     
-    public func loadData() {
+    private func loadData() {
         let watchlistsURL = getDocumentsDirectory().appendingPathComponent("watchlists.json")
         let sharedWatchlistsURL = getDocumentsDirectory().appendingPathComponent("sharedWatchlists.json")
         
-        let decoder = JSONDecoder()
-        var loadedWatchlists = false
-        var loadedShared = false
+        var loadedWatchlists = loadWatchlists(from: watchlistsURL, fallbackBundle: "watchlists")
+        var loadedShared = loadSharedWatchlists(from: sharedWatchlistsURL, fallbackBundle: "sharedWatchlists")
         
-        // 1. Load Custom Watchlists
-        if let data = try? Data(contentsOf: watchlistsURL) {
+        if loadedWatchlists.wasLoadedFromBundle || loadedShared.wasLoadedFromBundle {
+            saveData()
+        }
+    }
+    
+    private func loadWatchlists(from documentsURL: URL, fallbackBundle bundleName: String) -> (watchlists: [Watchlist], wasLoadedFromBundle: Bool) {
+        if let data = try? Data(contentsOf: documentsURL) {
             do {
                 let decoded = try decoder.decode([Watchlist].self, from: data)
-                self.watchlists = decoded
-                loadedWatchlists = true
+                return (decoded, false)
             } catch {
                 print("CRITICAL ERROR: Failed to decode watchlists.json from Documents: \(error)")
             }
         }
         
-        // Fallback: Load from Bundle if not in Documents
-        if !loadedWatchlists {
-            if let bundleURL = Bundle.main.url(forResource: "watchlists", withExtension: "json"),
-               let data = try? Data(contentsOf: bundleURL) {
-                do {
-                    let decoded = try decoder.decode([Watchlist].self, from: data)
-                    self.watchlists = decoded
-                    loadedWatchlists = true
-                } catch {
-                     print("CRITICAL ERROR: Failed to decode watchlists.json from Bundle: \(error)")
-                }
+        if let bundleURL = Bundle.main.url(forResource: bundleName, withExtension: "json"),
+           let data = try? Data(contentsOf: bundleURL) {
+            do {
+                let decoded = try decoder.decode([Watchlist].self, from: data)
+                print("Loaded watchlists from Bundle as fallback")
+                return (decoded, true)
+            } catch {
+                print("CRITICAL ERROR: Failed to decode watchlists.json from Bundle: \(error)")
             }
         }
-
-        // 2. Load Shared Watchlists
-        if let data = try? Data(contentsOf: sharedWatchlistsURL) {
+        
+        return ([], false)
+    }
+    
+    private func loadSharedWatchlists(from documentsURL: URL, fallbackBundle bundleName: String) -> (watchlists: [SharedWatchlist], wasLoadedFromBundle: Bool) {
+        if let data = try? Data(contentsOf: documentsURL) {
             do {
                 let decoded = try decoder.decode([SharedWatchlist].self, from: data)
-                self.sharedWatchlists = decoded
-                loadedShared = true
+                return (decoded, false)
             } catch {
-                 print("CRITICAL ERROR: Failed to decode sharedWatchlists.json from Documents: \(error)")
+                print("CRITICAL ERROR: Failed to decode sharedWatchlists.json from Documents: \(error)")
             }
         }
         
-        // Fallback: Load from Bundle
-        if !loadedShared {
-            if let bundleURL = Bundle.main.url(forResource: "sharedWatchlists", withExtension: "json"),
-               let data = try? Data(contentsOf: bundleURL) {
-                do {
-                    let decoded = try decoder.decode([SharedWatchlist].self, from: data)
-                    self.sharedWatchlists = decoded
-                    loadedShared = true
-                } catch {
-                     print("CRITICAL ERROR: Failed to decode sharedWatchlists.json from Bundle: \(error)")
-                }
+        if let bundleURL = Bundle.main.url(forResource: bundleName, withExtension: "json"),
+           let data = try? Data(contentsOf: bundleURL) {
+            do {
+                let decoded = try decoder.decode([SharedWatchlist].self, from: data)
+                print("Loaded shared watchlists from Bundle as fallback")
+                return (decoded, true)
+            } catch {
+                print("CRITICAL ERROR: Failed to decode sharedWatchlists.json from Bundle: \(error)")
             }
         }
         
-        // If we loaded from Bundle, save to Documents so user edits are persisted
-        // (Only save if we actually have data to save, to avoid empty file creation if not needed)
-        if !self.watchlists.isEmpty || !self.sharedWatchlists.isEmpty {
-             saveData()
-        }
+        return ([], false)
     }
-
-
-    // MARK: - Calculated Stats for Summary Cards
+    
+    // MARK: - Helper Methods
+    
+    private func findWatchlistIndex(id: UUID) -> (type: WatchlistType, index: Int)? {
+        if let index = watchlists.firstIndex(where: { $0.id == id }) {
+            return (.custom, index)
+        }
+        if let index = sharedWatchlists.firstIndex(where: { $0.id == id }) {
+            return (.shared, index)
+        }
+        return nil
+    }
+    
+    private enum WatchlistType {
+        case custom
+        case shared
+    }
+    
+    // MARK: - Calculated Stats
     
     var totalSpeciesCount: Int {
-        return watchlists.reduce(0) { $0 + $1.birds.count }
+        watchlists.reduce(0) { $0 + $1.birds.count }
     }
     
     var totalObservedCount: Int {
-        return watchlists.reduce(0) { $0 + $1.observedCount }
+        watchlists.reduce(0) { $0 + $1.observedCount }
     }
     
     var totalRareCount: Int {
-        return watchlists.reduce(0) { currentTotal, watchlist in
-            let rareInThisList = watchlist.birds.filter { bird in
-                bird.rarity.contains(.rare)
-            }.count
-            return currentTotal + rareInThisList
+        watchlists.reduce(0) { total, watchlist in
+            let rareCount = watchlist.birds.filter { $0.rarity.contains(.rare) }.count
+            return total + rareCount
         }
     }
     
-    // MARK: - CRUD
+    // MARK: - CRUD Operations
     
     func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) {
-        if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
+        guard let (type, index) = findWatchlistIndex(id: watchlistId) else { return }
+        
+        switch type {
+        case .custom:
             if asObserved {
                 watchlists[index].observedBirds.append(contentsOf: birds)
             } else {
                 watchlists[index].toObserveBirds.append(contentsOf: birds)
             }
-        } else if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
+        case .shared:
             if asObserved {
                 sharedWatchlists[index].observedBirds.append(contentsOf: birds)
             } else {
@@ -149,13 +170,16 @@ class WatchlistManager {
     }
     
     func deleteBird(_ bird: Bird, from watchlistId: UUID) {
-        if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
+        guard let (type, index) = findWatchlistIndex(id: watchlistId) else { return }
+        
+        switch type {
+        case .custom:
             if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
                 watchlists[index].observedBirds.remove(at: birdIndex)
             } else if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
                 watchlists[index].toObserveBirds.remove(at: birdIndex)
             }
-        } else if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
+        case .shared:
             if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
                 sharedWatchlists[index].observedBirds.remove(at: birdIndex)
             } else if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
@@ -166,35 +190,25 @@ class WatchlistManager {
     }
     
     func saveObservation(bird: Bird, watchlistId: UUID) {
-        // 1. Check My Watchlists
-        if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
-            // Case A: Update existing Observed
+        guard let (type, index) = findWatchlistIndex(id: watchlistId) else { return }
+        
+        switch type {
+        case .custom:
             if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
                 watchlists[index].observedBirds[birdIndex] = bird
-            }
-            // Case B: Move from To Observe -> Observed
-            else if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+            } else if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
                 watchlists[index].toObserveBirds.remove(at: birdIndex)
                 watchlists[index].observedBirds.append(bird)
-            }
-            // Case C: New Observation
-            else {
+            } else {
                 watchlists[index].observedBirds.append(bird)
             }
-        }
-        // 2. Check Shared Watchlists
-        else if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
-            // Case A: Update existing Observed
+        case .shared:
             if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
                 sharedWatchlists[index].observedBirds[birdIndex] = bird
-            }
-            // Case B: Move from To Observe -> Observed
-            else if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+            } else if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
                 sharedWatchlists[index].toObserveBirds.remove(at: birdIndex)
                 sharedWatchlists[index].observedBirds.append(bird)
-            }
-            // Case C: New Observation
-            else {
+            } else {
                 sharedWatchlists[index].observedBirds.append(bird)
             }
         }
@@ -202,23 +216,23 @@ class WatchlistManager {
     }
     
     func updateBird(_ bird: Bird, watchlistId: UUID) {
-         // 1. Check My Watchlists
-         if let index = watchlists.firstIndex(where: { $0.id == watchlistId }) {
-             if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
-                 watchlists[index].observedBirds[birdIndex] = bird
-             } else if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
-                 watchlists[index].toObserveBirds[birdIndex] = bird
-             }
-         }
-         // 2. Check Shared Watchlists
-         else if let index = sharedWatchlists.firstIndex(where: { $0.id == watchlistId }) {
-             if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
-                 sharedWatchlists[index].observedBirds[birdIndex] = bird
-             } else if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
-                 sharedWatchlists[index].toObserveBirds[birdIndex] = bird
-             }
-         }
-         saveData()
+        guard let (type, index) = findWatchlistIndex(id: watchlistId) else { return }
+        
+        switch type {
+        case .custom:
+            if let birdIndex = watchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                watchlists[index].observedBirds[birdIndex] = bird
+            } else if let birdIndex = watchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                watchlists[index].toObserveBirds[birdIndex] = bird
+            }
+        case .shared:
+            if let birdIndex = sharedWatchlists[index].observedBirds.firstIndex(where: { $0.id == bird.id }) {
+                sharedWatchlists[index].observedBirds[birdIndex] = bird
+            } else if let birdIndex = sharedWatchlists[index].toObserveBirds.firstIndex(where: { $0.id == bird.id }) {
+                sharedWatchlists[index].toObserveBirds[birdIndex] = bird
+            }
+        }
+        saveData()
     }
     
     func deleteWatchlist(id: UUID) {
@@ -236,6 +250,15 @@ class WatchlistManager {
     }
     
     func updateWatchlist(id: UUID, title: String, location: String, startDate: Date, endDate: Date) {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            print("Error: Watchlist title cannot be empty")
+            return
+        }
+        guard startDate <= endDate else {
+            print("Error: Start date must be before or equal to end date")
+            return
+        }
+        
         if let index = watchlists.firstIndex(where: { $0.id == id }) {
             watchlists[index].title = title
             watchlists[index].location = location
@@ -246,6 +269,11 @@ class WatchlistManager {
     }
     
     func updateSharedWatchlist(id: UUID, title: String, location: String, dateRange: String) {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            print("Error: Shared watchlist title cannot be empty")
+            return
+        }
+        
         if let index = sharedWatchlists.firstIndex(where: { $0.id == id }) {
             sharedWatchlists[index].title = title
             sharedWatchlists[index].location = location
@@ -255,74 +283,45 @@ class WatchlistManager {
     }
     
     func addWatchlist(_ watchlist: Watchlist) {
+        guard !watchlist.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            print("Error: Watchlist title cannot be empty")
+            return
+        }
         watchlists.append(watchlist)
         saveData()
     }
     
-        func addSharedWatchlist(_ watchlist: SharedWatchlist) {
-    
-            sharedWatchlists.append(watchlist)
-    
-            saveData()
-    
+    func addSharedWatchlist(_ watchlist: SharedWatchlist) {
+        guard !watchlist.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            print("Error: Shared watchlist title cannot be empty")
+            return
         }
-    
+        sharedWatchlists.append(watchlist)
+        saveData()
     }
     
+    // MARK: - Extension for Specific Bird Addition
     
-    
-    // Extension for adding specific birds by request
-    
-    extension WatchlistManager {
-    
-        func addRoseRingedParakeetToMyWatchlist() {
-    
-            // Find "My Watchlist"
-    
-            guard let myWatchlistIndex = watchlists.firstIndex(where: { $0.title == "My Watchlist" }) else {
-    
-                print("Error: 'My Watchlist' not found.")
-    
-                return
-    
-            }
-    
-    
-    
-            // Create the Rose-ringed Parakeet bird object
-    
+    func addRoseRingedParakeetToMyWatchlist() {
+        let defaultWatchlistID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+        
+        if let id = defaultWatchlistID, let index = watchlists.firstIndex(where: { $0.id == id }) {
             let roseRingedParakeet = Bird(
-    
                 id: UUID(),
-    
                 name: "Rose-ringed Parakeet",
-    
                 scientificName: "Psittacula krameri",
-    
                 images: ["rose_ringed_parakeet"],
-    
                 rarity: [.common],
-    
-                location: ["Pune, India"], // Example location
-    
-                date: [Date()], // Current date
-    
+                location: ["Pune, India"],
+                date: [Date()],
                 observedBy: nil,
-    
                 notes: "Added by user request."
-    
             )
-    
-    
-    
-            // Add to 'toObserveBirds'
-    
-            watchlists[myWatchlistIndex].toObserveBirds.append(roseRingedParakeet)
-    
+            watchlists[index].toObserveBirds.append(roseRingedParakeet)
             saveData()
-    
-            print("Rose-ringed Parakeet added to 'My Watchlist' successfully.")
-    
+            print("Rose-ringed Parakeet added to default watchlist successfully.")
+        } else {
+            print("Error: Default watchlist not found. Use addWatchlist() to create one first.")
         }
-    
     }
+}

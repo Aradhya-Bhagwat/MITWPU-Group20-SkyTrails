@@ -98,10 +98,8 @@ class BirdSmartCell: UITableViewCell {
 
         // Date
         if let firstDate = bird.date.first {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "d MMM yyyy"
-            let dateString = formatter.string(from: firstDate)
-            addIconToLabel(label: dateLabel, text: dateString, iconName: "calendar")
+            let dateString = DateFormatters.fullDate.string(from: firstDate)
+            dateLabel.addIcon(text: dateString, iconName: "calendar")
             dateLabel.isHidden = false
         } else {
             dateLabel.isHidden = true
@@ -109,7 +107,7 @@ class BirdSmartCell: UITableViewCell {
 
         // Location
         if let locationName = bird.location.first {
-            addIconToLabel(label: locationLabel, text: locationName, iconName: "location.fill")
+            locationLabel.addIcon(text: locationName, iconName: "location.fill")
             locationLabel.isHidden = false
         } else {
             locationLabel.isHidden = true
@@ -153,25 +151,5 @@ class BirdSmartCell: UITableViewCell {
             overflowBadgeView.isHidden = false
             overflowLabel.text = "+\(images.count - limit)"
         }
-    }
-    
-    private func addIconToLabel(label: UILabel, text: String, iconName: String) {
-        let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        let image = UIImage(systemName: iconName, withConfiguration: config)?
-            .withTintColor(label.textColor, renderingMode: .alwaysOriginal)
-        
-        guard let safeImage = image else {
-            label.text = text
-            return
-        }
-        
-        let attachment = NSTextAttachment(image: safeImage)
-        let yOffset = (label.font.capHeight - safeImage.size.height).rounded() / 2
-        attachment.bounds = CGRect(x: 0, y: yOffset - 1, width: safeImage.size.width, height: safeImage.size.height)
-        
-        let attrString = NSMutableAttributedString(attachment: attachment)
-        attrString.append(NSAttributedString(string: "  " + text))
-        
-        label.attributedText = attrString
     }
 }
