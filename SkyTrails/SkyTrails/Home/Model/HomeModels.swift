@@ -192,15 +192,17 @@ struct BirdCategory: Codable {
 }
 
 struct PopularSpot: Codable {
-    let imageName: String
-    let title: String
-    let location: String
-    let latitude: Double?
-    let longitude: Double?
-    let radius: Double?
-    let birds: [SpotBird]?
+	let imageName: String
+	let title: String
+	let location: String
+	let latitude: Double?
+	let longitude: Double?
+	let radius: Double?
+	let birds: [SpotBird]?
+	var speciesCount: Int {
+		return birds?.count ?? 0
+	}
 }
-
 struct SpotBird: Codable {
     let name: String
     let imageName: String
