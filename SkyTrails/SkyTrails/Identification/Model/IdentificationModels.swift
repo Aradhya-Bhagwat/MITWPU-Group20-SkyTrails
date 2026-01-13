@@ -2,26 +2,52 @@
 import Foundation
 import CoreLocation
 
-struct BirdDatabase: Codable {
+struct BirdDatabase: Decodable {
+    let metadata: Metadata
+    let referenceData: ReferenceData
     var birds: [Bird2]
-    let reference_data: ReferenceData
-    
+
     enum CodingKeys: String, CodingKey {
+        case metadata
+        case referenceData = "reference_data"
         case birds
-        case reference_data
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.metadata = try container.decode(Metadata.self, forKey: .metadata)
+        self.referenceData = try container.decode(ReferenceData.self, forKey: .referenceData)
+        let refBirds = try container.decode([ReferenceBird].self, forKey: .birds)
+        self.birds = refBirds.map { Bird2.fromReferenceBird($0) }
     }
 }
 
-struct ReferenceData: Codable {
+struct Metadata: Decodable {
+    let version: String
+    let totalSpecies: Int
+    let description: String?
+
+    enum CodingKeys: String, CodingKey {
+        case version
+        case totalSpecies = "total_species"
+        case description
+    }
+}
+
+
+struct ReferenceData: Decodable {
     let shapes: [BirdShape]
     let fieldMarks: [ReferenceFieldMark]
-    
+    let locations: [String]
+    let colors: [String]
+
     enum CodingKeys: String, CodingKey {
         case shapes
         case fieldMarks = "field_marks"
+        case locations
+        case colors
     }
 }
-
 struct ReferenceFieldMark: Codable {
     let area: String
     let variants: [String]
