@@ -8,33 +8,52 @@
 import Foundation
 import CoreLocation
 
-enum WatchlistMode {
-	case observed
-	case unobserved
-	case create
+enum WatchlistMode: String, Codable, CaseIterable {
+    case observed
+    case unobserved
+    case create
+    
+    var displayName: String {
+        switch self {
+        case .observed: return "Observed"
+        case .unobserved: return "To Observe"
+        case .create: return "Create New"
+        }
+    }
 }
 
-// The Watchlist model containing metadata
-struct Watchlist: Codable {
-	let id: UUID
-	var title: String
-	var location: String
-	var startDate: Date
-	var endDate: Date
+struct WatchlistStats {
+    let totalBirds: Int
+    let observedCount: Int
+    let rareCount: Int
+}
+
+struct Watchlist: Codable, Identifiable, Hashable {
+    let id: UUID
+    var title: String
+    var location: String
+    var startDate: Date
+    var endDate: Date
     
     var observedBirds: [Bird]
     var toObserveBirds: [Bird]
     
     var birds: [Bird] {
-        return observedBirds + toObserveBirds
+        observedBirds + toObserveBirds
     }
-	
-		// Helper to get counts for the UI
-	var observedCount: Int {
-		return observedBirds.count
-	}
     
-    // Custom init to provide default ID if needed, though Codable handles it if present
+    var observedCount: Int {
+        observedBirds.count
+    }
+    
+    var stats: WatchlistStats {
+        WatchlistStats(
+            totalBirds: birds.count,
+            observedCount: observedCount,
+            rareCount: birds.filter { $0.rarity.contains(.rare) }.count
+        )
+    }
+    
     init(id: UUID = UUID(), title: String, location: String, startDate: Date, endDate: Date, observedBirds: [Bird], toObserveBirds: [Bird]) {
         self.id = id
         self.title = title
@@ -44,27 +63,40 @@ struct Watchlist: Codable {
         self.observedBirds = observedBirds
         self.toObserveBirds = toObserveBirds
     }
+    
+    static func == (lhs: Watchlist, rhs: Watchlist) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
-struct SharedWatchlistStats: Codable {
+struct SharedWatchlistStats: Codable, Hashable {
     var greenValue: Int
     var blueValue: Int
+    
+    init(greenValue: Int = 0, blueValue: Int = 0) {
+        self.greenValue = greenValue
+        self.blueValue = blueValue
+    }
 }
 
-struct SharedWatchlist: Codable {
+struct SharedWatchlist: Codable, Identifiable, Hashable {
     let id: UUID
     var title: String
     var location: String
     var dateRange: String
     var mainImageName: String
     var stats: SharedWatchlistStats
-    var userImages: [String] // Using SF Symbol names or asset names
+    var userImages: [String]
     
-    var observedBirds: [Bird] = []
-    var toObserveBirds: [Bird] = []
+    var observedBirds: [Bird]
+    var toObserveBirds: [Bird]
     
     var birds: [Bird] {
-        return observedBirds + toObserveBirds
+        observedBirds + toObserveBirds
     }
     
     init(id: UUID = UUID(), title: String, location: String, dateRange: String, mainImageName: String, stats: SharedWatchlistStats, userImages: [String], observedBirds: [Bird] = [], toObserveBirds: [Bird] = []) {
@@ -78,5 +110,12 @@ struct SharedWatchlist: Codable {
         self.observedBirds = observedBirds
         self.toObserveBirds = toObserveBirds
     }
+    
+    static func == (lhs: SharedWatchlist, rhs: SharedWatchlist) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
-
