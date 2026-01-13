@@ -185,7 +185,6 @@ class UnobservedDetailViewController: UIViewController {
     
     @objc private func didTapSave() {
         guard var updatedBird = bird else {
-            print("Error: Bird object is missing for saving.")
             return
         }
 
@@ -247,13 +246,6 @@ extension UnobservedDetailViewController: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed: \(error.localizedDescription)")
-    }
-    
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
-        }
     }
 }
 
@@ -292,7 +284,6 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
                     }
                 }
             } catch {
-                print("Search failed: \(error.localizedDescription)")
             }
         }
     }

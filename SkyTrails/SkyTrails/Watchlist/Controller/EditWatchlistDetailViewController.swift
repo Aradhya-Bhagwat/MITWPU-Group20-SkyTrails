@@ -124,7 +124,6 @@ class EditWatchlistDetailViewController: UIViewController {
 		
 			// Safety check to ensure the stackview has the expected children
 		guard mainStack.arrangedSubviews.count >= 3 else {
-			print("Warning: locationOptionsContainer stack view structure mismatch.")
 			return
 		}
 		
@@ -174,9 +173,8 @@ class EditWatchlistDetailViewController: UIViewController {
 			popover.sourceRect = inviteContactsView.bounds
 		}
 		
-		activityVC.completionWithItemsHandler = { [weak self] (_, completed, _, _) in
-			if completed { self?.simulateAddingParticipants() }
-		}
+        activityVC.completionWithItemsHandler = { [weak self] (_, completed, _, _) in
+        }
 		
 		present(activityVC, animated: true)
 	}
@@ -188,17 +186,7 @@ class EditWatchlistDetailViewController: UIViewController {
 		locationSearchBar.resignFirstResponder()
 	}
 	
-	private func simulateAddingParticipants() {
-		guard !participants.contains(where: { $0.name == "Aradhya" }) else { return }
-		
-		let p1 = Participant(name: "Aradhya", imageName: "person.crop.circle")
-		let p2 = Participant(name: "Disha", imageName: "person.crop.circle.fill")
-		
-		participants.append(contentsOf: [p1, p2])
-		participantsTableView.reloadData()
-		
-		presentAlert(title: "Invites Sent", message: "Aradhya and Disha have been added.")
-	}
+
 	
 		// MARK: - Save Logic
 	@objc private func didTapSave() {
@@ -259,9 +247,9 @@ class EditWatchlistDetailViewController: UIViewController {
 	
 		// MARK: - Helpers
 	private func formatDateRange(start: Date, end: Date) -> String {
-		let formatter = DateFormatter()
-		formatter.dateFormat = "d MMM"
-		return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+		let startStr = DateFormatters.shortDate.string(from: start)
+		let endStr = DateFormatters.shortDate.string(from: end)
+		return "\(startStr) - \(endStr)"
 	}
 	
 	private func presentAlert(title: String, message: String) {
@@ -305,7 +293,6 @@ extension EditWatchlistDetailViewController: CLLocationManagerDelegate {
 	}
 	
 	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-		print("Location manager failed: \(error.localizedDescription)")
 	}
 	
 	func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -360,7 +347,6 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
 						}
 					}
 				} catch {
-					print("Search failed: \(error.localizedDescription)")
 				}
 			}
 		}
@@ -394,7 +380,6 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchC
 	}
 	
 	func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-		print("Completer error: \(error.localizedDescription)")
 	}
 }
 
@@ -405,11 +390,3 @@ extension EditWatchlistDetailViewController: MapSelectionDelegate {
     }
 }
 // MARK: - UI Utilities
-extension UIView {
-	func applyShadow(radius: CGFloat, opacity: Float, offset: CGSize, color: UIColor = .black) {
-		self.layer.shadowColor = color.cgColor
-		self.layer.shadowOpacity = opacity
-		self.layer.shadowOffset = offset
-		self.layer.shadowRadius = radius
-	}
-}

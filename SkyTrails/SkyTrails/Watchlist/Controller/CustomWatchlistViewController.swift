@@ -14,12 +14,12 @@ class CustomWatchlistViewController: UIViewController {
     @IBOutlet weak var searchBar: UISearchBar!
 
     // MARK: - Properties
+	private var filteredWatchlists: [Watchlist] = []
+	private var currentSortOption: SortOption = .nameAZ
+	
     private var allWatchlists: [Watchlist] {
         return WatchlistManager.shared.watchlists
     }
-    
-    private var filteredWatchlists: [Watchlist] = []
-    private var currentSortOption: SortOption = .nameAZ
     
     enum SortOption {
         case nameAZ, nameZA, startDate, endDate, rarity
@@ -31,14 +31,12 @@ class CustomWatchlistViewController: UIViewController {
         setupUI()
         setupGestures()
         
-        // Initial data load
         filteredWatchlists = allWatchlists
         updateData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("CustomWatchlistViewController appeared. Watchlist count: \(allWatchlists.count)")
         updateData()
     }
 
@@ -272,19 +270,3 @@ extension CustomWatchlistViewController {
 }
 
 // MARK: - UIView Extensions
-extension UIView {
-    @IBInspectable var shadow: Bool {
-        get { layer.shadowOpacity > 0 }
-        set {
-            if newValue {
-                self.layer.shadowColor = UIColor.black.cgColor
-                self.layer.shadowOpacity = 0.1
-                self.layer.shadowOffset = CGSize(width: 0, height: 2)
-                self.layer.shadowRadius = 4
-                self.layer.masksToBounds = false
-            } else {
-                self.layer.shadowOpacity = 0
-            }
-        }
-    }
-}

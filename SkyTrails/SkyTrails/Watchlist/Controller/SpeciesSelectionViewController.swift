@@ -117,7 +117,6 @@ extension SpeciesSelectionViewController {
     
     private func finalizeLoop() {
         if !processedBirds.isEmpty, let watchlistId = targetWatchlistId {
-            print("Loop finished. Updating data with \(processedBirds.count) birds.")
             let isObserved = (mode == .observed)
             WatchlistManager.shared.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
         }

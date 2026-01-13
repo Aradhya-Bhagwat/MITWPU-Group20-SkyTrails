@@ -173,11 +173,9 @@ extension WatchlistHomeViewController {
         let alert = UIAlertController(title: "Add to watchlist", message: nil, preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Add to observed", style: .default) { _ in
-            // TODO: Handle Add to observed
         })
         
         alert.addAction(UIAlertAction(title: "Add to unobserved", style: .default) { _ in
-            // TODO: Handle Add to unobserved
         })
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))

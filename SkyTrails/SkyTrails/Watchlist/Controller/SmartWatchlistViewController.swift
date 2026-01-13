@@ -183,7 +183,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     @IBAction func didTapAdd(_ sender: Any) {
         guard currentWatchlistId != nil else {
-            print("Cannot add: Missing Watchlist ID or context.")
             return
         }
         
@@ -263,7 +262,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     
     private func addReminder(for bird: Bird) {
-        print("Adding reminder for bird: \(bird.name)")
     }
     
     private func deleteBird(_ bird: Bird, watchlistId: UUID) {

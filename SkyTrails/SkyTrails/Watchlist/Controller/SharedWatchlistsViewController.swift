@@ -143,7 +143,6 @@ class SharedWatchlistsViewController: UIViewController {
     private func navigateToEdit(watchlist: SharedWatchlist?) {
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else {
-            print("Could not instantiate EditWatchlistDetailViewController")
             return
         }
 
@@ -230,7 +229,6 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 
         guard let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController else {
-            print("Error: Could not instantiate SmartWatchlistViewController")
             return
         }
 

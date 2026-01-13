@@ -214,7 +214,6 @@ class ObservedDetailViewController: UIViewController {
     }
     
     @objc func didTapImage() {
-        print("did tap recoginsed")
         let picker = UIImagePickerController()
         picker.sourceType = .photoLibrary
         picker.delegate = self
@@ -378,7 +377,6 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
     }
     
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        // print("Error")
     }
     
     private func filterBirdNames(query: String) {
@@ -448,7 +446,6 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
                             }
                         }
                     } catch {
-                        print("Search failed: \(error.localizedDescription)")
                     }
                 }
             }
@@ -495,7 +492,6 @@ extension ObservedDetailViewController: UITextFieldDelegate, UISearchBarDelegate
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed: \(error.localizedDescription)")
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -535,7 +531,6 @@ extension ObservedDetailViewController: UIImagePickerControllerDelegate, UINavig
             try data.write(to: fileURL)
             return filename
         } catch {
-            print("Error saving image: \(error)")
             return nil
         }
     }
