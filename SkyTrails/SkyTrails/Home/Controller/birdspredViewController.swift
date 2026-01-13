@@ -8,7 +8,10 @@
 import UIKit
 import MapKit
 
+
+
 class birdspredViewController: UIViewController {
+
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var pillView: UIView!
@@ -131,7 +134,6 @@ class birdspredViewController: UIViewController {
     }
     
     private func updateMapForCurrentBird() {
-        
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         
@@ -140,8 +142,8 @@ class birdspredViewController: UIViewController {
         let input = predictionInputs[currentSpeciesIndex]
         let relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
         
-        var annotations: [MKPointAnnotation] = []
         var coordinates: [CLLocationCoordinate2D] = []
+        var annotations: [MKPointAnnotation] = []
         
         for sighting in relevantSightings {
             let coord = CLLocationCoordinate2D(latitude: sighting.lat, longitude: sighting.lon)
@@ -157,9 +159,8 @@ class birdspredViewController: UIViewController {
         mapView.addAnnotations(annotations)
         
         if coordinates.count > 1 {
-            let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-            mapView.addOverlay(polyline)
-        }
+            let polyline = PredictedPathPolyline(coordinates: coordinates, count: coordinates.count)
+                    mapView.addOverlay(polyline)        }
         
         if !coordinates.isEmpty {
             var zoomRect = MKMapRect.null
@@ -235,10 +236,18 @@ extension birdspredViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = .systemBlue
             renderer.lineWidth = 4
             renderer.lineCap = .round
             renderer.lineJoin = .round
+            
+            if overlay is ProgressPathPolyline {
+                renderer.strokeColor = .systemBlue
+            } else if overlay is PredictedPathPolyline {
+                renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.3)
+            } else {
+                renderer.strokeColor = .systemBlue 
+            }
+            
             return renderer
         }
         return MKOverlayRenderer(overlay: overlay)

@@ -95,63 +95,70 @@ class HomeManager {
     
     // MARK: - Business Logic
     
-	func getDynamicMapCards() -> [MapCardType] {
-		guard let dynamicCards = coreHomeData?.dynamicCards else { return [] }
-		
-		return dynamicCards.compactMap { rawCard -> MapCardType? in
-			let toCoords: ([RawCoordinate]) -> [CLLocationCoordinate2D] = {
-				$0.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-			}
-			
-			switch rawCard.cardType {
-				case "migration":
-					guard let name = rawCard.birdName,
-						  let image = rawCard.birdImageName,
-						  let start = rawCard.startLocation,
-						  let end = rawCard.endLocation,
-						  let date = rawCard.dateRange,
-						  let progress = rawCard.currentProgress,
-						  let rawPoints = rawCard.pathPoints else { return nil }
-					
-					return .migration(MigrationPrediction(
-						birdName: name,
-						birdImageName: image,
-						startLocation: start,
-						endLocation: end,
-						dateRange: date,
-						pathCoordinates: toCoords(rawPoints),
-						currentProgress: progress
-					))
-					
-				case "hotspot":
-					guard let name = rawCard.placeName,
-						  let image = rawCard.placeImage,
-						  let count = rawCard.speciesCount,
-						  let distance = rawCard.distanceString,
-						  let date = rawCard.dateRange,
-						  let rawBoundary = rawCard.areaBoundary,
-						  let rawHotspots = rawCard.hotspots else { return nil }
-					
-					return .hotspot(HotspotPrediction(
-						placeName: name,
-						placeImageName: image,
-						speciesCount: count,
-						distanceString: distance,
-						dateRange: date,
-						areaBoundary: toCoords(rawBoundary),
-						hotspots: rawHotspots.map { BirdHotspot(
-							coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon),
-							birdImageName: $0.birdImageName
-						)},
-						radius: rawCard.radius
-					))
-					
-				default:
-					return nil
-			}
-		}
-	}
-    
+    func getDynamicMapCards() -> [MapCardType] {
+        guard let dynamicCards = coreHomeData?.dynamicCards else { return [] }
+        
+        return dynamicCards.compactMap { rawCard -> MapCardType? in
+            let toCoords: ([RawCoordinate]) -> [CLLocationCoordinate2D] = {
+                $0.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+            }
+            
+            switch rawCard.cardType {
+            case "migration":
+                guard let name = rawCard.birdName,
+                      let image = rawCard.birdImageName,
+                      let start = rawCard.startLocation,
+                      let end = rawCard.endLocation,
+                      let date = rawCard.dateRange,
+                      let progress = rawCard.currentProgress else { return nil }
+                
+                // 💡 Reach into speciesData to get the actual coordinates
+                var pathPoints: [CLLocationCoordinate2D] = []
+                if let species = coreHomeData?.speciesData?.first(where: { $0.name == name }) {
+                    pathPoints = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+                }
+                
+                // If we found coordinates, return the migration card
+                guard !pathPoints.isEmpty else { return nil }
+                
+                return .migration(MigrationPrediction(
+                    birdName: name,
+                    birdImageName: image,
+                    startLocation: start,
+                    endLocation: end,
+                    dateRange: date,
+                    pathCoordinates: pathPoints,
+                    currentProgress: progress
+                ))
+                
+            case "hotspot":
+                guard let name = rawCard.placeName,
+                      let image = rawCard.placeImage,
+                      let count = rawCard.speciesCount,
+                      let distance = rawCard.distanceString,
+                      let date = rawCard.dateRange,
+                      let rawBoundary = rawCard.areaBoundary,
+                      let rawHotspots = rawCard.hotspots else { return nil }
+                
+                return .hotspot(HotspotPrediction(
+                    placeName: name,
+                    placeImageName: image,
+                    speciesCount: count,
+                    distanceString: distance,
+                    dateRange: date,
+                    areaBoundary: toCoords(rawBoundary),
+                    hotspots: rawHotspots.map { BirdHotspot(
+                        coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon),
+                        birdImageName: $0.birdImageName
+                    )},
+                    radius: rawCard.radius
+                ))
+                
+            default:
+                return nil
+            }
+        }
+    }
 	fileprivate func waterfallMatchSpecies(_ allSpecies: [SpeciesData], _ isWeek: (Int, Int, Int, Int) -> Bool, _ weekRange: (start: Int, end: Int), _ lat: Double, _ degreeBuffer: Double, _ lon: Double, _ searchLoc: CLLocation, _ radiusMeters: Double, _ matchingBirds: inout [FinalPredictionResult], _ inputIndex: Int) {
 		for species in allSpecies {
 			

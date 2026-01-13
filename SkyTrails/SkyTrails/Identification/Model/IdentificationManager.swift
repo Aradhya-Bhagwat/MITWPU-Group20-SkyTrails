@@ -35,56 +35,30 @@ class IdentificationManager {
 
     private func loadAllData() {
         do {
+            // Initialize UI options
             self.fieldMarkOptions = [
-                FieldMarkType(
-                    symbols: "icn_location_date_pin",
-                    fieldMarkName: .locationDate,
-                    isSelected: false
-                ),
-                FieldMarkType(
-                    symbols: "icn_size",
-                    fieldMarkName: .size,
-                    isSelected: false
-                ),
-                FieldMarkType(
-                    symbols: "icn_shape_bird_question",
-                    fieldMarkName: .shape,
-                    isSelected: false
-                ),
-                FieldMarkType(
-                    symbols: "icn_field_marks",
-                    fieldMarkName: .fieldMarks,
-                    isSelected: false
-                )
+                FieldMarkType(symbols: "icn_location_date_pin", fieldMarkName: .locationDate, isSelected: false),
+                FieldMarkType(symbols: "icn_size", fieldMarkName: .size, isSelected: false),
+                FieldMarkType(symbols: "icn_shape_bird_question", fieldMarkName: .shape, isSelected: false),
+                FieldMarkType(symbols: "icn_field_marks", fieldMarkName: .fieldMarks, isSelected: false)
             ]
-            let data = try Data(contentsOf: Bundle.main.url(forResource: "bird_database", withExtension: "json")!)
-            let decoder = JSONDecoder()
-
-            // 1. Database
             var db = try loadDatabase()
             let userBirds = loadUserBirds()
             db.birds.append(contentsOf: userBirds)
+            
             self.masterDatabase = db
             self.birdShapes = db.referenceData.shapes
-            // 2. History
             self.histories = loadHistory()
-            
-            // 3. UI Helpers
-         
-          
-
-            
             self.chooseFieldMarks = db.referenceData.fieldMarks.map { mark in
                 ChooseFieldMark(imageView: "bird_\(mark.area.lowercased())", name: mark.area)
             }.sorted { $0.name < $1.name }
             
-            print("✅ MVC Model Loaded Successfully")
+            print("Model Loaded Successfully")
             
         } catch {
-            print("❌ Model Load Failed:", error)
+            print("Model Load Failed:", error)
         }
     }
-    
     private func loadDatabase() throws -> BirdDatabase {
         guard let url = Bundle.main.url(forResource: "bird_database", withExtension: "json") else {
             throw NSError(domain: "Model", code: 404, userInfo: ["msg": "json not found"])
@@ -263,7 +237,7 @@ class IdentificationManager {
                 do {
                     return try decoder.decode([Bird2].self, from: data)
                 } catch {
-                    print("❌ CRITICAL: Failed to decode user_birds.json:", error)
+                    print("CRITICAL: Failed to decode user_birds.json:", error)
                     return []
                 }
             }
@@ -284,7 +258,7 @@ class IdentificationManager {
                 let data = try encoder.encode(userBirds)
                 try data.write(to: url, options: .atomic)
             } catch {
-                print("❌ Failed to save user_birds.json:", error)
+                print("Failed to save user_birds.json:", error)
             }
         }
         
@@ -297,7 +271,7 @@ class IdentificationManager {
                 do {
                     return try decoder.decode([History].self, from: data)
                 } catch {
-                    print("❌ CRITICAL: Failed to decode history.json from Documents:", error)
+                    print("CRITICAL: Failed to decode history.json from Documents:", error)
                 }
             }
             
@@ -311,7 +285,7 @@ class IdentificationManager {
                     
                     return decoded
                 } catch {
-                    print("❌ CRITICAL: Failed to decode history.json from Bundle:", error)
+                    print("CRITICAL: Failed to decode history.json from Bundle:", error)
                 }
             }
             
@@ -329,7 +303,7 @@ class IdentificationManager {
                 let data = try encoder.encode(histories)
                 try data.write(to: url, options: .atomic)
             } catch {
-                print("❌ Failed to save history.json:", error)
+                print("Failed to save history.json:", error)
             }
         }
         

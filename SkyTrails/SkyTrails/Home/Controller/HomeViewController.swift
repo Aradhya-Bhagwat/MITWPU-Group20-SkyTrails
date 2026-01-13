@@ -582,23 +582,63 @@ extension HomeViewController {
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		
 		switch indexPath.section {
-			case 0: // Dynamic Cards (Featured)
-				let mapCard = HomeManager.shared.getDynamicMapCards()[indexPath.row]
-				
-				if case .hotspot(let hotspot) = mapCard {
-						// Convert HotspotPrediction data to SpotBird format
-					let mappedBirds = hotspot.hotspots.map {
-						SpotBird(name: "Bird Sighting", imageName: $0.birdImageName, lat: $0.coordinate.latitude, lon: $0.coordinate.longitude)
-					}
-					
-					navigateToSpotDetails(
-						name: hotspot.placeName,
-						lat: hotspot.areaBoundary.first?.latitude ?? 0,
-						lon: hotspot.areaBoundary.first?.longitude ?? 0,
-						radius: hotspot.radius ?? 5.0,
-						birds: mappedBirds
-					)
-				}
+        case 0: // Dynamic Cards (Featured Section)
+            let mapCard = HomeManager.shared.getDynamicMapCards()[indexPath.row]
+            
+            switch mapCard {
+            case .hotspot(let hotspot):
+                // 1. Map the bird pins from the card into SpotBird objects for the detail screen
+                let mappedBirds = hotspot.hotspots.map {
+                    SpotBird(
+                        name: "Bird Sighting",
+                        imageName: $0.birdImageName,
+                        lat: $0.coordinate.latitude,
+                        lon: $0.coordinate.longitude
+                    )
+                }
+                
+                // 2. Navigate using the unified helper
+                navigateToSpotDetails(
+                    name: hotspot.placeName,
+                    lat: hotspot.areaBoundary.first?.latitude ?? 0,
+                    lon: hotspot.areaBoundary.first?.longitude ?? 0,
+                    radius: hotspot.radius ?? 5.0,
+                    birds: mappedBirds
+                )
+                
+            case .migration(let migration):
+                if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == migration.birdName }) {
+                    
+                    // 💡 THE FIX: Robust parsing for JSON dates
+                    let separators = [" – ", " - ", "   "]
+                    var start: Date?
+                    var end: Date?
+                    
+                    for sep in separators {
+                        let parts = migration.dateRange.components(separatedBy: sep)
+                        if parts.count >= 2 {
+                            let formatter = DateFormatter()
+                            formatter.dateFormat = "dd MMM ’yy"
+                            formatter.locale = Locale(identifier: "en_US_POSIX")
+                            start = formatter.date(from: parts[0].trimmingCharacters(in: .whitespaces))
+                            end = formatter.date(from: parts[1].trimmingCharacters(in: .whitespaces))
+                            break
+                        }
+                    }
+                    
+                    // Use parsed dates, or fallback safely to a valid migration week (like Week 10)
+                    let input = BirdDateInput(
+                        species: species,
+                        startDate: start ?? Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 5)),
+                        endDate: end ?? Calendar.current.date(from: DateComponents(year: 2026, month: 6, day: 9))
+                    )
+                    
+                    let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+                    if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+                        mapVC.predictionInputs = [input]
+                        self.navigationController?.pushViewController(mapVC, animated: true)
+                    }
+                }            }
 				
 			case 1: // Upcoming Birds
 				let item = homeData.homeScreenBirds[indexPath.row]

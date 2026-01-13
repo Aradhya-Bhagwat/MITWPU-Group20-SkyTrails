@@ -11,10 +11,6 @@ import CoreLocation
 
 // MARK: - Custom Map Overlays (The "Stickers")
 
-class PredictedPathPolyline: MKPolyline {}
-class ProgressPathPolyline: MKPolyline {}
-class CurrentLocationAnnotation: MKPointAnnotation {}
-
 extension Array where Element == CLLocationCoordinate2D {
     
     func interpolatedProgress(at percentage: Double) -> (progressCoords: [CLLocationCoordinate2D], currentCoord: CLLocationCoordinate2D) {
@@ -177,73 +173,80 @@ class MigrationCellCollectionViewCell: UICollectionViewCell {
         endDateLabel.font = detailFont
     }
     func configure(with prediction: MigrationPrediction) {
-        
         birdNameLabel.text = prediction.birdName
-        birdNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         startLocationLabel.text = prediction.startLocation
         endLocationLabel.text = prediction.endLocation
         
-        let dateRangePrefixLength = prediction.dateRange.count / 2
-        startDateLabel.text = prediction.dateRange.prefix(dateRangePrefixLength).trimmingCharacters(in: .whitespacesAndNewlines)
-        endDateLabel.text = prediction.dateRange.suffix(dateRangePrefixLength).trimmingCharacters(in: .whitespacesAndNewlines)
+        // 1. FIX: Flexible Date Parsing
+        // This looks for common separators (long dash, short dash, or multiple spaces)
+        let separators = [" – ", " - ", "   "]
+        var dateComponents: [String] = []
         
+        for sep in separators {
+            let parts = prediction.dateRange.components(separatedBy: sep)
+            if parts.count >= 2 {
+                dateComponents = parts.map { $0.trimmingCharacters(in: .whitespaces) }
+                break
+            }
+        }
+        
+        if dateComponents.count >= 2 {
+            startDateLabel.text = dateComponents[0]
+            endDateLabel.text = dateComponents[1]
+        }
+
         progressView.progress = prediction.currentProgress
         birdImageView.image = UIImage(named: prediction.birdImageName)
         
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
+
+        guard let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == prediction.birdName }) else { return }
         
-        let fullCoordinates = prediction.pathCoordinates
-        let totalPoints = fullCoordinates.count
+        let fullCoordinates = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+        guard !fullCoordinates.isEmpty else { return }
         
         var annotationsToAdd: [MKAnnotation] = []
-        var progressCoordinates: [CLLocationCoordinate2D] = []
-        var currentLocation: CLLocationCoordinate2D?
-        
-        if totalPoints > 1 {
-            let progressPercentage = Double(prediction.currentProgress)
-            let result = fullCoordinates.interpolatedProgress(at: progressPercentage)
-            
-            progressCoordinates = result.progressCoords
-            currentLocation = result.currentCoord
-            
-        } else if totalPoints == 1 {
-            currentLocation = fullCoordinates.first
-            progressCoordinates = fullCoordinates
+
+        // 2. FIX: Explicitly add Start and End Pins
+        if let startCoord = fullCoordinates.first {
+            let startPin = MKPointAnnotation()
+            startPin.coordinate = startCoord
+            startPin.title = prediction.startLocation
+            annotationsToAdd.append(startPin)
         }
         
-        let predictedPath = PredictedPathPolyline(coordinates: fullCoordinates, count: totalPoints)
-        mapView.addOverlay(predictedPath)
-        if progressCoordinates.count >= 1 {
-            let progressPath = ProgressPathPolyline(coordinates: progressCoordinates, count: progressCoordinates.count)
-            mapView.addOverlay(progressPath)
-        }
- 
-        if let startCoord = fullCoordinates.first,
-           let endCoord = fullCoordinates.last {
-            
-            let startAnnotation = MKPointAnnotation()
-            startAnnotation.coordinate = startCoord
-            startAnnotation.title = prediction.startLocation
-            annotationsToAdd.append(startAnnotation)
-            
-            let endAnnotation = MKPointAnnotation()
-            endAnnotation.coordinate = endCoord
-            endAnnotation.title = prediction.endLocation
-            annotationsToAdd.append(endAnnotation)
+        if let endCoord = fullCoordinates.last {
+            let endPin = MKPointAnnotation()
+            endPin.coordinate = endCoord
+            endPin.title = prediction.endLocation
+            annotationsToAdd.append(endPin)
         }
 
-        if let currentCoord = currentLocation {
+        // 3. Add Path and Progress
+        if fullCoordinates.count > 1 {
+            let result = fullCoordinates.interpolatedProgress(at: Double(prediction.currentProgress))
+            
+            // Add blue progress line
+            let progressPath = ProgressPathPolyline(coordinates: result.progressCoords, count: result.progressCoords.count)
+            mapView.addOverlay(progressPath)
+            
+            // Add Orange Current Location Pin
             let currentAnnotation = CurrentLocationAnnotation()
-            currentAnnotation.coordinate = currentCoord
-            currentAnnotation.title = "Current Predicted Location"
+            currentAnnotation.coordinate = result.currentCoord
+            currentAnnotation.title = "Currently here"
             annotationsToAdd.append(currentAnnotation)
         }
         
+        // Add gray background predicted path
+        let predictedPath = PredictedPathPolyline(coordinates: fullCoordinates, count: fullCoordinates.count)
+        mapView.addOverlay(predictedPath)
+        
+        // Add all pins to the map
         mapView.addAnnotations(annotationsToAdd)
         
-        let fullPathLine = MKPolyline(coordinates: fullCoordinates, count: fullCoordinates.count)
-        zoomToFitOverlays(for: fullPathLine)
+        // 4. Force visibility of all pins (Safety)
+        zoomToFitOverlays(for: predictedPath)
     }
         private func zoomToFitOverlays(for pathLine: MKPolyline) {
                 let rect = pathLine.boundingMapRect
@@ -278,7 +281,7 @@ extension MigrationCellCollectionViewCell: MKMapViewDelegate {
             if annotationView == nil {
                 annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
                 annotationView?.canShowCallout = true
-                annotationView?.markerTintColor = .systemOrange // 👈 Distinct color (e.g., Orange)
+                annotationView?.markerTintColor = .systemOrange
     
             } else {
                 annotationView?.annotation = annotation

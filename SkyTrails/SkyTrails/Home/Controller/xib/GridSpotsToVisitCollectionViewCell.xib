@@ -22,9 +22,6 @@
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Me4-1Z-mq4">
                                 <rect key="frame" x="8" y="8" width="160" height="109"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" secondItem="Me4-1Z-mq4" secondAttribute="height" multiplier="160:109" id="tZ9-64-LQ5"/>
-                                </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DNf-tn-gH1">
                                 <rect key="frame" x="8" y="125" width="41.333333333333336" height="20"/>
