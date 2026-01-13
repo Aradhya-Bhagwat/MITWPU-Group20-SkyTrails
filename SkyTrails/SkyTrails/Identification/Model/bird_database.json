@@ -124,7 +124,7 @@
       { "area": "Eye", "variants": ["Ring", "Solid", "Mask"] },
       { "area": "Leg", "variants": ["Long", "Short", "Pink", "Yellow"] },
       { "area": "Tail", "variants": ["Long", "Short", "Forked", "Square", "Notched", "Cocked", "Rufous", "Train"] },
-      { "area": "Neck", "variants": ["Short", "Compact", "Slim", "Stocky", "Bull", "Tapered", "Extended", "Long", "Ring"] },
+      { "area": "Neck", "variants": [ "Default","Bibbed","Ring", "Naped", "Ruffed"] },
       { "area": "Chest", "variants": ["Solid", "Banded", "Barred", "Spotted", "Bibbed"] },
       { "area": "Wings", "variants": ["Solid", "Bar", "Striped", "Patch", "Broad"] },
       { "area": "Throat", "variants": ["Solid", "Patch", "White"] }
