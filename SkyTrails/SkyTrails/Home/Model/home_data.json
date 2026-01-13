@@ -216,12 +216,6 @@
 			"endLocation": "Pune",
 			"dateRange": "05 March '26   09 June '26",
 			"currentProgress": 0.65,
-			"pathPoints": [
-				{"lat": 11.7906, "lon": 82.1996},
-				{"lat": 12.1000, "lon": 79.8300},
-				{"lat": 13.1000, "lon": 76.8000},
-				{"lat": 15.5204, "lon": 73.8567}
-			]
 		},
 		{
 			"cardType": "hotspot",
@@ -491,6 +485,37 @@
         { "week": 24, "lat": 25.3176, "lon": 82.9739, "locationName": "Varanasi" },
         { "week": 32, "lat": 18.5900, "lon": 73.8000, "locationName": "Pune" }
       ]
-    }
+    },
+    {
+          "id": "bird_016",
+          "name": "Wire-tailed Swallow",
+          "imageName": "wire_tailed_swallow",
+          "sightings": [
+            { "week": 10, "lat": 11.7906, "lon": 82.1996, "locationName": "Ayodhya" },
+            { "week": 15, "lat": 12.1000, "lon": 79.8300, "locationName": "Passage Point A" },
+            { "week": 20, "lat": 13.1000, "lon": 76.8000, "locationName": "Passage Point B" },
+            { "week": 24, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune" }
+          ]
+        },
+    {
+          "id": "bird_017",
+          "name": "Brown Headed Barbet",
+          "imageName": "browna_headed_barbet",
+          "sightings": [
+            { "week": 42, "lat": 28.6139, "lon": 77.2090, "locationName": "Delhi Ridge" },
+            { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur Outskirts" },
+            { "week": 48, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad Park" }
+          ]
+        },
+        {
+          "id": "bird_018",
+          "name": "Eurasian Wigeon",
+          "imageName": "eurasian_wigeon",
+          "sightings": [
+            { "week": 44, "lat": 34.1, "lon": 74.8, "locationName": "Hokersar Wetland" },
+            { "week": 47, "lat": 29.9452, "lon": 76.8132, "locationName": "Bhindawas Lake" },
+            { "week": 50, "lat": 19.8157, "lon": 85.8315, "locationName": "Chilika Lake" }
+          ]
+        }
   ]
 }

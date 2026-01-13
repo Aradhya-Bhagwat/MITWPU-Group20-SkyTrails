@@ -117,15 +117,12 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
 			annotationsToAdd.append(annotation)
 			let annotationPoint = MKMapPoint(hotspot.coordinate)
 			let pointRect = MKMapRect(x: annotationPoint.x, y: annotationPoint.y, width: 0.1, height: 0.1)
-			zoomRect = zoomRect.union(pointRect) // Ensures this pin is inside the box
+			zoomRect = zoomRect.union(pointRect)
 		}
 		
 		mapView.addAnnotations(annotationsToAdd)
-		
-			// 3. Final Zoom with Safety Padding
 		if !zoomRect.isNull {
 			let padding = UIEdgeInsets(top: 30, left: 30, bottom: 30, right: 30)
-				// Use regionThatFits to prevent the "Invalid Region" crash we fixed earlier
 			let fittedRect = mapView.mapRectThatFits(zoomRect, edgePadding: padding)
 			mapView.setVisibleMapRect(fittedRect, animated: false)
 		}
@@ -134,6 +131,7 @@ class HotspotCellCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         let rect = pathLine.boundingMapRect
         let edgePadding = UIEdgeInsets(top: 15, left: 15, bottom: 15, right: 15)
         mapView.setVisibleMapRect(rect, edgePadding: edgePadding, animated: false)
+        
     }
 }
 
@@ -167,7 +165,6 @@ extension HotspotCellCollectionViewCell {
     
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        
         guard let hotspotAnnotation = annotation as? HotspotBirdAnnotation else {
             return nil
         }
@@ -181,27 +178,10 @@ extension HotspotCellCollectionViewCell {
         } else {
             annotationView?.annotation = annotation
         }
-
-        let colorStack: [UIColor] = [
-            .systemRed,
-            .systemBlue,
-            .systemGreen,
-            .systemOrange,
-            .systemPurple,
-            .systemPink,
-            .systemTeal,
-            .systemIndigo
-        ]
-        
-        if let index = mapView.annotations.firstIndex(where: { $0 === annotation }) {
-            let colorIndex = index % colorStack.count
-            annotationView?.markerTintColor = colorStack[colorIndex]
-        } else {
-            annotationView?.markerTintColor = .systemGray 
-        }
-        
+        annotationView?.displayPriority = .required
+        annotationView?.collisionMode = .none
+        annotationView?.markerTintColor = .systemTeal
         annotationView?.glyphImage = UIImage(systemName: "bird.fill")
-        
         return annotationView
     }
 }
