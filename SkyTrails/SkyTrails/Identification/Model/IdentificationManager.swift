@@ -60,24 +60,12 @@ class IdentificationManager {
             let data = try Data(contentsOf: Bundle.main.url(forResource: "bird_database", withExtension: "json")!)
             let decoder = JSONDecoder()
 
-            // ✅ Decode reference_data separately
-            let container = try decoder.decode(
-                [String: ReferenceData].self,
-                from: data
-            )
-
-            if let ref = container["reference_data"] {
-                self.birdShapes = ref.shapes
-                print("✅ Shapes loaded:", birdShapes.count)
-            }
-
-
             // 1. Database
             var db = try loadDatabase()
             let userBirds = loadUserBirds()
             db.birds.append(contentsOf: userBirds)
             self.masterDatabase = db
-            self.birdShapes = db.reference_data.shapes
+            self.birdShapes = db.referenceData.shapes
             // 2. History
             self.histories = loadHistory()
             
@@ -86,12 +74,9 @@ class IdentificationManager {
           
 
             
-            let allMarks = db.birds.compactMap { $0.fieldMarks }.flatMap { $0 }
-            
-            let uniqueAreas = Array(Set(allMarks.map { $0.area })).sorted()
-            self.chooseFieldMarks = uniqueAreas.map { area in
-                ChooseFieldMark(imageView: "bird_\(area.lowercased())", name: area)
-            }
+            self.chooseFieldMarks = db.referenceData.fieldMarks.map { mark in
+                ChooseFieldMark(imageView: "bird_\(mark.area.lowercased())", name: mark.area)
+            }.sorted { $0.name < $1.name }
             
             print("✅ MVC Model Loaded Successfully")
             
@@ -253,7 +238,7 @@ class IdentificationManager {
         }
         
         var referenceFieldMarks: [ReferenceFieldMark] {
-            return masterDatabase?.reference_data.fieldMarks ?? []
+            return masterDatabase?.referenceData.fieldMarks ?? []
         }
         
         func getBird(byName name: String) -> Bird2? {
