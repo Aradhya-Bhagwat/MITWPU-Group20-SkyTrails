@@ -23,7 +23,7 @@ class IdentificationManager {
     var selectedFieldMarks: [FieldMarkData] = []
     
     
-    var birdResults: [IdentificationBird] = []
+    var birdResults: [Bird2] = []
     
     
     var onResultsUpdated: (() -> Void)?
@@ -176,16 +176,11 @@ class IdentificationManager {
         scoredBirds.sort { $0.score > $1.score }
 
         self.birdResults = scoredBirds.map { item in
-            IdentificationBird(
-                id: item.bird.id.uuidString,
-                name: item.bird.commonName,
-                scientificName: item.bird.scientificName,
-                confidence: item.score,
-                description: item.breakdown,
-                imageName: item.bird.staticImageName,
-                scoreBreakdown: item.breakdown
-            )
-        }
+                    var bird = item.bird
+                    bird.confidence = item.score
+                    bird.scoreBreakdown = item.breakdown
+                    return bird
+                }
 
         // 5. Notify UI ONCE
         DispatchQueue.main.async {
@@ -262,10 +257,9 @@ class IdentificationManager {
             }
         }
         
-        private func loadHistory() -> [History] {
+        func loadHistory() -> [History] {
             let url = getDocumentsDirectory().appendingPathComponent("history.json")
-            let decoder = JSONDecoder()
-            
+                let decoder = JSONDecoder()
             // 1. Try Documents
             if let data = try? Data(contentsOf: url) {
                 do {
