@@ -11,6 +11,7 @@ enum WatchlistType {
     case myWatchlist
     case custom
     case shared
+    case allSpecies
 }
 
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
@@ -99,6 +100,35 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             } else if let shared = manager.sharedWatchlists.first(where: { $0.id == id }) {
                 updateSingleWatchlistData(observed: shared.observedBirds, toObserve: shared.toObserveBirds, title: shared.title)
             }
+            
+        case .allSpecies:
+            var seen = Set<String>()
+            var uniqueObserved: [Bird] = []
+            var uniqueToObserve: [Bird] = []
+            
+            // Helper to process lists
+            func process(_ birds: [Bird], target: inout [Bird]) {
+                for bird in birds {
+                    if !seen.contains(bird.name) {
+                        seen.insert(bird.name)
+                        target.append(bird)
+                    }
+                }
+            }
+            
+            // Local
+            for list in manager.watchlists {
+                process(list.observedBirds, target: &uniqueObserved)
+                process(list.toObserveBirds, target: &uniqueToObserve)
+            }
+            
+            // Shared
+            for list in manager.sharedWatchlists {
+                process(list.observedBirds, target: &uniqueObserved)
+                process(list.toObserveBirds, target: &uniqueToObserve)
+            }
+            
+            updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "All Species")
         }
         
         applyFilters()
@@ -362,7 +392,19 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             wId = allWatchlists[indexPath.section].id
         } else {
             bird = currentList[indexPath.row]
-            wId = currentWatchlistId
+            if watchlistType == .allSpecies {
+                // Find ID
+                let manager = WatchlistManager.shared
+                if let list = manager.watchlists.first(where: { $0.birds.contains(where: { $0.name == bird.name }) }) {
+                    wId = list.id
+                } else if let shared = manager.sharedWatchlists.first(where: { $0.birds.contains(where: { $0.name == bird.name }) }) {
+                    wId = shared.id
+                } else {
+                    wId = nil
+                }
+            } else {
+                wId = currentWatchlistId
+            }
         }
         
         guard let id = wId else { return }
@@ -378,6 +420,9 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             wId = allWatchlists[indexPath.section].id
         } else {
             bird = currentList[indexPath.row]
+            if watchlistType == .allSpecies {
+                return nil
+            }
             wId = currentWatchlistId
         }
         

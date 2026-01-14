@@ -71,7 +71,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         view.backgroundColor = color.withAlphaComponent(0.15)
         view.layer.masksToBounds = true
         label.textColor = color
-        label.font = .systemFont(ofSize: 12, weight: .bold)
+        label.font = .systemFont(ofSize: 16, weight: .semibold)
     }
     
     func configure(observedCount: Int, toObserveCount: Int, images: [UIImage?]) {
@@ -102,9 +102,9 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         
         // Configure Badges
         // Green: To Observe (birds added/not yet observed)
-        greenBadgeLabel.addIcon(text: "\(toObserveCount)", iconName: "bird")
+        greenBadgeLabel.addIcon(text: "\(toObserveCount) species", iconName: "bird")
 
         // Blue: Observed
-        blueBadgeLabel.addIcon(text: "\(observedCount)", iconName: "bird.fill")
+        blueBadgeLabel.addIcon(text: "\(observedCount) observed", iconName: "bird.fill")
     }
 }

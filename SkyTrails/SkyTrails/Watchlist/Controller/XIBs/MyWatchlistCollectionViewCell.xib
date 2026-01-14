@@ -11,28 +11,28 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="MyWatchlistCollectionViewCell" id="gTV-IL-0wX" customClass="MyWatchlistCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
-            <rect key="frame" x="0.0" y="0.0" width="350" height="292"/>
+            <rect key="frame" x="0.0" y="0.0" width="370" height="320"/>
             <autoresizingMask key="autoresizingMask"/>
             <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                <rect key="frame" x="0.0" y="0.0" width="350" height="292"/>
+                <rect key="frame" x="0.0" y="0.0" width="370" height="320"/>
                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 <subviews>
                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QVp-oS-57f" userLabel="ContainerView">
-                        <rect key="frame" x="0.0" y="4" width="350" height="284"/>
+                        <rect key="frame" x="0.0" y="4" width="370" height="312"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="img-stk-vw">
-                                <rect key="frame" x="0.0" y="0.0" width="350" height="213"/>
+                                <rect key="frame" x="0.0" y="0.0" width="370" height="234"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="img-01">
-                                        <rect key="frame" x="0.0" y="0.0" width="116.66666666666667" height="213"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="123.33333333333333" height="234"/>
                                         <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
                                     </imageView>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="img-02">
-                                        <rect key="frame" x="116.66666666666666" y="0.0" width="116.66666666666666" height="213"/>
+                                        <rect key="frame" x="123.33333333333334" y="0.0" width="123.33333333333334" height="234"/>
                                         <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
                                     </imageView>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="img-03">
-                                        <rect key="frame" x="233.33333333333334" y="0.0" width="116.66666666666666" height="213"/>
+                                        <rect key="frame" x="246.66666666666666" y="0.0" width="123.33333333333334" height="234"/>
                                         <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
                                     </imageView>
                                 </subviews>
@@ -41,13 +41,13 @@
                                 </userDefinedRuntimeAttributes>
                             </stackView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="My Watchlist" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tit-le-lbl">
-                                <rect key="frame" x="8" y="221" width="108.33333333333333" height="21.666666666666657"/>
+                                <rect key="frame" x="8" y="242" width="108.33333333333333" height="24"/>
                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="18"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="bdg-stk-vw">
-                                <rect key="frame" x="234" y="217" width="108" height="30"/>
+                                <rect key="frame" x="8" y="274" width="108" height="30"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="grn-bdg-vw">
                                         <rect key="frame" x="0.0" y="0.0" width="50" height="30"/>
@@ -90,16 +90,24 @@
                                     <constraint firstAttribute="height" constant="30" id="hgt-bdg-30"/>
                                 </constraints>
                             </stackView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="chevron.right" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="pk1-eJ-9i2">
+                                <rect key="frame" x="349.33333333333331" y="244" width="12.666666666666686" height="20.333333333333314"/>
+                                <color key="tintColor" systemColor="labelColor"/>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" systemColor="secondarySystemGroupedBackgroundColor"/>
                         <constraints>
+                            <constraint firstAttribute="trailing" secondItem="pk1-eJ-9i2" secondAttribute="trailing" constant="8" id="1yn-pS-Wai"/>
+                            <constraint firstAttribute="bottom" secondItem="bdg-stk-vw" secondAttribute="bottom" constant="8" id="6QX-Xr-Elp"/>
+                            <constraint firstItem="pk1-eJ-9i2" firstAttribute="height" secondItem="tit-le-lbl" secondAttribute="height" id="8sW-N8-QzJ"/>
+                            <constraint firstItem="pk1-eJ-9i2" firstAttribute="top" secondItem="img-stk-vw" secondAttribute="bottom" constant="8" id="BIh-ET-0dd"/>
+                            <constraint firstItem="bdg-stk-vw" firstAttribute="leading" secondItem="QVp-oS-57f" secondAttribute="leading" constant="8" id="JVY-3F-wmV"/>
                             <constraint firstAttribute="trailing" secondItem="img-stk-vw" secondAttribute="trailing" id="Jhs-N3-aCu"/>
                             <constraint firstItem="tit-le-lbl" firstAttribute="leading" secondItem="QVp-oS-57f" secondAttribute="leading" constant="8" id="SPD-fW-qgb"/>
-                            <constraint firstItem="bdg-stk-vw" firstAttribute="centerY" secondItem="tit-le-lbl" secondAttribute="centerY" id="Sff-11-TGk"/>
                             <constraint firstItem="tit-le-lbl" firstAttribute="top" secondItem="img-stk-vw" secondAttribute="bottom" constant="8" id="TTb-VO-2k9"/>
+                            <constraint firstItem="bdg-stk-vw" firstAttribute="top" secondItem="tit-le-lbl" secondAttribute="bottom" constant="8" id="Vkh-c5-xsF"/>
                             <constraint firstItem="img-stk-vw" firstAttribute="leading" secondItem="QVp-oS-57f" secondAttribute="leading" id="XJb-n9-NoC"/>
                             <constraint firstItem="img-stk-vw" firstAttribute="top" secondItem="QVp-oS-57f" secondAttribute="top" id="YIn-4e-5Fw"/>
-                            <constraint firstAttribute="trailing" secondItem="bdg-stk-vw" secondAttribute="trailing" constant="8" id="m8e-wx-ykO"/>
                             <constraint firstItem="img-stk-vw" firstAttribute="height" secondItem="QVp-oS-57f" secondAttribute="height" multiplier="0.75" id="t3L-ox-P9r"/>
                         </constraints>
                     </view>
@@ -129,17 +137,21 @@
         </collectionViewCell>
     </objects>
     <resources>
+        <image name="chevron.right" catalog="system" width="97" height="128"/>
+        <systemColor name="labelColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
         <systemColor name="secondarySystemBackgroundColor">
-            <color red="0.94901960784313721" green="0.94901960784313721" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.94901960780000005" green="0.94901960780000005" blue="0.96862745100000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="secondarySystemGroupedBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemBlueColor">
-            <color red="0.0" green="0.53333333333333333" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemGreenColor">
-            <color red="0.20392156862745098" green="0.7803921568627451" blue="0.34901960784313724" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.20392156859999999" green="0.78039215689999997" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

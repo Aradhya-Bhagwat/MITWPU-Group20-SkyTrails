@@ -28,7 +28,7 @@ class WatchlistHomeViewController: UIViewController {
 
     private struct LayoutConstants {
         static let summaryHeight: CGFloat = 110
-        static let myWatchlistHeight: CGFloat = 190
+        static let myWatchlistHeight: CGFloat = 320
         static let customWatchlistHeight: CGFloat = 184
         static let sharedWatchlistHeight: CGFloat = 140
         static let headerHeight: CGFloat = 40
@@ -241,7 +241,11 @@ extension WatchlistHomeViewController {
         if segue.identifier == "ShowSmartWatchlist",
            let destVC = segue.destination as? SmartWatchlistViewController {
             
-            if let watchlists = sender as? [Watchlist] {
+            if let mode = sender as? String, mode == "allSpecies" {
+                destVC.watchlistType = .allSpecies
+                destVC.watchlistTitle = "All Species"
+                
+            } else if let watchlists = sender as? [Watchlist] {
                 // My Watchlist Case
                 destVC.watchlistType = .myWatchlist
                 destVC.watchlistTitle = "My Watchlist"
@@ -280,7 +284,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
         guard let sectionType = WatchlistSection(rawValue: section) else { return 0 }
         
         switch sectionType {
-        case .summary: return 3
+        case .summary: return 0
         case .myWatchlist: return 1
         case .customWatchlist: return min(6, max(0, manager.watchlists.count - 1))
         case .sharedWatchlist: return manager.sharedWatchlists.count
@@ -310,6 +314,11 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
         guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return }
         
         switch sectionType {
+        case .summary:
+            if indexPath.item == 0 {
+                performSegue(withIdentifier: "ShowSmartWatchlist", sender: "allSpecies")
+            }
+
         case .myWatchlist:
             performSegue(withIdentifier: "ShowSmartWatchlist", sender: manager.watchlists)
             
@@ -444,7 +453,6 @@ extension WatchlistHomeViewController {
         
         let section = NSCollectionLayoutSection(group: group)
         section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
-        section.boundarySupplementaryItems = [createHeader()]
         return section
     }
     
