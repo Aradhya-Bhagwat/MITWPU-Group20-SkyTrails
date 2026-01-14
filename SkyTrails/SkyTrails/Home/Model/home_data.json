@@ -207,34 +207,31 @@
 			]
 		}
 	],
-	"dynamicCards": [
-		{
-			"cardType": "migration",
-			"birdName": "Wire-tailed Swallow",
-			"birdImageName": "wire_tailed_swallow",
-			"startLocation": "Ayodhya",
-			"endLocation": "Pune",
-			"dateRange": "05 March '26   09 June '26",
-			"currentProgress": 0.65,
-		},
-		{
-			"cardType": "hotspot",
-			"placeName": "Khadakwasla Backwaters",
-			"placeImage": "Khadakwasla",
-			"speciesCount": 5,
-			"distanceString": "12.6 km away",
-			"dateRange": "28 Nov '25 - 06 Jan '26",
-			"areaBoundary": [
-				{"lat": 18.4200, "lon": 73.7600}
-			],
-			"radius": 5,
-			"hotspots": [
-				{"lat": 18.4300, "lon": 73.7400, "birdImageName": "flamingo"},
-				{"lat": 18.4220, "lon": 73.7550, "birdImageName": "kingfisher"},
-				{"lat": 18.4100, "lon": 73.7600, "birdImageName": "crow"}
-			]
-		}
-	],
+    "dynamicCards": [
+        {
+            "cardType": "combined",
+            "birdName": "Wire-tailed Swallow",
+            "birdImageName": "wire_tailed_swallow",
+            "startLocation": "Ayodhya",
+            "endLocation": "Pune",
+            "migrationDateRange": "05 March '26 – 09 June '26",
+            "currentProgress": 0.65,
+            "placeName": "Khadakwasla Backwaters",
+            "placeImage": "Khadakwasla",
+            "speciesCount": 5,
+            "distanceString": "12.6 km away",
+            "hotspotDateRange": "28 Nov '25 - 06 Jan '26",
+            "areaBoundary": [
+                {"lat": 18.4200, "lon": 73.7600}
+            ],
+            "radius": 5,
+            "hotspots": [
+                {"lat": 18.4300, "lon": 73.7400, "birdImageName": "flamingo"},
+                {"lat": 18.4220, "lon": 73.7550, "birdImageName": "kingfisher"},
+                {"lat": 18.4100, "lon": 73.7600, "birdImageName": "crow"}
+            ]
+        }
+    ],
 	"communityObservations": [
 		{
 			"observationId": "obs_001",

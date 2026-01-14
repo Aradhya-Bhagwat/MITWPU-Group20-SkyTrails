@@ -94,133 +94,146 @@ class HomeManager {
     }
     
     // MARK: - Business Logic
-    
+    // MARK: - Business Logic
+
     func getDynamicMapCards() -> [MapCardType] {
-        guard let dynamicCards = coreHomeData?.dynamicCards else { return [] }
+        guard let core = self.coreHomeData, let dynamicCards = core.dynamicCards else { return [] }
+        let allSpecies = core.speciesData ?? []
         
-        return dynamicCards.compactMap { rawCard -> MapCardType? in
-            let toCoords: ([RawCoordinate]) -> [CLLocationCoordinate2D] = {
-                $0.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+        return dynamicCards.compactMap { raw -> MapCardType? in
+            // 💡 Use the new key names here
+            guard let bName = raw.birdName,
+                  let bImg = raw.birdImageName,
+                  let pName = raw.placeName,
+                  let pImg = raw.placeImage,
+                  let mDate = raw.migrationDateRange,
+                  let hDate = raw.hotspotDateRange else { return nil }
+            
+            var pathPoints: [CLLocationCoordinate2D] = []
+            if let species = allSpecies.first(where: { $0.name == bName }) {
+                pathPoints = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
             }
             
-            switch rawCard.cardType {
-            case "migration":
-                guard let name = rawCard.birdName,
-                      let image = rawCard.birdImageName,
-                      let start = rawCard.startLocation,
-                      let end = rawCard.endLocation,
-                      let date = rawCard.dateRange,
-                      let progress = rawCard.currentProgress else { return nil }
+            let migration = MigrationPrediction(
+                birdName: bName, birdImageName: bImg, startLocation: raw.startLocation ?? "",
+                endLocation: raw.endLocation ?? "", dateRange: mDate,
+                pathCoordinates: pathPoints, currentProgress: raw.currentProgress ?? 0
+            )
+            
+            let boundary = (raw.areaBoundary ?? []).map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+            let hotspots = (raw.hotspots ?? []).map { BirdHotspot(coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon), birdImageName: $0.birdImageName) }
+            
+            let hotspot = HotspotPrediction(
+                placeName: pName, placeImageName: pImg, speciesCount: raw.speciesCount ?? 0,
+                distanceString: raw.distanceString ?? "", dateRange: hDate,
+                areaBoundary: boundary, hotspots: hotspots, radius: raw.radius
+            )
+            
+            return MapCardType.combined(migration, hotspot)
+        }
+    }
+
+    // 💡 Private helpers make the code much easier to read
+    private func convertToMigration(_ raw: DynamicCard) -> MigrationPrediction? {
+        guard let bName = raw.birdName,
+              let bImg = raw.birdImageName,
+              let mDate = raw.migrationDateRange else { return nil }
+        
+        var pathPoints: [CLLocationCoordinate2D] = []
+        if let species = coreHomeData?.speciesData?.first(where: { $0.name == bName }) {
+            pathPoints = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+        }
+        
+        return MigrationPrediction(
+            birdName: bName,
+            birdImageName: bImg,
+            startLocation: raw.startLocation ?? "",
+            endLocation: raw.endLocation ?? "",
+            dateRange: mDate,
+            pathCoordinates: pathPoints,
+            currentProgress: raw.currentProgress ?? 0
+        )
+    }
+
+    private func convertToHotspot(_ raw: DynamicCard) -> HotspotPrediction? {
+        guard let pName = raw.placeName,
+              let pImg = raw.placeImage,
+              let hDate = raw.hotspotDateRange else { return nil }
+        
+        return HotspotPrediction(
+            placeName: pName,
+            placeImageName: pImg,
+            speciesCount: raw.speciesCount ?? 0,
+            distanceString: raw.distanceString ?? "",
+            dateRange: hDate,
+            areaBoundary: (raw.areaBoundary ?? []).map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) },
+            hotspots: (raw.hotspots ?? []).map { BirdHotspot(coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon), birdImageName: $0.birdImageName) },
+            radius: raw.radius
+        )
+    }
+    
+    fileprivate func waterfallMatchSpecies(_ allSpecies: [SpeciesData], _ isWeek: (Int, Int, Int, Int) -> Bool, _ weekRange: (start: Int, end: Int), _ lat: Double, _ degreeBuffer: Double, _ lon: Double, _ searchLoc: CLLocation, _ radiusMeters: Double, _ matchingBirds: inout [FinalPredictionResult], _ inputIndex: Int) {
+        for species in allSpecies {
+            
+            if let matched = species.sightings.first(where: { sighting in
                 
-                // 💡 Reach into speciesData to get the actual coordinates
-                var pathPoints: [CLLocationCoordinate2D] = []
-                if let species = coreHomeData?.speciesData?.first(where: { $0.name == name }) {
-                    pathPoints = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+                guard isWeek(sighting.week, weekRange.start, weekRange.end, 0) else { return false }
+                
+                
+                if abs(sighting.lat - lat) > degreeBuffer || abs(sighting.lon - lon) > degreeBuffer {
+                    return false
                 }
                 
-                // If we found coordinates, return the migration card
-                guard !pathPoints.isEmpty else { return nil }
-                
-                return .migration(MigrationPrediction(
-                    birdName: name,
-                    birdImageName: image,
-                    startLocation: start,
-                    endLocation: end,
-                    dateRange: date,
-                    pathCoordinates: pathPoints,
-                    currentProgress: progress
-                ))
-                
-            case "hotspot":
-                guard let name = rawCard.placeName,
-                      let image = rawCard.placeImage,
-                      let count = rawCard.speciesCount,
-                      let distance = rawCard.distanceString,
-                      let date = rawCard.dateRange,
-                      let rawBoundary = rawCard.areaBoundary,
-                      let rawHotspots = rawCard.hotspots else { return nil }
-                
-                return .hotspot(HotspotPrediction(
-                    placeName: name,
-                    placeImageName: image,
-                    speciesCount: count,
-                    distanceString: distance,
-                    dateRange: date,
-                    areaBoundary: toCoords(rawBoundary),
-                    hotspots: rawHotspots.map { BirdHotspot(
-                        coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon),
-                        birdImageName: $0.birdImageName
-                    )},
-                    radius: rawCard.radius
-                ))
-                
-            default:
-                return nil
+                let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
+                return sightingLoc.distance(from: searchLoc) <= radiusMeters
+            }) {
+                matchingBirds.append(
+                    FinalPredictionResult(
+                        birdName: species.name,
+                        imageName: species.imageName,
+                        matchedInputIndex: inputIndex,
+                        matchedLocation: (lat: matched.lat, lon: matched.lon)
+                    )
+                )
             }
         }
     }
-	fileprivate func waterfallMatchSpecies(_ allSpecies: [SpeciesData], _ isWeek: (Int, Int, Int, Int) -> Bool, _ weekRange: (start: Int, end: Int), _ lat: Double, _ degreeBuffer: Double, _ lon: Double, _ searchLoc: CLLocation, _ radiusMeters: Double, _ matchingBirds: inout [FinalPredictionResult], _ inputIndex: Int) {
-		for species in allSpecies {
-			
-			if let matched = species.sightings.first(where: { sighting in
-				
-				guard isWeek(sighting.week, weekRange.start, weekRange.end, 0) else { return false }
-				
-				
-				if abs(sighting.lat - lat) > degreeBuffer || abs(sighting.lon - lon) > degreeBuffer {
-					return false
-				}
-				
-				let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
-				return sightingLoc.distance(from: searchLoc) <= radiusMeters
-			}) {
-				matchingBirds.append(
-					FinalPredictionResult(
-						birdName: species.name,
-						imageName: species.imageName,
-						matchedInputIndex: inputIndex,
-						matchedLocation: (lat: matched.lat, lon: matched.lon)
-					)
-				)
-			}
-		}
-	}
-	
-	func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
-		guard let lat = input.latitude,
-			  let lon = input.longitude,
-			  let weekRange = input.weekRange,
-			  let allSpecies = predictionData?.speciesData else {
-			return []
-		}
-		
-		let searchLoc = CLLocation(latitude: lat, longitude: lon)
-		let radiusMeters = Double(input.areaValue) * 1000.0
-		
+    
+    func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
+        guard let lat = input.latitude,
+              let lon = input.longitude,
+              let weekRange = input.weekRange,
+              let allSpecies = predictionData?.speciesData else {
+            return []
+        }
+        
+        let searchLoc = CLLocation(latitude: lat, longitude: lon)
+        let radiusMeters = Double(input.areaValue) * 1000.0
+        
 
-		let degreeBuffer = radiusMeters / 111_000.0
-		
+        let degreeBuffer = radiusMeters / 111_000.0
+        
 
-		func isWeek(_ week: Int, withinStart start: Int, end: Int, tolerance: Int = 2) -> Bool {
+        func isWeek(_ week: Int, withinStart start: Int, end: Int, tolerance: Int = 2) -> Bool {
 
-			
-			let targetStart = (start - tolerance - 1 + 52) % 52 + 1
-			let targetEnd = (end + tolerance - 1 + 52) % 52 + 1
+            
+            let targetStart = (start - tolerance - 1 + 52) % 52 + 1
+            let targetEnd = (end + tolerance - 1 + 52) % 52 + 1
 
-			if targetStart <= targetEnd {
-				return week >= targetStart && week <= targetEnd
-			} else {
+            if targetStart <= targetEnd {
+                return week >= targetStart && week <= targetEnd
+            } else {
 
-				return week >= targetStart || week <= targetEnd
-			}
-		}
-		
-		var matchingBirds: [FinalPredictionResult] = []
-		
-		waterfallMatchSpecies(allSpecies, isWeek, weekRange, lat, degreeBuffer, lon, searchLoc, radiusMeters, &matchingBirds, inputIndex)
-		
-		return matchingBirds
-	}
+                return week >= targetStart || week <= targetEnd
+            }
+        }
+        
+        var matchingBirds: [FinalPredictionResult] = []
+        
+        waterfallMatchSpecies(allSpecies, isWeek, weekRange, lat, degreeBuffer, lon, searchLoc, radiusMeters, &matchingBirds, inputIndex)
+        
+        return matchingBirds
+    }
     
     func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
         let separators = [" – ", " - "]

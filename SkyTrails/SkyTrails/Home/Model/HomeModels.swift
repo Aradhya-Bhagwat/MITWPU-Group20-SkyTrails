@@ -2,6 +2,8 @@
 import Foundation
 import CoreLocation
 
+
+
 // Wrapper for 'home_data.json'
 struct CoreHomeData: Codable {
     let predictedMigrations: [PredictedMigration]?
@@ -113,26 +115,27 @@ struct PredictionInputData {
 }
 
 struct DynamicCard: Codable {
-	let cardType: String
-	
-		// Migration
-	let birdName: String?
-	let birdImageName: String?
-	let startLocation: String?
-	let endLocation: String?
-	let currentProgress: Float?
-	let pathPoints: [RawCoordinate]?
-	
-		// Hotspot
-	let placeName: String?
-	let speciesCount: Int?
-	let placeImage: String?
-	let distanceString: String?
-	let areaBoundary: [RawCoordinate]?
-	let hotspots: [RawHotspotPin]?
-	let radius: Double?
-	
-	let dateRange: String?
+    let cardType: String
+    
+    // Migration Fields
+    let birdName: String?
+    let birdImageName: String?
+    let startLocation: String?
+    let endLocation: String?
+    let currentProgress: Float?
+    let migrationDateRange: String? // Match JSON key
+    
+    // Hotspot Fields
+    let placeName: String?
+    let speciesCount: Int?
+    let placeImage: String?
+    let distanceString: String?
+    let areaBoundary: [RawCoordinate]?
+    let hotspots: [RawHotspotPin]?
+    let radius: Double?
+    let hotspotDateRange: String? // Match JSON key
+    
+    // Remove the old 'let dateRange: String?' line entirely
 }
 
 
@@ -168,8 +171,7 @@ struct HotspotPrediction {
 }
 
 enum MapCardType {
-    case migration(MigrationPrediction)
-    case hotspot(HotspotPrediction)
+    case combined(MigrationPrediction, HotspotPrediction)
 }
 
 // --- Home Section Models ---

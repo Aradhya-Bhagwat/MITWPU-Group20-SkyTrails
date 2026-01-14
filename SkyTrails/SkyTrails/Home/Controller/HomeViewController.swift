@@ -81,15 +81,9 @@ extension HomeViewController {
                 )
         
         homeCollectionView.register(
-                    UINib(nibName: MigrationCellCollectionViewCell.identifier, bundle: nil),
-                    forCellWithReuseIdentifier: MigrationCellCollectionViewCell.identifier
-                )
-        
-        homeCollectionView.register(
-            UINib(nibName: HotspotCellCollectionViewCell.identifier, bundle: nil),
-            forCellWithReuseIdentifier: HotspotCellCollectionViewCell.identifier
-        )
-        
+                UINib(nibName: newMigrationCollectionViewCell.identifier, bundle: nil),
+                forCellWithReuseIdentifier: newMigrationCollectionViewCell.identifier
+            )
         homeCollectionView.register(
             UINib(nibName: "NewsCollectionViewCell", bundle: nil),
             forCellWithReuseIdentifier: "NewsCollectionViewCell"
@@ -353,49 +347,28 @@ extension HomeViewController: UICollectionViewDataSource {
         return 0
     }
 
-    func collectionView(_ collectionView: UICollectionView,
-                        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == 0 {
+            let cardType = HomeManager.shared.getDynamicMapCards()[indexPath.row]
             
-            let mapCard = HomeManager.shared.getDynamicMapCards()[indexPath.row]
-            
-            switch mapCard {
-            
-            case .migration(let migrationData):
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: MigrationCellCollectionViewCell.identifier,
+            switch cardType {
+            case .combined(let migration, let hotspot):
+                let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: newMigrationCollectionViewCell.identifier,
                     for: indexPath
-                ) as? MigrationCellCollectionViewCell else { fatalError("Migration Cell failure") }
+                ) as! newMigrationCollectionViewCell
                 
-                cell.configure(with: migrationData)
-                return cell
-                
-            case .hotspot(let hotspotData):
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: HotspotCellCollectionViewCell.identifier,
-                    for: indexPath
-                ) as? HotspotCellCollectionViewCell else { fatalError("Hotspot Cell failure") }
-
-                cell.configure(with: hotspotData)
+                cell.configure(migration: migration, hotspot: hotspot)
                 return cell
             }
-        } else if indexPath.section == 1 {
-
-            let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "UpcomingBirdsCollectionViewCell",
-                for: indexPath
-            ) as! UpcomingBirdsCollectionViewCell
-            
-            let item = homeData.homeScreenBirds[indexPath.row]
-            cell.configure(
-                image: UIImage(named: item.imageName),
-                title: item.title,
-                date: item.date
-            )
-            return cell
-            
-        } else if indexPath.section == 2 {
+        }
+        else if indexPath.section == 1 {
+                // 💡 ADD THIS BACK: Logic for Upcoming Birds
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "UpcomingBirdsCollectionViewCell", for: indexPath) as! UpcomingBirdsCollectionViewCell
+                let item = homeData.homeScreenBirds[indexPath.row]
+                cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date)
+                return cell
+            }else if indexPath.section == 2 {
 
             let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "SpotsToVisitCollectionViewCell",
@@ -533,11 +506,7 @@ extension HomeViewController: UICollectionViewDataSource {
 
 extension HomeViewController {
     
-    func collectionView(_ collectionView: UICollectionView,
-                        willDisplay cell: UICollectionViewCell,
-                        forItemAt indexPath: IndexPath) {
-        
-
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         if indexPath.section == 0 {
             let footerKind = "MigrationPageControlFooter"
             if let footer = collectionView.supplementaryView(
@@ -546,7 +515,6 @@ extension HomeViewController {
             ) as? PageControlReusableViewCollectionReusableView {
                 
                 let totalCount = HomeManager.shared.getDynamicMapCards().count
-                
                 footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
             }
         }
@@ -579,58 +547,20 @@ extension HomeViewController {
             }
         }
     }
-	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-		
-		switch indexPath.section {
-        case 0: // Dynamic Cards (Featured Section)
-            let mapCard = HomeManager.shared.getDynamicMapCards()[indexPath.row]
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        switch indexPath.section {
+        case 0: // Combined Prediction Card
+            let cardData = HomeManager.shared.getDynamicMapCards()[indexPath.row]
             
-            switch mapCard {
-            case .hotspot(let hotspot):
-                // 1. Map the bird pins from the card into SpotBird objects for the detail screen
-                let mappedBirds = hotspot.hotspots.map {
-                    SpotBird(
-                        name: "Bird Sighting",
-                        imageName: $0.birdImageName,
-                        lat: $0.coordinate.latitude,
-                        lon: $0.coordinate.longitude
-                    )
-                }
-                
-                // 2. Navigate using the unified helper
-                navigateToSpotDetails(
-                    name: hotspot.placeName,
-                    lat: hotspot.areaBoundary.first?.latitude ?? 0,
-                    lon: hotspot.areaBoundary.first?.longitude ?? 0,
-                    radius: hotspot.radius ?? 5.0,
-                    birds: mappedBirds
-                )
-                
-            case .migration(let migration):
+            switch cardData {
+            case .combined(let migration, _):
+                // Primary Action: Open Migration Prediction Map
                 if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == migration.birdName }) {
-                    
-                    // 💡 THE FIX: Robust parsing for JSON dates
-                    let separators = [" – ", " - ", "   "]
-                    var start: Date?
-                    var end: Date?
-                    
-                    for sep in separators {
-                        let parts = migration.dateRange.components(separatedBy: sep)
-                        if parts.count >= 2 {
-                            let formatter = DateFormatter()
-                            formatter.dateFormat = "dd MMM ’yy"
-                            formatter.locale = Locale(identifier: "en_US_POSIX")
-                            start = formatter.date(from: parts[0].trimmingCharacters(in: .whitespaces))
-                            end = formatter.date(from: parts[1].trimmingCharacters(in: .whitespaces))
-                            break
-                        }
-                    }
-                    
-                    // Use parsed dates, or fallback safely to a valid migration week (like Week 10)
+                    let (start, end) = HomeManager.shared.parseDateRange(migration.dateRange)
                     let input = BirdDateInput(
                         species: species,
-                        startDate: start ?? Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 5)),
-                        endDate: end ?? Calendar.current.date(from: DateComponents(year: 2026, month: 6, day: 9))
+                        startDate: start ?? Date(),
+                        endDate: end ?? Date()
                     )
                     
                     let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
@@ -638,7 +568,8 @@ extension HomeViewController {
                         mapVC.predictionInputs = [input]
                         self.navigationController?.pushViewController(mapVC, animated: true)
                     }
-                }            }
+                }
+            }
 				
 			case 1: // Upcoming Birds
 				let item = homeData.homeScreenBirds[indexPath.row]
