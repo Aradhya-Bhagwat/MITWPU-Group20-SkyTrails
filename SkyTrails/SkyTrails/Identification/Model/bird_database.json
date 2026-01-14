@@ -127,7 +127,8 @@
       { "area": "Neck", "variants": [ "Default","Bibbed","Ring", "Naped", "Ruffed"] },
       { "area": "Chest", "variants": ["Solid", "Banded", "Barred", "Spotted", "Bibbed"] },
       { "area": "Wings", "variants": ["Solid", "Bar", "Striped", "Patch", "Broad"] },
-      { "area": "Throat", "variants": ["Solid", "Patch", "White"] }
+      { "area": "Throat", "variants": ["Solid", "Patch", "White"] },
+      { "area": "Facemask","variants": ["Masked","Earpatched","Eyeline", "Lore-Pointed","Moustached" ] }
     ]
   },
   "birds": [

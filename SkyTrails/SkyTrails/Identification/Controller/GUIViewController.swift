@@ -35,6 +35,7 @@ class GUIViewController: UIViewController {
 
         "Back", "Belly", "Chest",
         "Nape", "Throat", "Crown",
+        "Facemask",
         "Beak", "Eye",
         "Wings"
     ]
