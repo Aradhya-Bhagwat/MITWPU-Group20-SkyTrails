@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEF-mB-p5A">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEF-mB-p5A">
     <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
@@ -295,17 +295,25 @@
                                 </connections>
                             </slider>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="g4k-WR-MNl">
-                                <rect key="frame" x="16" y="486" width="370" height="21"/>
+                                <rect key="frame" x="16" y="486" width="370" height="20.333333333333314"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Tyw-Jv-ciW">
-                                <rect key="frame" x="16" y="260" width="370" height="128"/>
+                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="AiV-Z2-H3d">
+                                <rect key="frame" x="51" y="257" width="300" height="128"/>
+                                <subviews>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Tyw-Jv-ciW">
+                                        <rect key="frame" x="0.0" y="0.0" width="140" height="128"/>
+                                    </imageView>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="l3E-NR-j0m">
+                                        <rect key="frame" x="160" y="0.0" width="140" height="128"/>
+                                    </imageView>
+                                </subviews>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="128" id="XHO-8p-bTw"/>
+                                    <constraint firstAttribute="height" constant="128" id="Xgc-zy-zm5"/>
                                 </constraints>
-                            </imageView>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="kCa-fv-fY2"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -313,16 +321,16 @@
                             <constraint firstItem="iaE-19-gNh" firstAttribute="centerY" secondItem="nwb-gu-olA" secondAttribute="centerY" id="0KP-rz-1WS"/>
                             <constraint firstItem="RyS-20-GYu" firstAttribute="top" secondItem="kCa-fv-fY2" secondAttribute="top" constant="8" id="AC6-Jz-H1D"/>
                             <constraint firstItem="iaE-19-gNh" firstAttribute="centerX" secondItem="nwb-gu-olA" secondAttribute="centerX" id="CM6-b5-GgN"/>
-                            <constraint firstItem="kCa-fv-fY2" firstAttribute="trailing" secondItem="Tyw-Jv-ciW" secondAttribute="trailing" constant="16" id="HAi-Pb-EzL"/>
                             <constraint firstItem="RyS-20-GYu" firstAttribute="leading" secondItem="nwb-gu-olA" secondAttribute="leading" constant="16" id="KXI-Yy-o2A"/>
-                            <constraint firstItem="iaE-19-gNh" firstAttribute="top" secondItem="Tyw-Jv-ciW" secondAttribute="bottom" constant="32" id="M4v-Fc-fM6"/>
                             <constraint firstItem="iaE-19-gNh" firstAttribute="leading" secondItem="kCa-fv-fY2" secondAttribute="leading" constant="16" id="ViR-YQ-GBF"/>
                             <constraint firstItem="kCa-fv-fY2" firstAttribute="trailing" secondItem="g4k-WR-MNl" secondAttribute="trailing" constant="16" id="b3L-j1-yGb"/>
-                            <constraint firstItem="Tyw-Jv-ciW" firstAttribute="top" secondItem="RyS-20-GYu" secondAttribute="bottom" constant="124" id="egi-yA-tia"/>
+                            <constraint firstItem="AiV-Z2-H3d" firstAttribute="leading" secondItem="kCa-fv-fY2" secondAttribute="leading" constant="51" id="bIL-IW-hdc"/>
+                            <constraint firstItem="kCa-fv-fY2" firstAttribute="trailing" secondItem="AiV-Z2-H3d" secondAttribute="trailing" constant="51" id="h40-Nc-xbU"/>
+                            <constraint firstItem="AiV-Z2-H3d" firstAttribute="top" secondItem="RyS-20-GYu" secondAttribute="bottom" constant="121" id="iOI-Lw-lFN"/>
                             <constraint firstItem="kCa-fv-fY2" firstAttribute="trailing" secondItem="iaE-19-gNh" secondAttribute="trailing" constant="16" id="lok-ZK-J76"/>
                             <constraint firstItem="g4k-WR-MNl" firstAttribute="top" secondItem="iaE-19-gNh" secondAttribute="bottom" constant="32" id="p5J-YS-pNf"/>
                             <constraint firstItem="g4k-WR-MNl" firstAttribute="leading" secondItem="kCa-fv-fY2" secondAttribute="leading" constant="16" id="pLz-6a-Uhu"/>
-                            <constraint firstItem="Tyw-Jv-ciW" firstAttribute="leading" secondItem="kCa-fv-fY2" secondAttribute="leading" constant="16" id="tST-MU-Dud"/>
+                            <constraint firstItem="iaE-19-gNh" firstAttribute="top" secondItem="AiV-Z2-H3d" secondAttribute="bottom" constant="35" id="pvk-p8-r3k"/>
                             <constraint firstAttribute="trailing" secondItem="RyS-20-GYu" secondAttribute="trailing" constant="16" id="vOH-OK-0M8"/>
                         </constraints>
                     </view>
@@ -330,15 +338,16 @@
                         <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="Qhp-7o-QPD"/>
                     </navigationItem>
                     <connections>
-                        <outlet property="birdImage" destination="Tyw-Jv-ciW" id="DPL-TK-9SS"/>
                         <outlet property="birdLabel" destination="g4k-WR-MNl" id="uh5-DF-tiB"/>
                         <outlet property="birdSlider" destination="iaE-19-gNh" id="luW-oH-lLV"/>
+                        <outlet property="largeBirdImage" destination="l3E-NR-j0m" id="kt0-Zk-69Q"/>
                         <outlet property="progressView" destination="RyS-20-GYu" id="1C8-Jw-CF2"/>
+                        <outlet property="smallBirdImage" destination="Tyw-Jv-ciW" id="DPL-TK-9SS"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wO1-pK-VUK" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3797" y="-242"/>
+            <point key="canvasLocation" x="3795.5223880597014" y="-242.33409610983981"/>
         </scene>
         <!--Select 5 field marks to use-->
         <scene sceneID="xCJ-NJ-tg9">
@@ -714,13 +723,13 @@
     <resources>
         <image name="checkmark" catalog="system" width="128" height="114"/>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemGray3Color">
-            <color red="0.7803921568627451" green="0.7803921568627451" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.78039215689999997" green="0.78039215689999997" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

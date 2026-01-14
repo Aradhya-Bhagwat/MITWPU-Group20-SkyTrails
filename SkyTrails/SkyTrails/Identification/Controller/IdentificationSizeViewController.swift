@@ -9,9 +9,10 @@ import UIKit
 
 class IdentificationSizeViewController: UIViewController {
 
-    @IBOutlet weak var birdImage: UIImageView!
+    @IBOutlet weak var smallBirdImage: UIImageView!
     @IBOutlet weak var birdSlider: UISlider!
     @IBOutlet weak var birdLabel: UILabel!
+    @IBOutlet weak var largeBirdImage: UIImageView!
     
     @IBOutlet weak var progressView: UIProgressView!
     var selectedSize: String?
@@ -51,24 +52,43 @@ class IdentificationSizeViewController: UIViewController {
         button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
+    func sizeImageNames(for index: Int) -> (small: String, large: String) {
+        switch index {
+        case 0:
+            return ("size_0_small_white_eye", "size_0_large_sunbird")
+        case 1:
+            return ("size_1_small_sparrow", "size_1_large_parakeet")
+        case 2:
+            return ("size_2_small_koel", "size_2_large_cattle_egret")
+        case 3:
+            return ("size_3_small_painted_stork", "size_3_large_crane")
+        case 4:
+            return ("size_4_small_peafowl", "size_4_large_pelican")
+        default:
+            return ("", "")
+        }
+    }
+
     private func updateBirdDisplay(for index: Int) {
         switch index {
-                case 0:
-                    birdLabel.text = "Less than 6 inches"
-                case 1:
-                    birdLabel.text = "6–14 inches"
-                case 2:
-                    birdLabel.text = "14–25 inches"
-                case 3:
-                    birdLabel.text = "25–59 inches"
-                case 4:
-                    birdLabel.text = "59 inches and over"
-                default:
-                    birdLabel.text = ""
-                }
-                
-                let imageName = "bird\(index)"
-                birdImage.image = UIImage(named: imageName)
+          case 0:
+              birdLabel.text = "Between White-eye and Sunbird"
+          case 1:
+              birdLabel.text = "Between Sparrow and Parakeet"
+          case 2:
+              birdLabel.text = "Between Koel and Cattle Egret"
+          case 3:
+              birdLabel.text = "Between Painted Stork and Crane"
+          case 4:
+              birdLabel.text = "Between Peafowl and Pelican"
+          default:
+              birdLabel.text = ""
+          }
+
+          let names = sizeImageNames(for: index)
+          smallBirdImage.image = UIImage(named: names.small)
+          largeBirdImage.image = UIImage(named: names.large)
+
             }
 
     func sizeDescription(for index: Int) -> String {
