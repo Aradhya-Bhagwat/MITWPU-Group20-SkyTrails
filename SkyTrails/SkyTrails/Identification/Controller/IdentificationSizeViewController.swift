@@ -15,6 +15,10 @@ class IdentificationSizeViewController: UIViewController {
     @IBOutlet weak var largeBirdImage: UIImageView!
     
     @IBOutlet weak var progressView: UIProgressView!
+    
+    @IBOutlet weak var largeBirdNameLabel: UILabel!
+
+    @IBOutlet weak var smallBirdNameLabel: UILabel!
     var selectedSize: String?
 
     var viewModel: IdentificationManager!
@@ -29,7 +33,7 @@ class IdentificationSizeViewController: UIViewController {
         birdSlider.isContinuous = true
         viewModel.selectedSizeCategory = 0
         updateBirdDisplay(for: 0)
-        setupRightTickButton()
+     
              
       
     }
@@ -39,57 +43,102 @@ class IdentificationSizeViewController: UIViewController {
         updateBirdDisplay(for: steppedValue)
         viewModel.selectedSizeCategory = steppedValue
     }
-    private func setupRightTickButton() {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20
-        button.layer.masksToBounds = true
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-        button.tintColor = .black
-        
-        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
+ 
     func sizeImageNames(for index: Int) -> (small: String, large: String) {
         switch index {
         case 0:
-            return ("size_0_small_white_eye", "size_0_large_sunbird")
+            // Tiny (<13 cm)
+            return ("size_0_small_flowerpecker", "size_0_large_tailorbird")
+
         case 1:
-            return ("size_1_small_sparrow", "size_1_large_parakeet")
+            // Small (13–20 cm)
+            return ("size_1_small_munia", "size_1_large_bulbul")
+
         case 2:
-            return ("size_2_small_koel", "size_2_large_cattle_egret")
+            // Medium (20–40 cm)
+            return ("size_2_small_myna", "size_2_large_peahen")
+
         case 3:
-            return ("size_3_small_painted_stork", "size_3_large_crane")
+            // Large (40–70 cm)
+            return ("size_3_small_house_crow", "size_3_large_pond_heron")
+
         case 4:
-            return ("size_4_small_peafowl", "size_4_large_pelican")
+            // Very Large (70+ cm)
+            return ("size_4_small_cattle_egret", "size_4_large_sarus_crane")
+
         default:
             return ("", "")
         }
+
+    }
+    @IBAction func backButtonTapped(_ sender: UIBarButtonItem) {
+        navigationController?.popViewController(animated: true)
+    }
+    @IBAction func infoButtonTapped(_ sender: UIBarButtonItem) {
+        // Create an alert to show size information
+        let alert = UIAlertController(
+            title: "Bird Size Guide",
+            message: """
+            Compare the bird you saw to these common birds:
+            
+            • Flowerpecker–Tailorbird: Less than 6 inches
+            • Munia–Bulbul: 6–14 inches
+            • Myna–Peahen: 14–25 inches
+            • House Crow–Pond Heron: 25–59 inches
+            • Cattle Egret–Sarus Crane: 59 inches and over
+            
+            Use the slider to select the size category that best matches your bird.
+            """,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        
+        present(alert, animated: true, completion: nil)
     }
 
     private func updateBirdDisplay(for index: Int) {
         switch index {
-          case 0:
-              birdLabel.text = "Between White-eye and Sunbird"
-          case 1:
-              birdLabel.text = "Between Sparrow and Parakeet"
-          case 2:
-              birdLabel.text = "Between Koel and Cattle Egret"
-          case 3:
-              birdLabel.text = "Between Painted Stork and Crane"
-          case 4:
-              birdLabel.text = "Between Peafowl and Pelican"
-          default:
-              birdLabel.text = ""
-          }
+        case 0:
+            birdLabel.text = "Flowerpecker–Tailorbird sized"
+        case 1:
+            birdLabel.text = "Munia–Bulbul sized"
+        case 2:
+            birdLabel.text = "Myna–Peahen sized"
+        case 3:
+            birdLabel.text = "House Crow–Pond Heron sized"
+        case 4:
+            birdLabel.text = "Cattle Egret–Sarus Crane sized"
+        default:
+            birdLabel.text = ""
+        }
+
 
           let names = sizeImageNames(for: index)
           smallBirdImage.image = UIImage(named: names.small)
           largeBirdImage.image = UIImage(named: names.large)
-
+        smallBirdNameLabel.text = extractBirdName(from: names.small)
+        largeBirdNameLabel.text = extractBirdName(from: names.large)
             }
+   
+
+    private func extractBirdName(from filename: String) -> String {
+        // Split by underscore and get the last parts (the actual bird name)
+        let components = filename.components(separatedBy: "_")
+        
+        // Get everything after "small" or "large"
+        // e.g., ["size", "0", "small", "flowerpecker"] -> ["flowerpecker"]
+        if let smallIndex = components.firstIndex(of: "small") {
+            let birdNameParts = components.suffix(from: smallIndex + 1)
+            return birdNameParts.joined(separator: " ").capitalized
+        } else if let largeIndex = components.firstIndex(of: "large") {
+            let birdNameParts = components.suffix(from: largeIndex + 1)
+            return birdNameParts.joined(separator: " ").capitalized
+        }
+        
+        // Fallback: just capitalize the whole thing
+        return filename.replacingOccurrences(of: "_", with: " ").capitalized
+    }
 
     func sizeDescription(for index: Int) -> String {
         switch index {
@@ -102,7 +151,8 @@ class IdentificationSizeViewController: UIViewController {
         }
     }
 
-    @objc private func nextTapped() {
+    
+    @IBAction func checkmarkButtonTapped(_ sender: UIBarButtonItem) {
         // 1. Update ViewModel state
         viewModel.selectedSizeCategory = Int(round(birdSlider.value))
         
@@ -116,13 +166,11 @@ class IdentificationSizeViewController: UIViewController {
         
         // 3. Update data for GUI display
         let sizeText = sizeDescription(for: viewModel.selectedSizeCategory ?? 0)
-			// Inside nextTapped()
-		viewModel.data.size = sizeText            // Needed for Summary
-		viewModel.selectedSizeCategory = Int(round(birdSlider.value)) // Needed for Filtering
+        viewModel.data.size = sizeText            // Needed for Summary
+        viewModel.selectedSizeCategory = Int(round(birdSlider.value)) // Needed for Filtering
         
         delegate?.didFinishStep()
     }
-    
 }
 extension IdentificationSizeViewController: IdentificationProgressUpdatable {
     func updateProgress(current: Int, total: Int) {
