@@ -7,7 +7,7 @@
 
 import UIKit
 
-class OnboardViewController: UIViewController {
+class StartViewController: UIViewController {
 
     @IBOutlet weak var segmentOutlet: UISegmentedControl!
     

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="tzg-Nh-TCl">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="eqR-gV-h0r">
     <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
@@ -8,29 +8,29 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Onboard View Controller-->
+        <!--Start View Controller-->
         <scene sceneID="tt2-wk-n23">
             <objects>
-                <viewController id="eqR-gV-h0r" customClass="OnboardViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="eqR-gV-h0r" customClass="StartViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="KHA-UU-RDG">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="BrandLogo" translatesAutoresizingMaskIntoConstraints="NO" id="rga-4C-m8M">
-                                <rect key="frame" x="151" y="188" width="100" height="100"/>
+                                <rect key="frame" x="151" y="134" width="100" height="100"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="100" id="Swy-FN-OH1"/>
                                     <constraint firstAttribute="width" constant="100" id="umx-5A-rE5"/>
                                 </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="S K Y T R A I L S" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ogj-l8-lFR">
-                                <rect key="frame" x="16" y="308" width="370" height="38.333333333333314"/>
+                                <rect key="frame" x="16" y="254.00000000000003" width="370" height="38.333333333333343"/>
                                 <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="32"/>
                                 <color key="textColor" systemColor="systemBlueColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="GR9-zo-HNw">
-                                <rect key="frame" x="16" y="356.33333333333331" width="370" height="32"/>
+                                <rect key="frame" x="16" y="302.33333333333331" width="370" height="32"/>
                                 <segments>
                                     <segment title="Login"/>
                                     <segment title="Signup"/>
@@ -40,7 +40,7 @@
                                 </connections>
                             </segmentedControl>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZED-bd-BNm">
-                                <rect key="frame" x="16" y="397.33333333333326" width="370" height="350"/>
+                                <rect key="frame" x="16" y="343.33333333333326" width="370" height="350"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="350" id="sgG-36-kcw"/>
                                 </constraints>
@@ -49,7 +49,7 @@
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VAL-rG-YkM">
-                                <rect key="frame" x="16" y="397.33333333333326" width="370" height="350"/>
+                                <rect key="frame" x="16" y="343.33333333333326" width="370" height="350"/>
                                 <connections>
                                     <segue destination="VYd-mD-4mX" kind="embed" id="tOt-qf-0Sg"/>
                                 </connections>
@@ -127,7 +127,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="GTR-K4-SD5" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4628.3582089552237" y="63.157894736842103"/>
+            <point key="canvasLocation" x="5547.7611940298502" y="63.157894736842103"/>
         </scene>
         <!--Sign Up View Controller-->
         <scene sceneID="7YM-tf-QQn">
@@ -224,7 +224,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="C7s-Uy-X0L" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="5649.2537313432831" y="-132.49427917620136"/>
+            <point key="canvasLocation" x="6568.6567164179105" y="-132.49427917620136"/>
         </scene>
         <!--Login View Controller-->
         <scene sceneID="ViV-Yi-LgW">
@@ -296,26 +296,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xmV-U3-zP8" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="5649.2537313432831" y="256.75057208237985"/>
-        </scene>
-        <!--Item-->
-        <scene sceneID="rvy-d9-rkE">
-            <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="tzg-Nh-TCl" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Item" id="21n-6S-i2T"/>
-                    <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ZvK-wc-nvq">
-                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                    </navigationBar>
-                    <nil name="viewControllers"/>
-                    <connections>
-                        <segue destination="eqR-gV-h0r" kind="relationship" relationship="rootViewController" id="k3P-0I-YCY"/>
-                    </connections>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="ng7-cg-gud" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="3708.9552238805968" y="63.157894736842103"/>
+            <point key="canvasLocation" x="6568.6567164179105" y="256.75057208237985"/>
         </scene>
     </scenes>
     <resources>
