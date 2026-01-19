@@ -29,91 +29,84 @@
     ],
     "shapes": [
       {
-        "id": "Auks",
-        "name": "Auks",
-        "icon": "bird_auks_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Short", "head_offset_y": 10 }
-        ]
+        "id": "Anatidae",
+        "name": "Anatidae (Ducks)",
+        "icon": "shape_anatidae"
       },
       {
-        "id": "Chickadees",
-        "name": "Chickadees",
-        "icon": "bird_chickadees_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Compact", "head_offset_y": 5 }
-        ]
+        "id": "Ardeidae",
+        "name": "Ardeidae (Herons)",
+        "icon": "shape_ardeidae"
       },
       {
-        "id": "Owls",
-        "name": "Owls",
-        "icon": "bird_owls_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Bull", "head_offset_y": 5 }
-        ]
+        "id": "Accipitridae",
+        "name": "Accipitridae (Kites)",
+        "icon": "shape_accipitridae"
       },
       {
-        "id": "Ducks",
-        "name": "Ducks",
-        "icon": "bird_ducks_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Long", "head_offset_y": -40 },
-          { "id": "Short", "head_offset_y": 15 }
-        ]
+        "id": "Strigidae",
+        "name": "Strigidae (Owls)",
+        "icon": "shape_strigidae"
       },
       {
-        "id": "Hummingbird",
-        "name": "Hummingbird",
-        "icon": "bird_hummingbird_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Slim", "head_offset_y": -5 }
-        ]
+        "id": "Charadriidae",
+        "name": "Charadriidae (Waders)",
+        "icon": "shape_charadriidae"
       },
       {
-        "id": "Heron",
-        "name": "Heron",
-        "icon": "bird_heron_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Long", "head_offset_y": -120 },
-          { "id": "Extended", "head_offset_y": -140 }
-        ]
+        "id": "Phasianidae",
+        "name": "Phasianidae (Gamebirds)",
+        "icon": "shape_phasianidae"
       },
       {
-        "id": "Shorebird",
-        "name": "Shorebird",
-        "icon": "bird_shorebird_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Long", "head_offset_y": -50 },
-          { "id": "Tapered", "head_offset_y": -20 }
-        ]
+        "id": "Columbidae",
+        "name": "Columbidae (Pigeons)",
+        "icon": "shape_columbidae"
       },
       {
-        "id": "Game bird",
-        "name": "Game bird",
-        "icon": "bird_game_bird_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Stocky", "head_offset_y": 10 },
-          { "id": "Long", "head_offset_y": -45 }
-        ]
+        "id": "Psittaculidae",
+        "name": "Psittaculidae (Parakeets)",
+        "icon": "shape_psittaculidae"
       },
       {
-        "id": "Finch",
-        "name": "Finch",
-        "icon": "bird_finch_shape",
-        "neck_variations": [
-          { "id": "Default", "head_offset_y": 0 },
-          { "id": "Short", "head_offset_y": 15 },
-          { "id": "Long", "head_offset_y": -60 },
-          { "id": "Thin", "head_offset_y": 0 }
-        ]
+        "id": "Apodidae",
+        "name": "Apodidae (Aerialists)",
+        "icon": "shape_apodidae"
+      },
+      {
+        "id": "Alcedinidae",
+        "name": "Alcedinidae (Kingfishers)",
+        "icon": "shape_alcedinidae"
+      },
+      {
+        "id": "Picidae",
+        "name": "Picidae (Woodpeckers)",
+        "icon": "shape_picidae"
+      },
+      {
+        "id": "Corvidae",
+        "name": "Corvidae (Crows)",
+        "icon": "shape_corvidae"
+      },
+      {
+        "id": "Muscicapidae",
+        "name": "Muscicapidae (Songbirds)",
+        "icon": "shape_muscicapidae"
+      },
+      {
+        "id": "Pycnonotidae",
+        "name": "Pycnonotidae (Small Perchers)",
+        "icon": "shape_pycnonotidae"
+      },
+      {
+        "id": "Nectariniidae",
+        "name": "Nectariniidae (Tiny Perchers)",
+        "icon": "shape_nectariniidae"
+      },
+      {
+        "id": "Passeridae_Fringillidae",
+        "name": "Passeridae / Fringillidae (Finches & Sparrows)",
+        "icon": "shape_passeridae"
       }
     ],
     "field_marks": [
@@ -140,7 +133,7 @@
       "valid_locations": ["Himalayas"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Game bird",
+          "shape_id": "Phasianidae",
         "size_category": 3,
         "rarity": "Rare"
       },
@@ -158,7 +151,7 @@
       "valid_locations": ["Western Ghats", "Himalayas"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 4,
         "rarity": "Rare"
       },
@@ -175,7 +168,7 @@
       "valid_locations": ["Urban", "Dessert", "Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Game bird",
+          "shape_id": "Phasianidae",
         "size_category": 5,
         "rarity": "Common"
       },
@@ -193,7 +186,7 @@
       "valid_locations": ["Western Ghats", "Urban"],
       "valid_months": [5,6,7,8,9],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -211,7 +204,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Alcedinidae",
         "size_category": 1,
         "rarity": "Common"
       },
@@ -229,7 +222,7 @@
       "valid_locations": ["Urban", "Pune, India"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -247,7 +240,7 @@
       "valid_locations": ["Urban", "Pune, India"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Psittaculidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -265,7 +258,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [11,12,1,2,3],
       "attributes": {
-        "shape_id": "Heron",
+          "shape_id": "Ardeidae",
         "size_category": 5,
         "rarity": "Common"
       },
@@ -283,7 +276,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Heron",
+          "shape_id": "Ardeidae",
         "size_category": 5,
         "rarity": "Rare"
       },
@@ -300,7 +293,7 @@
       "valid_locations": ["Urban", "Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Passeridae_Fringillidae",
         "size_category": 1,
         "rarity": "Common"
       },
@@ -318,7 +311,7 @@
       "valid_locations": ["Urban", "Pune, India"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 3,
         "rarity": "Common"
       },
@@ -336,7 +329,7 @@
       "valid_locations": ["Urban", "Pune, India"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Corvidae",
         "size_category": 3,
         "rarity": "Common"
       },
@@ -353,7 +346,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Heron",
+          "shape_id": "Ardeidae",
         "size_category": 5,
         "rarity": "Common"
       },
@@ -371,7 +364,7 @@
       "valid_locations": ["Dessert"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Game bird",
+          "shape_id": "Phasianidae",
         "size_category": 5,
         "rarity": "Rare"
       },
@@ -389,7 +382,7 @@
       "valid_locations": ["Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 2,
         "rarity": "Rare"
       },
@@ -406,7 +399,7 @@
       "valid_locations": ["Urban"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Passeridae_Fringillidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -424,7 +417,7 @@
       "valid_locations": ["Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Picidae",
         "size_category": 3,
         "rarity": "Common"
       },
@@ -442,7 +435,7 @@
       "valid_locations": ["Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 3,
         "rarity": "Rare"
       },
@@ -460,7 +453,7 @@
       "valid_locations": ["Western Ghats", "Urban"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Muscicapidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -477,7 +470,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Heron",
+          "shape_id": "Ardeidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -494,7 +487,7 @@
       "valid_locations": ["Wetlands", "Urban"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Finch",
+          "shape_id": "Apodidae",
         "size_category": 1,
         "rarity": "Common"
       },
@@ -512,7 +505,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [11,12,1,2,3],
       "attributes": {
-        "shape_id": "Ducks",
+          "shape_id": "Anatidae",
         "size_category": 2,
         "rarity": "Common"
       },
@@ -530,7 +523,7 @@
       "valid_locations": ["Wetlands"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
-        "shape_id": "Heron",
+          "shape_id": "Ardeidae",
         "size_category": 1,
         "rarity": "Rare"
       },

@@ -76,6 +76,13 @@ class ResultCollectionViewCell: UICollectionViewCell {
         menuButton.showsMenuAsPrimaryAction = true
         menuButton.menu = menu
     }
-    
+    override func prepareForReuse() {
+            super.prepareForReuse()
+            // 3. Prevent old images from showing on new cells
+            resultImageView.image = nil
+            nameLabel.text = nil
+            percentageLabel.text = nil
+            isSelectedCell = false
+        }
 }
 
