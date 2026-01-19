@@ -5,21 +5,68 @@
 //  Created by Disha Jain on 27/11/25.
 //
 
+//
+//  IdentificationShapeViewController.swift
+//  SkyTrails
+//
+//  Created by Disha Jain on 27/11/25.
+//
+
 import UIKit
 
-class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+class IdentificationShapeViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
-
     @IBOutlet weak var tableContainerView: UIView!
-    @IBOutlet weak var shapeTableView: UITableView!
-    
+    @IBOutlet weak var shapeCollectionView: UICollectionView!
     @IBOutlet weak var progressView: UIProgressView!
 
     var viewModel: IdentificationManager!
     var selectedSizeIndex: Int?
     var filteredShapes: [BirdShape] = []
+    var selectedShapeIndex: Int?
 
     weak var delegate: IdentificationFlowStepDelegate?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        styleTableContainer()
+        
+        // Apply size filter to get available shapes
+        viewModel.selectedSizeCategory = selectedSizeIndex
+        filteredShapes = viewModel.availableShapesForSelectedSize()
+        
+        // Setup collection view
+        shapeCollectionView.delegate = self
+        shapeCollectionView.dataSource = self
+        
+        // Register the custom cell
+        let nib = UINib(nibName: "shapeCollectionViewCell", bundle: nil)
+        shapeCollectionView.register(nib, forCellWithReuseIdentifier: "shapeCell")
+        
+        setupCollectionViewLayout()
+        setupRightTickButton()
+        
+        // Restore previous selection if exists
+        if let shapeId = viewModel.selectedShapeId,
+           let index = filteredShapes.firstIndex(where: { $0.id == shapeId }) {
+            selectedShapeIndex = index
+        }
+    }
+    
+    private func setupCollectionViewLayout() {
+        let layout = UICollectionViewFlowLayout()
+        
+        layout.minimumInteritemSpacing = 12
+        layout.minimumLineSpacing = 16
+        layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
+        
+        let itemWidth = (shapeCollectionView.bounds.width - 36) / 2
+        // 12 (left) + 12 (right) + 12 (space between) = 36
+        
+        layout.itemSize = CGSize(width: itemWidth, height: 180)
+        
+        shapeCollectionView.collectionViewLayout = layout
+    }
 
     func styleTableContainer() {
         tableContainerView.layer.cornerRadius = 12
@@ -28,31 +75,48 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
         tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
         tableContainerView.layer.shadowRadius = 8
         tableContainerView.layer.masksToBounds = false
-        
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        filteredShapes.count
+    // MARK: - UICollectionViewDataSource
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return filteredShapes.count
     }
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    func resize(_ image: UIImage, to size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as! shapeCollectionViewCell
+        
+        let shape = filteredShapes[indexPath.item]
+        cell.configure(with: shape.name, imageName: shape.imageView)
+        
+        // Visual feedback for selection
+        if selectedShapeIndex == indexPath.item {
+            cell.contentView.layer.borderWidth = 3
+            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            cell.contentView.layer.cornerRadius = 12
+            cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        } else {
+            cell.contentView.layer.borderWidth = 1
+            cell.contentView.layer.borderColor = UIColor.systemGray4.cgColor
+            cell.contentView.layer.cornerRadius = 12
+            cell.contentView.backgroundColor = .white
         }
+        
+        return cell
     }
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedShape = filteredShapes[indexPath.row]
+    
+    // MARK: - UICollectionViewDelegate
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedShape = filteredShapes[indexPath.item]
+        
+        // Update selection
+        selectedShapeIndex = indexPath.item
         
         // Update ViewModel state
         viewModel.selectedShapeId = selectedShape.id
-
-			// Inside tableView didSelectRowAt
-		viewModel.data.shape = selectedShape.name // Needed for Summary
-		viewModel.selectedShapeId = selectedShape.id // Needed for Filtering
-		
+        viewModel.data.shape = selectedShape.name // Needed for Summary
+        
         // Trigger intermediate filtering
         viewModel.filterBirds(
             shape: selectedShape.id,
@@ -61,37 +125,11 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
             fieldMarks: [] // Field marks not selected yet
         )
         
-        delegate?.didTapShapes()
-
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "shape_cell", for: indexPath)
-        let item = filteredShapes[indexPath.row]
-        cell.textLabel?.text = item.name
-        if let img = UIImage(named: item.imageView) {
-    
-          let targetSize = CGSize(width: 60, height: 60)
-            let resized = resize(img, to: targetSize)
-            cell.imageView?.image = resized
-            cell.imageView?.contentMode = .scaleAspectFill
-            cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
-        } else {
-            cell.imageView?.image = nil
-        }
-        cell.accessoryType = .disclosureIndicator
-        return cell
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        styleTableContainer()
-      //  applySizeFilter()
-        viewModel.selectedSizeCategory = selectedSizeIndex
-        shapeTableView.delegate = self
-        shapeTableView.dataSource = self
-        setupRightTickButton()
+        // Reload collection view to show selection
+        collectionView.reloadData()
         
+        // Proceed to next step
+        delegate?.didTapShapes()
     }
     
     private func setupRightTickButton() {
@@ -109,24 +147,11 @@ class IdentificationShapeViewController: UIViewController,UITableViewDelegate,UI
     }
 
     @objc private func nextTapped() {
-        // If a shape is selected in the table, we proceed.
-        // Even if nothing is explicitly selected (user just wants to skip or current selection is implied),
-        // we trigger the delegate to move forward.
+        // Proceed to next step even if no shape is explicitly selected
         delegate?.didTapShapes()
-		
     }
-   
-    func applySizeFilter() {
-        filteredShapes = viewModel.availableShapesForSelectedSize()
-        shapeTableView.reloadData()
-    }
-
-
-  
-
-   
-
 }
+
 extension IdentificationShapeViewController: IdentificationProgressUpdatable {
     func updateProgress(current: Int, total: Int) {
         let percent = Float(current) / Float(total)

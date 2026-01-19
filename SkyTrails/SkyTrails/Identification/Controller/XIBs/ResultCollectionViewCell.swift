@@ -1,62 +1,70 @@
 //
-//  ResultTableViewCell.swift
+//  ResultCollectionViewCell.swift
 //  SkyTrails
 //
-//  Created by SDC-USER on 08/12/25.
+//  Created by Disha Jain on 19/01/26.
 //
 
 import UIKit
+
 protocol ResultCellDelegate: AnyObject {
-    func didTapPredict(for cell: ResultTableViewCell)
-    func didTapAddToWatchlist(for cell: ResultTableViewCell)
+    func didTapPredict(for cell: ResultCollectionViewCell)
+    func didTapAddToWatchlist(for cell: ResultCollectionViewCell)
 }
 
-class ResultTableViewCell: UITableViewCell {
+class ResultCollectionViewCell: UICollectionViewCell {
 
     @IBOutlet weak var resultImageView: UIImageView!
-    
     @IBOutlet weak var nameLabel: UILabel!
-    
     @IBOutlet weak var percentageLabel: UILabel!
-    
-    
     @IBOutlet weak var menuButton: UIButton!
+    
     weak var delegate: ResultCellDelegate?
+    var indexPath: IndexPath?
+    var isSelectedCell: Bool = false {
+            didSet {
+                updateSelectionAppearance()
+            }
+        }
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        resultImageView.layer.cornerRadius = 8
-        resultImageView.clipsToBounds = true
-        resultImageView.contentMode = .scaleAspectFill
+    
+           // self.layer.shadowColor = UIColor.black.cgColor
+          
         setupMenu()
-        // Initialization code
-    }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        
     }
   
     func configure(image: UIImage?, name: String, percentage: String) {
-          resultImageView.image = image
-          nameLabel.text = name
-          percentageLabel.text = percentage + "%"
-          percentageLabel.numberOfLines = 1
-         
-      }
+        resultImageView.image = image
+        nameLabel.text = name
+        percentageLabel.text = percentage + "%"
+    }
+    
     func configureHistory(image: UIImage?, name: String, date: String) {
         resultImageView.image = image
         nameLabel.text = name
-        percentageLabel.text = date   
+        percentageLabel.text = date
     }
+    private func updateSelectionAppearance() {
+            if isSelectedCell {
+                // Selected: Blue Border
+                self.layer.borderWidth = 3.0
+                self.layer.borderColor = UIColor.systemBlue.cgColor
+            } else {
+                // Not Selected: No Border
+                self.layer.borderWidth = 0.0
+                self.layer.borderColor = nil
+            }
+        }
+    
+    
     func setupMenu() {
         let predictAction = UIAction(title: "Predict Species",
                                      image: UIImage(systemName: "map")) { [weak self] _ in
             guard let self = self else { return }
             self.delegate?.didTapPredict(for: self)
         }
-
 
         let watchlistAction = UIAction(title: "Add to Watchlist",
                                        image: UIImage(systemName: "text.badge.plus")) { [weak self] _ in
@@ -65,8 +73,9 @@ class ResultTableViewCell: UITableViewCell {
         }
 
         let menu = UIMenu(title: "", children: [predictAction, watchlistAction])
-
-        menuButton.showsMenuAsPrimaryAction = true   // open menu on tap
+        menuButton.showsMenuAsPrimaryAction = true
         menuButton.menu = menu
     }
-    }
+    
+}
+
