@@ -10,11 +10,18 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 	var window: UIWindow?
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    func scene(_ scene: UIScene,
+               willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = RootTabBarController()
+
+        let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
+        let loginVC = storyboard.instantiateInitialViewController()!
+
+        window.rootViewController = loginVC
         self.window = window
         window.makeKeyAndVisible()
     }
