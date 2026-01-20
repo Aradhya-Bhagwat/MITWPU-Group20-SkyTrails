@@ -625,21 +625,28 @@ extension HomeViewController {
 extension HomeViewController {
     
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
-        
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
             heightDimension: .fractionalHeight(1.0)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        
+
         let screenWidth = self.view.bounds.width
-        let absoluteCardWidth = screenWidth - 32
-        let idealHeight = screenWidth * 0.8
-        let clampedHeight = min(max(idealHeight, 320), 450)
+        let absoluteCardWidth = screenWidth - 32 // Margin on both sides
         
+        // 💡 THE ADAPTIVE ASPECT RATIO LOGIC
+        let calculatedHeight: CGFloat
+        if screenWidth < 550 {
+            // Ratio 717:332 -> height = width * (332/717)
+            calculatedHeight = absoluteCardWidth * (332.0 / 717.0)
+        } else {
+            // Ratio 254:83 -> height = width * (83/254)
+            calculatedHeight = absoluteCardWidth * (83.0 / 254.0)
+        }
+
         let groupSize = NSCollectionLayoutSize(
             widthDimension: .absolute(absoluteCardWidth),
-            heightDimension: .absolute(clampedHeight)
+            heightDimension: .absolute(calculatedHeight)
         )
         
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
@@ -648,22 +655,12 @@ extension HomeViewController {
         section.orthogonalScrollingBehavior = .groupPagingCentered
         section.interGroupSpacing = 40
         
+        // Page Control and Header setup remains the same...
+        let footerKind = "MigrationPageControlFooter"
+        let footerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(30))
+        let footer = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: footerSize, elementKind: footerKind, alignment: .bottom)
         
-        let migrationPageControlFooterKind = "MigrationPageControlFooter"
-        let pageControlFooterSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(30)
-        )
-        
-        let pageControlFooter = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: pageControlFooterSize,
-            elementKind: migrationPageControlFooterKind,
-            alignment: .bottom
-        )
-        
-        let header = createSectionHeaderLayout()
-        
-        section.boundarySupplementaryItems = [header, pageControlFooter]
+        section.boundarySupplementaryItems = [createSectionHeaderLayout(), footer]
         section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
         
         return section
