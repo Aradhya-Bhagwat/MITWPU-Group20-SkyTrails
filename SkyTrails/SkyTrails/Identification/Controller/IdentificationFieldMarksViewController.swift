@@ -1,113 +1,215 @@
-	//
-	//  FieldMarksViewController.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 27/11/25.
-	//
+//
+//  IdentificationFieldMarksViewController.swift
+//  SkyTrails
+//
+//  Created by SDC-USER on 27/11/25.
+//
 
 import UIKit
 
-class IdentificationFieldMarksViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-	
-	@IBOutlet weak var tableContainerView: UIView!
-	@IBOutlet weak var fieldMarkTableView: UITableView!
-	@IBOutlet weak var progressView: UIProgressView!
-	
-	weak var delegate: IdentificationFlowStepDelegate?
-	var selectedFieldMarks: [Int] = []
-	
-	var viewModel: IdentificationManager!
-	
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		styleTableContainer()
-		fieldMarkTableView.delegate = self
-		fieldMarkTableView.dataSource = self
-		setupRightTickButton()
-	}
-	
-	func styleTableContainer() {
-		tableContainerView.backgroundColor = .white
-		tableContainerView.layer.cornerRadius = 12
-		tableContainerView.layer.shadowColor = UIColor.black.cgColor
-		tableContainerView.layer.shadowOpacity = 0.1
-		tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-		tableContainerView.layer.shadowRadius = 8
-		tableContainerView.layer.masksToBounds = false
-	}
-	
+class IdentificationFieldMarksViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    @IBOutlet weak var CanvasView: UIView!
+    @IBOutlet weak var Categories: UICollectionView!
+    @IBOutlet weak var progressView: UIProgressView!
+    
+    weak var delegate: IdentificationFlowStepDelegate?
+    var selectedFieldMarks: [Int] = []
+    
+    var viewModel: IdentificationManager!
+    
+    // Canvas Layers
+    private var baseShapeLayer: UIImageView!
+    private var partLayers: [String: UIImageView] = [:]
+    
+    // Z-Index Order for Bird Parts
+    private let layerOrder = [
+        "Tail",
+        "Leg",
+        "Thigh",
+        "Head",
+        "Neck",
+        "Back", "Belly", "Chest",
+        "Nape", "Throat", "Crown",
+        "Facemask",
+        "Beak", "Eye",
+        "Wings"
+    ]
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupCanvas()
+        setupRightTickButton()
+    }
+    
+    // Item 4: Canvas Layout Lifecycle Fix
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        let bounds = CanvasView.bounds
+        baseShapeLayer?.frame = bounds
+        
+        for layer in partLayers.values {
+            layer.frame = bounds
+        }
+    }
+    
+    func setupUI() {
+        // Register CategoryCell (Shared with GUIViewController)
+        let categoryNib = UINib(nibName: "CategoryCell", bundle: nil)
+        Categories.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
+        
+        Categories.delegate = self
+        Categories.dataSource = self
+        Categories.allowsMultipleSelection = true
+        
+        if let layout = Categories.collectionViewLayout as? UICollectionViewFlowLayout {
+            layout.scrollDirection = .horizontal
+            layout.estimatedItemSize = .zero
+        }
+    }
+    
+    /// Sanitizes strings for filenames
+    func cleanForFilename(_ name: String) -> String {
+        return name
+            .replacingOccurrences(of: " ", with: "_")
+            .replacingOccurrences(of: "-", with: "_")
+    }
+    
+    private func setupCanvas() {
+        // Clear existing views
+        CanvasView.subviews.forEach { $0.removeFromSuperview() }
+        partLayers.removeAll()
 
-	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return viewModel.chooseFieldMarks.count
-	}
-	
-	func numberOfSections(in tableView: UITableView) -> Int {
-		return 1
-	}
-	
-	func resize(_ image: UIImage, to size: CGSize) -> UIImage {
-		let renderer = UIGraphicsImageRenderer(size: size)
-		return renderer.image { _ in
-			image.draw(in: CGRect(origin: .zero, size: size))
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+        
+        // 1. Load the Core Torso (Hollow Base)
+        baseShapeLayer = UIImageView(frame: CanvasView.bounds)
+        baseShapeLayer.contentMode = .scaleAspectFit
+        baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base_Core")
+        // Item 5: Explicit and Safe Z-Ordering
+        baseShapeLayer.layer.zPosition = -1
+        CanvasView.addSubview(baseShapeLayer)
+
+        // 2. Loop through and CREATE the layers
+        for (index, catName) in layerOrder.enumerated() {
+            let imgView = UIImageView(frame: CanvasView.bounds)
+            imgView.contentMode = .scaleAspectFit
+            
+            // Item 5: Explicit and Safe Z-Ordering
+            imgView.layer.zPosition = CGFloat(index)
+            
+            CanvasView.addSubview(imgView)
+            partLayers[catName] = imgView
+            
+            // Initial Load
+            updateLayer(category: catName)
+        }
+    }
+    
+    func updateLayer(category: String) {
+        guard let layer = partLayers[category] else { return }
+        
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
+        let cleanCategory = cleanForFilename(category)
+        
+        // Determine if selected
+        let isSelected = isCategorySelected(name: category)
+        
+        // Item 8: Canvas Layer Image State Consistency
+        let baseName = "canvas_\(shapeID)_\(cleanCategory)"
+        let targetSuffix = isSelected ? "_color" : "_Default"
+        let targetImageName = baseName + targetSuffix
+        
+        if let img = UIImage(named: targetImageName) {
+            layer.image = img
+        } else if isSelected, let defaultImg = UIImage(named: baseName + "_Default") {
+            // Fallback: If colored version is missing, show default to ensure no flickering/nil state
+            layer.image = defaultImg
+        } else {
+            // Fallback: If default is missing, we must set it to nil to avoid showing stale data,
+            // but this path should ideally not be reached if assets are correct.
+             layer.image = nil
+        }
+    }
+    
+    func isCategorySelected(name: String) -> Bool {
+        if let index = viewModel.chooseFieldMarks.firstIndex(where: { $0.name == name }) {
+            return selectedFieldMarks.contains(index)
+        }
+        return false
+    }
+    
+    // MARK: - CollectionView DataSource & Delegate
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return viewModel.chooseFieldMarks.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+        let item = viewModel.chooseFieldMarks[indexPath.row]
+        
+		let isSelected = selectedFieldMarks.contains(indexPath.row)
+		if isSelected {
+			collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
 		}
-	}
-	
-	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let cell = tableView.dequeueReusableCell(withIdentifier: "fieldmark_cell", for: indexPath)
-		let item = viewModel.chooseFieldMarks[indexPath.row]
-		
-		cell.textLabel?.text = item.name
-		
-		if let img = UIImage(named: item.imageView) {
-			let targetSize = CGSize(width: 60, height: 60)
-			let resized = resize(img, to: targetSize)
-			cell.imageView?.image = resized
-			cell.imageView?.contentMode = .scaleAspectFill
-			cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
-		} else {
-			cell.imageView?.image = nil
-		}
-		
-		let toggle = UISwitch()
-		toggle.tag = indexPath.row
-		toggle.isOn = selectedFieldMarks.contains(indexPath.row)
-		toggle.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
-		cell.accessoryView = toggle
-		
-		return cell
-	}
-	
-	@objc func switchChanged(_ sender: UISwitch) {
-		let index = sender.tag
-		
-		if sender.isOn {
-			if selectedFieldMarks.count >= 5 {
-				sender.setOn(false, animated: true)
-				showMaxLimitAlert()
-				return
-			}
-			if !selectedFieldMarks.contains(index) {
-				selectedFieldMarks.append(index)
-			}
-		} else {
-			if let position = selectedFieldMarks.firstIndex(of: index) {
-				selectedFieldMarks.remove(at: position)
-			}
-		}
-		print("Selected indices = \(selectedFieldMarks)")
-	}
-	
-	private func showMaxLimitAlert() {
-		let alert = UIAlertController(
-			title: "Limit Reached",
-			message: "You can select at most 5 field marks.",
-			preferredStyle: .alert
-		)
-		alert.addAction(UIAlertAction(title: "OK", style: .default))
-		present(alert, animated: true)
-	}
-	
-	
+
+        cell.configure(name: item.name, iconName: item.imageView, isSelected: isSelected)
+        
+        return cell
+    }
+    
+    // Item 9: Selection Limit Enforcement (UX Fix)
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        if selectedFieldMarks.count >= 5 {
+            showMaxLimitAlert()
+            return false
+        }
+        return true
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let index = indexPath.row
+        
+        if !selectedFieldMarks.contains(index) {
+            selectedFieldMarks.append(index)
+        }
+        
+        // Item 3: Collection View Reload Optimization
+  
+        
+        let categoryName = viewModel.chooseFieldMarks[index].name
+        updateLayer(category: categoryName)
+        
+        print("Selected indices = \(selectedFieldMarks)")
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        let index = indexPath.row
+        
+        if let position = selectedFieldMarks.firstIndex(of: index) {
+            selectedFieldMarks.remove(at: position)
+        }
+        
+        // Item 3: Collection View Reload Optimization
+        collectionView.reloadItems(at: [indexPath])
+        
+        let categoryName = viewModel.chooseFieldMarks[index].name
+        updateLayer(category: categoryName)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 70, height: 70)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 15
+    }
+    
+    // MARK: - Navigation & Alerts
+    
     private func setupRightTickButton() {
         let button = UIButton(type: .system)
         button.backgroundColor = .white
@@ -122,36 +224,38 @@ class IdentificationFieldMarksViewController: UIViewController, UITableViewDeleg
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
     
-	
-	
-	@objc private func nextTapped() {
-			// 1. Get the NAMES of what the user selected (e.g., "Beak", "Eye")
-		let selectedNames = selectedFieldMarks.map { viewModel.chooseFieldMarks[$0].name }
-		
-			// 2. SAVE this list to the Shared Data Model
-			// This is the CRITICAL STEP for the next screen
-		viewModel.data.fieldMarks = selectedNames
-		
-			// 3. Perform the initial filter (for the list view later)
-		let marksForFilter: [FieldMarkData] = selectedNames.map { name in
-			return FieldMarkData(area: name, variant: "", colors: [])
-		}
-		
-		viewModel.filterBirds(
-			shape: viewModel.selectedShapeId,
-			size: viewModel.selectedSizeCategory,
-			location: viewModel.selectedLocation,
-			fieldMarks: marksForFilter
-		)
-		
-			// 4. Move to Next Screen
-		delegate?.didFinishStep()
-	}
+    private func showMaxLimitAlert() {
+        let alert = UIAlertController(
+            title: "Limit Reached",
+            message: "You can select at most 5 field marks.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    @objc private func nextTapped() {
+        let selectedNames = selectedFieldMarks.map { viewModel.chooseFieldMarks[$0].name }
+        viewModel.data.fieldMarks = selectedNames
+        
+        let marksForFilter: [FieldMarkData] = selectedNames.map { name in
+            return FieldMarkData(area: name, variant: "", colors: [])
+        }
+        
+        viewModel.filterBirds(
+            shape: viewModel.selectedShapeId,
+            size: viewModel.selectedSizeCategory,
+            location: viewModel.selectedLocation,
+            fieldMarks: marksForFilter
+        )
+        
+        delegate?.didFinishStep()
+    }
 }
 
 extension IdentificationFieldMarksViewController: IdentificationProgressUpdatable {
-	func updateProgress(current: Int, total: Int) {
-		let percent = Float(current) / Float(total)
-		progressView.setProgress(percent, animated: true)
-	}
+    func updateProgress(current: Int, total: Int) {
+        let percent = Float(current) / Float(total)
+        progressView.setProgress(percent, animated: true)
+    }
 }
