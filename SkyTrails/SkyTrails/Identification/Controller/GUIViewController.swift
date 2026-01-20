@@ -96,7 +96,14 @@ class GUIViewController: UIViewController {
 
         baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
-        baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base_Core")
+        let baseName = "shape_\(shapeID)_base_Core"
+        print("GUIViewController: Attempting to load base layer: \(baseName)")
+        if let img = UIImage(named: baseName) {
+            baseShapeLayer.image = img
+            print("GUIViewController: Successfully loaded base layer: \(baseName)")
+        } else {
+            print("GUIViewController: Failed to load base layer: \(baseName)")
+        }
         canvasContainerView.addSubview(baseShapeLayer)
 
         for catName in layerOrder {
@@ -116,12 +123,19 @@ class GUIViewController: UIViewController {
             } else {
                 imageName = "canvas_\(shapeID)_\(catName)_Default"
             }
-            if let name = imageName, let img = UIImage(named: name) {
-                imgView.image = img
+            
+            if let name = imageName {
+                print("GUIViewController: Attempting to load part layer: \(name)")
+                if let img = UIImage(named: name) {
+                    imgView.image = img
+                    print("GUIViewController: Successfully loaded part layer: \(name)")
+                } else {
+                    imgView.image = nil
+                    print("GUIViewController: Failed to load part layer: \(name)")
+                }
             } else {
                 imgView.image = nil
             }
-            
         }
     }
 	private func setupRightTickButton() {
@@ -141,6 +155,9 @@ class GUIViewController: UIViewController {
 		
 	
 	func cleanForFilename(_ name: String) -> String {
+        if name == "Passeridae_Fringillidae" {
+            return "Finch"
+        }
 		return name
 			.replacingOccurrences(of: " ", with: "_")
 			.replacingOccurrences(of: "-", with: "_")
@@ -183,13 +200,17 @@ class GUIViewController: UIViewController {
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
         let imageName = "canvas_\(shapeID)_\(cleanForFilename(category))_\(cleanForFilename(variant))"
         
+        print("GUIViewController: Attempting to update part: \(imageName)")
         if let layer = partLayers[category] {
-            layer.image = UIImage(named: imageName)
+            if let img = UIImage(named: imageName) {
+                layer.image = img
+                print("GUIViewController: Successfully updated part: \(imageName)")
+            } else {
+                print("GUIViewController: Failed to update part: \(imageName)")
+            }
+        } else {
+            print("GUIViewController: Layer not found for category: \(category)")
         }
-        
-//        if category == "Neck" {
-//            applyNeckOffset(variant: variant)
-//        }
     }
 	private func compositePreviewImage(base: UIImage, overlay: UIImage) -> UIImage {
 		let renderer = UIGraphicsImageRenderer(size: base.size)
