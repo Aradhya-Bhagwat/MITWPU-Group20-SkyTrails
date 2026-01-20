@@ -111,15 +111,15 @@
     ],
     "field_marks": [
       { "area": "Back", "variants": ["Solid", "Iridescent", "Streaked", "Mottled"] },
-      { "area": "Beak", "variants": ["Hooked", "Straight", "Curved", "Spoon-shaped", "Short", "Long", "Heavy", "Pale", "Casque"] },
+      { "area": "Beak", "variants": ["Hooked", "Default", "Curved", "Spoon-shaped", "Short", "Long", "Heavy", "Pale", "Casque"] },
       { "area": "Belly", "variants": ["Solid", "Pale", "White", "Spotted"] },
-      { "area": "Crown", "variants": ["Solid", "Striped", "Crest", "Cap", "Bare"] },
+      { "area": "Crown", "variants": ["Solid", "Striped", "Crest", "Cap"] },
       { "area": "Eye", "variants": ["Ring", "Solid", "Mask"] },
       { "area": "Leg", "variants": ["Long", "Short", "Pink", "Yellow"] },
-      { "area": "Tail", "variants": ["Long", "Short", "Forked", "Square", "Notched", "Cocked", "Rufous", "Train"] },
-      { "area": "Neck", "variants": [ "Default","Bibbed","Ring", "Naped", "Ruffed"] },
-      { "area": "Chest", "variants": ["Solid", "Banded", "Barred", "Spotted", "Bibbed"] },
-      { "area": "Wings", "variants": ["Solid", "Bar", "Striped", "Patch", "Broad"] },
+      { "area": "Tail", "variants": ["Long", "Short", "Forked", "Square", "Notched", "Rufous", "Train"] },
+      { "area": "Neck", "variants": [ "Bibbed","Ring", "Naped", "Ruffed"] },
+      { "area": "Chest", "variants": [ "Banded", "Barred", "Spotted", "Bibbed"] },
+      { "area": "Wings", "variants": ["Solid", "Bar", "Striped", "Patch"] },
       { "area": "Throat", "variants": ["Solid", "Patch", "White"] },
       { "area": "Facemask","variants": ["Masked","Earpatched","Eyeline", "Lore-Pointed","Moustached" ] }
     ]
