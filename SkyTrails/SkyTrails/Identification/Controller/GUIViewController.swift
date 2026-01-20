@@ -12,14 +12,11 @@ class GUIViewController: UIViewController {
 	var viewModel: IdentificationManager!
 	weak var delegate: IdentificationFlowStepDelegate?
 	
-		// Data Sources
 	private var categories: [ChooseFieldMark] = []
 	private var currentCategoryIndex: Int = 0
-	
-		// State
+
 	private var selectedVariations: [String: String] = [:]
 	
-		// Canvas Layers
 	private var baseShapeLayer: UIImageView!
 	private var partLayers: [String: UIImageView] = [:]
 	
@@ -29,10 +26,8 @@ class GUIViewController: UIViewController {
         "Tail",
         "Leg",
         "Thigh",
-
-        "Head",     // draw head first
-        "Neck",     // draw neck AFTER → overlays head
-
+        "Head",
+        "Neck",
         "Back", "Belly", "Chest",
         "Nape", "Throat", "Crown",
         "Facemask",
@@ -51,7 +46,7 @@ class GUIViewController: UIViewController {
 		categoriesCollectionView.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
 		
 		loadData()
-		setupCanvas() // Call setupCanvas AFTER loadData
+		setupCanvas()
 		setupRightTickButton()
 		
 		if !categories.isEmpty {
@@ -61,22 +56,14 @@ class GUIViewController: UIViewController {
 	
 		
 	private func loadData() {
-			// 1. Get the names you selected (e.g. "Beak", "Eye")
 		guard let selectedNames = viewModel.data.fieldMarks, !selectedNames.isEmpty else {
-			print("⚠️ No user selection found.")
 			self.categories = []
 			return
 		}
-		
-			// 2. Use 'fieldMarks' (The list of Body Parts)
         let allParts = viewModel.chooseFieldMarks
-		
-			// 3. Filter to get the objects for the selected names
 		self.categories = allParts.filter { part in
 			return selectedNames.contains(part.name)
 		}
-		
-		print("✅ GUI Loaded: \(self.categories.map { $0.name })")
         
         if selectedVariations["Neck"] == nil { selectedVariations["Neck"] = "Default" }
         if selectedVariations["Head"] == nil { selectedVariations["Head"] = "Default" }
@@ -89,9 +76,6 @@ class GUIViewController: UIViewController {
 		variationsCollectionView.dataSource = self
 		categoriesCollectionView.delegate = self
 		categoriesCollectionView.dataSource = self
-		
-			// --- FIX IS HERE ---
-			// We must disable estimatedItemSize so the delegate 'sizeForItemAt' is respected.
 		if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
 			layout.estimatedItemSize = .zero
 			layout.scrollDirection = .horizontal
@@ -102,79 +86,19 @@ class GUIViewController: UIViewController {
 		}
 	}
 
-//    func applyNeckOffset(variant: String) {
-//        let shapeName = viewModel.selectedShapeId ?? "Finch"
-//        
-//        // 1. Correct the property name to 'birdShapes'
-//        guard let shapeData = viewModel.birdShapes.first(where: { $0.name == shapeName }),
-//              let variations = shapeData.neck_variations else { return }
-//        
-//        // 2. Get the Y offset
-//        let offsetData = variations.first(where: { $0.id == variant })
-//            ?? variations.first(where: { $0.id == "Default" })
-//        
-//        // MAKE SURE THIS LINE IS ABOVE THE ANIMATION BLOCK
-//        let offsetY = CGFloat(offsetData?.head_offset_y ?? 0)
-//        
-//        let headRelatedLayers = ["Head", "Crown", "Beak", "Eye", "Nape", "Throat"]
-//        
-//        // 3. Animate using the offsetY variable defined above
-//        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
-//            for layerName in headRelatedLayers {
-//                if let layerView = self.partLayers[layerName] {
-//                    layerView.transform = CGAffineTransform(translationX: 0, y: offsetY)
-//                }
-//            }
-//        }
-//    }
-    
-//    private func setupCanvas() {
-//        canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
-//        partLayers.removeAll()
-//
-//        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-//        
-//        // 1. Load the Core Torso (Hollow Base)
-//        baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
-//        baseShapeLayer.contentMode = .scaleAspectFit
-//        baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base_Core")
-//        canvasContainerView.addSubview(baseShapeLayer)
-//
-//        // 2. Loop through and CREATE the layers first
-//        for catName in layerOrder {
-//            let imgView = UIImageView(frame: canvasContainerView.bounds)
-//            imgView.contentMode = .scaleAspectFit
-//            canvasContainerView.addSubview(imgView)
-//            partLayers[catName] = imgView // Store the reference safely
-//            
-//            // 3. Assign the image
-//            if let selectedVariant = selectedVariations[catName] {
-//                let imageName = "canvas_\(shapeID)_\(catName)_\(selectedVariant)"
-//                imgView.image = UIImage(named: imageName)
-//                
-//                if catName == "Neck" { applyNeckOffset(variant: selectedVariant) }
-//            } else {
-//                // Hide unselected parts (Tail, Legs, etc.)
-//                imgView.image = nil
-//            }
-//        }
-//    }
+
     private func setupCanvas() {
         canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
         partLayers.removeAll()
 
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-        
-        // Get the names of categories the user actually wants to identify
         let userSelectedCategories = categories.map { $0.name }
 
-        // 1. Load the Core Torso
         baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
         baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base_Core")
         canvasContainerView.addSubview(baseShapeLayer)
 
-        // 2. Loop through every possible part in the Z-index order
         for catName in layerOrder {
             let imgView = UIImageView(frame: canvasContainerView.bounds)
             imgView.contentMode = .scaleAspectFit
@@ -184,32 +108,20 @@ class GUIViewController: UIViewController {
             var imageName: String? = nil
 
             if userSelectedCategories.contains(catName) {
-                // OPTION A: This IS a part the user is identifying.
-                // Only show it if they have actually picked a variation.
                 if let selectedVariant = selectedVariations[catName] {
                     imageName = "canvas_\(shapeID)_\(catName)_\(selectedVariant)"
                 } else {
-                    // User hasn't clicked a variation yet, keep this layer empty (nil)
                     imageName = nil
                 }
             } else {
-                // OPTION B: This is NOT a part the user is identifying.
-                // Always show the "Default" version so the bird looks complete.
                 imageName = "canvas_\(shapeID)_\(catName)_Default"
             }
-
-            // 3. Apply the image
             if let name = imageName, let img = UIImage(named: name) {
                 imgView.image = img
             } else {
                 imgView.image = nil
             }
             
-            // 4. Handle Neck offsets for whatever version is loaded
-//            if catName == "Neck" {
-//                let variant = selectedVariations["Neck"] ?? "Default"
-//                applyNeckOffset(variant: variant)
-//            }
         }
     }
 	private func setupRightTickButton() {
@@ -228,7 +140,6 @@ class GUIViewController: UIViewController {
 	
 		
 	
-		/// Sanitizes strings for filenames (e.g. "Spoon-shaped" -> "Spoon_shaped")
 	func cleanForFilename(_ name: String) -> String {
 		return name
 			.replacingOccurrences(of: " ", with: "_")
