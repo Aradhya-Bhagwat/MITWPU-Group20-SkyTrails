@@ -46,7 +46,7 @@ class IdentificationSizeViewController: UIViewController {
         switch index {
         case 0:
             // Tiny (<13 cm)
-            return ("size_0_small_flowerpecker", "size_0_large_tailorbird")
+            return ("size_0_small_flowerpecker", "size_0_large_house_sparrow")
 
         case 1:
             // Small (13–20 cm)
@@ -62,7 +62,7 @@ class IdentificationSizeViewController: UIViewController {
 
         case 4:
             // Very Large (70+ cm)
-            return ("size_4_small_cattle_egret", "size_4_large_sarus_crane")
+            return ("size_4_small_cattle_egret", "size_4_large_greater_flamingo")
 
         default:
             return ("", "")
@@ -98,7 +98,7 @@ class IdentificationSizeViewController: UIViewController {
     private func updateBirdDisplay(for index: Int) {
         switch index {
         case 0:
-            birdLabel.text = "Flowerpecker–Tailorbird sized"
+            birdLabel.text = "Flowerpecker–Sparrow sized"
         case 1:
             birdLabel.text = "Munia–Bulbul sized"
         case 2:

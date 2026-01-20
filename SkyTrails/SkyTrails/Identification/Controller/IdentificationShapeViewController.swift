@@ -89,7 +89,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         let shape = filteredShapes[indexPath.item]
         cell.configure(with: shape.name, imageName: shape.imageView)
         
-        // Visual feedback for selection
+        
         if selectedShapeIndex == indexPath.item {
             cell.contentView.layer.borderWidth = 3
             cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
