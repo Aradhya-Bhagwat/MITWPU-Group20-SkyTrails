@@ -12,8 +12,7 @@ class CategoryCell: UICollectionViewCell {
 	
 	func configure(name: String, iconName: String, isSelected: Bool) {
 		iconImageView.image = UIImage(named: iconName) ?? UIImage(named: "icn_field_marks")
-		self.isSelected = isSelected
-		updateAppearance()
+
 	}
 	
 	private func updateAppearance() {

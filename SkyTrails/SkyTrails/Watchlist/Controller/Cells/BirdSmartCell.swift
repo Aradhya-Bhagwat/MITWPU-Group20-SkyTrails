@@ -58,7 +58,7 @@ class BirdSmartCell: UITableViewCell {
         locationLabel.font = .systemFont(ofSize: 13, weight: .medium)
         locationLabel.textColor = .secondaryLabel
 
-        // Configure all avatar image views initially
+        // Configur avatar image views 
         avatarImageViews.forEach {
             $0.layer.cornerRadius = 15
             $0.clipsToBounds = true
