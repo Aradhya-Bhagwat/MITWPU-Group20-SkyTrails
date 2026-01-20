@@ -29,8 +29,6 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        styleTableContainer()
-
         
 
         viewModel.selectedSizeCategory = selectedSizeIndex
@@ -45,7 +43,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         shapeCollectionView.register(nib, forCellWithReuseIdentifier: "shapeCell")
         
         setupCollectionViewLayout()
-        setupRightTickButton()
+      
         
   
         if let shapeId = viewModel.selectedShapeId,
@@ -68,17 +66,6 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         
         shapeCollectionView.collectionViewLayout = layout
     }
-
-    func styleTableContainer() {
-        tableContainerView.layer.cornerRadius = 12
-        tableContainerView.layer.shadowColor = UIColor.black.cgColor
-        tableContainerView.layer.shadowOpacity = 0.1
-        tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        tableContainerView.layer.shadowRadius = 8
-        tableContainerView.layer.masksToBounds = false
-    }
-    
-    
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredShapes.count
@@ -106,50 +93,26 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         return cell
     }
     
-    
-    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.item]
-        
-     
         selectedShapeIndex = indexPath.item
-        
-   
         viewModel.selectedShapeId = selectedShape.id
         viewModel.data.shape = selectedShape.name
         
-      
         viewModel.filterBirds(
             shape: selectedShape.id,
             size: viewModel.selectedSizeCategory,
             location: viewModel.selectedLocation,
-            fieldMarks: [] // Field marks not selected yet
+            fieldMarks: [] 
         )
-        
-       
         collectionView.reloadData()
-        
-      
         delegate?.didTapShapes()
-    }
-    
-    private func setupRightTickButton() {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20
-        button.layer.masksToBounds = true
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-        button.tintColor = .black
-        
-        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
 
-    @objc private func nextTapped() {
+    @IBAction func nextTapped(_ sender: UIBarButtonItem) {
         delegate?.didTapShapes()
     }
+
 }
 
 extension IdentificationShapeViewController: IdentificationProgressUpdatable {
