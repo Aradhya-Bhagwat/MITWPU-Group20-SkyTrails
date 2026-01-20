@@ -26,8 +26,6 @@ class IdentificationSizeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Set slider to 5 steps: 0,1,2,3,4
         birdSlider.minimumValue = 0
         birdSlider.maximumValue = 4
         birdSlider.isContinuous = true
@@ -75,7 +73,7 @@ class IdentificationSizeViewController: UIViewController {
         navigationController?.popViewController(animated: true)
     }
     @IBAction func infoButtonTapped(_ sender: UIBarButtonItem) {
-        // Create an alert to show size information
+       
         let alert = UIAlertController(
             title: "Bird Size Guide",
             message: """
@@ -123,11 +121,9 @@ class IdentificationSizeViewController: UIViewController {
    
 
     private func extractBirdName(from filename: String) -> String {
-        // Split by underscore and get the last parts (the actual bird name)
+       
         let components = filename.components(separatedBy: "_")
-        
-        // Get everything after "small" or "large"
-        // e.g., ["size", "0", "small", "flowerpecker"] -> ["flowerpecker"]
+      
         if let smallIndex = components.firstIndex(of: "small") {
             let birdNameParts = components.suffix(from: smallIndex + 1)
             return birdNameParts.joined(separator: " ").capitalized
@@ -136,7 +132,7 @@ class IdentificationSizeViewController: UIViewController {
             return birdNameParts.joined(separator: " ").capitalized
         }
         
-        // Fallback: just capitalize the whole thing
+
         return filename.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
@@ -153,10 +149,10 @@ class IdentificationSizeViewController: UIViewController {
 
     
     @IBAction func checkmarkButtonTapped(_ sender: UIBarButtonItem) {
-        // 1. Update ViewModel state
+
         viewModel.selectedSizeCategory = Int(round(birdSlider.value))
         
-        // 2. Trigger intermediate filtering
+ 
         viewModel.filterBirds(
             shape: viewModel.selectedShapeId,
             size: viewModel.selectedSizeCategory,
@@ -164,10 +160,10 @@ class IdentificationSizeViewController: UIViewController {
             fieldMarks: []
         )
         
-        // 3. Update data for GUI display
+    
         let sizeText = sizeDescription(for: viewModel.selectedSizeCategory ?? 0)
-        viewModel.data.size = sizeText            // Needed for Summary
-        viewModel.selectedSizeCategory = Int(round(birdSlider.value)) // Needed for Filtering
+        viewModel.data.size = sizeText
+        viewModel.selectedSizeCategory = Int(round(birdSlider.value)) 
         
         delegate?.didFinishStep()
     }
