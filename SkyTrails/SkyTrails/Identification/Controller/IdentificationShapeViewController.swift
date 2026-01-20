@@ -30,6 +30,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         styleTableContainer()
+
         
 
         viewModel.selectedSizeCategory = selectedSizeIndex
