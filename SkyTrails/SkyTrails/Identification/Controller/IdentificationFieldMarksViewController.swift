@@ -72,6 +72,11 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     
     /// Sanitizes strings for filenames
     func cleanForFilename(_ name: String) -> String {
+        // Special mapping for Finches/Sparrows ID to Asset Prefix
+        if name == "Passeridae_Fringillidae" {
+            return "Finch"
+        }
+        
         return name
             .replacingOccurrences(of: " ", with: "_")
             .replacingOccurrences(of: "-", with: "_")
@@ -109,28 +114,31 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func updateLayer(category: String) {
-        guard let layer = partLayers[category] else { return }
+        guard let layer = partLayers[category] else {
+            print("IdentificationFieldMarksViewController: Could not find layer for category: \(category)")
+            return
+        }
         
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
         let cleanCategory = cleanForFilename(category)
         
-        // Determine if selected
-        let isSelected = isCategorySelected(name: category)
+        // FUTURE: When colored assets are available, use this naming scheme:
+        // Default: "canvas_Finch_Beak_Default"
+        // Selected: "canvas_Finch_Beak_Default_color"
+        //
+        // Current behavior: Always load the default asset to prevent empty layers.
         
-        // Item 8: Canvas Layer Image State Consistency
-        let baseName = "canvas_\(shapeID)_\(cleanCategory)"
-        let targetSuffix = isSelected ? "_color" : "_Default"
-        let targetImageName = baseName + targetSuffix
+        let baseName = "canvas_\(shapeID)_\(cleanCategory)_Default"
+        // let targetSuffix = isSelected ? "_color" : "" // Restore this when assets exist
         
-        if let img = UIImage(named: targetImageName) {
+        print("IdentificationFieldMarksViewController: Attempting to load image named: \(baseName)")
+        
+        if let img = UIImage(named: baseName) {
             layer.image = img
-        } else if isSelected, let defaultImg = UIImage(named: baseName + "_Default") {
-            // Fallback: If colored version is missing, show default to ensure no flickering/nil state
-            layer.image = defaultImg
+            print("IdentificationFieldMarksViewController: Successfully loaded image: \(baseName)")
         } else {
-            // Fallback: If default is missing, we must set it to nil to avoid showing stale data,
-            // but this path should ideally not be reached if assets are correct.
              layer.image = nil
+             print("IdentificationFieldMarksViewController: Failed to load image: \(baseName)")
         }
     }
     

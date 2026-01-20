@@ -144,7 +144,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         return f.string(from: Date())
     }
     
-    // MARK: - UICollectionViewDataSource
+    // MARK: - UICollectionViewDataSource 
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return viewModel.birdResults.count
