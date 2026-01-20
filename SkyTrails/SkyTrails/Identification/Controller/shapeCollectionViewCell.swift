@@ -16,8 +16,10 @@ class shapeCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
   
     }
-    func configure(with shapeName: String, imageName: String) {
-        shapeNameLabel.text = shapeName
-        shapeImageView.image = UIImage(named: imageName) }
+	func configure(with shapeName: String, imageName: String) {
+		shapeNameLabel.text = shapeName
+		print("imageName: \(imageName)")
+		shapeImageView.image = UIImage(named: imageName)
+	}
 
 }

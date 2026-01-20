@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "canvas_Finch_Belly_Pale.png",
+      "filename" : "shape_alcedinidae .png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "shape_alcedinidae  1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "shape_alcedinidae  2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
