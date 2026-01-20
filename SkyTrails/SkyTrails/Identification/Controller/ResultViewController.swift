@@ -7,7 +7,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
     
-    // History editing state
     var historyItem: History?
     var historyIndex: Int?
     
@@ -17,7 +16,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Register collection view cell
+
         resultCollectionView.register(
             UINib(nibName: "ResultCollectionViewCell", bundle: nil),
             forCellWithReuseIdentifier: "ResultCollectionViewCell"
@@ -27,11 +26,11 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         resultCollectionView.dataSource = self
         
         setupCollectionViewLayout()
-        //styleTableContainer()
+
         setupLeftResetButton()
         setupRightTickButton()
         
-        // This ensures the collection reloads whenever the filter finishes
+
         viewModel.onResultsUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.resultCollectionView.reloadData()
@@ -178,28 +177,26 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         return cell
     }
     
-    // MARK: - UICollectionViewDelegate
+
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // 1. If we tapped the already selected cell, do nothing (or deselect if you prefer)
+        
         if selectedIndexPath == indexPath { return }
         
-        // 2. Identify the rows to reload
-        var rowsToReload: [IndexPath] = [indexPath] // The new one
+        
+        var rowsToReload: [IndexPath] = [indexPath]
         
         if let oldIndexPath = selectedIndexPath {
-            rowsToReload.append(oldIndexPath) // The old one
+            rowsToReload.append(oldIndexPath)
         }
         
-        // 3. Update the source of truth
         selectedResult = viewModel.birdResults[indexPath.item]
         selectedIndexPath = indexPath
         
-        // 4. Reload only the affected cells
         collectionView.reloadItems(at: rowsToReload)
     }
     
-    // MARK: - ResultCellDelegate
+
     
     func didTapPredict(for cell: ResultCollectionViewCell) {
         print("Predict species on map tapped")
@@ -251,7 +248,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
         } else {
-            print("⚠️ No default watchlist found to save to.")
+            print(" No default watchlist found to save to.")
         }
     }
 }

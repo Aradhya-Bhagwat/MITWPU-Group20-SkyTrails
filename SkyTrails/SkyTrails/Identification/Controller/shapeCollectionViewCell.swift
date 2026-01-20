@@ -14,7 +14,7 @@ class shapeCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var shapeNameLabel: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+  
     }
     func configure(with shapeName: String, imageName: String) {
         shapeNameLabel.text = shapeName

@@ -31,22 +31,22 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         super.viewDidLoad()
         styleTableContainer()
         
-        // Apply size filter to get available shapes
+
         viewModel.selectedSizeCategory = selectedSizeIndex
         filteredShapes = viewModel.availableShapesForSelectedSize()
         
-        // Setup collection view
+
         shapeCollectionView.delegate = self
         shapeCollectionView.dataSource = self
         
-        // Register the custom cell
+
         let nib = UINib(nibName: "shapeCollectionViewCell", bundle: nil)
         shapeCollectionView.register(nib, forCellWithReuseIdentifier: "shapeCell")
         
         setupCollectionViewLayout()
         setupRightTickButton()
         
-        // Restore previous selection if exists
+  
         if let shapeId = viewModel.selectedShapeId,
            let index = filteredShapes.firstIndex(where: { $0.id == shapeId }) {
             selectedShapeIndex = index
@@ -61,7 +61,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
         
         let itemWidth = (shapeCollectionView.bounds.width - 36) / 2
-        // 12 (left) + 12 (right) + 12 (space between) = 36
+
         
         layout.itemSize = CGSize(width: itemWidth, height: 180)
         
@@ -77,7 +77,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         tableContainerView.layer.masksToBounds = false
     }
     
-    // MARK: - UICollectionViewDataSource
+    
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredShapes.count
@@ -105,19 +105,19 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         return cell
     }
     
-    // MARK: - UICollectionViewDelegate
+    
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.item]
         
-        // Update selection
+     
         selectedShapeIndex = indexPath.item
         
-        // Update ViewModel state
+   
         viewModel.selectedShapeId = selectedShape.id
-        viewModel.data.shape = selectedShape.name // Needed for Summary
+        viewModel.data.shape = selectedShape.name
         
-        // Trigger intermediate filtering
+      
         viewModel.filterBirds(
             shape: selectedShape.id,
             size: viewModel.selectedSizeCategory,
@@ -125,10 +125,10 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
             fieldMarks: [] // Field marks not selected yet
         )
         
-        // Reload collection view to show selection
+       
         collectionView.reloadData()
         
-        // Proceed to next step
+      
         delegate?.didTapShapes()
     }
     
@@ -147,7 +147,6 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
 
     @objc private func nextTapped() {
-        // Proceed to next step even if no shape is explicitly selected
         delegate?.didTapShapes()
     }
 }

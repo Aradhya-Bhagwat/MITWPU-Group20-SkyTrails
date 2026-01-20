@@ -13,7 +13,7 @@ class SearchCell: UITableViewCell, UISearchBarDelegate {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        searchBar.backgroundImage = UIImage() // Remove default borders if needed
+        searchBar.backgroundImage = UIImage() 
         searchBar.placeholder = "Search for a location"
     }
 
