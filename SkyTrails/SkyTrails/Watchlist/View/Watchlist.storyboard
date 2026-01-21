@@ -48,7 +48,7 @@
                                     <constraint firstAttribute="width" constant="50" id="fab-w-cst"/>
                                 </constraints>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" image="plus" catalog="system" cornerStyle="capsule">
+                                <buttonConfiguration key="configuration" style="plain" image="custom.bird.fill.badge.plus" cornerStyle="capsule">
                                     <backgroundConfiguration key="background">
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                     </backgroundConfiguration>
@@ -75,6 +75,7 @@
                     <navigationItem key="navigationItem" id="o5c-Fa-kXL"/>
                     <connections>
                         <outlet property="SummaryCardCollectionView" destination="TzJ-jT-Fht" id="4f8-93-wH5"/>
+                        <outlet property="addFloatingButton" destination="FAB-Add-Btn" id="out-fab-btn"/>
                         <segue destination="bUc-Cy-MGb" kind="show" identifier="ShowCustomWatchlistGrid" id="V3h-Ro-DQ2"/>
                         <segue destination="zap-jy-tCo" kind="show" identifier="ShowSmartWatchlist" id="78Y-oW-Tc8"/>
                         <segue destination="x1S-M0-dFV" kind="show" identifier="ShowSharedWatchlistGrid" id="FUa-La-SUT"/>
