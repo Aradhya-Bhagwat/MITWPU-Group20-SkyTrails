@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="ckt-qD-EsR">
-    <device id="iPad13_0rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
+    <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Map view configurations" minToolsVersion="14.0"/>
@@ -15,11 +15,11 @@
             <objects>
                 <viewController storyboardIdentifier="Home" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Y6W-OH-hqX" customClass="HomeViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="HW6-l3-VNR">
-                                <rect key="frame" x="0.0" y="86" width="1032" height="1290"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="AY8-TT-BZZ">
                                     <size key="itemSize" width="195" height="180"/>
@@ -65,11 +65,11 @@
             <objects>
                 <viewController storyboardIdentifier="AllUpcomingBirdsViewController" id="Gfn-o0-NbS" customClass="AllUpcomingBirdsViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2Zu-ct-rCS">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="AuY-Cn-Gqw">
-                                <rect key="frame" x="0.0" y="86" width="1032" height="1245"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="hyt-2B-sLA">
                                     <size key="itemSize" width="238" height="193"/>
@@ -113,11 +113,11 @@
             <objects>
                 <viewController storyboardIdentifier="AllSpotsViewController" id="pZh-13-5MG" customClass="AllSpotsViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="SPl-NH-b72">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="bWX-xn-ZcC">
-                                <rect key="frame" x="0.0" y="86" width="1032" height="1245"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="8Ih-oJ-yuD">
                                     <size key="itemSize" width="239" height="229"/>
@@ -162,11 +162,11 @@
             <objects>
                 <viewController storyboardIdentifier="PredictMapViewController" id="DSF-gE-p6J" customClass="PredictMapViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="fRE-wA-RSM">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="778-BZ-oeC">
-                                <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                                <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                                 <standardMapConfiguration key="preferredConfiguration"/>
                             </mapView>
                         </subviews>
@@ -193,11 +193,11 @@
             <objects>
                 <viewController storyboardIdentifier="PredictInputViewController" id="mKF-qA-75a" customClass="PredictInputViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="PFZ-7c-ohk">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="LLr-fm-hMq">
-                                <rect key="frame" x="0.0" y="86" width="1032" height="360"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="360"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="360" id="rRM-W7-o5H"/>
@@ -220,7 +220,7 @@
                                 </cells>
                             </collectionView>
                             <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" translatesAutoresizingMaskIntoConstraints="NO" id="UF8-VM-Fa5">
-                                <rect key="frame" x="0.0" y="450" width="1032" height="26"/>
+                                <rect key="frame" x="0.0" y="542" width="402" height="26"/>
                                 <color key="pageIndicatorTintColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <color key="currentPageIndicatorTintColor" systemColor="labelColor"/>
                             </pageControl>
@@ -265,22 +265,22 @@
             <objects>
                 <viewController storyboardIdentifier="SearchLocationViewController" id="JGu-wa-VbE" customClass="SearchLocationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="1yy-SQ-kac">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Te0-VB-nsD">
-                                <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                                <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="SearchCell" id="CustomSearchCellID" customClass="SearchCell" customModule="SkyTrails" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="50" width="1032" height="73"/>
+                                        <rect key="frame" x="0.0" y="50" width="402" height="73"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="CustomSearchCellID" id="contentViewSearch">
-                                            <rect key="frame" x="0.0" y="0.0" width="1032" height="73"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="402" height="73"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder="Search for place" translatesAutoresizingMaskIntoConstraints="NO" id="SearchBarID">
-                                                    <rect key="frame" x="8" y="4" width="1016" height="65"/>
+                                                    <rect key="frame" x="8" y="4" width="386" height="65"/>
                                                     <textInputTraits key="textInputTraits"/>
                                                 </searchBar>
                                             </subviews>
@@ -296,21 +296,21 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="default" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="ResultCell" textLabel="ResultTitle" detailTextLabel="ResultSubtitle" style="IBUITableViewCellStyleSubtitle" id="ResultCellID">
-                                        <rect key="frame" x="0.0" y="123" width="1032" height="59"/>
+                                        <rect key="frame" x="0.0" y="123" width="402" height="51"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="ResultCellID" id="ResultContent">
-                                            <rect key="frame" x="0.0" y="0.0" width="1032" height="59"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="402" height="51"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="ResultTitle">
-                                                    <rect key="frame" x="16" y="13" width="25" height="14.5"/>
+                                                    <rect key="frame" x="20" y="10" width="25" height="14.333333333333334"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Subtitle" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="ResultSubtitle">
-                                                    <rect key="frame" x="16" y="29.5" width="44" height="14.5"/>
+                                                    <rect key="frame" x="19.999999999999996" y="26.333333333333332" width="43.666666666666664" height="14.333333333333334"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
                                                     <nil key="textColor"/>
@@ -351,11 +351,11 @@
             <objects>
                 <viewController storyboardIdentifier="PredictOutputViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="KzX-b6-IpH" customClass="PredictOutputViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5cL-C3-3Jg">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="ygN-IF-vKc">
-                                <rect key="frame" x="0.0" y="86" width="1032" height="1245"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </tableView>
                         </subviews>
@@ -381,11 +381,11 @@
             <objects>
                 <viewController storyboardIdentifier="CommunityObservationViewController" id="CommunityObservationVC" customClass="CommunityObservationViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="CommunityMainView">
-                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CommunityScrollView">
-                                <rect key="frame" x="0.0" y="32" width="1032" height="1299"/>
+                                <rect key="frame" x="0.0" y="124" width="402" height="682"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="birdImageView">
                                         <rect key="frame" x="20" y="0.0" width="992" height="220"/>
@@ -395,46 +395,46 @@
                                         </constraints>
                                     </imageView>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="MainContentStack">
-                                        <rect key="frame" x="0.0" y="220" width="1032" height="585"/>
+                                        <rect key="frame" x="0.0" y="219.99999999999994" width="402" height="584.66666666666652"/>
                                         <subviews>
                                             <stackView contentMode="scaleToFill" alignment="center" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="UserSubtextStack">
-                                                <rect key="frame" x="20" y="24" width="992" height="50"/>
+                                                <rect key="frame" x="20" y="24" width="362" height="50"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="by Username" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="userNameLabel">
-                                                        <rect key="frame" x="0.0" y="16.5" width="87.5" height="17"/>
+                                                        <rect key="frame" x="0.0" y="16.666666666666686" width="0.0" height="17"/>
                                                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
                                                         <color key="textColor" systemColor="secondaryLabelColor"/>
                                                     </label>
                                                     <view contentMode="scaleToFill" horizontalHuggingPriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="mxL-pz-OZK">
-                                                        <rect key="frame" x="95.5" y="0.0" width="842" height="50"/>
+                                                        <rect key="frame" x="8" y="0.0" width="338" height="50"/>
                                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                     </view>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="24" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="likesCountLabel">
-                                                        <rect key="frame" x="945.5" y="16.5" width="18" height="17"/>
+                                                        <rect key="frame" x="354" y="16.666666666666686" width="0.0" height="17"/>
                                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="14"/>
                                                     </label>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" image="heart.fill" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="LikeIcon">
-                                                        <rect key="frame" x="971.5" y="16.5" width="20.5" height="17.5"/>
+                                                        <rect key="frame" x="362" y="17" width="0.0" height="17.333333333333336"/>
                                                         <color key="tintColor" systemColor="systemRedColor"/>
                                                     </imageView>
                                                 </subviews>
                                             </stackView>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dateCardView">
-                                                <rect key="frame" x="20" y="98" width="992" height="140"/>
+                                                <rect key="frame" x="20" y="98" width="362" height="140"/>
                                                 <subviews>
                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="DateInternalStack">
-                                                        <rect key="frame" x="16" y="16" width="960" height="108"/>
+                                                        <rect key="frame" x="16" y="16" width="330" height="108"/>
                                                         <subviews>
                                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="DateRow">
-                                                                <rect key="frame" x="0.0" y="0.0" width="960" height="50"/>
+                                                                <rect key="frame" x="0.0" y="0.0" width="330" height="50"/>
                                                                 <subviews>
                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Date observed" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DateTitle">
-                                                                        <rect key="frame" x="0.0" y="0.0" width="116" height="50"/>
+                                                                        <rect key="frame" x="0.0" y="0.0" width="0.0" height="50"/>
                                                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
                                                                         <nil key="textColor"/>
                                                                     </label>
                                                                     <datePicker userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="datePicker">
-                                                                        <rect key="frame" x="203.5" y="0.0" width="756.5" height="50"/>
+                                                                        <rect key="frame" x="87.333333333333329" y="0.0" width="242.66666666666669" height="50"/>
                                                                     </datePicker>
                                                                 </subviews>
                                                                 <constraints>
@@ -442,15 +442,15 @@
                                                                 </constraints>
                                                             </stackView>
                                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="TimeRow">
-                                                                <rect key="frame" x="0.0" y="58" width="960" height="50"/>
+                                                                <rect key="frame" x="0.0" y="58" width="330" height="50"/>
                                                                 <subviews>
                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Time" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TimeTitle">
-                                                                        <rect key="frame" x="0.0" y="0.0" width="39.5" height="50"/>
+                                                                        <rect key="frame" x="0.0" y="0.0" width="0.0" height="50"/>
                                                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
                                                                         <nil key="textColor"/>
                                                                     </label>
                                                                     <datePicker userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="time" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="timePicker">
-                                                                        <rect key="frame" x="221" y="0.0" width="739" height="50"/>
+                                                                        <rect key="frame" x="181.66666666666663" y="0.0" width="148.33333333333337" height="50"/>
                                                                     </datePicker>
                                                                 </subviews>
                                                                 <constraints>
@@ -469,20 +469,20 @@
                                                 </constraints>
                                             </view>
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="locationStackView">
-                                                <rect key="frame" x="20" y="262" width="992" height="212.5"/>
+                                                <rect key="frame" x="20" y="262" width="362" height="212.33333333333337"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="locationTitle">
-                                                        <rect key="frame" x="0.0" y="0.0" width="992" height="20.5"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="362" height="20.333333333333332"/>
                                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                         <nil key="textColor"/>
                                                     </label>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Central Park, NY" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="locationNameLabel">
-                                                        <rect key="frame" x="0.0" y="32.5" width="992" height="18"/>
+                                                        <rect key="frame" x="0.0" y="32.333333333333371" width="362" height="18"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                                         <nil key="textColor"/>
                                                     </label>
                                                     <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MKMapView">
-                                                        <rect key="frame" x="0.0" y="62.5" width="992" height="150"/>
+                                                        <rect key="frame" x="0.0" y="62.333333333333371" width="362" height="150"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="150" id="mapHeight"/>
                                                         </constraints>
@@ -491,15 +491,15 @@
                                                 </subviews>
                                             </stackView>
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="notesStackView">
-                                                <rect key="frame" x="20" y="498.5" width="992" height="46.5"/>
+                                                <rect key="frame" x="20" y="498.33333333333331" width="362" height="46.333333333333314"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Observation Notes" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="notesTitle">
-                                                        <rect key="frame" x="0.0" y="0.0" width="992" height="20.5"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="362" height="20.333333333333332"/>
                                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                         <nil key="textColor"/>
                                                     </label>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Notes content goes here..." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="notesLabel">
-                                                        <rect key="frame" x="0.0" y="28.5" width="992" height="18"/>
+                                                        <rect key="frame" x="0.0" y="28.333333333333258" width="362" height="18"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                                         <nil key="textColor"/>
                                                     </label>
@@ -551,7 +551,7 @@
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="ckt-qD-EsR" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="Ijz-7f-FM7">
-                        <rect key="frame" x="0.0" y="32" width="1032" height="54"/>
+                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -569,7 +569,7 @@
                 <navigationController storyboardIdentifier="PredictInputNavigationController" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Nhn-U1-icH" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="neq-PX-sWh">
-                        <rect key="frame" x="0.0" y="32" width="1032" height="54"/>
+                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -587,7 +587,7 @@
                 <navigationController storyboardIdentifier="SearchNavigationController" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="EBl-Cx-17Q" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="Wn7-pa-vFg">
-                        <rect key="frame" x="0.0" y="32" width="1032" height="54"/>
+                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -605,7 +605,7 @@
                 <navigationController storyboardIdentifier="PredictOutputNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="hLo-ND-Ps0" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="ICa-ky-BBy">
-                        <rect key="frame" x="0.0" y="32" width="1032" height="54"/>
+                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>

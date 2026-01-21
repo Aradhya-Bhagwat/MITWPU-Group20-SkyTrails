@@ -41,7 +41,6 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         containerView.backgroundColor = .systemBackground
         containerView.layer.cornerRadius = 12
         
-        titleLabel.numberOfLines = 1
         titleLabel.textColor = .label
         
         DateLabel.textColor = .secondaryLabel
