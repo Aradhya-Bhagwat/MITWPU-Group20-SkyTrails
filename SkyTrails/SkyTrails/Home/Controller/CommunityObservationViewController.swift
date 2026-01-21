@@ -9,20 +9,16 @@ import UIKit
 
 class CommunityObservationViewController: UIViewController {
 
-    // MARK: - IBOutlets
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var userNameLabel: UILabel!
     @IBOutlet weak var locationNameLabel: UILabel!
-
     @IBOutlet weak var notesLabel: UILabel!
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var timePicker: UIDatePicker!
-    
     @IBOutlet weak var dateCardView: UIView!
     @IBOutlet weak var locationStackView: UIStackView!
     @IBOutlet weak var notesStackView: UIStackView!
     
-    // Data
     var observation: CommunityObservation?
     var observationId: String?
 

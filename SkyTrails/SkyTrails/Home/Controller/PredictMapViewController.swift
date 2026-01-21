@@ -63,83 +63,79 @@ class PredictMapViewController: UIViewController {
         if let firstInput = inputs.first,
            let lat = firstInput.latitude,
            let lon = firstInput.longitude {
-            
-            let centerCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            let radiusInMeters = Double(firstInput.areaValue * 1000)
-            let visibleMapWidthInMeters = (radiusInMeters * 2) / 0.50
-            let aspectRatio = mapView.bounds.height / mapView.bounds.width
-            let visibleMapHeightInMeters = visibleMapWidthInMeters * Double(aspectRatio)
-            let verticalOffsetInMeters = visibleMapHeightInMeters / 3.0
-            let metersPerDegreeLatitude = 111111.0
-            let latitudeOffset = verticalOffsetInMeters / metersPerDegreeLatitude
-            let newCenterLatitude = centerCoord.latitude - latitudeOffset
-            let newCenter = CLLocationCoordinate2D(latitude: newCenterLatitude, longitude: centerCoord.longitude)
-            let region = MKCoordinateRegion(center: newCenter, latitudinalMeters: visibleMapHeightInMeters, longitudinalMeters: visibleMapWidthInMeters)
-            mapView.setRegion(region, animated: true)
+                let centerCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+                let radiusInMeters = Double(firstInput.areaValue * 1000)
+                let visibleMapWidthInMeters = (radiusInMeters * 2) / 0.50
+                let aspectRatio = mapView.bounds.height / mapView.bounds.width
+                let visibleMapHeightInMeters = visibleMapWidthInMeters * Double(aspectRatio)
+                let verticalOffsetInMeters = visibleMapHeightInMeters / 3.0
+                let metersPerDegreeLatitude = 111111.0
+                let latitudeOffset = verticalOffsetInMeters / metersPerDegreeLatitude
+                let newCenterLatitude = centerCoord.latitude - latitudeOffset
+                let newCenter = CLLocationCoordinate2D(latitude: newCenterLatitude, longitude: centerCoord.longitude)
+                let region = MKCoordinateRegion(center: newCenter, latitudinalMeters: visibleMapHeightInMeters, longitudinalMeters: visibleMapWidthInMeters)
+                mapView.setRegion(region, animated: true)
         }
         
     }
         
-        private func setupMap() {
-            let center = CLLocationCoordinate2D(latitude: 20.0, longitude: 78.0)
-            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 90, longitudeDelta: 180))
-            mapView.setRegion(region, animated: false)
-        }
+    private func setupMap() {
+        let center = CLLocationCoordinate2D(latitude: 20.0, longitude: 78.0)
+        let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 90, longitudeDelta: 180))
+        mapView.setRegion(region, animated: false)
+    }
         
-        private func setupCustomModal() {
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-            guard let navVC = storyboard.instantiateViewController(withIdentifier: "PredictInputNavigationController") as? UINavigationController else { return }
-            let screenHeight = view.frame.height
-            let safeAreaTop = view.safeAreaInsets.top
-            
-            maxTopY = safeAreaTop + 140
-            initialLoadY = screenHeight * 0.45
-            minBottomY = screenHeight * 0.85
-            modalContainerView = UIView()
-            modalContainerView.backgroundColor = .clear
-            modalContainerView.layer.cornerRadius = 24
-            modalContainerView.layer.maskedCorners = [
-                CACornerMask.layerMinXMinYCorner,
-                CACornerMask.layerMaxXMinYCorner
-            ]
-            
-            modalContainerView.layer.shadowColor = UIColor.black.cgColor
-            modalContainerView.layer.shadowOpacity = 0.2
-            modalContainerView.layer.shadowOffset = CGSize(width: 0, height: -4)
-            modalContainerView.layer.shadowRadius = 10
-            modalContainerView.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(modalContainerView)
-            addChild(navVC)
-            modalContainerView.addSubview(navVC.view)
-            currentChildVC = navVC
-            
-            
-            navVC.view.translatesAutoresizingMaskIntoConstraints = false
-            navVC.view.clipsToBounds = true
-            navVC.view.layer.cornerRadius = 24
-            navVC.view.layer.maskedCorners = [
-                CACornerMask.layerMinXMinYCorner,
-                CACornerMask.layerMaxXMinYCorner
-            ]
-            
-    
-            
-            navVC.view.leadingAnchor.constraint(equalTo: modalContainerView.leadingAnchor).isActive = true
-            navVC.view.trailingAnchor.constraint(equalTo: modalContainerView.trailingAnchor).isActive = true
-            navVC.view.topAnchor.constraint(equalTo: modalContainerView.topAnchor).isActive = true
-            navVC.view.bottomAnchor.constraint(equalTo: modalContainerView.bottomAnchor).isActive = true
-            navVC.didMove(toParent: self)
-            
-            modalTopConstraint = modalContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: initialLoadY)
-            modalTopConstraint.isActive = true
-            modalContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-            modalContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-            modalContainerView.heightAnchor.constraint(equalToConstant: screenHeight).isActive = true
-            
-            let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
-            navVC.navigationBar.addGestureRecognizer(panGesture)
-        }
+    private func setupCustomModal() {
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        guard let navVC = storyboard.instantiateViewController(withIdentifier: "PredictInputNavigationController") as? UINavigationController else { return }
+        let screenHeight = view.frame.height
+        let safeAreaTop = view.safeAreaInsets.top
         
+        maxTopY = safeAreaTop + 140
+        initialLoadY = screenHeight * 0.45
+        minBottomY = screenHeight * 0.85
+        modalContainerView = UIView()
+        modalContainerView.backgroundColor = .clear
+        modalContainerView.layer.cornerRadius = 24
+        modalContainerView.layer.maskedCorners = [
+            CACornerMask.layerMinXMinYCorner,
+            CACornerMask.layerMaxXMinYCorner
+        ]
+            
+        modalContainerView.layer.shadowColor = UIColor.black.cgColor
+        modalContainerView.layer.shadowOpacity = 0.2
+        modalContainerView.layer.shadowOffset = CGSize(width: 0, height: -4)
+        modalContainerView.layer.shadowRadius = 10
+        modalContainerView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(modalContainerView)
+        addChild(navVC)
+        modalContainerView.addSubview(navVC.view)
+        currentChildVC = navVC
+            
+        navVC.view.translatesAutoresizingMaskIntoConstraints = false
+        navVC.view.clipsToBounds = true
+        navVC.view.layer.cornerRadius = 24
+        navVC.view.layer.maskedCorners = [
+            CACornerMask.layerMinXMinYCorner,
+            CACornerMask.layerMaxXMinYCorner
+        ]
+            
+        navVC.view.leadingAnchor.constraint(equalTo: modalContainerView.leadingAnchor).isActive = true
+        navVC.view.trailingAnchor.constraint(equalTo: modalContainerView.trailingAnchor).isActive = true
+        navVC.view.topAnchor.constraint(equalTo: modalContainerView.topAnchor).isActive = true
+        navVC.view.bottomAnchor.constraint(equalTo: modalContainerView.bottomAnchor).isActive = true
+        navVC.didMove(toParent: self)
+            
+        modalTopConstraint = modalContainerView.topAnchor.constraint(equalTo: view.topAnchor, constant: initialLoadY)
+        modalTopConstraint.isActive = true
+        modalContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        modalContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        modalContainerView.heightAnchor.constraint(equalToConstant: screenHeight).isActive = true
+        
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
+        navVC.navigationBar.addGestureRecognizer(panGesture)
+    }
+
         @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
             let translation = gesture.translation(in: view)
             
