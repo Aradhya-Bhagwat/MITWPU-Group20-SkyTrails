@@ -30,7 +30,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MiX-cX-INw">
-                                <rect key="frame" x="8" y="153" width="168" height="21"/>
+                                <rect key="frame" x="8" y="153" width="41.333333333333336" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -44,10 +44,8 @@
                             <constraint firstAttribute="trailing" secondItem="Me4-1Z-mq4" secondAttribute="trailing" constant="8" id="ZgK-DE-QEi"/>
                             <constraint firstItem="MiX-cX-INw" firstAttribute="leading" secondItem="6eT-zn-fgG" secondAttribute="leading" constant="8" id="aNW-8J-KZM"/>
                             <constraint firstItem="Me4-1Z-mq4" firstAttribute="leading" secondItem="6eT-zn-fgG" secondAttribute="leading" constant="8" id="ajR-87-rIy"/>
-                            <constraint firstAttribute="bottom" secondItem="MiX-cX-INw" secondAttribute="bottom" constant="8" id="etw-m7-mSK"/>
                             <constraint firstItem="Me4-1Z-mq4" firstAttribute="top" secondItem="6eT-zn-fgG" secondAttribute="top" constant="8" id="hap-Oy-J9B"/>
                             <constraint firstItem="DNf-tn-gH1" firstAttribute="top" secondItem="Me4-1Z-mq4" secondAttribute="bottom" constant="8" symbolic="YES" id="kER-nV-zSX"/>
-                            <constraint firstAttribute="trailing" secondItem="MiX-cX-INw" secondAttribute="trailing" id="te0-7k-dlr"/>
                             <constraint firstItem="Me4-1Z-mq4" firstAttribute="height" secondItem="6eT-zn-fgG" secondAttribute="height" multiplier="0.598901" id="u75-hQ-Gav"/>
                         </constraints>
                     </view>

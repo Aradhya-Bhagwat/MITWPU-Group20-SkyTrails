@@ -56,14 +56,16 @@ class GridSpotsToVisitCollectionViewCell: UICollectionViewCell {
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0
         let locationRatio: CGFloat = 12.0 / 200.0
+        let calculatedTitleSize = currentWidth * titleRatio
+        let calculatedLocSize = currentWidth * locationRatio
 
         titleLabel.font = UIFont.systemFont(
-            ofSize: currentWidth * titleRatio,
+            ofSize: min(calculatedTitleSize, 30.0),
             weight: .semibold
         )
         
         locationLabel.font = UIFont.systemFont(
-            ofSize: currentWidth * locationRatio,
+            ofSize: min(calculatedLocSize, 18.0),
             weight: .regular
         )
     }
