@@ -106,7 +106,7 @@
                 "name": "Sarus Crane",
                 "scientificName": "Antigone antigone",
                 "images": [
-                    "SarusCrane"
+                    "sarus_crane"
                 ],
                 "rarity": [
                     "rare"
@@ -376,7 +376,7 @@
                 "name": "Oriental Magpie-Robin",
                 "scientificName": "Copsychus saularis",
                 "images": [
-                    "OrientalMagpieRobin"
+                    "oriental_magpie_robin"
                 ],
                 "rarity": [
                     "common"
@@ -416,7 +416,7 @@
                 "name": "Great Indian Bustard",
                 "scientificName": "Ardeotis nigriceps",
                 "images": [
-                    "GreatIndianBustard"
+                    "great_indian_bustard"
                 ],
                 "rarity": [
                     "rare"
@@ -478,7 +478,7 @@
                 "name": "Himalayan Monal",
                 "scientificName": "Lophophorus impejanus",
                 "images": [
-                    "HimalayanMonal"
+                    "himalayan_monal"
                 ],
                 "rarity": [
                     "rare"
@@ -506,7 +506,7 @@
                 "name": "Oriental Magpie-Robin",
                 "scientificName": "Copsychus saularis",
                 "images": [
-                    "OrientalMagpieRobin"
+                    "oriental_magpie_robin"
                 ],
                 "rarity": [
                     "common"
@@ -626,7 +626,7 @@
                 "name": "Sarus Crane",
                 "scientificName": "Antigone antigone",
                 "images": [
-                    "SarusCrane"
+                    "sarus_crane"
                 ],
                 "rarity": [
                     "rare"
@@ -676,7 +676,7 @@
                 "observedBy": null
             }
         ],
-        "mainImageName": "OrientalMagpieRobin"
+        "mainImageName": "oriental_magpie_robin"
     },
     {
         "id": "3725415A-89FB-4E60-ABD5-8FD08E54BBB2",
@@ -730,7 +730,7 @@
                 "name": "Asian Koel",
                 "scientificName": "Eudynamys scolopaceus",
                 "images": [
-                    "AsianKoel"
+                    "asian_koel"
                 ],
                 "rarity": [
                     "common"
@@ -748,7 +748,7 @@
                 "name": "Himalayan Monal",
                 "scientificName": "Lophophorus impejanus",
                 "images": [
-                    "HimalayanMonal"
+                    "himalayan_monal"
                 ],
                 "rarity": [
                     "rare"
@@ -876,7 +876,7 @@
                 "name": "Great Hornbill",
                 "scientificName": "Buceros bicornis",
                 "images": [
-                    "GreatHornbill"
+                    "great_hornbill"
                 ],
                 "rarity": [
                     "rare"

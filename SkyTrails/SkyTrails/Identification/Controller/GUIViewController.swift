@@ -96,7 +96,7 @@ class GUIViewController: UIViewController {
 
         baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
-        let baseName = "shape_\(shapeID)_base_Core"
+        let baseName = "id_shape_\(shapeID)_base_core"
         print("GUIViewController: Attempting to load base layer: \(baseName)")
         if let img = UIImage(named: baseName) {
             baseShapeLayer.image = img
@@ -116,12 +116,12 @@ class GUIViewController: UIViewController {
 
             if userSelectedCategories.contains(catName) {
                 if let selectedVariant = selectedVariations[catName] {
-                    imageName = "canvas_\(shapeID)_\(catName)_\(selectedVariant)"
+                    imageName = "id_canvas_\(shapeID)_\(cleanForFilename(catName))_\(cleanForFilename(selectedVariant))"
                 } else {
                     imageName = nil
                 }
             } else {
-                imageName = "canvas_\(shapeID)_\(catName)_Default"
+                imageName = "id_canvas_\(shapeID)_\(cleanForFilename(catName))_default"
             }
             
             if let name = imageName {
@@ -156,9 +156,10 @@ class GUIViewController: UIViewController {
 	
 	func cleanForFilename(_ name: String) -> String {
         if name == "Passeridae_Fringillidae" {
-            return "Finch"
+            return "finch"
         }
 		return name
+            .lowercased()
 			.replacingOccurrences(of: " ", with: "_")
 			.replacingOccurrences(of: "-", with: "_")
 	}
@@ -198,7 +199,7 @@ class GUIViewController: UIViewController {
 //
     func updateCanvas(category: String, variant: String) {
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-        let imageName = "canvas_\(shapeID)_\(cleanForFilename(category))_\(cleanForFilename(variant))"
+        let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(category))_\(cleanForFilename(variant))"
         
         print("GUIViewController: Attempting to update part: \(imageName)")
         if let layer = partLayers[category] {
@@ -224,9 +225,9 @@ class GUIViewController: UIViewController {
 		let cleanCategory = cleanForFilename(categoryName)
 		let cleanVariant = cleanForFilename(variantName)
 		
-		let canvasName = "canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
-		let iconName = "icon_\(cleanCategory)_\(cleanVariant)"
-		let baseName = "shape_\(shapeID)_base"
+		let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
+		let iconName = "id_icon_\(cleanCategory)_\(cleanVariant)"
+		let baseName = "id_shape_\(shapeID)_base"
 		
 		if let canvas = UIImage(named: canvasName) {
 			if let base = UIImage(named: baseName) {

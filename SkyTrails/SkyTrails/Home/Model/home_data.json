@@ -18,7 +18,7 @@
 			"date": "17 Nov ’25 – 02 Dec ’25"
 		},
 		{
-			"imageName": "browna_headed_barbet",
+			"imageName": "brown_headed_barbet_alt",
 			"title": "Brown Headed Barbet",
 			"date": "20 Oct ’25 – 02 Dec ’25"
 		},
@@ -28,39 +28,39 @@
 			"date": "05 Nov ’25 – 15 Dec ’25"
 		},
 		{
-			"imageName": "bird_rosy_starling",
+			"imageName": "rosy_starling",
 			"title": "Rosy Starling",
 			"date": "01 Dec ’25 – 15 Jan ’26"
 		},
 		{
-			"imageName": "bird_demosielle_crane",
+			"imageName": "demoiselle_crane",
 			"title": "Demoiselle Crane",
 			"date": "10 Dec ’25 – 20 Feb ’26"
 		}
 	],
 	"recommendedBirds": [
 		{
-			"imageName": "bird_northern_pintail",
+			"imageName": "northern_pintail",
 			"title": "Northern Pintail",
 			"date": "15 Dec ’25 – 28 Feb ’26"
 		},
 		{
-			"imageName": "bird_bar_headed_goose",
+			"imageName": "bar_headed_goose",
 			"title": "Bar-headed Goose",
 			"date": "20 Dec ’25 – 10 Mar ’26"
 		},
 		{
-			"imageName": "bird_black_winged_stilt",
+			"imageName": "black_winged_stilt",
 			"title": "Black-winged Stilt",
 			"date": "01 Jan ’26 – 30 Mar ’26"
 		},
 		{
-			"imageName": "bird_pied_cuckoo",
+			"imageName": "pied_cuckoo",
 			"title": "Pied Cuckoo",
 			"date": "15 May ’26 – 30 Jul ’26"
 		},
 		{
-			"imageName": "bird_blue_tailed_bee_eater",
+			"imageName": "blue_tailed_bee_eater",
 			"title": "Blue-tailed Bee-eater",
 			"date": "01 Apr ’26 – 30 Jun ’26"
 		}
@@ -92,7 +92,7 @@
 			"longitude": 74.8,
 			"radius": 5,
 			"birds": [
-				{"name": "Bar-headed Goose", "imageName": "bird_bar_headed_goose", "lat": 34.102, "lon": 74.805},
+				{"name": "Bar-headed Goose", "imageName": "bar_headed_goose", "lat": 34.102, "lon": 74.805},
 				{"name": "Paradise Flycatcher", "imageName": "paradise_flycatcher", "lat": 34.098, "lon": 74.795}
 			]
 		},
@@ -117,7 +117,7 @@
 			"radius": 5,
 			"birds": [
 				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 21.945, "lon": 88.895},
-				{"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 21.935, "lon": 88.885}
+				{"name": "Northern Pintail", "imageName": "northern_pintail", "lat": 21.935, "lon": 88.885}
 			]
 		},
 		{
@@ -129,7 +129,7 @@
 			"radius": 5,
 			"birds": [
 				{"name": "Greater Flamingo", "imageName": "flamingo", "lat": 19.605, "lon": 85.355},
-				{"name": "Northern Pintail", "imageName": "bird_northern_pintail", "lat": 19.595, "lon": 85.345}
+				{"name": "Northern Pintail", "imageName": "northern_pintail", "lat": 19.595, "lon": 85.345}
 			]
 		},
 		{
@@ -167,7 +167,7 @@
 			"radius": 5,
 			"birds": [
 				{"name": "Greater Flamingo", "imageName": "flamingo", "lat": 22.805, "lon": 72.055},
-				{"name": "Rosy Starling", "imageName": "bird_rosy_starling", "lat": 22.795, "lon": 72.045}
+				{"name": "Rosy Starling", "imageName": "rosy_starling", "lat": 22.795, "lon": 72.045}
 			]
 		},
 		{
@@ -217,7 +217,7 @@
             "migrationDateRange": "05 March '26 – 09 June '26",
             "currentProgress": 0.65,
             "placeName": "Khadakwasla Backwaters",
-            "placeImage": "Khadakwasla",
+            "placeImage": "spot_khadakwasla",
             "speciesCount": 5,
             "distanceString": "12.6 km away",
             "hotspotDateRange": "28 Nov '25 - 06 Jan '26",
@@ -262,11 +262,11 @@
 		{
 			"observationId": "obs_003",
 			"username": "AvianExplorer",
-			"userAvatar": "appleUserProfile",
+			"userAvatar": "watchlist_user_profile",
 			"birdName": "Great Hornbill",
 			"observationTitle": "Great Hornbill Sighting",
 			"observationDescription": "Heard the distinctive whooshing sound of its wings before I saw it land on a high branch. Majestic bird.",
-			"observationImage": "GreatHornbill",
+			"observationImage": "great_hornbill",
 			"location": "Kaziranga, Assam",
 			"timestamp": "2026-01-02T10:15:00Z",
 			"likesCount": 89,
@@ -292,7 +292,7 @@
 			"birdName": "Indian Peafowl",
 			"observationTitle": "Indian Peafowl Dance",
 			"observationDescription": "Caught this peacock displaying its feathers. The rainy weather seems to have put it in a good mood.",
-			"observationImage": "IndianPeafowl",
+			"observationImage": "indian_peafowl",
 			"location": "Ranthambore, Rajasthan",
 			"timestamp": "2025-11-28T14:20:00Z",
 			"likesCount": 310,
@@ -304,14 +304,14 @@
 			"title": "Rare Migratory Bird Spotted",
 			"description": "A rare Siberian species was seen near the wetlands.",
 			"summary": "Birdwatchers are flocking to the local wetlands after a confirmed sighting of the elusive Siberian Crane.",
-			"imageName": "news_rare_migratory",
+			"imageName": "home_news_rare_migratory",
 			"link": "https://ebird.org/species/grswoo"
 		},
 		{
 			"title": "Climate Impact on Birds",
 			"description": "Researchers predict altered migration routes.",
 			"summary": "New studies suggest rising global temperatures are forcing migratory birds to change their traditional paths.",
-			"imageName": "news_climate_change",
+			"imageName": "home_news_climate_change",
 			"link": "https://www.un.org/en/climatechange/what-is-climate-change"
 		}
 	],
@@ -365,7 +365,7 @@
     {
       "id": "bird_005",
       "name": "Rosy Starling",
-      "imageName": "bird_rosy_starling",
+      "imageName": "rosy_starling",
       "sightings": [
         { "week": 4, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune" },
         { "week": 5, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune" },
@@ -376,7 +376,7 @@
     {
       "id": "bird_006",
       "name": "Bar-headed Goose",
-      "imageName": "bird_bar_headed_goose",
+      "imageName": "bar_headed_goose",
       "sightings": [
         { "week": 45, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore" },
         { "week": 48, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore (Karanji)" },
@@ -387,7 +387,7 @@
     {
       "id": "bird_007",
       "name": "Demoiselle Crane",
-      "imageName": "bird_demosielle_crane",
+      "imageName": "demoiselle_crane",
       "sightings": [
         { "week": 1, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur (Khichan)" },
         { "week": 2, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur" },
@@ -398,7 +398,7 @@
     {
       "id": "bird_008",
       "name": "Northern Pintail",
-      "imageName": "bird_northern_pintail",
+      "imageName": "northern_pintail",
       "sightings": [
         { "week": 50, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata (Santragachi)" },
         { "week": 52, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata" },
@@ -409,7 +409,7 @@
     {
       "id": "bird_009",
       "name": "Black-winged Stilt",
-      "imageName": "bird_black_winged_stilt",
+      "imageName": "black_winged_stilt",
       "sightings": [
         { "week": 15, "lat": 13.0600, "lon": 80.2500, "locationName": "Chennai" },
         { "week": 20, "lat": 12.9716, "lon": 77.5946, "locationName": "Bangalore" },
@@ -420,7 +420,7 @@
     {
       "id": "bird_010",
       "name": "Pied Cuckoo",
-      "imageName": "bird_pied_cuckoo",
+      "imageName": "pied_cuckoo",
       "sightings": [
         { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)" },
         { "week": 24, "lat": 19.0500, "lon": 72.8500, "locationName": "Mumbai" },
@@ -497,7 +497,7 @@
     {
           "id": "bird_017",
           "name": "Brown Headed Barbet",
-          "imageName": "browna_headed_barbet",
+          "imageName": "brown_headed_barbet_alt",
           "sightings": [
             { "week": 42, "lat": 28.6139, "lon": 77.2090, "locationName": "Delhi Ridge" },
             { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur Outskirts" },

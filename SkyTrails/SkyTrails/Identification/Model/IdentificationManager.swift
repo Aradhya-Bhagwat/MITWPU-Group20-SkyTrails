@@ -37,10 +37,10 @@ class IdentificationManager {
         do {
             // Initialize UI options
             self.fieldMarkOptions = [
-                FieldMarkType(symbols: "icn_location_date_pin", fieldMarkName: .locationDate, isSelected: false),
-                FieldMarkType(symbols: "icn_size", fieldMarkName: .size, isSelected: false),
-                FieldMarkType(symbols: "icn_shape_bird_question", fieldMarkName: .shape, isSelected: false),
-                FieldMarkType(symbols: "icn_field_marks", fieldMarkName: .fieldMarks, isSelected: false)
+                FieldMarkType(symbols: "home_icn_location_date_pin", fieldMarkName: .locationDate, isSelected: false),
+                FieldMarkType(symbols: "id_icn_size", fieldMarkName: .size, isSelected: false),
+                FieldMarkType(symbols: "id_icn_shape_bird_question", fieldMarkName: .shape, isSelected: false),
+                FieldMarkType(symbols: "id_icn_field_marks", fieldMarkName: .fieldMarks, isSelected: false)
             ]
             var db = try loadDatabase()
             let userBirds = loadUserBirds()
@@ -50,7 +50,7 @@ class IdentificationManager {
             self.birdShapes = db.referenceData.shapes
             self.histories = loadHistory()
             self.chooseFieldMarks = db.referenceData.fieldMarks.map { mark in
-                ChooseFieldMark(imageView: "bird_\(mark.area.lowercased())", name: mark.area)
+                ChooseFieldMark(imageView: "id_bird_\(mark.area.lowercased())", name: mark.area)
             }.sorted { $0.name < $1.name }
             
             print("Model Loaded Successfully")
