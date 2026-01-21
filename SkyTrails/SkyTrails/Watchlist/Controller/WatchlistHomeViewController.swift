@@ -36,6 +36,7 @@ class WatchlistHomeViewController: UIViewController {
 
 
     @IBOutlet weak var summaryCardCollectionView: UICollectionView!
+    @IBOutlet weak var addFloatingButton: UIButton!
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
