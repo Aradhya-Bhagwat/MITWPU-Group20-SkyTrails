@@ -431,7 +431,7 @@
     {
       "id": "bird_011",
       "name": "Indian Peafowl",
-      "imageName": "peafowl",
+      "imageName": "indian_peafowl",
       "sightings": [
         { "week": 5, "lat": 28.6900, "lon": 77.1300, "locationName": "Delhi (Ridge)" },
         { "week": 15, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur" },

@@ -14,15 +14,20 @@ class BirdSelectionViewController: UIViewController {
     var selectedSpecies: Set<String> = []
     var existingInputs: [BirdDateInput] = []
     
-    private let tableView = UITableView(frame: .zero, style: .plain)
+
+    private var cachedItemSize: NSCollectionLayoutSize?
     
+    @IBOutlet weak var searchCollection: UICollectionView!
     @IBOutlet weak var SearchBar: UISearchBar!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.selectedSpecies = Set(existingInputs.map { $0.species.id })
         self.title = "Select Species"
-        setupTableView()
+        
         setupNavigationBar()
-        SearchBar.delegate = self
+        setupCollectionView()
         
         SearchBar.delegate = self
         SearchBar.placeholder = "Search"
@@ -36,25 +41,78 @@ class BirdSelectionViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-
         let nextButton = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(didTapNext))
         navigationItem.rightBarButtonItem = nextButton
-        
     }
     
-    private func setupTableView() {
-        view.addSubview(tableView)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.topAnchor.constraint(equalTo: SearchBar.bottomAnchor).isActive = true
-        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-        tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+    private func setupCollectionView() {
+        searchCollection.collectionViewLayout = createLayout()
+        searchCollection.backgroundColor = .systemBackground
         
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "BirdCell")
-        tableView.allowsMultipleSelection = true
-        tableView.tableFooterView = UIView()
+        // Register Cell
+        searchCollection.register(
+            UINib(nibName: "GridUpcomingBirdCollectionViewCell", bundle: nil),
+            forCellWithReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier
+        )
+        
+        searchCollection.dataSource = self
+        searchCollection.delegate = self
+    }
+    
+    // Layout logic from AllUpcomingBirdsViewController
+    private func createLayout() -> UICollectionViewLayout {
+        return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
+            guard let self = self else { return nil }
+        
+            let containerWidth = layoutEnvironment.container.effectiveContentSize.width
+            if self.cachedItemSize == nil {
+                guard let windowScene = self.view.window?.windowScene else { return nil }
+                let screenBounds = windowScene.screen.bounds
+                let portraitWidth = min(screenBounds.width, screenBounds.height)
+                let padding: CGFloat = 16.0
+                let spacing: CGFloat = 16.0
+                let maxCardWidth: CGFloat = 300.0
+                let minColumns = 2
+        
+                var columnCount = minColumns
+                var calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                
+                while calculatedWidth > maxCardWidth {
+                    columnCount += 1
+                    calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                }
+                
+                let heightMultiplier: CGFloat = 91.0 / 88.0
+                let calculatedHeight = calculatedWidth * heightMultiplier
+                self.cachedItemSize = NSCollectionLayoutSize(
+                    widthDimension: .absolute(calculatedWidth),
+                    heightDimension: .absolute(calculatedHeight)
+                )
+            }
+            guard let fixedSize = self.cachedItemSize else { return nil }
+            let itemWidth = fixedSize.widthDimension.dimension
+            let interItemSpacing: CGFloat = 8
+            let estimatedColumns = Int((containerWidth + interItemSpacing) / (itemWidth + interItemSpacing))
+            let actualColumns = max(1, estimatedColumns)
+            let groupItemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0/CGFloat(actualColumns)),
+                heightDimension: .fractionalHeight(1.0)
+            )
+            let item = NSCollectionLayoutItem(layoutSize: groupItemSize)
+            item.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+            
+            let groupHeight = fixedSize.heightDimension.dimension
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .estimated(groupHeight)
+            )
+            
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+            let section = NSCollectionLayoutSection(group: group)
+            section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
+            
+            return section
+        }
     }
     
     @objc private func didTapNext() {
@@ -102,7 +160,7 @@ extension BirdSelectionViewController: UISearchBarDelegate {
                 return name.hasPrefix(query) || name.contains(" \(query)")
             }
         }
-        tableView.reloadData()
+        searchCollection.reloadData()
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -110,51 +168,49 @@ extension BirdSelectionViewController: UISearchBarDelegate {
     }
 }
 
-extension BirdSelectionViewController: UITableViewDataSource, UITableViewDelegate {
+extension BirdSelectionViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredSpecies.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "BirdCell", for: indexPath)
-        let species = filteredSpecies[indexPath.row]
-        
-        var content = cell.defaultContentConfiguration()
-        content.text = species.name
-        
-        if let image = UIImage(named: species.imageName) {
-            content.image = image
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier,
+            for: indexPath
+        ) as? GridUpcomingGridCollectionViewCell else {
+            return UICollectionViewCell()
         }
         
-        let sideLength: CGFloat = 60.0
-        content.imageProperties.maximumSize = CGSize(width: sideLength, height: sideLength)
-        content.imageProperties.reservedLayoutSize = CGSize(width: sideLength, height: sideLength)
-        content.imageProperties.cornerRadius = 12
-        content.imageToTextPadding = 20
-        cell.contentConfiguration = content
+        let species = filteredSpecies[indexPath.row]
+        // Map SpeciesData to UpcomingBird for configuration
+        let upcomingBird = UpcomingBird(imageName: species.imageName, title: species.name, date: "")
+        cell.configure(with: upcomingBird)
+        cell.DateLabel.isHidden = true
         
+        // Handle selection state
         if selectedSpecies.contains(species.id) {
-            cell.accessoryType = .checkmark
+            cell.containerView.layer.borderWidth = 3.0
+            cell.containerView.layer.borderColor = UIColor.systemBlue.cgColor
         } else {
-            cell.accessoryType = .none
+            cell.containerView.layer.borderWidth = 0.0
+            cell.containerView.layer.borderColor = UIColor.clear.cgColor
         }
         
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        searchCollection.deselectItem(at: indexPath, animated: true)
+        
         let species = filteredSpecies[indexPath.row]
-        selectedSpecies.insert(species.id)
-        tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-    }
-    
-    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-
-        let species = filteredSpecies[indexPath.row]
-        selectedSpecies.remove(species.id)
-        tableView.cellForRow(at: indexPath)?.accessoryType = .none
+        if selectedSpecies.contains(species.id) {
+            selectedSpecies.remove(species.id)
+        } else {
+            selectedSpecies.insert(species.id)
+        }
+        
+        searchCollection.reloadItems(at: [indexPath])
     }
 }
 

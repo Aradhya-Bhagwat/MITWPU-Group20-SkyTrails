@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEL-VC-001">
-    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Map view configurations" minToolsVersion="14.0"/>
@@ -15,39 +15,65 @@
             <objects>
                 <viewController storyboardIdentifier="BirdSelectionViewController" id="SEL-VC-001" customClass="BirdSelectionViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="SEL-VIEW-001">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="6WZ-z8-39D">
-                                <rect key="frame" x="0.0" y="118" width="393" height="64"/>
+                                <rect key="frame" x="0.0" y="124" width="402" height="64"/>
                                 <textInputTraits key="textInputTraits"/>
                                 <connections>
                                     <outlet property="delegate" destination="SEL-VC-001" id="NQm-Ri-2Gj"/>
                                 </connections>
                             </searchBar>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="DYK-5o-6pq">
+                                <rect key="frame" x="0.0" y="188" width="402" height="618"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Cld-SP-9gR">
+                                    <size key="itemSize" width="183" height="198"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells>
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="jZY-YX-hlY">
+                                        <rect key="frame" x="0.0" y="0.0" width="183" height="198"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="Akh-KS-9YR">
+                                            <rect key="frame" x="0.0" y="0.0" width="183" height="198"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </collectionViewCellContentView>
+                                        <size key="customSize" width="183" height="198"/>
+                                    </collectionViewCell>
+                                </cells>
+                            </collectionView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="SEL-SAFE-001"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="SEL-SAFE-001" firstAttribute="bottom" secondItem="DYK-5o-6pq" secondAttribute="bottom" id="1nz-lZ-PMl"/>
                             <constraint firstItem="6WZ-z8-39D" firstAttribute="top" secondItem="SEL-SAFE-001" secondAttribute="top" id="I7G-V8-cUW"/>
                             <constraint firstItem="6WZ-z8-39D" firstAttribute="trailing" secondItem="SEL-SAFE-001" secondAttribute="trailing" id="Xbp-bl-gIA"/>
+                            <constraint firstItem="SEL-SAFE-001" firstAttribute="trailing" secondItem="DYK-5o-6pq" secondAttribute="trailing" id="dSb-oE-lyS"/>
+                            <constraint firstItem="DYK-5o-6pq" firstAttribute="top" secondItem="6WZ-z8-39D" secondAttribute="bottom" id="gq2-a7-Xlg"/>
                             <constraint firstItem="6WZ-z8-39D" firstAttribute="leading" secondItem="SEL-SAFE-001" secondAttribute="leading" id="hrC-M5-Aqr"/>
+                            <constraint firstItem="DYK-5o-6pq" firstAttribute="leading" secondItem="SEL-SAFE-001" secondAttribute="leading" id="vO7-LO-gvW"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="SearchBar" destination="6WZ-z8-39D" id="JC1-OH-XIM"/>
+                        <outlet property="searchCollection" destination="DYK-5o-6pq" id="gi7-IN-SlT"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SEL-RESP-001" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-912" y="39"/>
+            <point key="canvasLocation" x="-923.88059701492534" y="38.443935926773456"/>
         </scene>
         <!--Bird Date Input View Controller-->
         <scene sceneID="inp-date-001">
             <objects>
                 <viewController storyboardIdentifier="BirdDateInputViewController" id="INP-VC-001" customClass="BirdDateInputViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="INP-VIEW-001">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="INP-SAFE-001"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -62,15 +88,15 @@
             <objects>
                 <viewController storyboardIdentifier="BirdMapResultViewController" id="Y6W-OH-hqX" customClass="birdspredViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="8Zk-9u-3tq">
-                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                                 <standardMapConfiguration key="preferredConfiguration"/>
                             </mapView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="PILL-VIEW-ID">
-                                <rect key="frame" x="116.66666666666669" y="714" width="160" height="40"/>
+                                <rect key="frame" x="121" y="736" width="160" height="40"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="X Species" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PILL-LBL-ID">
                                         <rect key="frame" x="8" y="9.6666666666666288" width="144" height="21"/>
@@ -89,7 +115,7 @@
                                 </constraints>
                             </view>
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-VIEW-ID">
-                                <rect key="frame" x="24" y="634" width="345" height="120"/>
+                                <rect key="frame" x="24" y="656" width="354" height="120"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-IMG-ID">
                                         <rect key="frame" x="16" y="16" width="60" height="60"/>
@@ -99,19 +125,19 @@
                                         </constraints>
                                     </imageView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-TITLE-ID">
-                                        <rect key="frame" x="88" y="16" width="241" height="24"/>
+                                        <rect key="frame" x="88" y="16" width="250" height="24"/>
                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date Range" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CARD-SUB-ID">
-                                        <rect key="frame" x="88" y="44" width="241" height="17"/>
+                                        <rect key="frame" x="88" y="44" width="250" height="17"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <color key="textColor" systemColor="secondaryLabelColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" translatesAutoresizingMaskIntoConstraints="NO" id="PAGE-CTRL-ID">
-                                        <rect key="frame" x="16" y="86" width="313" height="26"/>
+                                        <rect key="frame" x="16" y="86" width="322" height="26"/>
                                         <color key="pageIndicatorTintColor" systemColor="systemGray4Color"/>
                                         <color key="currentPageIndicatorTintColor" systemColor="labelColor"/>
                                     </pageControl>
@@ -167,11 +193,11 @@
             <objects>
                 <viewController id="7eL-4j-FfY" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="h7j-IH-Plw">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hzS-oY-fF6">
-                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                                 <standardMapConfiguration key="preferredConfiguration"/>
                             </mapView>
                         </subviews>
@@ -195,11 +221,11 @@
             <objects>
                 <viewController id="Uld-NQ-aUB" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="wWF-HW-1Lp">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="bGR-uD-X07">
-                                <rect key="frame" x="0.0" y="172" width="393" height="612"/>
+                                <rect key="frame" x="0.0" y="178" width="402" height="628"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="ih0-12-JGw">
                                     <size key="itemSize" width="128" height="128"/>
@@ -209,10 +235,10 @@
                                 </collectionViewFlowLayout>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="reIdentifier" id="9Uq-AF-JRI">
-                                        <rect key="frame" x="0.0" y="0.0" width="127.99999999999997" height="128"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="LFj-4L-ehl">
-                                            <rect key="frame" x="0.0" y="0.0" width="127.99999999999997" height="128"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </collectionViewCellContentView>
                                     </collectionViewCell>
@@ -243,7 +269,7 @@
                 <navigationController storyboardIdentifier="mapshow" automaticallyAdjustsScrollViewInsets="NO" id="pym-As-qnW" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="Xkx-uo-prB">
-                        <rect key="frame" x="0.0" y="118" width="393" height="54"/>
+                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -261,7 +287,7 @@
                 <navigationController storyboardIdentifier="mapShowNew" automaticallyAdjustsScrollViewInsets="NO" id="pe9-ly-ZRK" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="O2D-rZ-D21">
-                        <rect key="frame" x="0.0" y="118" width="393" height="54"/>
+                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
