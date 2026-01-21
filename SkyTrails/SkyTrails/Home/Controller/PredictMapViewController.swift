@@ -12,27 +12,26 @@ import QuartzCore
 class PredictMapViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
+    
     private var currentChildVC: UIViewController?
-        private var modalContainerView: UIView!
-        private var modalTopConstraint: NSLayoutConstraint!
-        private var originalTopConstant: CGFloat = 0
-        private var maxTopY: CGFloat = 120
-        private var minBottomY: CGFloat = 0
-        private var initialLoadY: CGFloat = 0
+    private var modalContainerView: UIView!
+    private var modalTopConstraint: NSLayoutConstraint!
+    private var originalTopConstant: CGFloat = 0
+    private var maxTopY: CGFloat = 120
+    private var minBottomY: CGFloat = 0
+    private var initialLoadY: CGFloat = 0
         
-        override func viewDidLoad() {
-            super.viewDidLoad()
-            setupMap()
-            setupCustomModal()
-            mapView.delegate = self
-        }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupMap()
+        setupCustomModal()
+        mapView.delegate = self
+    }
         
     private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
-        
 
-        
         var annotations: [MKAnnotation] = []
         var locationCoordinates: [CLLocationCoordinate2D] = []
         

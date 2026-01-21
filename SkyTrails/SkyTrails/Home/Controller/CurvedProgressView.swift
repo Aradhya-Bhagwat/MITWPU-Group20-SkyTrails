@@ -8,12 +8,10 @@ class CurvedProgressView: UIView {
     private let startInnerCircleLayer = CAShapeLayer()
     private let endOuterCircleLayer = CAShapeLayer()
     private let endInnerCircleLayer = CAShapeLayer()
-    
     private let progressColor = UIColor.systemBlue.cgColor
     private let trackColor = UIColor.systemBlue.withAlphaComponent(0.35).cgColor
     private let innerCircleColor = UIColor.white.cgColor
     
-    // 💡 These are now dynamic properties
     private var dynamicLineWidth: CGFloat = 7.0
     private var dynamicOuterRadius: CGFloat = 10.0
     private var dynamicInnerRadius: CGFloat = 3.0
@@ -60,12 +58,9 @@ class CurvedProgressView: UIView {
         let currentWidth = bounds.width
         let baseWidth: CGFloat = 390.0
         
-        // Calculate new sizes based on screen width
         dynamicLineWidth = (7.0 / baseWidth) * currentWidth
         dynamicOuterRadius = (10.0 / baseWidth) * currentWidth
         dynamicInnerRadius = (3.0 / baseWidth) * currentWidth
-        
-        // Apply the new line width to layers
         trackLayer.lineWidth = dynamicLineWidth
         progressLayer.lineWidth = dynamicLineWidth
 
@@ -76,26 +71,22 @@ class CurvedProgressView: UIView {
 
         let endX = bounds.width - dynamicOuterRadius
         let endY = bounds.height - verticalOffset
-        
-        // Match the control point ratio as well if needed
+    
         path.addQuadCurve(to: CGPoint(x: endX, y: endY),
                           controlPoint: CGPoint(x: bounds.width / 2, y: bounds.height / 1.6))
         
         let cgPath = path.cgPath
         trackLayer.path = cgPath
         progressLayer.path = cgPath
-        
         let startCircleCenter = CGPoint(x: dynamicOuterRadius, y: bounds.height - verticalOffset)
         let endCircleCenter = CGPoint(x: endX, y: endY)
         
         drawCircle(layer: startOuterCircleLayer, center: startCircleCenter, radius: dynamicOuterRadius, color: progressColor)
         drawCircle(layer: startInnerCircleLayer, center: startCircleCenter, radius: dynamicInnerRadius, color: innerCircleColor)
-        
         drawCircle(layer: endOuterCircleLayer, center: endCircleCenter, radius: dynamicOuterRadius, color: trackColor)
         drawCircle(layer: endInnerCircleLayer, center: endCircleCenter, radius: dynamicInnerRadius, color: innerCircleColor)
         
         progressLayer.strokeEnd = CGFloat(progress)
-        
         trackLayer.frame = bounds
         progressLayer.frame = bounds
     }

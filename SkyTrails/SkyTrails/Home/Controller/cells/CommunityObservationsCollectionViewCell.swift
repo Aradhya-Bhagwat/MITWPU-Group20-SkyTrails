@@ -11,41 +11,42 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "CommunityObservationsCollectionViewCell"
         
-        // MARK: - Outlets (Connect these from your XIB)
-        @IBOutlet weak var cardContainerView: UIView!
-        @IBOutlet weak var birdImageView: UIImageView!
-        @IBOutlet weak var userProfileImageView: UIImageView!
-        @IBOutlet weak var userNameLabel: UILabel!
-        @IBOutlet weak var observationCountLabel: UILabel!
-        @IBOutlet weak var birdNameLabel: UILabel!
-        @IBOutlet weak var locationLabel: UILabel!
-        
+    @IBOutlet weak var cardContainerView: UIView!
+    @IBOutlet weak var birdImageView: UIImageView!
+    @IBOutlet weak var userProfileImageView: UIImageView!
+    @IBOutlet weak var userNameLabel: UILabel!
+    @IBOutlet weak var observationCountLabel: UILabel!
+    @IBOutlet weak var birdNameLabel: UILabel!
+    @IBOutlet weak var locationLabel: UILabel!
 
-        private var gradientLayer: CAGradientLayer?
+    private var gradientLayer: CAGradientLayer?
     
     override func awakeFromNib() {
         super.awakeFromNib()
 
-                cardContainerView.layer.cornerRadius = 16
-                cardContainerView.clipsToBounds = true
+            cardContainerView.layer.cornerRadius = 16
+            cardContainerView.clipsToBounds = true
         
-                birdImageView.contentMode = .scaleAspectFill
-                birdImageView.clipsToBounds = true
+            birdImageView.contentMode = .scaleAspectFill
+            birdImageView.clipsToBounds = true
         
-                userProfileImageView.clipsToBounds = true
-                userProfileImageView.contentMode = .scaleAspectFill
-    }
+            userProfileImageView.clipsToBounds = true
+            userProfileImageView.contentMode = .scaleAspectFill
+        }
+    
     override func layoutSubviews() {
             super.layoutSubviews()
         
             applyGradientLayer()
             userProfileImageView.layer.cornerRadius = userProfileImageView.frame.height / 2
         }
+    
     func configure(with observation: CommunityObservation, birdImage: UIImage?) {
+        
+            let displayUser = observation.displayUser
             birdImageView.image = birdImage
             birdImageView.tintColor = .systemGray4
         
-            let displayUser = observation.displayUser
             userNameLabel.text = displayUser.name
             userNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
             userNameLabel.textColor = .white
@@ -54,17 +55,14 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             observationCountLabel.textColor = .white
             observationCountLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         
-        
             birdNameLabel.text = observation.displayBirdName
             birdNameLabel.textColor = .white
             birdNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
-        
         
             locationLabel.text = observation.location
             locationLabel.textColor = .white
             locationLabel.font = UIFont.systemFont(ofSize: 11.5, weight: .medium)
         
-            // 1. Try to load the user's custom profile image
             if let profileImage = UIImage(named: displayUser.profileImageName) {
                 userProfileImageView.image = profileImage
             } else {
@@ -79,8 +77,6 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             cardContainerView.bringSubviewToFront(locationLabel)
             cardContainerView.bringSubviewToFront(userProfileImageView) 
         }
-
-        // MARK: - Gradient Logic
         
         private func applyGradientLayer() {
             gradientLayer?.removeFromSuperlayer()

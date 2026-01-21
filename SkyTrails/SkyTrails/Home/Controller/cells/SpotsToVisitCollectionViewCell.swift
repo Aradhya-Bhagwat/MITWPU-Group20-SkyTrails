@@ -21,50 +21,41 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     }
     private func setupUI() {
         self.backgroundColor = .clear
-                contentView.backgroundColor = .systemBackground
-
-                contentView.layer.cornerRadius = 16
-                contentView.layer.masksToBounds = false
-                
-                // Add the Shadow
-                contentView.layer.shadowColor = UIColor.black.cgColor
-                contentView.layer.shadowOpacity = 0.15
-                contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-                contentView.layer.shadowRadius = 8
-                contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
-            cardContainerView2.backgroundColor = .systemBackground
-            cardContainerView2.layer.cornerRadius = 16
-            cardContainerView2.layer.masksToBounds = true
-
-
-           birdImageView2.contentMode = .scaleAspectFill
-           birdImageView2.clipsToBounds = true
-           birdImageView2.layer.cornerRadius = 12
-           
-  
-           titleLabel2.numberOfLines = 1
-           titleLabel2.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-           titleLabel2.textColor = .label
-           
-
-           dateLabel2.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-           dateLabel2.textColor = .secondaryLabel
-           
-         
-       }
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-  
+        contentView.backgroundColor = .systemBackground
+        contentView.layer.cornerRadius = 16
+        contentView.layer.masksToBounds = false
+        contentView.layer.shadowColor = UIColor.black.cgColor
+        contentView.layer.shadowOpacity = 0.15
+        contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        contentView.layer.shadowRadius = 8
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
+        cardContainerView2.backgroundColor = .systemBackground
+        cardContainerView2.layer.cornerRadius = 16
+        cardContainerView2.layer.masksToBounds = true
+        
+        birdImageView2.contentMode = .scaleAspectFill
+        birdImageView2.clipsToBounds = true
+        birdImageView2.layer.cornerRadius = 12
+        
+        titleLabel2.numberOfLines = 1
+        titleLabel2.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        titleLabel2.textColor = .label
+        
+        dateLabel2.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        dateLabel2.textColor = .secondaryLabel
+        
+    }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0
         let dateRatio: CGFloat = 12.0 / 200.0
         
-    
         titleLabel2.font = UIFont.systemFont(
             ofSize: currentWidth * titleRatio,
             weight: .semibold
@@ -90,19 +81,17 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
            titleLabel2.text = nil
            dateLabel2.text = nil
        }
+    
     private func createIconString(text: String, iconName: String, color: UIColor, fontSize: CGFloat) -> NSAttributedString {
             let config = UIImage.SymbolConfiguration(pointSize: fontSize * 0.9, weight: .semibold)
-            
             guard let icon = UIImage(systemName: iconName, withConfiguration: config)?
                 .withTintColor(color, renderingMode: .alwaysOriginal) else { return NSAttributedString(string: text) }
-            
             let attachment = NSTextAttachment(image: icon)
             let yOffset = (fontSize - icon.size.height) / 2.0 - 2
             attachment.bounds = CGRect(x: 0, y: yOffset, width: icon.size.width, height: icon.size.height)
-            
             let completeString = NSMutableAttributedString(attachment: attachment)
             completeString.append(NSAttributedString(string: " " + text, attributes: [.foregroundColor: color]))
-            
+        
             return completeString
         }
     
@@ -110,15 +99,15 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         birdImageView2.image = image
         titleLabel2.text = title
         let locationColor = dateLabel2.textColor ?? .secondaryLabel
-                let locationFontSize = dateLabel2.font.pointSize
+        let locationFontSize = dateLabel2.font.pointSize
                 
-                dateLabel2.attributedText = createIconString(
-                    text: date,
-                    iconName: "mappin.and.ellipse",
-                    color: locationColor,
-                    fontSize: locationFontSize
-                )
-    }
+        dateLabel2.attributedText = createIconString(
+                text: date,
+                iconName: "mappin.and.ellipse",
+                color: locationColor,
+                fontSize: locationFontSize
+            )
+        }
     
 }
 

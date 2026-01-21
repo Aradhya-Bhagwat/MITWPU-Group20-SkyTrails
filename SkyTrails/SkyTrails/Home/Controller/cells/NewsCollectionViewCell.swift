@@ -48,15 +48,17 @@ class NewsCollectionViewCell: UICollectionViewCell {
             newsImageView.image = UIImage(systemName: "photo")
             newsImageView.tintColor = .systemGray
         }
+        
         containerView.bringSubviewToFront(titleLabel)
         containerView.bringSubviewToFront(summaryLabel)
     }
     
     private func applyGradientLayer() {
-        gradientLayer?.removeFromSuperlayer()
         
+        gradientLayer?.removeFromSuperlayer()
         let gradient = CAGradientLayer()
         self.gradientLayer = gradient
+        
         gradient.colors = [
             UIColor.black.withAlphaComponent(0.2).cgColor,
             UIColor.black.withAlphaComponent(0.7).cgColor

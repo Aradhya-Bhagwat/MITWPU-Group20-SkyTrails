@@ -11,7 +11,7 @@ class PageControlReusableViewCollectionReusableView: UICollectionReusableView {
     
     static let identifier = "PageControlReusableViewCollectionReusableView"
         
-        @IBOutlet weak var pageControl: UIPageControl!
+    @IBOutlet weak var pageControl: UIPageControl!
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -20,6 +20,7 @@ class PageControlReusableViewCollectionReusableView: UICollectionReusableView {
                 pageControl.hidesForSinglePage = true
                 self.backgroundColor = .clear
     }
+    
     func configure(numberOfPages: Int, currentPage: Int) {
             pageControl.numberOfPages = numberOfPages
             pageControl.currentPage = currentPage

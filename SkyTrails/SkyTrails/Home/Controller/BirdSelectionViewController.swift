@@ -60,7 +60,6 @@ class BirdSelectionViewController: UIViewController {
     @objc private func didTapNext() {
 
         let selectedObjects = allSpecies.filter { selectedSpecies.contains($0.id) }
-        
         guard !selectedObjects.isEmpty else {
             let alert = UIAlertController(title: "No Selection", message: "Please select at least one bird.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -90,6 +89,7 @@ class BirdSelectionViewController: UIViewController {
         navigationController?.pushViewController(dateInputVC, animated: true)
     }
 }
+
 extension BirdSelectionViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText.isEmpty {
@@ -127,7 +127,6 @@ extension BirdSelectionViewController: UITableViewDataSource, UITableViewDelegat
             content.image = image
         }
         
-        // 2. THE FIX: Set properties that create the square, filled look
         let sideLength: CGFloat = 60.0
         content.imageProperties.maximumSize = CGSize(width: sideLength, height: sideLength)
         content.imageProperties.reservedLayoutSize = CGSize(width: sideLength, height: sideLength)
@@ -135,7 +134,6 @@ extension BirdSelectionViewController: UITableViewDataSource, UITableViewDelegat
         content.imageToTextPadding = 20
         cell.contentConfiguration = content
         
-        // 3. Selection state
         if selectedSpecies.contains(species.id) {
             cell.accessoryType = .checkmark
         } else {
