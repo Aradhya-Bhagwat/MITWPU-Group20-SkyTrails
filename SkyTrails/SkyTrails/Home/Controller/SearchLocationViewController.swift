@@ -190,37 +190,37 @@ class SearchLocationViewController: UIViewController {
         }
     }
 
-    extension SearchLocationViewController: UISearchBarDelegate {
-        func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-            searchQuery = searchText
-            
-            if let coordinate = isCoordinatePair(searchText) {
-                searchByCoordinate(coordinate)
-                return
-            }
-            
-            if searchText.isEmpty {
-                searchResults.removeAll()
-                reloadSuggestionsOnly()
-            } else {
-                searchCompleter.queryFragment = searchText
-            }
+extension SearchLocationViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        searchQuery = searchText
+        
+        if let coordinate = isCoordinatePair(searchText) {
+            searchByCoordinate(coordinate)
+            return
         }
         
-        func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-            searchBar.resignFirstResponder()
-        }
-    }
-
-    extension SearchLocationViewController: MKLocalSearchCompleterDelegate {
-        func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-            searchResults = completer.results
+        if searchText.isEmpty {
+            searchResults.removeAll()
             reloadSuggestionsOnly()
-        }
-        
-        func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        } else {
+            searchCompleter.queryFragment = searchText
         }
     }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+}
+
+extension SearchLocationViewController: MKLocalSearchCompleterDelegate {
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        searchResults = completer.results
+        reloadSuggestionsOnly()
+    }
+    
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+    }
+}
 
 extension SearchLocationViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -237,13 +237,14 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
             self.finalizeSelection(name: name, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
         }
     }
-        func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-            if manager.authorizationStatus == .authorizedWhenInUse {
-                manager.requestLocation()
-            }
-        }
-        
-        func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-            print("Location Error: \(error.localizedDescription)")
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if manager.authorizationStatus == .authorizedWhenInUse {
+            manager.requestLocation()
         }
     }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location Error: \(error.localizedDescription)")
+    }
+}
