@@ -7,7 +7,7 @@
 
 import UIKit
 
-class IdentificationViewController: UIViewController, UITableViewDelegate,UITableViewDataSource,UICollectionViewDataSource,UICollectionViewDelegate,UINavigationControllerDelegate{
+class IdentificationViewController: UIViewController, UITableViewDelegate,UITableViewDataSource,UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout,UINavigationControllerDelegate{
     
     private var flowSteps: [IdentificationStep] = []
     private var currentStepIndex: Int = 0
@@ -15,7 +15,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var historyCollectionView: UICollectionView!
     
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
@@ -32,27 +32,30 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         super.viewWillAppear(animated)
 
   
-
+        updateHistoryInteraction()
         tableView.reloadData()
-        collectionView.reloadData()
+        historyCollectionView.reloadData()
     }
+  
 
     
     override func viewDidLoad() {
         super.viewDidLoad()
-   
-        navigationController?.delegate = self  
+        let nib = UINib(nibName: "HistoryCollectionViewCell", bundle: nil)
+        historyCollectionView.register(nib, forCellWithReuseIdentifier: "history_cell")
+        updateHistoryInteraction()
+        navigationController?.delegate = self
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = .white
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.collectionViewLayout = generateLayout()
+        historyCollectionView.delegate = self
+        historyCollectionView.dataSource = self
+        setupHistoryFlowLayout()  
         tableView.rowHeight = 56
         tableView.estimatedRowHeight = 56
         
         tableView.reloadData()
-        collectionView.reloadData()
+        historyCollectionView.reloadData()
         updateSelectionState()
     }
     
@@ -60,8 +63,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     func updateSelectionState() {
         let selectedCount = model.fieldMarkOptions.filter { $0.isSelected ?? false }.count
         let isValid = selectedCount >= 2
-        
-        // Update Warning Label
+
         warningLabel.isHidden = isValid
         if !isValid {
             warningLabel.text =  "Please select at least two options."
@@ -73,14 +75,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         startButton.alpha = 1.0
         
         if isValid {
-            // Enabled State: Black Text (Standard)
+            
             startButton.setTitleColor(.black, for: .normal)
             
             startButton.layer.shadowOpacity = 0.1
         } else {
-            // Disabled State: Light Gray Text
+           
             startButton.setTitleColor(.systemGray3, for: .normal)
-            // Optional: Make shadow slightly lighter, but not invisible
+          
             startButton.layer.shadowOpacity = 0.05
         }
     }
@@ -90,48 +92,32 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "history_cell", for: indexPath)
-        
-        guard let historyCell = cell as? IdentificationHistoryCollectionViewCell else {
-            return cell
-        }
-        
+    func collectionView(_ collectionView: UICollectionView,
+                        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+
+        let historyCell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "history_cell",
+            for: indexPath
+        ) as! HistoryCollectionViewCell
+
         if model.histories.isEmpty {
-            
-            historyCell.historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
-            historyCell.historyImageView.tintColor = .lightGray
-            historyCell.historyImageView.contentMode = .scaleAspectFit
-            
-            historyCell.specieNameLabel.text = "No history yet"
-            historyCell.specieNameLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-            historyCell.specieNameLabel.textAlignment = .center
-            historyCell.specieNameLabel.textColor = .darkGray
-            
-            historyCell.dateLabel.text = "Start identifying birds!"
-            historyCell.dateLabel.font = UIFont.systemFont(ofSize: 14)
-            historyCell.dateLabel.textAlignment = .center
-            historyCell.dateLabel.textColor = .lightGray
-            historyCell.layer.shadowOpacity = 0
-            
-            return historyCell
+            historyCell.showEmptyState()
+        } else {
+            let historyItem = model.histories[indexPath.row]
+            historyCell.configureCell(historyItem: historyItem)
         }
-        
-        let historyItems = model.histories[indexPath.row]
-        historyCell.configureCell(historyItem: historyItems)
-        
-        historyCell.layer.backgroundColor = UIColor.white.cgColor
-        historyCell.layer.cornerRadius = 12
-        historyCell.layer.shadowColor = UIColor.black.cgColor
-        historyCell.layer.shadowOpacity = 0.1
-        historyCell.layer.shadowOffset = CGSize(width: 0, height: 2)
-        historyCell.layer.shadowRadius = 8
-        historyCell.layer.masksToBounds = false
-        
+
         return historyCell
     }
+
     
-    
+    private func updateHistoryInteraction() {
+        let isEmpty = model.histories.isEmpty
+
+        historyCollectionView.isUserInteractionEnabled = !isEmpty
+        historyCollectionView.alpha = isEmpty ? 0.6 : 1.0
+    }
+
     func applyCardShadow(to view: UIView) {
         view.layer.shadowColor = UIColor.black.cgColor
 
@@ -202,30 +188,45 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         updateSelectionState()
     }
     
-    func generateLayout() -> UICollectionViewLayout {
-        let size  = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(0.5),
-            heightDimension: .estimated(200))
-        let item = NSCollectionLayoutItem(layoutSize: size)
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(200))
-        
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.interItemSpacing = .fixed(10)
-        let section = NSCollectionLayoutSection(group: group)
-        section.interGroupSpacing = 20
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
-        
-        let layout = UICollectionViewCompositionalLayout(section: section)
-        return layout
+    func setupHistoryFlowLayout() {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical   // ✅ MUST be vertical
+
+        layout.minimumInteritemSpacing = 12
+        layout.minimumLineSpacing = 16
+        layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
+
+        historyCollectionView.collectionViewLayout = layout
     }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+
+        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
+            return .zero
+        }
+
+        let itemsPerRow: CGFloat =
+            UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2
+
+        let totalSpacing =
+            layout.sectionInset.left +
+            layout.sectionInset.right +
+            layout.minimumInteritemSpacing * (itemsPerRow - 1)
+
+        let width =
+            (collectionView.bounds.width - totalSpacing) / itemsPerRow
+
+        return CGSize(width: width, height: 230)
+    }
+
+
     
     @IBAction func startButtonTapped(_ sender: UIButton) {
-        
-        
-        
-        
+
         startIdentificationFlow(from: model.fieldMarkOptions)
     }
     
@@ -247,7 +248,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     func startIdentificationFlow(from options: [FieldMarkType]) {
         flowSteps.removeAll()
         
-        // 1. Filter selected options to build the step list
+        
         let selected = options.filter { $0.isSelected ?? false }
         for option in selected {
             switch option.fieldMarkName {

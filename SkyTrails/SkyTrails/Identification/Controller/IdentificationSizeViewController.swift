@@ -37,9 +37,13 @@ class IdentificationSizeViewController: UIViewController {
     }
  
     @IBAction func sliderChanged(_ sender: UISlider) {
-       let steppedValue = Int(round(sender.value)) 
-        updateBirdDisplay(for: steppedValue)
-        viewModel.selectedSizeCategory = steppedValue
+       
+            let steppedValue = Int(round(sender.value))
+            sender.value = Float(steppedValue)   
+            updateBirdDisplay(for: steppedValue)
+            viewModel.selectedSizeCategory = steppedValue
+        
+
     }
 
 
