@@ -46,23 +46,23 @@ class IdentificationSizeViewController: UIViewController {
         switch index {
         case 0:
             // Tiny (<13 cm)
-            return ("size_0_small_flowerpecker", "size_0_large_house_sparrow")
+            return ("id_size_0_small_flowerpecker", "id_size_0_large_house_sparrow")
 
         case 1:
             // Small (13–20 cm)
-            return ("size_1_small_munia", "size_1_large_bulbul")
+            return ("id_size_1_small_munia", "id_size_1_large_bulbul")
 
         case 2:
             // Medium (20–40 cm)
-            return ("size_2_small_myna", "size_2_large_peahen")
+            return ("id_size_2_small_myna", "id_size_2_large_peahen")
 
         case 3:
             // Large (40–70 cm)
-            return ("size_3_small_house_crow", "size_3_large_pond_heron")
+            return ("id_size_3_small_house_crow", "id_size_3_large_pond_heron")
 
         case 4:
             // Very Large (70+ cm)
-            return ("size_4_small_cattle_egret", "size_4_large_greater_flamingo")
+            return ("id_size_4_small_cattle_egret", "id_size_4_large_greater_flamingo")
 
         default:
             return ("", "")

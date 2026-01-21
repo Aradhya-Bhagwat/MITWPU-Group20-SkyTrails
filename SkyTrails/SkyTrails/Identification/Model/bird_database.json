@@ -31,82 +31,82 @@
       {
         "id": "Anatidae",
         "name": "Anatidae (Ducks)",
-        "icon": "shape_anatidae"
+        "icon": "id_shape_anatidae"
       },
       {
         "id": "Ardeidae",
         "name": "Ardeidae (Herons)",
-        "icon": "shape_ardeidae"
+        "icon": "id_shape_ardeidae"
       },
       {
         "id": "Accipitridae",
         "name": "Accipitridae (Kites)",
-        "icon": "shape_accipitridae"
+        "icon": "id_shape_accipitridae"
       },
       {
         "id": "Strigidae",
         "name": "Strigidae (Owls)",
-        "icon": "shape_strigidae"
+        "icon": "id_shape_strigidae"
       },
       {
         "id": "Charadriidae",
         "name": "Charadriidae (Waders)",
-        "icon": "shape_charadriidae"
+        "icon": "id_shape_charadriidae"
       },
       {
         "id": "Phasianidae",
         "name": "Phasianidae (Gamebirds)",
-        "icon": "shape_phasianidae"
+        "icon": "id_shape_phasianidae"
       },
       {
         "id": "Columbidae",
         "name": "Columbidae (Pigeons)",
-        "icon": "shape_columbidae"
+        "icon": "id_shape_columbidae"
       },
       {
         "id": "Psittaculidae",
         "name": "Psittaculidae (Parakeets)",
-        "icon": "shape_psittaculidae"
+        "icon": "id_shape_psittaculidae"
       },
       {
         "id": "Apodidae",
         "name": "Apodidae (Aerialists)",
-        "icon": "shape_apodidae"
+        "icon": "id_shape_apodidae"
       },
       {
         "id": "Alcedinidae",
         "name": "Alcedinidae (Kingfishers)",
-        "icon": "shape_alcedinidae"
+        "icon": "id_shape_alcedinidae"
       },
       {
         "id": "Picidae",
         "name": "Picidae (Woodpeckers)",
-        "icon": "shape_picidae"
+        "icon": "id_shape_picidae"
       },
       {
         "id": "Corvidae",
         "name": "Corvidae (Crows)",
-        "icon": "shape_corvidae"
+        "icon": "id_shape_corvidae"
       },
       {
         "id": "Muscicapidae",
         "name": "Muscicapidae (Songbirds)",
-        "icon": "shape_muscicapidae"
+        "icon": "id_shape_muscicapidae"
       },
       {
         "id": "Pycnonotidae",
         "name": "Pycnonotidae (Small Perchers)",
-        "icon": "shape_pycnonotidae"
+        "icon": "id_shape_pycnonotidae"
       },
       {
         "id": "Nectariniidae",
         "name": "Nectariniidae (Tiny Perchers)",
-        "icon": "shape_nectariniidae"
+        "icon": "id_shape_nectariniidae"
       },
       {
         "id": "Passeridae_Fringillidae",
         "name": "Passeridae / Fringillidae (Finches & Sparrows)",
-        "icon": "shape_passeridae"
+        "icon": "id_shape_passeridae"
       }
     ],
     "field_marks": [
@@ -129,7 +129,7 @@
       "id": "b_001",
       "common_name": "Himalayan Monal",
       "scientific_name": "Lophophorus impejanus",
-      "image_name": "HimalayanMonal",
+      "image_name": "himalayan_monal",
       "valid_locations": ["Himalayas"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -147,7 +147,7 @@
       "id": "b_002",
       "common_name": "Great Hornbill",
       "scientific_name": "Buceros bicornis",
-      "image_name": "GreatHornbill",
+      "image_name": "great_hornbill",
       "valid_locations": ["Western Ghats", "Himalayas"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -164,7 +164,7 @@
       "id": "b_003",
       "common_name": "Indian Peafowl",
       "scientific_name": "Pavo cristatus",
-      "image_name": "IndianPeafowl",
+      "image_name": "indian_peafowl",
       "valid_locations": ["Urban", "Dessert", "Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -218,7 +218,7 @@
       "id": "b_006",
       "common_name": "Oriental Magpie-Robin",
       "scientific_name": "Copsychus saularis",
-      "image_name": "OrientalMagpieRobin",
+      "image_name": "oriental_magpie_robin",
       "valid_locations": ["Urban", "Pune, India"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -272,7 +272,7 @@
       "id": "b_009",
       "common_name": "Sarus Crane",
       "scientific_name": "Antigone antigone",
-      "image_name": "SarusCrane",
+      "image_name": "sarus_crane",
       "valid_locations": ["Wetlands"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -307,7 +307,7 @@
       "id": "b_011",
       "common_name": "Asian Koel",
       "scientific_name": "Eudynamys scolopaceus",
-      "image_name": "AsianKoel",
+      "image_name": "asian_koel",
       "valid_locations": ["Urban", "Pune, India"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -360,7 +360,7 @@
       "id": "b_014",
       "common_name": "Great Indian Bustard",
       "scientific_name": "Ardeotis nigriceps",
-      "image_name": "GreatIndianBustard",
+      "image_name": "great_indian_bustard",
       "valid_locations": ["Dessert"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -378,7 +378,7 @@
       "id": "b_015",
       "common_name": "Asian Fairy Bluebird",
       "scientific_name": "Irena puella",
-      "image_name": "AsianFairyBluebird",
+      "image_name": "asian_fairy_bluebird",
       "valid_locations": ["Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -395,7 +395,7 @@
       "id": "b_016",
       "common_name": "Brown-headed Barbet",
       "scientific_name": "Psilopogon zeylanicus",
-      "image_name": "BrownHeadedBarbet",
+      "image_name": "brown_headed_barbet",
       "valid_locations": ["Urban"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {
@@ -413,7 +413,7 @@
       "id": "b_017",
       "common_name": "Greater Flameback",
       "scientific_name": "Chrysocolaptes guttacristatus",
-      "image_name": "GreaterFlameback",
+      "image_name": "greater_flameback",
       "valid_locations": ["Western Ghats"],
       "valid_months": [1,2,3,4,5,6,7,8,9,10,11,12],
       "attributes": {

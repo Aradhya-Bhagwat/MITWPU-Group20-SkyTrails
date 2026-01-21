@@ -11,7 +11,7 @@ class CategoryCell: UICollectionViewCell {
 	}
 	
 	func configure(name: String, iconName: String, isSelected: Bool) {
-		iconImageView.image = UIImage(named: iconName) ?? UIImage(named: "icn_field_marks")
+		iconImageView.image = UIImage(named: iconName) ?? UIImage(named: "id_icn_field_marks")
 
 	}
 	

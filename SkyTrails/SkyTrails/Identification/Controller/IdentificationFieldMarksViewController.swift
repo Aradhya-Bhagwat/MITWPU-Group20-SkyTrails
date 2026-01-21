@@ -74,10 +74,11 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     func cleanForFilename(_ name: String) -> String {
         // Special mapping for Finches/Sparrows ID to Asset Prefix
         if name == "Passeridae_Fringillidae" {
-            return "Finch"
+            return "finch"
         }
         
         return name
+            .lowercased()
             .replacingOccurrences(of: " ", with: "_")
             .replacingOccurrences(of: "-", with: "_")
     }
@@ -92,7 +93,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         // 1. Load the Core Torso (Hollow Base)
         baseShapeLayer = UIImageView(frame: CanvasView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
-        baseShapeLayer.image = UIImage(named: "shape_\(shapeID)_base_Core")
+        baseShapeLayer.image = UIImage(named: "id_shape_\(shapeID)_base_core")
         // Item 5: Explicit and Safe Z-Ordering
         baseShapeLayer.layer.zPosition = -1
         CanvasView.addSubview(baseShapeLayer)
@@ -123,12 +124,12 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         let cleanCategory = cleanForFilename(category)
         
         // FUTURE: When colored assets are available, use this naming scheme:
-        // Default: "canvas_Finch_Beak_Default"
+        // Default: "id_canvas_finch_beak_default"
         // Selected: "canvas_Finch_Beak_Default_color"
         //
         // Current behavior: Always load the default asset to prevent empty layers.
         
-        let baseName = "canvas_\(shapeID)_\(cleanCategory)_Default"
+        let baseName = "id_canvas_\(shapeID)_\(cleanCategory)_default"
         // let targetSuffix = isSelected ? "_color" : "" // Restore this when assets exist
         
         print("IdentificationFieldMarksViewController: Attempting to load image named: \(baseName)")

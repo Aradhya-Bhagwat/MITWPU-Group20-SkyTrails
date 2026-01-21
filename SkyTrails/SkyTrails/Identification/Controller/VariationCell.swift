@@ -11,7 +11,7 @@ class VariationCell: UICollectionViewCell {
 			return
 		}
 		
-		imageView.image = image ?? UIImage(named: "icn_field_marks")
+		imageView.image = image ?? UIImage(named: "id_icn_field_marks")
 		
 			
 		variationImageView.contentMode = .scaleAspectFit
