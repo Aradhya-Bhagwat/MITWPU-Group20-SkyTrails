@@ -367,4 +367,12 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
             manager.requestLocation()
         }
     }
+  
+
+}
+extension DateandLocationViewController: IdentificationProgressUpdatable {
+    func updateProgress(current: Int, total: Int) {
+        let progress = Float(current) / Float(total)
+        progressView.setProgress(progress, animated: true)
+    }
 }

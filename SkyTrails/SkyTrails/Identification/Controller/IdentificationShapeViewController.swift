@@ -51,21 +51,40 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
             selectedShapeIndex = index
         }
     }
-    
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
-        
+
         layout.minimumInteritemSpacing = 12
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
-        
-        let itemWidth = (shapeCollectionView.bounds.width - 36) / 2
 
-        
-        layout.itemSize = CGSize(width: itemWidth, height: 180)
-        
         shapeCollectionView.collectionViewLayout = layout
     }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+
+        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
+            return .zero
+        }
+
+        let itemsPerRow: CGFloat =
+            UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2
+
+        let totalSpacing =
+            layout.sectionInset.left +
+            layout.sectionInset.right +
+            layout.minimumInteritemSpacing * (itemsPerRow - 1)
+
+        let width =
+            (collectionView.bounds.width - totalSpacing) / itemsPerRow
+
+        return CGSize(width: width, height: 180)
+    }
+
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredShapes.count
