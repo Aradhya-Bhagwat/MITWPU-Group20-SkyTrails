@@ -207,7 +207,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yT2-5a-I87" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2192.5373134328356" y="-242.33409610983981"/>
+            <point key="canvasLocation" x="2124" y="-251"/>
         </scene>
         <!--Select the shape of the bird-->
         <scene sceneID="fLO-kk-N5A">
@@ -530,7 +530,11 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select 5 field marks to use" id="JGR-Vv-OcD">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf"/>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="VQY-US-wzf">
+                            <connections>
+                                <action selector="nextTapped:" destination="qmL-5v-0nM" id="QeP-kp-ZB6"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="CanvasView" destination="f55-ih-Vav" id="Ayd-s8-V7u"/>
@@ -608,6 +612,25 @@
                                     <constraint firstAttribute="trailing" secondItem="pqE-CW-yjS" secondAttribute="trailing" constant="8" id="Gbz-0r-BCq"/>
                                     <constraint firstItem="pqE-CW-yjS" firstAttribute="leading" secondItem="DRg-5F-1xg" secondAttribute="leading" constant="8" id="gq0-CQ-gmf"/>
                                 </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="16"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="size" keyPath="layer.shadowOffset">
+                                        <size key="value" width="0.0" height="2"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.shadowOpacity">
+                                        <real key="value" value="0.10000000000000001"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="layer.shadowColor">
+                                        <color key="value" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.shadowRadius">
+                                        <integer key="value" value="8"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds " value="NO"/>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
+                                </userDefinedRuntimeAttributes>
                             </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="F0A-t2-UOF"/>
@@ -623,7 +646,11 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Enter Date and Location" id="v4m-cf-cKV">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="39r-KO-tOE"/>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="39r-KO-tOE">
+                            <connections>
+                                <action selector="nextTapped:" destination="sFd-Fo-NuK" id="v8u-oi-AGK"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="dateandlocationTableView" destination="pqE-CW-yjS" id="9KS-oM-i4z"/>
@@ -644,14 +671,14 @@
                         <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <navigationBarAppearance key="standardAppearance">
-                            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <color key="shadowColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <textAttributes key="titleTextAttributes">
                                 <color key="textColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </textAttributes>
                         </navigationBarAppearance>
                         <navigationBarAppearance key="scrollEdgeAppearance">
-                            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <color key="shadowColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         </navigationBarAppearance>
                     </navigationBar>
@@ -872,6 +899,13 @@
                             <constraint firstItem="2bk-ez-Yin" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" id="joa-Un-pdb"/>
                         </constraints>
                     </view>
+                    <navigationItem key="navigationItem" id="TWe-qy-Kg6">
+                        <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="xz6-lB-Oqw">
+                            <connections>
+                                <action selector="nextTapped:" destination="bmL-6W-mcd" id="sTE-w2-3dz"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="canvasContainerView" destination="Cww-ay-CWI" id="J4K-5r-lbp"/>
                         <outlet property="categoriesCollectionView" destination="O4L-s3-kva" id="bGV-ga-peH"/>

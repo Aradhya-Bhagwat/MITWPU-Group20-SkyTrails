@@ -180,11 +180,12 @@ class MapViewController: UIViewController {
     }
 
 
-    @objc private func nextTapped() {
+    @IBAction func nextTapped(_ sender: Any) {
         guard let name = selectedLocationName, let coord = selectedCoordinate else { return }
         delegate?.didSelectMapLocation(name: name, lat: coord.latitude, lon: coord.longitude)
         navigationController?.popViewController(animated: true)
     }
+    
 }
 
 

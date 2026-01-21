@@ -40,7 +40,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         super.viewDidLoad()
         setupUI()
         setupCanvas()
-        setupRightTickButton()
+       
     }
     
     // Item 4: Canvas Layout Lifecycle Fix
@@ -217,21 +217,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         return 15
     }
     
-    // MARK: - Navigation & Alerts
-    
-    private func setupRightTickButton() {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20
-        button.layer.masksToBounds = true
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-        button.tintColor = .black
-        
-        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
+
     
     private func showMaxLimitAlert() {
         let alert = UIAlertController(
@@ -243,7 +229,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         present(alert, animated: true)
     }
     
-    @objc private func nextTapped() {
+    @IBAction func nextTapped(_ sender: Any) {
         let selectedNames = selectedFieldMarks.map { viewModel.chooseFieldMarks[$0].name }
         viewModel.data.fieldMarks = selectedNames
         
@@ -259,7 +245,10 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         )
         
         delegate?.didFinishStep()
+    
     }
+ 
+       
 }
 
 extension IdentificationFieldMarksViewController: IdentificationProgressUpdatable {
