@@ -47,7 +47,7 @@ class GUIViewController: UIViewController {
 		
 		loadData()
 		setupCanvas()
-		setupRightTickButton()
+		
 		
 		if !categories.isEmpty {
 			selectCategory(at: 0)
@@ -138,22 +138,7 @@ class GUIViewController: UIViewController {
             }
         }
     }
-	private func setupRightTickButton() {
-		let button = UIButton(type: .system)
-		button.backgroundColor = .white
-		button.layer.cornerRadius = 20
-		button.layer.masksToBounds = true
-		let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-		button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-		button.tintColor = .black
-		
-		button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-		button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-		navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-	}
-	
-		
-	
+
 	func cleanForFilename(_ name: String) -> String {
         if name == "Passeridae_Fringillidae" {
             return "finch"
@@ -175,28 +160,7 @@ class GUIViewController: UIViewController {
 		categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
 	}
 	
-//	func updateCanvas(category: String, variant: String) {
-//		let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-//		let cleanCategory = cleanForFilename(category)
-//		let cleanVariant = cleanForFilename(variant)
-//		
-//		let imageName = "canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
-//		
-//			// Debug print to help you find missing images
-//		print("🎨 Loading Canvas Image: \(imageName)")
-//		
-//		if let layer = partLayers[category] {
-//			if let image = UIImage(named: imageName) {
-//				layer.image = image
-//			} else {
-//				print("⚠️ Image not found: \(imageName)")
-//			}
-//		}
-//        if category == "Neck" {
-//                applyNeckOffset(variant: variant)
-//            }
-//	}
-//
+
     func updateCanvas(category: String, variant: String) {
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
         let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(category))_\(cleanForFilename(variant))"
@@ -249,22 +213,22 @@ class GUIViewController: UIViewController {
 		return []
 	}
 	
-	@objc private func nextTapped() {
-		var marks: [FieldMarkData] = []
-		for (area, variant) in selectedVariations {
-				// Note: Colors are empty for now as per your prototype scope
-			marks.append(FieldMarkData(area: area, variant: variant, colors: []))
-		}
-		
-		viewModel.filterBirds(
-			shape: viewModel.selectedShapeId,
-			size: viewModel.selectedSizeCategory,
-			location: viewModel.selectedLocation,
-			fieldMarks: marks
-		)
-		
-		delegate?.didFinishStep()
-	}
+    @IBAction func nextTapped(_ sender: Any) {
+        var marks: [FieldMarkData] = []
+        for (area, variant) in selectedVariations {
+                // Note: Colors are empty for now as per your prototype scope
+            marks.append(FieldMarkData(area: area, variant: variant, colors: []))
+        }
+        
+        viewModel.filterBirds(
+            shape: viewModel.selectedShapeId,
+            size: viewModel.selectedSizeCategory,
+            location: viewModel.selectedLocation,
+            fieldMarks: marks
+        )
+        
+        delegate?.didFinishStep()
+    }
 }
 
 	

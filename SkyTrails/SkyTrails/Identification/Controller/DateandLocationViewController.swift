@@ -29,7 +29,7 @@ class DateandLocationViewController: UIViewController {
         setupTableView()
         setupCompleter()
         setupLocationServices()
-        setupRightTickButton()
+ 
         // Pre-fill query if we already have a location selected
         if let currentLoc = viewModel.selectedLocation {
             searchQuery = currentLoc
@@ -39,14 +39,6 @@ class DateandLocationViewController: UIViewController {
     private func setupUI() {
         navigationItem.largeTitleDisplayMode = .never
         navigationController?.navigationBar.prefersLargeTitles = false
-        
-        tableContainerView.backgroundColor = .white
-        tableContainerView.layer.cornerRadius = 12
-        tableContainerView.layer.shadowColor = UIColor.black.cgColor
-        tableContainerView.layer.shadowOpacity = 0.1
-        tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        tableContainerView.layer.shadowRadius = 8
-        tableContainerView.layer.masksToBounds = false
     }
     
     private func setupTableView() {
@@ -63,21 +55,8 @@ class DateandLocationViewController: UIViewController {
     private func setupCompleter() {
         completer.delegate = self
     }
-    private func setupRightTickButton() {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20
-        button.layer.masksToBounds = true
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-        button.tintColor = .black
-        
-        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
-
-    @objc private func nextTapped() {
+   
+    @IBAction func nextTapped(_ sender: Any) {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd MMM yyyy"
         let formattedDate = formatter.string(from: selectedDate ?? Date())
@@ -94,6 +73,8 @@ class DateandLocationViewController: UIViewController {
         
         delegate?.didFinishStep()
     }
+    
+  
     
     private func updateLocationSelection(_ name: String) {
  
