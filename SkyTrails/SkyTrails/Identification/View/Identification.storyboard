@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEF-mB-p5A">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEF-mB-p5A">
     <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
@@ -761,7 +761,16 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Result" id="Xf1-Qj-PXh">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="Il5-6w-bMv"/>
+                        <barButtonItem key="leftBarButtonItem" title="Item" image="arrow.trianglehead.counterclockwise" catalog="system" id="aiH-G7-PuJ">
+                            <connections>
+                                <action selector="restartTapped:" destination="OBK-yW-fvY" id="Edz-OL-JiC"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="Il5-6w-bMv">
+                            <connections>
+                                <action selector="nextTapped:" destination="OBK-yW-fvY" id="7by-f3-npd"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="resultCollectionView" destination="zS5-1S-4tV" id="bVY-YN-a8a"/>
@@ -867,6 +876,7 @@
         </scene>
     </scenes>
     <resources>
+        <image name="arrow.trianglehead.counterclockwise" catalog="system" width="119" height="128"/>
         <image name="checkmark" catalog="system" width="128" height="114"/>
         <image name="chevron.left" catalog="system" width="97" height="128"/>
         <image name="info.circle" catalog="system" width="128" height="123"/>

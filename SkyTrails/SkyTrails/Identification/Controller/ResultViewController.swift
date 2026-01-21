@@ -27,17 +27,12 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         
         setupCollectionViewLayout()
 
-        setupLeftResetButton()
-        setupRightTickButton()
-        
-
         viewModel.onResultsUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.resultCollectionView.reloadData()
             }
         }
         
-        // If editing history, pre-select the bird
         if let history = historyItem {
             if let match = viewModel.birdResults.first(where: { $0.commonName == history.specieName }) {
                 selectedResult = match
@@ -48,7 +43,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
                 viewModel.birdResults = [selectedResult!]
             }
         } else {
-            // If not editing history, run the filter once to ensure data is fresh
             viewModel.filterBirds(
                 shape: viewModel.selectedShapeId,
                 size: viewModel.selectedSizeCategory,
@@ -56,8 +50,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
                 fieldMarks: viewModel.selectedFieldMarks
             )
         }
-        
-        // Restore selection if exists
+
         if let result = selectedResult,
            let index = viewModel.birdResults.firstIndex(where: { $0.id == result.id }) {
             selectedIndexPath = IndexPath(item: index, section: 0)
@@ -78,36 +71,8 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         resultCollectionView.collectionViewLayout = layout
     }
     
-  
-    
-    private func setupRightTickButton() {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20
-        button.layer.masksToBounds = true
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-       button.tintColor = .black
-        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
-    
-    private func setupLeftResetButton() {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 20
-        button.layer.masksToBounds = true
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        let image = UIImage(systemName: "arrow.trianglehead.counterclockwise", withConfiguration: config)
-        button.setImage(image, for: .normal)
-        button.tintColor = .black
-        button.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
-        button.addTarget(self, action: #selector(restartTapped), for: .touchUpInside)
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: button)
-    }
-    
-    @objc private func nextTapped() {
+
+    @IBAction func nextTapped(_ sender: Any) {
         let birdToSave = selectedResult ?? viewModel.birdResults.first
         
         guard let result = birdToSave else {
@@ -132,8 +97,8 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         navigationController?.popToRootViewController(animated: true)
         delegate?.didFinishStep()
     }
-    
-    @objc private func restartTapped() {
+  
+    @IBAction func restartTapped(_ sender: Any) {
         delegate?.didTapLeftButton()
     }
     
@@ -143,7 +108,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         return f.string(from: Date())
     }
     
-    // MARK: - UICollectionViewDataSource 
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return viewModel.birdResults.count
@@ -161,14 +125,20 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             name: result.commonName,
             percentage: percentString
         )
-        
-        // Selection state
+
         if selectedIndexPath == indexPath {
             cell.isSelectedCell = true
-          //  cell.setSelected(true)
+            cell.contentView.layer.borderWidth = 3
+            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            cell.contentView.layer.cornerRadius = 12
+            cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
         } else {
             cell.isSelectedCell = false
-            //cell.setSelected(false)
+            cell.contentView.layer.borderWidth = 1
+            cell.contentView.layer.borderColor = UIColor.systemGray4.cgColor
+            cell.contentView.layer.cornerRadius = 12
+            cell.contentView.backgroundColor = .white
+            
         }
         
         cell.delegate = self
