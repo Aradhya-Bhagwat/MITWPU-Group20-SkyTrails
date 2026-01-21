@@ -31,18 +31,16 @@ class GridSpotsToVisitCollectionViewCell: UICollectionViewCell {
         contentView.layer.shadowColor = UIColor.black.cgColor
         contentView.layer.shadowOpacity = 0.15
         contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        contentView.layer.shadowRadius = 8 
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        contentView.layer.shadowRadius = 8  
         
-        // Round Corners
         self.layer.cornerRadius = 12
         
         locationImage.contentMode = .scaleAspectFill
         locationImage.clipsToBounds = true
         locationImage.layer.cornerRadius = 12
         
-         containerView.backgroundColor = .systemBackground
-         containerView.layer.cornerRadius = 12
+        containerView.backgroundColor = .systemBackground
+        containerView.layer.cornerRadius = 12
         
         titleLabel.numberOfLines = 1
         titleLabel.textColor = .label

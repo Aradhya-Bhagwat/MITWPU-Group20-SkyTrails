@@ -51,7 +51,7 @@ class birdspredViewController: UIViewController {
         let addIcon = UIImage(systemName: "plus.circle.fill")
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: addIcon, style: .plain, target: self, action: #selector(didTapAddToWatchlist))
         
-        pillView.backgroundColor = .clear
+        
         let pillBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
         pillBlur.frame = pillView.bounds
         pillBlur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -59,6 +59,7 @@ class birdspredViewController: UIViewController {
         pillBlur.layer.masksToBounds = true
         pillBlur.isUserInteractionEnabled = false
         
+        pillView.backgroundColor = .clear
         pillView.insertSubview(pillBlur, at: 0)
         pillView.layer.shadowColor = UIColor.black.cgColor
         pillView.layer.shadowOpacity = 0.2
@@ -160,7 +161,8 @@ class birdspredViewController: UIViewController {
         
         if coordinates.count > 1 {
             let polyline = PredictedPathPolyline(coordinates: coordinates, count: coordinates.count)
-                    mapView.addOverlay(polyline)        }
+            mapView.addOverlay(polyline)
+        }
         
         if !coordinates.isEmpty {
             var zoomRect = MKMapRect.null

@@ -18,8 +18,6 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		setupStyle()
-    
-        
 	}
 	
     private func setupStyle() {
@@ -27,9 +25,9 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
             sectionTitle.textColor = .label
             sectionTitle.font = UIFont.systemFont(ofSize: 20, weight: .bold)
             
-
             let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
             let image = UIImage(systemName: "chevron.right", withConfiguration: config)
+        
             chevronButton.setImage(image, for: .normal)
             chevronButton.tintColor = .label
         }
@@ -37,14 +35,10 @@ class SectionHeaderCollectionReusableView: UICollectionReusableView {
     func configure(title: String, tapAction: (() -> Void)? = nil) {
             sectionTitle.text = title
             onChevronTap = tapAction
-            
-
             chevronButton.isHidden = (tapAction == nil)
         }
         
-
-        @IBAction func didTapChevron(_ sender: Any) {
-
+    @IBAction func didTapChevron(_ sender: Any) {
             onChevronTap?()
         }
 }

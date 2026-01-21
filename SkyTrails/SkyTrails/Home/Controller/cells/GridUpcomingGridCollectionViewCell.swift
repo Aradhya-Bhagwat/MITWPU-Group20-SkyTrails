@@ -24,6 +24,7 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
     private func setupStyle() {
         
         self.backgroundColor = .clear
+        self.layer.cornerRadius = 12
         
         contentView.backgroundColor = .clear
         contentView.layer.cornerRadius = 16
@@ -32,9 +33,6 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         contentView.layer.shadowOpacity = 0.15
         contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
         contentView.layer.shadowRadius = 8
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
-        
-        self.layer.cornerRadius = 12
         
         birImage.contentMode = .scaleAspectFill
         birImage.clipsToBounds = true

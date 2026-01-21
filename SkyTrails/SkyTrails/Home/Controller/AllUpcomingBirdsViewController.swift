@@ -152,7 +152,6 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
         }
 
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-        
         cell.configure(with: item)
         
         return cell

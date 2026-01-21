@@ -16,65 +16,61 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
     static let identifier = "newMigrationCollectionViewCell"
 
     @IBOutlet weak var cardContainerView: UIView!
-        @IBOutlet weak var birdImageView: UIImageView!
-        @IBOutlet weak var birdNameLabel: UILabel!
-        @IBOutlet weak var startLocationLabel: UILabel!
-        @IBOutlet weak var endLocationLabel: UILabel!
-        @IBOutlet weak var startDateLabel: UILabel!
-        @IBOutlet weak var endDateLabel: UILabel!
+    @IBOutlet weak var birdImageView: UIImageView!
+    @IBOutlet weak var birdNameLabel: UILabel!
+    @IBOutlet weak var startLocationLabel: UILabel!
+    @IBOutlet weak var endLocationLabel: UILabel!
+    @IBOutlet weak var startDateLabel: UILabel!
+    @IBOutlet weak var endDateLabel: UILabel!
     @IBOutlet weak var mapView: MKMapView!
-       @IBOutlet weak var overlayContentView1: UIView!
+    @IBOutlet weak var overlayContentView1: UIView!
     @IBOutlet weak var progressView: CurvedProgressView!
-    
     @IBOutlet weak var PlaceName: UILabel!
-        @IBOutlet weak var NoSpecies: UILabel!
-        @IBOutlet weak var Distance: UILabel!
-        @IBOutlet weak var DateLabel: UILabel!
-        @IBOutlet weak var PlaceImage: UIImageView!
+    @IBOutlet weak var NoSpecies: UILabel!
+    @IBOutlet weak var Distance: UILabel!
+    @IBOutlet weak var DateLabel: UILabel!
+    @IBOutlet weak var PlaceImage: UIImageView!
     @IBOutlet weak var overlayContentView2: UIView!
+    
+    struct num {
+        let cornerRadius = 16
+    }
     
     override func awakeFromNib() {
         super.awakeFromNib()
         setupUI()
-        // Initialization code
     }
+    
     private func setupUI() {
-            contentView.backgroundColor = .clear
+        contentView.backgroundColor = .clear
             
-            // Combined Stylings
-            cardContainerView?.layer.cornerRadius = 16
-            cardContainerView?.layer.masksToBounds = true
-            
-            layer.shadowColor = UIColor.black.cgColor
-            layer.shadowOpacity = 0.1
-            layer.shadowOffset = CGSize(width: 0, height: 4)
-            layer.shadowRadius = 8
-            layer.masksToBounds = false
-            
-            // Image Stylings
-            [birdImageView, PlaceImage].forEach { imgView in
-                imgView?.layer.cornerRadius = 8
-                imgView?.layer.masksToBounds = true
-                imgView?.contentMode = .scaleAspectFill
-                imgView?.clipsToBounds = true
-            }
-            
-            // Map Placeholder Styling
-            mapView?.layer.cornerRadius = 12
-            mapView?.layer.masksToBounds = true
-            mapView?.isZoomEnabled = false
-            mapView?.isScrollEnabled = false
-            // Note: Delegate will be set when you implement the map logic later
+        cardContainerView?.layer.cornerRadius = 16
+        cardContainerView?.layer.masksToBounds = true
+        
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOpacity = 0.1
+        layer.shadowOffset = CGSize(width: 0, height: 4)
+        layer.shadowRadius = 8
+        layer.masksToBounds = false
+        
+        [birdImageView, PlaceImage].forEach { imgView in
+            imgView?.layer.cornerRadius = 8
+            imgView?.layer.masksToBounds = true
+            imgView?.contentMode = .scaleAspectFill
+            imgView?.clipsToBounds = true
         }
-
-        // MARK: - Dynamic Font Scaling
+            
+        mapView?.layer.cornerRadius = 12
+        mapView?.layer.masksToBounds = true
+        mapView?.isZoomEnabled = false
+        mapView?.isScrollEnabled = false
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
-        
         let currentWidth = self.bounds.width
         
-    
         if currentWidth < 500 {
             if !mapView.isHidden { mapView.isHidden = true
                 zoomToFitPins(mapView.annotations)}
@@ -83,7 +79,6 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             }
         
         let baseWidth: CGFloat = 390.0
-        // --- Rest of your Font Scaling Logic remains exactly the same ---
         let titleRatio: CGFloat = 20.0 / baseWidth
         let calculatedTitleSize = min(currentWidth * titleRatio, 30.0)
         let titleFont = UIFont.systemFont(ofSize: calculatedTitleSize, weight: .semibold)
@@ -100,6 +95,7 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             label?.font = detailFont
         }
     }
+    
         override func prepareForReuse() {
             super.prepareForReuse()
             birdImageView.image = nil
@@ -107,13 +103,11 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             birdNameLabel.text = nil
             PlaceName.text = nil
             progressView.progress = 0
-            // Clean map markers without complex logic
             mapView.removeAnnotations(mapView.annotations)
             mapView.removeOverlays(mapView.overlays)
         }
 
         func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
-            // 1. Set Migration UI
             birdNameLabel.text = migration.birdName
             birdImageView.image = UIImage(named: migration.birdImageName)
             startLocationLabel.text = migration.startLocation
@@ -129,19 +123,17 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
                     break
                 }
             }
+            
             if dateComponents.count >= 2 {
                 startDateLabel.text = dateComponents[0]
                 endDateLabel.text = dateComponents[1]
             }
             
-            // 2. Set Hotspot UI
             PlaceName.text = hotspot.placeName
             NoSpecies.text = "\(hotspot.speciesCount) Species spotted"
             Distance.text = hotspot.distanceString
             DateLabel.text = hotspot.dateRange
             PlaceImage.image = UIImage(named: hotspot.placeImageName)
-            
-            // 3. Simple Map Centering (No overlays/pins)
             mapView.removeOverlays(mapView.overlays)
             mapView.removeAnnotations(mapView.annotations)
             setupMap(migration: migration, hotspot: hotspot)
@@ -155,7 +147,6 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         let coords = migration.pathCoordinates
         guard !coords.isEmpty else { return }
 
-        // 1. Draw the Overlays (Predicted and Progress Paths)
         let predictedPath = PredictedPathPolyline(coordinates: coords, count: coords.count)
         mapView.addOverlay(predictedPath)
 
@@ -163,7 +154,6 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         let progressPath = ProgressPathPolyline(coordinates: interpolation.progressCoords, count: interpolation.progressCoords.count)
         mapView.addOverlay(progressPath)
 
-        // 2. Add START PIN (This was missing)
         if let startCoord = coords.first {
             let startPin = MKPointAnnotation()
             startPin.coordinate = startCoord
@@ -171,13 +161,11 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             mapView.addAnnotation(startPin)
         }
 
-        // 3. Add CURRENT POSITION Marker
         let currentPos = CurrentLocationAnnotation()
         currentPos.coordinate = interpolation.currentCoord
         currentPos.title = "Current Position"
         mapView.addAnnotation(currentPos)
 
-        // 4. Add DESTINATION Pin
         if let destination = coords.last {
             let endPin = MKPointAnnotation()
             endPin.coordinate = destination
@@ -185,7 +173,6 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             mapView.addAnnotation(endPin)
         }
 
-        // 5. Add HOTSPOT Bird Pins
         for birdSpot in hotspot.hotspots {
             let annotation = HotspotBirdAnnotation()
             annotation.coordinate = birdSpot.coordinate
@@ -198,26 +185,22 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
 
     private func zoomToFitPins(_ annotations: [MKAnnotation]) {
         var zoomRect = MKMapRect.null
-
-        // 1. Include all Annotations in the calculation
         for annotation in annotations {
             let point = MKMapPoint(annotation.coordinate)
             let rect = MKMapRect(x: point.x, y: point.y, width: 0.001, height: 0.001)
             zoomRect = zoomRect.union(rect)
         }
 
-        // 2. Include all Overlays (the flight paths) in the calculation
         for overlay in mapView.overlays {
             zoomRect = zoomRect.union(overlay.boundingMapRect)
         }
 
         if !zoomRect.isNull {
-            // 💡 Use smaller padding for card-sized maps.
-            // 50 is often too big; 15-20 is safer for small views.
             let padding = UIEdgeInsets(top: 50, left: 50, bottom: 50, right: 50)
             mapView.setVisibleMapRect(zoomRect, edgePadding: padding, animated: false)
         }
     }
+    
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
@@ -259,7 +242,7 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
             annotationView?.displayPriority = .required
             annotationView?.markerTintColor = .systemTeal
             annotationView?.glyphImage = UIImage(systemName: "bird.fill")
-             return annotationView
+            return annotationView
         } else if let hotspotAnnotation = annotation as? HotspotBirdAnnotation {
              let identifier = "HotspotBirdPin"
              var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView

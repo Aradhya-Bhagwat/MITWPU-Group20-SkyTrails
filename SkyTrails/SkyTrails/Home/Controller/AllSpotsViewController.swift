@@ -11,7 +11,6 @@ class AllSpotsViewController: UIViewController {
     
     var watchlistData: [PopularSpot] = []
     var recommendationsData: [PopularSpot] = []
-    
     private var cachedItemSize: NSCollectionLayoutSize?
     
     @IBOutlet weak var collectionView: UICollectionView!
@@ -31,12 +30,9 @@ class AllSpotsViewController: UIViewController {
         }, completion: nil)
     }
     
-    
     private func setupCollectionView() {
 
         collectionView.collectionViewLayout = createLayout()
-        
-
         collectionView.register(
             UINib(nibName: GridSpotsToVisitCollectionViewCell.identifier, bundle: nil),
             forCellWithReuseIdentifier: GridSpotsToVisitCollectionViewCell.identifier
@@ -51,18 +47,16 @@ class AllSpotsViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
     }
+    
     private func setupNavigationBar() {
-
         let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
         self.navigationItem.rightBarButtonItem = predictButton
     }
         
     @objc private func didTapPredict() {
         self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
-
     }
     
-
     private func createLayout() -> UICollectionViewLayout {
         return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
             guard let self = self else { return nil }
@@ -111,7 +105,6 @@ class AllSpotsViewController: UIViewController {
                 widthDimension: .fractionalWidth(1.0),
                 heightDimension: .absolute(groupHeight)
             )
-            
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             let section = NSCollectionLayoutSection(group: group)
             section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
@@ -122,14 +115,12 @@ class AllSpotsViewController: UIViewController {
                 alignment: .top
             )
             section.boundarySupplementaryItems = [header]
-            
             return section
         }
     }
 }
 
     extension AllSpotsViewController: UICollectionViewDataSource {
-        
         func numberOfSections(in collectionView: UICollectionView) -> Int {
             return 2
         }
@@ -152,9 +143,7 @@ class AllSpotsViewController: UIViewController {
             }
 
             let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-            
             cell.configure(with: item)
-            
             return cell
         }
         
