@@ -1,0 +1,130 @@
+//
+//  HistoryCollectionViewCell.swift
+//  SkyTrails
+//
+//  Created by SDC-USER on 21/01/26.
+//
+
+import UIKit
+
+class HistoryCollectionViewCell: UICollectionViewCell {
+    @IBOutlet weak var historyImageView: UIImageView!
+    @IBOutlet weak var specieNameLabel: UILabel!
+    @IBOutlet weak var dateLabel: UILabel!
+    override func awakeFromNib() {
+        super.awakeFromNib()
+
+        // Card container
+        contentView.backgroundColor = .white
+        contentView.layer.cornerRadius = 14
+        contentView.layer.masksToBounds = true
+
+        // Shadow
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOpacity = 0.12
+        layer.shadowOffset = CGSize(width: 0, height: 4)
+        layer.shadowRadius = 10
+        layer.masksToBounds = false
+
+        // Image styling
+        historyImageView.layer.cornerRadius = 10
+        historyImageView.clipsToBounds = true
+        historyImageView.contentMode = .scaleAspectFill
+
+        // Labels styling
+        specieNameLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        specieNameLabel.textColor = .label
+        specieNameLabel.numberOfLines = 2
+
+        dateLabel.font = .systemFont(ofSize: 13, weight: .regular)
+        dateLabel.textColor = .secondaryLabel
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        historyImageView.image = nil
+        historyImageView.tintColor = nil
+        historyImageView.contentMode = .scaleAspectFill
+        historyImageView.layer.cornerRadius = 0
+
+        specieNameLabel.text = nil
+        specieNameLabel.textAlignment = .left
+        specieNameLabel.textColor = .label
+
+        dateLabel.text = nil
+        dateLabel.textAlignment = .left
+        dateLabel.textColor = .secondaryLabel
+
+        contentView.backgroundColor = .white
+        contentView.layer.borderWidth = 0
+        contentView.layer.borderColor = UIColor.clear.cgColor
+    }
+    func showEmptyState() {
+        historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
+        historyImageView.tintColor = .systemGray3
+        historyImageView.contentMode = .scaleAspectFit
+        historyImageView.layer.cornerRadius = 0
+
+        specieNameLabel.text = "No history yet"
+        specieNameLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        specieNameLabel.textAlignment = .center
+        specieNameLabel.textColor = .secondaryLabel
+
+        dateLabel.text = "Start identifying birds"
+        dateLabel.font = .systemFont(ofSize: 13)
+        dateLabel.textAlignment = .center
+        dateLabel.textColor = .tertiaryLabel
+
+        layer.shadowOpacity = 0
+    }
+
+    override var isSelected: Bool {
+        didSet {
+            UIView.animate(withDuration: 0.2) {
+                if self.isSelected {
+                    self.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.12)
+                    self.contentView.layer.borderWidth = 1.5
+                    self.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+                } else {
+                    self.contentView.backgroundColor = .white
+                    self.contentView.layer.borderWidth = 0
+                    self.contentView.layer.borderColor = UIColor.clear.cgColor
+                }
+            }
+        }
+    }
+
+    func configureCell(historyItem: History) {
+        historyImageView.image = UIImage(named: historyItem.imageView)
+
+        specieNameLabel.text = historyItem.specieName
+        dateLabel.text = formatDate(historyItem.date)
+    }
+
+
+        // MARK: - Date formatting
+        private func formatDate(_ dateString: String) -> String {
+
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateFormat = "d MMM"
+
+            if let date = formatter.date(from: dateString) {
+                return outputFormatter.string(from: date)
+            } else {
+                return dateString
+            }
+        }
+    }
+    
+
+
+
+
+   
+
+    
+

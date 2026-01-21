@@ -96,57 +96,20 @@
                                                     <constraint firstAttribute="width" secondItem="vFz-1I-rOM" secondAttribute="height" multiplier="370:287" id="FwB-yS-qvu"/>
                                                 </constraints>
                                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
-                                                    <size key="itemSize" width="361" height="192"/>
+                                                    <size key="itemSize" width="175" height="133"/>
                                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
                                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                                 </collectionViewFlowLayout>
                                                 <cells>
-                                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="history_cell" id="su4-SF-NbO" customClass="IdentificationHistoryCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
-                                                        <rect key="frame" x="4.666666666666667" y="0.0" width="361" height="192"/>
+                                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="history_cell" id="su4-SF-NbO" customClass="HistoryCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
+                                                        <rect key="frame" x="0.0" y="0.0" width="175" height="133"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="h4Z-VK-LhD">
-                                                            <rect key="frame" x="0.0" y="0.0" width="361" height="192"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="175" height="133"/>
                                                             <autoresizingMask key="autoresizingMask"/>
-                                                            <subviews>
-                                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="252" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vup-st-1ZR">
-                                                                    <rect key="frame" x="8" y="8" width="345" height="154"/>
-                                                                    <constraints>
-                                                                        <constraint firstAttribute="width" secondItem="vup-st-1ZR" secondAttribute="height" multiplier="4:3" id="bjy-TY-24M"/>
-                                                                    </constraints>
-                                                                </imageView>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="SpecieName" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="K1e-At-YzL">
-                                                                    <rect key="frame" x="8" y="170" width="345" height="0.0"/>
-                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                                    <nil key="textColor"/>
-                                                                    <nil key="highlightedColor"/>
-                                                                </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="749" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ifd-XM-1mF">
-                                                                    <rect key="frame" x="8" y="172" width="345" height="0.0"/>
-                                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                                    <color key="textColor" systemColor="secondaryLabelColor"/>
-                                                                    <nil key="highlightedColor"/>
-                                                                </label>
-                                                            </subviews>
-                                                            <constraints>
-                                                                <constraint firstItem="vup-st-1ZR" firstAttribute="leading" secondItem="h4Z-VK-LhD" secondAttribute="leading" constant="8" id="0Av-lq-lEt"/>
-                                                                <constraint firstAttribute="bottom" secondItem="Ifd-XM-1mF" secondAttribute="bottom" constant="20" id="5eu-j5-plb"/>
-                                                                <constraint firstAttribute="trailing" secondItem="vup-st-1ZR" secondAttribute="trailing" constant="8" id="D1N-1y-YCP"/>
-                                                                <constraint firstItem="K1e-At-YzL" firstAttribute="leading" secondItem="h4Z-VK-LhD" secondAttribute="leading" constant="8" id="XpM-5L-Qcg"/>
-                                                                <constraint firstAttribute="trailing" secondItem="Ifd-XM-1mF" secondAttribute="trailing" constant="8" id="cfg-Xd-9Gy"/>
-                                                                <constraint firstAttribute="trailing" secondItem="K1e-At-YzL" secondAttribute="trailing" constant="8" id="gb9-iK-2H6"/>
-                                                                <constraint firstItem="K1e-At-YzL" firstAttribute="top" secondItem="vup-st-1ZR" secondAttribute="bottom" constant="8" id="jPx-WB-bGA"/>
-                                                                <constraint firstItem="Ifd-XM-1mF" firstAttribute="top" secondItem="K1e-At-YzL" secondAttribute="bottom" constant="2" id="kpa-Ox-09K"/>
-                                                                <constraint firstItem="vup-st-1ZR" firstAttribute="top" secondItem="h4Z-VK-LhD" secondAttribute="top" constant="8" id="rBa-Cu-O47"/>
-                                                                <constraint firstItem="Ifd-XM-1mF" firstAttribute="leading" secondItem="h4Z-VK-LhD" secondAttribute="leading" constant="8" id="rQ3-z4-N4u"/>
-                                                            </constraints>
                                                         </collectionViewCellContentView>
-                                                        <size key="customSize" width="361" height="192"/>
-                                                        <connections>
-                                                            <outlet property="dateLabel" destination="Ifd-XM-1mF" id="GwE-eC-uAK"/>
-                                                            <outlet property="historyImageView" destination="vup-st-1ZR" id="UzS-vi-hNC"/>
-                                                            <outlet property="specieNameLabel" destination="K1e-At-YzL" id="IEm-9z-GYI"/>
-                                                        </connections>
+                                                        <size key="customSize" width="175" height="133"/>
                                                     </collectionViewCell>
                                                 </cells>
                                             </collectionView>
@@ -235,8 +198,8 @@
                     </view>
                     <navigationItem key="navigationItem" title="Identification" id="h4S-7J-WvE"/>
                     <connections>
-                        <outlet property="collectionView" destination="vFz-1I-rOM" id="Vi4-jj-4kl"/>
                         <outlet property="containerView" destination="sz8-14-rMC" id="dpZ-1y-dAK"/>
+                        <outlet property="historyCollectionView" destination="vFz-1I-rOM" id="Vi4-jj-4kl"/>
                         <outlet property="startButton" destination="FQA-lr-sA1" id="ObG-E6-yqv"/>
                         <outlet property="tableView" destination="6lX-AX-Dd8" id="4SF-by-AcE"/>
                         <outlet property="warningLabel" destination="juo-Tr-9OM" id="pGB-bF-fGt"/>
