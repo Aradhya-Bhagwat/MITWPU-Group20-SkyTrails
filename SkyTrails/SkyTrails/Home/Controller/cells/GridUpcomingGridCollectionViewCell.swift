@@ -57,12 +57,14 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         let titleRatio: CGFloat = 17.0 / 200.0
         let locationRatio: CGFloat = 12.0 / 200.0
         let calculatedTitleSize = currentWidth * titleRatio
+        let calculatedDateSize = currentWidth * locationRatio
+        
+        
         titleLabel.font = UIFont.systemFont(
             ofSize: min(calculatedTitleSize, 30.0),
             weight: .semibold
         )
         
-        let calculatedDateSize = currentWidth * locationRatio
         DateLabel.font = UIFont.systemFont(
             ofSize: min(calculatedDateSize, 18.0),
             weight: .regular
