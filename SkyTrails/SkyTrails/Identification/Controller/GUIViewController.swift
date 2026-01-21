@@ -28,7 +28,7 @@ class GUIViewController: UIViewController {
         "Thigh",
         "Head",
         "Neck",
-        "Back", "Belly", "Chest",
+        "Back", "Underparts",
         "Nape", "Throat", "Crown",
         "Facemask",
         "Beak", "Eye",
@@ -113,7 +113,7 @@ class GUIViewController: UIViewController {
             partLayers[catName] = imgView
 
             var imageName: String? = nil
-
+            
             if userSelectedCategories.contains(catName) {
                 if let selectedVariant = selectedVariations[catName] {
                     imageName = "id_canvas_\(shapeID)_\(cleanForFilename(catName))_\(cleanForFilename(selectedVariant))"

@@ -7,6 +7,8 @@
 
 import UIKit
 
+var signInEnabled = false
+
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 	var window: UIWindow?
@@ -18,10 +20,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: windowScene)
 
-        let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
-        let loginVC = storyboard.instantiateInitialViewController()!
+        if signInEnabled {
+            let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
+            let loginVC = storyboard.instantiateInitialViewController()!
+            window.rootViewController = loginVC
+        } else {
+            let mainVC = RootTabBarController()
+            window.rootViewController = mainVC
+        }
 
-        window.rootViewController = loginVC
         self.window = window
         window.makeKeyAndVisible()
     }
