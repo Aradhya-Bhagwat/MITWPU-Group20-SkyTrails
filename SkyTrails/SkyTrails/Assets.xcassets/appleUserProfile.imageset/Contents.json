@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "appleUserProfile.svg",
+      "filename" : "person1.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "appleUserProfile 1.svg",
+      "filename" : "person1 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "appleUserProfile 2.svg",
+      "filename" : "person1 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
