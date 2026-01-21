@@ -21,16 +21,12 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     @IBOutlet weak var warningLabel: UILabel!
     var model: IdentificationManager = IdentificationManager()
     
-    
-    // var history: [History] = []
-    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        applyCardShadow(to: startButton)
-        //        startButton.layer.shadowPath = UIBezierPath(roundedRect: startButton.bounds, cornerRadius: 12).cgPath
+      applyCardShadow(to: startButton)
+
     }
-    // In IdentificationViewController.swift
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -44,8 +40,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        styleTableContainer()
+   
         navigationController?.delegate = self  
         tableView.delegate = self
         tableView.dataSource = self
@@ -62,15 +57,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     }
     
     
-    func styleTableContainer() {
-        containerView.layer.cornerRadius = 12
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOpacity = 0.1
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
-        containerView.layer.masksToBounds = false
-        
-    }
     func updateSelectionState() {
         let selectedCount = model.fieldMarkOptions.filter { $0.isSelected ?? false }.count
         let isValid = selectedCount >= 2
@@ -147,13 +133,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     
     func applyCardShadow(to view: UIView) {
-        view.layer.cornerRadius = 12
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.1
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 8
-        view.layer.masksToBounds = false
-        view.layer.backgroundColor = UIColor.white.cgColor
+
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return model.fieldMarkOptions.count
