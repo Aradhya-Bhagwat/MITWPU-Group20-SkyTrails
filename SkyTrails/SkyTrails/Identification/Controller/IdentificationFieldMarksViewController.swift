@@ -29,7 +29,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         "Thigh",
         "Head",
         "Neck",
-        "Back", "Belly", "Chest",
+        "Back", "Underparts",
         "Nape", "Throat", "Crown",
         "Facemask",
         "Beak", "Eye",
