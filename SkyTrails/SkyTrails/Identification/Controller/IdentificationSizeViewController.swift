@@ -28,7 +28,7 @@ class IdentificationSizeViewController: UIViewController {
         super.viewDidLoad()
         birdSlider.minimumValue = 0
         birdSlider.maximumValue = 4
-        birdSlider.isContinuous = true
+        birdSlider.isContinuous = false
         viewModel.selectedSizeCategory = 0
         updateBirdDisplay(for: 0)
      
@@ -41,6 +41,8 @@ class IdentificationSizeViewController: UIViewController {
         updateBirdDisplay(for: steppedValue)
         viewModel.selectedSizeCategory = steppedValue
     }
+
+
  
     func sizeImageNames(for index: Int) -> (small: String, large: String) {
         switch index {
@@ -150,8 +152,10 @@ class IdentificationSizeViewController: UIViewController {
     
     @IBAction func checkmarkButtonTapped(_ sender: UIBarButtonItem) {
 
-        viewModel.selectedSizeCategory = Int(round(birdSlider.value))
-        
+        let selectedIndex = Int(round(birdSlider.value))
+        viewModel.selectedSizeCategory = selectedIndex
+        viewModel.selectedSizeRange = viewModel.sizeRange(for: selectedIndex)
+
  
         viewModel.filterBirds(
             shape: viewModel.selectedShapeId,

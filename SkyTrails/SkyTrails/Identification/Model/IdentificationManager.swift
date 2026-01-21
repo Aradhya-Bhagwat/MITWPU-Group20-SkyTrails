@@ -14,6 +14,8 @@ class IdentificationManager {
     var fieldMarkOptions: [FieldMarkType] = []
     var birdShapes: [BirdShape] = []
     var chooseFieldMarks: [ChooseFieldMark] = []
+    var selectedSizeRange: [Int] = []
+
     
     
     var data = IdentificationData()
@@ -71,13 +73,16 @@ class IdentificationManager {
 
         if let shape = shape { self.selectedShapeId = shape }
         if let size = size { self.selectedSizeCategory = size }
+        if let size = size {
+            self.selectedSizeRange = sizeRange(for: size)
+        }
+
         if let location = location { self.selectedLocation = location }
         if let fieldMarks = fieldMarks, !fieldMarks.isEmpty {
             self.selectedFieldMarks = fieldMarks
         }
 
         let currentShape = self.selectedShapeId
-        let currentSize = self.selectedSizeCategory
         let currentLocation = self.selectedLocation
         let currentFieldMarks = self.selectedFieldMarks
 
@@ -122,22 +127,24 @@ class IdentificationManager {
                 breakdownParts.append("Shape Match (+30)")
             }
 
-            // D. Size
-            if let userSize = currentSize,
-               let birdSize = bird.sizeCategory {
+            if let birdSize = bird.sizeCategory {
 
-                let diff = abs(birdSize - userSize)
-                if diff == 0 {
-                    score += 20
-                    breakdownParts.append("Size Match (+20)")
-                } else if diff == 1 {
-                    score += 10
-                    breakdownParts.append("Size Approx (+10)")
+                if selectedSizeRange.contains(birdSize) {
+
+                    if birdSize == selectedSizeCategory {
+                        score += 20
+                        breakdownParts.append("Size Match (+20)")
+                    } else {
+                        score += 10
+                        breakdownParts.append("Size Approx (+10)")
+                    }
+
                 } else {
                     score -= 20
                     breakdownParts.append("Size Mismatch (-20)")
                 }
             }
+
 
             // E. Field Marks
             if !currentFieldMarks.isEmpty {
@@ -188,24 +195,23 @@ class IdentificationManager {
         }
 
         }
-        func availableShapesForSelectedSize() -> [BirdShape] {
-            guard let size = selectedSizeCategory,
-                  let birds = masterDatabase?.birds else {
-                return birdShapes
-            }
-            
-            let validShapeIds: Set<String> = Set(
-                birds.compactMap { bird in
-                    guard bird.sizeCategory == size else { return nil }
-                    return bird.shapeId
-                }
-            )
-
-
-            
-            return birdShapes.filter { validShapeIds.contains($0.id) }
+    func availableShapesForSelectedSize() -> [BirdShape] {
+        guard !selectedSizeRange.isEmpty,
+              let birds = masterDatabase?.birds else {
+            return birdShapes
         }
-        
+
+        let validShapeIds: Set<String> = Set(
+            birds.compactMap { bird in
+                guard let birdSize = bird.sizeCategory,
+                      selectedSizeRange.contains(birdSize) else { return nil }
+                return bird.shapeId
+            }
+        )
+
+        return birdShapes.filter { validShapeIds.contains($0.id) }
+    }
+
         var referenceFieldMarks: [ReferenceFieldMark] {
             return masterDatabase?.referenceData.fieldMarks ?? []
         }
@@ -287,7 +293,12 @@ class IdentificationManager {
         }
         
         
-        
+    func sizeRange(for index: Int) -> [Int] {
+        let minIndex = max(0, index - 1)
+        let maxIndex = min(4, index + 1)
+        return Array(minIndex...maxIndex)
+    }
+
         func saveHistory() {
             let url = getDocumentsDirectory().appendingPathComponent("history.json")
             

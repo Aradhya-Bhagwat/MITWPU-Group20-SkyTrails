@@ -59,17 +59,38 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 12
+
         layout.minimumInteritemSpacing = 12
-        layout.sectionInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-        
-      
-        let spacing: CGFloat = 12 + 8 + 8
-        let itemWidth = (resultCollectionView.bounds.width - spacing) / 2
-        layout.itemSize = CGSize(width: itemWidth, height: 240)
-        
+        layout.minimumLineSpacing = 16
+        layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
+
         resultCollectionView.collectionViewLayout = layout
     }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+
+        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
+            return .zero
+        }
+
+        let itemsPerRow: CGFloat =
+            UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2
+
+        let totalSpacing =
+            layout.sectionInset.left +
+            layout.sectionInset.right +
+            layout.minimumInteritemSpacing * (itemsPerRow - 1)
+
+        let width =
+            (collectionView.bounds.width - totalSpacing) / itemsPerRow
+
+        return CGSize(width: width, height: 180)
+    }
+
     
 
     @IBAction func nextTapped(_ sender: Any) {

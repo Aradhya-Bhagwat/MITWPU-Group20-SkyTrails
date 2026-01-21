@@ -356,7 +356,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             // ADD THIS LINE: Force the view to load so outlets are not nil
             progressVC.loadViewIfNeeded()
             
-            progressVC.updateProgress(current: idx + 1, total: progressSteps.count)
+            let completed = idx + 1
+            progressVC.updateProgress(current: completed, total: progressSteps.count)
+
         }
         
         self.navigationController?.pushViewController(vc, animated: true)
