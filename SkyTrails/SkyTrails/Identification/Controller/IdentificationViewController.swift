@@ -190,8 +190,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     func setupHistoryFlowLayout() {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical   // ✅ MUST be vertical
-
+        layout.scrollDirection = .vertical
         layout.minimumInteritemSpacing = 12
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
@@ -268,7 +267,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         
         flowSteps.append(.result)
         
-        // Calculate progress steps (exclude result/gui for progress bar logic)
+        
         progressSteps = flowSteps.filter { step in
             switch step {
             case .gui, .result: return false
@@ -299,12 +298,12 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     func pushNextViewController() {
         guard currentStepIndex < flowSteps.count else {
-            // Flow finished, maybe reset?
+            
             return
         }
         
         let step = flowSteps[currentStepIndex]
-        // Increment for next time
+        
         
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         let vc: UIViewController

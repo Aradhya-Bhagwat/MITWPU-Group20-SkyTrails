@@ -15,7 +15,7 @@ class DateandLocationViewController: UIViewController {
     
     
     private var selectedDate: Date? = Date()
-    private var searchQuery: String = "" // The active text in the bar
+    private var searchQuery: String = ""
     private var searchResults: [MKLocalSearchCompletion] = []
     
     
@@ -30,7 +30,7 @@ class DateandLocationViewController: UIViewController {
         setupCompleter()
         setupLocationServices()
  
-        // Pre-fill query if we already have a location selected
+        
         if let currentLoc = viewModel.selectedLocation {
             searchQuery = currentLoc
         }
@@ -47,9 +47,7 @@ class DateandLocationViewController: UIViewController {
         
         dateandlocationTableView.delegate = self
         dateandlocationTableView.dataSource = self
-        
-        // Hide empty rows
-        dateandlocationTableView.tableFooterView = UIView()
+
     }
     
     private func setupCompleter() {
