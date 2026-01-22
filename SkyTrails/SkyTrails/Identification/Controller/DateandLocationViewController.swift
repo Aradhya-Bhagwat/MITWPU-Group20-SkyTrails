@@ -75,6 +75,7 @@ class DateandLocationViewController: UIViewController {
   
     
     private func updateLocationSelection(_ name: String) {
+        print("DateandLocationViewController: updateLocationSelection() called with name: '\(name)'.")
  
         viewModel.selectedLocation = name
         viewModel.data.location = name
@@ -82,6 +83,7 @@ class DateandLocationViewController: UIViewController {
         searchResults = []
         dateandlocationTableView.reloadData()
         view.endEditing(true)
+        print("DateandLocationViewController: UI and ViewModel updated with new location.")
     }
     
     private func setupLocationServices() {
@@ -91,15 +93,19 @@ class DateandLocationViewController: UIViewController {
 
     private func fetchCurrentLocationName() {
         let authStatus = locationManager.authorizationStatus
+        print("DateandLocationViewController: fetchCurrentLocationName() called. Auth status: \(authStatus.rawValue)")
         
         switch authStatus {
         case .notDetermined:
+            print("DateandLocationViewController: Location permission not determined. Requesting authorization.")
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
+            print("DateandLocationViewController: Location access is restricted or denied.")
             let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
         case .authorizedAlways, .authorizedWhenInUse:
+            print("DateandLocationViewController: Location access granted. Requesting location.")
             locationManager.requestLocation()
         default:
             break
@@ -204,6 +210,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         }
         
         if indexPath.section == 2 && indexPath.row == 1 {
+            print("DateandLocationViewController: User tapped 'Current Location'.")
             fetchCurrentLocationName()
         }
     }
@@ -283,30 +290,38 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager,
                          didUpdateLocations locations: [CLLocation]) {
-
-        guard let location = locations.last else { return }
+        print("DateandLocationViewController: locationManager didUpdateLocations with \(locations.count) location(s).")
+        guard let location = locations.last else {
+            print("DateandLocationViewController: No location found in the update.")
+            return
+        }
+        print("DateandLocationViewController: Last location is \(location.coordinate). Starting reverse geocoding.")
 
         Task { [weak self] in
             guard let self else { return }
 
             do {
                 guard let request = MKReverseGeocodingRequest(location: location) else {
+                    print("DateandLocationViewController: Failed to create MKReverseGeocodingRequest.")
                     await MainActor.run {
                         self.updateLocationSelection("Location")
                     }
                     return
                 }
 
+                print("DateandLocationViewController: Awaiting reverse geocoding response...")
                 let response = try await request.mapItems
                 let item = response.first
 
                 let name = item?.name ?? "Location"
+                print("DateandLocationViewController: Reverse geocoding successful. Found name: '\(name)'.")
                 await MainActor.run {
                     self.updateLocationSelection(name)
                 }
 
             } catch {
                 await MainActor.run {
+                    print("DateandLocationViewController: Reverse geocoding failed.")
                     self.updateLocationSelection("Location")
                 }
                 print("Reverse geocoding failed: \(error.localizedDescription)")
@@ -316,11 +331,14 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
 
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("DateandLocationViewController: locationManager didFailWithError.")
         print("Location manager failed: \(error.localizedDescription)")
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        print("DateandLocationViewController: locationManagerDidChangeAuthorization. New status: \(manager.authorizationStatus.rawValue)")
         if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+            print("DateandLocationViewController: Authorization granted. Requesting location.")
             manager.requestLocation()
         }
     }
