@@ -30,8 +30,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-  
         updateHistoryInteraction()
         tableView.reloadData()
         historyCollectionView.reloadData()
@@ -47,13 +45,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         navigationController?.delegate = self
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = .white
         historyCollectionView.delegate = self
         historyCollectionView.dataSource = self
-        setupHistoryFlowLayout()  
-        tableView.rowHeight = 56
-        tableView.estimatedRowHeight = 56
-        
+        setupHistoryFlowLayout()
         tableView.reloadData()
         historyCollectionView.reloadData()
         updateSelectionState()
@@ -65,27 +59,15 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         let isValid = selectedCount >= 2
 
         warningLabel.isHidden = isValid
-        if !isValid {
-            warningLabel.text =  "Please select at least two options."
-        }
-        
-        
         startButton.isEnabled = isValid
-        
-        startButton.alpha = 1.0
-        
-        if isValid {
-            
-            startButton.setTitleColor(.black, for: .normal)
-            
-            startButton.layer.shadowOpacity = 0.1
-        } else {
-           
-            startButton.setTitleColor(.systemGray3, for: .normal)
-          
-            startButton.layer.shadowOpacity = 0.05
-        }
+
+        let titleColor: UIColor = isValid ? .black : .systemGray3
+        let shadowOpacity: Float = isValid ? 0.1 : 0.05
+
+        startButton.setTitleColor(titleColor, for: .normal)
+        startButton.layer.shadowOpacity = shadowOpacity
     }
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return max(model.histories.count, 1)
         
@@ -310,7 +292,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             nextVC.viewModel = self.model
             nextVC.delegate = self
             nextVC.selectedSizeIndex = model.selectedSizeCategory
-            // Note: If you have a filteredShapes property, pass it here:
             nextVC.filteredShapes = model.birdShapes
             vc = nextVC
             

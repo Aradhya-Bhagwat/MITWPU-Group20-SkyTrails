@@ -29,9 +29,6 @@ class ResultCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-    
-           // self.layer.shadowColor = UIColor.black.cgColor
-          
         setupMenu()
     }
   
@@ -48,14 +45,9 @@ class ResultCollectionViewCell: UICollectionViewCell {
     }
     private func updateSelectionAppearance() {
             if isSelectedCell {
-                // Selected: Blue Border
                 self.layer.borderWidth = 3.0
                 self.layer.borderColor = UIColor.systemBlue.cgColor
-            } else {
-                // Not Selected: No Border
-                self.layer.borderWidth = 0.0
-                self.layer.borderColor = nil
-            }
+            } 
         }
     
     
@@ -76,13 +68,6 @@ class ResultCollectionViewCell: UICollectionViewCell {
         menuButton.showsMenuAsPrimaryAction = true
         menuButton.menu = menu
     }
-    override func prepareForReuse() {
-            super.prepareForReuse()
-            // 3. Prevent old images from showing on new cells
-            resultImageView.image = nil
-            nameLabel.text = nil
-            percentageLabel.text = nil
-            isSelectedCell = false
-        }
+   
 }
 
