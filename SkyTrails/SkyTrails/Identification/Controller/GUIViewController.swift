@@ -274,7 +274,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 			let selectedVariant = variants[indexPath.row]
 			let categoryName = categories[currentCategoryIndex].name
 			
-			print("👉 Selected: \(categoryName) - \(selectedVariant)")
+			print("Selected: \(categoryName) - \(selectedVariant)")
 			
 			selectedVariations[categoryName] = selectedVariant
 			variationsCollectionView.reloadData()

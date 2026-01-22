@@ -18,11 +18,11 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     
     var viewModel: IdentificationManager!
     
-    // Canvas Layers
+ 
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
     
-    // Z-Index Order for Bird Parts
+
     private let layerOrder = [
         "Tail",
         "Leg",
@@ -43,7 +43,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
        
     }
     
-    // Item 4: Canvas Layout Lifecycle Fix
+   
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
@@ -56,7 +56,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func setupUI() {
-        // Register CategoryCell (Shared with GUIViewController)
+        
         let categoryNib = UINib(nibName: "CategoryCell", bundle: nil)
         Categories.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
         
@@ -70,9 +70,9 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         }
     }
     
-    /// Sanitizes strings for filenames
+    
     func cleanForFilename(_ name: String) -> String {
-        // Special mapping for Finches/Sparrows ID to Asset Prefix
+        
         if name == "Passeridae_Fringillidae" {
             return "finch"
         }
@@ -90,26 +90,26 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
 
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
         
-        // 1. Load the Core Torso (Hollow Base)
+        
         baseShapeLayer = UIImageView(frame: CanvasView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
         baseShapeLayer.image = UIImage(named: "id_shape_\(shapeID)_base_core")
-        // Item 5: Explicit and Safe Z-Ordering
+       
         baseShapeLayer.layer.zPosition = -1
         CanvasView.addSubview(baseShapeLayer)
 
-        // 2. Loop through and CREATE the layers
+       
         for (index, catName) in layerOrder.enumerated() {
             let imgView = UIImageView(frame: CanvasView.bounds)
             imgView.contentMode = .scaleAspectFit
             
-            // Item 5: Explicit and Safe Z-Ordering
+            
             imgView.layer.zPosition = CGFloat(index)
             
             CanvasView.addSubview(imgView)
             partLayers[catName] = imgView
             
-            // Initial Load
+           
             updateLayer(category: catName)
         }
     }
@@ -123,14 +123,10 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
         let cleanCategory = cleanForFilename(category)
         
-        // FUTURE: When colored assets are available, use this naming scheme:
-        // Default: "id_canvas_finch_beak_default"
-        // Selected: "canvas_Finch_Beak_Default_color"
-        //
-        // Current behavior: Always load the default asset to prevent empty layers.
+      
         
         let baseName = "id_canvas_\(shapeID)_\(cleanCategory)_default"
-        // let targetSuffix = isSelected ? "_color" : "" // Restore this when assets exist
+        
         
         print("IdentificationFieldMarksViewController: Attempting to load image named: \(baseName)")
         
@@ -150,7 +146,6 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         return false
     }
     
-    // MARK: - CollectionView DataSource & Delegate
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return viewModel.chooseFieldMarks.count
@@ -170,7 +165,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         return cell
     }
     
-    // Item 9: Selection Limit Enforcement (UX Fix)
+  
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         if selectedFieldMarks.count >= 5 {
             showMaxLimitAlert()
@@ -186,7 +181,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
             selectedFieldMarks.append(index)
         }
         
-        // Item 3: Collection View Reload Optimization
+      
   
         
         let categoryName = viewModel.chooseFieldMarks[index].name
@@ -202,7 +197,6 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
             selectedFieldMarks.remove(at: position)
         }
         
-        // Item 3: Collection View Reload Optimization
         collectionView.reloadItems(at: [indexPath])
         
         let categoryName = viewModel.chooseFieldMarks[index].name
