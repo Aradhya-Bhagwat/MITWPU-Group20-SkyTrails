@@ -54,7 +54,17 @@ class GUIViewController: UIViewController {
 		}
 	}
 	
+	override func viewDidLayoutSubviews() {
+		super.viewDidLayoutSubviews()
 		
+		let bounds = canvasContainerView.bounds
+		baseShapeLayer?.frame = bounds
+		
+		for layer in partLayers.values {
+			layer.frame = bounds
+		}
+	}
+	
 	private func loadData() {
 		guard let selectedNames = viewModel.data.fieldMarks, !selectedNames.isEmpty else {
 			self.categories = []
