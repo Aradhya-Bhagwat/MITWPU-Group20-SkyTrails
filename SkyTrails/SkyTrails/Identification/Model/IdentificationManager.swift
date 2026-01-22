@@ -37,7 +37,6 @@ class IdentificationManager {
 
     private func loadAllData() {
         do {
-            // Initialize UI options
             self.fieldMarkOptions = [
                 FieldMarkType(symbols: "home_icn_location_date_pin", fieldMarkName: .locationDate, isSelected: false),
                 FieldMarkType(symbols: "id_icn_size", fieldMarkName: .size, isSelected: false),
@@ -86,7 +85,6 @@ class IdentificationManager {
         let currentLocation = self.selectedLocation
         let currentFieldMarks = self.selectedFieldMarks
 
-        // Date logic
         var searchMonth: Int?
         if let dateString = data.date {
             let formatter = DateFormatter()
@@ -98,13 +96,13 @@ class IdentificationManager {
 
         var scoredBirds: [(bird: Bird2, score: Double, breakdown: String)] = []
 
-        // 3. Scoring loop
+      
         for bird in allBirds {
 
             var score = 0.0
             var breakdownParts: [String] = []
 
-            // A. Location
+            
             if let loc = currentLocation,
                let locations = bird.validLocations,
                !locations.contains(loc) {
@@ -112,7 +110,7 @@ class IdentificationManager {
                 breakdownParts.append("Wrong Location (-30)")
             }
 
-            // B. Seasonality
+           
             if let month = searchMonth,
                let validMonths = bird.validMonths,
                !validMonths.contains(month) {
@@ -120,7 +118,7 @@ class IdentificationManager {
                 breakdownParts.append("Wrong Season (-50)")
             }
 
-            // C. Shape
+            
             if let userShape = currentShape,
                bird.shapeId == userShape {
                 score += 30
@@ -178,7 +176,7 @@ class IdentificationManager {
             scoredBirds.append((bird, normalized, breakdownParts.joined(separator: ", ")))
         }
 
-        // 4. Sort and store (OUTSIDE loop)
+        
         scoredBirds = scoredBirds.filter { $0.score > 0.3 }
         scoredBirds.sort { $0.score > $1.score }
 
@@ -243,7 +241,7 @@ class IdentificationManager {
                 }
             }
             
-            // No bundle fallback by design (user birds are user-only)
+       
             return []
         }
         
@@ -266,7 +264,7 @@ class IdentificationManager {
         func loadHistory() -> [History] {
             let url = getDocumentsDirectory().appendingPathComponent("history.json")
                 let decoder = JSONDecoder()
-            // 1. Try Documents
+            
             if let data = try? Data(contentsOf: url) {
                 do {
                     return try decoder.decode([History].self, from: data)
@@ -275,7 +273,7 @@ class IdentificationManager {
                 }
             }
             
-            // 2. Fallback to Bundle (first launch)
+           
             if let bundleURL = Bundle.main.url(forResource: "history", withExtension: "json"),
                let data = try? Data(contentsOf: bundleURL) {
                 do {

@@ -195,7 +195,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let selectedBird = viewModel.birdResults[indexPath.item]
         
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-        guard let birdSelectionVC = storyboard.instantiateViewController(withIdentifier: "birdspredViewController") as? BirdSelectionViewController else {
+        guard let birdSelectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else {
             print("Error: Could not instantiate BirdSelectionViewController from birdspred.storyboard")
             return
         }
