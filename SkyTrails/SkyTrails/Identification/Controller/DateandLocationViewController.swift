@@ -274,6 +274,7 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
     
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
         updateLocationSelection(name)
+       
     }
 }
 

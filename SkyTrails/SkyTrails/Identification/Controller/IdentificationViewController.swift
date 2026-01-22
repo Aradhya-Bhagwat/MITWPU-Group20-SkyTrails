@@ -278,22 +278,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         currentStepIndex = 0
         pushNextViewController()
     }
-    func navigationController(
-        _ navigationController: UINavigationController,
-        didShow viewController: UIViewController,
-        animated: Bool
-    ) {
-        guard
-            let fromVC = navigationController.transitionCoordinator?
-                .viewController(forKey: .from),
-            !navigationController.viewControllers.contains(fromVC)
-        else {
-            return
-        }
-
-    
-        currentStepIndex = max(0, currentStepIndex - 1)
-    }
 
     
     func pushNextViewController() {
@@ -353,7 +337,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         if let progressVC = vc as? (UIViewController & IdentificationProgressUpdatable),
            let idx = progressSteps.firstIndex(of: step) {
             
-            // ADD THIS LINE: Force the view to load so outlets are not nil
             progressVC.loadViewIfNeeded()
             
             let completed = idx + 1
@@ -361,8 +344,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
 
         }
         
-        self.navigationController?.pushViewController(vc, animated: true)
-        currentStepIndex += 1
+        self.navigationController?.pushViewController(vc, animated: false)
     }
     
     
@@ -393,6 +375,33 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
 }
 extension IdentificationViewController: IdentificationFlowStepDelegate {
     func didFinishStep() {
+    
+        if let visibleVC = navigationController?.topViewController {
+            
+            
+            let currentStep: IdentificationStep?
+            if visibleVC is DateandLocationViewController {
+                currentStep = .dateLocation
+            } else if visibleVC is IdentificationSizeViewController {
+                currentStep = .size
+            } else if visibleVC is IdentificationShapeViewController {
+                currentStep = .shape
+            } else if visibleVC is IdentificationFieldMarksViewController {
+                currentStep = .fieldMarks
+            } else if visibleVC is GUIViewController {
+                currentStep = .gui
+            } else {
+                currentStep = nil
+            }
+            
+            
+            if let currentStep = currentStep,
+               let indexInFlow = flowSteps.firstIndex(of: currentStep) {
+                currentStepIndex = indexInFlow + 1
+            }
+        }
+        
+        
         pushNextViewController()
     }
     
