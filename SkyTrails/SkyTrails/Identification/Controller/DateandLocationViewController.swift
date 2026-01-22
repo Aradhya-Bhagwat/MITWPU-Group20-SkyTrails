@@ -78,16 +78,10 @@ class DateandLocationViewController: UIViewController {
  
         viewModel.selectedLocation = name
         viewModel.data.location = name
-        
-        // Update UI State
         searchQuery = name
-        searchResults = [] // Clear suggestions
-        
-        // Update Table
-        // We reload everything to ensure the search bar shows the committed text
-        // and suggestions disappear.
+        searchResults = []
         dateandlocationTableView.reloadData()
-        view.endEditing(true) // Dismiss keyboard
+        view.endEditing(true)
     }
     
     private func setupLocationServices() {
@@ -157,8 +151,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
                 return cell
             }
         }
-        
-        // Section 2: Static Options
+
         if indexPath.section == 2 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "location_cell", for: indexPath)
             if indexPath.row == 0 {
@@ -178,7 +171,6 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        // Handle Suggestion Tap
         if indexPath.section == 1 && indexPath.row > 0 {
             let suggestionIndex = indexPath.row - 1
             let completion = searchResults[suggestionIndex]
@@ -202,7 +194,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             }
         }
         
-        // Handle Map Tap
+
         if indexPath.section == 2 && indexPath.row == 0 {
             let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
             if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
@@ -211,7 +203,6 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             }
         }
         
-        // Handle Current Location Tap
         if indexPath.section == 2 && indexPath.row == 1 {
             fetchCurrentLocationName()
         }
@@ -222,15 +213,11 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
 extension DateandLocationViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        // 1. Update State
+       
         searchQuery = searchText
-        
-        // 2. Clear previous selection state if user starts typing again
         if !searchText.isEmpty {
-            viewModel.selectedLocation = nil // or keep it, depending on preference
+            viewModel.selectedLocation = nil
         }
-        
-        // 3. Trigger Search
         if searchText.isEmpty {
             searchResults = []
             reloadSuggestionsOnly()
@@ -255,18 +242,13 @@ extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
         // Handle error if needed
     }
     
-    // Helper to reload strictly the suggestion rows, NOT the search bar row.
-    // This prevents the search bar from resigning first responder.
     private func reloadSuggestionsOnly() {
         let sectionIndex = 1
         
-        // 1. Calculate how many suggestion rows we currently have
         let currentTotalRows = dateandlocationTableView.numberOfRows(inSection: sectionIndex)
         let currentSuggestionCount = currentTotalRows - 1 // Subtract the SearchBar row
         
-        // 2. Perform updates without touching Row 0
         dateandlocationTableView.performBatchUpdates({
-            // Remove old suggestions
             if currentSuggestionCount > 0 {
                 let indexPathsToDelete = (1...currentSuggestionCount).map {
                     IndexPath(row: $0, section: sectionIndex)
@@ -274,7 +256,6 @@ extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
                 dateandlocationTableView.deleteRows(at: indexPathsToDelete, with: .none)
             }
             
-            // Insert new suggestions
             if !searchResults.isEmpty {
                 let indexPathsToInsert = (1...searchResults.count).map {
                     IndexPath(row: $0, section: sectionIndex)
@@ -308,7 +289,6 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
             guard let self else { return }
 
             do {
-                // Create MapKit reverse geocoding request
                 guard let request = MKReverseGeocodingRequest(location: location) else {
                     await MainActor.run {
                         self.updateLocationSelection("Location")
@@ -316,13 +296,10 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
                     return
                 }
 
-                // Perform reverse geocoding
                 let response = try await request.mapItems
                 let item = response.first
 
                 let name = item?.name ?? "Location"
-
-                // Update UI + model on main thread
                 await MainActor.run {
                     self.updateLocationSelection(name)
                 }

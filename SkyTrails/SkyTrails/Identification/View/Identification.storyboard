@@ -645,7 +645,7 @@
                             <constraint firstItem="Ocq-bk-U3B" firstAttribute="leading" secondItem="F0A-t2-UOF" secondAttribute="leading" constant="8" id="joI-tb-di2"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Enter Date and Location" id="v4m-cf-cKV">
+                    <navigationItem key="navigationItem" title="Enter Date and Location" largeTitleDisplayMode="never" id="v4m-cf-cKV">
                         <barButtonItem key="rightBarButtonItem" title="Item" image="checkmark" catalog="system" id="39r-KO-tOE">
                             <connections>
                                 <action selector="nextTapped:" destination="sFd-Fo-NuK" id="v8u-oi-AGK"/>
