@@ -184,9 +184,10 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         
         let bird = filteredBirds[indexPath.row]
         
-        // Configure Cell Content
-        cell.shouldShowAvatars = false
+        // Configure Cell Content - configure FIRST before setting shouldShowAvatars
+        // to avoid crash when outlets aren't connected yet
         cell.configure(with: bird)
+        cell.shouldShowAvatars = false
         cell.dateLabel.isHidden = true
         
         // Rarity Logic

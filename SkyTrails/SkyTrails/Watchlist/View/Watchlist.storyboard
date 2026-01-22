@@ -49,9 +49,7 @@
                                 </constraints>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" image="custom.bird.fill.badge.plus" cornerStyle="capsule">
-                                    <backgroundConfiguration key="background">
-                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                    </backgroundConfiguration>
+                                    <backgroundConfiguration key="background"/>
                                 </buttonConfiguration>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
@@ -579,19 +577,19 @@
                                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesStack">
                                                             <rect key="frame" x="96" y="21.000000000000004" width="266" height="58.333333333333343"/>
                                                             <subviews>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesTitle">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesTitle">
                                                                     <rect key="frame" x="0.0" y="0.0" width="266" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
                                                                     <nil key="textColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesDate">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesDate">
                                                                     <rect key="frame" x="0.0" y="25.666666666666661" width="266" height="14.333333333333332"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesLocation">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesLocation">
                                                                     <rect key="frame" x="0.0" y="44" width="266" height="14.333333333333336"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
@@ -599,14 +597,75 @@
                                                                 </label>
                                                             </subviews>
                                                         </stackView>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="-10" translatesAutoresizingMaskIntoConstraints="NO" id="Cf2-26-fMz">
+                                                            <rect key="frame" x="358" y="12" width="0.0" height="30"/>
+                                                            <subviews>
+                                                                <imageView hidden="YES" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Bgg-n5-44f">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                    <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="width" constant="30" id="bNI-eP-gSX"/>
+                                                                        <constraint firstAttribute="height" constant="30" id="d8V-JN-wFR"/>
+                                                                    </constraints>
+                                                                    <userDefinedRuntimeAttributes>
+                                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                            <integer key="value" value="15"/>
+                                                                        </userDefinedRuntimeAttribute>
+                                                                    </userDefinedRuntimeAttributes>
+                                                                </imageView>
+                                                                <imageView hidden="YES" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="q3w-a0-bha">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                    <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="width" constant="30" id="25a-Oo-Jiw"/>
+                                                                        <constraint firstAttribute="height" constant="30" id="whe-gv-KGn"/>
+                                                                    </constraints>
+                                                                    <userDefinedRuntimeAttributes>
+                                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                            <integer key="value" value="15"/>
+                                                                        </userDefinedRuntimeAttribute>
+                                                                    </userDefinedRuntimeAttributes>
+                                                                </imageView>
+                                                                <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Ugw-Ot-6LS">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                    <subviews>
+                                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="+1" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kdx-oY-QXX">
+                                                                            <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
+                                                                            <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
+                                                                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                                            <nil key="highlightedColor"/>
+                                                                        </label>
+                                                                    </subviews>
+                                                                    <color key="backgroundColor" systemColor="systemGrayColor"/>
+                                                                    <constraints>
+                                                                        <constraint firstAttribute="height" constant="30" id="6Tp-03-CSL"/>
+                                                                        <constraint firstAttribute="bottom" secondItem="kdx-oY-QXX" secondAttribute="bottom" id="L5j-Lm-VSI"/>
+                                                                        <constraint firstAttribute="trailing" secondItem="kdx-oY-QXX" secondAttribute="trailing" id="p8Y-jz-gGh"/>
+                                                                        <constraint firstAttribute="width" constant="30" id="q6q-63-pmJ"/>
+                                                                        <constraint firstItem="kdx-oY-QXX" firstAttribute="top" secondItem="Ugw-Ot-6LS" secondAttribute="top" id="x2N-qi-oax"/>
+                                                                        <constraint firstItem="kdx-oY-QXX" firstAttribute="leading" secondItem="Ugw-Ot-6LS" secondAttribute="leading" id="z4R-nD-C9Z"/>
+                                                                    </constraints>
+                                                                    <userDefinedRuntimeAttributes>
+                                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                            <integer key="value" value="15"/>
+                                                                        </userDefinedRuntimeAttribute>
+                                                                    </userDefinedRuntimeAttributes>
+                                                                </view>
+                                                            </subviews>
+                                                            <constraints>
+                                                                <constraint firstAttribute="height" constant="30" id="d7S-wg-LmR"/>
+                                                            </constraints>
+                                                        </stackView>
                                                     </subviews>
                                                     <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                     <constraints>
+                                                        <constraint firstItem="Cf2-26-fMz" firstAttribute="top" secondItem="SpeciesContainer" secondAttribute="top" constant="12" id="IKU-TM-FTl"/>
                                                         <constraint firstItem="SpeciesImage" firstAttribute="centerY" secondItem="SpeciesContainer" secondAttribute="centerY" id="ImgCenter"/>
                                                         <constraint firstItem="SpeciesImage" firstAttribute="leading" secondItem="SpeciesContainer" secondAttribute="leading" constant="8" id="ImgLead"/>
                                                         <constraint firstItem="SpeciesStack" firstAttribute="centerY" secondItem="SpeciesContainer" secondAttribute="centerY" id="StkCenter"/>
                                                         <constraint firstItem="SpeciesStack" firstAttribute="leading" secondItem="SpeciesImage" secondAttribute="trailing" constant="8" id="StkLead"/>
                                                         <constraint firstAttribute="trailing" secondItem="SpeciesStack" secondAttribute="trailing" constant="8" id="StkTrail"/>
+                                                        <constraint firstAttribute="trailing" secondItem="Cf2-26-fMz" secondAttribute="trailing" constant="12" id="Vfw-Kj-rSn"/>
                                                     </constraints>
                                                 </view>
                                             </subviews>
@@ -618,11 +677,16 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="avatarStackView" destination="Cf2-26-fMz" id="P27-Wh-xxq"/>
                                             <outlet property="birdImageView" destination="SpeciesImage" id="OutImg"/>
                                             <outlet property="containerView" destination="SpeciesContainer" id="OutCnt"/>
                                             <outlet property="dateLabel" destination="SpeciesDate" id="OutDate"/>
                                             <outlet property="locationLabel" destination="SpeciesLocation" id="OutLoc"/>
+                                            <outlet property="overflowBadgeView" destination="Ugw-Ot-6LS" id="S4o-I9-dDv"/>
+                                            <outlet property="overflowLabel" destination="kdx-oY-QXX" id="out-species-ovr-lbl"/>
                                             <outlet property="titleLabel" destination="SpeciesTitle" id="OutTitle"/>
+                                            <outletCollection property="avatarImageViews" destination="Bgg-n5-44f" collectionClass="NSMutableArray" id="col-species-avt-001"/>
+                                            <outletCollection property="avatarImageViews" destination="q3w-a0-bha" collectionClass="NSMutableArray" id="col-species-avt-002"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -1536,7 +1600,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="New-Seg-Id"/>
+        <segue reference="k90-vC-BJg"/>
         <segue reference="nKR-lt-0XR"/>
         <segue reference="WlZ-eO-mfp"/>
     </inferredMetricsTieBreakers>
