@@ -42,7 +42,7 @@ class MapViewController: UIViewController {
 
     
     private func setupUI() {
-        setupRightTickButton()
+      
         
         // Style the container
         searchPillView.layer.cornerRadius = 28
@@ -83,14 +83,7 @@ class MapViewController: UIViewController {
         resultsTableView.dataSource = self
     }
 
-    private func setupRightTickButton() {
-        let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        button.setImage(UIImage(systemName: "checkmark", withConfiguration: config), for: .normal)
-        button.tintColor = .black
-        button.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
-    }
+
 
     // MARK: - Map Interactions
     @objc func mapTapped(_ sender: UITapGestureRecognizer) {

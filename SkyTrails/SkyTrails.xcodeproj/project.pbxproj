@@ -145,9 +145,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				DEVELOPMENT_TEAM = XT5U75L8YQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SkyTrails/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = always;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -181,6 +182,7 @@
 				DEVELOPMENT_TEAM = XT5U75L8YQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SkyTrails/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = always;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
