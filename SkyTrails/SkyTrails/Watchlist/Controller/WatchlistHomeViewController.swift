@@ -197,14 +197,16 @@ extension WatchlistHomeViewController {
 		present(alert, animated: true)
 	}
 	
-		// MARK: - Floating Action Button
+	// MARK: - Floating Action Button
 	@IBAction func addFloatingButtonTapped(_ sender: UIButton) {
 		let alert = UIAlertController(title: "Add to watchlist", message: nil, preferredStyle: .actionSheet)
 		
-		alert.addAction(UIAlertAction(title: "Add to observed", style: .default) { _ in
+		alert.addAction(UIAlertAction(title: "Add to observed", style: .default) { [weak self] _ in
+			self?.showObservedDetail()
 		})
 		
-		alert.addAction(UIAlertAction(title: "Add to unobserved", style: .default) { _ in
+		alert.addAction(UIAlertAction(title: "Add to unobserved", style: .default) { [weak self] _ in
+			self?.showSpeciesSelection()
 		})
 		
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -216,6 +218,30 @@ extension WatchlistHomeViewController {
 		
 		present(alert, animated: true)
 	}
+	
+	private func showObservedDetail() {
+		guard let watchlistId = WatchlistManager.shared.watchlists.first?.id else { return }
+		
+		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
+		vc.bird = nil
+		vc.watchlistId = watchlistId
+		navigationController?.pushViewController(vc, animated: true)
+	}
+	
+	private func showSpeciesSelection() {
+		guard let watchlistId = WatchlistManager.shared.watchlists.first?.id else { return }
+		
+		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
+		vc.mode = .unobserved
+		vc.targetWatchlistId = watchlistId
+		navigationController?.pushViewController(vc, animated: true)
+	}
+
+
+	
+
 }
 
 // MARK: - Navigation
