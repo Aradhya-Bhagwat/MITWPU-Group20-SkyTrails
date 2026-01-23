@@ -201,7 +201,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         let width =
             (collectionView.bounds.width - totalSpacing) / itemsPerRow
 
-        return CGSize(width: width, height: 230)
+        return CGSize(width: width, height: 240)
     }
 
 
