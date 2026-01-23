@@ -13,6 +13,10 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var dateLabel: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()
+        
+        contentView.backgroundColor = .white
+        contentView.layer.cornerRadius = 16
+        contentView.layer.masksToBounds = true
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = 0.12
         layer.shadowOffset = CGSize(width: 0, height: 4)

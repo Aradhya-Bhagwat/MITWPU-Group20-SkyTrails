@@ -38,7 +38,7 @@
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
-            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <constraints>
                 <constraint firstAttribute="trailing" secondItem="7a1-04-YJM" secondAttribute="trailing" constant="8" id="0QT-Gh-Pbx"/>
                 <constraint firstAttribute="bottom" secondItem="V79-tv-Ttn" secondAttribute="bottom" constant="8" id="FH0-Vk-kbQ"/>
@@ -52,11 +52,6 @@
                 <constraint firstItem="V79-tv-Ttn" firstAttribute="top" secondItem="1jK-Ka-RvL" secondAttribute="bottom" constant="2" id="uhD-jC-xyQ"/>
             </constraints>
             <size key="customSize" width="184" height="198"/>
-            <userDefinedRuntimeAttributes>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                    <integer key="value" value="16"/>
-                </userDefinedRuntimeAttribute>
-            </userDefinedRuntimeAttributes>
             <connections>
                 <outlet property="dateLabel" destination="V79-tv-Ttn" id="5dF-T4-SZ2"/>
                 <outlet property="historyImageView" destination="7a1-04-YJM" id="EOh-dm-yOB"/>
