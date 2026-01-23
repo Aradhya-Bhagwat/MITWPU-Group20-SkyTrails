@@ -23,18 +23,13 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         layer.shadowRadius = 10
         layer.masksToBounds = false
 
-        // Image styling
+        
         historyImageView.layer.cornerRadius = 10
         historyImageView.clipsToBounds = true
         historyImageView.contentMode = .scaleAspectFill
 
         
-        specieNameLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-        specieNameLabel.textColor = .label
-        specieNameLabel.numberOfLines = 2
-
-        dateLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        dateLabel.textColor = .secondaryLabel
+   
     }
 
     override func prepareForReuse() {
