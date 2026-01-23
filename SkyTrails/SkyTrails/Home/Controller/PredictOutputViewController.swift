@@ -154,7 +154,7 @@ class BirdResultCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        birdImageView.contentMode = .scaleAspectFit
+        birdImageView.contentMode = .scaleAspectFill
         birdImageView.clipsToBounds = true
         birdImageView.layer.cornerRadius = 8
         

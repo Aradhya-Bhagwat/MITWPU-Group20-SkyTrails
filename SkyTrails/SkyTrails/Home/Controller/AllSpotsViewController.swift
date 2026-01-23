@@ -48,7 +48,9 @@ class AllSpotsViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
+        let predictSpot = UIImage(named: "upcomingspots")
+        let predictButton = UIBarButtonItem(image: predictSpot, style: .plain, target: self, action: #selector(didTapPredict))
+        predictButton.tintColor = .systemBlue
         self.navigationItem.rightBarButtonItem = predictButton
     }
         
