@@ -16,7 +16,6 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        self.backgroundColor = .clear
         setupUI()
     }
     

@@ -48,7 +48,11 @@ class AllUpcomingBirdsViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
-            let predictButton = UIBarButtonItem(title: "Predict", style: .plain, target: self, action: #selector(didTapPredict))
+            let predictImage = UIImage(named: "upcomingBirds")
+            let predictButton = UIBarButtonItem(image: predictImage,
+                                                 style: .plain,
+                                                 target: self,
+                                                 action: #selector(didTapPredict))
             self.navigationItem.rightBarButtonItem = predictButton
         }
             

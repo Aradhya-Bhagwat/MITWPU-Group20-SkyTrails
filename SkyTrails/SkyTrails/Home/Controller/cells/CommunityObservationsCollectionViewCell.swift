@@ -23,15 +23,7 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-
-            cardContainerView.layer.cornerRadius = 16
-            cardContainerView.clipsToBounds = true
         
-            birdImageView.contentMode = .scaleAspectFill
-            birdImageView.clipsToBounds = true
-        
-            userProfileImageView.clipsToBounds = true
-            userProfileImageView.contentMode = .scaleAspectFill
         }
     
     override func layoutSubviews() {

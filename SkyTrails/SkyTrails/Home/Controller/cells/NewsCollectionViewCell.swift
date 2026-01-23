@@ -19,11 +19,6 @@ class NewsCollectionViewCell: UICollectionViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         
-        containerView.layer.cornerRadius = 16
-        containerView.clipsToBounds = true
-        
-        newsImageView.contentMode = .scaleAspectFill
-        newsImageView.clipsToBounds = true
     }
     
     override func layoutSubviews() {
