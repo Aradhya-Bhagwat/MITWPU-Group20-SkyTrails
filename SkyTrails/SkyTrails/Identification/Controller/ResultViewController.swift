@@ -34,15 +34,20 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         }
         
         if let history = historyItem {
+            print("DEBUG: Loading from history - specieName: \(history.specieName)")
             if let match = viewModel.birdResults.first(where: { $0.commonName == history.specieName }) {
                 selectedResult = match
+                print("DEBUG: Found match in birdResults: \(match.commonName)")
             } else if var dbBird = viewModel.getBird(byName: history.specieName) {
                 dbBird.confidence = 1.0
                 dbBird.scoreBreakdown = "From History"
                 selectedResult = dbBird
                 viewModel.birdResults = [selectedResult!]
+                print("DEBUG: Loaded from DB: \(dbBird.commonName)")
             }
         } else {
+//            print("DEBUG: Filtering birds - shape: \(viewModel.selectedShapeId ?? "nil"), size: \(viewModel.selectedSizeCategory ?? "nil"), location: \(viewModel.selectedLocation ?? "nil")")
+//            print("DEBUG: fieldMarks count: \(viewModel.selectedFieldMarks?.count ?? 0)")
             viewModel.filterBirds(
                 shape: viewModel.selectedShapeId,
                 size: viewModel.selectedSizeCategory,
@@ -55,6 +60,9 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
            let index = viewModel.birdResults.firstIndex(where: { $0.id == result.id }) {
             selectedIndexPath = IndexPath(item: index, section: 0)
         }
+        
+        print("ResultViewController: \(viewModel.birdResults.count) birds loaded")
+        resultCollectionView.reloadData()
     }
     
     private func setupCollectionViewLayout() {
@@ -88,7 +96,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let width =
             (collectionView.bounds.width - totalSpacing) / itemsPerRow
 
-        return CGSize(width: width, height: 180)
+        return CGSize(width: width, height: 300)
     }
 
     
@@ -116,7 +124,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         }
         
         navigationController?.popToRootViewController(animated: true)
-        delegate?.didFinishStep()
     }
   
     @IBAction func restartTapped(_ sender: Any) {
@@ -131,13 +138,16 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print("DEBUG: numberOfItemsInSection returning \(viewModel.birdResults.count)")
         return viewModel.birdResults.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let result = viewModel.birdResults[indexPath.item]
+        print("DEBUG: cellForItemAt loading bird: \(result.commonName), image: \(result.staticImageName)")
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ResultCollectionViewCell", for: indexPath) as! ResultCollectionViewCell
         
-        let result = viewModel.birdResults[indexPath.item]
         let img = UIImage(named: result.staticImageName)
         let percentString = String(Int((result.confidence ?? 0.0) * 100))
         
