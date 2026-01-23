@@ -39,6 +39,7 @@ class BirdDateInputViewController: UIViewController {
         doneButton.tintColor = .white
         let deleteButton = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(didTapDelete))
         navigationItem.rightBarButtonItems = [doneButton, addButton, deleteButton]
+        deleteButton.tintColor = .systemRed
     }
     
     private func setupUI() {

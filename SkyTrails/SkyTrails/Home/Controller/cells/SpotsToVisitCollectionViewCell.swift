@@ -16,7 +16,6 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        self.backgroundColor = .clear
         setupUI()   
     }
     private func setupUI() {

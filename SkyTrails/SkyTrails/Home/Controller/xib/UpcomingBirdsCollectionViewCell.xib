@@ -62,6 +62,7 @@
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="rXF-fC-hbX" secondAttribute="bottom" id="TSi-1o-Y0C"/>
                 <constraint firstItem="rXF-fC-hbX" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="sak-bs-4xk"/>

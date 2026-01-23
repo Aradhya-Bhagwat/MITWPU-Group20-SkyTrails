@@ -18,7 +18,6 @@ class AllSpotsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "All Spots"
-        self.view.backgroundColor = .systemBackground
         setupNavigationBar()
         setupCollectionView()
     }
