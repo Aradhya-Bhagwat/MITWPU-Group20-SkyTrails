@@ -201,6 +201,7 @@ class UnobservedDetailViewController: UIViewController {
             WatchlistManager.shared.updateBird(updatedBird, watchlistId: wId)
             navigationController?.popViewController(animated: true)
         } else {
+            navigationController?.popViewController(animated: true)
             onSave?(updatedBird)
         }
     }
