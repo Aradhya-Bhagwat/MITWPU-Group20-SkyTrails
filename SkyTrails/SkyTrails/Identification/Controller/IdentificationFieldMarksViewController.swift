@@ -123,19 +123,23 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
         let cleanCategory = cleanForFilename(category)
         
-      
+        let isSelected = isCategorySelected(name: category)
         
-        let baseName = "id_canvas_\(shapeID)_\(cleanCategory)_default"
+        let baseName: String
+        if isSelected {
+            baseName = "canvas_\(shapeID)_\(cleanCategory)_color"
+        } else {
+            baseName = "id_canvas_\(shapeID)_\(cleanCategory)_default"
+        }
         
-        
-        print("IdentificationFieldMarksViewController: Attempting to load image named: \(baseName)")
+        print("IdentificationFieldMarksViewController: Attempting to load image named: \(baseName) (selected: \(isSelected))")
         
         if let img = UIImage(named: baseName) {
             layer.image = img
             print("IdentificationFieldMarksViewController: Successfully loaded image: \(baseName)")
         } else {
-             layer.image = nil
-             print("IdentificationFieldMarksViewController: Failed to load image: \(baseName)")
+            layer.image = nil
+            print("IdentificationFieldMarksViewController: Failed to load image: \(baseName)")
         }
     }
     
