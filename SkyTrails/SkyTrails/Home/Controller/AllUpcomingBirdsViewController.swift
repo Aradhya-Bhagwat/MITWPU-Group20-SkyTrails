@@ -49,10 +49,8 @@ class AllUpcomingBirdsViewController: UIViewController {
 
     private func setupNavigationBar() {
             let predictImage = UIImage(named: "upcomingBirds")
-            let predictButton = UIBarButtonItem(image: predictImage,
-                                                 style: .plain,
-                                                 target: self,
-                                                 action: #selector(didTapPredict))
+            let predictButton = UIBarButtonItem(image: predictImage, style: .plain, target: self, action: #selector(didTapPredict))
+            predictButton.tintColor = .systemBlue
             self.navigationItem.rightBarButtonItem = predictButton
         }
             

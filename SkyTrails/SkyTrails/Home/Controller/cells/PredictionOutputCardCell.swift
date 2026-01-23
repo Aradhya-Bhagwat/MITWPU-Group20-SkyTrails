@@ -56,6 +56,7 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
         cell.configure(with: prediction.birdName, imageName: prediction.imageName)
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
+        cell.selectionStyle = .default
         
         return cell
     }
