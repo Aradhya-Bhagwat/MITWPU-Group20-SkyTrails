@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "bird_facemask.png",
+      "filename" : "id_bird_facemask.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "id_bird_facemask 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "id_bird_facemask 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
