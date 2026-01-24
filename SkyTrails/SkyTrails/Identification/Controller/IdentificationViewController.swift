@@ -220,7 +220,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
         let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
         
-        return CGSize(width: itemWidth, height: itemWidth * 1.4)
+        return CGSize(width: itemWidth, height: itemWidth * 1.0)
     }
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
