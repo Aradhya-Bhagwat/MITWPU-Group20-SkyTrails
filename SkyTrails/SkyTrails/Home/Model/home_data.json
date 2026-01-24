@@ -91,10 +91,6 @@
 			"latitude": 34.1,
 			"longitude": 74.8,
 			"radius": 5,
-			"birds": [
-				{"name": "Bar-headed Goose", "imageName": "bar_headed_goose", "lat": 34.102, "lon": 74.805},
-				{"name": "Paradise Flycatcher", "imageName": "paradise_flycatcher", "lat": 34.098, "lon": 74.795}
-			]
 		},
 		{
 			"imageName": "spot_bharatpur",
@@ -103,10 +99,6 @@
 			"latitude": 27.17,
 			"longitude": 77.52,
 			"radius": 5,
-			"birds": [
-				{"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 27.175, "lon": 77.525},
-				{"name": "Painted Stork", "imageName": "painted_stork", "lat": 27.165, "lon": 77.515}
-			]
 		},
 		{
 			"imageName": "spot_sundarbans",
@@ -115,10 +107,6 @@
 			"latitude": 21.94,
 			"longitude": 88.89,
 			"radius": 5,
-			"birds": [
-				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 21.945, "lon": 88.895},
-				{"name": "Northern Pintail", "imageName": "northern_pintail", "lat": 21.935, "lon": 88.885}
-			]
 		},
 		{
 			"imageName": "spot_chilika",
@@ -127,10 +115,6 @@
 			"latitude": 19.60,
 			"longitude": 85.35,
 			"radius": 5,
-			"birds": [
-				{"name": "Greater Flamingo", "imageName": "flamingo", "lat": 19.605, "lon": 85.355},
-				{"name": "Northern Pintail", "imageName": "northern_pintail", "lat": 19.595, "lon": 85.345}
-			]
 		},
 		{
 			"imageName": "spot_ranganathittu",
@@ -139,10 +123,6 @@
 			"latitude": 12.42,
 			"longitude": 76.68,
 			"radius": 5,
-			"birds": [
-				{"name": "Painted Stork", "imageName": "painted_stork", "lat": 12.425, "lon": 76.685},
-				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 12.415, "lon": 76.675}
-			]
 		}
 	],
 	"recommendedSpots": [
@@ -153,10 +133,6 @@
 			"latitude": 10.12,
 			"longitude": 76.69,
 			"radius": 5,
-			"birds": [
-				{"name": "Malabar Trogon", "imageName": "malabar_trogon", "lat": 10.125, "lon": 76.695},
-				{"name": "Indian Pitta", "imageName": "indian_pitta", "lat": 10.115, "lon": 76.685}
-			]
 		},
 		{
 			"imageName": "spot_nalsarovar",
@@ -165,10 +141,6 @@
 			"latitude": 22.80,
 			"longitude": 72.05,
 			"radius": 5,
-			"birds": [
-				{"name": "Greater Flamingo", "imageName": "flamingo", "lat": 22.805, "lon": 72.055},
-				{"name": "Rosy Starling", "imageName": "rosy_starling", "lat": 22.795, "lon": 72.045}
-			]
 		},
 		{
 			"imageName": "spot_kaziranga",
@@ -177,10 +149,6 @@
 			"latitude": 26.65,
 			"longitude": 93.35,
 			"radius": 5,
-			"birds": [
-				{"name": "Great Hornbill", "imageName": "great_hornbill", "lat": 26.655, "lon": 93.355},
-				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 26.645, "lon": 93.345}
-			]
 		},
 		{
 			"imageName": "spot_kumarakom",
@@ -189,10 +157,6 @@
 			"latitude": 9.61,
 			"longitude": 76.43,
 			"radius": 5,
-			"birds": [
-				{"name": "Siberian Crane", "imageName": "siberian_crane", "lat": 9.615, "lon": 76.435},
-				{"name": "Kingfisher", "imageName": "kingfisher", "lat": 9.605, "lon": 76.425}
-			]
 		},
 		{
 			"imageName": "spot_salimali",
@@ -201,10 +165,6 @@
 			"latitude": 15.51,
 			"longitude": 73.91,
 			"radius": 5,
-			"birds": [
-				{"name": "Little Bittern", "imageName": "little_bittern", "lat": 15.515, "lon": 73.915},
-				{"name": "Striated Heron", "imageName": "striated_heron", "lat": 15.505, "lon": 73.905}
-			]
 		}
 	],
     "dynamicCards": [
@@ -321,11 +281,11 @@
       "name": "Arctic Tern",
       "imageName": "arctic_tern",
       "sightings": [
-        { "week": 44, "lat": 28.7041, "lon": 77.1025, "locationName": "Delhi" },
-        { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur" },
-        { "week": 46, "lat": 19.0760, "lon": 72.8777, "locationName": "Mumbai" },
-        { "week": 47, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune" },
-        { "week": 48, "lat": 15.2993, "lon": 74.1240, "locationName": "Goa" }
+        { "week": 44, "lat": 28.7041, "lon": 77.1025, "locationName": "Delhi", "probability": 85 },
+        { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur", "probability": 85},
+        { "week": 46, "lat": 19.0760, "lon": 72.8777, "locationName": "Mumbai", "probability": 85 },
+        { "week": 47, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune", "probability": 85 },
+        { "week": 48, "lat": 15.2993, "lon": 74.1240, "locationName": "Goa", "probability": 85 }
       ]
     },
     {
@@ -333,11 +293,11 @@
       "name": "Greater Flamingo",
       "imageName": "flamingo",
       "sightings": [
-        { "week": 1, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)" },
-        { "week": 5, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)" },
-        { "week": 10, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad (Nalsarovar)" },
-        { "week": 15, "lat": 23.7337, "lon": 69.8597, "locationName": "Kutch" },
-        { "week": 45, "lat": 18.5000, "lon": 73.8800, "locationName": "Pune (Bhigwan)" }
+        { "week": 1, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)", "probability": 85 },
+        { "week": 5, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)", "probability": 85 },
+        { "week": 10, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad (Nalsarovar)", "probability": 85 },
+        { "week": 15, "lat": 23.7337, "lon": 69.8597, "locationName": "Kutch", "probability": 85 },
+        { "week": 45, "lat": 18.5000, "lon": 73.8800, "locationName": "Pune (Bhigwan)", "probability": 85 }
       ]
     },
     {
@@ -345,10 +305,10 @@
       "name": "Siberian Crane",
       "imageName": "siberian_crane",
       "sightings": [
-        { "week": 48, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi" },
-        { "week": 50, "lat": 27.1767, "lon": 78.0081, "locationName": "Agra" },
-        { "week": 52, "lat": 26.1584, "lon": 94.5624, "locationName": "Assam Wetlands" },
-        { "week": 2, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi" }
+        { "week": 48, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi", "probability": 85 },
+        { "week": 50, "lat": 27.1767, "lon": 78.0081, "locationName": "Agra", "probability": 85 },
+        { "week": 52, "lat": 26.1584, "lon": 94.5624, "locationName": "Assam Wetlands", "probability": 85 },
+        { "week": 2, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi", "probability": 85 }
       ]
     },
     {
@@ -356,10 +316,10 @@
       "name": "Amur Falcon",
       "imageName": "amur_falcon",
       "sightings": [
-        { "week": 40, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland (Doyang)" },
-        { "week": 41, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland" },
-        { "week": 42, "lat": 25.5788, "lon": 91.8933, "locationName": "Meghalaya" },
-        { "week": 44, "lat": 18.5400, "lon": 73.8200, "locationName": "Pune (Passage)" }
+        { "week": 40, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland (Doyang)", "probability": 85 },
+        { "week": 41, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland", "probability": 85 },
+        { "week": 42, "lat": 25.5788, "lon": 91.8933, "locationName": "Meghalaya", "probability": 85 },
+        { "week": 44, "lat": 18.5400, "lon": 73.8200, "locationName": "Pune (Passage)", "probability": 85 }
       ]
     },
     {
@@ -367,10 +327,10 @@
       "name": "Rosy Starling",
       "imageName": "rosy_starling",
       "sightings": [
-        { "week": 4, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune" },
-        { "week": 5, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune" },
-        { "week": 6, "lat": 19.0600, "lon": 72.8600, "locationName": "Mumbai" },
-        { "week": 8, "lat": 22.7196, "lon": 75.8577, "locationName": "Indore" }
+        { "week": 4, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune", "probability": 85},
+        { "week": 5, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune", "probability": 85 },
+        { "week": 6, "lat": 19.0600, "lon": 72.8600, "locationName": "Mumbai", "probability": 85 },
+        { "week": 8, "lat": 22.7196, "lon": 75.8577, "locationName": "Indore", "probability": 85 }
       ]
     },
     {
@@ -378,10 +338,10 @@
       "name": "Bar-headed Goose",
       "imageName": "bar_headed_goose",
       "sightings": [
-        { "week": 45, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore" },
-        { "week": 48, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore (Karanji)" },
-        { "week": 50, "lat": 15.3173, "lon": 75.7139, "locationName": "Hubli" },
-        { "week": 2, "lat": 34.1526, "lon": 77.5770, "locationName": "Ladakh (Summer)" }
+        { "week": 45, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore", "probability": 85 },
+        { "week": 48, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore (Karanji)", "probability": 85 },
+        { "week": 50, "lat": 15.3173, "lon": 75.7139, "locationName": "Hubli", "probability": 85 },
+        { "week": 2, "lat": 34.1526, "lon": 77.5770, "locationName": "Ladakh (Summer)", "probability": 85 }
       ]
     },
     {
@@ -389,10 +349,10 @@
       "name": "Demoiselle Crane",
       "imageName": "demoiselle_crane",
       "sightings": [
-        { "week": 1, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur (Khichan)" },
-        { "week": 2, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur" },
-        { "week": 10, "lat": 26.9300, "lon": 75.8000, "locationName": "Jaipur" },
-        { "week": 45, "lat": 24.5854, "lon": 73.7125, "locationName": "Udaipur" }
+        { "week": 1, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur (Khichan)", "probability": 85 },
+        { "week": 2, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur", "probability": 85 },
+        { "week": 10, "lat": 26.9300, "lon": 75.8000, "locationName": "Jaipur", "probability": 85 },
+        { "week": 45, "lat": 24.5854, "lon": 73.7125, "locationName": "Udaipur", "probability": 85 }
       ]
     },
     {
@@ -400,10 +360,10 @@
       "name": "Northern Pintail",
       "imageName": "northern_pintail",
       "sightings": [
-        { "week": 50, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata (Santragachi)" },
-        { "week": 52, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata" },
-        { "week": 4, "lat": 19.8157, "lon": 85.8315, "locationName": "Chilika Lake" },
-        { "week": 8, "lat": 13.0827, "lon": 80.2707, "locationName": "Chennai (Pulicat)" }
+        { "week": 50, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata (Santragachi)", "probability": 85 },
+        { "week": 52, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata", "probability": 85 },
+        { "week": 4, "lat": 34.1020, "lon": 74.8050, "locationName": "Chilika Lake", "probability": 85 },
+        { "week": 8, "lat": 13.0827, "lon": 80.2707, "locationName": "Chennai (Pulicat)", "probability": 85 }
       ]
     },
     {
@@ -411,10 +371,10 @@
       "name": "Black-winged Stilt",
       "imageName": "black_winged_stilt",
       "sightings": [
-        { "week": 15, "lat": 13.0600, "lon": 80.2500, "locationName": "Chennai" },
-        { "week": 20, "lat": 12.9716, "lon": 77.5946, "locationName": "Bangalore" },
-        { "week": 25, "lat": 18.5100, "lon": 73.8700, "locationName": "Pune" },
-        { "week": 30, "lat": 19.0900, "lon": 72.8900, "locationName": "Mumbai" }
+        { "week": 15, "lat": 13.0600, "lon": 80.2500, "locationName": "Chennai", "probability": 85 },
+        { "week": 20, "lat": 12.9716, "lon": 77.5946, "locationName": "Bangalore", "probability": 85 },
+        { "week": 25, "lat": 18.5100, "lon": 73.8700, "locationName": "Pune", "probability": 85 },
+        { "week": 30, "lat": 19.0900, "lon": 72.8900, "locationName": "Mumbai", "probability": 85 }
       ]
     },
     {
@@ -422,10 +382,11 @@
       "name": "Pied Cuckoo",
       "imageName": "pied_cuckoo",
       "sightings": [
-        { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)" },
-        { "week": 24, "lat": 19.0500, "lon": 72.8500, "locationName": "Mumbai" },
-        { "week": 26, "lat": 23.0400, "lon": 72.5900, "locationName": "Ahmedabad" },
-        { "week": 28, "lat": 28.7200, "lon": 77.0800, "locationName": "Delhi" }
+        { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)", "probability": 85 },
+        { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)", "probability": 85 },
+        { "week": 24, "lat": 19.0500, "lon": 72.8500, "locationName": "Mumbai", "probability": 85 },
+        { "week": 26, "lat": 23.0400, "lon": 72.5900, "locationName": "Ahmedabad", "probability": 85 },
+        { "week": 28, "lat": 28.7200, "lon": 77.0800, "locationName": "Delhi", "probability": 85 }
       ]
     },
     {
@@ -433,10 +394,10 @@
       "name": "Indian Peafowl",
       "imageName": "indian_peafowl",
       "sightings": [
-        { "week": 5, "lat": 28.6900, "lon": 77.1300, "locationName": "Delhi (Ridge)" },
-        { "week": 15, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur" },
-        { "week": 25, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur" },
-        { "week": 35, "lat": 18.4900, "lon": 73.8300, "locationName": "Pune (Sinhagad)" }
+        { "week": 5, "lat": 28.6900, "lon": 77.1300, "locationName": "Delhi (Ridge)", "probability": 85 },
+        { "week": 15, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur", "probability": 85 },
+        { "week": 25, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur", "probability": 85 },
+        { "week": 35, "lat": 18.4900, "lon": 73.8300, "locationName": "Pune (Sinhagad)", "probability": 85 }
       ]
     },
     {
@@ -444,10 +405,10 @@
       "name": "Coppersmith Barbet",
       "imageName": "coppersmith_barbet",
       "sightings": [
-        { "week": 10, "lat": 19.1000, "lon": 72.9000, "locationName": "Mumbai (SNGP)" },
-        { "week": 20, "lat": 18.5600, "lon": 73.8800, "locationName": "Pune" },
-        { "week": 30, "lat": 12.9900, "lon": 77.6100, "locationName": "Bangalore" },
-        { "week": 40, "lat": 13.1000, "lon": 80.2900, "locationName": "Chennai" }
+        { "week": 10, "lat": 19.1000, "lon": 72.9000, "locationName": "Mumbai (SNGP)", "probability": 85 },
+        { "week": 20, "lat": 18.5600, "lon": 73.8800, "locationName": "Pune", "probability": 85 },
+        { "week": 30, "lat": 12.9900, "lon": 77.6100, "locationName": "Bangalore", "probability": 85 },
+        { "week": 40, "lat": 13.1000, "lon": 80.2900, "locationName": "Chennai", "probability": 85 }
       ]
     },
     {
@@ -455,10 +416,10 @@
       "name": "White-throated Kingfisher",
       "imageName": "kingfisher",
       "sightings": [
-        { "week": 12, "lat": 15.3200, "lon": 74.1400, "locationName": "Goa" },
-        { "week": 24, "lat": 9.9312, "lon": 76.2673, "locationName": "Kochi" },
-        { "week": 36, "lat": 22.5600, "lon": 88.3500, "locationName": "Kolkata" },
-        { "week": 48, "lat": 18.5700, "lon": 73.8900, "locationName": "Pune (Mula-Mutha)" }
+        { "week": 12, "lat": 15.3200, "lon": 74.1400, "locationName": "Goa", "probability": 85 },
+        { "week": 24, "lat": 9.9312, "lon": 76.2673, "locationName": "Kochi", "probability": 85 },
+        { "week": 36, "lat": 22.5600, "lon": 88.3500, "locationName": "Kolkata", "probability": 85 },
+        { "week": 48, "lat": 18.5700, "lon": 73.8900, "locationName": "Pune (Mula-Mutha)", "probability": 85 }
       ]
     },
     {
@@ -466,10 +427,10 @@
       "name": "Indian Paradise Flycatcher",
       "imageName": "paradise_flycatcher",
       "sightings": [
-        { "week": 42, "lat": 22.7300, "lon": 75.8700, "locationName": "Indore" },
-        { "week": 45, "lat": 18.5800, "lon": 73.8100, "locationName": "Pune" },
-        { "week": 48, "lat": 15.2800, "lon": 74.1000, "locationName": "Goa (Winter)" },
-        { "week": 10, "lat": 32.2190, "lon": 76.3234, "locationName": "Dharamshala (Summer)" }
+        { "week": 42, "lat": 22.7300, "lon": 75.8700, "locationName": "Indore", "probability": 85 },
+        { "week": 45, "lat": 18.5800, "lon": 73.8100, "locationName": "Pune", "probability": 85 },
+        { "week": 48, "lat": 15.2800, "lon": 74.1000, "locationName": "Goa (Winter)", "probability": 85 },
+        { "week": 10, "lat": 32.2190, "lon": 76.3234, "locationName": "Dharamshala (Summer)", "probability": 85 }
       ]
     },
     {
@@ -477,10 +438,10 @@
       "name": "Purple Sunbird",
       "imageName": "purple_sunbird",
       "sightings": [
-        { "week": 8, "lat": 28.7300, "lon": 77.0900, "locationName": "Delhi" },
-        { "week": 16, "lat": 26.8467, "lon": 80.9462, "locationName": "Lucknow" },
-        { "week": 24, "lat": 25.3176, "lon": 82.9739, "locationName": "Varanasi" },
-        { "week": 32, "lat": 18.5900, "lon": 73.8000, "locationName": "Pune" }
+        { "week": 8, "lat": 28.7300, "lon": 77.0900, "locationName": "Delhi", "probability": 85 },
+        { "week": 16, "lat": 26.8467, "lon": 80.9462, "locationName": "Lucknow", "probability": 85 },
+        { "week": 24, "lat": 25.3176, "lon": 82.9739, "locationName": "Varanasi", "probability": 85 },
+        { "week": 32, "lat": 18.5900, "lon": 73.8000, "locationName": "Pune", "probability": 85 }
       ]
     },
     {
@@ -488,10 +449,10 @@
           "name": "Wire-tailed Swallow",
           "imageName": "wire_tailed_swallow",
           "sightings": [
-            { "week": 10, "lat": 11.7906, "lon": 82.1996, "locationName": "Ayodhya" },
-            { "week": 15, "lat": 12.1000, "lon": 79.8300, "locationName": "Passage Point A" },
-            { "week": 20, "lat": 13.1000, "lon": 76.8000, "locationName": "Passage Point B" },
-            { "week": 24, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune" }
+            { "week": 10, "lat": 11.7906, "lon": 82.1996, "locationName": "Ayodhya", "probability": 85 },
+            { "week": 15, "lat": 12.1000, "lon": 79.8300, "locationName": "Passage Point A", "probability": 85 },
+            { "week": 20, "lat": 13.1000, "lon": 76.8000, "locationName": "Passage Point B", "probability": 85 },
+            { "week": 24, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune", "probability": 85 }
           ]
         },
     {
@@ -499,9 +460,9 @@
           "name": "Brown Headed Barbet",
           "imageName": "brown_headed_barbet_alt",
           "sightings": [
-            { "week": 42, "lat": 28.6139, "lon": 77.2090, "locationName": "Delhi Ridge" },
-            { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur Outskirts" },
-            { "week": 48, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad Park" }
+            { "week": 42, "lat": 28.6139, "lon": 77.2090, "locationName": "Delhi Ridge", "probability": 85 },
+            { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur Outskirts", "probability": 85 },
+            { "week": 48, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad Park", "probability": 85 }
           ]
         },
         {
@@ -509,9 +470,9 @@
           "name": "Eurasian Wigeon",
           "imageName": "eurasian_wigeon",
           "sightings": [
-            { "week": 44, "lat": 34.1, "lon": 74.8, "locationName": "Hokersar Wetland" },
-            { "week": 47, "lat": 29.9452, "lon": 76.8132, "locationName": "Bhindawas Lake" },
-            { "week": 50, "lat": 19.8157, "lon": 85.8315, "locationName": "Chilika Lake" }
+            { "week": 4, "lat": 34.1200, "lon": 74.8100, "locationName": "Hokersar Wetland", "probability": 85},
+            { "week": 47, "lat": 29.9452, "lon": 76.8132, "locationName": "Bhindawas Lake", "probability": 85 },
+            { "week": 50, "lat": 19.8157, "lon": 85.8315, "locationName": "Chilika Lake", "probability": 85 }
           ]
         }
   ]

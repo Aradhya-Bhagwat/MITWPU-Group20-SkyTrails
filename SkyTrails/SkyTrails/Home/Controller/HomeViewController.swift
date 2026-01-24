@@ -116,17 +116,9 @@ extension HomeViewController {
 		inputData.longitude = lon
 		inputData.areaValue = Int(radius)
 		inputData.startDate = Date()
-		inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+        inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
 		
-		let predictions: [FinalPredictionResult] = birds.map { bird in
-			return FinalPredictionResult(
-				birdName: bird.name,
-				imageName: bird.imageName,
-				matchedInputIndex: 0,
-				matchedLocation: (lat: bird.lat, lon: bird.lon)
-			)
-		}
-		
+        let predictions = HomeManager.shared.getLivePredictions(for: lat, lon: lon, radiusKm: radius)
 		let storyboard = UIStoryboard(name: "Home", bundle: nil)
 		if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
 			self.navigationController?.pushViewController(predictMapVC, animated: true)
@@ -376,10 +368,11 @@ extension HomeViewController: UICollectionViewDataSource {
             ) as! SpotsToVisitCollectionViewCell
             
             let item = homeData.homeScreenSpots[indexPath.row]
+            let activeCount = HomeManager.shared.spotSpeciesCountCache[item.title] ?? 0
             cell.configure(
                 image: UIImage(named: item.imageName),
                 title: item.title,
-                date: item.location
+                speciesCount: activeCount
             )
             return cell
             

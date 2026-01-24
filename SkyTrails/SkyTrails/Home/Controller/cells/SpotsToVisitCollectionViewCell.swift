@@ -13,6 +13,8 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var birdImageView2: UIImageView!
     @IBOutlet weak var titleLabel2: UILabel!
     @IBOutlet weak var dateLabel2: UILabel!
+    
+    private var currentSpeciesCount: Int = 0
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -61,17 +63,19 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         )
         
         let dynamicDateSize = currentWidth * dateRatio
-            dateLabel2.font = UIFont.systemFont(ofSize: dynamicDateSize, weight: .regular)
+        dateLabel2.font = UIFont.systemFont(ofSize: dynamicDateSize, weight: .regular)
+        updateSpeciesLabel(count: currentSpeciesCount, fontSize: dynamicDateSize)
         
-        if let text = dateLabel2.text {
+    }
+    private func updateSpeciesLabel(count: Int, fontSize: CGFloat) {
+            let text = "\(count) Species active now"
             dateLabel2.attributedText = createIconString(
                 text: text,
-                iconName: "mappin.and.ellipse",
-                color: .secondaryLabel,
-                fontSize: dynamicDateSize
+                iconName: "bird.fill", // 💡 Changed to bird icon
+                color: .systemGreen,   // 💡 Changed to green to indicate "live" data
+                fontSize: fontSize
             )
         }
-    }
     
     override func prepareForReuse() {
            super.prepareForReuse()
@@ -94,18 +98,12 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
             return completeString
         }
     
-    func configure(image: UIImage?, title: String, date: String) {
-        birdImageView2.image = image
-        titleLabel2.text = title
-        let locationColor = dateLabel2.textColor ?? .secondaryLabel
-        let locationFontSize = dateLabel2.font.pointSize
-                
-        dateLabel2.attributedText = createIconString(
-                text: date,
-                iconName: "mappin.and.ellipse",
-                color: locationColor,
-                fontSize: locationFontSize
-            )
+    func configure(image: UIImage?, title: String, speciesCount: Int) {
+            self.birdImageView2.image = image
+            self.titleLabel2.text = title
+            self.currentSpeciesCount = speciesCount // Save the state
+            
+            updateSpeciesLabel(count: speciesCount, fontSize: dateLabel2.font.pointSize)
         }
     
 }
