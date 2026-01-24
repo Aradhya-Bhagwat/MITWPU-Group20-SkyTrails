@@ -244,6 +244,7 @@ struct Sighting: Codable {
     let lat: Double
     let lon: Double
     let locationName: String
+    let probability: Int?
 }
 
 // Helper for the Logic
@@ -258,6 +259,7 @@ struct FinalPredictionResult: Hashable { // Make it Hashable to easily get uniqu
     let imageName: String
     let matchedInputIndex: Int
     let matchedLocation: (lat: Double, lon: Double)
+    let spottingProbability: Int
     
     // Conform to Hashable for unique filtering
     func hash(into hasher: inout Hasher) {
@@ -280,8 +282,6 @@ class PredictionEngine {
             self.allSpecies = speciesData
         }
     }
-    
-    /// Finds all matching birds based on a single user input card's criteria.
    
 }
 

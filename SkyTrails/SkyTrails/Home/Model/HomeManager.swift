@@ -15,6 +15,7 @@ class HomeManager {
     var coreHomeData: CoreHomeData?
     var newsResponse: NewsResponse?
     var predictionData: PredictionDataWrapper?
+    var spotSpeciesCountCache: [String: Int] = [:]
 
     
     private init() {
@@ -87,11 +88,45 @@ class HomeManager {
             }
         }
         
+        precalculateSpotSpeciesCounts()
         // If we loaded successfully from Bundle (and not documents), save to Documents to ensure persistence for next time
         if loadedCoreData && !loadedFromDocuments {
             saveData()
         }
     }
+    
+    // 💡 ADD THIS NEW FUNCTION:
+        private func precalculateSpotSpeciesCounts() {
+            // Ensure we have spots and bird data before starting
+            guard let watchlist = coreHomeData?.watchlistSpots,
+                  let recommended = coreHomeData?.recommendedSpots,
+                  let allSpecies = predictionData?.speciesData else { return }
+            
+            let allSpots = watchlist + recommended
+            let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+            
+            for spot in allSpots {
+                guard let lat = spot.latitude, let lon = spot.longitude else { continue }
+                
+                let searchLoc = CLLocation(latitude: lat, longitude: lon)
+                let radiusMeters = (spot.radius ?? 5.0) * 1000.0
+                
+                // Search through every bird in the global speciesData
+                let activeBirds = allSpecies.filter { species in
+                    species.sightings.contains { sighting in
+                        // Logic: Is this bird sighting near the spot AND happening this week?
+                        let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
+                        let isNearby = sightingLoc.distance(from: searchLoc) <= radiusMeters
+                        let isCurrentWeek = sighting.week == currentWeek
+                        
+                        return isNearby && isCurrentWeek
+                    }
+                }
+                
+                // Save the number of birds found for this specific spot title
+                spotSpeciesCountCache[spot.title] = activeBirds.count
+            }
+        }
     
     // MARK: - Business Logic
     // MARK: - Business Logic
@@ -192,7 +227,9 @@ class HomeManager {
                         birdName: species.name,
                         imageName: species.imageName,
                         matchedInputIndex: inputIndex,
-                        matchedLocation: (lat: matched.lat, lon: matched.lon)
+                        matchedLocation: (lat: matched.lat, lon: matched.lon),
+                        spottingProbability: matched.probability ?? 75
+                        
                     )
                 )
             }
@@ -253,16 +290,6 @@ class HomeManager {
         return (nil, nil)
     }
     
-    func getPredictions(for spot: PopularSpot) -> [FinalPredictionResult] {
-        return (spot.birds ?? []).map { bird in
-            return FinalPredictionResult(
-                birdName: bird.name,
-                imageName: bird.imageName,
-                matchedInputIndex: 0, // All match this single input
-                matchedLocation: (lat: bird.lat, lon: bird.lon)
-            )
-        }
-    }
     
     func getRelevantSightings(for input: BirdDateInput) -> [Sighting] {
         guard let start = input.startDate, let end = input.endDate else { return [] }
@@ -309,4 +336,29 @@ class HomeManager {
         
         return relevantSightings
     }
+    
+    // 💡 ADD THIS TO HELP YOUR OUTPUT SCREEN:
+        func getLivePredictions(for lat: Double, lon: Double, radiusKm: Double) -> [FinalPredictionResult] {
+            guard let allSpecies = predictionData?.speciesData else { return [] }
+            
+            let searchLoc = CLLocation(latitude: lat, longitude: lon)
+            let radiusMeters = radiusKm * 1000.0
+            let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+            
+            return allSpecies.compactMap { species in
+                if let match = species.sightings.first(where: { s in
+                    let loc = CLLocation(latitude: s.lat, longitude: s.lon)
+                    return loc.distance(from: searchLoc) <= radiusMeters && s.week == currentWeek
+                }) {
+                    return FinalPredictionResult(
+                        birdName: species.name,
+                        imageName: species.imageName,
+                        matchedInputIndex: 0,
+                        matchedLocation: (lat: match.lat, lon: match.lon),
+                        spottingProbability: match.probability ?? 70 // Use the JSON field we added
+                    )
+                }
+                return nil
+            }
+        }
 }

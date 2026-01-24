@@ -121,77 +121,84 @@ class AllSpotsViewController: UIViewController {
     }
 }
 
-    extension AllSpotsViewController: UICollectionViewDataSource {
-        func numberOfSections(in collectionView: UICollectionView) -> Int {
-            return 2
+extension AllSpotsViewController: UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 2
+    }
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return (section == 0) ? watchlistData.count : recommendationsData.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: GridSpotsToVisitCollectionViewCell.identifier,
+            for: indexPath
+        ) as? GridSpotsToVisitCollectionViewCell else {
+            return UICollectionViewCell()
         }
 
-        func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-            if section == 0 {
-                return watchlistData.count
-            } else {
-                return recommendationsData.count
-            }
-        }
-
-        func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-                
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: GridSpotsToVisitCollectionViewCell.identifier,
-                for: indexPath
-            ) as? GridSpotsToVisitCollectionViewCell else {
-                return UICollectionViewCell()
-            }
-
-            let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-            cell.configure(with: item)
-            return cell
+        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
+        
+        // 💡 FETCH DYNAMIC DATA: Get the pre-calculated count from HomeManager
+        let activeCount = HomeManager.shared.spotSpeciesCountCache[item.title] ?? 0
+        
+        // 💡 CONFIGURE WITH INT: Ensure your Grid cell's configure method accepts Int
+        cell.configure(
+            image: UIImage(named: item.imageName),
+            title: item.title,
+            speciesCount: activeCount
+        )
+        
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard kind == UICollectionView.elementKindSectionHeader,
+              let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as? SectionHeaderCollectionReusableView else {
+            return UICollectionReusableView()
         }
         
-        func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-            guard kind == UICollectionView.elementKindSectionHeader,
-                  let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as? SectionHeaderCollectionReusableView else {
-                return UICollectionReusableView()
-            }
-            
-            if indexPath.section == 0 {
-                header.isHidden = watchlistData.isEmpty
-                header.configure(title: "Your Watchlist")
-            } else {
-                header.isHidden = false
-                header.configure(title: "Recommendations")
-            }
-            return header
+        if indexPath.section == 0 {
+            header.isHidden = watchlistData.isEmpty
+            header.configure(title: "Your Watchlist")
+        } else {
+            header.isHidden = false
+            header.configure(title: "Recommendations")
+        }
+        return header
+    }
+}
+
+extension AllSpotsViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
+
+        guard let lat = item.latitude, let lon = item.longitude else { return }
+        
+        // 1. Prepare search criteria
+        var inputData = PredictionInputData()
+        inputData.locationName = item.title
+        inputData.latitude = lat
+        inputData.longitude = lon
+        inputData.areaValue = Int(item.radius ?? 5.0)
+        inputData.startDate = Date()
+        // Match the live-week logic by setting a 1-week window
+        inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+        
+        // 2. 💡 LIVE PREDICTION: Perform the dynamic search against global speciesData
+        let predictions = HomeManager.shared.getLivePredictions(
+            for: lat,
+            lon: lon,
+            radiusKm: item.radius ?? 5.0
+        )
+        
+        // 3. Navigate to Output
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+            self.navigationController?.pushViewController(predictMapVC, animated: true)
+            predictMapVC.loadViewIfNeeded()
+            predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
         }
     }
-
-    extension AllSpotsViewController: UICollectionViewDelegate {
-        func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-            let item: PopularSpot
-            if indexPath.section == 0 {
-                item = watchlistData[indexPath.row]
-            } else {
-                item = recommendationsData[indexPath.row]
-            }
-
-            guard let lat = item.latitude, let lon = item.longitude else {
-                print( "\(item.title)")
-                return
-            }
-            
-            var inputData = PredictionInputData()
-            inputData.locationName = item.title
-            inputData.latitude = lat
-            inputData.longitude = lon
-            inputData.areaValue = Int(item.radius ?? 5.0)
-            inputData.startDate = Date()
-            inputData.endDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
-            let predictions = HomeManager.shared.getPredictions(for: item)
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-            if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
-                self.navigationController?.pushViewController(predictMapVC, animated: true)
-                predictMapVC.loadViewIfNeeded()
-                predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
-            }
-        }
-    }
+}
