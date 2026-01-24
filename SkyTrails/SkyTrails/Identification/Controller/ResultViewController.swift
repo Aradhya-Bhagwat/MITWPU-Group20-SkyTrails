@@ -68,9 +68,9 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
 
-        layout.minimumInteritemSpacing = 12
-        layout.minimumLineSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
+        layout.minimumInteritemSpacing = 8
+        layout.minimumLineSpacing = 12
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
 
         resultCollectionView.collectionViewLayout = layout
     }
@@ -96,7 +96,15 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let width =
             (collectionView.bounds.width - totalSpacing) / itemsPerRow
 
-        return CGSize(width: width, height: 300)
+        return CGSize(width: width, height: width * 1.4)
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        coordinator.animate(alongsideTransition: { [weak self] context in
+            self?.resultCollectionView.collectionViewLayout.invalidateLayout()
+        }, completion: nil)
     }
 
     
