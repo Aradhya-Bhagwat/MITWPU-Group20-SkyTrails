@@ -71,23 +71,56 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
             return .zero
         }
 
-        let itemsPerRow: CGFloat =
-            UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2
+        let minItemWidth: CGFloat = 100 // Define minimum desirable width for a card
+        let maxItemsPerRow: CGFloat = 4 // User requested maximum 4 cards per row
+        let interItemSpacing = layout.minimumInteritemSpacing
+        let sectionLeftInset = layout.sectionInset.left
+        let sectionRightInset = layout.sectionInset.right
 
-        let totalSpacing =
-            layout.sectionInset.left +
-            layout.sectionInset.right +
-            layout.minimumInteritemSpacing * (itemsPerRow - 1)
+        let availableWidth = collectionView.bounds.width - sectionLeftInset - sectionRightInset
 
-        let width =
-            (collectionView.bounds.width - totalSpacing) / itemsPerRow
+        var itemsPerRow: CGFloat = 1
+      
+        while true {
+            let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
+            let potentialWidth = (availableWidth - potentialTotalSpacing) / itemsPerRow
 
-        return CGSize(width: width, height: 180)
+            if potentialWidth >= minItemWidth {
+                itemsPerRow += 1
+            } else {
+                itemsPerRow -= 1
+                break
+            }
+        
+            if itemsPerRow == 0 {
+                itemsPerRow = 1
+                break
+            }
+        }
+    
+        if itemsPerRow < 1 { itemsPerRow = 1 }
+
+        if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
+
+        let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
+        let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
+        
+       
+        let itemHeight = itemWidth * 1.0
+
+        return CGSize(width: itemWidth, height: itemHeight)
     }
 
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredShapes.count
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            self?.shapeCollectionView.collectionViewLayout.invalidateLayout()
+        }, completion: nil)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

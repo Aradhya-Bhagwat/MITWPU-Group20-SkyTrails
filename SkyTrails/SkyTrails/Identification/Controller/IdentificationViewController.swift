@@ -190,18 +190,44 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             return .zero
         }
 
-        let itemsPerRow: CGFloat =
-            UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2
+        let minItemWidth: CGFloat = 120
+        let maxItemsPerRow: CGFloat = 4
+        let interItemSpacing = layout.minimumInteritemSpacing
+        let sectionLeftInset = layout.sectionInset.left
+        let sectionRightInset = layout.sectionInset.right
 
-        let totalSpacing =
-            layout.sectionInset.left +
-            layout.sectionInset.right +
-            layout.minimumInteritemSpacing * (itemsPerRow - 1)
+        let availableWidth = collectionView.bounds.width - sectionLeftInset - sectionRightInset
+        
+        var itemsPerRow: CGFloat = 1
+        while true {
+            let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
+            let potentialWidth = (availableWidth - potentialTotalSpacing) / itemsPerRow
+            if potentialWidth >= minItemWidth {
+                itemsPerRow += 1
+            } else {
+                itemsPerRow -= 1
+                break
+            }
+            if itemsPerRow == 0 {
+                itemsPerRow = 1
+                break
+            }
+        }
+        
+        if itemsPerRow < 1 { itemsPerRow = 1 }
+        if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
 
-        let width =
-            (collectionView.bounds.width - totalSpacing) / itemsPerRow
+        let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
+        let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
+        
+        return CGSize(width: itemWidth, height: itemWidth * 1.4)
+    }
 
-        return CGSize(width: width, height: 240)
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            self?.historyCollectionView.collectionViewLayout.invalidateLayout()
+        }, completion: nil)
     }
 
 
