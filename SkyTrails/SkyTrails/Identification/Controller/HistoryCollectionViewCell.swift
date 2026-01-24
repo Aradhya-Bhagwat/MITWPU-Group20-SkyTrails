@@ -88,8 +88,11 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     }
 
     func configureCell(historyItem: History) {
-        historyImageView.image = UIImage(named: historyItem.imageView)
+        contentView.backgroundColor = .white
+        layer.shadowOpacity = 0.12
 
+        historyImageView.image = UIImage(named: historyItem.imageView)
+        historyImageView.layer.cornerRadius = 10
         specieNameLabel.text = historyItem.specieName
         dateLabel.text = formatDate(historyItem.date)
     }
