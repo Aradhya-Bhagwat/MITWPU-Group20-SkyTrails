@@ -7,7 +7,10 @@
 
 import UIKit
 
+@MainActor
 class WatchlistHomeViewController: UIViewController {
+
+	private let manager = WatchlistManager.shared
 	
 		// MARK: - Types
 	enum WatchlistSection: Int, CaseIterable {
@@ -70,7 +73,7 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func refreshDataIfNeeded() {
-		WatchlistManager.shared.onDataLoaded { [weak self] success in
+		manager.onDataLoaded { [weak self] success in
 			guard success else { return }
 			DispatchQueue.main.async {
 				self?.summaryCardCollectionView.reloadData()
@@ -127,8 +130,6 @@ extension WatchlistHomeViewController {
 		guard let indexPath = summaryCardCollectionView.indexPathForItem(at: point),
 			  let sectionType = WatchlistSection(rawValue: indexPath.section) else { return }
 		
-		let manager = WatchlistManager.shared
-		
 		switch sectionType {
 			case .myWatchlist:
 				if let watchlist = manager.watchlists.first {
@@ -160,7 +161,7 @@ extension WatchlistHomeViewController {
 		})
 		
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-			WatchlistManager.shared.deleteWatchlist(id: watchlist.id)
+			self?.manager.deleteWatchlist(id: watchlist.id)
 			self?.summaryCardCollectionView.reloadData()
 		})
 		
@@ -176,7 +177,7 @@ extension WatchlistHomeViewController {
 		})
 		
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-			WatchlistManager.shared.deleteSharedWatchlist(id: shared.id)
+			self?.manager.deleteSharedWatchlist(id: shared.id)
 			self?.summaryCardCollectionView.reloadData()
 		})
 		
@@ -220,7 +221,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func showObservedDetail() {
-		guard let watchlistId = WatchlistManager.shared.watchlists.first?.id else { return }
+		guard let watchlistId = manager.watchlists.first?.id else { return }
 		
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
@@ -230,7 +231,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func showSpeciesSelection() {
-		guard let watchlistId = WatchlistManager.shared.watchlists.first?.id else { return }
+		guard let watchlistId = manager.watchlists.first?.id else { return }
 		
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
@@ -312,7 +313,6 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	}
 	
 	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		let manager = WatchlistManager.shared
 		guard let sectionType = WatchlistSection(rawValue: section) else { return 0 }
 		
 		switch sectionType {
@@ -324,7 +324,6 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	}
 	
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		let manager = WatchlistManager.shared
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else {
 			return collectionView.dequeueReusableCell(withReuseIdentifier: "PlaceholderCell", for: indexPath)
 		}
@@ -342,7 +341,6 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	}
 	
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-		let manager = WatchlistManager.shared
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return }
 		
 		switch sectionType {
@@ -396,8 +394,7 @@ extension WatchlistHomeViewController {
 			
 				// Get up to 4 images for the collage
 			let images = watchlist.birds.prefix(4).compactMap { bird -> UIImage? in
-				guard let imageName = bird.images.first else { return nil }
-				return UIImage(named: imageName)
+				return UIImage(named: bird.staticImageName)
 			}
 			
 			cell.configure(

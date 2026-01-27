@@ -14,7 +14,10 @@ enum WatchlistType {
     case allSpecies
 }
 
+@MainActor
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
+
+    private let manager = WatchlistManager.shared
     
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
@@ -60,7 +63,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             
     @IBAction func didTapEdit(_ sender: Any) {
         guard let id = currentWatchlistId else { return }
-        let manager = WatchlistManager.shared
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         
         guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
@@ -78,7 +80,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        WatchlistManager.shared.onDataLoaded { [weak self] _ in
+        manager.onDataLoaded { [weak self] _ in
             DispatchQueue.main.async {
                 self?.refreshData()
             }
@@ -86,8 +88,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     }
     
     private func refreshData() {
-        let manager = WatchlistManager.shared
-        
         switch watchlistType {
         case .myWatchlist:
             self.allWatchlists = manager.watchlists
@@ -197,12 +197,12 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             case .nameAZ: return b1.name < b2.name
             case .nameZA: return b1.name > b2.name
             case .date:
-                let d1 = b1.date.first ?? Date.distantPast
-                let d2 = b2.date.first ?? Date.distantPast
+                let d1 = b1.observationDates?.first ?? Date.distantPast
+                let d2 = b2.observationDates?.first ?? Date.distantPast
                 return d1 > d2
             case .rarity:
-                let isRare1 = b1.rarity.contains(.rare)
-                let isRare2 = b2.rarity.contains(.rare)
+                let isRare1 = b1.rarity?.contains(.rare) ?? false
+                let isRare2 = b2.rarity?.contains(.rare) ?? false
                 return isRare1 && !isRare2
             }
         }
@@ -313,7 +313,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     }
     
     private func deleteBird(_ bird: Bird, watchlistId: UUID) {
-        WatchlistManager.shared.deleteBird(bird, from: watchlistId)
+        manager.deleteBird(bird, from: watchlistId)
         refreshData()
     }
     
@@ -394,7 +394,6 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             bird = currentList[indexPath.row]
             if watchlistType == .allSpecies {
                 // Find ID
-                let manager = WatchlistManager.shared
                 if let list = manager.watchlists.first(where: { $0.birds.contains(where: { $0.name == bird.name }) }) {
                     wId = list.id
                 } else if let shared = manager.sharedWatchlists.first(where: { $0.birds.contains(where: { $0.name == bird.name }) }) {

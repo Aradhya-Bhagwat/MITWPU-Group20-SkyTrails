@@ -7,7 +7,10 @@
 
 import UIKit
 
+@MainActor
 class SharedWatchlistsViewController: UIViewController {
+
+    private let manager = WatchlistManager.shared
 
     // MARK: - Outlets
     @IBOutlet weak var collectionView: UICollectionView!
@@ -24,7 +27,7 @@ class SharedWatchlistsViewController: UIViewController {
 
     // Computed property to access shared watchlists from Singleton
     var allSharedWatchlists: [SharedWatchlist] {
-        return WatchlistManager.shared.sharedWatchlists
+        return manager.sharedWatchlists
     }
 
     // MARK: - Lifecycle
@@ -50,7 +53,7 @@ class SharedWatchlistsViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        WatchlistManager.shared.onDataLoaded { [weak self] _ in
+        manager.onDataLoaded { [weak self] _ in
             DispatchQueue.main.async {
                 self?.refreshData()
             }
@@ -196,7 +199,7 @@ class SharedWatchlistsViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             guard let self = self else { return }
-            WatchlistManager.shared.deleteSharedWatchlist(id: shared.id)
+            self.manager.deleteSharedWatchlist(id: shared.id)
             self.refreshData()
         }))
 

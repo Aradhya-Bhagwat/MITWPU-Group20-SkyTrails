@@ -25,7 +25,7 @@ class IdentificationManager {
     var selectedFieldMarks: [FieldMarkData] = []
     
     
-    var birdResults: [Bird2] = []
+    var birdResults: [Bird] = []
     
     
     var onResultsUpdated: (() -> Void)?
@@ -94,7 +94,7 @@ class IdentificationManager {
             }
         }
 
-        var scoredBirds: [(bird: Bird2, score: Double, breakdown: String)] = []
+        var scoredBirds: [(bird: Bird, score: Double, breakdown: String)] = []
 
       
         for bird in allBirds {
@@ -214,7 +214,7 @@ class IdentificationManager {
             return masterDatabase?.referenceData.fieldMarks ?? []
         }
         
-        func getBird(byName name: String) -> Bird2? {
+        func getBird(byName name: String) -> Bird? {
             return masterDatabase?.birds.first(where: { $0.commonName == name })
         }
         
@@ -228,13 +228,14 @@ class IdentificationManager {
             return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         }
         
-        private func loadUserBirds() -> [Bird2] {
+        private func loadUserBirds() -> [Bird] {
             let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
             let decoder = JSONDecoder()
             
             if let data = try? Data(contentsOf: url) {
                 do {
-                    return try decoder.decode([Bird2].self, from: data)
+                    // return try decoder.decode([Bird].self, from: data)
+                    return [] // TODO: Migrate to SwiftData
                 } catch {
                     print("CRITICAL: Failed to decode user_birds.json:", error)
                     return []
@@ -254,8 +255,8 @@ class IdentificationManager {
             do {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = .prettyPrinted
-                let data = try encoder.encode(userBirds)
-                try data.write(to: url, options: .atomic)
+                // let data = try encoder.encode(userBirds)
+                // try data.write(to: url, options: .atomic)
             } catch {
                 print("Failed to save user_birds.json:", error)
             }

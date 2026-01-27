@@ -15,7 +15,10 @@ struct Participant {
 	let imageName: String
 }
 
+@MainActor
 class EditWatchlistDetailViewController: UIViewController {
+
+	private let manager = WatchlistManager.shared
 	
 		// MARK: - Outlets
 	@IBOutlet weak var titleTextField: UITextField!
@@ -199,8 +202,6 @@ class EditWatchlistDetailViewController: UIViewController {
 		let startDate = startDatePicker.date
 		let endDate = endDatePicker.date
 		let finalUserImages = participants.map { $0.imageName }
-		let manager = WatchlistManager.shared
-		
 			// 1. Update Existing Custom Watchlist
 		if let watchlist = watchlistToEdit {
 			manager.updateWatchlist(id: watchlist.id, title: title, location: location, startDate: startDate, endDate: endDate)
@@ -222,16 +223,22 @@ class EditWatchlistDetailViewController: UIViewController {
 		
 			// 3. Create New Custom Watchlist
 		if watchlistType == .custom {
+				// FIXED: Removed extra arguments 'observedBirds' and 'toObserveBirds'.
+				// The model uses a single 'birds' array (defaulting to []).
 			let newWatchlist = Watchlist(
-				title: title, location: location, startDate: startDate, endDate: endDate,
-				observedBirds: [], toObserveBirds: []
+				title: title,
+				location: location,
+				startDate: startDate,
+				endDate: endDate,
+				birds: [] // You can explicitly pass empty birds or omit this parameter
 			)
 			manager.addWatchlist(newWatchlist)
 			
 				// 4. Create New Shared Watchlist
 		} else if watchlistType == .shared {
 			let newShared = SharedWatchlist(
-				title: title, location: location,
+				title: title,
+				location: location,
 				dateRange: formatDateRange(start: startDate, end: endDate),
 				mainImageName: "bird_placeholder",
 				stats: SharedWatchlistStats(greenValue: 0, blueValue: 0),

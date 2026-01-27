@@ -1,5 +1,5 @@
 //
-//  models.swift
+//  Models.swift
 //  SkyTrails
 //
 //  Created by SDC-USER on 24/11/25.
@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import SwiftData
 
 enum WatchlistMode: String, Codable, CaseIterable {
     case observed
@@ -28,18 +29,22 @@ struct WatchlistStats {
     let rareCount: Int
 }
 
-struct Watchlist: Codable, Identifiable, Hashable {
-    let id: UUID
+@Model
+final class Watchlist {
+    @Attribute(.unique) var id: UUID
     var title: String
     var location: String
     var startDate: Date
     var endDate: Date
     
-    var observedBirds: [Bird]
-    var toObserveBirds: [Bird]
+    @Relationship(deleteRule: .cascade, inverse: \Bird.watchlist) var birds: [Bird]
     
-    var birds: [Bird] {
-        observedBirds + toObserveBirds
+    var observedBirds: [Bird] {
+        birds.filter { $0.observationStatus == .observed }
+    }
+    
+    var toObserveBirds: [Bird] {
+        birds.filter { $0.observationStatus == .toObserve }
     }
     
     var observedCount: Int {
@@ -50,26 +55,17 @@ struct Watchlist: Codable, Identifiable, Hashable {
         WatchlistStats(
             totalBirds: birds.count,
             observedCount: observedCount,
-            rareCount: birds.filter { $0.rarity.contains(.rare) }.count
+            rareCount: birds.filter { $0.rarity?.contains(.rare) ?? false }.count
         )
     }
     
-    init(id: UUID = UUID(), title: String, location: String, startDate: Date, endDate: Date, observedBirds: [Bird], toObserveBirds: [Bird]) {
+    init(id: UUID = UUID(), title: String, location: String, startDate: Date, endDate: Date, birds: [Bird] = []) {
         self.id = id
         self.title = title
         self.location = location
         self.startDate = startDate
         self.endDate = endDate
-        self.observedBirds = observedBirds
-        self.toObserveBirds = toObserveBirds
-    }
-    
-    static func == (lhs: Watchlist, rhs: Watchlist) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        self.birds = birds
     }
 }
 
@@ -83,8 +79,9 @@ struct SharedWatchlistStats: Codable, Hashable {
     }
 }
 
-struct SharedWatchlist: Codable, Identifiable, Hashable {
-    let id: UUID
+@Model
+final class SharedWatchlist {
+    @Attribute(.unique) var id: UUID
     var title: String
     var location: String
     var dateRange: String
@@ -92,14 +89,17 @@ struct SharedWatchlist: Codable, Identifiable, Hashable {
     var stats: SharedWatchlistStats
     var userImages: [String]
     
-    var observedBirds: [Bird]
-    var toObserveBirds: [Bird]
+    @Relationship(deleteRule: .cascade, inverse: \Bird.sharedWatchlist) var birds: [Bird]
     
-    var birds: [Bird] {
-        observedBirds + toObserveBirds
+    var observedBirds: [Bird] {
+        birds.filter { $0.observationStatus == .observed }
     }
     
-    init(id: UUID = UUID(), title: String, location: String, dateRange: String, mainImageName: String, stats: SharedWatchlistStats, userImages: [String], observedBirds: [Bird] = [], toObserveBirds: [Bird] = []) {
+    var toObserveBirds: [Bird] {
+        birds.filter { $0.observationStatus == .toObserve }
+    }
+    
+    init(id: UUID = UUID(), title: String, location: String, dateRange: String, mainImageName: String, stats: SharedWatchlistStats, userImages: [String], birds: [Bird] = []) {
         self.id = id
         self.title = title
         self.location = location
@@ -107,15 +107,6 @@ struct SharedWatchlist: Codable, Identifiable, Hashable {
         self.mainImageName = mainImageName
         self.stats = stats
         self.userImages = userImages
-        self.observedBirds = observedBirds
-        self.toObserveBirds = toObserveBirds
-    }
-    
-    static func == (lhs: SharedWatchlist, rhs: SharedWatchlist) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        self.birds = birds
     }
 }

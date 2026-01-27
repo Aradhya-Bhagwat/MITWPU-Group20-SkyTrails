@@ -5,7 +5,7 @@ import CoreLocation
 struct BirdDatabase: Decodable {
     let metadata: Metadata
     let referenceData: ReferenceData
-    var birds: [Bird2]
+    var birds: [Bird]
 
     enum CodingKeys: String, CodingKey {
         case metadata
@@ -18,7 +18,7 @@ struct BirdDatabase: Decodable {
         self.metadata = try container.decode(Metadata.self, forKey: .metadata)
         self.referenceData = try container.decode(ReferenceData.self, forKey: .referenceData)
         let refBirds = try container.decode([ReferenceBird].self, forKey: .birds)
-        self.birds = refBirds.map { Bird2.fromReferenceBird($0) }
+        self.birds = refBirds.map { Bird.fromReferenceBird($0) }
     }
 }
 

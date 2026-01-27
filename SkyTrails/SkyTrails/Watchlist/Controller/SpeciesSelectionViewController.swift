@@ -6,7 +6,10 @@
 
 import UIKit
 
+@MainActor
 class SpeciesSelectionViewController: UIViewController {
+
+    private let manager = WatchlistManager.shared
 
     // MARK: - Constants
     private struct Constants {
@@ -57,7 +60,6 @@ class SpeciesSelectionViewController: UIViewController {
     
     private func loadData() {
         // Flatten all birds from all watchlists
-        let manager = WatchlistManager.shared
         let all = manager.watchlists.flatMap { $0.birds }
         
         // Deduplicate birds by ID using a Dictionary grouping
@@ -118,7 +120,7 @@ extension SpeciesSelectionViewController {
     private func finalizeLoop() {
         if !processedBirds.isEmpty, let watchlistId = targetWatchlistId {
             let isObserved = (mode == .observed)
-            WatchlistManager.shared.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
+            manager.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
         }
         navigationController?.popViewController(animated: true)
     }
@@ -190,15 +192,16 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         cell.shouldShowAvatars = false
         cell.dateLabel.isHidden = true
         
-        // Rarity Logic
-        let rarityString = bird.rarity.compactMap { "\($0)" }.joined(separator: ", ").capitalized
-        cell.locationLabel.text = rarityString.isEmpty ? "Unknown" : rarityString
-        cell.locationLabel.textColor = .systemOrange
-        
-        // Selection State
-        cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
-        
-        return cell
+			// Rarity Logic
+			// FIXED: Added '?? []' to handle the optional array safely
+		let rarityString = (bird.rarity ?? []).compactMap { "\($0)" }.joined(separator: ", ").capitalized
+		cell.locationLabel.text = rarityString.isEmpty ? "Unknown" : rarityString
+		cell.locationLabel.textColor = .systemOrange
+		
+			// Selection State
+		cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
+		
+		return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
