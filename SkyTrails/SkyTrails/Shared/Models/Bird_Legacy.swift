@@ -12,7 +12,7 @@ enum Rarity: String, Codable {
     case common
 }
 
-struct Bird: Codable {
+struct BirdLegacy: Codable {
     var id: UUID = UUID()
     
     var name: String

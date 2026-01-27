@@ -2,7 +2,10 @@ import UIKit
 import MapKit
 import CoreLocation
 
+@MainActor
 class UnobservedDetailViewController: UIViewController {
+
+	private let manager = WatchlistManager.shared
 	
 		// MARK: - Dependencies
 	var bird: Bird?
@@ -117,27 +120,24 @@ class UnobservedDetailViewController: UIViewController {
 		navigationItem.title = "Edit Species"
 		loadImage(for: bird)
 		
-		if let firstDate = bird.date.first { startDatePicker.date = firstDate }
-		if let lastDate = bird.date.last { endDatePicker.date = lastDate }
+		if let firstDate = bird.observationDates?.first { startDatePicker.date = firstDate }
+		if let lastDate = bird.observationDates?.last { endDatePicker.date = lastDate }
 		
-		locationSearchBar.text = bird.location.first
+		locationSearchBar.text = bird.validLocations?.first
 		notesTextView.text = bird.notes ?? ""
 	}
 	
 	private func loadImage(for bird: Bird) {
-		if let imageName = bird.images.first {
-			if let assetImage = UIImage(named: imageName) {
-				birdImageView.image = assetImage
-			} else {
-				let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
-				if let docImage = UIImage(contentsOfFile: fileURL.path) {
-					birdImageView.image = docImage
-				} else {
-					birdImageView.image = UIImage(systemName: "photo")
-				}
-			}
+		let imageName = bird.staticImageName
+		if let assetImage = UIImage(named: imageName) {
+			birdImageView.image = assetImage
 		} else {
-			birdImageView.image = UIImage(systemName: "photo")
+			let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
+			if let docImage = UIImage(contentsOfFile: fileURL.path) {
+				birdImageView.image = docImage
+			} else {
+				birdImageView.image = UIImage(systemName: "photo")
+			}
 		}
 	}
 	
@@ -178,7 +178,7 @@ class UnobservedDetailViewController: UIViewController {
 		let alert = UIAlertController(title: "Delete Bird", message: "Delete this bird from watchlist?", preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-			WatchlistManager.shared.deleteBird(bird, from: id)
+			self?.manager.deleteBird(bird, from: id)
 			self?.navigationController?.popViewController(animated: true)
 		}))
 		present(alert, animated: true)
@@ -191,13 +191,13 @@ class UnobservedDetailViewController: UIViewController {
 		let notes = notesTextView.text
 		
 		if !location.isEmpty {
-			updatedBird.location = [location]
+			updatedBird.validLocations = [location]
 		}
-		updatedBird.date = [startDatePicker.date, endDatePicker.date]
+		updatedBird.observationDates = [startDatePicker.date, endDatePicker.date]
 		updatedBird.notes = notes
 		
 		if let wId = watchlistId {
-			WatchlistManager.shared.updateBird(updatedBird, watchlistId: wId)
+			manager.updateBird(updatedBird, watchlistId: wId)
 			navigationController?.popViewController(animated: true)
 		} else {
 			navigationController?.popViewController(animated: true)

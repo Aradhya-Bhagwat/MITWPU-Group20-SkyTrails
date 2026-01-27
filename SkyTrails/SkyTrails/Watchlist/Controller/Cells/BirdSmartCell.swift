@@ -81,23 +81,20 @@ class BirdSmartCell: UITableViewCell {
         titleLabel.text = bird.name
         
         // Image
-        if let imageName = bird.images.first {
-            if let assetImage = UIImage(named: imageName) {
-                birdImageView.image = assetImage
-            } else {
-                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
-                if let docImage = UIImage(contentsOfFile: fileURL.path) {
-                    birdImageView.image = docImage
-                } else {
-                    birdImageView.image = UIImage(systemName: "photo")
-                }
-            }
+        let imageName = bird.staticImageName
+        if let assetImage = UIImage(named: imageName) {
+            birdImageView.image = assetImage
         } else {
-            birdImageView.image = nil 
+            let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
+            if let docImage = UIImage(contentsOfFile: fileURL.path) {
+                birdImageView.image = docImage
+            } else {
+                birdImageView.image = UIImage(systemName: "photo")
+            }
         }
 
         // Date
-        if let firstDate = bird.date.first {
+        if let firstDate = bird.observationDates?.first {
             let dateString = DateFormatters.fullDate.string(from: firstDate)
             dateLabel.addIcon(text: dateString, iconName: "calendar")
             dateLabel.isHidden = false
@@ -106,7 +103,7 @@ class BirdSmartCell: UITableViewCell {
         }
 
         // Location
-        if let locationName = bird.location.first {
+        if let locationName = bird.validLocations?.first {
             locationLabel.addIcon(text: locationName, iconName: "location.fill")
             locationLabel.isHidden = false
         } else {
@@ -115,7 +112,17 @@ class BirdSmartCell: UITableViewCell {
         
         // Avatars
         if shouldShowAvatars {
-            setupAvatars(images: bird.observedBy ?? [])
+            let avatarImages: [String]
+            if let userImages = bird.userImages, !userImages.isEmpty {
+                avatarImages = userImages
+            } else if let observedBy = bird.observedBy {
+                avatarImages = observedBy
+                    .split(separator: ",")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            } else {
+                avatarImages = []
+            }
+            setupAvatars(images: avatarImages)
         } else {
             avatarStackView.isHidden = true
             avatarImageViews.forEach { $0.isHidden = true }

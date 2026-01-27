@@ -99,12 +99,13 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         rightBadgeLabel.addIcon(text: "\(watchlist.observedCount)", iconName: "bird.fill")
         
         // Cover Image
-        if let firstBird = watchlist.birds.first, let imageName = firstBird.images.first {
-            coverImageView.image = UIImage(named: imageName)
+        if let firstBird = watchlist.birds.first {
+            coverImageView.image = UIImage(named: firstBird.staticImageName)
         } else {
             coverImageView.image = nil
             coverImageView.backgroundColor = .systemGray5
         }
+
     }
     
     // MARK: - Helpers

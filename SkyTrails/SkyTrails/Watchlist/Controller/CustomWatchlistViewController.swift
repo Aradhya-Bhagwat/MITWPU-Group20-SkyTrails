@@ -7,7 +7,10 @@
 
 import UIKit
 
+@MainActor
 class CustomWatchlistViewController: UIViewController {
+
+    private let manager = WatchlistManager.shared
 
     // MARK: - Outlets
     @IBOutlet weak var collectionView: UICollectionView!
@@ -18,7 +21,7 @@ class CustomWatchlistViewController: UIViewController {
 	private var currentSortOption: SortOption = .nameAZ
 	
     private var allWatchlists: [Watchlist] {
-        return WatchlistManager.shared.watchlists
+        return manager.watchlists
     }
     
     enum SortOption {
@@ -48,7 +51,7 @@ class CustomWatchlistViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        WatchlistManager.shared.onDataLoaded { [weak self] _ in
+        manager.onDataLoaded { [weak self] _ in
             DispatchQueue.main.async {
                 self?.updateData()
             }
@@ -115,10 +118,11 @@ class CustomWatchlistViewController: UIViewController {
             filteredWatchlists.sort { $0.endDate < $1.endDate }
         case .rarity:
             filteredWatchlists.sort {
-                let rareCount1 = $0.birds.filter { $0.rarity.contains(.rare) }.count
-                let rareCount2 = $1.birds.filter { $0.rarity.contains(.rare) }.count
+                let rareCount1 = $0.birds.filter { $0.rarity?.contains(.rare) ?? false }.count
+                let rareCount2 = $1.birds.filter { $0.rarity?.contains(.rare) ?? false }.count
                 return rareCount1 > rareCount2
             }
+
         }
         
         // Ensure UI is updated when this is called
@@ -276,7 +280,7 @@ extension CustomWatchlistViewController {
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            WatchlistManager.shared.deleteWatchlist(id: watchlist.id)
+            self?.manager.deleteWatchlist(id: watchlist.id)
             self?.updateData()
         }))
         

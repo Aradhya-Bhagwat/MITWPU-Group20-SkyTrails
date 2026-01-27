@@ -10,7 +10,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     var historyItem: History?
     var historyIndex: Int?
     
-    var selectedResult: Bird2?
+    var selectedResult: Bird?
     var selectedIndexPath: IndexPath?
     
     override func viewDidLoad() {
@@ -248,20 +248,23 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         saveToWatchlist(bird: savedBird)
     }
     
-    private func convertToSavedBird(from result: Bird2) -> Bird {
-        return Bird(
-            id: UUID(),
-            name: result.commonName,
-            scientificName: result.scientificName,
-            images: [result.staticImageName],
-            rarity: [.common],
-            location: viewModel.selectedLocation != nil ? [viewModel.selectedLocation!] : [],
-            date: [Date()],
-            observedBy: nil,
-            notes: "Identified via Filter: \(result.scoreBreakdown ?? "N/A")"
-        )
+    private func convertToSavedBird(from result: Bird) -> Bird {
+		return Bird(
+			id: UUID(),
+			name: result.name,
+			scientificName: result.scientificName,
+			staticImageName: result.staticImageName,
+			validLocations: result.validLocations,
+			validMonths: result.validMonths,
+			rarity: result.rarity,
+			fieldMarks: result.fieldMarks,
+			confidence: result.confidence,
+			scoreBreakdown: result.scoreBreakdown,
+			isUserCreated: true,
+			observationStatus: .toObserve
+		)
     }
-    
+
     private func saveToWatchlist(bird: Bird) {
         let manager = WatchlistManager.shared
         

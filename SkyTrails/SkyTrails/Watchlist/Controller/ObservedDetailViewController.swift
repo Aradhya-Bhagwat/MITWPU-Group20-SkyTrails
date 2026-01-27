@@ -2,7 +2,10 @@ import UIKit
 import MapKit
 import CoreLocation
 
+@MainActor
 class ObservedDetailViewController: UIViewController {
+
+	private let manager = WatchlistManager.shared
 	
 		// MARK: - Data Dependency
 	var bird: Bird?
@@ -152,7 +155,7 @@ class ObservedDetailViewController: UIViewController {
 		let alert = UIAlertController(title: "Delete Observation", message: "Are you sure?", preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-			WatchlistManager.shared.deleteBird(birdToDelete, from: id)
+			self?.manager.deleteBird(birdToDelete, from: id)
 			self?.navigationController?.popViewController(animated: true)
 		}))
 		present(alert, animated: true)
@@ -175,25 +178,23 @@ class ObservedDetailViewController: UIViewController {
 	@objc func didTapSave() {
 		guard let name = nameTextField.text, !name.isEmpty else { return }
 		
-		var images: [String] = []
-		if let imgName = selectedImageName { images.append(imgName) }
-		else if let existing = bird?.images.first { images.append(existing) }
-		else { images.append("bird_placeholder") }
+		let imageName = selectedImageName ?? bird?.staticImageName ?? "bird_placeholder"
 		
 		let newBird = Bird(
 			id: bird?.id ?? UUID(),
 			name: name,
 			scientificName: "Unknown",
-			images: images,
+			staticImageName: imageName,
+			validLocations: [locationSearchBar.text ?? "Unknown Location"],
+			observationDates: [dateTimePicker.date],
 			rarity: [.common],
-			location: [locationSearchBar.text ?? "Unknown Location"],
-			date: [dateTimePicker.date],
-			observedBy: ["person.circle.fill"],
-			notes: notesTextView.text
+			userImages: ["person.circle.fill"],
+			notes: notesTextView.text,
+			observationStatus: .observed
 		)
 		
 		if let wId = watchlistId {
-			WatchlistManager.shared.saveObservation(bird: newBird, watchlistId: wId)
+			manager.saveObservation(bird: newBird, watchlistId: wId)
 			navigationController?.popViewController(animated: true)
 		} else {
 			onSave?(newBird)
@@ -202,11 +203,9 @@ class ObservedDetailViewController: UIViewController {
 	
 	func configure(with bird: Bird) {
 		nameTextField.text = bird.name
-		locationSearchBar.text = bird.location.first
-		if let imageName = bird.images.first {
-			birdImageView.image = UIImage(named: imageName) ?? UIImage(systemName: "photo")
-		}
-		if let date = bird.date.first { dateTimePicker.date = date }
+		locationSearchBar.text = bird.validLocations?.first
+		birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
+		if let date = bird.observationDates?.first { dateTimePicker.date = date }
 		notesTextView.text = bird.notes
 	}
 	
