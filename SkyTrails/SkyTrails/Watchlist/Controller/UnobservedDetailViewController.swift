@@ -9,6 +9,7 @@ class UnobservedDetailViewController: UIViewController {
 	
 		// MARK: - Dependencies
 	var bird: Bird?
+    var entry: WatchlistEntry? // Added
 	var watchlistId: UUID?
 	var onSave: ((Bird) -> Void)?
 	
@@ -120,11 +121,15 @@ class UnobservedDetailViewController: UIViewController {
 		navigationItem.title = "Edit Species"
 		loadImage(for: bird)
 		
-		if let firstDate = bird.observationDates?.first { startDatePicker.date = firstDate }
-		if let lastDate = bird.observationDates?.last { endDatePicker.date = lastDate }
+        if let entry = entry {
+            if let date = entry.toObserveStartDate { startDatePicker.date = date }
+            if let date = entry.toObserveEndDate { endDatePicker.date = date }
+            notesTextView.text = entry.notes ?? ""
+        } else {
+             notesTextView.text = ""
+        }
 		
 		locationSearchBar.text = bird.validLocations?.first
-		notesTextView.text = bird.notes ?? ""
 	}
 	
 	private func loadImage(for bird: Bird) {
@@ -173,36 +178,37 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapDelete() {
-		guard let bird = bird, let id = watchlistId else { return }
-		
-		let alert = UIAlertController(title: "Delete Bird", message: "Delete this bird from watchlist?", preferredStyle: .alert)
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-		alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-			self?.manager.deleteBird(bird, from: id)
-			self?.navigationController?.popViewController(animated: true)
-		}))
-		present(alert, animated: true)
+        if let entryId = entry?.id {
+            let alert = UIAlertController(title: "Delete Bird", message: "Delete this bird from watchlist?", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+                self?.manager.deleteEntry(entryId: entryId)
+                self?.navigationController?.popViewController(animated: true)
+            }))
+            present(alert, animated: true)
+        } else {
+             navigationController?.popViewController(animated: true)
+        }
 	}
 	
 	@objc private func didTapSave() {
-		guard var updatedBird = bird else { return }
-		
-		let location = locationSearchBar.text ?? ""
-		let notes = notesTextView.text
-		
-		if !location.isEmpty {
-			updatedBird.validLocations = [location]
-		}
-		updatedBird.observationDates = [startDatePicker.date, endDatePicker.date]
-		updatedBird.notes = notes
-		
-		if let wId = watchlistId {
-			manager.updateBird(updatedBird, watchlistId: wId)
-			navigationController?.popViewController(animated: true)
-		} else {
-			navigationController?.popViewController(animated: true)
-			onSave?(updatedBird)
-		}
+        // Logic handling
+        let notes = notesTextView.text
+        
+        if let existingEntry = entry {
+            manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil)
+            existingEntry.toObserveStartDate = startDatePicker.date
+            existingEntry.toObserveEndDate = endDatePicker.date
+            
+            navigationController?.popViewController(animated: true)
+            
+        } else if let wId = watchlistId, let bird = bird {
+            manager.addBirds([bird], to: wId, asObserved: false)
+             navigationController?.popViewController(animated: true)
+             onSave?(bird)
+        } else {
+             navigationController?.popViewController(animated: true)
+        }
 	}
 	
 	private func updateLocationSelection(_ name: String) {

@@ -80,12 +80,12 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         titleLabel.text = watchlist.title
         
         // Location
-        locationLabel.addIcon(text: watchlist.location, iconName: "location.fill")
+        locationLabel.addIcon(text: watchlist.location ?? "Unknown", iconName: "location.fill")
         
         // Date
-        if isDateValid(start: watchlist.startDate, end: watchlist.endDate) {
-            let startStr = DateFormatters.shortDate.string(from: watchlist.startDate)
-            let endStr = DateFormatters.shortDate.string(from: watchlist.endDate)
+        if let start = watchlist.startDate, let end = watchlist.endDate, isDateValid(start: start, end: end) {
+            let startStr = DateFormatters.shortDate.string(from: start)
+            let endStr = DateFormatters.shortDate.string(from: end)
             let dateString = "\(startStr) - \(endStr)"
             
             dateLabel.addIcon(text: dateString, iconName: "calendar")
@@ -95,12 +95,13 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         }
         
         // Badges
-        leftBadgeLabel.addIcon(text: "\(watchlist.birds.count)", iconName: "bird")
+        let birdsCount = watchlist.entries?.count ?? 0
+        leftBadgeLabel.addIcon(text: "\(birdsCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(watchlist.observedCount)", iconName: "bird.fill")
         
         // Cover Image
-        if let firstBird = watchlist.birds.first {
-            coverImageView.image = UIImage(named: firstBird.staticImageName)
+        if let firstEntry = watchlist.entries?.first, let bird = firstEntry.bird {
+            coverImageView.image = UIImage(named: bird.staticImageName)
         } else {
             coverImageView.image = nil
             coverImageView.backgroundColor = .systemGray5

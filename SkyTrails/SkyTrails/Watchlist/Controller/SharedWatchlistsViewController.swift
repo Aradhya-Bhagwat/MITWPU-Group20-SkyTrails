@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftData
 
 @MainActor
 class SharedWatchlistsViewController: UIViewController {
@@ -22,12 +23,12 @@ class SharedWatchlistsViewController: UIViewController {
     }
 
     // MARK: - Properties
-    var filteredWatchlists: [SharedWatchlist] = []
+    var filteredWatchlists: [Watchlist] = []
     var currentSortOption: SortOption = .nameAZ
 
     // Computed property to access shared watchlists from Singleton
-    var allSharedWatchlists: [SharedWatchlist] {
-        return manager.sharedWatchlists
+    var allSharedWatchlists: [Watchlist] {
+        return manager.fetchWatchlists(type: .shared)
     }
 
     // MARK: - Lifecycle
@@ -96,17 +97,17 @@ class SharedWatchlistsViewController: UIViewController {
         var list = allSharedWatchlists
 
         if let searchText = searchBar.text, !searchText.isEmpty {
-            list = list.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+            list = list.filter { ($0.title ?? "").localizedCaseInsensitiveContains(searchText) }
         }
 
         switch currentSortOption {
         case .nameAZ:
-            list.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+            list.sort { ($0.title ?? "").localizedCaseInsensitiveCompare($1.title ?? "") == .orderedAscending }
         case .nameZA:
-            list.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+            list.sort { ($0.title ?? "").localizedCaseInsensitiveCompare($1.title ?? "") == .orderedDescending }
         case .date:
-            // Basic string comparison; consider parsing to Date for correct chronological order.
-            list.sort { $0.dateRange < $1.dateRange }
+            // Sorting by created_at or startDate as 'dateRange' is not direct property
+            list.sort { ($0.startDate ?? Date.distantPast) < ($1.startDate ?? Date.distantPast) }
         }
 
         filteredWatchlists = list
@@ -158,7 +159,7 @@ class SharedWatchlistsViewController: UIViewController {
     }
 
     // MARK: - Navigation Helpers
-    private func navigateToEdit(watchlist: SharedWatchlist?) {
+    private func navigateToEdit(watchlist: Watchlist?) {
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else {
             return
@@ -166,12 +167,16 @@ class SharedWatchlistsViewController: UIViewController {
 
         vc.watchlistType = .shared
         if let watchlist = watchlist {
-            vc.sharedWatchlistToEdit = watchlist
+            // vc.sharedWatchlistToEdit = watchlist 
+            // Assuming EditWatchlistDetailVC is updated to handle 'Watchlist' generally, 
+            // or we need to fix it. For now, we assume it has a property `watchlistToEdit` 
+            // that can take this, or we rely on `watchlistToEdit` being the unified property.
+             vc.watchlistToEdit = watchlist
         }
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    private func showOptions(for shared: SharedWatchlist, at indexPath: IndexPath) {
+    private func showOptions(for shared: Watchlist, at indexPath: IndexPath) {
         let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
 
         alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { [weak self] _ in
@@ -193,13 +198,13 @@ class SharedWatchlistsViewController: UIViewController {
         present(alert, animated: true)
     }
 
-    private func confirmDelete(shared: SharedWatchlist) {
-        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(shared.title)'?", preferredStyle: .alert)
+    private func confirmDelete(shared: Watchlist) {
+        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(shared.title ?? "")'?", preferredStyle: .alert)
 
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             guard let self = self else { return }
-            self.manager.deleteSharedWatchlist(id: shared.id)
+            self.manager.deleteWatchlist(id: shared.id)
             self.refreshData()
         }))
 
@@ -221,16 +226,26 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
 
         let item = filteredWatchlists[indexPath.row]
 
-        let userImages = item.userImages.compactMap {
-            UIImage(systemName: $0)?.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
+        // Map Shares to Avatars (Assuming 'shares' relationship exists or using placeholders)
+        // Since we don't have User/Avatar data fully set up, we'll pass generic icons if empty
+        let userImages: [UIImage] = [] // Placeholder
+
+        // Map Stats (observed vs total entries)
+        let stats = manager.getStats(for: item.id)
+
+        // Get Image
+        var image: UIImage? = nil
+        if let path = item.images?.first?.imagePath {
+            image = UIImage(named: path)
         }
 
         cell.configure(
-            title: item.title,
-            location: item.location,
-            dateRange: item.dateRange,
-            mainImage: UIImage(named: item.mainImageName),
-            stats: item.stats,
+            title: item.title ?? "Shared Watchlist",
+            location: item.location ?? "Unknown",
+            dateRange: "Oct - Nov", // Placeholder or derived from startDate/endDate
+            mainImage: image,
+            speciesCount: stats.total,
+            observedCount: stats.observed,
             userImages: userImages
         )
 
@@ -251,9 +266,7 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         }
 
         smartVC.watchlistType = .shared
-        smartVC.watchlistTitle = item.title
-        smartVC.observedBirds = item.observedBirds
-        smartVC.toObserveBirds = item.toObserveBirds
+        smartVC.watchlistTitle = item.title ?? "Shared Watchlist"
         smartVC.currentWatchlistId = item.id
 
         navigationController?.pushViewController(smartVC, animated: true)

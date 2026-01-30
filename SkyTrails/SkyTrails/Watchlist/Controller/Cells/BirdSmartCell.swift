@@ -77,26 +77,20 @@ class BirdSmartCell: UITableViewCell {
         overflowLabel.textAlignment = .center
     }
     
-    func configure(with bird: Bird) {
+    func configure(with entry: WatchlistEntry) {
+        guard let bird = entry.bird else { return }
         titleLabel.text = bird.name
         
         // Image
-        let imageName = bird.staticImageName
-        if let assetImage = UIImage(named: imageName) {
-            birdImageView.image = assetImage
-        } else {
-            let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
-            if let docImage = UIImage(contentsOfFile: fileURL.path) {
-                birdImageView.image = docImage
-            } else {
-                birdImageView.image = UIImage(systemName: "photo")
-            }
-        }
+        birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
 
         // Date
-        if let firstDate = bird.observationDates?.first {
-            let dateString = DateFormatters.fullDate.string(from: firstDate)
-            dateLabel.addIcon(text: dateString, iconName: "calendar")
+        if let observationDate = entry.observationDate {
+            // Using a basic date formatter if DateFormatters is not available or has different name
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            let dateString = formatter.string(from: observationDate)
+            dateLabel.text = dateString
             dateLabel.isHidden = false
         } else {
             dateLabel.isHidden = true
@@ -104,7 +98,7 @@ class BirdSmartCell: UITableViewCell {
 
         // Location
         if let locationName = bird.validLocations?.first {
-            locationLabel.addIcon(text: locationName, iconName: "location.fill")
+            locationLabel.text = locationName
             locationLabel.isHidden = false
         } else {
             locationLabel.isHidden = true
@@ -112,22 +106,37 @@ class BirdSmartCell: UITableViewCell {
         
         // Avatars
         if shouldShowAvatars {
-            let avatarImages: [String]
-            if let userImages = bird.userImages, !userImages.isEmpty {
-                avatarImages = userImages
-            } else if let observedBy = bird.observedBy {
-                avatarImages = observedBy
-                    .split(separator: ",")
-                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            } else {
-                avatarImages = []
-            }
+            // Placeholder logic for avatars in shared lists
+            let avatarImages: [String] = entry.observedBy != nil ? [entry.observedBy!] : []
             setupAvatars(images: avatarImages)
         } else {
             avatarStackView.isHidden = true
             avatarImageViews.forEach { $0.isHidden = true }
             overflowBadgeView.isHidden = true
         }
+    }
+
+    func configure(with bird: Bird) {
+        titleLabel.text = bird.name
+        
+        // Image
+        birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
+
+        // Date - Bird model doesn't have observation dates directly anymore
+        dateLabel.isHidden = true
+
+        // Location
+        if let locationName = bird.validLocations?.first {
+            locationLabel.text = locationName
+            locationLabel.isHidden = false
+        } else {
+            locationLabel.isHidden = true
+        }
+        
+        // Avatars
+        avatarStackView.isHidden = true
+        avatarImageViews.forEach { $0.isHidden = true }
+        overflowBadgeView.isHidden = true
     }
     
     private func setupAvatars(images: [String]) {

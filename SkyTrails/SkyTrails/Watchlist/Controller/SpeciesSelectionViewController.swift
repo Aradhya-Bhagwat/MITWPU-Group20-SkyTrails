@@ -60,12 +60,14 @@ class SpeciesSelectionViewController: UIViewController {
     
     private func loadData() {
         // Flatten all birds from all watchlists
-        let all = manager.watchlists.flatMap { $0.birds }
+        let allWatchlists = manager.fetchWatchlists()
+        let allEntries = allWatchlists.flatMap { $0.entries ?? [] }
+        let allBirdsFromEntries = allEntries.compactMap { $0.bird }
         
         // Deduplicate birds by ID using a Dictionary grouping
         var uniqueBirds : [Bird] = []
         var seenIDs: Set<UUID> = []
-        for bird in all {
+        for bird in allBirdsFromEntries {
             if !seenIDs.contains(bird.id) {
                 uniqueBirds.append(bird)
                 seenIDs.insert(bird.id)
@@ -193,9 +195,8 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         cell.dateLabel.isHidden = true
         
 			// Rarity Logic
-			// FIXED: Added '?? []' to handle the optional array safely
-		let rarityString = (bird.rarity ?? []).compactMap { "\($0)" }.joined(separator: ", ").capitalized
-		cell.locationLabel.text = rarityString.isEmpty ? "Unknown" : rarityString
+		let rarityString = bird.rarityLevel?.rawValue.capitalized ?? "Unknown"
+		cell.locationLabel.text = rarityString
 		cell.locationLabel.textColor = .systemOrange
 		
 			// Selection State

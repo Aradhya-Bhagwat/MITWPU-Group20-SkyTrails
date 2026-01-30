@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftData
 
 @MainActor
 class CustomWatchlistViewController: UIViewController {
@@ -21,7 +22,7 @@ class CustomWatchlistViewController: UIViewController {
 	private var currentSortOption: SortOption = .nameAZ
 	
     private var allWatchlists: [Watchlist] {
-        return manager.watchlists
+        return manager.fetchWatchlists(type: .custom)
     }
     
     enum SortOption {
@@ -93,7 +94,7 @@ class CustomWatchlistViewController: UIViewController {
     private func updateData() {
         // 1. Filter
         if let text = searchBar.text, !text.isEmpty {
-            filteredWatchlists = allWatchlists.filter { $0.title.localizedCaseInsensitiveContains(text) }
+            filteredWatchlists = allWatchlists.filter { ($0.title ?? "").localizedCaseInsensitiveContains(text) }
         } else {
             filteredWatchlists = allWatchlists
         }
@@ -107,19 +108,17 @@ class CustomWatchlistViewController: UIViewController {
         
         switch option {
         case .nameAZ:
-            // Updated to use localizedStandardCompare for smarter sorting
-            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            filteredWatchlists.sort { ($0.title ?? "").localizedStandardCompare($1.title ?? "") == .orderedAscending }
         case .nameZA:
-            // Updated to use localizedStandardCompare for smarter sorting
-            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedDescending }
+            filteredWatchlists.sort { ($0.title ?? "").localizedStandardCompare($1.title ?? "") == .orderedDescending }
         case .startDate:
-            filteredWatchlists.sort { $0.startDate < $1.startDate }
+            filteredWatchlists.sort { ($0.startDate ?? Date.distantPast) < ($1.startDate ?? Date.distantPast) }
         case .endDate:
-            filteredWatchlists.sort { $0.endDate < $1.endDate }
+            filteredWatchlists.sort { ($0.endDate ?? Date.distantPast) < ($1.endDate ?? Date.distantPast) }
         case .rarity:
             filteredWatchlists.sort {
-                let rareCount1 = $0.birds.filter { $0.rarity?.contains(.rare) ?? false }.count
-                let rareCount2 = $1.birds.filter { $0.rarity?.contains(.rare) ?? false }.count
+                let rareCount1 = ($0.entries ?? []).filter { $0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare }.count
+                let rareCount2 = ($1.entries ?? []).filter { $0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare }.count
                 return rareCount1 > rareCount2
             }
 
@@ -165,6 +164,8 @@ class CustomWatchlistViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowEditCustomWatchlist",
            let destVC = segue.destination as? EditWatchlistDetailViewController {
+            // Updated to use the correct model enum if EditWatchlistDetailViewController uses it,
+            // or we might need to fix that VC too. Assuming it uses WatchlistType from Models.
             destVC.watchlistType = .custom
         }
     }
@@ -191,10 +192,9 @@ extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionV
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         
         if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
-            smartVC.watchlistType = .custom
-            smartVC.watchlistTitle = item.title
-            smartVC.observedBirds = item.observedBirds
-            smartVC.toObserveBirds = item.toObserveBirds
+            smartVC.watchlistType = .custom // Enum case matches
+            smartVC.watchlistTitle = item.title ?? "Watchlist"
+            // REMOVED array passing, smartVC fetches entries by ID now
             smartVC.currentWatchlistId = item.id
             navigationController?.pushViewController(smartVC, animated: true)
         }
@@ -276,7 +276,7 @@ extension CustomWatchlistViewController {
     }
     
     func confirmDelete(watchlist: Watchlist) {
-        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(watchlist.title)'?", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(watchlist.title ?? "this list")'?", preferredStyle: .alert)
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in

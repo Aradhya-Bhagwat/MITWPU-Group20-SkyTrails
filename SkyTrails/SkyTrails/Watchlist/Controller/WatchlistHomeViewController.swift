@@ -6,11 +6,17 @@
 	//
 
 import UIKit
+import SwiftData
 
 @MainActor
 class WatchlistHomeViewController: UIViewController {
 
 	private let manager = WatchlistManager.shared
+    
+    // Local Cache for UI
+    private var myWatchlist: Watchlist?
+    private var customWatchlists: [Watchlist] = []
+    private var sharedWatchlists: [Watchlist] = []
 	
 		// MARK: - Types
 	enum WatchlistSection: Int, CaseIterable {
@@ -74,9 +80,15 @@ class WatchlistHomeViewController: UIViewController {
 	
 	private func refreshDataIfNeeded() {
 		manager.onDataLoaded { [weak self] success in
-			guard success else { return }
+			guard success, let self = self else { return }
+            
+            // Fetch Data
+            self.myWatchlist = self.manager.fetchWatchlists(type: .my_watchlist).first
+            self.customWatchlists = self.manager.fetchWatchlists(type: .custom)
+            self.sharedWatchlists = self.manager.fetchWatchlists(type: .shared)
+            
 			DispatchQueue.main.async {
-				self?.summaryCardCollectionView.reloadData()
+				self.summaryCardCollectionView.reloadData()
 			}
 		}
 	}
@@ -132,20 +144,18 @@ extension WatchlistHomeViewController {
 		
 		switch sectionType {
 			case .myWatchlist:
-				if let watchlist = manager.watchlists.first {
+				if let watchlist = myWatchlist {
 					showOptions(for: watchlist, at: indexPath)
 				}
 				
 			case .customWatchlist:
-					// Custom section logic: index + 1 (skipping 'My Watchlist')
-				let actualIndex = indexPath.item + 1
-				if actualIndex < manager.watchlists.count {
-					let watchlist = manager.watchlists[actualIndex]
+				if indexPath.item < customWatchlists.count {
+					let watchlist = customWatchlists[indexPath.item]
 					showOptions(for: watchlist, at: indexPath)
 				}
 				
 			case .sharedWatchlist:
-				if let shared = manager.sharedWatchlists[safe: indexPath.item] {
+				if let shared = sharedWatchlists[safe: indexPath.item] {
 					showOptions(for: shared, at: indexPath)
 				}
 				
@@ -162,23 +172,7 @@ extension WatchlistHomeViewController {
 		
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
 			self?.manager.deleteWatchlist(id: watchlist.id)
-			self?.summaryCardCollectionView.reloadData()
-		})
-		
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-		presentAlert(alert, at: indexPath)
-	}
-	
-	private func showOptions(for shared: SharedWatchlist, at indexPath: IndexPath) {
-		let alert = UIAlertController(title: shared.title, message: nil, preferredStyle: .actionSheet)
-		
-		alert.addAction(UIAlertAction(title: "Edit", style: .default) { [weak self] _ in
-			self?.navigateToEdit(sharedWatchlist: shared)
-		})
-		
-		alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-			self?.manager.deleteSharedWatchlist(id: shared.id)
-			self?.summaryCardCollectionView.reloadData()
+			self?.refreshDataIfNeeded()
 		})
 		
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -221,7 +215,13 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func showObservedDetail() {
-		guard let watchlistId = manager.watchlists.first?.id else { return }
+        // Use myWatchlist ID or create/fetch it via manager
+        // For now, let's try to get My Watchlist from cache
+        guard let watchlistId = myWatchlist?.id else {
+            manager.addRoseRingedParakeetToMyWatchlist() // Triggers creation if missing
+            refreshDataIfNeeded() // Async refresh, might not be ready immediately.
+            return
+        }
 		
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
@@ -231,7 +231,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func showSpeciesSelection() {
-		guard let watchlistId = manager.watchlists.first?.id else { return }
+		guard let watchlistId = myWatchlist?.id else { return }
 		
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
@@ -251,16 +251,11 @@ extension WatchlistHomeViewController {
 	private func navigateToEdit(watchlist: Watchlist) {
 		let sb = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = sb.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
-		vc.watchlistType = .custom
-		vc.watchlistToEdit = watchlist
-		navigationController?.pushViewController(vc, animated: true)
-	}
-	
-	private func navigateToEdit(sharedWatchlist: SharedWatchlist) {
-		let sb = UIStoryboard(name: "Watchlist", bundle: nil)
-		guard let vc = sb.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
-		vc.watchlistType = .shared
-		vc.sharedWatchlistToEdit = sharedWatchlist
+        
+        vc.watchlistType = (watchlist.type == .shared) ? .shared : .custom
+        // vc.sharedWatchlistToEdit = ... // Logic removed as Watchlist is unified
+        vc.watchlistToEdit = watchlist
+        
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
@@ -278,29 +273,20 @@ extension WatchlistHomeViewController {
 				destVC.watchlistType = .allSpecies
 				destVC.watchlistTitle = "All Species"
 				
-			} else if let watchlists = sender as? [Watchlist] {
-					// My Watchlist Case
-				destVC.watchlistType = .myWatchlist
-				destVC.watchlistTitle = "My Watchlist"
-				destVC.allWatchlists = watchlists
-				destVC.currentWatchlistId = watchlists.first?.id
-				
-			} else if let watchlist = sender as? Watchlist {
-					// Custom Watchlist Case
-				destVC.watchlistType = .custom
-				destVC.watchlistTitle = watchlist.title
-				destVC.observedBirds = watchlist.observedBirds
-				destVC.toObserveBirds = watchlist.toObserveBirds
-				destVC.currentWatchlistId = watchlist.id
-				
-			} else if let sharedWatchlist = sender as? SharedWatchlist {
-					// Shared Watchlist Case
-				destVC.watchlistType = .shared
-				destVC.watchlistTitle = sharedWatchlist.title
-				destVC.observedBirds = sharedWatchlist.observedBirds
-				destVC.toObserveBirds = sharedWatchlist.toObserveBirds
-				destVC.currentWatchlistId = sharedWatchlist.id
-			}
+            } else if let watchlist = sender as? Watchlist {
+                // Unified logic for all watchlist types
+                if watchlist.type == .my_watchlist {
+                    destVC.watchlistType = .myWatchlist
+                    destVC.watchlistTitle = "My Watchlist"
+                } else if watchlist.type == .shared {
+                    destVC.watchlistType = .shared
+                    destVC.watchlistTitle = watchlist.title ?? "Shared Watchlist"
+                } else {
+                    destVC.watchlistType = .custom
+                    destVC.watchlistTitle = watchlist.title ?? "Custom Watchlist"
+                }
+                destVC.currentWatchlistId = watchlist.id
+            }
 		}
 	}
 }
@@ -317,9 +303,9 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		
 		switch sectionType {
 			case .summary: return 0
-			case .myWatchlist: return 1
-			case .customWatchlist: return min(6, max(0, manager.watchlists.count - 1))
-			case .sharedWatchlist: return manager.sharedWatchlists.count
+			case .myWatchlist: return myWatchlist != nil ? 1 : 0
+			case .customWatchlist: return min(6, customWatchlists.count)
+			case .sharedWatchlist: return sharedWatchlists.count
 		}
 	}
 	
@@ -350,16 +336,17 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				}
 				
 			case .myWatchlist:
-				performSegue(withIdentifier: "ShowSmartWatchlist", sender: manager.watchlists)
+                if let wl = myWatchlist {
+                    performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
+                }
 				
 			case .customWatchlist:
-				let watchlistIndex = indexPath.item + 1
-				if watchlistIndex < manager.watchlists.count {
-					performSegue(withIdentifier: "ShowSmartWatchlist", sender: manager.watchlists[watchlistIndex])
+				if indexPath.item < customWatchlists.count {
+					performSegue(withIdentifier: "ShowSmartWatchlist", sender: customWatchlists[indexPath.item])
 				}
 				
 			case .sharedWatchlist:
-				if let sharedWatchlist = manager.sharedWatchlists[safe: indexPath.item] {
+				if let sharedWatchlist = sharedWatchlists[safe: indexPath.item] {
 					performSegue(withIdentifier: "ShowSmartWatchlist", sender: sharedWatchlist)
 				}
 				
@@ -373,10 +360,36 @@ extension WatchlistHomeViewController {
 	
 	private func configureSummaryCell(in cv: UICollectionView, at indexPath: IndexPath, manager: WatchlistManager) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: "SummaryCardCollectionViewCell", for: indexPath) as! SummaryCardCollectionViewCell
+        
+        // Dynamic stats calculation
+        let observedCount = manager.fetchGlobalObservedCount()
+        // For total species in watchlists (unique) or just total entries?
+        // Assuming 'Watchlist' count means total species across lists for now
+        // Or simply sum of all lists. Let's use total entries count for simplicity or add a manager method.
+        // For now: Total observed, Total Custom Lists, Shared Lists?
+        // The UI labels are "Watchlist", "Observed", "Rare"
+        
+        let allWatchlists = manager.fetchWatchlists()
+        let totalEntriesCount = allWatchlists.reduce(0) { $0 + ($1.entries?.count ?? 0) }
+        
+        // Rare count: Iterate all observed entries and check rarity
+        // This might be expensive on main thread for large datasets, consider optimizing later
+        // or adding a cached property on Manager.
+        var rareCount = 0
+        for wl in allWatchlists {
+            if let entries = wl.entries {
+                for entry in entries {
+                    if entry.status == .observed, let rarity = entry.bird?.rarityLevel, (rarity == .rare || rarity == .very_rare) {
+                        rareCount += 1
+                    }
+                }
+            }
+        }
+        
 		let data = [
-			(manager.totalSpeciesCount, "Watchlist", UIColor.systemGreen),
-			(manager.totalObservedCount, "Observed", UIColor.systemBlue),
-			(manager.totalRareCount, "Rare", UIColor.systemOrange)
+			(totalEntriesCount, "Watchlist", UIColor.systemGreen),
+			(observedCount, "Observed", UIColor.systemBlue),
+			(rareCount, "Rare", UIColor.systemOrange)
 		]
 		
 		let item = data[indexPath.item]
@@ -387,14 +400,18 @@ extension WatchlistHomeViewController {
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath, manager: WatchlistManager) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: "MyWatchlistCollectionViewCell", for: indexPath) as! MyWatchlistCollectionViewCell
 		
-		if let watchlist = manager.watchlists.first {
-			let observedCount = watchlist.observedCount
-			let totalCount = watchlist.birds.count
+		if let watchlist = myWatchlist {
+            // Stats via Manager
+            let stats = manager.getStats(for: watchlist.id)
+			let observedCount = stats.observed
+			let totalCount = stats.total
 			let toObserveCount = totalCount - observedCount
 			
-				// Get up to 4 images for the collage
-			let images = watchlist.birds.prefix(4).compactMap { bird -> UIImage? in
-				return UIImage(named: bird.staticImageName)
+            // Images from entries
+            // Limit to 4
+            let birds = (watchlist.entries ?? []).prefix(4).compactMap { $0.bird }
+			let images = birds.compactMap { bird -> UIImage? in
+                return UIImage(named: bird.staticImageName)
 			}
 			
 			cell.configure(
@@ -415,10 +432,8 @@ extension WatchlistHomeViewController {
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath, manager: WatchlistManager) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath) as! CustomWatchlistCollectionViewCell
 		
-			// Offset by 1 to skip "My Watchlist"
-		let listIndex = indexPath.item + 1
-		if listIndex < manager.watchlists.count {
-			cell.configure(with: manager.watchlists[listIndex])
+		if indexPath.item < customWatchlists.count {
+			cell.configure(with: customWatchlists[indexPath.item])
 		}
 		return cell
 	}
@@ -426,17 +441,25 @@ extension WatchlistHomeViewController {
 	private func configureSharedWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath, manager: WatchlistManager) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: SharedWatchlistCollectionViewCell.identifier, for: indexPath) as! SharedWatchlistCollectionViewCell
 		
-		if let sharedItem = manager.sharedWatchlists[safe: indexPath.item] {
-			let userImages = sharedItem.userImages.compactMap { imageName in
-				UIImage(systemName: imageName)?.withTintColor(.systemGray, renderingMode: .alwaysOriginal)
-			}
+		if let sharedItem = sharedWatchlists[safe: indexPath.item] {
+            // Avatar placeholders
+            let userImages: [UIImage] = [] // Placeholder
 			
+            let stats = manager.getStats(for: sharedItem.id)
+            
+            // Image
+            var image: UIImage? = nil
+            if let path = sharedItem.images?.first?.imagePath {
+                image = UIImage(named: path)
+            }
+            
 			cell.configure(
-				title: sharedItem.title,
-				location: sharedItem.location,
-				dateRange: sharedItem.dateRange,
-				mainImage: UIImage(named: sharedItem.mainImageName),
-				stats: sharedItem.stats,
+				title: sharedItem.title ?? "Shared Watchlist",
+				location: sharedItem.location ?? "Unknown",
+				dateRange: "Oct - Nov", // Format from dates if needed or use placeholder
+				mainImage: image,
+				speciesCount: stats.total,
+                observedCount: stats.observed,
 				userImages: userImages
 			)
 		}
