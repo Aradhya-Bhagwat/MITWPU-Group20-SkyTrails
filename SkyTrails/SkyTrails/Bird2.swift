@@ -9,143 +9,123 @@ import Foundation
 import CoreLocation
 import SwiftData
 
+// MARK: - Bird Enums
+
+enum BirdRarityLevel: String, Codable {
+    case common
+    case uncommon
+    case rare
+    case very_rare
+    case endangered
+}
+
+// MARK: - Bird Model (Reference Data)
+
 @Model
 final class Bird {
     @Attribute(.unique) var id: UUID
-    var name: String
+    var commonName: String
     var scientificName: String
     var staticImageName: String
     
-    var lat: Double?
-    var lon: Double?
-    var validLocations: [String]?
+    // Taxonomy & Details
+    var family: String?
+    var order_name: String?
+    var descriptionText: String? // 'description' in schema
+    var conservation_status: String?
     
-    var validMonths: [Int]?
-    var observationDates: [Date]?
-    var IdentificationShape: String?
-    
-    var shapeId: String?
+    // Identification Keys
+    var shapeId: String? // shape_id in schema
     var sizeCategory: Int?
-    var rarity: [BirdRarity]?
-    var fieldMarks: [FieldMarkData]?
+    var rarityLevel: BirdRarityLevel?
     
-    var confidence: Double?
-    var scoreBreakdown: String?
+    // Geography & Migration
+    var migration_strategy: String?
+    var hemisphere: String?
     
-    var userImages: [String]?
-    var observedBy: String?
-    var notes: String?
-    var isUserCreated: Bool = false
+    // Legacy/Compatibility Fields (Optional, kept for seeding/identification)
+    var validLocations: [String]?
+    var validMonths: [Int]?
+    var fieldMarks: [FieldMarkData]? // Struct from Identification
     
-    var observationStatusRaw: String?
-    var watchlist: Watchlist?
-    var sharedWatchlist: SharedWatchlist?
+    // Relationships
+    // The schema defines relationships:
+    // Ref: Bird.id < WatchlistEntry.bird_id
+    // In SwiftData, we can define the inverse if helpful, but strictly 'Bird' is reference.
+    // We will omit the inverse 'entries' for now to keep it clean, or add it if needed for queries.
+    // @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.bird) var watchlistEntries: [WatchlistEntry]?
 
-    var coordinate: CLLocationCoordinate2D? {
-        guard let lat = lat, let lon = lon else { return nil }
-        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-    }
-    
-    var commonName: String { return name }
+    var name: String { return commonName } // Compatibility alias
 
-    enum BirdRarity: String, Codable {
-        case common
-        case rare
-    }
-    
-    enum ObservationStatus: String, Codable {
-        case observed
-        case toObserve
-    }
-    
-    var observationStatus: ObservationStatus {
-        get {
-            guard let raw = observationStatusRaw, let status = ObservationStatus(rawValue: raw) else {
-                return .toObserve
-            }
-            return status
-        }
-        set {
-            observationStatusRaw = newValue.rawValue
-        }
-    }
-    
     init(
         id: UUID = UUID(),
-        name: String,
+        commonName: String,
         scientificName: String,
         staticImageName: String,
-        lat: Double? = nil,
-        lon: Double? = nil,
-        validLocations: [String]? = nil,
-        validMonths: [Int]? = nil,
-        observationDates: [Date]? = nil,
-        IdentificationShape: String? = nil,
+        family: String? = nil,
+        order_name: String? = nil,
+        descriptionText: String? = nil,
+        conservation_status: String? = nil,
         shapeId: String? = nil,
         sizeCategory: Int? = nil,
-        rarity: [BirdRarity]? = nil,
-        fieldMarks: [FieldMarkData]? = nil,
-        confidence: Double? = nil,
-        scoreBreakdown: String? = nil,
-        userImages: [String]? = nil,
-        observedBy: String? = nil,
-        notes: String? = nil,
-        isUserCreated: Bool = false,
-        observationStatus: ObservationStatus = .toObserve
+        rarityLevel: BirdRarityLevel? = nil,
+        migration_strategy: String? = nil,
+        hemisphere: String? = nil,
+        validLocations: [String]? = nil,
+        validMonths: [Int]? = nil,
+        fieldMarks: [FieldMarkData]? = nil
     ) {
         self.id = id
-        self.name = name
+        self.commonName = commonName
         self.scientificName = scientificName
         self.staticImageName = staticImageName
-        self.lat = lat
-        self.lon = lon
-        self.validLocations = validLocations
-        self.validMonths = validMonths
-        self.observationDates = observationDates
-        self.IdentificationShape = IdentificationShape
+        self.family = family
+        self.order_name = order_name
+        self.descriptionText = descriptionText
+        self.conservation_status = conservation_status
         self.shapeId = shapeId
         self.sizeCategory = sizeCategory
-        self.rarity = rarity
+        self.rarityLevel = rarityLevel
+        self.migration_strategy = migration_strategy
+        self.hemisphere = hemisphere
+        self.validLocations = validLocations
+        self.validMonths = validMonths
         self.fieldMarks = fieldMarks
-        self.confidence = confidence
-        self.scoreBreakdown = scoreBreakdown
-        self.userImages = userImages
-        self.observedBy = observedBy
-        self.notes = notes
-        self.isUserCreated = isUserCreated
-        self.observationStatusRaw = observationStatus.rawValue
     }
+    
+    // MARK: - Factory Methods
     
     static func fromSpotBird(_ spotBird: SpotBird) -> Bird {
         return Bird(
             id: UUID(),
-            name: spotBird.name,
+            commonName: spotBird.name,
             scientificName: "",
-            staticImageName: spotBird.imageName,
-            lat: spotBird.lat,
-            lon: spotBird.lon
+            staticImageName: spotBird.imageName
         )
     }
     
     static func fromReferenceBird(_ refBird: ReferenceBird) -> Bird {
+        // Map old rarity string to new Enum
+        let rarityString = refBird.attributes.rarity.lowercased()
+        let rarity: BirdRarityLevel
+        switch rarityString {
+        case "common": rarity = .common
+        case "rare": rarity = .rare
+        default: rarity = .uncommon
+        }
+        
         return Bird(
             id: UUID(uuidString: refBird.id) ?? UUID(),
-            name: refBird.commonName,
+            commonName: refBird.commonName,
             scientificName: refBird.scientificName ?? "",
             staticImageName: refBird.imageName,
-            lat: nil,
-            lon: nil,
-            validLocations: refBird.validLocations,
-            validMonths: refBird.validMonths,
-            observationDates: nil,
             shapeId: refBird.attributes.shapeId,
             sizeCategory: refBird.attributes.sizeCategory,
-            rarity: BirdRarity(rawValue: refBird.attributes.rarity.lowercased()).map { [$0] },
-            fieldMarks: refBird.fieldMarks,
-            userImages: nil,
-            observedBy: nil,
-            notes: nil,
-            isUserCreated: refBird.isUserCreated ?? false
+            rarityLevel: rarity,
+            validLocations: refBird.validLocations,
+            validMonths: refBird.validMonths,
+            fieldMarks: refBird.fieldMarks
         )
     }
 }
+
