@@ -51,9 +51,8 @@ final class Bird {
     // Relationships
     // The schema defines relationships:
     // Ref: Bird.id < WatchlistEntry.bird_id
-    // In SwiftData, we can define the inverse if helpful, but strictly 'Bird' is reference.
-    // We will omit the inverse 'entries' for now to keep it clean, or add it if needed for queries.
-    // @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.bird) var watchlistEntries: [WatchlistEntry]?
+    // Explicitly defining inverse to help SwiftData schema generation
+    @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.bird) var watchlistEntries: [WatchlistEntry]?
 
     var name: String { return commonName } // Compatibility alias
 

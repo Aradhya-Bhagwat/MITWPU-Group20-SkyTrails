@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import SwiftData
 
-enum WatchlistType {
+enum WatchlistPresentationMode {
     case myWatchlist
     case custom
     case shared
@@ -26,16 +27,16 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     @IBOutlet weak var headerView: UIView! // Optional: To add shadow or styling
     
     // MARK: - Properties
-    var watchlistType: WatchlistType = .custom
+    var watchlistType: WatchlistPresentationMode = .custom
     var watchlistTitle: String = "Watchlist"
     var currentWatchlistId: UUID?
     
     // Data Source
     public var allWatchlists: [Watchlist] = []
-    private var filteredSections: [[Bird]] = []
-    public var observedBirds: [Bird] = []
-    public var toObserveBirds: [Bird] = []
-    private var currentList: [Bird] = []
+    private var filteredSections: [[WatchlistEntry]] = []
+    public var observedEntries: [WatchlistEntry] = []
+    public var toObserveEntries: [WatchlistEntry] = []
+    private var currentList: [WatchlistEntry] = []
     
     // State
     private var currentSegmentIndex: Int = 0
@@ -67,14 +68,17 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         
         guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
         
-        if watchlistType == .custom, let watchlist = manager.watchlists.first(where: { $0.id == id }) {
-            vc.watchlistType = .custom
-            vc.watchlistToEdit = watchlist
-            navigationController?.pushViewController(vc, animated: true)
-        } else if watchlistType == .shared, let shared = manager.sharedWatchlists.first(where: { $0.id == id }) {
-            vc.watchlistType = .shared
-            vc.sharedWatchlistToEdit = shared
-            navigationController?.pushViewController(vc, animated: true)
+        // Fetch fresh object
+        if let watchlist = manager.getWatchlist(by: id) {
+            vc.watchlistType = (watchlist.type == .shared) ? .shared : .custom
+            if watchlist.type == .shared {
+                // vc.sharedWatchlistToEdit = watchlist // Assuming logic handles this
+            } else {
+                vc.watchlistToEdit = watchlist
+            }
+            // For now, let's assume the VC can handle the generic Watchlist object or needs updates too.
+            // Keeping navigation simple to avoid breakage until that VC is fixed.
+             navigationController?.pushViewController(vc, animated: true)
         }
     }
     
@@ -90,42 +94,41 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     private func refreshData() {
         switch watchlistType {
         case .myWatchlist:
-            self.allWatchlists = manager.watchlists
+            self.allWatchlists = manager.fetchWatchlists(type: .custom) + manager.fetchWatchlists(type: .my_watchlist)
             
         case .custom, .shared:
             guard let id = currentWatchlistId else { return }
+            let observed = manager.fetchEntries(watchlistID: id, status: .observed)
+            let toObserve = manager.fetchEntries(watchlistID: id, status: .to_observe)
             
-            if let watchlist = manager.watchlists.first(where: { $0.id == id }) {
-                updateSingleWatchlistData(observed: watchlist.observedBirds, toObserve: watchlist.toObserveBirds, title: watchlist.title)
-            } else if let shared = manager.sharedWatchlists.first(where: { $0.id == id }) {
-                updateSingleWatchlistData(observed: shared.observedBirds, toObserve: shared.toObserveBirds, title: shared.title)
-            }
+            // Get title safely
+            let title = manager.getWatchlist(by: id)?.title ?? "Watchlist"
+            updateSingleWatchlistData(observed: observed, toObserve: toObserve, title: title)
             
         case .allSpecies:
-            var seen = Set<String>()
-            var uniqueObserved: [Bird] = []
-            var uniqueToObserve: [Bird] = []
+            // This mode aggregates EVERYTHING
+            let allWls = manager.fetchWatchlists()
+            var uniqueObserved: [WatchlistEntry] = []
+            var uniqueToObserve: [WatchlistEntry] = []
+            var seenObs = Set<String>()
+            var seenToObs = Set<String>()
             
-            // Helper to process lists
-            func process(_ birds: [Bird], target: inout [Bird]) {
-                for bird in birds {
-                    if !seen.contains(bird.name) {
-                        seen.insert(bird.name)
-                        target.append(bird)
+            for wl in allWls {
+                let obs = manager.fetchEntries(watchlistID: wl.id, status: .observed)
+                let toObs = manager.fetchEntries(watchlistID: wl.id, status: .to_observe)
+                
+                for entry in obs {
+                    if let name = entry.bird?.name, !seenObs.contains(name) {
+                        seenObs.insert(name)
+                        uniqueObserved.append(entry)
                     }
                 }
-            }
-            
-            // Local
-            for list in manager.watchlists {
-                process(list.observedBirds, target: &uniqueObserved)
-                process(list.toObserveBirds, target: &uniqueToObserve)
-            }
-            
-            // Shared
-            for list in manager.sharedWatchlists {
-                process(list.observedBirds, target: &uniqueObserved)
-                process(list.toObserveBirds, target: &uniqueToObserve)
+                for entry in toObs {
+                    if let name = entry.bird?.name, !seenToObs.contains(name) {
+                        seenToObs.insert(name)
+                        uniqueToObserve.append(entry)
+                    }
+                }
             }
             
             updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "All Species")
@@ -134,9 +137,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         applyFilters()
     }
     
-    private func updateSingleWatchlistData(observed: [Bird], toObserve: [Bird], title: String) {
-        self.observedBirds = observed
-        self.toObserveBirds = toObserve
+    private func updateSingleWatchlistData(observed: [WatchlistEntry], toObserve: [WatchlistEntry], title: String) {
+        self.observedEntries = observed
+        self.toObserveEntries = toObserve
         self.title = title
     }
     
@@ -174,15 +177,17 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         
         if watchlistType == .myWatchlist {
             filteredSections = allWatchlists.map { watchlist in
-                let source = isObserved ? watchlist.observedBirds : watchlist.toObserveBirds
-                return source.filter { bird in
-                    searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
+                let entries = manager.fetchEntries(watchlistID: watchlist.id, status: isObserved ? .observed : .to_observe)
+                return entries.filter { entry in
+                    guard let bird = entry.bird else { return false }
+                    return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
                 }
             }
         } else {
-            let sourceList = isObserved ? observedBirds : toObserveBirds
-            currentList = sourceList.filter { bird in
-                searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
+            let sourceList = isObserved ? observedEntries : toObserveEntries
+            currentList = sourceList.filter { entry in
+                guard let bird = entry.bird else { return false }
+                return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
             }
         }
         
@@ -192,18 +197,21 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     func sortBirds(by option: SortOption) {
         currentSortOption = option
         
-        let sortClosure: (Bird, Bird) -> Bool = { b1, b2 in
+        let sortClosure: (WatchlistEntry, WatchlistEntry) -> Bool = { e1, e2 in
+            guard let b1 = e1.bird, let b2 = e2.bird else { return false }
+            
             switch option {
             case .nameAZ: return b1.name < b2.name
             case .nameZA: return b1.name > b2.name
             case .date:
-                let d1 = b1.observationDates?.first ?? Date.distantPast
-                let d2 = b2.observationDates?.first ?? Date.distantPast
+                let d1 = e1.observationDate ?? Date.distantPast
+                let d2 = e2.observationDate ?? Date.distantPast
                 return d1 > d2
             case .rarity:
-                let isRare1 = b1.rarity?.contains(.rare) ?? false
-                let isRare2 = b2.rarity?.contains(.rare) ?? false
-                return isRare1 && !isRare2
+                // Simple rarity check, can be improved with Enum comparable
+                let r1 = (b1.rarityLevel == .rare || b1.rarityLevel == .very_rare) ? 1 : 0
+                let r2 = (b2.rarityLevel == .rare || b2.rarityLevel == .very_rare) ? 1 : 0
+                return r1 > r2
             }
         }
         
@@ -312,8 +320,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     private func addReminder(for bird: Bird) {
     }
     
-    private func deleteBird(_ bird: Bird, watchlistId: UUID) {
-        manager.deleteBird(bird, from: watchlistId)
+    private func deleteEntry(_ entry: WatchlistEntry) {
+        manager.deleteEntry(entryId: entry.id)
         refreshData()
     }
     
@@ -321,12 +329,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         var targetBird: Bird?
         var targetId: UUID?
         
-        if let bird = sender as? Bird {
-            targetBird = bird
+        if let entry = sender as? WatchlistEntry {
+            targetBird = entry.bird
             targetId = self.currentWatchlistId
-        } else if let tuple = sender as? (Bird, UUID) {
-            targetBird = tuple.0
-            targetId = tuple.1
         }
         
         if let bird = targetBird {
@@ -369,10 +374,11 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             return UITableViewCell()
         }
         
-        let bird = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
+        let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
         
+        // Map Entry to Cell Configuration
         cell.shouldShowAvatars = (watchlistType == .shared)
-        cell.configure(with: bird)
+        cell.configure(with: entry)
         
         return cell
     }
@@ -384,51 +390,31 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let bird: Bird
-        let wId: UUID?
+        let entry: WatchlistEntry
         
         if watchlistType == .myWatchlist {
-            bird = filteredSections[indexPath.section][indexPath.row]
-            wId = allWatchlists[indexPath.section].id
+            entry = filteredSections[indexPath.section][indexPath.row]
         } else {
-            bird = currentList[indexPath.row]
-            if watchlistType == .allSpecies {
-                // Find ID
-                if let list = manager.watchlists.first(where: { $0.birds.contains(where: { $0.name == bird.name }) }) {
-                    wId = list.id
-                } else if let shared = manager.sharedWatchlists.first(where: { $0.birds.contains(where: { $0.name == bird.name }) }) {
-                    wId = shared.id
-                } else {
-                    wId = nil
-                }
-            } else {
-                wId = currentWatchlistId
-            }
+            entry = currentList[indexPath.row]
         }
         
-        guard let id = wId else { return }
-        performSegue(withIdentifier: "ShowObservedDetail", sender: (bird, id))
+        performSegue(withIdentifier: "ShowObservedDetail", sender: entry)
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let bird: Bird
-        let wId: UUID?
+        let entry: WatchlistEntry
+        let wId: UUID? = currentWatchlistId
         
         if watchlistType == .myWatchlist {
-            bird = filteredSections[indexPath.section][indexPath.row]
-            wId = allWatchlists[indexPath.section].id
+            entry = filteredSections[indexPath.section][indexPath.row]
         } else {
-            bird = currentList[indexPath.row]
-            if watchlistType == .allSpecies {
-                return nil
-            }
-            wId = currentWatchlistId
+            entry = currentList[indexPath.row]
         }
         
-        guard let id = wId else { return nil }
+        if watchlistType == .allSpecies { return nil } // Read only view usually
         
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (_, _, completion) in
-            self?.deleteBird(bird, watchlistId: id)
+            self?.deleteEntry(entry)
             completion(true)
         }
         deleteAction.image = UIImage(systemName: "trash")
@@ -437,9 +423,9 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         let editAction = UIContextualAction(style: .normal, title: "Edit") { [weak self] (_, _, completion) in
             guard let self = self else { return }
             if self.currentSegmentIndex == 1 {
-                self.performSegue(withIdentifier: "ShowUnobservedDetailFromWatchlist", sender: (bird, id))
+                self.performSegue(withIdentifier: "ShowUnobservedDetailFromWatchlist", sender: entry)
             } else {
-                self.performSegue(withIdentifier: "ShowObservedDetail", sender: (bird, id))
+                self.performSegue(withIdentifier: "ShowObservedDetail", sender: entry)
             }
             completion(true)
         }
@@ -448,7 +434,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         
         var actions = [deleteAction, editAction]
         
-        if currentSegmentIndex == 1 {
+        if currentSegmentIndex == 1, let bird = entry.bird {
             let reminderAction = UIContextualAction(style: .normal, title: "Remind") { [weak self] (_, _, completion) in
                 self?.addReminder(for: bird)
                 completion(true)

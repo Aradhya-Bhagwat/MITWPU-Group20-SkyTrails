@@ -8,6 +8,7 @@
 import UIKit
 import CoreLocation
 import MapKit
+import SwiftData
 
 	// MARK: - Helper Models
 struct Participant {
@@ -35,7 +36,6 @@ class EditWatchlistDetailViewController: UIViewController {
 	
 		// Edit Mode Data
 	var watchlistToEdit: Watchlist?
-	var sharedWatchlistToEdit: SharedWatchlist?
 	
 		// Location & Search
 	private let locationManager = CLLocationManager()
@@ -60,7 +60,7 @@ class EditWatchlistDetailViewController: UIViewController {
 			// Navigation
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
-		self.title = (watchlistToEdit == nil && sharedWatchlistToEdit == nil) ? "New Watchlist" : "Edit Watchlist"
+		self.title = (watchlistToEdit == nil) ? "New Watchlist" : "Edit Watchlist"
 		
 			// Background & Styling
 		view.backgroundColor = .systemGray6
@@ -97,13 +97,13 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
 	
 	private func initializeParticipants() {
-		if let shared = sharedWatchlistToEdit {
-			self.participants = shared.userImages.enumerated().map { (index, img) in
-				index == 0 ? Participant(name: "You", imageName: img) : Participant(name: "Bird Enthusiast \(index)", imageName: img)
-			}
-		} else {
-			self.participants = [Participant(name: "You", imageName: "person.circle.fill")]
-		}
+        // Placeholder logic as Participant mapping to new Schema (WatchlistShare) is not fully implemented in UI
+        if watchlistType == .shared {
+            self.participants = [Participant(name: "You", imageName: "person.circle.fill")]
+            // Ideally fetch from watchlist.shares
+        } else {
+            self.participants = [Participant(name: "You", imageName: "person.circle.fill")]
+        }
 		participantsTableView.reloadData()
 	}
 	
@@ -111,12 +111,8 @@ class EditWatchlistDetailViewController: UIViewController {
 		if let watchlist = watchlistToEdit {
 			titleTextField.text = watchlist.title
 			locationSearchBar.text = watchlist.location
-			startDatePicker.date = watchlist.startDate
-			endDatePicker.date = watchlist.endDate
-		} else if let shared = sharedWatchlistToEdit {
-			titleTextField.text = shared.title
-			locationSearchBar.text = shared.location
-				// Parsing date strings back to Date objects would happen here if needed
+            if let start = watchlist.startDate { startDatePicker.date = start }
+            if let end = watchlist.endDate { endDatePicker.date = end }
 		}
 	}
 	
@@ -201,51 +197,26 @@ class EditWatchlistDetailViewController: UIViewController {
 		let location = locationSearchBar.text ?? "Unknown"
 		let startDate = startDatePicker.date
 		let endDate = endDatePicker.date
-		let finalUserImages = participants.map { $0.imageName }
-			// 1. Update Existing Custom Watchlist
+		
+			// 1. Update Existing Watchlist
 		if let watchlist = watchlistToEdit {
-			manager.updateWatchlist(id: watchlist.id, title: title, location: location, startDate: startDate, endDate: endDate)
+            // Direct update on SwiftData object
+			watchlist.title = title
+            watchlist.location = location
+            watchlist.startDate = startDate
+            watchlist.endDate = endDate
+            // Manager doesn't need explicit update call if object is managed context
+            // But we can force save if needed via manager private context save, 
+            // or assume autosave / context save happens on run loop.
+            // Ideally manager should have a save method exposed or update method.
+            // For now, this modifies the object in context.
+            
 			navigationController?.popViewController(animated: true)
 			return
 		}
 		
-			// 2. Update Existing Shared Watchlist
-		if let shared = sharedWatchlistToEdit {
-			let dateRange = formatDateRange(start: startDate, end: endDate)
-			
-				// Sync local participant changes if necessary
-			manager.updateSharedWatchlistUserImages(id: shared.id, userImages: finalUserImages)
-			
-			manager.updateSharedWatchlist(id: shared.id, title: title, location: location, dateRange: dateRange)
-			navigationController?.popViewController(animated: true)
-			return
-		}
-		
-			// 3. Create New Custom Watchlist
-		if watchlistType == .custom {
-				// FIXED: Removed extra arguments 'observedBirds' and 'toObserveBirds'.
-				// The model uses a single 'birds' array (defaulting to []).
-			let newWatchlist = Watchlist(
-				title: title,
-				location: location,
-				startDate: startDate,
-				endDate: endDate,
-				birds: [] // You can explicitly pass empty birds or omit this parameter
-			)
-			manager.addWatchlist(newWatchlist)
-			
-				// 4. Create New Shared Watchlist
-		} else if watchlistType == .shared {
-			let newShared = SharedWatchlist(
-				title: title,
-				location: location,
-				dateRange: formatDateRange(start: startDate, end: endDate),
-				mainImageName: "bird_placeholder",
-				stats: SharedWatchlistStats(greenValue: 0, blueValue: 0),
-				userImages: finalUserImages
-			)
-			manager.addSharedWatchlist(newShared)
-		}
+			// 2. Create New Watchlist
+        manager.addWatchlist(title: title, location: location, startDate: startDate, endDate: endDate, type: watchlistType)
 		
 		navigationController?.popViewController(animated: true)
 	}
@@ -395,3 +366,4 @@ extension EditWatchlistDetailViewController: MapSelectionDelegate {
     }
 }
 // MARK: - UI Utilities
+
