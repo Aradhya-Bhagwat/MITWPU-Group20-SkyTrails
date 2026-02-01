@@ -9,8 +9,6 @@ import Foundation
 import CoreLocation
 import SwiftData
 
-// MARK: - Bird Enums
-
 enum BirdRarityLevel: String, Codable {
     case common
     case uncommon
@@ -19,7 +17,6 @@ enum BirdRarityLevel: String, Codable {
     case endangered
 }
 
-// MARK: - Bird Model (Reference Data)
 
 @Model
 final class Bird {
@@ -34,28 +31,20 @@ final class Bird {
     var descriptionText: String? // 'description' in schema
     var conservation_status: String?
     
-    // Identification Keys
-    var shapeId: String? // shape_id in schema
+   
+    var shapeId: String?
     var sizeCategory: Int?
     var rarityLevel: BirdRarityLevel?
     
-    // Geography & Migration
+   
     var migration_strategy: String?
     var hemisphere: String?
-    
-    // Legacy/Compatibility Fields (Optional, kept for seeding/identification)
+   
     var validLocations: [String]?
     var validMonths: [Int]?
-    var fieldMarks: [FieldMarkData]? // Struct from Identification
-    
-    // Relationships
-    // The schema defines relationships:
-    // Ref: Bird.id < WatchlistEntry.bird_id
-    // In SwiftData, we can define the inverse if helpful, but strictly 'Bird' is reference.
-    // We will omit the inverse 'entries' for now to keep it clean, or add it if needed for queries.
-    // @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.bird) var watchlistEntries: [WatchlistEntry]?
-
-    var name: String { return commonName } // Compatibility alias
+    var fieldMarks: [FieldMarkData]?
+  
+    var name: String { return commonName }
 
     init(
         id: UUID = UUID(),
@@ -93,7 +82,7 @@ final class Bird {
         self.fieldMarks = fieldMarks
     }
     
-    // MARK: - Factory Methods
+
     
     static func fromSpotBird(_ spotBird: SpotBird) -> Bird {
         return Bird(
