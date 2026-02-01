@@ -43,8 +43,7 @@ class IdentificationManager {
                 FieldMarkType(symbols: "id_icn_field_marks", fieldMarkName: .fieldMarks, isSelected: false)
             ]
             var db = try loadDatabase()
-            let userBirds = loadUserBirds()
-            db.birds.append(contentsOf: userBirds)
+            
             
             self.masterDatabase = db
             self.birdShapes = db.referenceData.shapes
@@ -235,51 +234,40 @@ class IdentificationManager {
         }
 
 
-    func loadWatchlists() -> [Watchlist] {
-        let url = getDocumentsDirectory().appendingPathComponent("watchlists.json")
-        let decoder = JSONDecoder()
-
-        if let data = try? Data(contentsOf: url),
-           let lists = try? decoder.decode([Watchlist].self, from: data) {
-            return lists
-        }
-        return []
-    }
-
-        
-        private func loadUserBirds() -> [Bird] {
-            let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
-            let decoder = JSONDecoder()
-            
-            if let data = try? Data(contentsOf: url) {
-                do {
-                    // return try decoder.decode([Bird].self, from: data)
-                    return [] // TODO: Migrate to SwiftData
-                } catch {
-                    print("CRITICAL: Failed to decode user_birds.json:", error)
-                    return []
-                }
-            }
-            
-       
-            return []
-        }
-        
-        func saveUserBirds() {
-            guard let db = masterDatabase else { return }
-            
-            let userBirds = db.birds.filter { $0.isUserCreated == true }
-            let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
-            
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = .prettyPrinted
-                // let data = try encoder.encode(userBirds)
-                // try data.write(to: url, options: .atomic)
-            } catch {
-                print("Failed to save user_birds.json:", error)
-            }
-        }
+//        
+//        private func loadUserBirds() -> [Bird] {
+//            let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
+//            let decoder = JSONDecoder()
+//            
+//            if let data = try? Data(contentsOf: url) {
+//                do {
+//                    // return try decoder.decode([Bird].self, from: data)
+//                    return [] // TODO: Migrate to SwiftData
+//                } catch {
+//                    print("CRITICAL: Failed to decode user_birds.json:", error)
+//                    return []
+//                }
+//            }
+//            
+//       
+//            return []
+//        }
+//        
+//        func saveUserBirds() {
+//            guard let db = masterDatabase else { return }
+//            
+//            let userBirds = db.birds.filter { $0.isUserCreated == true }
+//            let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
+//            
+//            do {
+//                let encoder = JSONEncoder()
+//                encoder.outputFormatting = .prettyPrinted
+//                // let data = try encoder.encode(userBirds)
+//                // try data.write(to: url, options: .atomic)
+//            } catch {
+//                print("Failed to save user_birds.json:", error)
+//            }
+//        }
         
         func loadHistory() -> [History] {
             let url = getDocumentsDirectory().appendingPathComponent("history.json")
