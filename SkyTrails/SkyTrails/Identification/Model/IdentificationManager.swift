@@ -24,9 +24,8 @@ class IdentificationManager {
     var selectedLocation: String?
     var selectedFieldMarks: [FieldMarkData] = []
     
-    
-    var birdResults: [Bird] = []
-    
+    var birdResults: [IdentificationBird] = []
+
     
     var onResultsUpdated: (() -> Void)?
     
@@ -165,10 +164,10 @@ class IdentificationManager {
             }
 
           
-            if let rarities = bird.rarity,
-               rarities.contains(.common) {
+            if bird.rarityLevel == .common {
                 score += 5
             }
+
 
             let finalScore = max(0.0, score)
             let normalized = min(finalScore / 100.0, 1.0)
@@ -181,10 +180,17 @@ class IdentificationManager {
         scoredBirds.sort { $0.score > $1.score }
 
         self.birdResults = scoredBirds.map { item in
-                    var bird = item.bird
-                    bird.confidence = item.score
-                    bird.scoreBreakdown = item.breakdown
-                    return bird
+            let result = IdentificationBird(
+                id: item.bird.id.uuidString,
+                name: item.bird.commonName,
+                scientificName: item.bird.scientificName,
+                confidence: item.score,
+                description: item.bird.descriptionText ?? "",
+                imageName: item.bird.staticImageName,
+                scoreBreakdown: item.breakdown
+            )
+            return result
+
                 }
 
         // 5. Notify UI ONCE
@@ -227,6 +233,19 @@ class IdentificationManager {
         private func getDocumentsDirectory() -> URL {
             return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         }
+
+
+    func loadWatchlists() -> [Watchlist] {
+        let url = getDocumentsDirectory().appendingPathComponent("watchlists.json")
+        let decoder = JSONDecoder()
+
+        if let data = try? Data(contentsOf: url),
+           let lists = try? decoder.decode([Watchlist].self, from: data) {
+            return lists
+        }
+        return []
+    }
+
         
         private func loadUserBirds() -> [Bird] {
             let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
