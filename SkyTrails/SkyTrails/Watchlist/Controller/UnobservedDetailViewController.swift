@@ -192,22 +192,56 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapSave() {
+        print("💾 [UnobservedDetailVC] didTapSave() called")
+        
         // Logic handling
         let notes = notesTextView.text
+        let startDate = startDatePicker.date
+        let endDate = endDatePicker.date
+        
+        print("📝 [UnobservedDetailVC] Notes: \(notes ?? "nil")")
+        print("📅 [UnobservedDetailVC] Start date: \(startDate)")
+        print("📅 [UnobservedDetailVC] End date: \(endDate)")
         
         if let existingEntry = entry {
+            print("✏️  [UnobservedDetailVC] Editing existing entry: \(existingEntry.id)")
             manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil)
-            existingEntry.toObserveStartDate = startDatePicker.date
-            existingEntry.toObserveEndDate = endDatePicker.date
+            existingEntry.toObserveStartDate = startDate
+            existingEntry.toObserveEndDate = endDate
             
+            print("✅ [UnobservedDetailVC] Updated existing entry, popping view controller")
             navigationController?.popViewController(animated: true)
             
         } else if let wId = watchlistId, let bird = bird {
+            print("➕ [UnobservedDetailVC] Creating new entry")
+            print("🐦 [UnobservedDetailVC] Bird: \(bird.commonName)")
+            print("📋 [UnobservedDetailVC] Watchlist ID: \(wId)")
+            
             manager.addBirds([bird], to: wId, asObserved: false)
-             navigationController?.popViewController(animated: true)
-             onSave?(bird)
+            
+            print("🔍 [UnobservedDetailVC] Fetching newly created entry...")
+            let entries = manager.fetchEntries(watchlistID: wId, status: .to_observe)
+            print("📊 [UnobservedDetailVC] Total to_observe entries: \(entries.count)")
+            
+            if let newEntry = entries.last {
+                print("✅ [UnobservedDetailVC] Found new entry: \(newEntry.id)")
+                print("📝 [UnobservedDetailVC] Setting notes and dates on entry...")
+                newEntry.notes = notes
+                newEntry.toObserveStartDate = startDate
+                newEntry.toObserveEndDate = endDate
+                print("✅ [UnobservedDetailVC] Entry properties updated")
+            } else {
+                print("❌ [UnobservedDetailVC] ERROR: Could not find newly created entry!")
+            }
+            
+            print("📞 [UnobservedDetailVC] Calling onSave callback")
+            onSave?(bird)
+            
+            print("✅ [UnobservedDetailVC] Complete, popping view controller")
+            navigationController?.popViewController(animated: true)
         } else {
-             navigationController?.popViewController(animated: true)
+            print("⚠️  [UnobservedDetailVC] No entry or bird/watchlistId - just popping")
+            navigationController?.popViewController(animated: true)
         }
 	}
 	

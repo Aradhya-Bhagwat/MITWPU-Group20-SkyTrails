@@ -32,6 +32,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     var currentWatchlistId: UUID?
     
     // Data Source
+    private var sourceWatchlists: [Watchlist] = []
     public var allWatchlists: [Watchlist] = []
     private var filteredSections: [[WatchlistEntry]] = []
     public var observedEntries: [WatchlistEntry] = []
@@ -87,7 +88,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     private func refreshData() {
         switch watchlistType {
         case .myWatchlist:
-            self.allWatchlists = manager.fetchWatchlists(type: .custom) + manager.fetchWatchlists(type: .my_watchlist)
+            self.title = "My Watchlist"
+            self.currentWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")
+            self.sourceWatchlists = manager.fetchWatchlists()
             
         case .custom, .shared:
             guard let id = currentWatchlistId else { return }
@@ -169,13 +172,17 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         let isObserved = (currentSegmentIndex == 0)
         
         if watchlistType == .myWatchlist {
-            filteredSections = allWatchlists.map { watchlist in
+            let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
                 let entries = manager.fetchEntries(watchlistID: watchlist.id, status: isObserved ? .observed : .to_observe)
-                return entries.filter { entry in
+                let matching = entries.filter { entry in
                     guard let bird = entry.bird else { return false }
                     return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
                 }
+                return matching.isEmpty ? nil : (watchlist, matching)
             }
+            
+            allWatchlists = filteredResults.map { $0.0 }
+            filteredSections = filteredResults.map { $0.1 }
         } else {
             let sourceList = isObserved ? observedEntries : toObserveEntries
             currentList = sourceList.filter { entry in
@@ -190,29 +197,44 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     func sortBirds(by option: SortOption) {
         currentSortOption = option
         
-        let sortClosure: (WatchlistEntry, WatchlistEntry) -> Bool = { e1, e2 in
-            guard let b1 = e1.bird, let b2 = e2.bird else { return false }
-            
-            switch option {
-            case .nameAZ: return b1.name < b2.name
-            case .nameZA: return b1.name > b2.name
-            case .date:
-                let d1 = e1.observationDate ?? Date.distantPast
-                let d2 = e2.observationDate ?? Date.distantPast
-                return d1 > d2
-            case .rarity:
-                // Simple rarity check, can be improved with Enum comparable
-                let r1 = (b1.rarityLevel == .rare || b1.rarityLevel == .very_rare) ? 1 : 0
-                let r2 = (b2.rarityLevel == .rare || b2.rarityLevel == .very_rare) ? 1 : 0
-                return r1 > r2
-            }
-        }
-        
         if watchlistType == .myWatchlist {
+            let sortClosure: (WatchlistEntry, WatchlistEntry) -> Bool = { e1, e2 in
+                guard let b1 = e1.bird, let b2 = e2.bird else { return false }
+                
+                switch option {
+                case .nameAZ: return b1.name < b2.name
+                case .nameZA: return b1.name > b2.name
+                case .date:
+                    let d1 = e1.observationDate ?? Date.distantPast
+                    let d2 = e2.observationDate ?? Date.distantPast
+                    return d1 > d2
+                case .rarity:
+                    let r1 = (b1.rarityLevel == .rare || b1.rarityLevel == .very_rare) ? 1 : 0
+                    let r2 = (b2.rarityLevel == .rare || b2.rarityLevel == .very_rare) ? 1 : 0
+                    return r1 > r2
+                }
+            }
+            
             for i in 0..<filteredSections.count {
                 filteredSections[i].sort(by: sortClosure)
             }
         } else {
+            let sortClosure: (WatchlistEntry, WatchlistEntry) -> Bool = { e1, e2 in
+                guard let b1 = e1.bird, let b2 = e2.bird else { return false }
+                
+                switch option {
+                case .nameAZ: return b1.name < b2.name
+                case .nameZA: return b1.name > b2.name
+                case .date:
+                    let d1 = e1.observationDate ?? Date.distantPast
+                    let d2 = e2.observationDate ?? Date.distantPast
+                    return d1 > d2
+                case .rarity:
+                    let r1 = (b1.rarityLevel == .rare || b1.rarityLevel == .very_rare) ? 1 : 0
+                    let r2 = (b2.rarityLevel == .rare || b2.rarityLevel == .very_rare) ? 1 : 0
+                    return r1 > r2
+                }
+            }
             currentList.sort(by: sortClosure)
         }
         
@@ -231,17 +253,23 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     }
     
     @IBAction func didTapAdd(_ sender: Any) {
+        print("➕ [SmartWatchlistVC] didTapAdd() called")
+        print("📋 [SmartWatchlistVC] Current watchlist ID: \(currentWatchlistId?.description ?? "nil")")
+        
         guard currentWatchlistId != nil else {
+            print("❌ [SmartWatchlistVC] No current watchlist ID, aborting")
             return
         }
         
         let alert = UIAlertController(title: "Add to Watchlist", message: nil, preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
+            print("👆 [SmartWatchlistVC] User selected: Add to Observed")
             self?.showObservedDetail(bird: nil)
         })
         
         alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default) { [weak self] _ in
+            print("👆 [SmartWatchlistVC] User selected: Add to Unobserved")
             self?.showSpeciesSelection(mode: .unobserved)
         })
         

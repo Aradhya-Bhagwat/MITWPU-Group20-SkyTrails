@@ -11,4 +11,5 @@ protocol WatchlistRepository {
     func loadDashboardData() async throws -> (myWatchlist: WatchlistSummaryDTO?, custom: [WatchlistSummaryDTO], shared: [WatchlistSummaryDTO], globalStats: WatchlistStatsDTO)
     func deleteWatchlist(id: UUID) async throws
     func ensureMyWatchlistExists() async throws -> UUID
+    func getPersonalWatchlists() -> [Watchlist]
 }
