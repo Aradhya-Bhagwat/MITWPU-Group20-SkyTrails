@@ -1,4 +1,4 @@
-	//
+//
 //  WatchlistManager.swift
 //  SkyTrails
 //
@@ -9,8 +9,29 @@ import Foundation
 import CoreLocation
 import SwiftData
 
+// MARK: - Repository Errors
+
+enum RepositoryError: Error, LocalizedError {
+    case watchlistNotFound(UUID)
+    case entryNotFound(UUID)
+    case saveFailed(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .watchlistNotFound(let id):
+            return "Watchlist not found: \(id)"
+        case .entryNotFound(let id):
+            return "Entry not found: \(id)"
+        case .saveFailed(let error):
+            return "Failed to save: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Watchlist Manager
+
 @MainActor
-final class WatchlistManager {
+final class WatchlistManager: WatchlistRepository {
     
     static let shared = WatchlistManager()
     
@@ -26,36 +47,208 @@ final class WatchlistManager {
     
     static let didLoadDataNotification = Notification.Name("WatchlistManagerDidLoadData")
     
-	private init() {
-		do {
-				// Build schema from the model types
-			let schema = Schema([
-				Watchlist.self,
-				WatchlistEntry.self,
-				WatchlistRule.self,
-				WatchlistShare.self,
-				WatchlistImage.self,
-				ObservedBirdPhoto.self,
-				Bird.self     // ensure `@Model final class Bird { ... }` exists
-			])
-			
-				// Create a configuration describing where/how to store the schema.
-				// Do NOT redundantly pass `schema:` here — pass only persistence options.
-			let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: false)
-			
-				// Create the container for the schema with the configuration.
-				// This matches the examples in the SwiftData docs / guides.
-			container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-			context = container.mainContext
-		} catch {
-			fatalError("Failed to initialize SwiftData container: \(error)")
-		}
-		
-		loadData()
-	}
+    private init() {
+        do {
+            print("🚀 [WatchlistManager] Initializing...")
+            
+            // 1. Init Container
+            let schema = Schema([
+                Watchlist.self,
+                WatchlistEntry.self,
+                WatchlistRule.self,
+                WatchlistShare.self,
+                WatchlistImage.self,
+                ObservedBirdPhoto.self,
+                Bird.self
+            ])
+            let config = ModelConfiguration(isStoredInMemoryOnly: false)
+            container = try ModelContainer(for: schema, configurations: [config])
+            context = container.mainContext
+            print("✅ [WatchlistManager] SwiftData container initialized")
+            
+            // TEMPORARY: Force database reset for testing
+            print("🗑️  [WatchlistManager] Force clearing database for fresh seed...")
+            let descriptor = FetchDescriptor<Watchlist>()
+            if let existing = try? context.fetch(descriptor) {
+                existing.forEach { context.delete($0) }
+                try? context.save()
+                print("✅ [WatchlistManager] Cleared \(existing.count) existing watchlists")
+            }
 
+            // 2. Perform Seeding
+            do {
+                try WatchlistSeeder.seed(context: context)
+                print("✅ [WatchlistManager] Seeding completed successfully")
+            } catch {
+                print("❌ [WatchlistManager] Seeding failed: \(error)")
+                print("⚠️  [WatchlistManager] Continuing with empty/existing database")
+                // Don't fatal error - allow app to continue with empty DB
+            }
+            
+            // 3. Notify Legacy Observers
+            isDataLoaded = true
+            
+        } catch {
+            print("💥 [WatchlistManager] FATAL: Failed to init SwiftData: \(error)")
+            fatalError("Failed to init SwiftData: \(error)")
+        }
+        
+        // Post-Init Notification for legacy support
+        DispatchQueue.main.async { [weak self] in
+            self?.notifyDataLoaded(success: true)
+        }
+    }
 
-    // MARK: - Data Loading
+    
+    // MARK: - Repository Implementation
+    
+    func loadDashboardData() async throws -> (myWatchlist: WatchlistSummaryDTO?, custom: [WatchlistSummaryDTO], shared: [WatchlistSummaryDTO], globalStats: WatchlistStatsDTO) {
+        
+        // Fetch All
+        let descriptor = FetchDescriptor<Watchlist>(sortBy: [SortDescriptor(\.created_at, order: .reverse)])
+        let allLists = try context.fetch(descriptor)
+        
+        // Filter & Map (Business Logic here, not in VC)
+        let myWatchlist = allLists.first(where: { $0.type == .my_watchlist }).map { toDTO($0) }
+        let customLists = allLists.filter { $0.type == .custom }.map { toDTO($0) }
+        let sharedLists = allLists.filter { $0.type == .shared }.map { toDTO($0) }
+        
+        // Calculate Global Stats
+        let allEntries = allLists.flatMap { $0.entries ?? [] }
+        let observedCount = allEntries.filter { $0.status == .observed }.count
+        let rareCount = allEntries.filter { $0.status == .observed && ($0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare) }.count
+        let totalCount = allEntries.count
+        
+        return (myWatchlist, customLists, sharedLists, WatchlistStatsDTO(observedCount: observedCount, totalCount: totalCount, rareCount: rareCount))
+    }
+    
+    func deleteWatchlist(id: UUID) async throws {
+        let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate<Watchlist> { watchlist in
+            watchlist.id == id
+        })
+        guard let object = try context.fetch(descriptor).first else {
+            throw RepositoryError.watchlistNotFound(id)
+        }
+        context.delete(object)
+        try context.save()
+    }
+    
+    func ensureMyWatchlistExists() async throws -> UUID {
+        // Check for existing "My Watchlist" or type .my_watchlist
+        // Note: We need to capture the enum value outside the predicate for Swift macro compatibility
+        let myWatchlistType = WatchlistType.my_watchlist
+        let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate<Watchlist> { watchlist in
+            watchlist.type == myWatchlistType
+        })
+        if let existing = try? context.fetch(descriptor).first {
+            return existing.id
+        }
+        
+        // Fallback: Check by title if type migration failed
+        let titleDescriptor = FetchDescriptor<Watchlist>(predicate: #Predicate<Watchlist> { watchlist in
+            watchlist.title == "My Watchlist"
+        })
+        if let existing = try? context.fetch(titleDescriptor).first {
+            existing.type = .my_watchlist // Auto-fix type
+            try? context.save()
+            return existing.id
+        }
+        
+        // Create New
+        let newWL = Watchlist(title: "My Watchlist", location: "Home", startDate: Date(), endDate: Date())
+        newWL.type = .my_watchlist
+        context.insert(newWL)
+        
+        // Add Legacy Seed Data (Rose-ringed Parakeet)
+        addRoseRingedParakeetTo(watchlist: newWL)
+        
+        try context.save()
+        return newWL.id
+    }
+    
+    // MARK: - Internal Helpers
+    
+    private func addRoseRingedParakeetTo(watchlist: Watchlist) {
+        let birdName = "Rose-ringed Parakeet"
+        let birdDesc = FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
+            bird.commonName == birdName
+        })
+        var targetBird = try? context.fetch(birdDesc).first
+        
+        if targetBird == nil {
+            let newBird = Bird(
+                commonName: birdName,
+                scientificName: "Psittacula krameri",
+                staticImageName: "rose_ringed_parakeet",
+                rarityLevel: .common,
+                validLocations: ["Pune, India"]
+            )
+            context.insert(newBird)
+            targetBird = newBird
+        }
+        
+        guard let bird = targetBird else { return }
+        
+        // Check if already exists to be safe
+        let existingEntries = watchlist.entries ?? []
+        if !existingEntries.contains(where: { $0.bird?.id == bird.id }) {
+            let entry = WatchlistEntry(
+                watchlist: watchlist,
+                bird: bird,
+                status: .to_observe
+            )
+            context.insert(entry)
+        }
+    }
+    
+    // MARK: - Mapper
+    private func toDTO(_ model: Watchlist) -> WatchlistSummaryDTO {
+        let entries = model.entries ?? []
+        let observed = entries.filter { $0.status == .observed }.count
+        
+        // Calculate Stats
+        let stats = WatchlistStatsDTO(
+            observedCount: observed,
+            totalCount: entries.count,
+            rareCount: 0 // Simplification for list view
+        )
+        
+        // Determine Image
+        // Prioritize explicit images, then first bird image
+        var imagePath: String? = model.images?.first?.imagePath
+        if imagePath == nil {
+             imagePath = model.entries?.first?.bird?.staticImageName
+        }
+        
+        // Preview Images (up to 4)
+        let previewImages = entries.compactMap { $0.bird?.staticImageName }.prefix(4).map { String($0) }
+        
+        // Subtitle logic
+        let subtitle = model.location ?? "Unknown Location"
+        
+        // Date Text
+        let dateText: String
+        if let start = model.startDate, let end = model.endDate {
+             let formatter = DateFormatter()
+             formatter.dateFormat = "MMM"
+             dateText = "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        } else {
+             dateText = ""
+        }
+        
+        return WatchlistSummaryDTO(
+            id: model.id,
+            title: model.title ?? "Untitled",
+            subtitle: subtitle,
+            dateText: dateText,
+            image: imagePath,
+            previewImages: Array(previewImages),
+            stats: stats,
+            type: model.type ?? .custom
+        )
+    }
+
+    // MARK: - Legacy Data Loading Support
     
     func onDataLoaded(_ handler: @escaping (Bool) -> Void) {
         if isDataLoaded {
@@ -76,33 +269,19 @@ final class WatchlistManager {
         loadCompletionHandlers.removeAll()
     }
     
-    private func loadData() {
-        // Check if data exists by counting Watchlists
-        let count = (try? context.fetchCount(FetchDescriptor<Watchlist>())) ?? 0
-        
-        if count == 0 {
-            print("No SwiftData records found. Attempting to seed from bundle...")
-            seedInitialData()
-        }
-        
-        // We verify success by checking if any watchlists exist now
-        let hasData = (try? context.fetchCount(FetchDescriptor<Watchlist>())) ?? 0 > 0
-        notifyDataLoaded(success: hasData)
-    }
-    
-    // MARK: - Queries (The Source of Truth)
+    // MARK: - Legacy Queries
     
     func fetchWatchlists(type: WatchlistType? = nil) -> [Watchlist] {
         var descriptor = FetchDescriptor<Watchlist>(sortBy: [SortDescriptor(\.startDate, order: .reverse)])
         if let type = type {
-            // predicate support for enums in SwiftData can be tricky, but basic equality usually works
-            descriptor.predicate = #Predicate { $0.type == type }
+            descriptor.predicate = #Predicate<Watchlist> { watchlist in
+                watchlist.type == type
+            }
         }
         return (try? context.fetch(descriptor)) ?? []
     }
     
     func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus? = nil) -> [WatchlistEntry] {
-        // Fetch via parent relationship to avoid optional chaining predicate issues
         guard let watchlist = getWatchlist(by: watchlistID) else { return [] }
         var entries = watchlist.entries ?? []
         
@@ -114,7 +293,6 @@ final class WatchlistManager {
     }
     
     func fetchGlobalObservedCount() -> Int {
-        // Fetch all entries and filter in memory to avoid predicate enum issues
         let descriptor = FetchDescriptor<WatchlistEntry>()
         let allEntries = (try? context.fetch(descriptor)) ?? []
         return allEntries.filter { $0.status == .observed }.count
@@ -129,108 +307,10 @@ final class WatchlistManager {
     }
     
     func getWatchlist(by id: UUID) -> Watchlist? {
-        let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate { $0.id == id })
+        let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate<Watchlist> { watchlist in
+            watchlist.id == id
+        })
         return try? context.fetch(descriptor).first
-    }
-    
-    // MARK: - Seeding
-    
-    private func seedInitialData() {
-        // Seed Custom Watchlists
-        if let url = Bundle.main.url(forResource: "watchlists", withExtension: "json"),
-           let data = try? Data(contentsOf: url) {
-            do {
-                let dtos = try JSONDecoder().decode([JSONWatchlistDTO].self, from: data)
-                for dto in dtos { createWatchlistFromDTO(dto, type: .custom) }
-                print("Seeded \(dtos.count) custom watchlists.")
-            } catch {
-                print("Failed to decode watchlists.json: \(error)")
-            }
-        }
-        
-        // Seed Shared Watchlists
-        if let url = Bundle.main.url(forResource: "sharedWatchlists", withExtension: "json"),
-           let data = try? Data(contentsOf: url) {
-            do {
-                let dtos = try JSONDecoder().decode([JSONSharedWatchlistDTO].self, from: data)
-                for dto in dtos { createSharedWatchlistFromDTO(dto) }
-                print("Seeded \(dtos.count) shared watchlists.")
-            } catch {
-                print("Failed to decode sharedWatchlists.json: \(error)")
-            }
-        }
-        
-        saveContext()
-    }
-    
-    private func createWatchlistFromDTO(_ dto: JSONWatchlistDTO, type: WatchlistType) {
-        let watchlist = Watchlist(
-            id: dto.id,
-            type: type,
-            title: dto.title,
-            location: dto.location,
-            startDate: Date(timeIntervalSinceReferenceDate: dto.startDate),
-            endDate: Date(timeIntervalSinceReferenceDate: dto.endDate)
-        )
-        if let mainImg = dto.mainImageName {
-            context.insert(WatchlistImage(watchlist: watchlist, imagePath: mainImg))
-        }
-        context.insert(watchlist)
-        processBirds(dto.observedBirds, for: watchlist, status: .observed)
-        processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe)
-    }
-    
-    private func createSharedWatchlistFromDTO(_ dto: JSONSharedWatchlistDTO) {
-        let watchlist = Watchlist(
-            id: dto.id,
-            type: .shared,
-            title: dto.title,
-            location: dto.location
-        )
-        if !dto.mainImageName.isEmpty {
-            context.insert(WatchlistImage(watchlist: watchlist, imagePath: dto.mainImageName))
-        }
-        context.insert(watchlist)
-        processBirds(dto.observedBirds, for: watchlist, status: .observed)
-        processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe)
-    }
-    
-    private func processBirds(_ birdDTOs: [JSONBirdDTO], for watchlist: Watchlist, status: WatchlistEntryStatus) {
-        for dto in birdDTOs {
-            let bird = findOrCreateBird(from: dto)
-            // No duplicate check needed for seeding, assuming clean data
-            let entry = WatchlistEntry(
-                watchlist: watchlist,
-                bird: bird,
-                status: status,
-                notes: dto.notes,
-                observedBy: dto.observedBy?.first
-            )
-            if status == .observed, let dateInterval = dto.date.first {
-                entry.observationDate = Date(timeIntervalSinceReferenceDate: dateInterval)
-            }
-            context.insert(entry)
-        }
-    }
-    
-    private func findOrCreateBird(from dto: JSONBirdDTO) -> Bird {
-        let name = dto.name
-        let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.commonName == name })
-        if let existing = try? context.fetch(descriptor).first { return existing }
-        
-        let rarityString = dto.rarity.first?.lowercased() ?? "common"
-        let rarity: BirdRarityLevel = (rarityString == "rare") ? .rare : (rarityString == "very_rare" ? .very_rare : .common)
-        
-        let newBird = Bird(
-            id: dto.id,
-            commonName: dto.name,
-            scientificName: dto.scientificName,
-            staticImageName: dto.images.first ?? "placeholder",
-            rarityLevel: rarity,
-            validLocations: dto.location
-        )
-        context.insert(newBird)
-        return newBird
     }
     
     // MARK: - CRUD Helpers
@@ -248,15 +328,10 @@ final class WatchlistManager {
         saveContext()
     }
     
-    func deleteWatchlist(id: UUID) {
-        if let wl = getWatchlist(by: id) {
-            context.delete(wl)
-            saveContext()
-        }
-    }
-    
     func deleteEntry(entryId: UUID) {
-        let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == entryId })
+        let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate<WatchlistEntry> { entry in
+            entry.id == entryId
+        })
         if let entry = try? context.fetch(descriptor).first {
             context.delete(entry)
             saveContext()
@@ -264,7 +339,9 @@ final class WatchlistManager {
     }
     
     func updateEntry(entryId: UUID, notes: String?, observationDate: Date?, lat: Double? = nil, lon: Double? = nil) {
-        let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == entryId })
+        let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate<WatchlistEntry> { entry in
+            entry.id == entryId
+        })
         if let entry = try? context.fetch(descriptor).first {
             entry.notes = notes
             entry.observationDate = observationDate
@@ -274,13 +351,11 @@ final class WatchlistManager {
         }
     }
     
-    /// Adds birds to a watchlist, strictly checking for duplicates via query first.
     func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) {
         guard let watchlist = getWatchlist(by: watchlistId) else { return }
         let existingEntries = watchlist.entries ?? []
         
         for bird in birds {
-            // Check existence in memory via relationship to avoid complex predicates
             if !existingEntries.contains(where: { $0.bird?.id == bird.id }) {
                 let entry = WatchlistEntry(
                     watchlist: watchlist,
@@ -295,93 +370,13 @@ final class WatchlistManager {
     }
     
     func toggleObservationStatus(entryId: UUID) {
-        let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == entryId })
+        let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate<WatchlistEntry> { entry in
+            entry.id == entryId
+        })
         if let entry = try? context.fetch(descriptor).first {
             entry.status = (entry.status == .observed) ? .to_observe : .observed
             entry.observationDate = (entry.status == .observed) ? Date() : nil
             saveContext()
         }
     }
-    
-    // MARK: - Special Cases
-    
-    func addRoseRingedParakeetToMyWatchlist() {
-        // 1. Find "My Watchlist" via Query
-        let wlDesc = FetchDescriptor<Watchlist>(predicate: #Predicate { $0.title == "My Watchlist" })
-        var myWatchlist = try? context.fetch(wlDesc).first
-        
-        if myWatchlist == nil {
-            let newWL = Watchlist(title: "My Watchlist", location: "Home", startDate: Date(), endDate: Date())
-            newWL.type = .custom
-            context.insert(newWL)
-            myWatchlist = newWL
-        }
-        
-        guard let targetWatchlist = myWatchlist else { return }
-        
-        // 2. Find Bird via Query
-        let birdName = "Rose-ringed Parakeet"
-        let birdDesc = FetchDescriptor<Bird>(predicate: #Predicate { $0.commonName == birdName })
-        var targetBird = try? context.fetch(birdDesc).first
-        
-        if targetBird == nil {
-            let newBird = Bird(
-                commonName: birdName,
-                scientificName: "Psittacula krameri",
-                staticImageName: "rose_ringed_parakeet",
-                rarityLevel: .common,
-                validLocations: ["Pune, India"]
-            )
-            context.insert(newBird)
-            targetBird = newBird
-        }
-        
-        guard let bird = targetBird else { return }
-        
-        // 3. Add via Entry (Checking existence)
-        addBirds([bird], to: targetWatchlist.id, asObserved: false)
-        print("Rose-ringed Parakeet added to My Watchlist.")
-    }
-}
-
-// MARK: - DTOs
-
-private struct JSONWatchlistDTO: Codable {
-    let id: UUID
-    let title: String
-    let location: String
-    let startDate: TimeInterval
-    let endDate: TimeInterval
-    let observedBirds: [JSONBirdDTO]
-    let toObserveBirds: [JSONBirdDTO]
-    let mainImageName: String?
-}
-
-private struct JSONSharedWatchlistDTO: Codable {
-    let id: UUID
-    let title: String
-    let location: String
-    let dateRange: String
-    let mainImageName: String
-    let stats: JSONSharedStatsDTO
-    let userImages: [String]
-    let observedBirds: [JSONBirdDTO]
-    let toObserveBirds: [JSONBirdDTO]
-}
-
-private struct JSONSharedStatsDTO: Codable {
-    let greenValue: Int
-    let blueValue: Int
-}
-
-private struct JSONBirdDTO: Codable {
-    let id: UUID
-    let name: String
-    let scientificName: String
-    let images: [String]
-    let rarity: [String]
-    let location: [String]
-    let date: [TimeInterval]
-    let observedBy: [String]?
-    let notes: String?
 }

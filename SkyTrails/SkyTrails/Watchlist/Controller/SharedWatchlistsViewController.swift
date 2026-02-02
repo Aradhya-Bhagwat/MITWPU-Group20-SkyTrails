@@ -167,11 +167,7 @@ class SharedWatchlistsViewController: UIViewController {
 
         vc.watchlistType = .shared
         if let watchlist = watchlist {
-            // vc.sharedWatchlistToEdit = watchlist 
-            // Assuming EditWatchlistDetailVC is updated to handle 'Watchlist' generally, 
-            // or we need to fix it. For now, we assume it has a property `watchlistToEdit` 
-            // that can take this, or we rely on `watchlistToEdit` being the unified property.
-             vc.watchlistToEdit = watchlist
+             vc.watchlistIdToEdit = watchlist.id
         }
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -204,8 +200,12 @@ class SharedWatchlistsViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             guard let self = self else { return }
-            self.manager.deleteWatchlist(id: shared.id)
-            self.refreshData()
+            Task {
+                try? await self.manager.deleteWatchlist(id: shared.id)
+                await MainActor.run {
+                    self.refreshData()
+                }
+            }
         }))
 
         present(alert, animated: true)

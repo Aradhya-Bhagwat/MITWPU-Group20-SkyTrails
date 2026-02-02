@@ -4,6 +4,8 @@
         "title": "Canopy Wanderers",
         "location": "Vetal tekdi",
         "dateRange": "8th Oct - 7th Nov",
+        "startDate": 750038400.0,
+        "endDate": 752716799.0,
         "mainImageName": "spotted_dove",
         "stats": {
             "greenValue": 18,
@@ -210,6 +212,8 @@
         "title": "Feather Trail",
         "location": "Singhad Valley",
         "dateRange": "12th Oct - 15th Nov",
+        "startDate": 750384000.0,
+        "endDate": 753407999.0,
         "mainImageName": "striated_heron",
         "stats": {
             "greenValue": 10,

@@ -68,17 +68,10 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         
         guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
         
-        // Fetch fresh object
+        // Fetch fresh object to determine type, then pass ID
         if let watchlist = manager.getWatchlist(by: id) {
             vc.watchlistType = (watchlist.type == .shared) ? .shared : .custom
-            if watchlist.type == .shared {
-                // vc.sharedWatchlistToEdit = watchlist // Assuming logic handles this
-            } else {
-                vc.watchlistToEdit = watchlist
-            }
-            // For now, let's assume the VC can handle the generic Watchlist object or needs updates too.
-            // Keeping navigation simple to avoid breakage until that VC is fixed.
-             navigationController?.pushViewController(vc, animated: true)
+            navigationController?.pushViewController(vc, animated: true)
         }
     }
     

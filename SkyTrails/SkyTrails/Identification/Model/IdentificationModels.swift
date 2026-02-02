@@ -1,6 +1,6 @@
-
 import Foundation
 import CoreLocation
+import SwiftData
 
 struct BirdDatabase: Decodable {
     let metadata: Metadata
@@ -146,7 +146,22 @@ struct IdentificationBird: Codable, Identifiable {
     let description: String
     let imageName: String
     let scoreBreakdown: String
-    
-   
 }
 
+// Temporary Wrapper for Identification Results
+struct IdentifiedBird {
+    let bird: Bird
+    var confidence: Double
+    var scoreBreakdown: String
+    
+    // Proxy properties
+    var id: UUID { bird.id }
+    var commonName: String { bird.commonName }
+    var scientificName: String { bird.scientificName }
+    var staticImageName: String { bird.staticImageName }
+    var validLocations: [String]? { bird.validLocations }
+    var validMonths: [Int]? { bird.validMonths }
+    var fieldMarks: [FieldMarkData]? { bird.fieldMarks }
+    var rarityLevel: BirdRarityLevel? { bird.rarityLevel }
+    var name: String { bird.commonName }
+}

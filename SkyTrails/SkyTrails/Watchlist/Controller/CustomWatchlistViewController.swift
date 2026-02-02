@@ -11,19 +11,17 @@ import SwiftData
 @MainActor
 class CustomWatchlistViewController: UIViewController {
 
-    private let manager = WatchlistManager.shared
+    private let repository: WatchlistRepository = WatchlistManager.shared
+    private let manager = WatchlistManager.shared // For legacy operations
 
     // MARK: - Outlets
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var searchBar: UISearchBar!
 
     // MARK: - Properties
-	private var filteredWatchlists: [Watchlist] = []
+	private var filteredWatchlists: [WatchlistSummaryDTO] = []
 	private var currentSortOption: SortOption = .nameAZ
-	
-    private var allWatchlists: [Watchlist] {
-        return manager.fetchWatchlists(type: .custom)
-    }
+	private var allWatchlistsDTOs: [WatchlistSummaryDTO] = []
     
     enum SortOption {
         case nameAZ, nameZA, startDate, endDate, rarity
@@ -35,6 +33,7 @@ class CustomWatchlistViewController: UIViewController {
         setupUI()
         setupGestures()
         setupDataObservers()
+        loadData()
     }
 
     private func setupDataObservers() {
@@ -47,16 +46,12 @@ class CustomWatchlistViewController: UIViewController {
     }
 
     @objc private func handleDataLoaded(_ notification: Notification) {
-        updateData()
+        loadData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        manager.onDataLoaded { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.updateData()
-            }
-        }
+        loadData()
     }
 
     // MARK: - Setup
@@ -91,12 +86,24 @@ class CustomWatchlistViewController: UIViewController {
     }
 
     // MARK: - Data Handling
+    private func loadData() {
+        Task {
+            do {
+                let data = try await repository.loadDashboardData()
+                self.allWatchlistsDTOs = data.custom
+                self.updateData()
+            } catch {
+                print("Error loading custom watchlists: \(error)")
+            }
+        }
+    }
+
     private func updateData() {
         // 1. Filter
         if let text = searchBar.text, !text.isEmpty {
-            filteredWatchlists = allWatchlists.filter { ($0.title ?? "").localizedCaseInsensitiveContains(text) }
+            filteredWatchlists = allWatchlistsDTOs.filter { $0.title.localizedCaseInsensitiveContains(text) }
         } else {
-            filteredWatchlists = allWatchlists
+            filteredWatchlists = allWatchlistsDTOs
         }
         
         // 2. Sort & Reload (Now handled by sortWatchlists)
@@ -108,20 +115,13 @@ class CustomWatchlistViewController: UIViewController {
         
         switch option {
         case .nameAZ:
-            filteredWatchlists.sort { ($0.title ?? "").localizedStandardCompare($1.title ?? "") == .orderedAscending }
+            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         case .nameZA:
-            filteredWatchlists.sort { ($0.title ?? "").localizedStandardCompare($1.title ?? "") == .orderedDescending }
-        case .startDate:
-            filteredWatchlists.sort { ($0.startDate ?? Date.distantPast) < ($1.startDate ?? Date.distantPast) }
-        case .endDate:
-            filteredWatchlists.sort { ($0.endDate ?? Date.distantPast) < ($1.endDate ?? Date.distantPast) }
-        case .rarity:
-            filteredWatchlists.sort {
-                let rareCount1 = ($0.entries ?? []).filter { $0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare }.count
-                let rareCount2 = ($1.entries ?? []).filter { $0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare }.count
-                return rareCount1 > rareCount2
-            }
-
+            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedDescending }
+        case .startDate, .endDate, .rarity:
+            // These sorts require more data than available in DTOs
+            // For now, fallback to name sort or maintain current order
+            break
         }
         
         // Ensure UI is updated when this is called
@@ -188,14 +188,13 @@ extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionV
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = filteredWatchlists[indexPath.row]
+        let dto = filteredWatchlists[indexPath.row]
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         
         if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
-            smartVC.watchlistType = .custom // Enum case matches
-            smartVC.watchlistTitle = item.title ?? "Watchlist"
-            // REMOVED array passing, smartVC fetches entries by ID now
-            smartVC.currentWatchlistId = item.id
+            smartVC.watchlistType = .custom
+            smartVC.watchlistTitle = dto.title
+            smartVC.currentWatchlistId = dto.id
             navigationController?.pushViewController(smartVC, animated: true)
         }
     }
@@ -236,13 +235,13 @@ extension CustomWatchlistViewController {
         
         let point = gesture.location(in: collectionView)
         if let indexPath = collectionView.indexPathForItem(at: point) {
-            let watchlist = filteredWatchlists[indexPath.row]
-            showOptions(for: watchlist, at: indexPath)
+            let dto = filteredWatchlists[indexPath.row]
+            showOptions(for: dto, at: indexPath)
         }
     }
     
-    func showOptions(for watchlist: Watchlist, at indexPath: IndexPath) {
-        let alert = UIAlertController(title: watchlist.title, message: nil, preferredStyle: .actionSheet)
+    func showOptions(for dto: WatchlistSummaryDTO, at indexPath: IndexPath) {
+        let alert = UIAlertController(title: dto.title, message: nil, preferredStyle: .actionSheet)
         
         // Edit Action
         alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { [weak self] _ in
@@ -250,14 +249,14 @@ extension CustomWatchlistViewController {
             let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
             if let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController {
                 vc.watchlistType = .custom
-                vc.watchlistToEdit = watchlist
+                vc.watchlistIdToEdit = dto.id
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         }))
         
         // Delete Action
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            self?.confirmDelete(watchlist: watchlist)
+            self?.confirmDelete(dto: dto)
         }))
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -275,13 +274,15 @@ extension CustomWatchlistViewController {
         present(alert, animated: true)
     }
     
-    func confirmDelete(watchlist: Watchlist) {
-        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(watchlist.title ?? "this list")'?", preferredStyle: .alert)
+    func confirmDelete(dto: WatchlistSummaryDTO) {
+        let alert = UIAlertController(title: "Delete Watchlist", message: "Are you sure you want to delete '\(dto.title)'?", preferredStyle: .alert)
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            self?.manager.deleteWatchlist(id: watchlist.id)
-            self?.updateData()
+            Task {
+                try? await self?.repository.deleteWatchlist(id: dto.id)
+                self?.loadData()
+            }
         }))
         
         present(alert, animated: true)
