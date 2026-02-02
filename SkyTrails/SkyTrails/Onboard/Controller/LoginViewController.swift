@@ -7,23 +7,32 @@ class LoginViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupPasswordField()
+        setupPassword()
     }
 
-    private func setupPasswordField() {
+    private func setupPassword() {
         passwordTextField.isSecureTextEntry = true
-        addPasswordToggle(to: passwordTextField)
+        addEyeButton(to: passwordTextField)
     }
 
-    private func addPasswordToggle(to textField: UITextField) {
+    private func addEyeButton(to textField: UITextField) {
+
         let button = UIButton(type: .custom)
+
         button.setImage(UIImage(systemName: "eye.slash"), for: .normal)
         button.setImage(UIImage(systemName: "eye"), for: .selected)
+
         button.tintColor = .gray
-        button.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
-        button.addTarget(self, action: #selector(togglePasswordVisibility(_:)), for: .touchUpInside)
+        button.frame = CGRect(x: 0, y: 0, width: 25, height: 25)
+
+        button.addTarget(
+            self,
+            action: #selector(togglePassword(_:)),
+            for: .touchUpInside
+        )
 
         let container = UIView(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
+
         button.center = container.center
         container.addSubview(button)
 
@@ -31,53 +40,86 @@ class LoginViewController: UIViewController {
         textField.rightViewMode = .always
     }
 
-    @objc private func togglePasswordVisibility(_ sender: UIButton) {
+    @objc private func togglePassword(_ sender: UIButton) {
+
         sender.isSelected.toggle()
         passwordTextField.isSecureTextEntry = !sender.isSelected
     }
 
-    @IBAction func loginButtonTapped(_ sender: UIButton) {
-        validateAndLogin()
+    // MARK: - Login Button
+
+    @IBAction func loginTapped(_ sender: UIButton) {
+        login()
     }
 
-    private func validateAndLogin() {
-        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+    private func login() {
+
+        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
               let password = passwordTextField.text,
               !email.isEmpty,
               !password.isEmpty else {
-            showAlert(message: "Please enter email and password")
+
+            showAlert("Enter email and password")
             return
         }
 
         guard email.isValidEmail else {
-            showAlert(message: "Please enter a valid email address")
+            showAlert("Invalid email")
             return
         }
 
-        goToMainApp()
+        guard let savedPassword =
+                KeychainManager.shared.getPassword(email: email) else {
+
+            showAlert("Account not found")
+            return
+        }
+
+        if savedPassword == password {
+
+            // Save session
+            UserDefaults.standard.set(true, forKey: "isLoggedIn")
+            UserDefaults.standard.set(email, forKey: "userEmail")
+
+            goToMain()
+
+        } else {
+            showAlert("Wrong password")
+        }
     }
 
-    private func goToMainApp() {
+    private func goToMain() {
+
+        guard let scene =
+                UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else { return }
+
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let tabBar = storyboard.instantiateViewController(identifier: "RootTabBarController") as! RootTabBarController
 
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
+        let mainVC = storyboard.instantiateViewController(
+            identifier: "RootTabBarController"
+        )
 
-        window.rootViewController = tabBar
-        window.makeKeyAndVisible()
+        window.rootViewController = mainVC
+
+        UIView.transition(
+            with: window,
+            duration: 0.3,
+            options: .transitionFlipFromRight,
+            animations: nil
+        )
     }
 
-    private func showAlert(title: String = "Invalid Input", message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    private func showAlert(_ msg: String) {
+
+        let alert = UIAlertController(
+            title: "Alert",
+            message: msg,
+            preferredStyle: .alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
-}
 
-extension String {
-    var isValidEmail: Bool {
-        let emailRegex = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
-        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: self)
+        present(alert, animated: true)
     }
 }
