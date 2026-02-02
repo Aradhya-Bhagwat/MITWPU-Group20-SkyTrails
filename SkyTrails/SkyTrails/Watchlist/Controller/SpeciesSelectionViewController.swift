@@ -59,24 +59,8 @@ class SpeciesSelectionViewController: UIViewController {
     }
     
     private func loadData() {
-        // Flatten all birds from all watchlists
-        let allWatchlists = manager.fetchWatchlists()
-        let allEntries = allWatchlists.flatMap { $0.entries ?? [] }
-        let allBirdsFromEntries = allEntries.compactMap { $0.bird }
-        
-        // Deduplicate birds by ID using a Dictionary grouping
-        var uniqueBirds : [Bird] = []
-        var seenIDs: Set<UUID> = []
-        for bird in allBirdsFromEntries {
-            if !seenIDs.contains(bird.id) {
-                uniqueBirds.append(bird)
-                seenIDs.insert(bird.id)
-            }
-        }
-
-        self.allBirds = uniqueBirds.sorted { $0.name < $1.name }
-        self.filteredBirds = uniqueBirds
-        
+        self.allBirds = manager.fetchAllBirds()
+        self.filteredBirds = allBirds
         tableView.reloadData()
     }
     
@@ -92,10 +76,21 @@ class SpeciesSelectionViewController: UIViewController {
 extension SpeciesSelectionViewController {
     
     @objc private func didTapNext() {
-        guard !selectedBirds.isEmpty else { return }
+        print("➡️  [SpeciesSelectionVC] didTapNext() called")
+        print("📊 [SpeciesSelectionVC] Selected birds count: \(selectedBirds.count)")
+        
+        guard !selectedBirds.isEmpty else {
+            print("⚠️  [SpeciesSelectionVC] No birds selected, returning")
+            return
+        }
         
         // Filter the selected bird objects
         let birdsToProcess = allBirds.filter { selectedBirds.contains($0.id) }
+        
+        print("🐦 [SpeciesSelectionVC] Birds to process:")
+        birdsToProcess.forEach { print("  - \($0.commonName)") }
+        print("📋 [SpeciesSelectionVC] Target watchlist ID: \(targetWatchlistId?.description ?? "nil")")
+        print("🎯 [SpeciesSelectionVC] Mode: \(mode == .observed ? "observed" : "unobserved")")
         
         // Start the wizard loop
         startDetailLoop(birds: birdsToProcess)
@@ -120,10 +115,6 @@ extension SpeciesSelectionViewController {
     }
     
     private func finalizeLoop() {
-        if !processedBirds.isEmpty, let watchlistId = targetWatchlistId {
-            let isObserved = (mode == .observed)
-            manager.addBirds(processedBirds, to: watchlistId, asObserved: isObserved)
-        }
         navigationController?.popViewController(animated: true)
     }
     
@@ -135,6 +126,7 @@ extension SpeciesSelectionViewController {
         if mode == .unobserved {
             let vc = storyboard.instantiateViewController(withIdentifier: Constants.unobservedVCId) as! UnobservedDetailViewController
             vc.bird = bird
+            vc.watchlistId = targetWatchlistId
             vc.onSave = { [weak self] savedBird in
                 self?.handleSave(bird: savedBird)
             }
@@ -142,6 +134,7 @@ extension SpeciesSelectionViewController {
         } else {
             let vc = storyboard.instantiateViewController(withIdentifier: Constants.observedVCId) as! ObservedDetailViewController
             vc.bird = bird
+            vc.watchlistId = targetWatchlistId
             vc.onSave = { [weak self] savedBird in
                 self?.handleSave(bird: savedBird)
             }
@@ -153,6 +146,10 @@ extension SpeciesSelectionViewController {
     }
     
     private func handleSave(bird: Bird) {
+        print("✅ [SpeciesSelectionVC] handleSave() called for: \(bird.commonName)")
+        print("📊 [SpeciesSelectionVC] Processed so far: \(processedBirds.count)")
+        print("📊 [SpeciesSelectionVC] Remaining in queue: \(birdQueue.count)")
+        
         processedBirds.append(bird)
         showNextInLoop()
     }

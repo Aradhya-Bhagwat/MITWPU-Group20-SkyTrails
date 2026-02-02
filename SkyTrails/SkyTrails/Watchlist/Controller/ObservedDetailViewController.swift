@@ -196,25 +196,53 @@ class ObservedDetailViewController: UIViewController {
 	}
 	
 	@objc func didTapSave() {
-		guard let name = nameTextField.text, !name.isEmpty else { return }
+		print("💾 [ObservedDetailVC] didTapSave() called")
+		
+		guard let name = nameTextField.text, !name.isEmpty else {
+			print("❌ [ObservedDetailVC] ERROR: Name is empty, cannot save")
+			return
+		}
+		
+		print("📝 [ObservedDetailVC] Bird name: \(name)")
+		print("📅 [ObservedDetailVC] Observation date: \(dateTimePicker.date)")
+		print("📝 [ObservedDetailVC] Notes: \(notesTextView.text ?? "nil")")
 		
         if let existingEntry = entry {
+            print("✏️  [ObservedDetailVC] Editing existing entry: \(existingEntry.id)")
             // Update using manager
             manager.updateEntry(
                 entryId: existingEntry.id,
                 notes: notesTextView.text,
                 observationDate: dateTimePicker.date
             )
+            print("✅ [ObservedDetailVC] Updated existing entry")
         } else if let wId = watchlistId {
+            print("➕ [ObservedDetailVC] Creating new entry")
+            print("📋 [ObservedDetailVC] Watchlist ID: \(wId)")
+            
             // New Entry
-            if let birdRef = bird {
-                manager.addBirds([birdRef], to: wId, asObserved: true)
-                // Note: Currently manager.addBirds doesn't return the entry, 
-                // so we can't immediately update it with notes/custom date here without fetching.
-                // For a prototype, this is acceptable, or we could extend addBirds.
+            let birdToUse: Bird
+            if let existingBird = bird {
+                print("🐦 [ObservedDetailVC] Using existing bird: \(existingBird.commonName)")
+                birdToUse = existingBird
+            } else if let found = manager.findBird(byName: name) {
+                print("🔍 [ObservedDetailVC] Found existing bird in DB: \(found.commonName)")
+                birdToUse = found
+            } else {
+                print("➕ [ObservedDetailVC] Creating new bird: \(name)")
+                birdToUse = manager.createBird(name: name)
             }
+            
+            print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
+            manager.addBirds([birdToUse], to: wId, asObserved: true)
+            
+            print("📞 [ObservedDetailVC] Calling onSave callback")
+            onSave?(birdToUse)
+        } else {
+        	print("⚠️  [ObservedDetailVC] No watchlistId available")
         }
         
+		print("✅ [ObservedDetailVC] Complete, popping view controller")
 		navigationController?.popViewController(animated: true)
 	}
 	
