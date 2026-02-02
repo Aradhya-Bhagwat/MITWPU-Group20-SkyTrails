@@ -76,37 +76,31 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         label.font = .systemFont(ofSize: 12, weight: .bold)
     }
     
-    func configure(with watchlist: Watchlist) {
-        titleLabel.text = watchlist.title
+    func configure(with dto: WatchlistSummaryDTO) {
+        titleLabel.text = dto.title
         
         // Location
-        locationLabel.addIcon(text: watchlist.location ?? "Unknown", iconName: "location.fill")
+        locationLabel.addIcon(text: dto.subtitle, iconName: "location.fill")
         
         // Date
-        if let start = watchlist.startDate, let end = watchlist.endDate, isDateValid(start: start, end: end) {
-            let startStr = DateFormatters.shortDate.string(from: start)
-            let endStr = DateFormatters.shortDate.string(from: end)
-            let dateString = "\(startStr) - \(endStr)"
-            
-            dateLabel.addIcon(text: dateString, iconName: "calendar")
+        if !dto.dateText.isEmpty {
+            dateLabel.addIcon(text: dto.dateText, iconName: "calendar")
             dateLabel.isHidden = false
         } else {
             dateLabel.isHidden = true
         }
         
         // Badges
-        let birdsCount = watchlist.entries?.count ?? 0
-        leftBadgeLabel.addIcon(text: "\(birdsCount)", iconName: "bird")
-        rightBadgeLabel.addIcon(text: "\(watchlist.observedCount)", iconName: "bird.fill")
+        leftBadgeLabel.addIcon(text: "\(dto.stats.totalCount)", iconName: "bird")
+        rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
         
         // Cover Image
-        if let firstEntry = watchlist.entries?.first, let bird = firstEntry.bird {
-            coverImageView.image = UIImage(named: bird.staticImageName)
+        if let imageName = dto.image {
+            coverImageView.image = UIImage(named: imageName)
         } else {
             coverImageView.image = nil
             coverImageView.backgroundColor = .systemGray5
         }
-
     }
     
     // MARK: - Helpers

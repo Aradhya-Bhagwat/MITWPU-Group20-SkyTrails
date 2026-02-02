@@ -25,7 +25,7 @@ class IdentificationManager {
     var selectedFieldMarks: [FieldMarkData] = []
     
     
-    var birdResults: [Bird] = []
+    var birdResults: [IdentifiedBird] = []
     
     
     var onResultsUpdated: (() -> Void)?
@@ -165,8 +165,7 @@ class IdentificationManager {
             }
 
           
-            if let rarities = bird.rarity,
-               rarities.contains(.common) {
+            if bird.rarityLevel == .common {
                 score += 5
             }
 
@@ -181,11 +180,8 @@ class IdentificationManager {
         scoredBirds.sort { $0.score > $1.score }
 
         self.birdResults = scoredBirds.map { item in
-                    var bird = item.bird
-                    bird.confidence = item.score
-                    bird.scoreBreakdown = item.breakdown
-                    return bird
-                }
+            IdentifiedBird(bird: item.bird, confidence: item.score, scoreBreakdown: item.breakdown)
+        }
 
         // 5. Notify UI ONCE
         DispatchQueue.main.async {
@@ -229,63 +225,29 @@ class IdentificationManager {
         }
         
         private func loadUserBirds() -> [Bird] {
-            let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
-            let decoder = JSONDecoder()
-            
-            if let data = try? Data(contentsOf: url) {
-                do {
-                    // return try decoder.decode([Bird].self, from: data)
-                    return [] // TODO: Migrate to SwiftData
-                } catch {
-                    print("CRITICAL: Failed to decode user_birds.json:", error)
-                    return []
-                }
-            }
-            
-       
+            // TODO: Migrate to SwiftData
             return []
         }
         
         func saveUserBirds() {
-            guard let db = masterDatabase else { return }
-            
-            let userBirds = db.birds.filter { $0.isUserCreated == true }
-            let url = getDocumentsDirectory().appendingPathComponent("user_birds.json")
-            
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = .prettyPrinted
-                // let data = try encoder.encode(userBirds)
-                // try data.write(to: url, options: .atomic)
-            } catch {
-                print("Failed to save user_birds.json:", error)
-            }
+            // TODO: Migrate to SwiftData. Legacy JSON saving disabled.
         }
         
         func loadHistory() -> [History] {
             let url = getDocumentsDirectory().appendingPathComponent("history.json")
-                let decoder = JSONDecoder()
+            let decoder = JSONDecoder()
             
-            if let data = try? Data(contentsOf: url) {
-                do {
-                    return try decoder.decode([History].self, from: data)
-                } catch {
-                    print("CRITICAL: Failed to decode history.json from Documents:", error)
-                }
+            if let data = try? Data(contentsOf: url),
+               let decoded = try? decoder.decode([History].self, from: data) {
+                return decoded
             }
             
-           
             if let bundleURL = Bundle.main.url(forResource: "history", withExtension: "json"),
-               let data = try? Data(contentsOf: bundleURL) {
-                do {
-                    let decoded = try decoder.decode([History].self, from: data)
-                    self.histories = decoded
-                    saveHistory()
-                    
-                    return decoded
-                } catch {
-                    print("CRITICAL: Failed to decode history.json from Bundle:", error)
-                }
+               let data = try? Data(contentsOf: bundleURL),
+               let decoded = try? decoder.decode([History].self, from: data) {
+                self.histories = decoded
+                saveHistory()
+                return decoded
             }
             
             return []

@@ -10,7 +10,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     var historyItem: History?
     var historyIndex: Int?
     
-    var selectedResult: Bird?
+    var selectedResult: IdentifiedBird?
     var selectedIndexPath: IndexPath?
     
     override func viewDidLoad() {
@@ -38,11 +38,11 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             if let match = viewModel.birdResults.first(where: { $0.commonName == history.specieName }) {
                 selectedResult = match
                 print("DEBUG: Found match in birdResults: \(match.commonName)")
-            } else if var dbBird = viewModel.getBird(byName: history.specieName) {
-                dbBird.confidence = 1.0
-                dbBird.scoreBreakdown = "From History"
-                selectedResult = dbBird
-                viewModel.birdResults = [selectedResult!]
+            } else if let dbBird = viewModel.getBird(byName: history.specieName) {
+                // Wrap in IdentifiedBird
+                let identified = IdentifiedBird(bird: dbBird, confidence: 1.0, scoreBreakdown: "From History")
+                selectedResult = identified
+                viewModel.birdResults = [identified]
                 print("DEBUG: Loaded from DB: \(dbBird.commonName)")
             }
         } else {
@@ -176,7 +176,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ResultCollectionViewCell", for: indexPath) as! ResultCollectionViewCell
         
         let img = UIImage(named: result.staticImageName)
-        let percentString = String(Int((result.confidence ?? 0.0) * 100))
+        let percentString = String(Int(result.confidence * 100))
         
         cell.configure(
             image: img,
@@ -248,27 +248,25 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         saveToWatchlist(bird: savedBird)
     }
     
-    private func convertToSavedBird(from result: Bird) -> Bird {
-		return Bird(
-			id: UUID(),
-			name: result.name,
-			scientificName: result.scientificName,
-			staticImageName: result.staticImageName,
-			validLocations: result.validLocations,
-			validMonths: result.validMonths,
-			rarity: result.rarity,
-			fieldMarks: result.fieldMarks,
-			confidence: result.confidence,
-			scoreBreakdown: result.scoreBreakdown,
-			isUserCreated: true,
-			observationStatus: .toObserve
-		)
+    private func convertToSavedBird(from result: IdentifiedBird) -> Bird {
+        // Create a new Bird instance from the identification result.
+        // We cannot set isUserCreated/confidence/scoreBreakdown as they were removed from Bird.
+        return Bird(
+            id: UUID(),
+            commonName: result.commonName,
+            scientificName: result.scientificName,
+            staticImageName: result.staticImageName,
+            validLocations: result.validLocations,
+            validMonths: result.validMonths,
+            fieldMarks: result.fieldMarks
+        )
     }
 
     private func saveToWatchlist(bird: Bird) {
         let manager = WatchlistManager.shared
         
-        if let defaultWatchlist = manager.watchlists.first {
+        // Fetch "My Watchlist" or default to the first available watchlist
+        if let defaultWatchlist = manager.fetchWatchlists(type: .my_watchlist).first ?? manager.fetchWatchlists().first {
             manager.addBirds([bird], to: defaultWatchlist.id, asObserved: false)
             
             let alert = UIAlertController(

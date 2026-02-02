@@ -85,3 +85,4 @@ docs/html
 .netrc
 local.properties
 SkyTrails/SkyTrails.xcodeproj/project.pbxproj
+SkyTrails/SkyTrails/Identification/

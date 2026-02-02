@@ -49,7 +49,7 @@ final class Watchlist {
 	
 	@Attribute(.unique) var id: UUID
 	var owner_id: UUID = Watchlist.defaultOwnerId // In a real app with Auth, this links to User
-	var type: WatchlistType
+	var type: WatchlistType? // Default to custom if missing
 	var title: String?
 	var location: String?
 	var startDate: Date?

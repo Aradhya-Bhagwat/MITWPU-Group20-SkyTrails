@@ -34,11 +34,13 @@ class EditWatchlistDetailViewController: UIViewController {
 		// MARK: - Properties
 	var watchlistType: WatchlistType = .custom
 	
-		// Edit Mode Data
-	var watchlistToEdit: Watchlist?
-	
-		// Location & Search
-	private let locationManager = CLLocationManager()
+    // Edit Mode Data
+    var watchlistIdToEdit: UUID?
+    private var watchlistToEdit: Watchlist?
+    
+    // Location & Search
+    private let locationManager = CLLocationManager()
+
 
 	
 	private var searchCompleter = MKLocalSearchCompleter()
@@ -91,10 +93,14 @@ class EditWatchlistDetailViewController: UIViewController {
 		searchCompleter.delegate = self
 	}
 	
-	private func configureInitialData() {
-		initializeParticipants()
-		populateDataForEdit()
-	}
+    private func configureInitialData() {
+        if let id = watchlistIdToEdit {
+            self.watchlistToEdit = manager.getWatchlist(by: id)
+        }
+        initializeParticipants()
+        populateDataForEdit()
+    }
+
 	
 	private func initializeParticipants() {
         // Placeholder logic as Participant mapping to new Schema (WatchlistShare) is not fully implemented in UI
