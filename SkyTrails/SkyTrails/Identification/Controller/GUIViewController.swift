@@ -1,309 +1,256 @@
 import UIKit
+import SwiftData
 
 class GUIViewController: UIViewController {
-	
-		
-	@IBOutlet weak var variationsCollectionView: UICollectionView!
-	@IBOutlet weak var canvasContainerView: UIView!
-	@IBOutlet weak var categoryLabel: UILabel!
-	@IBOutlet weak var categoriesCollectionView: UICollectionView!
-	
-		
-	var viewModel: IdentificationManager!
-	weak var delegate: IdentificationFlowStepDelegate?
-	
-	private var categories: [ChooseFieldMark] = []
-	private var currentCategoryIndex: Int = 0
+    
+    @IBOutlet weak var variationsCollectionView: UICollectionView!
+    @IBOutlet weak var canvasContainerView: UIView!
+    @IBOutlet weak var categoryLabel: UILabel!
+    @IBOutlet weak var categoriesCollectionView: UICollectionView!
+    
+    var viewModel: IdentificationManager!
+    weak var delegate: IdentificationFlowStepDelegate?
+    
+    // Data source derived from the selected shape
+    private var categories: [BirdFieldMark] = []
+    private var currentCategoryIndex: Int = 0
 
-	private var selectedVariations: [String: String] = [:]
-	
-	private var baseShapeLayer: UIImageView!
-	private var partLayers: [String: UIImageView] = [:]
-	
-
-	
+    // Layers for the visual bird builder
+    private var baseShapeLayer: UIImageView!
+    private var partLayers: [String: UIImageView] = [:]
+    
+    // The specific order in which layers are stacked (bottom to top)
     private let layerOrder = [
-        "Tail",
-        "Leg",
-        "Thigh",
-        "Head",
-        "Neck",
-        "Back", "Underparts",
-        "Nape", "Throat", "Crown",
-        "Facemask",
-        "Beak", "Eye",
-        "Wings"
+        "Tail", "Leg", "Thigh", "Head", "Neck",
+        "Back", "Underparts", "Nape", "Throat", "Crown",
+        "Facemask", "Beak", "Eye", "Wings"
     ]
 
-
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		setupUI()
-		
-		let variationNib = UINib(nibName: "VariationCell", bundle: nil)
-		variationsCollectionView.register(variationNib, forCellWithReuseIdentifier: "VariationCell")
-		let categoryNib = UINib(nibName: "CategoryCell", bundle: nil)
-		categoriesCollectionView.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
-		
-		loadData()
-		setupCanvas()
-		
-		
-		if !categories.isEmpty {
-			selectCategory(at: 0)
-		}
-	}
-	
-	override func viewDidLayoutSubviews() {
-		super.viewDidLayoutSubviews()
-		
-		let bounds = canvasContainerView.bounds
-		baseShapeLayer?.frame = bounds
-		
-		for layer in partLayers.values {
-			layer.frame = bounds
-		}
-	}
-	
-	private func loadData() {
-		guard let selectedNames = viewModel.data.fieldMarks, !selectedNames.isEmpty else {
-			self.categories = []
-			return
-		}
-        let allParts = viewModel.chooseFieldMarks
-		self.categories = allParts.filter { part in
-			return selectedNames.contains(part.name)
-		}
-        
-        if selectedVariations["Neck"] == nil { selectedVariations["Neck"] = "Default" }
-        if selectedVariations["Head"] == nil { selectedVariations["Head"] = "Default" }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        registerCells()
+        loadData()
         setupCanvas()
-	}
-	
-	private func setupUI() {
-		title = "Identify field marks"
-		variationsCollectionView.delegate = self
-		variationsCollectionView.dataSource = self
-		categoriesCollectionView.delegate = self
-		categoriesCollectionView.dataSource = self
-		if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-			layout.estimatedItemSize = .zero
-			layout.scrollDirection = .horizontal
-		}
-		if let layout = categoriesCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-			layout.estimatedItemSize = .zero
-			layout.scrollDirection = .horizontal
-		}
-	}
-
+        
+        if !categories.isEmpty {
+            selectCategory(at: 0)
+        }
+    }
+    
+    /// CRITICAL: This ensures the bird layers are centered and sized correctly
+    /// after the AutoLayout engine determines the container's final size.
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let bounds = canvasContainerView.bounds
+        baseShapeLayer?.frame = bounds
+        for layer in partLayers.values {
+            layer.frame = bounds
+        }
+    }
+    
+    private func registerCells() {
+        let variationNib = UINib(nibName: "VariationCell", bundle: nil)
+        variationsCollectionView.register(variationNib, forCellWithReuseIdentifier: "VariationCell")
+        let categoryNib = UINib(nibName: "CategoryCell", bundle: nil)
+        categoriesCollectionView.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
+    }
+    
+    private func loadData() {
+        // Fetch field marks directly from the selected shape in the VM
+        guard let shape = viewModel.selectedShape else {
+            self.categories = []
+            return
+        }
+        
+        // Sort by layerOrder so the horizontal list matches the visual stacking logic
+        let fieldMarks = shape.fieldMarks ?? []
+        self.categories = fieldMarks.sorted { mark1, mark2 in
+            let index1 = layerOrder.firstIndex(of: mark1.area) ?? 999
+            let index2 = layerOrder.firstIndex(of: mark2.area) ?? 999
+            return index1 < index2
+        }
+        
+        if categories.isEmpty {
+            print("DEBUG: No field marks found for shape: \(shape.name). Check your Seeder.")
+        }
+    }
+    
+    private func setupUI() {
+        title = "Identify field marks"
+        variationsCollectionView.delegate = self
+        variationsCollectionView.dataSource = self
+        categoriesCollectionView.delegate = self
+        categoriesCollectionView.dataSource = self
+        
+        // Ensure flow layouts are horizontal and items don't resize unexpectedly
+        if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+            layout.scrollDirection = .horizontal
+            layout.estimatedItemSize = .zero
+        }
+        if let layout = categoriesCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+            layout.scrollDirection = .horizontal
+            layout.estimatedItemSize = .zero
+        }
+    }
 
     private func setupCanvas() {
+        // Clear existing layers if re-initializing
         canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
         partLayers.removeAll()
 
-        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-        let userSelectedCategories = categories.map { $0.name }
+        let shapeID = cleanForFilename(viewModel.selectedShape?.id ?? "finch")
 
+        // 1. Create Base Layer
         baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
         let baseName = "id_shape_\(shapeID)_base_core"
-        print("GUIViewController: Attempting to load base layer: \(baseName)")
         if let img = UIImage(named: baseName) {
             baseShapeLayer.image = img
-            print("GUIViewController: Successfully loaded base layer: \(baseName)")
-        } else {
-            print("GUIViewController: Failed to load base layer: \(baseName)")
         }
         canvasContainerView.addSubview(baseShapeLayer)
 
+        // 2. Create Part Layers (Ordered by layerOrder - unchanged)
         for catName in layerOrder {
             let imgView = UIImageView(frame: canvasContainerView.bounds)
             imgView.contentMode = .scaleAspectFit
             canvasContainerView.addSubview(imgView)
             partLayers[catName] = imgView
 
-            var imageName: String? = nil
+            // Find if there's a user selection for this category
+            let category = categories.first(where: { $0.area == catName })
+            let activeVariant = viewModel.selectedFieldMarks[category?.id ?? UUID()]
             
-            if userSelectedCategories.contains(catName) {
-                if let selectedVariant = selectedVariations[catName] {
-                    imageName = "id_canvas_\(shapeID)_\(cleanForFilename(catName))_\(cleanForFilename(selectedVariant))"
-                } else {
-                    imageName = nil
-                }
-            } else {
-                imageName = "id_canvas_\(shapeID)_\(cleanForFilename(catName))_default"
-            }
+            // If no selection, we show the "default" asset for that body part
+            let variantName = activeVariant?.name ?? "default"
+            let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(catName))_\(cleanForFilename(variantName))"
             
-            if let name = imageName {
-                print("GUIViewController: Attempting to load part layer: \(name)")
-                if let img = UIImage(named: name) {
-                    imgView.image = img
-                    print("GUIViewController: Successfully loaded part layer: \(name)")
-                } else {
-                    imgView.image = nil
-                    print("GUIViewController: Failed to load part layer: \(name)")
-                }
-            } else {
-                imgView.image = nil
-            }
+            imgView.image = UIImage(named: imageName)
         }
     }
 
-	func cleanForFilename(_ name: String) -> String {
-        if name == "Passeridae_Fringillidae" {
-            return "finch"
-        }
-		return name
-            .lowercased()
-			.replacingOccurrences(of: " ", with: "_")
-			.replacingOccurrences(of: "-", with: "_")
-	}
-	
-	func selectCategory(at index: Int) {
-		guard index < categories.count else { return }
-		currentCategoryIndex = index
-		let cat = categories[index]
-		
-		categoryLabel.text = cat.name
-		
-		variationsCollectionView.reloadData()
-		categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
-	}
-	
-
-    func updateCanvas(category: String, variant: String) {
-        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-        let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(category))_\(cleanForFilename(variant))"
+    func cleanForFilename(_ name: String) -> String {
+        // Special case for your specific family naming in JSON
+        if name == "Passeridae_Fringillidae" { return "finch" }
+        return name.lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+            .replacingOccurrences(of: "-", with: "_")
+    }
+    
+    func selectCategory(at index: Int) {
+        guard index < categories.count else { return }
+        currentCategoryIndex = index
+        categoryLabel.text = categories[index].area
         
-        print("GUIViewController: Attempting to update part: \(imageName)")
-        if let layer = partLayers[category] {
-            if let img = UIImage(named: imageName) {
-                layer.image = img
-                print("GUIViewController: Successfully updated part: \(imageName)")
-            } else {
-                print("GUIViewController: Failed to update part: \(imageName)")
-            }
-        } else {
-            print("GUIViewController: Layer not found for category: \(category)")
+        variationsCollectionView.reloadData()
+        categoriesCollectionView.reloadData()
+        
+        let indexPath = IndexPath(item: index, section: 0)
+        categoriesCollectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+    }
+
+    func updateCanvas(categoryName: String, variantName: String) {
+        let shapeID = cleanForFilename(viewModel.selectedShape?.id ?? "finch")
+        let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(categoryName))_\(cleanForFilename(variantName))"
+        
+        if let layer = partLayers[categoryName] {
+            // Animating the transition makes the "builder" feel high quality
+            UIView.transition(with: layer, duration: 0.2, options: .transitionCrossDissolve, animations: {
+                layer.image = UIImage(named: imageName)
+            }, completion: nil)
         }
     }
-	private func compositePreviewImage(base: UIImage, overlay: UIImage) -> UIImage {
-		let renderer = UIGraphicsImageRenderer(size: base.size)
-		return renderer.image { _ in
-			base.draw(in: CGRect(origin: .zero, size: base.size))
-			overlay.draw(in: CGRect(origin: .zero, size: base.size))
-		}
-	}
-	
-	private func variationThumbnailImage(shapeID: String, categoryName: String, variantName: String) -> UIImage? {
-		let cleanCategory = cleanForFilename(categoryName)
-		let cleanVariant = cleanForFilename(variantName)
-		
-		let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
-		let iconName = "id_icon_\(cleanCategory)_\(cleanVariant)"
-		let baseName = "id_shape_\(shapeID)_base"
-		
-		if let canvas = UIImage(named: canvasName) {
-			if let base = UIImage(named: baseName) {
-				return compositePreviewImage(base: base, overlay: canvas)
-			}
-			return canvas
-		}
-		
-		return UIImage(named: iconName)
-	}
-	
-	func getVariantsForCurrentCategory() -> [String] {
-		guard currentCategoryIndex < categories.count else { return [] }
-		let currentName = categories[currentCategoryIndex].name
-		
-		if let fieldMark = viewModel.referenceFieldMarks.first(where: { $0.area == currentName }) {
-			return fieldMark.variants
-		}
-		return []
-	}
-	
+
     @IBAction func nextTapped(_ sender: Any) {
-        var marks: [FieldMarkData] = []
-        for (area, variant) in selectedVariations {
-                // Note: Colors are empty for now as per your prototype scope
-            marks.append(FieldMarkData(area: area, variant: variant, colors: []))
-        }
-        
-        viewModel.filterBirds(
-            shape: viewModel.selectedShapeId,
-            size: viewModel.selectedSizeCategory,
-            location: viewModel.selectedLocation,
-            fieldMarks: marks
-        )
-        
+        // The viewModel already has the selectedFieldMarks synced
+        viewModel.runFilter()
         delegate?.didFinishStep()
     }
 }
 
-	
+// MARK: - CollectionView Logic
 extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-	
-	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		if collectionView == categoriesCollectionView {
-			return categories.count
-		} else {
-			return getVariantsForCurrentCategory().count
-		}
-	}
-	
-	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		if collectionView == categoriesCollectionView {
-				// BOTTOM BAR (Categories)
-			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
-			let item = categories[indexPath.row]
-			
-			cell.configure(name: item.name, iconName: item.imageView, isSelected: indexPath.row == currentCategoryIndex)
-			return cell
-			
-		} else {
-				// TOP BAR (Variations)
-			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
-			let variants = getVariantsForCurrentCategory()
-			let variantName = variants[indexPath.row]
-			let categoryName = categories[currentCategoryIndex].name
-			
-			let isSelected = selectedVariations[categoryName] == variantName
-			let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "Finch")
-			let thumb = variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
-			cell.configure(image: thumb, isSelected: isSelected)
-			return cell
-		}
-	}
-	
-	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-		if collectionView == categoriesCollectionView {
-			selectCategory(at: indexPath.row)
-		} else {
-			let variants = getVariantsForCurrentCategory()
-			let selectedVariant = variants[indexPath.row]
-			let categoryName = categories[currentCategoryIndex].name
-			
-			print("Selected: \(categoryName) - \(selectedVariant)")
-			
-			selectedVariations[categoryName] = selectedVariant
-			variationsCollectionView.reloadData()
-			updateCanvas(category: categoryName, variant: selectedVariant)
-		}
-	}
-	
-		
-	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-			// I restored the sizes from your original code (70 and 60)
-			// because you mentioned they worked better than the larger ones.
-		if collectionView == categoriesCollectionView {
-			return CGSize(width: 70, height: 70)
-		} else {
-			return CGSize(width: 60, height: 60)
-		}
-	}
-	
-	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-		return 15
-	}
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if collectionView == categoriesCollectionView {
+            return categories.count
+        } else {
+            guard !categories.isEmpty, currentCategoryIndex < categories.count else { return 0 }
+            return categories[currentCategoryIndex].variants?.count ?? 0
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if collectionView == categoriesCollectionView {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+            let item = categories[indexPath.row]
+            
+            // Build the icon name based on category area (e.g., id_icn_beak)
+            let iconName = "id_icn_\(cleanForFilename(item.area))"
+            cell.configure(name: item.area, iconName: iconName, isSelected: indexPath.row == currentCategoryIndex)
+            return cell
+            
+        } else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
+            let currentMark = categories[currentCategoryIndex]
+            
+            guard let variants = currentMark.variants, indexPath.row < variants.count else { return cell }
+            
+            let variant = variants[indexPath.row]
+            let isSelected = viewModel.selectedFieldMarks[currentMark.id] == variant
+            let shapeID = cleanForFilename(viewModel.selectedShape?.id ?? "finch")
+            
+            // Generate the thumbnail by compositing the bird base with this specific variant
+            let thumb = variationThumbnailImage(shapeID: shapeID, categoryName: currentMark.area, variantName: variant.name)
+            
+            cell.configure(image: thumb, isSelected: isSelected)
+            return cell
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if collectionView == categoriesCollectionView {
+            selectCategory(at: indexPath.row)
+        } else {
+            let currentMark = categories[currentCategoryIndex]
+            guard let variants = currentMark.variants else { return }
+            let variant = variants[indexPath.row]
+            
+            // Update state in ViewModel
+            viewModel.toggleVariant(variant, for: currentMark)
+            
+            // UI Feedback
+            variationsCollectionView.reloadData()
+            updateCanvas(categoryName: currentMark.area, variantName: variant.name)
+        }
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return collectionView == categoriesCollectionView ? CGSize(width: 70, height: 70) : CGSize(width: 60, height: 60)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 15
+    }
+}
+
+// MARK: - Image Composition Helper
+extension GUIViewController {
+    private func variationThumbnailImage(shapeID: String, categoryName: String, variantName: String) -> UIImage? {
+        let cleanCategory = cleanForFilename(categoryName)
+        let cleanVariant = cleanForFilename(variantName)
+        
+        let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
+        let baseName = "id_shape_\(shapeID)_base" // Note: Thumbnails use the generic base, not the 'core'
+        
+        if let canvas = UIImage(named: canvasName), let base = UIImage(named: baseName) {
+            let renderer = UIGraphicsImageRenderer(size: base.size)
+            return renderer.image { _ in
+                base.draw(in: CGRect(origin: .zero, size: base.size))
+                canvas.draw(in: CGRect(origin: .zero, size: base.size))
+            }
+        }
+        // Fallback to a dedicated icon if compositing fails
+        return UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
+    }
 }

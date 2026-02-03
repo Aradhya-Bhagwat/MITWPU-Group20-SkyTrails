@@ -1,0 +1,348 @@
+[
+    {
+        "id": "BC6BB037-9603-4311-9854-4D33D8112362",
+        "title": "Canopy Wanderers",
+        "location": "Vetal tekdi",
+        "dateRange": "8th Oct - 7th Nov",
+        "mainImageName": "spotted_dove",
+        "stats": {
+            "greenValue": 18,
+            "blueValue": 7
+        },
+        "userImages": [
+            "person.crop.circle.fill",
+            "person.crop.circle",
+            "person.circle.fill",
+            "person.crop.circle.fill",
+            "person.crop.circle"
+        ],
+        "observedBirds": [
+            {
+                "id": "3127C0ED-66E8-40C4-B466-79FBC8181060",
+                "name": "Spotted Dove",
+                "scientificName": "Spilopelia chinensis",
+                "images": [
+                    "spotted_dove"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    787466843.0348473
+                ],
+                "observedBy": [
+                    "person.circle.fill"
+                ]
+            },
+            {
+                "id": "0B0B5C21-1732-4770-8DD9-87A641AF55B7",
+                "name": "White Wagtail",
+                "scientificName": "Motacilla alba",
+                "images": [
+                    "white_wagtail"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Wetlands"
+                ],
+                "date": [
+                    786656111.3001591
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "BA5CDFAA-E349-40A4-BDD0-98A4F84E08BB",
+                "name": "Painted Stork",
+                "scientificName": "Mycteria leucocephala",
+                "images": [
+                    "painted_stork"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Wetlands"
+                ],
+                "date": [
+                    787504957.4827409
+                ],
+                "observedBy": [
+                    "person.crop.circle"
+                ]
+            },
+            {
+                "id": "4DCE7E28-4CE6-44C6-AC12-B0DD35B097B4",
+                "name": "Brown-headed Barbet",
+                "scientificName": "Psilopogon zeylanicus",
+                "images": [
+                    "brown_headed_barbet"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    786691225.1051635
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "5CDF0E27-4A5E-475F-A518-1F3171F75584",
+                "name": "Indian Scops Owl",
+                "scientificName": "Otus bakkamoena",
+                "images": [
+                    "indian_scops_owl"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    787217841.921387
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "8FDD81C0-5A01-48AA-B25D-0564B5E37CA9",
+                "name": "Laughing Dove",
+                "scientificName": "Spilopelia senegalensis",
+                "images": [
+                    "laughing_dove"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    786938017.2551247
+                ],
+                "observedBy": null
+            }
+        ],
+        "toObserveBirds": [
+            {
+                "id": "D98F253E-AEF2-416E-83BA-F0B063735CA1",
+                "name": "Striated Heron",
+                "scientificName": "Butorides striata",
+                "images": [
+                    "striated_heron"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Wetlands"
+                ],
+                "date": [
+                    787026406.6658442
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "1ADFCB64-DFF2-4B29-AC3E-F556BEE33716",
+                "name": "Indian Grey Hornbill",
+                "scientificName": "Ocyceros birostris",
+                "images": [
+                    "indian_grey_hornbill"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    787098840.210685
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "C7A5F4F1-E33B-4E7E-99FB-957C6C2BFDB7",
+                "name": "Pied Bushchat",
+                "scientificName": "Saxicola caprata",
+                "images": [
+                    "pied_bushchat"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    786777540.7692893
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "A6DD6825-577E-445A-9282-D84D89600F04",
+                "name": "European Goldfinch",
+                "scientificName": "Carduelis carduelis",
+                "images": [
+                    "european_goldfinch"
+                ],
+                "rarity": [
+                    "rare"
+                ],
+                "location": [
+                    "Himalayas"
+                ],
+                "date": [
+                    786656304.042139
+                ],
+                "observedBy": null
+            }
+        ]
+    },
+    {
+        "id": "68ABEA96-37A7-47DC-84AC-1A19F5A4339A",
+        "title": "Feather Trail",
+        "location": "Singhad Valley",
+        "dateRange": "12th Oct - 15th Nov",
+        "mainImageName": "striated_heron",
+        "stats": {
+            "greenValue": 10,
+            "blueValue": 2
+        },
+        "userImages": [
+            "person.circle.fill",
+            "person.crop.circle",
+            "person.crop.circle.fill",
+            "person.crop.circle"
+        ],
+        "observedBirds": [
+            {
+                "id": "6EDEEBC7-023F-442C-BDDB-5696C4B343A5",
+                "name": "Striated Heron",
+                "scientificName": "Butorides striata",
+                "images": [
+                    "striated_heron"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Wetlands"
+                ],
+                "date": [
+                    787148389.5212398
+                ],
+                "observedBy": [
+                    "person.crop.circle",
+                    "person.crop.circle.badge.plus"
+                ]
+            },
+            {
+                "id": "D669CC24-DBA2-4E69-947F-F7D753084347",
+                "name": "Shikra",
+                "scientificName": "Accipiter badius",
+                "images": [
+                    "shikra"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    786872524.6082668
+                ],
+                "observedBy": [
+                    "person.fill",
+                    "person.crop.circle.badge.plus",
+                    "person.circle.fill"
+                ]
+            },
+            {
+                "id": "7B12AAA7-8754-495C-A900-E48DD4A9CDD8",
+                "name": "Common Rosefinch",
+                "scientificName": "Carpodacus erythrinus",
+                "images": [
+                    "common_rosefinch"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Western Ghats"
+                ],
+                "date": [
+                    787394620.3929037
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "C50C1D51-BC33-4BCB-8BA5-FBF3A0A41620",
+                "name": "Wire-tailed Swallow",
+                "scientificName": "Hirundo smithii",
+                "images": [
+                    "wire_tailed_swallow"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Wetlands"
+                ],
+                "date": [
+                    786615870.5168538
+                ],
+                "observedBy": [
+                    "person.crop.circle",
+                    "person.crop.circle.badge.plus",
+                    "person.circle"
+                ]
+            }
+        ],
+        "toObserveBirds": [
+            {
+                "id": "7A1485D4-A884-417A-A090-AF66C5EDEF90",
+                "name": "Black Kite",
+                "scientificName": "Milvus migrans",
+                "images": [
+                    "black_kite"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Urban"
+                ],
+                "date": [
+                    787556943.2151396
+                ],
+                "observedBy": null
+            },
+            {
+                "id": "A00784DA-F9CA-4213-8E19-DC9213933E33",
+                "name": "Indian Pitta",
+                "scientificName": "Pitta brachyura",
+                "images": [
+                    "indian_pitta"
+                ],
+                "rarity": [
+                    "common"
+                ],
+                "location": [
+                    "Western Ghats"
+                ],
+                "date": [
+                    787243288.8895301
+                ],
+                "observedBy": null
+            }
+        ]
+    }
+]
