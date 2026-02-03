@@ -339,19 +339,19 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard !histories.isEmpty else { return }
-        let selectedHistory = histories[indexPath.row]
+        let selectedSession = histories[indexPath.row]
         
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
             resultVC.viewModel = self.model
-            resultVC.historyItem = selectedHistory
-            //resultVC.historyIndex = indexPath.row
+            
+           
+            resultVC.historyItem = selectedSession.result
+            
             resultVC.delegate = self
             self.navigationController?.pushViewController(resultVC, animated: true)
         }
     }
-    
-    
     func startIdentificationFlow(from options: [IdentificationOption]) {
         flowSteps.removeAll()
         
