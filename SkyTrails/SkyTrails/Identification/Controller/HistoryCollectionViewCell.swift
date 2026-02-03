@@ -6,16 +6,17 @@
 //
 
 import UIKit
+import SwiftData
 
 class HistoryCollectionViewCell: UICollectionViewCell {
+    
     @IBOutlet weak var historyImageView: UIImageView!
     @IBOutlet weak var specieNameLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
-   contentView.layer.cornerRadius = 16
-
-   
+        contentView.layer.cornerRadius = 16
     }
 
     override func prepareForReuse() {
@@ -38,6 +39,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         contentView.layer.borderWidth = 0
         contentView.layer.borderColor = UIColor.clear.cgColor
     }
+    
     func showEmptyState() {
         historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
         historyImageView.tintColor = .systemGray3
@@ -73,39 +75,37 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         }
     }
 
-    func configureCell(historyItem: History) {
+
+    func configureCell(historyItem: IdentificationSession) {
         contentView.backgroundColor = .white
         layer.shadowOpacity = 0.12
 
-        historyImageView.image = UIImage(named: historyItem.imageView)
-        historyImageView.layer.cornerRadius = 10
-        specieNameLabel.text = historyItem.specieName
-        dateLabel.text = formatDate(historyItem.date)
-    }
-
-
        
-        private func formatDate(_ dateString: String) -> String {
-
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-
-            let outputFormatter = DateFormatter()
-            outputFormatter.dateFormat = "d MMM"
-
-            if let date = formatter.date(from: dateString) {
-                return outputFormatter.string(from: date)
+        if let bird = historyItem.result?.bird {
+            specieNameLabel.text = bird.commonName
+            
+            if let image = UIImage(named: bird.staticImageName) {
+                historyImageView.image = image
             } else {
-                return dateString
+                historyImageView.image = UIImage(systemName: "bird.fill") // Fallback
             }
+        } else {
+            // Handle cases where session exists but no bird is assigned (e.g. In Progress)
+            specieNameLabel.text = "Unknown Bird"
+            historyImageView.image = UIImage(systemName: "questionmark.circle")
         }
+
+        historyImageView.contentMode = .scaleAspectFill
+        historyImageView.layer.cornerRadius = 10
+        
+      
+        dateLabel.text = formatDate(historyItem.observationDate)
     }
-    
-
-
-
 
    
-
-    
-
+    private func formatDate(_ date: Date) -> String {
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "d MMM"
+        return outputFormatter.string(from: date)
+    }
+}

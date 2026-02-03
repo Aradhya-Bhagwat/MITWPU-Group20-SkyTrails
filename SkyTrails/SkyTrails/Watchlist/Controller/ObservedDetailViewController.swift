@@ -1,0 +1,342 @@
+//
+//  ObservedDetailViewController.swift
+//  SkyTrails
+//
+//  Created by SDC-USER on 12/12/25.
+//
+
+import UIKit
+import MapKit
+import CoreLocation
+import SwiftData
+
+@MainActor
+class ObservedDetailViewController: UIViewController {
+
+    private let manager = WatchlistManager.shared
+    
+    // MARK: - Data Dependency
+    var bird: Bird? // Kept for 'New Observation' flow
+    var entry: WatchlistEntry? // The existing entry being edited
+    var watchlistId: UUID?
+    
+    var onSave: ((Bird) -> Void)?
+    
+    private let locationManager = CLLocationManager()
+    private var selectedImageName: String?
+    
+    // Location Autocomplete State
+    private var searchCompleter = MKLocalSearchCompleter()
+    private var locationResults: [MKLocalSearchCompletion] = []
+    
+    // MARK: - Outlets
+    @IBOutlet weak var suggestionsTableView: UITableView!
+    @IBOutlet weak var birdImageView: UIImageView!
+    @IBOutlet weak var dateLabel: UILabel!
+    @IBOutlet weak var dateTimePicker: UIDatePicker!
+    @IBOutlet weak var notesTextView: UITextView!
+    @IBOutlet weak var nameTextField: UITextField!
+    @IBOutlet weak var locationSearchBar: UISearchBar!
+    @IBOutlet weak var detailsCardView: UIView!
+    @IBOutlet weak var notesCardView: UIView!
+    @IBOutlet weak var locationCardView: UIView!
+    
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        setupInitialData()
+        setupStyling()
+        setupSearch()
+        setupInteractions()
+        setupKeyboardHandling()
+        setupLocationServices()
+        setupLocationOptionsInteractions()
+        
+        dateTimePicker.maximumDate = Date()
+    }
+    
+    private func setupInitialData() {
+        if let entry = entry {
+            self.title = entry.bird?.commonName
+            self.bird = entry.bird
+            configure(with: entry)
+            setupRightBarButtons(isEditMode: true)
+        } else if let birdData = bird {
+            self.title = birdData.commonName
+            nameTextField.text = birdData.commonName
+            birdImageView.image = UIImage(named: birdData.staticImageName) ?? UIImage(systemName: "photo")
+            setupRightBarButtons(isEditMode: false)
+        } else {
+            self.navigationItem.title = "New Observation"
+            birdImageView.image = UIImage(systemName: "camera.fill")
+            birdImageView.tintColor = .systemGray
+            setupRightBarButtons(isEditMode: false)
+        }
+    }
+    
+    private func setupLocationServices() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    private func setupSearch() {
+        searchCompleter.delegate = self
+        locationSearchBar.delegate = self
+        suggestionsTableView.delegate = self
+        suggestionsTableView.dataSource = self
+        suggestionsTableView.isHidden = true
+    }
+    
+    private func setupLocationOptionsInteractions() {
+        guard let container = locationCardView,
+              let mainStack = container.subviews.first as? UIStackView,
+              mainStack.arrangedSubviews.count >= 3 else { return }
+        
+        let currentLocationView = mainStack.arrangedSubviews[0]
+        let mapView = mainStack.arrangedSubviews[2]
+        
+        let locationTap = UITapGestureRecognizer(target: self, action: #selector(didTapCurrentLocation))
+        currentLocationView.isUserInteractionEnabled = true
+        currentLocationView.addGestureRecognizer(locationTap)
+        
+        let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapMap))
+        mapView.isUserInteractionEnabled = true
+        mapView.addGestureRecognizer(mapTap)
+    }
+    
+    // MARK: - Actions
+    @objc private func didTapCurrentLocation() {
+        let authStatus = locationManager.authorizationStatus
+        switch authStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            presentAlert(title: "Location Access Denied", message: "Please enable location services in Settings.")
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.requestLocation()
+        @unknown default:
+            break
+        }
+    }
+    
+    @objc private func didTapMap() {
+        let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
+            mapVC.delegate = self
+            navigationController?.pushViewController(mapVC, animated: true)
+        }
+    }
+    
+    private func updateLocationSelection(_ name: String) {
+        locationSearchBar.text = name
+        suggestionsTableView.isHidden = true
+        locationSearchBar.resignFirstResponder()
+    }
+    
+    // MARK: - Keyboard Handling
+    private func setupKeyboardHandling() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+        addDoneButtonOnKeyboard()
+    }
+    
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
+        suggestionsTableView.isHidden = true
+    }
+    
+    private func addDoneButtonOnKeyboard() {
+        let doneToolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 50))
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneButtonAction))
+        doneToolbar.items = [flexSpace, done]
+        doneToolbar.sizeToFit()
+        nameTextField.inputAccessoryView = doneToolbar
+        notesTextView.inputAccessoryView = doneToolbar
+    }
+    
+    @objc func doneButtonAction() {
+        view.endEditing(true)
+    }
+    
+    private func setupRightBarButtons(isEditMode: Bool) {
+        let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
+        
+        if isEditMode {
+            let deleteButton = UIBarButtonItem(image: UIImage(systemName: "trash"), style: .plain, target: self, action: #selector(didTapDelete))
+            deleteButton.tintColor = .systemRed
+            navigationItem.rightBarButtonItems = [saveButton, deleteButton]
+        } else {
+            navigationItem.rightBarButtonItem = saveButton
+        }
+    }
+    
+    @objc private func didTapDelete() {
+        guard let entry = entry else {
+            navigationController?.popViewController(animated: true)
+            return
+        }
+        
+        let alert = UIAlertController(title: "Delete Observation", message: "Are you sure you want to delete this sighting?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            self?.manager.deleteEntry(entryId: entry.id)
+            self?.navigationController?.popViewController(animated: true)
+        }))
+        present(alert, animated: true)
+    }
+    
+    private func setupInteractions() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapImage))
+        birdImageView.isUserInteractionEnabled = true
+        birdImageView.addGestureRecognizer(tapGesture)
+    }
+    
+    @objc func didTapImage() {
+        let picker = UIImagePickerController()
+        picker.sourceType = .photoLibrary
+        picker.delegate = self
+        picker.allowsEditing = true
+        present(picker, animated: true)
+    }
+    
+    @objc func didTapSave() {
+        guard let name = nameTextField.text, !name.isEmpty else {
+            presentAlert(title: "Missing Info", message: "Please provide a bird name.")
+            return
+        }
+        
+        if let existingEntry = entry {
+            manager.updateEntry(
+                entryId: existingEntry.id,
+                notes: notesTextView.text,
+                observationDate: dateTimePicker.date
+            )
+        } else if let wId = watchlistId {
+            if let birdRef = bird {
+                manager.addBirds([birdRef], to: wId, asObserved: true)
+                // Note: Extension logic would be needed here to save notes to a new entry immediately
+            }
+        }
+        
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func configure(with entry: WatchlistEntry) {
+        guard let bird = entry.bird else { return }
+        nameTextField.text = bird.commonName
+        locationSearchBar.text = bird.validLocations?.first
+        birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
+        if let date = entry.observationDate { dateTimePicker.date = date }
+        notesTextView.text = entry.notes
+    }
+    
+    func setupStyling() {
+        view.backgroundColor = .systemGray6
+        birdImageView.layer.cornerRadius = 24
+        birdImageView.clipsToBounds = true
+        [detailsCardView, notesCardView, locationCardView].forEach { styleCard($0) }
+    }
+    
+    func styleCard(_ view: UIView?) {
+        guard let view = view else { return }
+        view.layer.cornerRadius = 20
+        view.backgroundColor = .white
+        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+    }
+    
+    private func presentAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - Delegates
+extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty {
+            locationResults = []
+            suggestionsTableView.isHidden = true
+        } else {
+            searchCompleter.queryFragment = searchText
+        }
+    }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        if !locationResults.isEmpty { suggestionsTableView.isHidden = false }
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+        suggestionsTableView.isHidden = true
+    }
+    
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        locationResults = completer.results
+        suggestionsTableView.isHidden = locationResults.isEmpty
+        suggestionsTableView.reloadData()
+    }
+    
+    // MARK: - TableView
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return locationResults.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
+        let item = locationResults[indexPath.row]
+        cell.textLabel?.text = item.title + ", " + item.subtitle
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let item = locationResults[indexPath.row]
+        Task {
+            let request = MKLocalSearch.Request()
+            request.naturalLanguageQuery = item.title + " " + item.subtitle
+            let search = MKLocalSearch(request: request)
+            if let response = try? await search.start(), let place = response.mapItems.first {
+                await MainActor.run { self.updateLocationSelection(place.name ?? item.title) }
+            }
+        }
+    }
+    
+    // MARK: - Location Manager
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
+            if let name = placemarks?.first?.name {
+                DispatchQueue.main.async {
+                    self?.updateLocationSelection(name)
+                }
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location manager error: \(error.localizedDescription)")
+    }
+}
+
+extension ObservedDetailViewController: MapSelectionDelegate {
+    func didSelectMapLocation(name: String, lat: Double, lon: Double) {
+        updateLocationSelection(name)
+    }
+}
+
+extension ObservedDetailViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        if let image = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage {
+            birdImageView.image = image
+            birdImageView.contentMode = .scaleAspectFill
+        }
+    }
+}

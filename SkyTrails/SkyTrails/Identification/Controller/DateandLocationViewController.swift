@@ -4,36 +4,32 @@ import MapKit
 
 class DateandLocationViewController: UIViewController {
 
-
     @IBOutlet weak var tableContainerView: UIView!
     @IBOutlet weak var dateandlocationTableView: UITableView!
     @IBOutlet weak var progressView: UIProgressView!
-    
 
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
     
-    
-    private var selectedDate: Date? = Date()
+    private var selectedDate: Date = Date()
     private var searchQuery: String = ""
     private var searchResults: [MKLocalSearchCompletion] = []
-    
     
     private let locationManager = CLLocationManager()
     private var completer = MKLocalSearchCompleter()
     
-   
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupTableView()
         setupCompleter()
         setupLocationServices()
- 
         
+
         if let currentLoc = viewModel.selectedLocation {
             searchQuery = currentLoc
         }
+        selectedDate = viewModel.selectedDate
     }
     
     private func setupUI() {
@@ -47,7 +43,6 @@ class DateandLocationViewController: UIViewController {
         
         dateandlocationTableView.delegate = self
         dateandlocationTableView.dataSource = self
-
     }
     
     private func setupCompleter() {
@@ -55,35 +50,25 @@ class DateandLocationViewController: UIViewController {
     }
    
     @IBAction func nextTapped(_ sender: Any) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd MMM yyyy"
-        let formattedDate = formatter.string(from: selectedDate ?? Date())
+        // 1. Sync state to manager
+        viewModel.selectedDate = selectedDate
+        viewModel.selectedLocation = searchQuery.isEmpty ? nil : searchQuery
         
-        viewModel.data.date = formattedDate
-     
+        // 2. Trigger the prediction filter
+        viewModel.runFilter()
         
-        viewModel.filterBirds(
-            shape: viewModel.selectedShapeId,
-            size: viewModel.selectedSizeCategory,
-            location: viewModel.selectedLocation,
-            fieldMarks: []
-        )
-        
+        // 3. Navigate to next step
         delegate?.didFinishStep()
     }
     
-  
-    
     private func updateLocationSelection(_ name: String) {
         print("DateandLocationViewController: updateLocationSelection() called with name: '\(name)'.")
- 
+        
         viewModel.selectedLocation = name
-        viewModel.data.location = name
         searchQuery = name
         searchResults = []
         dateandlocationTableView.reloadData()
         view.endEditing(true)
-        print("DateandLocationViewController: UI and ViewModel updated with new location.")
     }
     
     private func setupLocationServices() {
@@ -93,19 +78,14 @@ class DateandLocationViewController: UIViewController {
 
     private func fetchCurrentLocationName() {
         let authStatus = locationManager.authorizationStatus
-        print("DateandLocationViewController: fetchCurrentLocationName() called. Auth status: \(authStatus.rawValue)")
-        
         switch authStatus {
         case .notDetermined:
-            print("DateandLocationViewController: Location permission not determined. Requesting authorization.")
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
-            print("DateandLocationViewController: Location access is restricted or denied.")
-            let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.", preferredStyle: .alert)
+            let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
         case .authorizedAlways, .authorizedWhenInUse:
-            print("DateandLocationViewController: Location access granted. Requesting location.")
             locationManager.requestLocation()
         default:
             break
@@ -113,7 +93,7 @@ class DateandLocationViewController: UIViewController {
     }
 }
 
-
+// MARK: - TableView DataSource & Delegate
 extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -128,18 +108,13 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-       
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
             cell.delegate = self
-           
             return cell
         }
         
-        
         if indexPath.section == 1 {
-            
             if indexPath.row == 0 {
                 let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as! SearchCell
                 cell.searchBar.delegate = self
@@ -147,15 +122,12 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
                 return cell
             }
             
-            
             let suggestionIndex = indexPath.row - 1
-            if suggestionIndex < searchResults.count {
-                let item = searchResults[suggestionIndex]
-                let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "suggestionCell")
-                cell.textLabel?.text = item.title
-                cell.detailTextLabel?.text = item.subtitle
-                return cell
-            }
+            let item = searchResults[suggestionIndex]
+            let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "suggestionCell")
+            cell.textLabel?.text = item.title
+            cell.detailTextLabel?.text = item.subtitle
+            return cell
         }
 
         if indexPath.section == 2 {
@@ -178,31 +150,23 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         tableView.deselectRow(at: indexPath, animated: true)
         
         if indexPath.section == 1 && indexPath.row > 0 {
-            let suggestionIndex = indexPath.row - 1
-            let completion = searchResults[suggestionIndex]
-            
+            let completion = searchResults[indexPath.row - 1]
             Task {
                 let request = MKLocalSearch.Request()
                 request.naturalLanguageQuery = completion.title + " " + completion.subtitle
                 let search = MKLocalSearch(request: request)
-                
                 do {
                     let response = try await search.start()
                     if let place = response.mapItems.first {
                         let name = place.name ?? completion.title
-                        await MainActor.run {
-                            self.updateLocationSelection(name)
-                        }
+                        await MainActor.run { self.updateLocationSelection(name) }
                     }
-                } catch {
-                    print("Search failed: \(error.localizedDescription)")
-                }
+                } catch { print("Search failed: \(error)") }
             }
         }
-        
 
         if indexPath.section == 2 && indexPath.row == 0 {
-            let storyboard = UIStoryboard(name:"SharedStoryboard",bundle:nil)
+            let storyboard = UIStoryboard(name: "SharedStoryboard", bundle: nil)
             if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
                 mapVC.delegate = self
                 navigationController?.pushViewController(mapVC, animated: true)
@@ -210,66 +174,28 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         }
         
         if indexPath.section == 2 && indexPath.row == 1 {
-            print("DateandLocationViewController: User tapped 'Current Location'.")
             fetchCurrentLocationName()
         }
     }
 }
 
-
+// MARK: - Search Logic
 extension DateandLocationViewController: UISearchBarDelegate {
-    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-       
         searchQuery = searchText
-        if !searchText.isEmpty {
-            viewModel.selectedLocation = nil
-        }
         if searchText.isEmpty {
             searchResults = []
-            reloadSuggestionsOnly()
+            dateandlocationTableView.reloadData()
         } else {
             completer.queryFragment = searchText
         }
     }
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.resignFirstResponder()
-    }
 }
 
 extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
-    
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         self.searchResults = completer.results
-        reloadSuggestionsOnly()
-    }
-    
-    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        // Handle error if needed
-    }
-    
-    private func reloadSuggestionsOnly() {
-        let sectionIndex = 1
-        
-        let currentTotalRows = dateandlocationTableView.numberOfRows(inSection: sectionIndex)
-        let currentSuggestionCount = currentTotalRows - 1 // Subtract the SearchBar row
-        
-        dateandlocationTableView.performBatchUpdates({
-            if currentSuggestionCount > 0 {
-                let indexPathsToDelete = (1...currentSuggestionCount).map {
-                    IndexPath(row: $0, section: sectionIndex)
-                }
-                dateandlocationTableView.deleteRows(at: indexPathsToDelete, with: .none)
-            }
-            
-            if !searchResults.isEmpty {
-                let indexPathsToInsert = (1...searchResults.count).map {
-                    IndexPath(row: $0, section: sectionIndex)
-                }
-                dateandlocationTableView.insertRows(at: indexPathsToInsert, with: .none)
-            }
-        }, completion: nil)
+        dateandlocationTableView.reloadSections(IndexSet(integer: 1), with: .none)
     }
 }
 
@@ -281,15 +207,11 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
     
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
         updateLocationSelection(name)
-       
     }
 }
 
-
 extension DateandLocationViewController: CLLocationManagerDelegate {
-    
-    func locationManager(_ manager: CLLocationManager,
-                         didUpdateLocations locations: [CLLocation]) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         print("DateandLocationViewController: locationManager didUpdateLocations with \(locations.count) location(s).")
         guard let location = locations.last else {
             print("DateandLocationViewController: No location found in the update.")
@@ -299,13 +221,10 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
 
         Task { [weak self] in
             guard let self else { return }
-
             do {
                 guard let request = MKReverseGeocodingRequest(location: location) else {
                     print("DateandLocationViewController: Failed to create MKReverseGeocodingRequest.")
-                    await MainActor.run {
-                        self.updateLocationSelection("Location")
-                    }
+                    await MainActor.run { self.updateLocationSelection("Location") }
                     return
                 }
 
@@ -315,10 +234,7 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
 
                 let name = item?.name ?? "Location"
                 print("DateandLocationViewController: Reverse geocoding successful. Found name: '\(name)'.")
-                await MainActor.run {
-                    self.updateLocationSelection(name)
-                }
-
+                await MainActor.run { self.updateLocationSelection(name) }
             } catch {
                 await MainActor.run {
                     print("DateandLocationViewController: Reverse geocoding failed.")
@@ -329,22 +245,17 @@ extension DateandLocationViewController: CLLocationManagerDelegate {
         }
     }
 
-    
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("DateandLocationViewController: locationManager didFailWithError.")
         print("Location manager failed: \(error.localizedDescription)")
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        print("DateandLocationViewController: locationManagerDidChangeAuthorization. New status: \(manager.authorizationStatus.rawValue)")
         if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
-            print("DateandLocationViewController: Authorization granted. Requesting location.")
             manager.requestLocation()
         }
     }
-  
-
 }
+
 extension DateandLocationViewController: IdentificationProgressUpdatable {
     func updateProgress(current: Int, total: Int) {
         let progress = Float(current) / Float(total)
