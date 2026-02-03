@@ -100,7 +100,20 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
 
             // Seed data if the database is empty
             let birdCount = try context.fetchCount(FetchDescriptor<Bird>())
-            if birdCount == 0 {
+            let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
+            let fieldMarkCount = try context.fetchCount(FetchDescriptor<BirdFieldMark>())
+            let variantCount = try context.fetchCount(FetchDescriptor<FieldMarkVariant>())
+            let identificationBirdCount = try context.fetchCount(
+                FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
+                    bird.shape_id != nil && bird.size_category != nil
+                })
+            )
+            print("DEBUG: Seed check counts -> birds: \(birdCount), shapes: \(shapeCount)")
+            if birdCount > 0 && shapeCount == 0 {
+                print("WARNING: Birds exist but shapes are missing. IdentificationSeeder may be skipped.")
+            }
+            let needsSeeding = shapeCount == 0 || fieldMarkCount == 0 || variantCount == 0 || identificationBirdCount == 0
+            if needsSeeding {
                 isSeeding = true
                 updateSelectionState() // Disable button while seeding
                 Task { @MainActor in
@@ -135,21 +148,16 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             guard let context = modelContainer?.mainContext else { return }
             
            
-            let targetStatus = SessionStatus.completed
-            
-            do {
-                let descriptor = FetchDescriptor<IdentificationSession>(
-                    predicate: #Predicate<IdentificationSession> { session in
-                        // Use the local variable here
-                        session.status == targetStatus
-                    },
-                    sortBy: [SortDescriptor(\.observationDate, order: .reverse)]
-                )
-                self.histories = try context.fetch(descriptor)
-            } catch {
-                print("Error fetching history: \(error)")
-                self.histories = []
-            }
+        do {
+            let descriptor = FetchDescriptor<IdentificationSession>(
+                sortBy: [SortDescriptor(\.observationDate, order: .reverse)]
+            )
+            let sessions = try context.fetch(descriptor)
+            self.histories = sessions.filter { $0.status == .completed }
+        } catch {
+            print("Error fetching history: \(error)")
+            self.histories = []
+        }
         }
     
     func updateSelectionState() {
