@@ -227,4 +227,5 @@ class IdentificationManager {
         modelContext.insert(newSession)
         try? modelContext.save()
     }
+    
 }
