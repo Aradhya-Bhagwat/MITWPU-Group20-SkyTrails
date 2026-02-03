@@ -21,6 +21,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private var progressSteps: [IdentificationStep] = []
     
     // Local state for UI
+    private var isSeeding = false
     private var options: [IdentificationOption] = []
     private var histories: [IdentificationSession] = []
     
@@ -96,6 +97,27 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             self.modelContainer = try ModelContainer(for: schema)
             let context = ModelContext(modelContainer!)
             self.model = IdentificationManager(modelContext: context)
+
+            // Seed data if the database is empty
+            let birdCount = try context.fetchCount(FetchDescriptor<Bird>())
+            if birdCount == 0 {
+                isSeeding = true
+                updateSelectionState() // Disable button while seeding
+                Task { @MainActor in
+                    do {
+                        try IdentificationSeeder.seed(context: context)
+                        // Must re-fetch shapes after seeding
+                        self.model.fetchShapes()
+                        self.isSeeding = false
+                        self.updateSelectionState() // Re-enable button
+                        self.tableView.reloadData()
+                    } catch {
+                        print("Error seeding database: \(error)")
+                        self.isSeeding = false
+                        self.updateSelectionState()
+                    }
+                }
+            }
         } catch {
             print("Failed to create ModelContainer: \(error)")
             // Handle error appropriately (e.g., show alert)
@@ -132,7 +154,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     func updateSelectionState() {
         let selectedCount = options.filter { $0.isSelected }.count
-        let isValid = selectedCount >= 2
+        let isValid = selectedCount >= 2 && !isSeeding
         
         warningLabel.isHidden = isValid
         startButton.isEnabled = isValid
