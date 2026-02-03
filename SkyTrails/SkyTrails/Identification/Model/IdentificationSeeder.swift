@@ -12,23 +12,25 @@ struct IdentificationSeeder {
 
     private struct ReferenceData: Codable {
         let shapes: [ShapeDTO]
+        let fieldMarks: [FieldMarkDTO]
+        let variants: [VariantDTO]
     }
 
     private struct ShapeDTO: Codable {
         let id: String
         let name: String
         let icon: String
-        let fieldMarks: [ShapeFieldMarkDTO]?
     }
     
-    private struct ShapeFieldMarkDTO: Codable {
+    private struct FieldMarkDTO: Codable {
         let id: String
+        let shapeId: String
         let area: String
-        let variants: [VariantDTO]
     }
     
     private struct VariantDTO: Codable {
         let id: String
+        let fieldMarkId: String
         let name: String
     }
     
@@ -73,52 +75,61 @@ struct IdentificationSeeder {
         let data = try Data(contentsOf: url)
         let db = try JSONDecoder().decode(BirdDB.self, from: data)
 
-        // MARK: - Seed Shapes with Field Marks and Variants
+        // MARK: - Step 1: Create Shapes
         var shapeMap: [String: BirdShape] = [:]
-        var variantMap: [String: FieldMarkVariant] = [:] // UUID string -> FieldMarkVariant
-
-        for s in db.reference_data.shapes {
+        
+        for shapeDTO in db.reference_data.shapes {
             let shape = BirdShape(
-                id: s.id,
-                name: s.name,
-                icon: s.icon
+                id: shapeDTO.id,
+                name: shapeDTO.name,
+                icon: shapeDTO.icon
             )
             context.insert(shape)
-            shapeMap[s.id] = shape
-            
-            // Seed field marks for this shape
-            if let fieldMarks = s.fieldMarks {
-                for fm in fieldMarks {
-                    // Create BirdFieldMark with proper UUID
-                    let fieldMark = BirdFieldMark(area: fm.area)
-                    fieldMark.id = UUID(uuidString: fm.id) ?? UUID()
-                    fieldMark.shape = shape
-                    context.insert(fieldMark)
-                    
-                    // Create variants for this field mark
-                    for v in fm.variants {
-                        let variant = FieldMarkVariant(name: v.name)
-                        variant.id = UUID(uuidString: v.id) ?? UUID()
-                        variant.fieldMark = fieldMark
-                        context.insert(variant)
-                        
-                        // Store in map for bird seeding
-                        variantMap[v.id] = variant
-                    }
-                }
-            }
+            shapeMap[shapeDTO.id] = shape
         }
 
-        // MARK: - Seed Birds
-        for b in db.birds {
+        // MARK: - Step 2: Create Field Marks
+        var fieldMarkMap: [String: BirdFieldMark] = [:]
+        
+        for fieldMarkDTO in db.reference_data.fieldMarks {
+            let fieldMark = BirdFieldMark(area: fieldMarkDTO.area)
+            fieldMark.id = UUID(uuidString: fieldMarkDTO.id) ?? UUID()
+            
+            // Link to shape
+            if let shape = shapeMap[fieldMarkDTO.shapeId] {
+                fieldMark.shape = shape
+            }
+            
+            context.insert(fieldMark)
+            fieldMarkMap[fieldMarkDTO.id] = fieldMark
+        }
+
+        // MARK: - Step 3: Create Variants
+        var variantMap: [String: FieldMarkVariant] = [:]
+        
+        for variantDTO in db.reference_data.variants {
+            let variant = FieldMarkVariant(name: variantDTO.name)
+            variant.id = UUID(uuidString: variantDTO.id) ?? UUID()
+            
+            // Link to field mark
+            if let fieldMark = fieldMarkMap[variantDTO.fieldMarkId] {
+                variant.fieldMark = fieldMark
+            }
+            
+            context.insert(variant)
+            variantMap[variantDTO.id] = variant
+        }
+
+        // MARK: - Step 4: Create Birds
+        for birdDTO in db.birds {
 
             let rarity = BirdRarityLevel(
-                rawValue: b.rarityLevel?.lowercased() ?? "common"
+                rawValue: birdDTO.rarityLevel?.lowercased() ?? "common"
             ) ?? .common
 
             // Convert BirdFieldMarkDataDTO to BirdFieldMarkData
             var fieldMarkData: [BirdFieldMarkData] = []
-            if let markDataDTOs = b.fieldMarkData {
+            if let markDataDTOs = birdDTO.fieldMarkData {
                 for dto in markDataDTOs {
                     if let variantUUID = UUID(uuidString: dto.variantId) {
                         let data = BirdFieldMarkData(
@@ -131,21 +142,21 @@ struct IdentificationSeeder {
             }
 
             let bird = Bird(
-                id: b.id,
-                commonName: b.commonName,
-                scientificName: b.scientificName,
-                staticImageName: b.staticImageName,
-                family: b.family,
-                order_name: b.order_name,
-                descriptionText: b.descriptionText,
-                conservation_status: b.conservation_status,
+                id: birdDTO.id,
+                commonName: birdDTO.commonName,
+                scientificName: birdDTO.scientificName,
+                staticImageName: birdDTO.staticImageName,
+                family: birdDTO.family,
+                order_name: birdDTO.order_name,
+                descriptionText: birdDTO.descriptionText,
+                conservation_status: birdDTO.conservation_status,
                 rarityLevel: rarity,
                 migration_strategy: nil,
                 hemisphere: nil,
-                validLocations: b.validLocations,
-                validMonths: b.validMonths,
-                shape_id: b.shape_id,
-                size_category: b.size_category
+                validLocations: birdDTO.validLocations,
+                validMonths: birdDTO.validMonths,
+                shape_id: birdDTO.shape_id,
+                size_category: birdDTO.size_category
             )
             
             // Assign field mark data

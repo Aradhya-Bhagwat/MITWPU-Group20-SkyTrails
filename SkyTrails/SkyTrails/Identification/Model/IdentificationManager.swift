@@ -41,6 +41,7 @@ class IdentificationManager {
         do {
             let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
             self.allShapes = try modelContext.fetch(descriptor)
+            print("DEBUG: Fetched \(allShapes.count) shapes.")
         } catch {
             print("Error loading shapes: \(error)")
         }
@@ -48,17 +49,31 @@ class IdentificationManager {
 
     
     func availableShapesForSelectedSize() -> [BirdShape] {
-        guard let size = selectedSizeCategory else { return allShapes }
+        print("DEBUG: availableShapesForSelectedSize called. Size range: \(selectedSizeRange)")
+        guard !selectedSizeRange.isEmpty else { return allShapes }
         
         do {
-            let birdDescriptor = FetchDescriptor<Bird>(
-                predicate: #Predicate<Bird> { $0.size_category == size }
-            )
+            let predicate = #Predicate<Bird> { bird in
+                if let sizeCategory = bird.size_category {
+                    return selectedSizeRange.contains(sizeCategory)
+                } else {
+                    return false
+                }
+            }
+
+            let birdDescriptor = FetchDescriptor<Bird>(predicate: predicate)
             let birdsInSize = try modelContext.fetch(birdDescriptor)
-            let validShapeIds = Set(birdsInSize.compactMap { $0.shape_id })
+            print("DEBUG: Found \(birdsInSize.count) birds in size range.")
             
-            return allShapes.filter { validShapeIds.contains($0.id) }
+            let validShapeIds = Set(birdsInSize.compactMap { $0.shape_id })
+            print("DEBUG: Valid shape IDs: \(validShapeIds)")
+            
+            let filtered = allShapes.filter { validShapeIds.contains($0.id) }
+            print("DEBUG: Returning \(filtered.count) shapes.")
+            return filtered
+            
         } catch {
+            print("Error fetching birds for size range: \(error)")
             return allShapes
         }
     }
