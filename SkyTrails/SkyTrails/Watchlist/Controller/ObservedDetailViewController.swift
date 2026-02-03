@@ -5,14 +5,14 @@ import SwiftData
 
 @MainActor
 class ObservedDetailViewController: UIViewController {
-
+	
 	private let manager = WatchlistManager.shared
 	
 		// MARK: - Data Dependency
-    var bird: Bird? // Kept for 'New Observation' flow where entry doesn't exist yet
-    var entry: WatchlistEntry? // The existing entry being edited
+	var bird: Bird? // Kept for 'New Observation' flow where entry doesn't exist yet
+	var entry: WatchlistEntry? // The existing entry being edited
 	var watchlistId: UUID?
-    
+	
 	var onSave: ((Bird) -> Void)?
 	
 	private let locationManager = CLLocationManager()
@@ -36,30 +36,30 @@ class ObservedDetailViewController: UIViewController {
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
-        
-        if let entry = entry {
-            self.title = entry.bird?.commonName
-            self.bird = entry.bird
-        } else {
-            self.title = bird?.commonName
-        }
-        
+		
+		if let entry = entry {
+			self.title = entry.bird?.commonName
+			self.bird = entry.bird
+		} else {
+			self.title = bird?.commonName
+		}
+		
 		setupStyling()
 		setupSearch()
 		setupInteractions()
 		
 		dateTimePicker.maximumDate = Date()
 		
-        if let entry = entry {
-            configure(with: entry)
-            setupRightBarButtons()
-        } else if let birdData = bird {
-            // New observation for specific bird
-            nameTextField.text = birdData.commonName
-            birdImageView.image = UIImage(named: birdData.staticImageName) ?? UIImage(systemName: "photo")
-            setupRightBarButtons() // Can delete only if entry exists? No, cancel.
-        } else {
-            // Completely new
+		if let entry = entry {
+			configure(with: entry)
+			setupRightBarButtons()
+		} else if let birdData = bird {
+				// New observation for specific bird
+			nameTextField.text = birdData.commonName
+			birdImageView.image = UIImage(named: birdData.staticImageName) ?? UIImage(systemName: "photo")
+			setupRightBarButtons() // Can delete only if entry exists? No, cancel.
+		} else {
+				// Completely new
 			self.navigationItem.title = "New Observation"
 			birdImageView.image = UIImage(systemName: "camera.fill")
 			birdImageView.tintColor = .systemGray
@@ -167,18 +167,18 @@ class ObservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapDelete() {
-        if let entry = entry {
-            let alert = UIAlertController(title: "Delete Observation", message: "Are you sure?", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-                self?.manager.deleteEntry(entryId: entry.id)
-                self?.navigationController?.popViewController(animated: true)
-            }))
-            present(alert, animated: true)
-        } else {
-            // Just pop if it wasn't saved yet
-            navigationController?.popViewController(animated: true)
-        }
+		if let entry = entry {
+			let alert = UIAlertController(title: "Delete Observation", message: "Are you sure?", preferredStyle: .alert)
+			alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+			alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+				self?.manager.deleteEntry(entryId: entry.id)
+				self?.navigationController?.popViewController(animated: true)
+			}))
+			present(alert, animated: true)
+		} else {
+				// Just pop if it wasn't saved yet
+			navigationController?.popViewController(animated: true)
+		}
 	}
 	
 	private func setupInteractions() {
@@ -207,52 +207,84 @@ class ObservedDetailViewController: UIViewController {
 		print("📅 [ObservedDetailVC] Observation date: \(dateTimePicker.date)")
 		print("📝 [ObservedDetailVC] Notes: \(notesTextView.text ?? "nil")")
 		
-        if let existingEntry = entry {
-            print("✏️  [ObservedDetailVC] Editing existing entry: \(existingEntry.id)")
-            // Update using manager
-            manager.updateEntry(
-                entryId: existingEntry.id,
-                notes: notesTextView.text,
-                observationDate: dateTimePicker.date
-            )
-            print("✅ [ObservedDetailVC] Updated existing entry")
-        } else if let wId = watchlistId {
-            print("➕ [ObservedDetailVC] Creating new entry")
-            print("📋 [ObservedDetailVC] Watchlist ID: \(wId)")
-            
-            // New Entry
-            let birdToUse: Bird
-            if let existingBird = bird {
-                print("🐦 [ObservedDetailVC] Using existing bird: \(existingBird.commonName)")
-                birdToUse = existingBird
-            } else if let found = manager.findBird(byName: name) {
-                print("🔍 [ObservedDetailVC] Found existing bird in DB: \(found.commonName)")
-                birdToUse = found
-            } else {
-                print("➕ [ObservedDetailVC] Creating new bird: \(name)")
-                birdToUse = manager.createBird(name: name)
-            }
-            
-            print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
-            manager.addBirds([birdToUse], to: wId, asObserved: true)
-            
-            print("📞 [ObservedDetailVC] Calling onSave callback")
-            onSave?(birdToUse)
-        } else {
-        	print("⚠️  [ObservedDetailVC] No watchlistId available")
-        }
-        
+		if let existingEntry = entry {
+			print("✏️  [ObservedDetailVC] Editing existing entry: \(existingEntry.id)")
+				// Update using manager
+			manager.updateEntry(
+				entryId: existingEntry.id,
+				notes: notesTextView.text,
+				observationDate: dateTimePicker.date
+			)
+				// Persist newly picked photo if the user changed it
+			if let photoName = selectedImageName {
+				manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
+				print("📸 [ObservedDetailVC] Photo attached to existing entry: \(photoName)")
+			}
+			print("✅ [ObservedDetailVC] Updated existing entry")
+		} else if let wId = watchlistId {
+			print("➕ [ObservedDetailVC] Creating new entry")
+			print("📋 [ObservedDetailVC] Watchlist ID: \(wId)")
+			
+				// New Entry
+			let birdToUse: Bird
+			if let existingBird = bird {
+				print("🐦 [ObservedDetailVC] Using existing bird: \(existingBird.commonName)")
+				birdToUse = existingBird
+			} else if let found = manager.findBird(byName: name) {
+				print("🔍 [ObservedDetailVC] Found existing bird in DB: \(found.commonName)")
+				birdToUse = found
+			} else {
+				print("➕ [ObservedDetailVC] Creating new bird: \(name)")
+				birdToUse = manager.createBird(name: name)
+			}
+			
+			print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
+			manager.addBirds([birdToUse], to: wId, asObserved: true)
+			
+				// Persist newly picked photo to the entry that was just created
+			if let photoName = selectedImageName {
+				if let newEntry = manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
+					manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
+					print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
+				}
+			}
+			
+			print("📞 [ObservedDetailVC] Calling onSave callback")
+			onSave?(birdToUse)
+		} else {
+			print("⚠️  [ObservedDetailVC] No watchlistId available")
+		}
+		
 		print("✅ [ObservedDetailVC] Complete, popping view controller")
 		navigationController?.popViewController(animated: true)
 	}
 	
 	func configure(with entry: WatchlistEntry) {
-        guard let bird = entry.bird else { return }
+		guard let bird = entry.bird else { return }
 		nameTextField.text = bird.commonName
 		locationSearchBar.text = bird.validLocations?.first // Or entry.lat/lon reversed
-		birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
-        if let date = entry.observationDate { dateTimePicker.date = date }
+		
+			// Three-tier image resolution: user photo on disk → asset catalogue → placeholder
+		birdImageView.image = ObservedDetailViewController.loadImage(for: entry)
+		
+		if let date = entry.observationDate { dateTimePicker.date = date }
 		notesTextView.text = entry.notes
+	}
+	
+		/// Resolves the best available image for an entry.
+		/// Priority: user-captured photo on disk → bundled asset → system placeholder.
+	private static func loadImage(for entry: WatchlistEntry) -> UIImage {
+		if let photoPath = entry.photos?.first?.imagePath {
+			let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+			let fileURL = supportDir.appendingPathComponent(photoPath)
+			if let image = UIImage(contentsOfFile: fileURL.path) {
+				return image
+			}
+		}
+		if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
+			return asset
+		}
+		return UIImage(systemName: "photo")!
 	}
 	
 	func setupStyling() {
@@ -343,8 +375,22 @@ extension ObservedDetailViewController: MapSelectionDelegate {
 extension ObservedDetailViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 	func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
 		picker.dismiss(animated: true)
-		if let image = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage {
-			birdImageView.image = image
+		guard let image = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage else { return }
+		
+		birdImageView.image = image
+		
+			// Persist to applicationSupportDirectory so it survives app launches
+		let filename = "bird_photo_\(UUID().uuidString).png"
+		if let data = image.pngData() {
+			let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+			let fileURL = supportDir.appendingPathComponent(filename)
+			do {
+				try data.write(to: fileURL)
+				selectedImageName = filename
+				print("📸 [ObservedDetailVC] Photo saved to disk: \(filename)")
+			} catch {
+				print("❌ [ObservedDetailVC] Failed to write photo: \(error)")
+			}
 		}
 	}
 }

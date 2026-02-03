@@ -28,7 +28,7 @@ enum RepositoryError: Error, LocalizedError {
 	}
 }
 
-// MARK: - Watchlist Manager
+	// MARK: - Watchlist Manager
 
 @MainActor
 final class WatchlistManager: WatchlistRepository {
@@ -304,12 +304,12 @@ final class WatchlistManager: WatchlistRepository {
 		print("🔍 [WatchlistManager] - Watchlist ID: \(watchlistID)")
 		print("🔍 [WatchlistManager] - Filter by status: \(status?.rawValue ?? "all")")
 		
-		// Special handling for My Watchlist virtual ID
+			// Special handling for My Watchlist virtual ID
 		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
 		
 		if watchlistID == myWatchlistId {
 			print("📋 [WatchlistManager] Fetching from My Watchlist (virtual aggregation)")
-			// Return ALL entries from ALL watchlists
+				// Return ALL entries from ALL watchlists
 			let allLists = fetchWatchlists()
 			var allEntries = allLists.flatMap { $0.entries ?? [] }
 			print("📊 [WatchlistManager] Total entries across all watchlists: \(allEntries.count)")
@@ -494,32 +494,32 @@ final class WatchlistManager: WatchlistRepository {
 		print("🐦 [WatchlistManager] - As observed: \(asObserved)")
 		birds.forEach { print("🐦 [WatchlistManager] - Bird: \($0.commonName) (id: \($0.id))") }
 		
-        var targetWatchlistId = watchlistId
-        let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
-        
-        if watchlistId == myWatchlistId {
-             print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected. resolving to real watchlist...")
-             let customLists = fetchWatchlists(type: .custom)
-             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                 targetWatchlistId = existing.id
-                 print("✅ [WatchlistManager] Resolved to existing 'My Watchlist' (ID: \(existing.id))")
-             } else if let first = customLists.first {
-                 targetWatchlistId = first.id
-                 print("✅ [WatchlistManager] Resolved to first available custom watchlist: '\(first.title ?? "Untitled")' (ID: \(first.id))")
-             } else {
-                 print("⚠️ [WatchlistManager] No custom watchlists found. Creating 'My Watchlist'...")
-                 addWatchlist(title: "My Watchlist", location: "General", startDate: Date(), endDate: Date().addingTimeInterval(31536000))
-                 // Fetch it back
-                 if let newWl = fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
-                     targetWatchlistId = newWl.id
-                     print("✅ [WatchlistManager] Created and resolved to 'My Watchlist' (ID: \(newWl.id))")
-                 } else {
-                     print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
-                     return
-                 }
-             }
-        }
-        
+		var targetWatchlistId = watchlistId
+		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		
+		if watchlistId == myWatchlistId {
+			print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected. resolving to real watchlist...")
+			let customLists = fetchWatchlists(type: .custom)
+			if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
+				targetWatchlistId = existing.id
+				print("✅ [WatchlistManager] Resolved to existing 'My Watchlist' (ID: \(existing.id))")
+			} else if let first = customLists.first {
+				targetWatchlistId = first.id
+				print("✅ [WatchlistManager] Resolved to first available custom watchlist: '\(first.title ?? "Untitled")' (ID: \(first.id))")
+			} else {
+				print("⚠️ [WatchlistManager] No custom watchlists found. Creating 'My Watchlist'...")
+				addWatchlist(title: "My Watchlist", location: "General", startDate: Date(), endDate: Date().addingTimeInterval(31536000))
+					// Fetch it back
+				if let newWl = fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
+					targetWatchlistId = newWl.id
+					print("✅ [WatchlistManager] Created and resolved to 'My Watchlist' (ID: \(newWl.id))")
+				} else {
+					print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
+					return
+				}
+			}
+		}
+		
 		guard let watchlist = getWatchlist(by: targetWatchlistId) else {
 			print("❌ [WatchlistManager] FAILED: Watchlist not found for ID: \(targetWatchlistId)")
 			return
@@ -563,12 +563,47 @@ final class WatchlistManager: WatchlistRepository {
 			print("💾 [WatchlistManager] Calling saveContext() for \(addedCount) new entries...")
 			saveContext()
 			
-			// Verify entries were saved
+				// Verify entries were saved
 			let afterSave = watchlist.entries ?? []
 			print("✅ [WatchlistManager] After save: watchlist now has \(afterSave.count) entries")
 		} else {
 			print("⚠️  [WatchlistManager] No new entries to save")
 		}
+	}
+	
+		// MARK: - Photo Persistence
+	
+		/// Finds the entry for a specific bird inside a specific watchlist (used after addBirds to locate the new entry)
+	func findEntry(birdId: UUID, watchlistId: UUID) -> WatchlistEntry? {
+			// Resolve virtual My Watchlist ID the same way addBirds does
+		var targetId = watchlistId
+		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		if watchlistId == myWatchlistId {
+			let customLists = fetchWatchlists(type: .custom)
+			if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
+				targetId = existing.id
+			} else if let first = customLists.first {
+				targetId = first.id
+			}
+		}
+		
+		guard let watchlist = getWatchlist(by: targetId) else { return nil }
+		return watchlist.entries?.first(where: { $0.bird?.id == birdId })
+	}
+	
+		/// Creates an ObservedBirdPhoto record linking the on-disk file to the entry
+	func attachPhoto(entryId: UUID, imageName: String) {
+		let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate<WatchlistEntry> { entry in
+			entry.id == entryId
+		})
+		guard let entry = try? context.fetch(descriptor).first else {
+			print("❌ [WatchlistManager] attachPhoto – entry not found: \(entryId)")
+			return
+		}
+		let photo = ObservedBirdPhoto(watchlistEntry: entry, imagePath: imageName)
+		context.insert(photo)
+		saveContext()
+		print("📸 [WatchlistManager] ObservedBirdPhoto created for entry \(entryId): \(imageName)")
 	}
 	
 	func toggleObservationStatus(entryId: UUID) {
