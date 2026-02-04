@@ -123,6 +123,12 @@ final class LocationService: NSObject {
     
     /// Get location suggestions for autocomplete
     func getAutocompleteSuggestions(for query: String) async -> [LocationSuggestion] {
+        // Cancel any pending request to avoid leaks or out-of-order returns
+        if let existing = autocompleteContinuation {
+            existing.resume(returning: [])
+            autocompleteContinuation = nil
+        }
+        
         if query.isEmpty { return [] }
         
         return await withCheckedContinuation { continuation in
@@ -136,10 +142,11 @@ final class LocationService: NSObject {
 extension LocationService: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         let suggestions = completer.results.map { result in
-            LocationSuggestion(
+            let text = result.subtitle.isEmpty ? result.title : "\(result.title) \(result.subtitle)"
+            return LocationSuggestion(
                 title: result.title,
                 subtitle: result.subtitle,
-                fullText: "\(result.title) \(result.subtitle)"
+                fullText: text
             )
         }
         autocompleteContinuation?.resume(returning: suggestions)
@@ -147,6 +154,7 @@ extension LocationService: MKLocalSearchCompleterDelegate {
     }
     
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        // Only report error if it's not a cancellation (though MKLocalSearchCompleter doesn't typically error on cancel)
         print("❌ [LocationService] Autocomplete failed: \(error.localizedDescription)")
         autocompleteContinuation?.resume(returning: [])
         autocompleteContinuation = nil

@@ -37,7 +37,7 @@ class WatchlistHomeViewController: UIViewController {
 	
 	private struct LayoutConstants {
 		static let summaryHeight: CGFloat = 110
-		static let myWatchlistHeight: CGFloat = 320
+		static let myWatchlistHeight: CGFloat = 280
 		static let customWatchlistHeight: CGFloat = 184
 		static let sharedWatchlistHeight: CGFloat = 140
 		static let headerHeight: CGFloat = 40
@@ -117,7 +117,6 @@ class WatchlistHomeViewController: UIViewController {
 			// Cells
 		let cells = [
 			"SummaryCardCollectionViewCell",
-			"MyWatchlistCollectionViewCell",
 			CustomWatchlistCollectionViewCell.identifier,
 			SharedWatchlistCollectionViewCell.identifier
 		]
@@ -125,6 +124,8 @@ class WatchlistHomeViewController: UIViewController {
 		cells.forEach { identifier in
 			summaryCardCollectionView.register(UINib(nibName: identifier, bundle: nil), forCellWithReuseIdentifier: identifier)
 		}
+		
+		MyWatchlistCollectionViewCell.register(in: summaryCardCollectionView)
 		
 		summaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
 	}
@@ -389,22 +390,20 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: "MyWatchlistCollectionViewCell", for: indexPath) as! MyWatchlistCollectionViewCell
+		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = myWatchlist {
-			let stats = watchlist.stats
-			let observedCount = stats.observedCount
-			let totalCount = stats.totalCount
-			let toObserveCount = totalCount - observedCount
-			
-				// Images from DTO
 			let images = watchlist.previewImages.compactMap { UIImage(named: $0) }
 			
-			cell.configure(
-				observedCount: observedCount,
-				toObserveCount: toObserveCount,
-				images: images
+			let data = WatchlistData(
+				title: watchlist.title,
+				images: images,
+				totalCount: watchlist.stats.totalCount,
+				observedCount: watchlist.stats.observedCount,
+				totalImageCount: watchlist.stats.totalCount
 			)
+			
+			cell.configure(with: data)
 		}
 		return cell
 	}
@@ -475,7 +474,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func layoutMyWatchlistSection() -> NSCollectionLayoutSection {
-		let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
+		let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.65), heightDimension: .fractionalHeight(1.0)))
 		
 		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(LayoutConstants.myWatchlistHeight))
 		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])

@@ -337,7 +337,13 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
 		Task {
 			do {
 				let location = try await locationService.geocode(query: query)
-				await MainActor.run { self.updateLocationSelection(location) }
+				// Use the user's selected text (query) for display name, but geocoded coordinates
+				let finalLocation = LocationService.LocationData(
+					displayName: query,
+					lat: location.lat,
+					lon: location.lon
+				)
+				await MainActor.run { self.updateLocationSelection(finalLocation) }
 			} catch {
 				await MainActor.run { self.updateLocationSelection(query, lat: nil, lon: nil) }
 			}
