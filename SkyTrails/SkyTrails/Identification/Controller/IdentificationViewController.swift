@@ -292,7 +292,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             return .zero
         }
         
-        let minItemWidth: CGFloat = 120
+        let minItemWidth: CGFloat = 130
         let maxItemsPerRow: CGFloat = 4
         let interItemSpacing = layout.minimumInteritemSpacing
         let sectionLeftInset = layout.sectionInset.left
