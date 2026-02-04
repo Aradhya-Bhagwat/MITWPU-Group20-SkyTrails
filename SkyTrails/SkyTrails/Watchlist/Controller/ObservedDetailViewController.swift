@@ -438,8 +438,16 @@ extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchComple
 			print("Debug: tableView didSelectRowAt Task - geocoding selected suggestion")
 			do {
 				let location = try await locationService.geocode(query: fullLocationText)
+                
+                // Use the text the user actually clicked on, rather than the geocoded name
+                let finalLocation = LocationService.LocationData(
+                    displayName: fullLocationText,
+                    lat: location.lat,
+                    lon: location.lon
+                )
+                
 				await MainActor.run {
-					self.updateLocationSelection(location)
+					self.updateLocationSelection(finalLocation)
 				}
 			} catch {
 				print("Debug: tableView didSelectRowAt Task - geocoding FAILED")
