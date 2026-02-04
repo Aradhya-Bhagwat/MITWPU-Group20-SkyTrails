@@ -58,6 +58,7 @@ final class Watchlist {
 	var speciesCount: Int = 0
 	var created_at: Date = Date()
 	var updated_at: Date?
+	var locationDisplayName: String?
 	
 		// Relationships
 	@Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.watchlist) var entries: [WatchlistEntry]?
@@ -71,6 +72,7 @@ final class Watchlist {
 		type: WatchlistType = .custom,
 		title: String? = nil,
 		location: String? = nil,
+		locationDisplayName: String? = nil,
 		startDate: Date? = nil,
 		endDate: Date? = nil
 	) {
@@ -79,6 +81,7 @@ final class Watchlist {
 		self.type = type
 		self.title = title
 		self.location = location
+		self.locationDisplayName = locationDisplayName
 		self.startDate = startDate
 		self.endDate = endDate
 		self.created_at = Date()
@@ -103,6 +106,7 @@ final class WatchlistEntry {
 		// Denormalized Location Data for Quick Access
 	var lat: Double?
 	var lon: Double?
+	var locationDisplayName: String?
 	
 	var priority: Int = 0
 	var notify_upcoming: Bool = false

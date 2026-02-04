@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 import SwiftData
 
 	// MARK: - Repository Errors
@@ -71,9 +72,16 @@ final class WatchlistManager: WatchlistRepository {
 			let descriptor = FetchDescriptor<Watchlist>()
 			if let existing = try? context.fetch(descriptor) {
 				existing.forEach { context.delete($0) }
-				try? context.save()
-				print("✅ [WatchlistManager] Cleared \(existing.count) existing watchlists")
 			}
+			
+			let birdDescriptor = FetchDescriptor<Bird>()
+			if let existingBirds = try? context.fetch(birdDescriptor) {
+				existingBirds.forEach { context.delete($0) }
+				print("✅ [WatchlistManager] Cleared \(existingBirds.count) existing birds")
+			}
+			
+			try? context.save()
+			print("✅ [WatchlistManager] Cleared watchlists and birds")
 			
 				// 2. Perform Seeding
 			do {
@@ -408,8 +416,8 @@ final class WatchlistManager: WatchlistRepository {
 	
 		// MARK: - Operations
 	
-	func addWatchlist(title: String, location: String, startDate: Date, endDate: Date, type: WatchlistType = .custom) {
-		let wl = Watchlist(title: title, location: location, startDate: startDate, endDate: endDate)
+	func addWatchlist(title: String, location: String, startDate: Date, endDate: Date, type: WatchlistType = .custom, locationDisplayName: String? = nil) {
+		let wl = Watchlist(title: title, location: location, locationDisplayName: locationDisplayName, startDate: startDate, endDate: endDate)
 		wl.type = type
 		context.insert(wl)
 		saveContext()
@@ -454,7 +462,7 @@ final class WatchlistManager: WatchlistRepository {
 		return bird
 	}
 	
-	func updateEntry(entryId: UUID, notes: String?, observationDate: Date?, lat: Double? = nil, lon: Double? = nil) {
+	func updateEntry(entryId: UUID, notes: String?, observationDate: Date?, lat: Double? = nil, lon: Double? = nil, locationDisplayName: String? = nil) {
 		print("✏️  [WatchlistManager] updateEntry() called")
 		print("✏️  [WatchlistManager] - Entry ID: \(entryId)")
 		print("✏️  [WatchlistManager] - Notes: \(notes ?? "nil")")
@@ -476,6 +484,7 @@ final class WatchlistManager: WatchlistRepository {
 				entry.observationDate = observationDate
 				entry.lat = lat
 				entry.lon = lon
+				entry.locationDisplayName = locationDisplayName
 				
 				print("💾 [WatchlistManager] Saving changes...")
 				saveContext()
@@ -485,6 +494,11 @@ final class WatchlistManager: WatchlistRepository {
 		} catch {
 			print("❌ [WatchlistManager] Fetch failed: \(error)")
 		}
+	}
+
+	@available(*, deprecated, message: "Use LocationService.shared.reverseGeocode() instead")
+	func lat_lon_to_Name(lat: Double, lon: Double) async -> String? {
+		return await LocationService.shared.reverseGeocode(lat: lat, lon: lon)
 	}
 	
 	func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) {

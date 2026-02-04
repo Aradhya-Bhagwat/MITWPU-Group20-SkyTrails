@@ -145,6 +145,10 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		self.view.backgroundColor = .systemGroupedBackground
 		self.navigationItem.largeTitleDisplayMode = .never
 		
+		if watchlistType == .myWatchlist || watchlistType == .allSpecies {
+			navigationItem.rightBarButtonItems = nil
+		}
+		
 			// TableView
 		tableView.delegate = self
 		tableView.dataSource = self
@@ -344,6 +348,20 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		if let entry = sender as? WatchlistEntry {
 			targetBird = entry.bird
 			targetId = self.currentWatchlistId
+			
+			if segue.identifier == "ShowObservedDetail",
+			   let vc = segue.destination as? ObservedDetailViewController {
+				vc.entry = entry
+				vc.bird = entry.bird
+				vc.watchlistId = targetId
+				return
+			} else if segue.identifier == "ShowUnobservedDetailFromWatchlist",
+				let vc = segue.destination as? UnobservedDetailViewController {
+				vc.entry = entry
+				vc.bird = entry.bird
+				vc.watchlistId = targetId
+				return
+			}
 		}
 		
 		if let bird = targetBird {
