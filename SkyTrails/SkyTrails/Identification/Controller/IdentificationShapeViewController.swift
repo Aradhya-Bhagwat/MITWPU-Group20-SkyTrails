@@ -110,19 +110,15 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.item]
         
-        // 2. Update local state instead of get-only viewModel property
-        self.selectedShapeId = selectedShape.id
+        // 1. Sync the actual object to the ViewModel
+        viewModel.selectedShape = selectedShape
         
-        // 3. Call filter logic directly (removed the .data.shape call since it was missing)
-        viewModel.filterBirds(
-            shape: selectedShape.id,
-            size: viewModel.selectedSizeCategory,
-            location: viewModel.selectedLocation,
-            fieldMarks: []
-        )
+        // 2. Update local UI state
+        self.selectedShapeId = selectedShape.id
         
         collectionView.reloadData()
         
+        // 3. Proceed to next step
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.delegate?.didTapShapes()
         }
