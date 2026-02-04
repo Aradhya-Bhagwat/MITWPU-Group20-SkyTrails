@@ -6,6 +6,7 @@ import CoreLocation
 class UnobservedDetailViewController: UIViewController {
 
 	private let manager = WatchlistManager.shared
+	private let locationService = LocationService.shared
 	
 		// MARK: - Dependencies
 	var bird: Bird?
@@ -14,9 +15,8 @@ class UnobservedDetailViewController: UIViewController {
 	var onSave: ((Bird) -> Void)?
 	
 		// MARK: - Private Properties
-	private let locationManager = CLLocationManager()
-	private var searchCompleter = MKLocalSearchCompleter()
-	private var locationResults: [MKLocalSearchCompletion] = []
+	private var locationSuggestions: [LocationService.LocationSuggestion] = []
+	private var selectedLocation: LocationService.LocationData?
 	
 		// MARK: - IBOutlets
 	@IBOutlet weak var suggestionsTableView: UITableView!
@@ -79,12 +79,9 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	private func setupLocationServices() {
-		locationManager.delegate = self
-		locationManager.desiredAccuracy = kCLLocationAccuracyBest
 	}
 	
 	private func setupSearch() {
-		searchCompleter.delegate = self
 		locationSearchBar.delegate = self
 		suggestionsTableView.delegate = self
 		suggestionsTableView.dataSource = self
@@ -129,7 +126,17 @@ class UnobservedDetailViewController: UIViewController {
              notesTextView.text = ""
         }
 		
-		locationSearchBar.text = bird.validLocations?.first
+		if let displayName = entry?.locationDisplayName {
+			updateLocationSelection(displayName, lat: entry?.lat, lon: entry?.lon)
+		} else if let lat = entry?.lat, let lon = entry?.lon {
+			Task { [weak self] in
+				guard let self else { return }
+				let name = await self.locationService.reverseGeocode(lat: lat, lon: lon) ?? "Location"
+				await MainActor.run { self.updateLocationSelection(name, lat: lat, lon: lon) }
+			}
+		} else {
+			updateLocationSelection(bird.validLocations?.first ?? "")
+		}
 	}
 	
 	private func loadImage(for bird: Bird) {
@@ -153,19 +160,15 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapCurrentLocation() {
-		let authStatus = locationManager.authorizationStatus
-		
-		switch authStatus {
-			case .notDetermined:
-				locationManager.requestWhenInUseAuthorization()
-			case .restricted, .denied:
-				let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.", preferredStyle: .alert)
+		Task {
+			do {
+				let location = try await locationService.getCurrentLocation()
+				updateLocationSelection(location)
+			} catch {
+				let alert = UIAlertController(title: "Location Unavailable", message: "Please enable location services in Settings.", preferredStyle: .alert)
 				alert.addAction(UIAlertAction(title: "OK", style: .default))
 				present(alert, animated: true)
-			case .authorizedAlways, .authorizedWhenInUse:
-				locationManager.requestLocation()
-			@unknown default:
-				break
+			}
 		}
 	}
 	
@@ -203,50 +206,106 @@ class UnobservedDetailViewController: UIViewController {
         print("📅 [UnobservedDetailVC] Start date: \(startDate)")
         print("📅 [UnobservedDetailVC] End date: \(endDate)")
         
-        if let existingEntry = entry {
-            print("✏️  [UnobservedDetailVC] Editing existing entry: \(existingEntry.id)")
-            manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil)
-            existingEntry.toObserveStartDate = startDate
-            existingEntry.toObserveEndDate = endDate
-            
-            print("✅ [UnobservedDetailVC] Updated existing entry, popping view controller")
-            navigationController?.popViewController(animated: true)
-            
-        } else if let wId = watchlistId, let bird = bird {
-            print("➕ [UnobservedDetailVC] Creating new entry")
-            print("🐦 [UnobservedDetailVC] Bird: \(bird.commonName)")
-            print("📋 [UnobservedDetailVC] Watchlist ID: \(wId)")
-            
-            manager.addBirds([bird], to: wId, asObserved: false)
-            
-            print("🔍 [UnobservedDetailVC] Fetching newly created entry...")
-            let entries = manager.fetchEntries(watchlistID: wId, status: .to_observe)
-            print("📊 [UnobservedDetailVC] Total to_observe entries: \(entries.count)")
-            
-            if let newEntry = entries.last {
-                print("✅ [UnobservedDetailVC] Found new entry: \(newEntry.id)")
-                print("📝 [UnobservedDetailVC] Setting notes and dates on entry...")
-                newEntry.notes = notes
-                newEntry.toObserveStartDate = startDate
-                newEntry.toObserveEndDate = endDate
-                print("✅ [UnobservedDetailVC] Entry properties updated")
-            } else {
-                print("❌ [UnobservedDetailVC] ERROR: Could not find newly created entry!")
-            }
-            
-            print("📞 [UnobservedDetailVC] Calling onSave callback")
-            onSave?(bird)
-            
-            print("✅ [UnobservedDetailVC] Complete, popping view controller")
-            navigationController?.popViewController(animated: true)
-        } else {
+        		if let existingEntry = entry {
+        
+        			print("✏️  [UnobservedDetailVC] Editing existing entry: \(existingEntry.id)")
+        
+        			
+        
+        			// Update dates FIRST so they are included when updateEntry triggers a save
+        
+        			existingEntry.toObserveStartDate = startDate
+        
+        			existingEntry.toObserveEndDate = endDate
+        
+        			
+        
+        			manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
+        
+        			
+        
+        			print("✅ [UnobservedDetailVC] Updated existing entry, popping view controller")
+        
+        			navigationController?.popViewController(animated: true)
+        
+        			
+        
+        			
+        
+        		} else if let wId = watchlistId, let bird = bird {
+        
+        			print("➕ [UnobservedDetailVC] Creating new entry")
+        
+        			print("🐦 [UnobservedDetailVC] Bird: \(bird.commonName)")
+        
+        			print("📋 [UnobservedDetailVC] Watchlist ID: \(wId)")
+        
+        			
+        
+        			manager.addBirds([bird], to: wId, asObserved: false)
+        
+        			
+        
+        			if let newEntry = manager.findEntry(birdId: bird.id, watchlistId: wId) {
+        
+        				print("✅ [UnobservedDetailVC] Found new entry: \(newEntry.id)")
+        
+        				
+        
+        				// Set dates (in memory)
+        
+        				newEntry.toObserveStartDate = startDate
+        
+        				newEntry.toObserveEndDate = endDate
+        
+        				
+        
+        				// Call updateEntry to set notes and SAVE everything
+        
+        				manager.updateEntry(entryId: newEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
+        
+        				
+        
+        				print("✅ [UnobservedDetailVC] Entry properties updated and saved")
+        
+        			} else {
+        
+        				print("❌ [UnobservedDetailVC] ERROR: Could not find newly created entry!")
+        
+        			}
+        
+        			
+        
+        			print("📞 [UnobservedDetailVC] Calling onSave callback")
+        
+        			onSave?(bird)
+        
+        			
+        
+        			print("✅ [UnobservedDetailVC] Complete, popping view controller")
+        
+        			navigationController?.popViewController(animated: true)
+        
+        		} else {
             print("⚠️  [UnobservedDetailVC] No entry or bird/watchlistId - just popping")
             navigationController?.popViewController(animated: true)
         }
 	}
 	
-	private func updateLocationSelection(_ name: String) {
+	private func updateLocationSelection(_ location: LocationService.LocationData) {
+		locationSearchBar.text = location.displayName
+		selectedLocation = location
+		suggestionsTableView.isHidden = true
+		locationSearchBar.resignFirstResponder()
+	}
+	
+	private func updateLocationSelection(_ name: String, lat: Double? = nil, lon: Double? = nil) {
 		locationSearchBar.text = name
+		if let lat = lat, let lon = lon {
+			selectedLocation = LocationService.LocationData(displayName: name, lat: lat, lon: lon)
+		} else {
+			selectedLocation = nil
+		}
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
 	}
@@ -254,54 +313,34 @@ class UnobservedDetailViewController: UIViewController {
 
 	// MARK: - CLLocationManagerDelegate
 extension UnobservedDetailViewController: CLLocationManagerDelegate {
-	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-		guard let location = locations.last else { return }
-		
-		Task { [weak self] in
-			guard let self else { return }
-			do {
-				guard let request = MKReverseGeocodingRequest(location: location) else {
-					await MainActor.run { self.updateLocationSelection("Location") }
-					return
-				}
-				let response = try await request.mapItems
-				let name = response.first?.name ?? "Location"
-				await MainActor.run { self.updateLocationSelection(name) }
-			} catch {
-				await MainActor.run { self.updateLocationSelection("Location") }
-			}
-		}
-	}
-	
+	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}
 	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 }
 
 	// MARK: - UITableViewDelegate & DataSource
 extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSource {
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return locationResults.count
+		return locationSuggestions.count
 	}
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
-		let result = locationResults[indexPath.row]
-		cell.textLabel?.text = "\(result.title) \(result.subtitle)"
+		let result = locationSuggestions[indexPath.row]
+		cell.textLabel?.text = result.fullText
 		return cell
 	}
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		let item = locationResults[indexPath.row]
+		let item = locationSuggestions[indexPath.row]
+		let query = item.fullText
+		updateLocationSelection(query)
 		Task {
-			let request = MKLocalSearch.Request()
-			request.naturalLanguageQuery = item.title + " " + item.subtitle
-			let search = MKLocalSearch(request: request)
 			do {
-				let response = try await search.start()
-				if let place = response.mapItems.first {
-					let name = place.name ?? item.title
-					await MainActor.run { self.updateLocationSelection(name) }
-				}
-			} catch {}
+				let location = try await locationService.geocode(query: query)
+				await MainActor.run { self.updateLocationSelection(location) }
+			} catch {
+				await MainActor.run { self.updateLocationSelection(query, lat: nil, lon: nil) }
+			}
 		}
 	}
 }
@@ -309,16 +348,24 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
 	// MARK: - UISearchBarDelegate
 extension UnobservedDetailViewController: UISearchBarDelegate {
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		selectedLocation = nil
 		if searchText.isEmpty {
-			locationResults = []
+			locationSuggestions = []
 			suggestionsTableView.isHidden = true
 		} else {
-			searchCompleter.queryFragment = searchText
+			Task {
+				let results = await locationService.getAutocompleteSuggestions(for: searchText)
+				await MainActor.run {
+					self.locationSuggestions = results
+					self.suggestionsTableView.isHidden = self.locationSuggestions.isEmpty
+					self.suggestionsTableView.reloadData()
+				}
+			}
 		}
 	}
 	
 	func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-		if !locationResults.isEmpty {
+		if !locationSuggestions.isEmpty {
 			suggestionsTableView.isHidden = false
 		}
 	}
@@ -331,15 +378,11 @@ extension UnobservedDetailViewController: UISearchBarDelegate {
 
 	// MARK: - MKLocalSearchCompleterDelegate
 extension UnobservedDetailViewController: MKLocalSearchCompleterDelegate {
-	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-		locationResults = completer.results
-		suggestionsTableView.isHidden = locationResults.isEmpty
-		suggestionsTableView.reloadData()
-	}
+	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {}
 }
 
 extension UnobservedDetailViewController: MapSelectionDelegate {
 	func didSelectMapLocation(name: String, lat: Double, lon: Double) {
-		updateLocationSelection(name)
+		updateLocationSelection(name, lat: lat, lon: lon)
 	}
 }

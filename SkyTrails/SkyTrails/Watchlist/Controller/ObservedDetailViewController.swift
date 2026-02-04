@@ -7,6 +7,7 @@ import SwiftData
 class ObservedDetailViewController: UIViewController {
 	
 	private let manager = WatchlistManager.shared
+	private let locationService = LocationService.shared
 	
 		// MARK: - Data Dependency
 	var bird: Bird? // Kept for 'New Observation' flow where entry doesn't exist yet
@@ -15,12 +16,11 @@ class ObservedDetailViewController: UIViewController {
 	
 	var onSave: ((Bird) -> Void)?
 	
-	private let locationManager = CLLocationManager()
 	private var selectedImageName: String?
+	private var selectedLocation: LocationService.LocationData?
 	
 		// Location Autocomplete State
-	private var searchCompleter = MKLocalSearchCompleter()
-	private var locationResults: [MKLocalSearchCompletion] = []
+	private var locationSuggestions: [LocationService.LocationSuggestion] = []
 	
 	@IBOutlet weak var suggestionsTableView: UITableView!
 	@IBOutlet weak var birdImageView: UIImageView!
@@ -36,12 +36,15 @@ class ObservedDetailViewController: UIViewController {
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		print("Debug: viewDidLoad started")
 		
 		if let entry = entry {
 			self.title = entry.bird?.commonName
 			self.bird = entry.bird
+			print("Debug: viewDidLoad - loaded existing entry for bird: \(entry.bird?.commonName ?? "nil")")
 		} else {
 			self.title = bird?.commonName
+			print("Debug: viewDidLoad - no existing entry, bird: \(bird?.commonName ?? "nil")")
 		}
 		
 		setupStyling()
@@ -58,6 +61,7 @@ class ObservedDetailViewController: UIViewController {
 			nameTextField.text = birdData.commonName
 			birdImageView.image = UIImage(named: birdData.staticImageName) ?? UIImage(systemName: "photo")
 			setupRightBarButtons() // Can delete only if entry exists? No, cancel.
+			print("Debug: viewDidLoad - configured for new observation with bird: \(birdData.commonName)")
 		} else {
 				// Completely new
 			self.navigationItem.title = "New Observation"
@@ -65,20 +69,21 @@ class ObservedDetailViewController: UIViewController {
 			birdImageView.tintColor = .systemGray
 			let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 			navigationItem.rightBarButtonItem = saveButton
+			print("Debug: viewDidLoad - configured for completely new observation")
 		}
 		
 		setupKeyboardHandling()
 		setupLocationServices()
 		setupLocationOptionsInteractions()
+		print("Debug: viewDidLoad completed")
 	}
 	
 	private func setupLocationServices() {
-		locationManager.delegate = self
-		locationManager.desiredAccuracy = kCLLocationAccuracyBest
+		print("Debug: setupLocationServices called")
 	}
 	
 	private func setupSearch() {
-		searchCompleter.delegate = self
+		print("Debug: setupSearch called")
 		locationSearchBar.delegate = self
 		suggestionsTableView.delegate = self
 		suggestionsTableView.dataSource = self
@@ -86,9 +91,13 @@ class ObservedDetailViewController: UIViewController {
 	}
 	
 	private func setupLocationOptionsInteractions() {
+		print("Debug: setupLocationOptionsInteractions called")
 		guard let container = locationCardView,
 			  let mainStack = container.subviews.first as? UIStackView,
-			  mainStack.arrangedSubviews.count >= 3 else { return }
+			  mainStack.arrangedSubviews.count >= 3 else {
+			print("Debug: setupLocationOptionsInteractions - failed to get views")
+			return
+		}
 		
 		let currentLocationView = mainStack.arrangedSubviews[0]
 		let mapView = mainStack.arrangedSubviews[2]
@@ -100,34 +109,52 @@ class ObservedDetailViewController: UIViewController {
 		let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapMap))
 		mapView.isUserInteractionEnabled = true
 		mapView.addGestureRecognizer(mapTap)
+		print("Debug: setupLocationOptionsInteractions - gesture recognizers added")
 	}
 	
 	@objc private func didTapCurrentLocation() {
-		let authStatus = locationManager.authorizationStatus
-		switch authStatus {
-			case .notDetermined:
-				locationManager.requestWhenInUseAuthorization()
-			case .restricted, .denied:
-				let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings.", preferredStyle: .alert)
+		print("Debug: didTapCurrentLocation called")
+		Task {
+			do {
+				let location = try await locationService.getCurrentLocation()
+				updateLocationSelection(location)
+			} catch {
+				print("Debug: didTapCurrentLocation - error: \(error)")
+				let alert = UIAlertController(title: "Location Unavailable", message: "Please enable location services in Settings.", preferredStyle: .alert)
 				alert.addAction(UIAlertAction(title: "OK", style: .default))
 				present(alert, animated: true)
-			case .authorizedAlways, .authorizedWhenInUse:
-				locationManager.requestLocation()
-			@unknown default:
-				break
+			}
 		}
 	}
 	
 	@objc private func didTapMap() {
+		print("Debug: didTapMap called")
 		let storyboard = UIStoryboard(name:"SharedStoryboard", bundle:nil)
 		if let mapVC = storyboard.instantiateViewController(withIdentifier: "MapViewController") as? MapViewController {
 			mapVC.delegate = self
 			navigationController?.pushViewController(mapVC, animated: true)
+			print("Debug: didTapMap - navigated to MapViewController")
+		} else {
+			print("Debug: didTapMap - failed to instantiate MapViewController")
 		}
 	}
 	
-	private func updateLocationSelection(_ name: String) {
+	private func updateLocationSelection(_ location: LocationService.LocationData) {
+		print("Debug: updateLocationSelection called with location: \(location)")
+		locationSearchBar.text = location.displayName
+		selectedLocation = location
+		suggestionsTableView.isHidden = true
+		locationSearchBar.resignFirstResponder()
+	}
+	
+	private func updateLocationSelection(_ name: String, lat: Double? = nil, lon: Double? = nil) {
+		print("Debug: updateLocationSelection called with name: '\(name)', lat: \(lat?.description ?? "nil"), lon: \(lon?.description ?? "nil")")
 		locationSearchBar.text = name
+		if let lat = lat, let lon = lon {
+			selectedLocation = LocationService.LocationData(displayName: name, lat: lat, lon: lon)
+		} else {
+			selectedLocation = nil
+		}
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
 	}
@@ -136,11 +163,13 @@ class ObservedDetailViewController: UIViewController {
 	private func setupKeyboardHandling() {
 		let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
 		tap.cancelsTouchesInView = false
+		tap.delegate = self
 		view.addGestureRecognizer(tap)
 		addDoneButtonOnKeyboard()
 	}
 	
 	@objc func dismissKeyboard() {
+		print("Debug: dismissKeyboard called")
 		view.endEditing(true)
 		suggestionsTableView.isHidden = true
 	}
@@ -148,7 +177,7 @@ class ObservedDetailViewController: UIViewController {
 	private func addDoneButtonOnKeyboard() {
 		let doneToolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 50))
 		let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-		let done = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneButtonAction))
+		let done = UIBarButtonItem(title: "Done", style: .prominent, target: self, action: #selector(doneButtonAction))
 		doneToolbar.items = [flexSpace, done]
 		doneToolbar.sizeToFit()
 		nameTextField.inputAccessoryView = doneToolbar
@@ -156,6 +185,7 @@ class ObservedDetailViewController: UIViewController {
 	}
 	
 	@objc func doneButtonAction() {
+		print("Debug: doneButtonAction called")
 		view.endEditing(true)
 	}
 	
@@ -213,7 +243,10 @@ class ObservedDetailViewController: UIViewController {
 			manager.updateEntry(
 				entryId: existingEntry.id,
 				notes: notesTextView.text,
-				observationDate: dateTimePicker.date
+				observationDate: dateTimePicker.date,
+				lat: selectedLocation?.lat,
+				lon: selectedLocation?.lon,
+				locationDisplayName: selectedLocation?.displayName
 			)
 				// Persist newly picked photo if the user changed it
 			if let photoName = selectedImageName {
@@ -241,9 +274,19 @@ class ObservedDetailViewController: UIViewController {
 			print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
 			manager.addBirds([birdToUse], to: wId, asObserved: true)
 			
-				// Persist newly picked photo to the entry that was just created
-			if let photoName = selectedImageName {
-				if let newEntry = manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
+			if let newEntry = manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
+					// Update the newly created entry with notes and the specific date picked by user
+				manager.updateEntry(
+					entryId: newEntry.id,
+					notes: notesTextView.text,
+					observationDate: dateTimePicker.date,
+					lat: selectedLocation?.lat,
+					lon: selectedLocation?.lon,
+					locationDisplayName: selectedLocation?.displayName
+				)
+				
+					// Persist newly picked photo to the entry
+				if let photoName = selectedImageName {
 					manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
 					print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
 				}
@@ -260,15 +303,44 @@ class ObservedDetailViewController: UIViewController {
 	}
 	
 	func configure(with entry: WatchlistEntry) {
-		guard let bird = entry.bird else { return }
+		print("Debug: configure(with:) called for entry: \(entry.id)")
+		guard let bird = entry.bird else {
+			print("Debug: configure(with:) - no bird found in entry")
+			return
+		}
 		nameTextField.text = bird.commonName
-		locationSearchBar.text = bird.validLocations?.first // Or entry.lat/lon reversed
+		print("Debug: configure(with:) - bird name: \(bird.commonName)")
+		
+		if let displayName = entry.locationDisplayName {
+			print("Debug: configure(with:) - using stored displayName: \(displayName)")
+			let lat = entry.lat
+			let lon = entry.lon
+			updateLocationSelection(displayName, lat: lat, lon: lon)
+		} else if let lat = entry.lat, let lon = entry.lon {
+			print("Debug: configure(with:) - no displayName, but coordinates found. lat: \(lat), lon: \(lon)")
+			Task { [weak self] in
+				guard let self else { return }
+				print("Debug: configure(with:) Task - starting reverse geocoding fallback")
+				let name = await locationService.reverseGeocode(lat: lat, lon: lon) ?? "Location"
+				await MainActor.run {
+					self.updateLocationSelection(name, lat: lat, lon: lon)
+				}
+			}
+		} else {
+			let fallbackLocation = bird.validLocations?.first ?? ""
+			print("Debug: configure(with:) - no coordinates or name, using fallback location: '\(fallbackLocation)'")
+			updateLocationSelection(fallbackLocation)
+		}
 		
 			// Three-tier image resolution: user photo on disk → asset catalogue → placeholder
 		birdImageView.image = ObservedDetailViewController.loadImage(for: entry)
 		
-		if let date = entry.observationDate { dateTimePicker.date = date }
+		if let date = entry.observationDate {
+			dateTimePicker.date = date
+			print("Debug: configure(with:) - set observation date: \(date)")
+		}
 		notesTextView.text = entry.notes
+		print("Debug: configure(with:) - set notes: '\(entry.notes ?? "nil")'")
 	}
 	
 		/// Resolves the best available image for an entry.
@@ -304,71 +376,104 @@ class ObservedDetailViewController: UIViewController {
 }
 
 	// MARK: - Protocols & Delegates
-extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate {
+extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate, UIGestureRecognizerDelegate {
 	
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		print("Debug: searchBar textDidChange - new text: '\(searchText)'")
+		selectedLocation = nil
 		if searchText.isEmpty {
-			locationResults = []
+			print("Debug: searchBar textDidChange - text is empty, hiding suggestions")
+			locationSuggestions = []
 			suggestionsTableView.isHidden = true
 		} else {
-			searchCompleter.queryFragment = searchText
+			print("Debug: searchBar textDidChange - fetching suggestions from LocationService")
+			Task {
+				let results = await locationService.getAutocompleteSuggestions(for: searchText)
+				await MainActor.run {
+					self.locationSuggestions = results
+					self.suggestionsTableView.isHidden = self.locationSuggestions.isEmpty
+					self.suggestionsTableView.reloadData()
+				}
+			}
 		}
 	}
 	
 	func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-		if !locationResults.isEmpty { suggestionsTableView.isHidden = false }
+		print("Debug: searchBarTextDidBeginEditing - locationSuggestions.count: \(locationSuggestions.count)")
+		if !locationSuggestions.isEmpty {
+			suggestionsTableView.isHidden = false
+			print("Debug: searchBarTextDidBeginEditing - showing suggestions table")
+		}
 	}
 	
 	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+		print("Debug: searchBarSearchButtonClicked - text: '\(searchBar.text ?? "nil")'")
 		searchBar.resignFirstResponder()
 		suggestionsTableView.isHidden = true
 	}
 	
-	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-		locationResults = completer.results
-		suggestionsTableView.isHidden = locationResults.isEmpty
-		suggestionsTableView.reloadData()
-	}
-	
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return locationResults.count
+		print("Debug: tableView numberOfRowsInSection - returning: \(locationSuggestions.count)")
+		return locationSuggestions.count
 	}
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
-		let item = locationResults[indexPath.row]
-		cell.textLabel?.text = item.title + " " + item.subtitle
+		let item = locationSuggestions[indexPath.row]
+		cell.textLabel?.text = item.fullText
+		print("Debug: tableView cellForRowAt - row \(indexPath.row): '\(item.fullText)'")
 		return cell
 	}
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		let item = locationResults[indexPath.row]
+		let item = locationSuggestions[indexPath.row]
+		let fullLocationText = item.fullText
+		print("Debug: tableView didSelectRowAt - row \(indexPath.row) selected: '\(fullLocationText)'")
+		
+			// Immediately update UI and hide table
+		suggestionsTableView.isHidden = true
+		locationSearchBar.resignFirstResponder()
+		
 		Task {
-			let request = MKLocalSearch.Request()
-			request.naturalLanguageQuery = item.title + " " + item.subtitle
-			let search = MKLocalSearch(request: request)
-			if let response = try? await search.start(), let place = response.mapItems.first {
-				await MainActor.run { self.updateLocationSelection(place.name ?? item.title) }
+			print("Debug: tableView didSelectRowAt Task - geocoding selected suggestion")
+			do {
+				let location = try await locationService.geocode(query: fullLocationText)
+				await MainActor.run {
+					self.updateLocationSelection(location)
+				}
+			} catch {
+				print("Debug: tableView didSelectRowAt Task - geocoding FAILED")
+				await MainActor.run {
+					// Fallback: use text but nil coordinates
+					self.updateLocationSelection(fullLocationText, lat: nil, lon: nil)
+				}
 			}
 		}
 	}
+	
 	
 	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-		guard let location = locations.last else { return }
-		Task {
-			let request = MKReverseGeocodingRequest(location: location)
-			if let response = try? await request?.mapItems, let name = response.first?.name {
-				await MainActor.run { self.updateLocationSelection(name) }
-			}
-		}
 	}
 	
-	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+	}
+	
+		// MARK: - UIGestureRecognizerDelegate
+	func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+			// Don't trigger dismissKeyboard when tapping on the suggestions tableview
+		if touch.view?.isDescendant(of: suggestionsTableView) == true {
+			print("Debug: gestureRecognizer shouldReceive - touch is on suggestionsTableView, ignoring")
+			return false
+		}
+		print("Debug: gestureRecognizer shouldReceive - touch is NOT on suggestionsTableView, allowing")
+		return true
+	}
 }
 
 extension ObservedDetailViewController: MapSelectionDelegate {
 	func didSelectMapLocation(name: String, lat: Double, lon: Double) {
-		updateLocationSelection(name)
+		print("Debug: didSelectMapLocation called - name: '\(name)', lat: \(lat), lon: \(lon)")
+		updateLocationSelection(name, lat: lat, lon: lon)
 	}
 }
 

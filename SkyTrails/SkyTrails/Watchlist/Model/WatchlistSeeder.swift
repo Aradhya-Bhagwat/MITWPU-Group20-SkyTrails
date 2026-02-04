@@ -232,6 +232,16 @@ struct WatchlistSeeder {
 			return existing
 		}
 		
+			// Fallback: Check by Name
+		let name = dto.name
+		let nameDescriptor = FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
+			bird.commonName == name
+		})
+		if let existingByName = try? context.fetch(nameDescriptor).first {
+			print("⚠️ [WatchlistSeeder] Found existing bird by name '\(name)' but ID mismatch. Reusing existing.")
+			return existingByName
+		}
+		
 			// Map Rarity String to Enum
 		let rarityString = dto.rarity.first?.lowercased() ?? "common"
 		let rarity: BirdRarityLevel = (rarityString == "rare") ? .rare : (rarityString == "very_rare" ? .very_rare : .common)

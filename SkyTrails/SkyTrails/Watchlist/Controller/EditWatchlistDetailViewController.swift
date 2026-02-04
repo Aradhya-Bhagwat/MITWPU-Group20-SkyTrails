@@ -20,6 +20,7 @@ struct Participant {
 class EditWatchlistDetailViewController: UIViewController {
 
 	private let manager = WatchlistManager.shared
+	private let locationService = LocationService.shared
 	
 		// MARK: - Outlets
 	@IBOutlet weak var titleTextField: UITextField!
@@ -39,12 +40,8 @@ class EditWatchlistDetailViewController: UIViewController {
     private var watchlistToEdit: Watchlist?
     
     // Location & Search
-    private let locationManager = CLLocationManager()
-
-
-	
-	private var searchCompleter = MKLocalSearchCompleter()
-	private var searchResults: [MKLocalSearchCompletion] = []
+	private var locationSuggestions: [LocationService.LocationSuggestion] = []
+	private var selectedLocation: LocationService.LocationData?
 	
 		// Internal State
 	private var participants: [Participant] = []
@@ -88,9 +85,15 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
 	
 	private func setupLocationServices() {
-		locationManager.delegate = self
-		locationManager.desiredAccuracy = kCLLocationAccuracyBest
-		searchCompleter.delegate = self
+	}
+	
+	private func populateDataForEdit() {
+		if let watchlist = watchlistToEdit {
+			titleTextField.text = watchlist.title
+			locationSearchBar.text = watchlist.locationDisplayName ?? watchlist.location
+            if let start = watchlist.startDate { startDatePicker.date = start }
+            if let end = watchlist.endDate { endDatePicker.date = end }
+		}
 	}
 	
     private func configureInitialData() {
@@ -112,15 +115,7 @@ class EditWatchlistDetailViewController: UIViewController {
         }
 		participantsTableView.reloadData()
 	}
-	
-	private func populateDataForEdit() {
-		if let watchlist = watchlistToEdit {
-			titleTextField.text = watchlist.title
-			locationSearchBar.text = watchlist.location
-            if let start = watchlist.startDate { startDatePicker.date = start }
-            if let end = watchlist.endDate { endDatePicker.date = end }
-		}
-	}
+
 	
 		// MARK: - Gesture Setup
 	private func setupLocationOptionsInteractions() {
@@ -146,17 +141,13 @@ class EditWatchlistDetailViewController: UIViewController {
 	
 		// MARK: - Actions
 	@objc private func didTapCurrentLocation() {
-		let authStatus = locationManager.authorizationStatus
-		
-		switch authStatus {
-			case .notDetermined:
-				locationManager.requestWhenInUseAuthorization()
-			case .restricted, .denied:
-				presentAlert(title: "Location Access Denied", message: "Please enable location services in Settings to use this feature.")
-			case .authorizedAlways, .authorizedWhenInUse:
-				locationManager.requestLocation()
-			@unknown default:
-				break
+		Task {
+			do {
+				let location = try await locationService.getCurrentLocation()
+				updateLocationSelection(location)
+			} catch {
+				presentAlert(title: "Location Unavailable", message: "Please enable location services in Settings.")
+			}
 		}
 	}
 	
@@ -185,8 +176,16 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
 	
 		// MARK: - Logic Implementation
+	private func updateLocationSelection(_ location: LocationService.LocationData) {
+		locationSearchBar.text = location.displayName
+		selectedLocation = location
+		suggestionsTableView.isHidden = true
+		locationSearchBar.resignFirstResponder()
+	}
+	
 	private func updateLocationSelection(_ name: String) {
 		locationSearchBar.text = name
+		selectedLocation = nil
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
 	}
@@ -209,20 +208,16 @@ class EditWatchlistDetailViewController: UIViewController {
             // Direct update on SwiftData object
 			watchlist.title = title
             watchlist.location = location
+			watchlist.locationDisplayName = selectedLocation?.displayName ?? location
             watchlist.startDate = startDate
             watchlist.endDate = endDate
-            // Manager doesn't need explicit update call if object is managed context
-            // But we can force save if needed via manager private context save, 
-            // or assume autosave / context save happens on run loop.
-            // Ideally manager should have a save method exposed or update method.
-            // For now, this modifies the object in context.
             
 			navigationController?.popViewController(animated: true)
 			return
 		}
 		
 			// 2. Create New Watchlist
-        manager.addWatchlist(title: title, location: location, startDate: startDate, endDate: endDate, type: watchlistType)
+        manager.addWatchlist(title: title, location: location, startDate: startDate, endDate: endDate, type: watchlistType, locationDisplayName: selectedLocation?.displayName ?? location)
 		
 		navigationController?.popViewController(animated: true)
 	}
@@ -243,51 +238,15 @@ class EditWatchlistDetailViewController: UIViewController {
 
 // MARK: - CoreLocation Delegate
 extension EditWatchlistDetailViewController: CLLocationManagerDelegate {
-	
-	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-		guard let location = locations.last else { return }
-		
-		Task { [weak self] in
-			guard let self else { return }
-
-			do {
-				guard let request = MKReverseGeocodingRequest(location: location) else {
-					await MainActor.run {
-						self.updateLocationSelection("Location")
-					}
-					return
-				}
-				let response = try await request.mapItems
-				let item = response.first
-
-				let name = item?.name ?? "Location"
-
-				await MainActor.run {
-					self.updateLocationSelection(name)
-				}
-
-			} catch {
-				await MainActor.run {
-					self.updateLocationSelection("Location")
-				}
-			}
-		}
-	}
-	
-	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-	}
-	
-	func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-		if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
-			manager.requestLocation()
-		}
-	}
+	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}
+	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+	func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
 }
 
 // MARK: - TableView Delegate & DataSource
 extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDataSource {
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return tableView == participantsTableView ? participants.count : searchResults.count
+		return tableView == participantsTableView ? participants.count : locationSuggestions.count
 	}
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -304,31 +263,24 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
 			return cell
 		} else {
 			let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
-			let item = searchResults[indexPath.row]
-			cell.textLabel?.text = "\(item.title) \(item.subtitle)"
+			let item = locationSuggestions[indexPath.row]
+			cell.textLabel?.text = item.fullText
 			return cell
 		}
 	}
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		if tableView == suggestionsTableView {
-			let item = searchResults[indexPath.row]
+			let item = locationSuggestions[indexPath.row]
+			let query = item.fullText
+			updateLocationSelection(query)
 			
-				// Modern Async Search
 			Task {
-				let request = MKLocalSearch.Request()
-				request.naturalLanguageQuery = item.title + " " + item.subtitle
-				let search = MKLocalSearch(request: request)
-				
 				do {
-					let response = try await search.start()
-					if let place = response.mapItems.first {
-						let name = place.name ?? item.title
-						await MainActor.run {
-							self.updateLocationSelection(name)
-						}
-					}
+					let location = try await locationService.geocode(query: query)
+					await MainActor.run { self.updateLocationSelection(location) }
 				} catch {
+					await MainActor.run { self.updateLocationSelection(query) }
 				}
 			}
 		}
@@ -338,16 +290,24 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
 // MARK: - Search Delegates
 extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate {
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		selectedLocation = nil
 		if searchText.isEmpty {
-			searchResults = []
+			locationSuggestions = []
 			suggestionsTableView.isHidden = true
 		} else {
-			searchCompleter.queryFragment = searchText
+			Task {
+				let results = await locationService.getAutocompleteSuggestions(for: searchText)
+				await MainActor.run {
+					self.locationSuggestions = results
+					self.suggestionsTableView.isHidden = self.locationSuggestions.isEmpty
+					self.suggestionsTableView.reloadData()
+				}
+			}
 		}
 	}
 	
 	func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-		suggestionsTableView.isHidden = searchResults.isEmpty
+		suggestionsTableView.isHidden = locationSuggestions.isEmpty
 	}
 	
 	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -355,21 +315,14 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchC
 		suggestionsTableView.isHidden = true
 	}
 	
-	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-		self.searchResults = completer.results
-		suggestionsTableView.isHidden = searchResults.isEmpty
-		suggestionsTableView.reloadData()
-	}
-	
-	func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-	}
+	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {}
+	func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {}
 }
 
 // MARK: - MapSelectionDelegate
 extension EditWatchlistDetailViewController: MapSelectionDelegate {
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
-        updateLocationSelection(name)
+        updateLocationSelection(LocationService.LocationData(displayName: name, lat: lat, lon: lon))
     }
 }
 // MARK: - UI Utilities
-
