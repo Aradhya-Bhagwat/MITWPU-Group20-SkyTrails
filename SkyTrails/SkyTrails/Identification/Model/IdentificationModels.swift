@@ -60,7 +60,7 @@ final class BirdFieldMark {
 
     var iconName: String {
         guard let shapeId = shape?.id else { return "" }
-        return "shape_\(shapeId)_\(area.lowercased())"
+        return "id_bird_\(area.lowercased())"
     }
 
     init(area: String) {

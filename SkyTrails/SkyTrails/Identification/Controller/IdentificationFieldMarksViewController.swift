@@ -1,41 +1,34 @@
 import UIKit
 import SwiftData
 
-class IdentificationFieldMarksViewController: UIViewController {
+class IdentificationFieldMarksViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     @IBOutlet weak var CanvasView: UIView!
     @IBOutlet weak var Categories: UICollectionView!
     @IBOutlet weak var progressView: UIProgressView!
     
     weak var delegate: IdentificationFlowStepDelegate?
-    
-    // Updated to store the actual model objects
-    private var availableFieldMarks: [BirdFieldMark] = []
-    private var selectedMarks: Set<BirdFieldMark> = []
+    var selectedFieldMarks: [Int] = [] // Preserving your original selection tracking logic
     
     var viewModel: IdentificationManager!
     
+    // Model Accessor: Provides the list of marks available for the specific shape selected
+    private var availableMarks: [BirdFieldMark] {
+        return viewModel.selectedShape?.fieldMarks ?? []
+    }
+
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
-    
+
     private let layerOrder = [
-        "Tail", "Leg", "Thigh", "Head", "Neck",
-        "Back", "Underparts", "Nape", "Throat", "Crown",
-        "Facemask", "Beak", "Eye", "Wings"
+        "Tail", "Leg", "Thigh", "Head", "Neck", "Back", "Underparts",
+        "Nape", "Throat", "Crown", "Facemask", "Beak", "Eye", "Wings"
     ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadData()
         setupUI()
         setupCanvas()
-    }
-    
-    private func loadData() {
-        // Fetch field marks specifically for the selected shape from the manager
-        if let shape = viewModel.selectedShape {
-            self.availableFieldMarks = shape.fieldMarks?.sorted { $0.area < $1.area } ?? []
-        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -63,7 +56,8 @@ class IdentificationFieldMarksViewController: UIViewController {
     
     func cleanForFilename(_ name: String) -> String {
         if name == "Passeridae_Fringillidae" { return "finch" }
-        return name.lowercased()
+        return name
+            .lowercased()
             .replacingOccurrences(of: " ", with: "_")
             .replacingOccurrences(of: "-", with: "_")
     }
@@ -72,7 +66,7 @@ class IdentificationFieldMarksViewController: UIViewController {
         CanvasView.subviews.forEach { $0.removeFromSuperview() }
         partLayers.removeAll()
 
-        let shapeID = cleanForFilename(viewModel.selectedShape?.id ?? "finch")
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
         
         baseShapeLayer = UIImageView(frame: CanvasView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
@@ -87,7 +81,6 @@ class IdentificationFieldMarksViewController: UIViewController {
             
             CanvasView.addSubview(imgView)
             partLayers[catName] = imgView
-            
             updateLayer(category: catName)
         }
     }
@@ -95,17 +88,83 @@ class IdentificationFieldMarksViewController: UIViewController {
     func updateLayer(category: String) {
         guard let layer = partLayers[category] else { return }
         
-        let shapeID = cleanForFilename(viewModel.selectedShape?.id ?? "finch")
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
         let cleanCategory = cleanForFilename(category)
         
-        // Logic check: Is this area currently in our local selected set?
-        let isSelected = selectedMarks.contains(where: { $0.area == category })
+        let isSelected = isCategorySelected(name: category)
         
         let baseName = isSelected ?
             "canvas_\(shapeID)_\(cleanCategory)_color" :
             "id_canvas_\(shapeID)_\(cleanCategory)_default"
         
         layer.image = UIImage(named: baseName)
+    }
+    
+    func isCategorySelected(name: String) -> Bool {
+        // Matches the category name against the currently selected indices in availableMarks
+        return selectedFieldMarks.contains { index in
+            availableMarks.indices.contains(index) && availableMarks[index].area == name
+        }
+    }
+    
+    // MARK: - CollectionView DataSource
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return availableMarks.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+        let item = availableMarks[indexPath.row]
+        
+        let isSelected = selectedFieldMarks.contains(indexPath.row)
+        if isSelected {
+            collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        }
+
+      
+        cell.configure(name: item.area, iconName: item.iconName, isSelected: isSelected)
+        
+        return cell
+    }
+    
+    // MARK: - CollectionView Delegate
+    
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        if selectedFieldMarks.count >= 5 {
+            showMaxLimitAlert()
+            return false
+        }
+        return true
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let index = indexPath.row
+        if !selectedFieldMarks.contains(index) {
+            selectedFieldMarks.append(index)
+        }
+        
+        let categoryName = availableMarks[index].area
+        updateLayer(category: categoryName)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        let index = indexPath.row
+        if let position = selectedFieldMarks.firstIndex(of: index) {
+            selectedFieldMarks.remove(at: position)
+        }
+        
+        collectionView.reloadItems(at: [indexPath])
+        let categoryName = availableMarks[index].area
+        updateLayer(category: categoryName)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 70, height: 70)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 15
     }
 
     private func showMaxLimitAlert() {
@@ -115,66 +174,22 @@ class IdentificationFieldMarksViewController: UIViewController {
     }
     
     @IBAction func nextTapped(_ sender: Any) {
-        // No longer using viewModel.data.fieldMarks (String array).
-        // Instead, the next screen (GUI) will read from the 'selectedMarks' we've gathered.
-        // We sync our local Selection to the manager if necessary, or pass it via navigation.
+        // Map the selected indices to the actual model objects for the manager
+        let selectedMarkObjects = selectedFieldMarks.compactMap { index -> BirdFieldMark? in
+            availableMarks.indices.contains(index) ? availableMarks[index] : nil
+        }
         
-        // For filtering logic alignment:
-        let selectedNames = selectedMarks.map { $0.area }
+        // Sync selected areas to the manager's tempSelectedAreas array
+        viewModel.tempSelectedAreas = selectedMarkObjects.map { $0.area }
         
-        // We temporarily store these in a way the GUIViewController can access
-        // (You may need to add 'var selectedFieldMarkAreas: [String]' to IdentificationManager)
-        viewModel.tempSelectedAreas = selectedNames
+        viewModel.filterBirds(
+            shape: viewModel.selectedShapeId,
+            size: viewModel.selectedSizeCategory,
+            location: viewModel.selectedLocation,
+            fieldMarks: selectedMarkObjects // Pass the aligned model objects
+        )
         
-        viewModel.runFilter()
         delegate?.didFinishStep()
-    }
-}
-
-// MARK: - CollectionView Logic
-extension IdentificationFieldMarksViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return availableFieldMarks.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
-        let item = availableFieldMarks[indexPath.row]
-        
-        let isSelected = selectedMarks.contains(item)
-        if isSelected {
-            collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-        }
-
-        cell.configure(name: item.area, iconName: "id_icn_\(cleanForFilename(item.area))", isSelected: isSelected)
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        if selectedMarks.count >= 5 {
-            showMaxLimitAlert()
-            return false
-        }
-        return true
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = availableFieldMarks[indexPath.row]
-        selectedMarks.insert(item)
-        updateLayer(category: item.area)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        let item = availableFieldMarks[indexPath.row]
-        selectedMarks.remove(item)
-        
-        collectionView.reloadItems(at: [indexPath])
-        updateLayer(category: item.area)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 70, height: 70)
     }
 }
 
