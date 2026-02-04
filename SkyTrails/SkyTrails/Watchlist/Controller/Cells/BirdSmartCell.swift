@@ -100,7 +100,10 @@ class BirdSmartCell: UITableViewCell {
 		}
 		
 			// Location
-		if let locationName = bird.validLocations?.first {
+		if let userLocation = entry.locationDisplayName, !userLocation.isEmpty {
+			locationLabel.text = userLocation
+			locationLabel.isHidden = false
+		} else if let locationName = bird.validLocations?.first {
 			locationLabel.text = locationName
 			locationLabel.isHidden = false
 		} else {
