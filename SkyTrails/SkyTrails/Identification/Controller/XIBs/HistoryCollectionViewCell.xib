@@ -30,7 +30,7 @@
                         <nil key="highlightedColor"/>
                     </label>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V79-tv-Ttn">
-                        <rect key="frame" x="8" y="152" width="168" height="38"/>
+                        <rect key="frame" x="8" y="164" width="168" height="26"/>
                         <fontDescription key="fontDescription" type="system" pointSize="13"/>
                         <color key="textColor" systemColor="secondaryLabelColor"/>
                         <nil key="highlightedColor"/>
@@ -49,7 +49,7 @@
                 <constraint firstItem="V79-tv-Ttn" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="8" id="n9d-K2-U58"/>
                 <constraint firstItem="7a1-04-YJM" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="8" id="pit-be-v1Z"/>
                 <constraint firstAttribute="trailing" secondItem="1jK-Ka-RvL" secondAttribute="trailing" constant="8" id="sej-QH-Kdo"/>
-                <constraint firstItem="V79-tv-Ttn" firstAttribute="top" secondItem="1jK-Ka-RvL" secondAttribute="bottom" constant="-8" id="uhD-jC-xyQ"/>
+                <constraint firstItem="V79-tv-Ttn" firstAttribute="top" secondItem="1jK-Ka-RvL" secondAttribute="bottom" constant="4" id="uhD-jC-xyQ"/>
             </constraints>
             <size key="customSize" width="184" height="198"/>
             <userDefinedRuntimeAttributes>
