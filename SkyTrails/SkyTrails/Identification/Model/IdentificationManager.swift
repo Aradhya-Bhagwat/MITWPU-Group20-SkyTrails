@@ -1,278 +1,218 @@
-//
-//  IdentificationManager.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 12/01/26.
-//
-
 import Foundation
-import CoreLocation
+import SwiftData
+import SwiftUI
+
+@Observable
 class IdentificationManager {
-    var masterDatabase: BirdDatabase?
-    
-    var histories: [History] = []
-    var fieldMarkOptions: [FieldMarkType] = []
-    var birdShapes: [BirdShape] = []
-    var chooseFieldMarks: [ChooseFieldMark] = []
+    var modelContext: ModelContext
+    var tempSelectedAreas: [String] = []
+    var allShapes: [BirdShape] = []
+    var selectedShapeId: String? {
+            selectedShape?.id
+        }
+    var selectedShape: BirdShape? {
+        didSet {
+            selectedFieldMarks.removeAll()
+            runFilter()
+        }
+    }
+    func filterBirds(shape: String?, size: Int?, location: String?, fieldMarks: [Any]) {
+            
+            runFilter()
+        }
+    var selectedFieldMarks: [UUID: FieldMarkVariant] = [:]
+    var selectedSizeCategory: Int?
     var selectedSizeRange: [Int] = []
+    var selectedLocation: String?
+    var selectedDate: Date = Date()
+    var results: [IdentificationCandidate] = []
+
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        fetchShapes()
+    }
+    
+    func fetchShapes() {
+        do {
+            let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
+            self.allShapes = try modelContext.fetch(descriptor)
+        } catch {
+            print("Error loading shapes: \(error)")
+        }
+    }
 
     
-    
-    var data = IdentificationData()
-    var selectedSizeCategory: Int?
-    var selectedShapeId: String?
-    var selectedLocation: String?
-    var selectedFieldMarks: [FieldMarkData] = []
-    
-    
-    var birdResults: [IdentifiedBird] = []
-    
-    
-    var onResultsUpdated: (() -> Void)?
-    
-    init() {
-        loadAllData()
+    func availableShapesForSelectedSize() -> [BirdShape] {
+        print("DEBUG: availableShapesForSelectedSize called. Size range: \(selectedSizeRange)")
+        guard !selectedSizeRange.isEmpty else { return allShapes }
+        
+        do {
+            let predicate = #Predicate<Bird> { bird in
+                if let sizeCategory = bird.size_category {
+                    return selectedSizeRange.contains(sizeCategory)
+                } else {
+                    return false
+                }
+            }
+
+            let birdDescriptor = FetchDescriptor<Bird>(predicate: predicate)
+            let birdsInSize = try modelContext.fetch(birdDescriptor)
+            let validShapeIds = Set(birdsInSize.compactMap { $0.shape_id })
+            let filtered = allShapes.filter { validShapeIds.contains($0.id) }
+            return filtered
+            
+        } catch {
+            print("Error fetching birds for size range: \(error)")
+            return allShapes
+        }
     }
   
 
-    private func loadAllData() {
-        do {
-            self.fieldMarkOptions = [
-                FieldMarkType(symbols: "home_icn_location_date_pin", fieldMarkName: .locationDate, isSelected: false),
-                FieldMarkType(symbols: "id_icn_size", fieldMarkName: .size, isSelected: false),
-                FieldMarkType(symbols: "id_icn_shape_bird_question", fieldMarkName: .shape, isSelected: false),
-                FieldMarkType(symbols: "id_icn_field_marks", fieldMarkName: .fieldMarks, isSelected: false)
-            ]
-            var db = try loadDatabase()
-            let userBirds = loadUserBirds()
-            db.birds.append(contentsOf: userBirds)
-            
-            self.masterDatabase = db
-            self.birdShapes = db.referenceData.shapes
-            self.histories = loadHistory()
-            self.chooseFieldMarks = db.referenceData.fieldMarks.map { mark in
-                ChooseFieldMark(imageView: "id_bird_\(mark.area.lowercased())", name: mark.area)
-            }.sorted { $0.name < $1.name }
-            
-            print("Model Loaded Successfully")
-            
-        } catch {
-            print("Model Load Failed:", error)
-        }
+    func updateSize(_ size: Int) {
+        self.selectedSizeCategory = size
+        let minSize = max(1, size - 1)
+        let maxSize = min(5, size + 1)
+        self.selectedSizeRange = Array(minSize...maxSize)
+        
+        runFilter()
     }
-    private func loadDatabase() throws -> BirdDatabase {
-        guard let url = Bundle.main.url(forResource: "bird_database", withExtension: "json") else {
-            throw NSError(domain: "Model", code: 404, userInfo: ["msg": "json not found"])
-        }
-        return try JSONDecoder().decode(BirdDatabase.self, from: try Data(contentsOf: url))
-    }
-    
-    func filterBirds(shape: String?, size: Int?, location: String?, fieldMarks: [FieldMarkData]?) {
-        guard let allBirds = masterDatabase?.birds else { return }
 
-        if let shape = shape { self.selectedShapeId = shape }
-        if let size = size { self.selectedSizeCategory = size }
-        if let size = size {
-            self.selectedSizeRange = sizeRange(for: size)
-        }
-
-        if let location = location { self.selectedLocation = location }
-        if let fieldMarks = fieldMarks, !fieldMarks.isEmpty {
-            self.selectedFieldMarks = fieldMarks
-        }
-
-        let currentShape = self.selectedShapeId
-        let currentLocation = self.selectedLocation
-        let currentFieldMarks = self.selectedFieldMarks
-
-        var searchMonth: Int?
-        if let dateString = data.date {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "dd MMM yyyy"
-            if let date = formatter.date(from: dateString) {
-                searchMonth = Calendar.current.component(.month, from: date)
-            }
-        }
-
-        var scoredBirds: [(bird: Bird, score: Double, breakdown: String)] = []
-
-      
+    func runFilter() {
+        guard let allBirds = try? modelContext.fetch(FetchDescriptor<Bird>()) else { return }
+        
+        var candidates: [IdentificationCandidate] = []
+        let searchMonth = Calendar.current.component(.month, from: selectedDate)
+        
         for bird in allBirds {
-
             var score = 0.0
-            var breakdownParts: [String] = []
-
+            var matchedFeats: [String] = []
+            var mismatchedFeats: [String] = []
             
-            if let loc = currentLocation,
-               let locations = bird.validLocations,
-               !locations.contains(loc) {
-                score -= 5
-                breakdownParts.append("Wrong Location (-30)")
+            // 1. Shape Logic (Strict matching)
+            if let userShapeId = selectedShape?.id {
+                if bird.shape_id == userShapeId {
+                    score += 30
+                    matchedFeats.append("Shape")
+                } else {
+                    continue // Ignore birds that don't match the selected shape
+                }
             }
-
-           
-            if let month = searchMonth,
-               let validMonths = bird.validMonths,
-               !validMonths.contains(month) {
-                score -= 50
-                breakdownParts.append("Wrong Season (-50)")
-            }
-
             
-            if let userShape = currentShape,
-               bird.shapeId == userShape {
-                score += 30
-                breakdownParts.append("Shape Match (+30)")
-            }
-
-            if let birdSize = bird.sizeCategory {
-
-                if selectedSizeRange.contains(birdSize) {
-
-                    if birdSize == selectedSizeCategory {
-                        score += 20
-                        breakdownParts.append("Size Match (+20)")
-                    } else {
-                        score += 10
-                        breakdownParts.append("Size Approx (+10)")
-                    }
-
+            // 2. Size Scoring (Fuzzy +/- 1 logic)
+            if let birdSize = bird.size_category, !selectedSizeRange.isEmpty {
+                if birdSize == selectedSizeCategory {
+                    score += 20
+                    matchedFeats.append("Size")
+                } else if selectedSizeRange.contains(birdSize) {
+                    score += 10 // Partial match for the range
+                    matchedFeats.append("Approx. Size")
                 } else {
                     score -= 20
-                    breakdownParts.append("Size Mismatch (-20)")
+                    mismatchedFeats.append("Size")
                 }
             }
 
+            // 3. Location & Season
+            if let loc = selectedLocation, let birdLocs = bird.validLocations {
+                if !birdLocs.contains(loc) {
+                    score -= 30
+                    mismatchedFeats.append("Location")
+                }
+            }
+            
+            if let birdMonths = bird.validMonths {
+                if !birdMonths.contains(searchMonth) {
+                    score -= 50
+                    mismatchedFeats.append("Season")
+                }
+            }
+            
+            
+            if !selectedFieldMarks.isEmpty,
+               let birdMarkData = bird.fieldMarkData {
 
-            // E. Field Marks
-            if !currentFieldMarks.isEmpty {
-                let pointsPerMark = 50.0 / Double(currentFieldMarks.count)
+                for (_, userVariant) in selectedFieldMarks {
+                    guard let userFieldMark = userVariant.fieldMark else { continue }
+                    let areaName = userFieldMark.area
 
-                for userMark in currentFieldMarks {
-                    if let birdMarks = bird.fieldMarks,
-                       let birdMark = birdMarks.first(where: { $0.area == userMark.area }) {
+                    // Check if bird has this AREA with this VARIANT
+                    let matched = birdMarkData.contains {
+                        $0.area == areaName && $0.variantId == userVariant.id
+                    }
 
-                        if !userMark.variant.isEmpty {
-                            if userMark.variant == birdMark.variant {
-                                score += pointsPerMark * 0.6
-                                breakdownParts.append("\(userMark.area) (+)")
-                            } else {
-                                score -= pointsPerMark * 0.5
-                            }
-                        }
+                    if matched {
+                        score += 25
+                        matchedFeats.append("\(areaName): \(userVariant.name)")
+                    } else {
+                        score -= 10
+                        mismatchedFeats.append(areaName)
                     }
                 }
             }
 
-          
-            if bird.rarityLevel == .common {
-                score += 5
+            
+            // Normalize score and create candidate if threshold met
+            let finalScore = max(0.0, min(score / 100.0, 1.0))
+            
+            if finalScore > 0.1 {
+                let matchScore = MatchScore(
+                    matchedFeatures: matchedFeats,
+                    mismatchedFeatures: mismatchedFeats,
+                    score: finalScore
+                )
+                
+                let candidate = IdentificationCandidate(
+                    bird: bird,
+                    confidence: finalScore,
+                    matchScore: matchScore
+                )
+                candidates.append(candidate)
             }
-
-            let finalScore = max(0.0, score)
-            let normalized = min(finalScore / 100.0, 1.0)
-
-            scoredBirds.append((bird, normalized, breakdownParts.joined(separator: ", ")))
         }
-
         
-        scoredBirds = scoredBirds.filter { $0.score > 0.3 }
-        scoredBirds.sort { $0.score > $1.score }
+        self.results = candidates.sorted { $0.confidence > $1.confidence }
+    }
 
-        self.birdResults = scoredBirds.map { item in
-            IdentifiedBird(bird: item.bird, confidence: item.score, scoreBreakdown: item.breakdown)
+    func toggleVariant(_ variant: FieldMarkVariant, for mark: BirdFieldMark) {
+        if selectedFieldMarks[mark.id] == variant {
+            selectedFieldMarks.removeValue(forKey: mark.id)
+        } else {
+            selectedFieldMarks[mark.id] = variant
         }
+        runFilter()
+    }
 
-        // 5. Notify UI ONCE
-        DispatchQueue.main.async {
-            self.onResultsUpdated?()
-        }
-
-        }
-    func availableShapesForSelectedSize() -> [BirdShape] {
-        guard !selectedSizeRange.isEmpty,
-              let birds = masterDatabase?.birds else {
-            return birdShapes
-        }
-
-        let validShapeIds: Set<String> = Set(
-            birds.compactMap { bird in
-                guard let birdSize = bird.sizeCategory,
-                      selectedSizeRange.contains(birdSize) else { return nil }
-                return bird.shapeId
-            }
+    func saveSession(winningCandidate: IdentificationCandidate?) {
+        let newSession = IdentificationSession(
+            id: UUID(),
+            userId: UUID(),
+            shape: selectedShape,
+            locationId: nil,
+            observationDate: selectedDate,
+            status: .completed
         )
 
-        return birdShapes.filter { validShapeIds.contains($0.id) }
-    }
-
-        var referenceFieldMarks: [ReferenceFieldMark] {
-            return masterDatabase?.referenceData.fieldMarks ?? []
-        }
-        
-        func getBird(byName name: String) -> Bird? {
-            return masterDatabase?.birds.first(where: { $0.commonName == name })
-        }
-        
-        func addToHistory(_ item: History) {
-            histories.append(item)
-            saveHistory()
-        }
-        
-        
-        private func getDocumentsDirectory() -> URL {
-            return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        }
-        
-        private func loadUserBirds() -> [Bird] {
-            // TODO: Migrate to SwiftData
-            return []
-        }
-        
-        func saveUserBirds() {
-            // TODO: Migrate to SwiftData. Legacy JSON saving disabled.
-        }
-        
-        func loadHistory() -> [History] {
-            let url = getDocumentsDirectory().appendingPathComponent("history.json")
-            let decoder = JSONDecoder()
-            
-            if let data = try? Data(contentsOf: url),
-               let decoded = try? decoder.decode([History].self, from: data) {
-                return decoded
-            }
-            
-            if let bundleURL = Bundle.main.url(forResource: "history", withExtension: "json"),
-               let data = try? Data(contentsOf: bundleURL),
-               let decoded = try? decoder.decode([History].self, from: data) {
-                self.histories = decoded
-                saveHistory()
-                return decoded
-            }
-            
-            return []
-        }
-        
-        
-    func sizeRange(for index: Int) -> [Int] {
-        let minIndex = max(0, index - 1)
-        let maxIndex = min(4, index + 1)
-        return Array(minIndex...maxIndex)
-    }
-
-        func saveHistory() {
-            let url = getDocumentsDirectory().appendingPathComponent("history.json")
-            
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = .prettyPrinted
-                let data = try encoder.encode(histories)
-                try data.write(to: url, options: .atomic)
-            } catch {
-                print("Failed to save history.json:", error)
+        for (_, variant) in selectedFieldMarks {
+            if let fieldMark = variant.fieldMark {
+                let sessionMark = IdentificationSessionFieldMark(
+                    session: newSession,
+                    fieldMark: fieldMark,
+                    variant: variant,
+                    area: fieldMark.area
+                )
+                modelContext.insert(sessionMark)
             }
         }
-        
-        
-    }
 
+        let result = IdentificationResult(
+            session: newSession,
+            userId: newSession.userId,
+            bird: winningCandidate?.bird
+        )
+        newSession.result = result
+        
+        modelContext.insert(newSession)
+        try? modelContext.save()
+    }
+    
+}

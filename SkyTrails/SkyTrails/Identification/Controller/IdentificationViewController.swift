@@ -6,12 +6,24 @@
 //
 
 import UIKit
+import SwiftData
 
-class IdentificationViewController: UIViewController, UITableViewDelegate,UITableViewDataSource,UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout,UINavigationControllerDelegate{
+
+struct IdentificationOption {
+    let category: FilterCategory
+    var isSelected: Bool
+}
+
+class IdentificationViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UINavigationControllerDelegate {
     
     private var flowSteps: [IdentificationStep] = []
     private var currentStepIndex: Int = 0
     private var progressSteps: [IdentificationStep] = []
+    
+    // Local state for UI
+    private var isSeeding = false
+    private var options: [IdentificationOption] = []
+    private var histories: [IdentificationSession] = []
     
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
@@ -19,98 +31,191 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
-    var model: IdentificationManager = IdentificationManager()
+    
+    // Updated to Implicitly Unwrapped Optional because it requires context to init
+    var model: IdentificationManager!
+    var modelContainer: ModelContainer?
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-      applyCardShadow(to: startButton)
-
+        applyCardShadow(to: startButton)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        // Refresh history when view appears (in case new sessions were saved)
+        fetchHistory()
         updateHistoryInteraction()
         tableView.reloadData()
         historyCollectionView.reloadData()
     }
-  
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Initialize SwiftData and Manager
+        setupModel()
+        
+        // Initialize Options based on FilterCategory enum
+        setupOptions()
+        
+        // Fetch initial history
+        fetchHistory()
+        
         let nib = UINib(nibName: "HistoryCollectionViewCell", bundle: nil)
         historyCollectionView.register(nib, forCellWithReuseIdentifier: "history_cell")
+        
         updateHistoryInteraction()
+        
         navigationController?.delegate = self
         tableView.delegate = self
         tableView.dataSource = self
         historyCollectionView.delegate = self
         historyCollectionView.dataSource = self
+        
         setupHistoryFlowLayout()
+        
         tableView.reloadData()
         historyCollectionView.reloadData()
         updateSelectionState()
     }
     
+    private func setupModel() {
+        do {
+            // Initialize the container with relevant Schema
+            let schema = Schema([
+                Bird.self,
+                BirdShape.self,
+                BirdFieldMark.self,
+                FieldMarkVariant.self,
+                IdentificationSession.self,
+                IdentificationSessionFieldMark.self,
+                IdentificationResult.self,
+                IdentificationCandidate.self
+            ])
+            self.modelContainer = try ModelContainer(for: schema)
+            let context = ModelContext(modelContainer!)
+            self.model = IdentificationManager(modelContext: context)
+
+            // Seed data if the database is empty
+            let birdCount = try context.fetchCount(FetchDescriptor<Bird>())
+            let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
+            let fieldMarkCount = try context.fetchCount(FetchDescriptor<BirdFieldMark>())
+            let variantCount = try context.fetchCount(FetchDescriptor<FieldMarkVariant>())
+            let identificationBirdCount = try context.fetchCount(
+                FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
+                    bird.shape_id != nil && bird.size_category != nil
+                })
+            )
+            print("DEBUG: Seed check counts -> birds: \(birdCount), shapes: \(shapeCount)")
+            if birdCount > 0 && shapeCount == 0 {
+                print("WARNING: Birds exist but shapes are missing. IdentificationSeeder may be skipped.")
+            }
+            let needsSeeding = shapeCount == 0 || fieldMarkCount == 0 || variantCount == 0 || identificationBirdCount == 0
+            if needsSeeding {
+                isSeeding = true
+                updateSelectionState() // Disable button while seeding
+                Task { @MainActor in
+                    do {
+                        try IdentificationSeeder.seed(context: context)
+                        // Must re-fetch shapes after seeding
+                        self.model.fetchShapes()
+                        self.isSeeding = false
+                        self.updateSelectionState() // Re-enable button
+                        self.tableView.reloadData()
+                    } catch {
+                        print("Error seeding database: \(error)")
+                        self.isSeeding = false
+                        self.updateSelectionState()
+                    }
+                }
+            }
+        } catch {
+            print("Failed to create ModelContainer: \(error)")
+            // Handle error appropriately (e.g., show alert)
+        }
+    }
+    
+    private func setupOptions() {
+        // Map FilterCategory cases to local options
+        self.options = FilterCategory.allCases.map { category in
+            IdentificationOption(category: category, isSelected: false)
+        }
+    }
+    
+    private func fetchHistory() {
+            guard let context = modelContainer?.mainContext else { return }
+            
+           
+        do {
+            let descriptor = FetchDescriptor<IdentificationSession>(
+                sortBy: [SortDescriptor(\.observationDate, order: .reverse)]
+            )
+            let sessions = try context.fetch(descriptor)
+            self.histories = sessions.filter { $0.status == .completed }
+        } catch {
+            print("Error fetching history: \(error)")
+            self.histories = []
+        }
+        }
     
     func updateSelectionState() {
-        let selectedCount = model.fieldMarkOptions.filter { $0.isSelected ?? false }.count
-        let isValid = selectedCount >= 2
-
+        let selectedCount = options.filter { $0.isSelected }.count
+        let isValid = selectedCount >= 2 && !isSeeding
+        
         warningLabel.isHidden = isValid
         startButton.isEnabled = isValid
-
+        
         let titleColor: UIColor = isValid ? .black : .systemGray3
         let shadowOpacity: Float = isValid ? 0.1 : 0.05
-
+        
         startButton.setTitleColor(titleColor, for: .normal)
         startButton.layer.shadowOpacity = shadowOpacity
     }
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return max(model.histories.count, 1)
-        
-    }
     
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return max(histories.count, 1)
+    }
     
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-
+        
         let historyCell = collectionView.dequeueReusableCell(
             withReuseIdentifier: "history_cell",
             for: indexPath
         ) as! HistoryCollectionViewCell
-
-        if model.histories.isEmpty {
+        
+        if histories.isEmpty {
             historyCell.showEmptyState()
         } else {
-            let historyItem = model.histories[indexPath.row]
+            let historyItem = histories[indexPath.row]
             historyCell.configureCell(historyItem: historyItem)
         }
-
+        
         return historyCell
     }
-
     
     private func updateHistoryInteraction() {
-        let isEmpty = model.histories.isEmpty
-
+        let isEmpty = histories.isEmpty
+        
         historyCollectionView.isUserInteractionEnabled = !isEmpty
         historyCollectionView.alpha = isEmpty ? 0.6 : 1.0
     }
-
+    
     func applyCardShadow(to view: UIView) {
         view.layer.shadowColor = UIColor.black.cgColor
-
+        
     }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return model.fieldMarkOptions.count
+        return options.count
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
+    
     func resize(_ image: UIImage, to size: CGSize) -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { _ in
@@ -122,11 +227,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         
+        let item = options[indexPath.row]
+        cell.textLabel?.text = item.category.rawValue // Using rawValue from FilterCategory
         
-        let item = model.fieldMarkOptions[indexPath.row]
-        cell.textLabel?.text = item.fieldMarkName.rawValue
-        
-        if let img = UIImage(named: item.symbols) {
+        // Using icon property from FilterCategory
+        if let img = UIImage(named: item.category.icon) {
             
             let targetSize = CGSize(width: 28, height: 28)
             let resized = resize(img, to: targetSize)
@@ -140,32 +245,29 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             cell.imageView?.tintColor = .systemGray
         }
         
-        cell.accessoryType = (item.isSelected ?? false) ? .checkmark : .none
+        cell.accessoryType = item.isSelected ? .checkmark : .none
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        let currentState = model.fieldMarkOptions[indexPath.row].isSelected ?? false
-        model.fieldMarkOptions[indexPath.row].isSelected = !currentState
+        let currentState = options[indexPath.row].isSelected
+        options[indexPath.row].isSelected = !currentState
         
+        let tappedCategory = options[indexPath.row].category
+        let isNowSelected = options[indexPath.row].isSelected
         
-        let tappedItemName = model.fieldMarkOptions[indexPath.row].fieldMarkName
-        let isNowSelected = model.fieldMarkOptions[indexPath.row].isSelected ?? false
-        
-        if tappedItemName == .fieldMarks && isNowSelected {
-            if let shapeIndex = model.fieldMarkOptions.firstIndex(where: {
-                $0.fieldMarkName == .shape
+        // Logic: If Field Marks is selected, Shape must also be selected
+        if tappedCategory == .fieldMarks && isNowSelected {
+            if let shapeIndex = options.firstIndex(where: {
+                $0.category == .shape
             }) {
-                model.fieldMarkOptions[shapeIndex].isSelected = true
+                options[shapeIndex].isSelected = true
             }
         }
         
-        
-        
         tableView.reloadData()
-        
         
         updateSelectionState()
     }
@@ -176,26 +278,26 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         layout.minimumInteritemSpacing = 12
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
-
+        
         historyCollectionView.collectionViewLayout = layout
     }
-
+    
     func collectionView(
         _ collectionView: UICollectionView,
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-
+        
         guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
             return .zero
         }
-
-        let minItemWidth: CGFloat = 120
+        
+        let minItemWidth: CGFloat = 130
         let maxItemsPerRow: CGFloat = 4
         let interItemSpacing = layout.minimumInteritemSpacing
         let sectionLeftInset = layout.sectionInset.left
         let sectionRightInset = layout.sectionInset.right
-
+        
         let availableWidth = collectionView.bounds.width - sectionLeftInset - sectionRightInset
         
         var itemsPerRow: CGFloat = 1
@@ -216,65 +318,59 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         
         if itemsPerRow < 1 { itemsPerRow = 1 }
         if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
-
+        
         let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
         let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
         
         return CGSize(width: itemWidth, height: itemWidth * 1.0)
     }
-
+    
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { [weak self] _ in
             self?.historyCollectionView.collectionViewLayout.invalidateLayout()
         }, completion: nil)
     }
-
-
+    
     
     @IBAction func startButtonTapped(_ sender: UIButton) {
-
-        startIdentificationFlow(from: model.fieldMarkOptions)
+        startIdentificationFlow(from: self.options)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard !model.histories.isEmpty else { return }
-        let selectedHistory = model.histories[indexPath.row]
+        guard !histories.isEmpty else { return }
+        let selectedSession = histories[indexPath.row]
         
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
             resultVC.viewModel = self.model
-            resultVC.historyItem = selectedHistory
-            resultVC.historyIndex = indexPath.row
+            
+           
+            resultVC.historyItem = selectedSession.result
+            
             resultVC.delegate = self
             self.navigationController?.pushViewController(resultVC, animated: true)
         }
     }
-    
-    
-    func startIdentificationFlow(from options: [FieldMarkType]) {
+    func startIdentificationFlow(from options: [IdentificationOption]) {
         flowSteps.removeAll()
         
-        
-        let selected = options.filter { $0.isSelected ?? false }
+        let selected = options.filter { $0.isSelected }
         for option in selected {
-            switch option.fieldMarkName {
+            // Map FilterCategory to IdentificationStep
+            switch option.category {
             case .locationDate: flowSteps.append(.dateLocation)
             case .size:         flowSteps.append(.size)
             case .shape:        flowSteps.append(.shape)
             case .fieldMarks:   flowSteps.append(.fieldMarks)
             }
-            
         }
         
-        
-        if selected.contains(where: { $0.fieldMarkName == .fieldMarks }) {
+        if selected.contains(where: { $0.category == .fieldMarks }) {
             flowSteps.append(.gui)
         }
         
-        
         flowSteps.append(.result)
-        
         
         progressSteps = flowSteps.filter { step in
             switch step {
@@ -286,16 +382,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
         currentStepIndex = 0
         pushNextViewController()
     }
-
+    
     
     func pushNextViewController() {
         guard currentStepIndex < flowSteps.count else {
-            
             return
         }
         
         let step = flowSteps[currentStepIndex]
-        
         
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         let vc: UIViewController
@@ -318,7 +412,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             nextVC.viewModel = self.model
             nextVC.delegate = self
             nextVC.selectedSizeIndex = model.selectedSizeCategory
-            nextVC.filteredShapes = model.birdShapes
+            // Updated: Manager uses `allShapes`, not `birdShapes`
+            nextVC.filteredShapes = model.allShapes
             vc = nextVC
             
         case .fieldMarks:
@@ -340,7 +435,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             vc = nextVC
         }
         
-        
         if let progressVC = vc as? (UIViewController & IdentificationProgressUpdatable),
            let idx = progressSteps.firstIndex(of: step) {
             
@@ -348,7 +442,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             
             let completed = idx + 1
             progressVC.updateProgress(current: completed, total: progressSteps.count)
-
+            
         }
         
         self.navigationController?.pushViewController(vc, animated: false)
@@ -357,8 +451,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
     
     func handleShapeStepCompletion() {
         
-        let fieldMarksSelected = model.fieldMarkOptions.contains {
-            $0.fieldMarkName == .fieldMarks && ($0.isSelected ?? false)
+        let fieldMarksSelected = options.contains {
+            $0.category == .fieldMarks && $0.isSelected
         }
         
         let isLastDecisionStep = !flowSteps.contains(.fieldMarks) && !flowSteps.contains(.gui)
@@ -376,15 +470,13 @@ class IdentificationViewController: UIViewController, UITableViewDelegate,UITabl
             currentStepIndex = resIndex
             return
         }
-        
-       
     }
 }
+
 extension IdentificationViewController: IdentificationFlowStepDelegate {
     func didFinishStep() {
-    
+        
         if let visibleVC = navigationController?.topViewController {
-            
             
             let currentStep: IdentificationStep?
             if visibleVC is DateandLocationViewController {
@@ -401,13 +493,11 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
                 currentStep = nil
             }
             
-            
             if let currentStep = currentStep,
                let indexInFlow = flowSteps.firstIndex(of: currentStep) {
                 currentStepIndex = indexInFlow + 1
             }
         }
-        
         
         pushNextViewController()
     }
@@ -418,7 +508,6 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
     }
     
     func didTapLeftButton() {
-        
         navigationController?.popToRootViewController(animated: true)
     }
     
@@ -430,5 +519,3 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
         }
     }
 }
-
-

@@ -1,60 +1,79 @@
-//
-//  HistoryCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 21/01/26.
-//
-
 import UIKit
+import SwiftData
 
 class HistoryCollectionViewCell: UICollectionViewCell {
+    
     @IBOutlet weak var historyImageView: UIImageView!
     @IBOutlet weak var specieNameLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
-   contentView.layer.cornerRadius = 16
-
-   
+        contentView.layer.cornerRadius = 16
+        contentView.clipsToBounds = true
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
-
+        // Reset properties to default state to avoid UI bugs during scrolling
         historyImageView.image = nil
         historyImageView.tintColor = nil
         historyImageView.contentMode = .scaleAspectFill
-        historyImageView.layer.cornerRadius = 0
-
+        
         specieNameLabel.text = nil
         specieNameLabel.textAlignment = .left
-        specieNameLabel.textColor = .label
-
+        specieNameLabel.font = .systemFont(ofSize: 16, weight: .bold) // Default font
+        
         dateLabel.text = nil
         dateLabel.textAlignment = .left
-        dateLabel.textColor = .secondaryLabel
-
+        
         contentView.backgroundColor = .white
         contentView.layer.borderWidth = 0
-        contentView.layer.borderColor = UIColor.clear.cgColor
     }
+    
+    func configureCell(historyItem: IdentificationSession) {
+        contentView.backgroundColor = .white
+        
+        
+        if let bird = historyItem.result?.bird {
+            specieNameLabel.text = bird.commonName
+            
+            if let image = UIImage(named: bird.staticImageName) {
+                historyImageView.image = image
+                historyImageView.contentMode = .scaleAspectFill
+            } else {
+             
+                historyImageView.image = UIImage(systemName: "bird.fill")
+                historyImageView.tintColor = .systemGray4
+                historyImageView.contentMode = .scaleAspectFit
+            }
+        } else {
+          
+            specieNameLabel.text = "Unknown Species"
+            historyImageView.image = UIImage(systemName: "questionmark.circle.fill")
+            historyImageView.tintColor = .systemGray4
+            historyImageView.contentMode = .scaleAspectFit
+        }
+
+        historyImageView.layer.cornerRadius = 10
+        historyImageView.clipsToBounds = true
+        
+        // 2. Format the Date
+        dateLabel.text = formatDate(historyItem.observationDate)
+    }
+    
     func showEmptyState() {
         historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
         historyImageView.tintColor = .systemGray3
         historyImageView.contentMode = .scaleAspectFit
-        historyImageView.layer.cornerRadius = 0
 
         specieNameLabel.text = "No history yet"
-        specieNameLabel.font = .systemFont(ofSize: 15, weight: .semibold)
         specieNameLabel.textAlignment = .center
         specieNameLabel.textColor = .secondaryLabel
 
         dateLabel.text = "Start identifying birds"
-        dateLabel.font = .systemFont(ofSize: 13)
         dateLabel.textAlignment = .center
         dateLabel.textColor = .tertiaryLabel
-
-        layer.shadowOpacity = 0
     }
 
     override var isSelected: Bool {
@@ -67,45 +86,14 @@ class HistoryCollectionViewCell: UICollectionViewCell {
                 } else {
                     self.contentView.backgroundColor = .white
                     self.contentView.layer.borderWidth = 0
-                    self.contentView.layer.borderColor = UIColor.clear.cgColor
                 }
             }
         }
     }
 
-    func configureCell(historyItem: History) {
-        contentView.backgroundColor = .white
-        layer.shadowOpacity = 0.12
-
-        historyImageView.image = UIImage(named: historyItem.imageView)
-        historyImageView.layer.cornerRadius = 10
-        specieNameLabel.text = historyItem.specieName
-        dateLabel.text = formatDate(historyItem.date)
+    private func formatDate(_ date: Date) -> String {
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "d MMM yyyy"
+        return outputFormatter.string(from: date)
     }
-
-
-       
-        private func formatDate(_ dateString: String) -> String {
-
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-
-            let outputFormatter = DateFormatter()
-            outputFormatter.dateFormat = "d MMM"
-
-            if let date = formatter.date(from: dateString) {
-                return outputFormatter.string(from: date)
-            } else {
-                return dateString
-            }
-        }
-    }
-    
-
-
-
-
-   
-
-    
-
+}

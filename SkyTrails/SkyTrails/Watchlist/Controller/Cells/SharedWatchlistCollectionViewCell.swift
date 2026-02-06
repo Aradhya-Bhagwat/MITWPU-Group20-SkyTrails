@@ -106,6 +106,7 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
             imageView.layer.borderWidth = 2
             imageView.layer.borderColor = UIColor.white.cgColor
             
+            imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
             imageView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
             
@@ -129,12 +130,16 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
             
             badgeView.addSubview(badgeLabel)
             badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                badgeLabel.centerXAnchor.constraint(equalTo: badgeView.centerXAnchor),
+                badgeLabel.centerYAnchor.constraint(equalTo: badgeView.centerYAnchor)
+            ])
 
+            badgeView.translatesAutoresizingMaskIntoConstraints = false
             badgeView.widthAnchor.constraint(equalToConstant: imageSize).isActive = true
             badgeView.heightAnchor.constraint(equalToConstant: imageSize).isActive = true
             
             avatarStackView.addArrangedSubview(badgeView)
         }
     }
-    
 }

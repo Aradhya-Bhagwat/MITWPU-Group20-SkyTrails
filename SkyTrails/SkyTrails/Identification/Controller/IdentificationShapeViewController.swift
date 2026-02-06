@@ -1,17 +1,3 @@
-//
-//  ShapeViewController.swift
-//  SkyTrails
-//
-//  Created by Disha Jain on 27/11/25.
-//
-
-//
-//  IdentificationShapeViewController.swift
-//  SkyTrails
-//
-//  Created by Disha Jain on 27/11/25.
-//
-
 import UIKit
 
 class IdentificationShapeViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -23,148 +9,131 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     var viewModel: IdentificationManager!
     var selectedSizeIndex: Int?
     var filteredShapes: [BirdShape] = []
-    var selectedShapeIndex: Int?
+    
+    // Local state to track selection
+    var selectedShapeId: String?
 
     weak var delegate: IdentificationFlowStepDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-
+        // 1. Assign local state from ViewModel
         viewModel.selectedSizeCategory = selectedSizeIndex
         filteredShapes = viewModel.availableShapesForSelectedSize()
+        selectedShapeId = viewModel.selectedShapeId
         
-
+        setupCollectionView()
+        setupCollectionViewLayout()
+    }
+    
+    private func setupCollectionView() {
         shapeCollectionView.delegate = self
         shapeCollectionView.dataSource = self
         
-
+        // Match the class name 'shapeCollectionViewCell' from your original code
         let nib = UINib(nibName: "shapeCollectionViewCell", bundle: nil)
         shapeCollectionView.register(nib, forCellWithReuseIdentifier: "shapeCell")
-        
-        setupCollectionViewLayout()
-      
-        
-  
-        if let shapeId = viewModel.selectedShapeId,
-           let index = filteredShapes.firstIndex(where: { $0.id == shapeId }) {
-            selectedShapeIndex = index
-        }
     }
+
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
-
         layout.minimumInteritemSpacing = 12
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
-
         shapeCollectionView.collectionViewLayout = layout
     }
 
-    func collectionView(
-        _ collectionView: UICollectionView,
-        layout collectionViewLayout: UICollectionViewLayout,
-        sizeForItemAt indexPath: IndexPath
-    ) -> CGSize {
+    // MARK: - CollectionView Logic (Original Logic Preserved)
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else { return .zero }
 
-        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
-            return .zero
-        }
-
-        let minItemWidth: CGFloat = 100 // Define minimum desirable width for a card
-        let maxItemsPerRow: CGFloat = 4 // User requested maximum 4 cards per row
+        let minItemWidth: CGFloat = 100
+        let maxItemsPerRow: CGFloat = 4
         let interItemSpacing = layout.minimumInteritemSpacing
-        let sectionLeftInset = layout.sectionInset.left
-        let sectionRightInset = layout.sectionInset.right
-
-        let availableWidth = collectionView.bounds.width - sectionLeftInset - sectionRightInset
+        let sectionInsets = layout.sectionInset.left + layout.sectionInset.right
+        let availableWidth = collectionView.bounds.width - sectionInsets
 
         var itemsPerRow: CGFloat = 1
-      
         while true {
             let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
             let potentialWidth = (availableWidth - potentialTotalSpacing) / itemsPerRow
-
             if potentialWidth >= minItemWidth {
                 itemsPerRow += 1
             } else {
                 itemsPerRow -= 1
                 break
             }
-        
-            if itemsPerRow == 0 {
-                itemsPerRow = 1
-                break
-            }
         }
     
-        if itemsPerRow < 1 { itemsPerRow = 1 }
-
-        if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
-
+        itemsPerRow = max(1, min(itemsPerRow, maxItemsPerRow))
         let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
         let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
-        
-       
-        let itemHeight = itemWidth * 1.0
-
-        return CGSize(width: itemWidth, height: itemHeight)
+        return CGSize(width: itemWidth, height: itemWidth)
     }
 
-    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredShapes.count
-    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        coordinator.animate(alongsideTransition: { [weak self] _ in
-            self?.shapeCollectionView.collectionViewLayout.invalidateLayout()
-        }, completion: nil)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as! shapeCollectionViewCell
         
         let shape = filteredShapes[indexPath.item]
-        cell.configure(with: shape.name, imageName: shape.imageView)
         
+        // Using 'icon' as per your model/seeder
+        cell.configure(with: shape.name, imageName: shape.icon)
         
-        if selectedShapeIndex == indexPath.item {
-            cell.contentView.layer.borderWidth = 3
-            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
-            cell.contentView.layer.cornerRadius = 12
-            cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-        } else {
-            cell.contentView.layer.borderWidth = 1
-            cell.contentView.layer.borderColor = UIColor.systemGray4.cgColor
-            cell.contentView.layer.cornerRadius = 12
-            cell.contentView.backgroundColor = .white
-        }
+        // Compare against local selectedShapeId
+        let isSelected = (shape.id == selectedShapeId)
+        updateCellUI(cell, isSelected: isSelected)
         
         return cell
     }
     
+    private func updateCellUI(_ cell: UICollectionViewCell, isSelected: Bool) {
+        cell.contentView.layer.cornerRadius = 12
+        cell.contentView.layer.masksToBounds = true
+        
+        if isSelected {
+            cell.contentView.layer.borderWidth = 3
+            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        } else {
+            cell.contentView.layer.borderWidth = 1
+            cell.contentView.layer.borderColor = UIColor.systemGray4.cgColor
+            cell.contentView.backgroundColor = .white
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.item]
-        selectedShapeIndex = indexPath.item
-        viewModel.selectedShapeId = selectedShape.id
-        viewModel.data.shape = selectedShape.name
         
-        viewModel.filterBirds(
-            shape: selectedShape.id,
-            size: viewModel.selectedSizeCategory,
-            location: viewModel.selectedLocation,
-            fieldMarks: [] 
-        )
+        // 1. Sync the actual object to the ViewModel
+        viewModel.selectedShape = selectedShape
+        
+        // 2. Update local UI state
+        self.selectedShapeId = selectedShape.id
+        
         collectionView.reloadData()
-        delegate?.didTapShapes()
+        
+        // 3. Proceed to next step
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.delegate?.didTapShapes()
+        }
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            self?.shapeCollectionView.collectionViewLayout.invalidateLayout()
+        }, completion: nil)
     }
 
     @IBAction func nextTapped(_ sender: UIBarButtonItem) {
         delegate?.didTapShapes()
     }
-
 }
 
 extension IdentificationShapeViewController: IdentificationProgressUpdatable {
