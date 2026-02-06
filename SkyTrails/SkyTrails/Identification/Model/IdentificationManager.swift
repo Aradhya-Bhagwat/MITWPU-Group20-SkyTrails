@@ -6,15 +6,12 @@ import SwiftUI
 class IdentificationManager {
     var modelContext: ModelContext
     var tempSelectedAreas: [String] = []
-    // Core Data for the Filter
     var allShapes: [BirdShape] = []
     var selectedShapeId: String? {
             selectedShape?.id
         }
-    // Prediction relies on these properties:
     var selectedShape: BirdShape? {
         didSet {
-            // Reset field marks when shape changes to avoid illogical combinations
             selectedFieldMarks.removeAll()
             runFilter()
         }
@@ -28,8 +25,6 @@ class IdentificationManager {
     var selectedSizeRange: [Int] = []
     var selectedLocation: String?
     var selectedDate: Date = Date()
-    
-    // Results stored for the UI to observe
     var results: [IdentificationCandidate] = []
 
     init(modelContext: ModelContext) {
@@ -41,7 +36,6 @@ class IdentificationManager {
         do {
             let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
             self.allShapes = try modelContext.fetch(descriptor)
-            print("DEBUG: Fetched \(allShapes.count) shapes.")
         } catch {
             print("Error loading shapes: \(error)")
         }
@@ -63,13 +57,8 @@ class IdentificationManager {
 
             let birdDescriptor = FetchDescriptor<Bird>(predicate: predicate)
             let birdsInSize = try modelContext.fetch(birdDescriptor)
-            print("DEBUG: Found \(birdsInSize.count) birds in size range.")
-            
             let validShapeIds = Set(birdsInSize.compactMap { $0.shape_id })
-            print("DEBUG: Valid shape IDs: \(validShapeIds)")
-            
             let filtered = allShapes.filter { validShapeIds.contains($0.id) }
-            print("DEBUG: Returning \(filtered.count) shapes.")
             return filtered
             
         } catch {
@@ -81,8 +70,6 @@ class IdentificationManager {
 
     func updateSize(_ size: Int) {
         self.selectedSizeCategory = size
-        
-        // Logic: specific size plus/minus one for a broader search
         let minSize = max(1, size - 1)
         let maxSize = min(5, size + 1)
         self.selectedSizeRange = Array(minSize...maxSize)
@@ -140,7 +127,7 @@ class IdentificationManager {
                 }
             }
             
-            // 4. Field Mark Matching (AREA + VARIANT) - UPDATED
+            
             if !selectedFieldMarks.isEmpty,
                let birdMarkData = bird.fieldMarkData {
 
