@@ -223,12 +223,6 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
 	
 		// MARK: - Helpers
-	private func formatDateRange(start: Date, end: Date) -> String {
-		let startStr = DateFormatters.shortDate.string(from: start)
-		let endStr = DateFormatters.shortDate.string(from: end)
-		return "\(startStr) - \(endStr)"
-	}
-	
 	private func presentAlert(title: String, message: String) {
 		let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "OK", style: .default))

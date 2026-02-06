@@ -67,30 +67,35 @@ final class WatchlistManager: WatchlistRepository {
 			context = container.mainContext
 			print("✅ [WatchlistManager] SwiftData container initialized")
 			
-				// TEMPORARY: Force database reset for testing
-			print("🗑️ [WatchlistManager] Force clearing database for fresh seed...")
-			let descriptor = FetchDescriptor<Watchlist>()
-			if let existing = try? context.fetch(descriptor) {
-				existing.forEach { context.delete($0) }
-			}
-			
-			let birdDescriptor = FetchDescriptor<Bird>()
-			if let existingBirds = try? context.fetch(birdDescriptor) {
-				existingBirds.forEach { context.delete($0) }
-				print("✅ [WatchlistManager] Cleared \(existingBirds.count) existing birds")
-			}
-			
-			try? context.save()
-			print("✅ [WatchlistManager] Cleared watchlists and birds")
-			
-				// 2. Perform Seeding
-			do {
-				try WatchlistSeeder.seed(context: context)
-				print("✅ [WatchlistManager] Seeding completed successfully")
-			} catch {
-				print("❌ [WatchlistManager] Seeding failed: \(error)")
-				print("⚠️ [WatchlistManager] Continuing with empty/existing database")
-					// Don't fatal error - allow app to continue with empty DB
+			let hasSeededKey = "kAppHasSeededData_v1"
+			if !UserDefaults.standard.bool(forKey: hasSeededKey) {
+				print("🗑️ [WatchlistManager] First launch or reset: clearing and seeding database...")
+				
+				let descriptor = FetchDescriptor<Watchlist>()
+				if let existing = try? context.fetch(descriptor) {
+					existing.forEach { context.delete($0) }
+				}
+				
+				let birdDescriptor = FetchDescriptor<Bird>()
+				if let existingBirds = try? context.fetch(birdDescriptor) {
+					existingBirds.forEach { context.delete($0) }
+					print("✅ [WatchlistManager] Cleared \(existingBirds.count) existing birds")
+				}
+				
+				try? context.save()
+				print("✅ [WatchlistManager] Cleared watchlists and birds")
+				
+				// Perform Seeding
+				do {
+					try WatchlistSeeder.seed(context: context)
+					UserDefaults.standard.set(true, forKey: hasSeededKey)
+					print("✅ [WatchlistManager] Seeding completed successfully")
+				} catch {
+					print("❌ [WatchlistManager] Seeding failed: \(error)")
+					// Don't fatal error - allow app to continue
+				}
+			} else {
+				print("ℹ️ [WatchlistManager] Database already seeded. Skipping wipe.")
 			}
 			
 				// 3. Notify Legacy Observers
@@ -121,13 +126,13 @@ final class WatchlistManager: WatchlistRepository {
 		print("📊 [WatchlistManager] Fetched \(allLists.count) total watchlists")
 		
 			// Filter & Map
-		let customLists = allLists.filter { $0.type == .custom }.map { toDTO($0) }
-		let sharedLists = allLists.filter { $0.type == .shared }.map { toDTO($0) }
+		let customLists = allLists.filter { $0.type == .custom }.map { WatchlistMapper.toDTO($0) }
+		let sharedLists = allLists.filter { $0.type == .shared }.map { WatchlistMapper.toDTO($0) }
 		
 		print("📊 [WatchlistManager] Custom: \(customLists.count), Shared: \(sharedLists.count)")
 		
 			// Build My Watchlist (Virtual Aggregation)
-		let myWatchlist = buildMyWatchlistDTO(from: allLists)
+		let myWatchlist = WatchlistMapper.buildMyWatchlistDTO(from: allLists)
 		
 		print("📊 [WatchlistManager] My Watchlist: \(myWatchlist.stats.observedCount)/\(myWatchlist.stats.totalCount)")
 		
@@ -164,114 +169,11 @@ final class WatchlistManager: WatchlistRepository {
 	
 	func ensureMyWatchlistExists() async throws -> UUID {
 			// My Watchlist is now virtual, return special ID
-		return UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		return WatchlistConstants.myWatchlistID
 	}
 	
 	func getPersonalWatchlists() -> [Watchlist] {
 		return fetchWatchlists(type: .custom)
-	}
-	
-		// MARK: - My Watchlist Builder
-	
-	private func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
-			// Aggregate ALL entries from ALL watchlists
-		let allEntries = allLists.flatMap { $0.entries ?? [] }
-		
-			// Remove duplicates by bird ID (keep observed status if exists)
-		var uniqueEntries: [UUID: WatchlistEntry] = [:]
-		for entry in allEntries {
-			if let birdId = entry.bird?.id {
-				if let existing = uniqueEntries[birdId] {
-						// Prefer observed status
-					if entry.status == .observed && existing.status != .observed {
-						uniqueEntries[birdId] = entry
-					}
-				} else {
-					uniqueEntries[birdId] = entry
-				}
-			}
-		}
-		
-		let uniqueEntriesArray = Array(uniqueEntries.values)
-		
-			// Calculate stats
-		let observedCount = uniqueEntriesArray.filter { $0.status == .observed }.count
-		let totalCount = uniqueEntriesArray.count
-		let rareCount = uniqueEntriesArray.filter {
-			$0.status == .observed &&
-			($0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare)
-		}.count
-		
-		let stats = WatchlistStatsDTO(
-			observedCount: observedCount,
-			totalCount: totalCount,
-			rareCount: rareCount
-		)
-		
-			// Get preview images (up to 4 unique birds)
-		let previewImages = uniqueEntriesArray
-			.compactMap { $0.bird?.staticImageName }
-			.prefix(4)
-			.map { String($0) }
-		
-		return WatchlistSummaryDTO(
-			id: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!, // Special ID
-			title: "My Watchlist",
-			subtitle: "All Birds",
-			dateText: "",
-			image: previewImages.first,
-			previewImages: Array(previewImages),
-			stats: stats,
-			type: .my_watchlist
-		)
-	}
-	
-		// MARK: - Mapper
-	
-	private func toDTO(_ model: Watchlist) -> WatchlistSummaryDTO {
-		let entries = model.entries ?? []
-		let observed = entries.filter { $0.status == .observed }.count
-		
-			// Calculate Stats
-		let stats = WatchlistStatsDTO(
-			observedCount: observed,
-			totalCount: entries.count,
-			rareCount: 0 // Simplification for list view
-		)
-		
-			// Determine Image
-			// Prioritize explicit images, then first bird image
-		var imagePath: String? = model.images?.first?.imagePath
-		if imagePath == nil {
-			imagePath = model.entries?.first?.bird?.staticImageName
-		}
-		
-			// Preview Images (up to 4)
-		let previewImages = entries.compactMap { $0.bird?.staticImageName }.prefix(4).map { String($0) }
-		
-			// Subtitle logic
-		let subtitle = model.location ?? "Unknown Location"
-		
-			// Date Text
-		let dateText: String
-		if let start = model.startDate, let end = model.endDate {
-			let formatter = DateFormatter()
-			formatter.dateFormat = "MMM"
-			dateText = "\(formatter.string(from: start)) - \(formatter.string(from: end))"
-		} else {
-			dateText = ""
-		}
-		
-		return WatchlistSummaryDTO(
-			id: model.id,
-			title: model.title ?? "Untitled",
-			subtitle: subtitle,
-			dateText: dateText,
-			image: imagePath,
-			previewImages: Array(previewImages),
-			stats: stats,
-			type: model.type ?? .custom
-		)
 	}
 	
 		// MARK: - Legacy Data Loading Support
@@ -313,7 +215,7 @@ final class WatchlistManager: WatchlistRepository {
 		print("🔍 [WatchlistManager] - Filter by status: \(status?.rawValue ?? "all")")
 		
 			// Special handling for My Watchlist virtual ID
-		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		let myWatchlistId = WatchlistConstants.myWatchlistID
 		
 		if watchlistID == myWatchlistId {
 			print("📋 [WatchlistManager] Fetching from My Watchlist (virtual aggregation)")
@@ -359,7 +261,7 @@ final class WatchlistManager: WatchlistRepository {
 	
 	func getStats(for watchlistID: UUID) -> (observed: Int, total: Int) {
 			// Special handling for My Watchlist virtual ID
-		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		let myWatchlistId = WatchlistConstants.myWatchlistID
 		
 		if watchlistID == myWatchlistId {
 			let allLists = fetchWatchlists()
@@ -495,7 +397,7 @@ final class WatchlistManager: WatchlistRepository {
 			print("❌ [WatchlistManager] Fetch failed: \(error)")
 		}
 	}
-
+	
 	@available(*, deprecated, message: "Use LocationService.shared.reverseGeocode() instead")
 	func lat_lon_to_Name(lat: Double, lon: Double) async -> String? {
 		return await LocationService.shared.reverseGeocode(lat: lat, lon: lon)
@@ -509,7 +411,7 @@ final class WatchlistManager: WatchlistRepository {
 		birds.forEach { print("🐦 [WatchlistManager] - Bird: \($0.commonName) (id: \($0.id))") }
 		
 		var targetWatchlistId = watchlistId
-		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		let myWatchlistId = WatchlistConstants.myWatchlistID
 		
 		if watchlistId == myWatchlistId {
 			print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected. resolving to real watchlist...")
@@ -591,7 +493,7 @@ final class WatchlistManager: WatchlistRepository {
 	func findEntry(birdId: UUID, watchlistId: UUID) -> WatchlistEntry? {
 			// Resolve virtual My Watchlist ID the same way addBirds does
 		var targetId = watchlistId
-		let myWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+		let myWatchlistId = WatchlistConstants.myWatchlistID
 		if watchlistId == myWatchlistId {
 			let customLists = fetchWatchlists(type: .custom)
 			if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {

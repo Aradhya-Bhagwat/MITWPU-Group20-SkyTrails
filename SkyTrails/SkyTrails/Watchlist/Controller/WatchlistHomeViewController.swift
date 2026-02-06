@@ -38,7 +38,7 @@ class WatchlistHomeViewController: UIViewController {
 	private struct LayoutConstants {
 		static let summaryHeight: CGFloat = 110
 		static let myWatchlistHeight: CGFloat = 280
-		static let customWatchlistHeight: CGFloat = 184
+		static let customWatchlistHeight: CGFloat = 210
 		static let sharedWatchlistHeight: CGFloat = 140
 		static let headerHeight: CGFloat = 40
 	}
@@ -171,8 +171,18 @@ extension WatchlistHomeViewController {
 		
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
 			Task {
-				try? await self?.repository.deleteWatchlist(id: dto.id)
-				self?.loadData()
+				do {
+					try await self?.repository.deleteWatchlist(id: dto.id)
+					self?.loadData()
+				} catch {
+					let errorAlert = UIAlertController(
+						title: "Delete Failed",
+						message: "Unable to delete watchlist. Please try again.",
+						preferredStyle: .alert
+					)
+					errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+					self?.present(errorAlert, animated: true)
+				}
 			}
 		})
 		

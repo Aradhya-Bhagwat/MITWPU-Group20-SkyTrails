@@ -89,7 +89,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		switch watchlistType {
 			case .myWatchlist:
 				self.title = "My Watchlist"
-				self.currentWatchlistId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")
+				self.currentWatchlistId = WatchlistConstants.myWatchlistID
 				self.sourceWatchlists = manager.fetchWatchlists()
 				
 			case .custom, .shared:
