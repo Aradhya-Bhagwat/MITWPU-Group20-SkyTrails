@@ -139,32 +139,4 @@ struct WatchlistData {
 }
 
 	// MARK: - UIView Extension for Shadow (matches XIB runtime
-	// MARK: - Additional Helper: Loading Images Asynchronously
-extension MyWatchlistCollectionViewCell {
-	
-	func configureWithURLs(title: String, imageURLs: [URL], totalCount: Int, observedCount: Int, totalImageCount: Int) {
-		titleLabel.text = title
-		greenCountLabel.text = "\(totalCount)"
-		blueCountLabel.text = "\(observedCount)"
-		
-		blurEffectView.isHidden = totalImageCount <= 3
-		
-			// Load images asynchronously
-		let imageViews = [imageView1, imageView2, imageView3]
-		for (index, imageView) in imageViews.enumerated() {
-			guard index < imageURLs.count, let imgView = imageView else { continue }
-			
-				// Set placeholder
-			imgView.image = nil
-			imgView.backgroundColor = .systemGray6
-			
-				// Load image (you can replace this with your image loading library like Kingfisher or SDWebImage)
-			URLSession.shared.dataTask(with: imageURLs[index]) { data, response, error in
-				guard let data = data, let image = UIImage(data: data) else { return }
-				DispatchQueue.main.async {
-					imgView.image = image
-				}
-			}.resume()
-		}
-	}
-}
+

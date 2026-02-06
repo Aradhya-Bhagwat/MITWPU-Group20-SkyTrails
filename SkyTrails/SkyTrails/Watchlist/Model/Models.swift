@@ -45,7 +45,7 @@ enum WatchlistMode {
 @Model
 final class Watchlist {
 		// Default owner ID for single-user offline mode
-	static let defaultOwnerId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+	static let defaultOwnerId = WatchlistConstants.defaultOwnerID
 	
 	@Attribute(.unique) var id: UUID
 	var owner_id: UUID = Watchlist.defaultOwnerId // In a real app with Auth, this links to User
