@@ -66,7 +66,7 @@
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="4st-FJ-3Bq">
                                         <rect key="frame" x="288.5" y="24.5" width="135" height="25"/>
                                         <subviews>
-                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Icon_Apple" translatesAutoresizingMaskIntoConstraints="NO" id="Vyt-B7-DmZ">
+                                            <imageView clipsSubviews="YES" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Icon_Apple" translatesAutoresizingMaskIntoConstraints="NO" id="Vyt-B7-DmZ">
                                                 <rect key="frame" x="0.0" y="0.0" width="25" height="25"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="25" id="IbR-FC-Rr4"/>
@@ -120,6 +120,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="LWJ-Ah-7Fb"/>
                     <connections>
+                        <outlet property="appleImageView" destination="Vyt-B7-DmZ" id="3Sb-Zf-ESu"/>
                         <outlet property="loginSegmentView" destination="ZED-bd-BNm" id="URK-DM-wRm"/>
                         <outlet property="segmentOutlet" destination="GR9-zo-HNw" id="Yy9-aA-axZ"/>
                         <outlet property="signupSegmentView" destination="VAL-rG-YkM" id="aXf-8T-ZST"/>
@@ -314,7 +315,7 @@
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemBlueColor">
-            <color red="0.0" green="0.53333333333333333" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
