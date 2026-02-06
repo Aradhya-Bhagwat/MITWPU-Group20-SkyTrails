@@ -19,14 +19,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if isLoggedIn {
 
             let mainVC = storyboard.instantiateViewController(
-                identifier: "RootTabBarController"
+                withIdentifier: "RootTabBarController"
             )
 
             window.rootViewController = mainVC
 
         } else {
 
-            let authVC = storyboard.instantiateInitialViewController()!
+            // Start/Login/Signup screen
+            let authVC = storyboard.instantiateInitialViewController()
 
             window.rootViewController = authVC
         }
