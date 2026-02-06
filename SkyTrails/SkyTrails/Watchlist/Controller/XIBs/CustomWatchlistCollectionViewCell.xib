@@ -24,10 +24,10 @@
                                 <rect key="frame" x="0.0" y="0.0" width="248" height="214.33333333333334"/>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="b6E-Xu-eTv" userLabel="viewOverImage">
-                                <rect key="frame" x="0.0" y="214.33333333333337" width="248" height="142.66666666666663"/>
+                                <rect key="frame" x="0.0" y="198.33333333333337" width="248" height="158.66666666666663"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="vhi-Px-otD" userLabel="LabelsStack">
-                                        <rect key="frame" x="12" y="12" width="224" height="66.666666666666671"/>
+                                        <rect key="frame" x="12" y="12" width="224" height="69"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="ZEL-I1-oD3" userLabel="NameCheveronHorizontalstack">
                                                 <rect key="frame" x="0.0" y="0.0" width="224" height="20.333333333333332"/>
@@ -45,13 +45,13 @@
                                                 </subviews>
                                             </stackView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalCompressionResistancePriority="740" text="locationLabel" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="F3h-cj-mmQ">
-                                                <rect key="frame" x="0.0" y="24.333333333333314" width="224" height="18"/>
+                                                <rect key="frame" x="0.0" y="24.333333333333314" width="224" height="20.333333333333329"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <color key="textColor" systemColor="secondaryLabelColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="740" text="dateLabel" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Bzz-ys-fir">
-                                                <rect key="frame" x="0.0" y="46.333333333333343" width="224" height="20.333333333333329"/>
+                                                <rect key="frame" x="0.0" y="48.666666666666657" width="224" height="20.333333333333329"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <color key="textColor" systemColor="secondaryLabelColor"/>
                                                 <nil key="highlightedColor"/>
@@ -59,7 +59,7 @@
                                         </subviews>
                                     </stackView>
                                     <stackView opaque="NO" contentMode="left" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="hsA-Ym-HpW" userLabel="Badges horizontal stack">
-                                        <rect key="frame" x="12" y="90.666666666666657" width="224" height="40"/>
+                                        <rect key="frame" x="12" y="106.66666666666666" width="224" height="40"/>
                                         <subviews>
                                             <view contentMode="scaleToFill" horizontalHuggingPriority="252" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="LKb-KA-5Nf">
                                                 <rect key="frame" x="0.0" y="0.0" width="50" height="40"/>
@@ -125,7 +125,7 @@
                             <constraint firstAttribute="bottom" secondItem="b6E-Xu-eTv" secondAttribute="bottom" id="2it-NX-fw1"/>
                             <constraint firstItem="iKr-9k-GVf" firstAttribute="top" secondItem="Riy-sk-hI6" secondAttribute="top" id="5ok-jt-Dbt"/>
                             <constraint firstItem="iKr-9k-GVf" firstAttribute="leading" secondItem="Riy-sk-hI6" secondAttribute="leading" id="KwR-pA-ao6"/>
-                            <constraint firstItem="b6E-Xu-eTv" firstAttribute="top" secondItem="iKr-9k-GVf" secondAttribute="bottom" id="OYD-79-nVC"/>
+                            <constraint firstItem="b6E-Xu-eTv" firstAttribute="top" secondItem="iKr-9k-GVf" secondAttribute="bottom" constant="-16" id="OYD-79-nVC"/>
                             <constraint firstAttribute="trailing" secondItem="iKr-9k-GVf" secondAttribute="trailing" id="ZeK-rZ-coO"/>
                             <constraint firstItem="iKr-9k-GVf" firstAttribute="height" secondItem="Riy-sk-hI6" secondAttribute="height" multiplier="0.6" id="pdu-2j-Bii"/>
                             <constraint firstAttribute="trailing" secondItem="b6E-Xu-eTv" secondAttribute="trailing" id="qH8-8i-GE6"/>
