@@ -13,19 +13,15 @@ class DateandLocationViewController: UIViewController {
     
     private var selectedDate: Date = Date()
     private var searchQuery: String = ""
-    private var searchResults: [MKLocalSearchCompletion] = []
+    private var searchResults: [LocationService.LocationSuggestion] = []
     
-    private let locationManager = CLLocationManager()
-    private var completer = MKLocalSearchCompleter()
+    private let locationService = LocationService.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupTableView()
-        setupCompleter()
-        setupLocationServices()
         
-
         if let currentLoc = viewModel.selectedLocation {
             searchQuery = currentLoc
         }
@@ -43,10 +39,6 @@ class DateandLocationViewController: UIViewController {
         
         dateandlocationTableView.delegate = self
         dateandlocationTableView.dataSource = self
-    }
-    
-    private func setupCompleter() {
-        completer.delegate = self
     }
    
     @IBAction func nextTapped(_ sender: Any) {
@@ -70,25 +62,18 @@ class DateandLocationViewController: UIViewController {
         dateandlocationTableView.reloadData()
         view.endEditing(true)
     }
-    
-    private func setupLocationServices() {
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    }
 
     private func fetchCurrentLocationName() {
-        let authStatus = locationManager.authorizationStatus
-        switch authStatus {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        case .restricted, .denied:
-            let alert = UIAlertController(title: "Location Access Denied", message: "Please enable location services in Settings.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-        case .authorizedAlways, .authorizedWhenInUse:
-            locationManager.requestLocation()
-        default:
-            break
+        Task {
+            do {
+                let locationData = try await locationService.getCurrentLocation()
+                await MainActor.run { self.updateLocationSelection(locationData.displayName) }
+            } catch {
+                print("Failed to get current location: \(error)")
+                let alert = UIAlertController(title: "Location Error", message: "Could not fetch current location. Please check your settings.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                await MainActor.run { self.present(alert, animated: true) }
+            }
         }
     }
 }
@@ -150,18 +135,16 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         tableView.deselectRow(at: indexPath, animated: true)
         
         if indexPath.section == 1 && indexPath.row > 0 {
-            let completion = searchResults[indexPath.row - 1]
+            let suggestion = searchResults[indexPath.row - 1]
             Task {
-                let request = MKLocalSearch.Request()
-                request.naturalLanguageQuery = completion.title + " " + completion.subtitle
-                let search = MKLocalSearch(request: request)
                 do {
-                    let response = try await search.start()
-                    if let place = response.mapItems.first {
-                        let name = place.name ?? completion.title
-                        await MainActor.run { self.updateLocationSelection(name) }
-                    }
-                } catch { print("Search failed: \(error)") }
+                    let locationData = try await locationService.geocode(query: suggestion.fullText)
+                    await MainActor.run { self.updateLocationSelection(locationData.displayName) }
+                } catch {
+                    // Fallback to the suggestion title if geocoding fails for any reason
+                    await MainActor.run { self.updateLocationSelection(suggestion.title) }
+                    print("Could not geocode suggestion '\(suggestion.fullText)': \(error)")
+                }
             }
         }
 
@@ -183,22 +166,18 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
 extension DateandLocationViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchQuery = searchText
-        if searchText.isEmpty {
-            searchResults = []
-            dateandlocationTableView.reloadData()
-        } else {
-            completer.queryFragment = searchText
+        Task {
+            if searchText.isEmpty {
+                self.searchResults = []
+            } else {
+                self.searchResults = await locationService.getAutocompleteSuggestions(for: searchText)
+            }
+            await MainActor.run {
+                self.dateandlocationTableView.reloadSections(IndexSet(integer: 1), with: .none)
+            }
         }
     }
 }
-
-extension DateandLocationViewController: MKLocalSearchCompleterDelegate {
-    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        self.searchResults = completer.results
-        dateandlocationTableView.reloadSections(IndexSet(integer: 1), with: .none)
-    }
-}
-
 
 extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDelegate {
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
@@ -207,52 +186,6 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
     
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
         updateLocationSelection(name)
-    }
-}
-
-extension DateandLocationViewController: CLLocationManagerDelegate {
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("DateandLocationViewController: locationManager didUpdateLocations with \(locations.count) location(s).")
-        guard let location = locations.last else {
-            print("DateandLocationViewController: No location found in the update.")
-            return
-        }
-        print("DateandLocationViewController: Last location is \(location.coordinate). Starting reverse geocoding.")
-
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                guard let request = MKReverseGeocodingRequest(location: location) else {
-                    print("DateandLocationViewController: Failed to create MKReverseGeocodingRequest.")
-                    await MainActor.run { self.updateLocationSelection("Location") }
-                    return
-                }
-
-                print("DateandLocationViewController: Awaiting reverse geocoding response...")
-                let response = try await request.mapItems
-                let item = response.first
-
-                let name = item?.name ?? "Location"
-                print("DateandLocationViewController: Reverse geocoding successful. Found name: '\(name)'.")
-                await MainActor.run { self.updateLocationSelection(name) }
-            } catch {
-                await MainActor.run {
-                    print("DateandLocationViewController: Reverse geocoding failed.")
-                    self.updateLocationSelection("Location")
-                }
-                print("Reverse geocoding failed: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager failed: \(error.localizedDescription)")
-    }
-    
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
-        }
     }
 }
 
