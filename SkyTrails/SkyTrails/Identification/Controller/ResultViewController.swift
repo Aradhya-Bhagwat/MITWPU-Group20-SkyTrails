@@ -154,6 +154,13 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         selectedResult = birdResults[indexPath.item].bird
         collectionView.reloadData()
     }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            self?.resultCollectionView.collectionViewLayout.invalidateLayout()
+        }, completion: nil)
+    }
 
     // MARK: - ResultCellDelegate
     
