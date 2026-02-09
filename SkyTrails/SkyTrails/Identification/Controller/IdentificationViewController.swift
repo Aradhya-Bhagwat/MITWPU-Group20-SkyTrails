@@ -39,7 +39,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        applyCardShadow(to: startButton)
+        if startButton != nil {
+            applyCardShadow(to: startButton)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -328,7 +330,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { [weak self] _ in
-            self?.historyCollectionView.collectionViewLayout.invalidateLayout()
+            guard let self = self, self.historyCollectionView != nil else { return }
+            self.historyCollectionView.collectionViewLayout.invalidateLayout()
         }, completion: nil)
     }
     

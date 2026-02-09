@@ -23,6 +23,7 @@ class NewsCollectionViewCell: UICollectionViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        guard newsImageView != nil else { return }
         applyGradientLayer()
     }
     

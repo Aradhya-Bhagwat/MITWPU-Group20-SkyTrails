@@ -51,6 +51,9 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        
+        guard titleLabel2 != nil, dateLabel2 != nil else { return }
+        
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
         let currentWidth = self.bounds.width

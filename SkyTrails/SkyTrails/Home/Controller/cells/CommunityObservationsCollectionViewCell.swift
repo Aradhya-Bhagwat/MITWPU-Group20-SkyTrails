@@ -29,6 +29,8 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
             super.layoutSubviews()
         
+            guard userProfileImageView != nil, birdImageView != nil else { return }
+        
             applyGradientLayer()
             userProfileImageView.layer.cornerRadius = userProfileImageView.frame.height / 2
         }
