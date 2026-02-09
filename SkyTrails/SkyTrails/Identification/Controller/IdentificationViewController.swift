@@ -39,9 +39,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        if startButton != nil {
-            applyCardShadow(to: startButton)
-        }
+
+		applyCardShadow(to: startButton)
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {

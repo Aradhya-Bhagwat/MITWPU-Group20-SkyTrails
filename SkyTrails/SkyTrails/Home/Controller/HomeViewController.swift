@@ -28,7 +28,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
             cachedUpcomingBirdCardWidth = nil
             cachedSpotsCardWidth = nil
             coordinator.animate(alongsideTransition: { _ in
-                self.homeCollectionView?.collectionViewLayout.invalidateLayout()
+                self.homeCollectionView.collectionViewLayout.invalidateLayout()
             }, completion: nil)
         } 
    
