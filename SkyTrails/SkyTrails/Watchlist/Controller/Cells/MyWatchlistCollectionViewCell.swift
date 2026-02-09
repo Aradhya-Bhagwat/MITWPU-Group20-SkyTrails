@@ -1,133 +1,11 @@
 import UIKit
 
-class MyWatchlistCollectionViewCell: UICollectionViewCell {
-	
-		// MARK: - IBOutlets (matching XIB)
-	@IBOutlet weak var containerView: UIView!
-	@IBOutlet weak var titleLabel: UILabel!
-	@IBOutlet weak var imageView1: UIImageView!
-	@IBOutlet weak var imageView2: UIImageView!
-	@IBOutlet weak var imageView3: UIImageView!
-	@IBOutlet weak var deckContainerView: UIView!
-	@IBOutlet weak var blurEffectView: UIVisualEffectView!
-	@IBOutlet weak var greenBadgeView: UIView!
-	@IBOutlet weak var blueBadgeView: UIView!
-	@IBOutlet weak var greenCountLabel: UILabel!
-	@IBOutlet weak var blueCountLabel: UILabel!
-	
-	@IBOutlet weak var speciesLabel: UILabel!
-	@IBOutlet weak var observedLabel: UILabel!
-		// MARK: - Constants
-	 let reuseIdentifier = "MyWatchlistCollectionViewCell"
-	
-		// MARK: - Lifecycle
-	override func awakeFromNib() {
-		super.awakeFromNib()
-		setupUI()
-	}
-	
-	override func prepareForReuse() {
-		super.prepareForReuse()
-		imageView1.image = nil
-		imageView2.image = nil
-		imageView3.image = nil
-		greenCountLabel.text = ""
-		blueCountLabel.text = ""
-	}
-	
-		// MARK: - UI Setup
-	private func setupUI() {
-			// Container view styling
-		containerView.backgroundColor = .white
-		containerView.layer.cornerRadius = 16
-		containerView.layer.shadowColor = UIColor.black.cgColor
-		containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-		containerView.layer.shadowRadius = 8
-		containerView.layer.shadowOpacity = 0.1
-		containerView.layer.masksToBounds = false
-		
-			// Title label styling
-		titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
-		titleLabel.textColor = .black
-		
-			// Image views styling
-		setupImageView(imageView1)
-		setupImageView(imageView2)
-		setupImageView(imageView3)
-		
-			// Deck container (third image with blur)
-		deckContainerView.layer.cornerRadius = 16
-		deckContainerView.clipsToBounds = true
-		deckContainerView.backgroundColor = .systemGray6
-		
-			// MARK: - Green Section (Total/Species)
-		greenBadgeView.backgroundColor = UIColor(red: 0.165, green: 0.643, blue: 0.263, alpha: 0.12)
-		greenBadgeView.layer.cornerRadius = 16
-		
-		greenCountLabel.font = UIFont.systemFont(ofSize: 36, weight: .bold)
-		greenCountLabel.textColor = UIColor(red: 0.165, green: 0.643, blue: 0.263, alpha: 1.0)
-		
-			// New Species Label
-		speciesLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-		speciesLabel.textColor = UIColor(red: 0.165, green: 0.643, blue: 0.263, alpha: 1.0)
-		
-			// MARK: - Blue Section (Observed)
-			// Fixed: Added background color for blue badge
-		blueBadgeView.backgroundColor = UIColor(red: 0.235, green: 0.329, blue: 0.918, alpha: 0.12)
-		blueBadgeView.layer.cornerRadius = 16
-		
-		blueCountLabel.font = UIFont.systemFont(ofSize: 36, weight: .bold)
-		blueCountLabel.textColor = UIColor(red: 0.235, green: 0.329, blue: 0.918, alpha: 1.0)
-		
-			// New Observed Label
-		observedLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-		observedLabel.textColor = UIColor(red: 0.235, green: 0.329, blue: 0.918, alpha: 1.0)
-	}
-	
-	private func setupImageView(_ imageView: UIImageView) {
-		imageView.contentMode = .scaleAspectFill
-		imageView.clipsToBounds = true
-		imageView.layer.cornerRadius = 16
-		imageView.backgroundColor = .systemGray6
-	}
-	
-		// MARK: - Configuration
-	func configure(with data: WatchlistData) {
-		titleLabel.text = data.title
-		
-			// Set images
-		if data.images.indices.contains(0) {
-			imageView1.image = data.images[0]
-		}
-		if data.images.indices.contains(1) {
-			imageView2.image = data.images[1]
-		}
-		if data.images.indices.contains(2) {
-			imageView3.image = data.images[2]
-		}
-		
-			// Show blur effect if there are more than 3 images
-		blurEffectView.isHidden = data.totalImageCount <= 3
-		
-			// Set badge counts
-		greenCountLabel.text = "\(data.totalCount)"
-		blueCountLabel.text = "\(data.observedCount)"
-	}
-	
-		// MARK: - Cell Registration Helper
-	static func register(in collectionView: UICollectionView) {
-		let nib = UINib(nibName: String(describing: self), bundle: nil)
-		collectionView.register(nib, forCellWithReuseIdentifier: reuseIdentifier)
-	}
-}
-
-	// MARK: - Data Model
 struct WatchlistData {
 	let title: String
 	let images: [UIImage]
 	let totalCount: Int
 	let observedCount: Int
-	let totalImageCount: Int // Total number of images (used to determine if blur is needed)
+	let totalImageCount: Int
 	
 	init(title: String, images: [UIImage], totalCount: Int, observedCount: Int, totalImageCount: Int? = nil) {
 		self.title = title
@@ -138,5 +16,174 @@ struct WatchlistData {
 	}
 }
 
-	// MARK: - UIView Extension for Shadow (matches XIB runtime
-
+class MyWatchlistCollectionViewCell: UICollectionViewCell {
+	
+	static let identifier = "MyWatchlistCollectionViewCell"
+	
+		// MARK: - Outlets
+	
+	@IBOutlet weak var mainContainerView: UIView!
+	@IBOutlet weak var titleLabel: UILabel!
+	
+		// --- Image Row ---
+	
+		// First two slots
+	@IBOutlet weak var image1: UIImageView!
+	@IBOutlet weak var image2: UIImageView!
+	
+		// Slot 3: The Stack Container
+	@IBOutlet weak var stackContainerView: UIView!
+	
+		// Inside Slot 3
+	@IBOutlet weak var stackFrontImage: UIImageView! // The clear one in front
+	@IBOutlet weak var stackBackImage: UIImageView!  // The blurred one behind
+	
+		// --- Stats Row ---
+	@IBOutlet weak var speciesContainer: UIView!
+	@IBOutlet weak var speciesCountLabel: UILabel!
+	@IBOutlet weak var speciesIcon: UIImageView!
+	@IBOutlet weak var speciesTitleLabel: UILabel!
+	
+	@IBOutlet weak var observedContainer: UIView!
+	@IBOutlet weak var observedCountLabel: UILabel!
+	@IBOutlet weak var observedIcon: UIImageView!
+	@IBOutlet weak var observedTitleLabel: UILabel!
+	
+		// MARK: - Lifecycle
+	
+	override func awakeFromNib() {
+		super.awakeFromNib()
+		setupStyling()
+	}
+	
+	override func prepareForReuse() {
+		super.prepareForReuse()
+			// Clear data to prevent reuse glitches
+		image1.image = nil
+		image2.image = nil
+		stackFrontImage.image = nil
+		stackBackImage.image = nil
+		
+			// Hide stack by default
+		stackContainerView.isHidden = true
+		stackBackImage.isHidden = true
+		
+			// Remove old blur effects
+		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
+	}
+	
+		// MARK: - Configuration
+	
+	func configure(with data: WatchlistData) {
+		titleLabel.text = "All my birds"
+		speciesCountLabel.text = "\(data.totalCount)"
+		observedCountLabel.text = "\(data.observedCount)"
+		
+		let images = data.images
+		
+			// 1. Configure First Image
+		if images.indices.contains(0) {
+			image1.isHidden = false
+			image1.image = images[0]
+		} else {
+			image1.isHidden = true
+		}
+		
+			// 2. Configure Second Image
+		if images.indices.contains(1) {
+			image2.isHidden = false
+			image2.image = images[1]
+		} else {
+			image2.isHidden = true
+		}
+		
+			// 3. Configure Third Slot (The Stack)
+		if images.indices.contains(2) {
+			stackContainerView.isHidden = false
+			stackFrontImage.image = images[2]
+			
+				// Determine if we need the "depth" effect (back image)
+				// We show it if there are more than 3 images in total
+			let hasMoreContent = data.totalImageCount > 3
+			
+			if hasMoreContent {
+				stackBackImage.isHidden = false
+				
+					// If we have a 4th image, use it for the background.
+					// If not, just reuse the 3rd image to create the visual bulk.
+				let backImg = images.indices.contains(3) ? images[3] : images[2]
+				stackBackImage.image = backImg
+				
+				addBlurToBackImage()
+			} else {
+				stackBackImage.isHidden = true
+			}
+		} else {
+			stackContainerView.isHidden = true
+		}
+	}
+	
+		// MARK: - Styling
+	
+	private func setupStyling() {
+			// Main Card Styling
+		self.contentView.layer.cornerRadius = 22
+		self.contentView.layer.masksToBounds = true
+		
+		mainContainerView.backgroundColor = .secondarySystemGroupedBackground
+		mainContainerView.layer.cornerRadius = 22
+		mainContainerView.layer.masksToBounds = true
+		
+			// Card Shadow (Applied to self, not contentView)
+		self.layer.shadowColor = UIColor.black.cgColor
+		self.layer.shadowOpacity = 0.08
+		self.layer.shadowOffset = CGSize(width: 0, height: 4)
+		self.layer.shadowRadius = 8
+		self.layer.masksToBounds = false
+		
+			// Image Corner Radius (Squircles)
+		let imageRadius: CGFloat = 12
+		let images = [image1, image2, stackFrontImage, stackBackImage]
+		
+		images.forEach { imageView in
+			imageView?.layer.cornerRadius = imageRadius
+			imageView?.layer.cornerCurve = .continuous
+			imageView?.clipsToBounds = true
+			imageView?.contentMode = .scaleAspectFill
+		}
+		
+			// --- Stats Pills Styling ---
+		
+			// 1. Species Container (Green background, opacity 0.15)
+		speciesContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
+		speciesContainer.layer.cornerRadius = 8
+		speciesContainer.layer.masksToBounds = true
+		
+		speciesCountLabel.textColor = .systemGreen
+		speciesIcon.tintColor = .systemGreen
+		speciesTitleLabel.textColor = .systemGreen
+		
+			// 2. Observed Container (Blue background, opacity 0.15)
+		observedContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.15)
+		observedContainer.layer.cornerRadius = 8
+		observedContainer.layer.masksToBounds = true
+		
+		observedCountLabel.textColor = .systemBlue
+		observedIcon.tintColor = .systemBlue
+		observedTitleLabel.textColor = .systemBlue
+	}
+	
+	private func addBlurToBackImage() {
+			// Ensure we don't double add blurs
+		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
+		
+		let blurEffect = UIBlurEffect(style: .regular)
+		let blurView = UIVisualEffectView(effect: blurEffect)
+		
+		blurView.frame = stackBackImage.bounds
+		blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+		blurView.alpha = 0.5 // Adjust opacity to control how "faded" it looks
+		
+		stackBackImage.addSubview(blurView)
+	}
+}
