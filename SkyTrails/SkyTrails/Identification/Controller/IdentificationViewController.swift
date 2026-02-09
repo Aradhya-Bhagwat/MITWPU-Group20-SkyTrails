@@ -350,13 +350,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         guard !histories.isEmpty else { return }
         let selectedSession = histories[indexPath.row]
         
+        model.loadSessionAndFilter(session: selectedSession)
+        
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
             resultVC.viewModel = self.model
-            
-           
-            resultVC.historyItem = selectedSession.result
-            
             resultVC.delegate = self
             self.navigationController?.pushViewController(resultVC, animated: true)
         }

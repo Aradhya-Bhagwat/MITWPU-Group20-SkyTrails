@@ -218,6 +218,45 @@ class IdentificationManager {
         try? modelContext.save()
     }
 
+    func loadSessionAndFilter(session: IdentificationSession) {
+        // Reset state manually to avoid `reset()`'s filter run.
+        self.tempSelectedAreas = []
+        self.selectedLocationId = nil
+        self.selectedSizeCategory = nil
+        self.selectedSizeRange = []
+        self.selectedLocation = nil
+        self.selectedLocationData = nil
+        self.selectedDate = Date()
+        self.results = []
+        
+        // This will trigger a filter run and clear field marks.
+        self.selectedShape = session.shape
+
+        // Now, load the rest of the session data.
+        self.selectedSizeCategory = session.sizeCategory
+        if let size = self.selectedSizeCategory {
+            let minSize = max(1, size - 1)
+            let maxSize = min(5, size + 1)
+            self.selectedSizeRange = Array(minSize...maxSize)
+        }
+
+        self.selectedDate = session.observationDate
+        self.selectedLocationId = session.locationId
+        
+        var newFieldMarks: [UUID: FieldMarkVariant] = [:]
+        if let sessionMarks = session.selectedMarks {
+            for sessionMark in sessionMarks {
+                if let fieldMark = sessionMark.fieldMark, let variant = sessionMark.variant {
+                    newFieldMarks[fieldMark.id] = variant
+                }
+            }
+        }
+        self.selectedFieldMarks = newFieldMarks
+        
+        // Finally, run the filter with the complete state.
+        runFilter()
+    }
+
     func reset() {
         tempSelectedAreas.removeAll()
         selectedLocationId = nil
