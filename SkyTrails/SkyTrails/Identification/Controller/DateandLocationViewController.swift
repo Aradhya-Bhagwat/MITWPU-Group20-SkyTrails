@@ -62,7 +62,15 @@ class DateandLocationViewController: UIViewController {
         dateandlocationTableView.reloadData()
         view.endEditing(true)
     }
+   
+    private func getID(for displayName: String) -> UUID? {
 
+        let matchingSuggestion = searchResults.first { suggestion in
+            suggestion.title == displayName
+        }
+        
+        return matchingSuggestion?.id
+    }
     private func fetchCurrentLocationName() {
         Task {
             do {
@@ -139,10 +147,17 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             Task {
                 do {
                     let locationData = try await locationService.geocode(query: suggestion.fullText)
-                    await MainActor.run { self.updateLocationSelection(locationData.displayName) }
+                    await MainActor.run { self.updateLocationSelection(locationData.displayName)
+                        let foundID = self.getID(for: locationData.displayName)
+                                            
+                        
+                        self.viewModel.selectedLocationId = foundID
+                    }
                 } catch {
                     // Fallback to the suggestion title if geocoding fails for any reason
                     await MainActor.run { self.updateLocationSelection(suggestion.title) }
+                    self.viewModel.selectedLocationId = self.getID(for: suggestion.title)
+                                    
                     print("Could not geocode suggestion '\(suggestion.fullText)': \(error)")
                 }
             }

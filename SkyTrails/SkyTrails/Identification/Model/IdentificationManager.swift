@@ -10,6 +10,7 @@ class IdentificationManager {
     var selectedShapeId: String? {
             selectedShape?.id
         }
+    var selectedLocationId: UUID?
     var selectedShape: BirdShape? {
         didSet {
             selectedFieldMarks.removeAll()
@@ -24,6 +25,7 @@ class IdentificationManager {
     var selectedSizeCategory: Int?
     var selectedSizeRange: [Int] = []
     var selectedLocation: String?
+    var selectedLocationData: LocationService.LocationData?
     var selectedDate: Date = Date()
     var results: [IdentificationCandidate] = []
 
@@ -187,7 +189,7 @@ class IdentificationManager {
             id: UUID(),
             userId: UUID(),
             shape: selectedShape,
-            locationId: nil,
+            locationId: selectedLocationId,
             observationDate: selectedDate,
             status: .completed
         )
