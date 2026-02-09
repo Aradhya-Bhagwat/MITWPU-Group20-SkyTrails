@@ -46,8 +46,11 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
         }
     
     override func layoutSubviews() {
-        
         super.layoutSubviews()
+        
+        // Guard against uninitialized outlets during layout passes
+        guard cardContainerView != nil, dateLabel != nil, titleLabel != nil else { return }
+        
         contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
     
         let currentWidth = self.bounds.width

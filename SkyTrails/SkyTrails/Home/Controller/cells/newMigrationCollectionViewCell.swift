@@ -68,6 +68,9 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        
+        guard mapView != nil, birdNameLabel != nil, PlaceName != nil else { return }
+        
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
         let currentWidth = self.bounds.width
         
