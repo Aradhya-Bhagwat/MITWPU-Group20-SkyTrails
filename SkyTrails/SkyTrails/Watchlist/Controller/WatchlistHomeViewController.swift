@@ -125,7 +125,10 @@ class WatchlistHomeViewController: UIViewController {
 			summaryCardCollectionView.register(UINib(nibName: identifier, bundle: nil), forCellWithReuseIdentifier: identifier)
 		}
 		
-		MyWatchlistCollectionViewCell.register(in: summaryCardCollectionView)
+		summaryCardCollectionView.register(
+			UINib(nibName: MyWatchlistCollectionViewCell.identifier, bundle: nil),
+			forCellWithReuseIdentifier: MyWatchlistCollectionViewCell.identifier
+		)
 		
 		summaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
 	}
