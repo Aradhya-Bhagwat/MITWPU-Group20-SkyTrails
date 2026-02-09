@@ -118,7 +118,8 @@ class WatchlistHomeViewController: UIViewController {
 		let cells = [
 			"SummaryCardCollectionViewCell",
 			CustomWatchlistCollectionViewCell.identifier,
-			SharedWatchlistCollectionViewCell.identifier
+			SharedWatchlistCollectionViewCell.identifier,
+			WatchlistActionCell.identifier
 		]
 		
 		cells.forEach { identifier in
@@ -275,6 +276,16 @@ extension WatchlistHomeViewController {
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
+	private func navigateToCreateWatchlist() {
+		let sb = UIStoryboard(name: "Watchlist", bundle: nil)
+		guard let vc = sb.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
+		
+		vc.watchlistType = .custom
+		vc.watchlistIdToEdit = nil  // nil means creating a new watchlist
+		
+		navigationController?.pushViewController(vc, animated: true)
+	}
+	
 	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 			// Handle Grid Segues
@@ -325,7 +336,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 			case .summary:
 				count = 3
 			case .myWatchlist:
-				count = myWatchlist != nil ? 1 : 0
+				count = myWatchlist != nil ? 3 : 0  // 1 main card + 2 action cells
 			case .customWatchlist:
 				count = customWatchlists.count
 			case .sharedWatchlist:
@@ -361,8 +372,19 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				performSegue(withIdentifier: "ShowSmartWatchlist", sender: "allSpecies")
 				
 			case .myWatchlist:
-				if let wl = myWatchlist {
-					performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
+				// Item 0: Main watchlist card
+				if indexPath.item == 0 {
+					if let wl = myWatchlist {
+						performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
+					}
+				}
+				// Item 1: Create new watchlist
+				else if indexPath.item == 1 {
+					navigateToCreateWatchlist()
+				}
+				// Item 2: Add bird to watchlist
+				else if indexPath.item == 2 {
+					addFloatingButtonTapped(addFloatingButton)
 				}
 				
 			case .customWatchlist:
@@ -403,22 +425,45 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
-		
-		if let watchlist = myWatchlist {
-			let images = watchlist.previewImages.compactMap { UIImage(named: $0) }
+		// Item 0: Main MyWatchlist card
+		if indexPath.item == 0 {
+			let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
 			
-			let data = WatchlistData(
-				title: watchlist.title,
-				images: images,
-				totalCount: watchlist.stats.totalCount,
-				observedCount: watchlist.stats.observedCount,
-				totalImageCount: watchlist.stats.totalCount
-			)
-			
-			cell.configure(with: data)
+			if let watchlist = myWatchlist {
+				let images = watchlist.previewImages.compactMap { UIImage(named: $0) }
+				
+				let data = WatchlistData(
+					title: watchlist.title,
+					images: images,
+					totalCount: watchlist.stats.totalCount,
+					observedCount: watchlist.stats.observedCount,
+					totalImageCount: watchlist.stats.totalCount
+				)
+				
+				cell.configure(with: data)
+			}
+			return cell
 		}
-		return cell
+		// Item 1: Create new watchlist action
+		else if indexPath.item == 1 {
+			let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
+			cell.configure(
+				icon: "custom.list.bullet.badge.plus",
+				title: "Create Watchlist",
+				color: .systemYellow
+			)
+			return cell
+		}
+		// Item 2: Add bird to watchlist action
+		else {
+			let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
+			cell.configure(
+				icon: "custom.bird.fill.badge.plus",
+				title: "Add Bird",
+				color: .systemRed
+			)
+			return cell
+		}
 	}
 	
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
@@ -487,12 +532,49 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func layoutMyWatchlistSection() -> NSCollectionLayoutSection {
-		let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.65), heightDimension: .fractionalHeight(1.0)))
+		// Main watchlist card (left side, 65% width)
+		let mainItem = NSCollectionLayoutItem(
+			layoutSize: NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(1.0),
+				heightDimension: .fractionalHeight(1.0)
+			)
+		)
 		
-		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(LayoutConstants.myWatchlistHeight))
-		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+		let mainGroup = NSCollectionLayoutGroup.horizontal(
+			layoutSize: NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(0.65),
+				heightDimension: .fractionalHeight(1.0)
+			),
+			subitems: [mainItem]
+		)
 		
-		let section = NSCollectionLayoutSection(group: group)
+		// Action cells (right side, 35% width, stacked vertically)
+		let actionItem = NSCollectionLayoutItem(
+			layoutSize: NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(1.0),
+				heightDimension: .fractionalHeight(0.5)
+			)
+		)
+		actionItem.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 0)
+		
+		let actionGroup = NSCollectionLayoutGroup.vertical(
+			layoutSize: NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(0.35),
+				heightDimension: .fractionalHeight(1.0)
+			),
+			subitems: [actionItem, actionItem]
+		)
+		
+		// Combine main card and action cells horizontally
+		let containerGroup = NSCollectionLayoutGroup.horizontal(
+			layoutSize: NSCollectionLayoutSize(
+				widthDimension: .fractionalWidth(1.0),
+				heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+			),
+			subitems: [mainGroup, actionGroup]
+		)
+		
+		let section = NSCollectionLayoutSection(group: containerGroup)
 		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
 		return section
 	}
