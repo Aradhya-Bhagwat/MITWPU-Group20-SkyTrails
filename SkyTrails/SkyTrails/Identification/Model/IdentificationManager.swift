@@ -191,7 +191,8 @@ class IdentificationManager {
             shape: selectedShape,
             locationId: selectedLocationId,
             observationDate: selectedDate,
-            status: .completed
+            status: .completed,
+            sizeCategory: selectedSizeCategory
         )
 
         for (_, variant) in selectedFieldMarks {
@@ -215,6 +216,21 @@ class IdentificationManager {
         
         modelContext.insert(newSession)
         try? modelContext.save()
+    }
+
+    func reset() {
+        tempSelectedAreas.removeAll()
+        selectedLocationId = nil
+        selectedSizeCategory = nil
+        selectedSizeRange.removeAll()
+        selectedLocation = nil
+        selectedLocationData = nil
+        selectedDate = Date()
+        results.removeAll()
+        
+        // Setting selectedShape to nil triggers its `didSet` observer,
+        // which clears `selectedFieldMarks` and runs the filter.
+        selectedShape = nil
     }
     
 }

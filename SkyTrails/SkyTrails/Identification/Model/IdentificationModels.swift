@@ -100,6 +100,7 @@ final class IdentificationSession {
     var createdAt: Date
     
     var status: SessionStatus
+    var sizeCategory: Int?
     
     @Relationship(deleteRule: .cascade, inverse: \IdentificationSessionFieldMark.session)
     var selectedMarks: [IdentificationSessionFieldMark]?
@@ -114,7 +115,8 @@ final class IdentificationSession {
         locationId: UUID? = nil,
         observationDate: Date,
         createdAt: Date = Date(),
-        status: SessionStatus = .inProgress
+        status: SessionStatus = .inProgress,
+        sizeCategory: Int? = nil
     ) {
         self.id = id
         self.userId = userId
@@ -123,6 +125,7 @@ final class IdentificationSession {
         self.observationDate = observationDate
         self.createdAt = createdAt
         self.status = status
+        self.sizeCategory = sizeCategory
     }
 }
 

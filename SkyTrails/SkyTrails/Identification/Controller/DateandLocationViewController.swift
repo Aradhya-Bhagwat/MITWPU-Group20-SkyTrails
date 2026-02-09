@@ -77,10 +77,16 @@ class DateandLocationViewController: UIViewController {
                 let locationData = try await locationService.getCurrentLocation()
                 await MainActor.run { self.updateLocationSelection(locationData.displayName) }
             } catch {
-                print("Failed to get current location: \(error)")
-                let alert = UIAlertController(title: "Location Error", message: "Could not fetch current location. Please check your settings.", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
-                await MainActor.run { self.present(alert, animated: true) }
+                if let locError = error as? LocationService.LocationError,
+                      locError == .locationAccessDenied {
+                    print("Failed to get current location: \(error)")
+                    let alert = UIAlertController(title: "Location Error", message: "Could not fetch current location. Please check your settings.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    await MainActor.run { self.present(alert, animated: true) }
+                       return
+                   }
+
+                
             }
         }
     }
@@ -104,6 +110,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
             cell.delegate = self
+            cell.datePicker.date = selectedDate // Set the date picker's date
             return cell
         }
         

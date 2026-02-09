@@ -83,6 +83,12 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         updateSelectionState()
     }
     
+    public func resetIdentificationOptions() {
+        setupOptions()
+        tableView.reloadData()
+        updateSelectionState()
+    }
+    
     private func setupModel() {
         do {
             // Initialize the container with relevant Schema
