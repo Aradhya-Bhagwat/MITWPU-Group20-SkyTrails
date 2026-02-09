@@ -18,8 +18,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // 1. Assign local state from ViewModel
-        viewModel.selectedSizeCategory = selectedSizeIndex
+        // filteredShapes will reflect the current selected size from the viewModel
         filteredShapes = viewModel.availableShapesForSelectedSize()
         selectedShapeId = viewModel.selectedShapeId
         

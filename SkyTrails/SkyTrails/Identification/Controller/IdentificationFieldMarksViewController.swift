@@ -28,7 +28,20 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        
+        // Initialize selectedFieldMarks from viewModel's state
+        // availableMarks depends on viewModel.selectedShape, which should be set by previous VC.
+        for (index, mark) in availableMarks.enumerated() {
+            // Check if this mark's area name is in the manager's temporary selected areas
+            if viewModel.tempSelectedAreas.contains(mark.area) {
+                selectedFieldMarks.append(index)
+            }
+        }
+        
         setupCanvas()
+        
+        // Reload collection view to reflect selections
+        Categories.reloadData()
     }
     
     override func viewDidLayoutSubviews() {

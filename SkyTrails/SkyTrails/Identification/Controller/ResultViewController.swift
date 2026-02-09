@@ -101,6 +101,14 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         if let candidate = candidateToSave {
             viewModel.saveSession(winningCandidate: candidate)
         }
+        
+        // Reset the manager's state for a fresh start next time.
+        viewModel.reset()
+
+        // Find the root VC and reset its options UI before navigating back.
+        if let rootVC = navigationController?.viewControllers.first as? IdentificationViewController {
+            rootVC.resetIdentificationOptions()
+        }
 
         // 3. Return to history
         navigationController?.popToRootViewController(animated: true)
