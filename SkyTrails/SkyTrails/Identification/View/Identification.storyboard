@@ -93,7 +93,7 @@
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
                                                 <rect key="frame" x="16" y="459.66666666666663" width="370" height="1072.666666666667"/>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
+                                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
                                                     <size key="itemSize" width="175" height="133"/>
                                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
@@ -175,6 +175,7 @@
                                         <constraints>
                                             <constraint firstAttribute="trailing" secondItem="mPg-zb-PDo" secondAttribute="trailing" constant="16" id="1kB-lq-OYz"/>
                                             <constraint firstItem="sz8-14-rMC" firstAttribute="top" secondItem="juo-Tr-9OM" secondAttribute="bottom" constant="16" id="6W8-7q-tLy"/>
+                                            <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="8" id="7ke-bu-vMc"/>
                                             <constraint firstItem="FQA-lr-sA1" firstAttribute="top" secondItem="sz8-14-rMC" secondAttribute="bottom" constant="8" id="8sD-A8-nod"/>
                                             <constraint firstItem="vFz-1I-rOM" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="9Ar-hk-zce"/>
                                             <constraint firstAttribute="trailing" secondItem="juo-Tr-9OM" secondAttribute="trailing" constant="16" id="9Q3-VZ-UJa"/>
@@ -195,7 +196,6 @@
                                     </view>
                                 </subviews>
                                 <constraints>
-                                    <constraint firstItem="4nx-pp-Ahc" firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="8" id="7ke-bu-vMc"/>
                                     <constraint firstItem="vFz-1I-rOM" firstAttribute="height" secondItem="dAJ-Zt-q2y" secondAttribute="height" multiplier="0.7" id="8xN-e5-MUo"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="width" secondItem="deH-Bp-JJV" secondAttribute="width" id="Efv-qY-n5z"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="bottom" secondItem="dAJ-Zt-q2y" secondAttribute="bottom" constant="8" id="Y4t-Ae-FoB"/>

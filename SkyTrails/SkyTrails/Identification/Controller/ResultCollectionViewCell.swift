@@ -22,16 +22,31 @@ class ResultCollectionViewCell: UICollectionViewCell {
     weak var delegate: ResultCellDelegate?
     var indexPath: IndexPath?
     var isSelectedCell: Bool = false {
-            didSet {
-                updateSelectionAppearance()
-            }
+        didSet {
+            updateSelectionAppearance()
         }
+    }
 
     override func awakeFromNib() {
         super.awakeFromNib()
         setupMenu()
     }
-  
+
+    // MARK: - Reuse
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Reset selection state so recycled cells don't carry stale borders
+        contentView.layer.borderWidth = 1
+        contentView.layer.borderColor = UIColor.systemGray4.cgColor
+        contentView.backgroundColor = .white
+        resultImageView.image = nil
+        nameLabel.text = nil
+        percentageLabel.text = nil
+    }
+
+    // MARK: - Configuration
+
     func configure(image: UIImage?, name: String, percentage: String) {
         resultImageView.image = image
         nameLabel.text = name
@@ -43,14 +58,24 @@ class ResultCollectionViewCell: UICollectionViewCell {
         nameLabel.text = name
         percentageLabel.text = date
     }
+
+    // MARK: - Selection Appearance
+
     private func updateSelectionAppearance() {
-            if isSelectedCell {
-                self.layer.borderWidth = 3.0
-                self.layer.borderColor = UIColor.systemBlue.cgColor
-            } 
+        if isSelectedCell {
+            contentView.layer.borderWidth = 3.0
+            contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        } else {
+            // ← was missing: reset back to unselected state
+            contentView.layer.borderWidth = 1.0
+            contentView.layer.borderColor = UIColor.systemGray4.cgColor
+            contentView.backgroundColor = .white
         }
-    
-    
+    }
+
+    // MARK: - Context Menu
+
     func setupMenu() {
         let predictAction = UIAction(title: "Predict Species",
                                      image: UIImage(systemName: "map")) { [weak self] _ in
@@ -68,6 +93,4 @@ class ResultCollectionViewCell: UICollectionViewCell {
         menuButton.showsMenuAsPrimaryAction = true
         menuButton.menu = menu
     }
-   
 }
-

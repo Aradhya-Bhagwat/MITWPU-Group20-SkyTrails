@@ -8,15 +8,12 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
     
-    // Changed History? to IdentificationResult? (assuming this is your session record)
     var historyItem: IdentificationResult?
     var historyIndex: Int?
     
-    // Changed Bird2? to Bird?
     var selectedResult: Bird?
     var selectedIndexPath: IndexPath?
     
-    // Local storage for display if the manager doesn't have it
     var birdResults: [IdentificationCandidate] = []
     
     override func viewDidLoad() {
@@ -36,26 +33,21 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     private func loadData() {
         if let history = historyItem {
-            // Loading from a saved session
             self.birdResults = history.candidates ?? []
         } else {
-           
             viewModel.filterBirds(
                 shape: viewModel.selectedShapeId,
                 size: viewModel.selectedSizeCategory,
                 location: viewModel.selectedLocation,
                 fieldMarks: Array(viewModel.selectedFieldMarks.values)
             )
-            
-            
             self.birdResults = viewModel.results
         }
-        
         resultCollectionView.reloadData()
     }
     
-    // MARK: - CollectionView Layout (Preserved Logic)
-    
+    // MARK: - CollectionView Layout
+
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 8
@@ -64,11 +56,16 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         resultCollectionView.collectionViewLayout = layout
     }
 
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
         guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else { return .zero }
+        
         let minItemWidth: CGFloat = 120
         let maxItemsPerRow: CGFloat = 4
-        let availableWidth = collectionView.bounds.width - layout.sectionInset.left - layout.sectionInset.right
+        let availableWidth = collectionView.bounds.width
+            - layout.sectionInset.left
+            - layout.sectionInset.right
         
         var itemsPerRow: CGFloat = 1
         while true {
@@ -82,14 +79,32 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         }
         
         let itemWidth = (availableWidth - (layout.minimumInteritemSpacing * (itemsPerRow - 1))) / itemsPerRow
-        return CGSize(width: itemWidth, height: itemWidth * 1.4)
+        
+        let imageMargins: CGFloat = 16
+        let imageWidth = itemWidth - imageMargins
+        let imageHeight = imageWidth  // 1:1 square
+
+        let topMargin: CGFloat = 8
+        let imageToLabelSpacing: CGFloat = 8
+        let nameButtonHeight: CGFloat = 48  // button height governs the row
+        let labelSpacing: CGFloat = 4
+        let percentageHeight: CGFloat = 17
+        let bottomMargin: CGFloat = 8
+        
+        let totalHeight = topMargin
+            + imageHeight
+            + imageToLabelSpacing
+            + nameButtonHeight
+            + labelSpacing
+            + percentageHeight
+            + bottomMargin
+        
+        return CGSize(width: itemWidth, height: totalHeight)
     }
 
     // MARK: - Actions
     
     @IBAction func nextTapped(_ sender: Any) {
-        // 1. Get the selected candidate.
-        // If user hasn't tapped one, we use the first (top) result automatically.
         let candidateToSave: IdentificationCandidate?
         if let selectedPath = selectedIndexPath {
             candidateToSave = birdResults[selectedPath.item]
@@ -97,20 +112,16 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             candidateToSave = birdResults.first
         }
         
-        // 2. Call the manager's saveSession function
         if let candidate = candidateToSave {
             viewModel.saveSession(winningCandidate: candidate)
         }
         
-        // Reset the manager's state for a fresh start next time.
         viewModel.reset()
 
-        // Find the root VC and reset its options UI before navigating back.
         if let rootVC = navigationController?.viewControllers.first as? IdentificationViewController {
             rootVC.resetIdentificationOptions()
         }
 
-        // 3. Return to history
         navigationController?.popToRootViewController(animated: true)
     }
   
@@ -128,7 +139,10 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let candidate = birdResults[indexPath.item]
         guard let bird = candidate.bird else { return UICollectionViewCell() }
         
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ResultCollectionViewCell", for: indexPath) as! ResultCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "ResultCollectionViewCell",
+            for: indexPath
+        ) as! ResultCollectionViewCell
         
         let confidencePercent = String(Int(candidate.confidence * 100))
         cell.configure(
@@ -137,12 +151,16 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             percentage: confidencePercent
         )
 
-        let isSelected = selectedIndexPath == indexPath
-        cell.contentView.layer.borderWidth = isSelected ? 3 : 1
-        cell.contentView.layer.borderColor = isSelected ? UIColor.systemBlue.cgColor : UIColor.systemGray4.cgColor
-        cell.contentView.backgroundColor = isSelected ? UIColor.systemBlue.withAlphaComponent(0.1) : .white
+        // FIX: Selection appearance is owned by the cell via isSelectedCell.
+        // Setting it here (after prepareForReuse has already reset borders)
+        // ensures correct state on every dequeue — no stale borders on recycled cells.
+        cell.isSelectedCell = (selectedIndexPath == indexPath)
+
+        // Apply corner radius here (contentView, not cell layer, to avoid
+        // clipping the shadow applied on the cell layer in the XIB).
         cell.contentView.layer.cornerRadius = 12
-        
+        cell.contentView.layer.masksToBounds = true
+
         cell.delegate = self
         cell.indexPath = indexPath
         
@@ -150,9 +168,14 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let previous = selectedIndexPath
         selectedIndexPath = indexPath
         selectedResult = birdResults[indexPath.item].bird
-        collectionView.reloadData()
+
+        // Reload only the affected cells for efficiency
+        var toReload = [indexPath]
+        if let prev = previous, prev != indexPath { toReload.append(prev) }
+        collectionView.reloadItems(at: toReload)
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -176,11 +199,11 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     func didTapAddToWatchlist(for cell: ResultCollectionViewCell) {
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }
         
-        // Use the WatchlistManager with your new WatchlistEntry model
-        let manager = WatchlistManager.shared
-        // manager.addBirdToDefaultWatchlist(bird)
-        
-        let alert = UIAlertController(title: "Added", message: "\(bird.commonName) added to watchlist", preferredStyle: .alert)
+        let alert = UIAlertController(
+            title: "Added",
+            message: "\(bird.commonName) added to watchlist",
+            preferredStyle: .alert
+        )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
