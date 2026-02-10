@@ -2,16 +2,24 @@ import UIKit
 
 class SignUpViewController: UIViewController {
 
+    // MARK: - Outlets
+
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var emailTextField: UITextField!
 
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var confirmPasswordTextField: UITextField!
 
+    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
+
         setupPasswords()
+        hideKeyboardWhenTapped()
     }
+
+    // MARK: - Password Setup
 
     private func setupPasswords() {
 
@@ -34,7 +42,7 @@ class SignUpViewController: UIViewController {
 
         button.addTarget(
             self,
-            action: #selector(toggle(_:)),
+            action: #selector(togglePassword(_:)),
             for: .touchUpInside
         )
 
@@ -47,7 +55,7 @@ class SignUpViewController: UIViewController {
         textField.rightViewMode = .always
     }
 
-    @objc private func toggle(_ sender: UIButton) {
+    @objc private func togglePassword(_ sender: UIButton) {
 
         sender.isSelected.toggle()
 
@@ -58,25 +66,32 @@ class SignUpViewController: UIViewController {
         }
     }
 
-    // MARK: - Signup
+    // MARK: - Signup Button
 
     @IBAction func signupTapped(_ sender: UIButton) {
         register()
     }
 
+    // MARK: - Register Logic
+
     private func register() {
 
         guard let name = nameTextField.text, !name.isEmpty,
               let email = emailTextField.text, !email.isEmpty,
-              let pass = passwordTextField.text,
-              let confirm = confirmPasswordTextField.text else {
+              let pass = passwordTextField.text, !pass.isEmpty,
+              let confirm = confirmPasswordTextField.text, !confirm.isEmpty else {
 
-            show("Fill all fields")
+            show("Please fill all fields")
             return
         }
 
         guard email.isValidEmail else {
-            show("Invalid email")
+            show("Invalid email address")
+            return
+        }
+
+        guard pass.count >= 6 else {
+            show("Password must be at least 6 characters")
             return
         }
 
@@ -85,6 +100,7 @@ class SignUpViewController: UIViewController {
             return
         }
 
+        // Save to Keychain
         let saved = KeychainManager.shared.save(
             email: email,
             password: pass
@@ -92,14 +108,49 @@ class SignUpViewController: UIViewController {
 
         if saved {
 
-            show("Account created!") {
-                self.dismiss(animated: true)
+            // Save session
+            UserDefaults.standard.set(true, forKey: "isLoggedIn")
+            UserDefaults.standard.set(email, forKey: "userEmail")
+            UserDefaults.standard.set(name, forKey: "userName")
+
+            show("Account created successfully!") {
+                self.goToMain()
             }
 
         } else {
-            show("Signup failed")
+
+            show("Account already exists or signup failed")
         }
     }
+
+    // MARK: - Navigation
+
+    private func goToMain() {
+
+        guard let scene =
+                UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window =
+                scene.windows.first(where: { $0.isKeyWindow }) else {
+            return
+        }
+
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+
+        let mainVC = storyboard.instantiateViewController(
+            withIdentifier: "RootTabBarController"
+        )
+
+        window.rootViewController = mainVC
+
+        UIView.transition(
+            with: window,
+            duration: 0.3,
+            options: .transitionFlipFromRight,
+            animations: nil
+        )
+    }
+
+    // MARK: - Alert
 
     private func show(_ msg: String,
                       completion: (() -> Void)? = nil) {
@@ -110,10 +161,28 @@ class SignUpViewController: UIViewController {
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            completion?()
-        })
+        alert.addAction(
+            UIAlertAction(title: "OK", style: .default) { _ in
+                completion?()
+            }
+        )
 
         present(alert, animated: true)
+    }
+
+    // MARK: - Keyboard
+
+    private func hideKeyboardWhenTapped() {
+
+        let tap = UITapGestureRecognizer(
+            target: self,
+            action: #selector(dismissKeyboard)
+        )
+
+        view.addGestureRecognizer(tap)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
 }
