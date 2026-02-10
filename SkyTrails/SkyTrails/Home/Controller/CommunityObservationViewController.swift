@@ -60,12 +60,7 @@ class CommunityObservationViewController: UIViewController {
     }
     
     func loadData(for id: String) {
-        if let found = HomeManager.shared.coreHomeData?.communityObservations?.first(where: { $0.observationId == id }) {
-            self.observation = found
-            configureView(with: found)
-        } else {
-            print("Observation with ID \(id) not found.")
-        }
+        print("Observation with ID \(id) not found.")
     }
     
     private func configureView(with observation: CommunityObservation) {
@@ -83,13 +78,8 @@ class CommunityObservationViewController: UIViewController {
         notesLabel.numberOfLines = 0
         notesLabel.text = observation.observationDescription ?? "No description available."
         
-        if let dateString = observation.timestamp {
-            let formatter = ISO8601DateFormatter()
-            if let date = formatter.date(from: dateString) {
-                datePicker.date = date
-                timePicker.date = date
-            }
-        }
+        datePicker.date = observation.observedAt
+        timePicker.date = observation.observedAt
         datePicker.isUserInteractionEnabled = false
         timePicker.isUserInteractionEnabled = false
     }

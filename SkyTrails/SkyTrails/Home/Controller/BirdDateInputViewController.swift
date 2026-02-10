@@ -13,6 +13,12 @@ struct BirdDateInput {
     var endDate: Date?
 }
 
+struct SpeciesData {
+    let id: String
+    let name: String
+    let imageName: String
+}
+
 class BirdDateInputViewController: UIViewController {
     
     var speciesList: [SpeciesData] = []

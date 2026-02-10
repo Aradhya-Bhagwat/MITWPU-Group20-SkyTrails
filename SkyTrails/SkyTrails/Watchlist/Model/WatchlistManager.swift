@@ -308,7 +308,7 @@ final class WatchlistManager: WatchlistRepository {
 	
 		// MARK: - CRUD Helpers
 	
-	private func saveContext() {
+	func saveContext() {
 		do {
 			print("💾 [WatchlistManager] Attempting to save context...")
 			try context.save()
@@ -568,7 +568,7 @@ extension WatchlistManager {
 			// 1. Get all watchlist entries with notifications enabled
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.notify_upcoming == true && entry.status == .to_observe
+				entry.notify_upcoming == true && entry.status.rawValue == "to_observe"
 			}
 		)
 		
@@ -646,7 +646,7 @@ extension WatchlistManager {
 		
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.status == .observed && entry.lat != nil && entry.lon != nil
+				entry.status.rawValue == "observed" && entry.lat != nil && entry.lon != nil
 			}
 		)
 		
@@ -678,7 +678,7 @@ extension WatchlistManager {
 		
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.status == .to_observe
+				entry.status.rawValue == "to_observe"
 			}
 		)
 		

@@ -34,10 +34,11 @@ class BirdSelectionViewController: UIViewController {
         SearchBar.searchBarStyle = .minimal
         SearchBar.backgroundColor = .systemBackground
 
-        if let speciesData = HomeManager.shared.predictionData?.speciesData {
-            self.allSpecies = speciesData.sorted { $0.name < $1.name }
-            self.filteredSpecies = allSpecies
-        }
+        let speciesData = WatchlistManager.shared.fetchAllBirds()
+        self.allSpecies = speciesData.map {
+            SpeciesData(id: $0.id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+        }.sorted { $0.name < $1.name }
+        self.filteredSpecies = allSpecies
     }
     
     private func setupNavigationBar() {
@@ -213,4 +214,3 @@ extension BirdSelectionViewController: UICollectionViewDataSource, UICollectionV
         searchCollection.reloadItems(at: [indexPath])
     }
 }
-

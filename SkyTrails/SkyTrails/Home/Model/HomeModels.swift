@@ -55,6 +55,30 @@ struct FinalPredictionResult: Hashable {
     }
 }
 
+struct NewsItem: Codable, Hashable {
+    let title: String
+    let summary: String
+    let link: String
+    let imageName: String
+}
+
+struct UpcomingBird: Codable, Hashable {
+    let imageName: String
+    let title: String
+    let date: String
+}
+
+struct PopularSpot: Codable, Hashable {
+    let id: UUID
+    let imageName: String
+    let title: String
+    let location: String
+    let latitude: Double?
+    let longitude: Double?
+    let speciesCount: Int
+    let radius: Double?
+}
+
 // MARK: - Extensions
 
 extension Date {
