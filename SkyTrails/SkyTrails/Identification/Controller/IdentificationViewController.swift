@@ -280,34 +280,29 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         updateSelectionState()
     }
     
-    func setupHistoryFlowLayout() {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 12
-        layout.minimumLineSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
-        
-        historyCollectionView.collectionViewLayout = layout
-    }
-    
-    func collectionView(
-        _ collectionView: UICollectionView,
-        layout collectionViewLayout: UICollectionViewLayout,
-        sizeForItemAt indexPath: IndexPath
-    ) -> CGSize {
-        
-        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
-            return .zero
+    private func setupHistoryFlowLayout() {
+        guard let layout = historyCollectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
+            return
         }
         
-        let minItemWidth: CGFloat = 130
+        layout.scrollDirection = .vertical
+        layout.minimumInteritemSpacing = 16
+        layout.minimumLineSpacing = 16
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+    }
+
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        
+        let minItemWidth: CGFloat = 160
         let maxItemsPerRow: CGFloat = 4
-        let interItemSpacing = layout.minimumInteritemSpacing
-        let sectionLeftInset = layout.sectionInset.left
-        let sectionRightInset = layout.sectionInset.right
+        let interItemSpacing: CGFloat = 16
+        let sectionInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         
-        let availableWidth = collectionView.bounds.width - sectionLeftInset - sectionRightInset
+        let availableWidth = collectionView.bounds.width - sectionInsets.left - sectionInsets.right
         
+
         var itemsPerRow: CGFloat = 1
         while true {
             let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
@@ -329,10 +324,33 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
         let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
         let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
+      
+        let imageHorizontalMargins: CGFloat = 16
+        let imageWidth = itemWidth - imageHorizontalMargins
+        let imageHeight = imageWidth * (3.0 / 4.0)
         
-        return CGSize(width: itemWidth, height: itemWidth * 1.05)
+ 
+        let topMargin: CGFloat = 8
+        let imageToLabelSpacing: CGFloat = 8
+        let labelSpacing: CGFloat = 2
+        let bottomMargin: CGFloat = 16
+        
+ 
+        let speciesLabelHeight: CGFloat = 36
+        let dateLabelHeight: CGFloat = 18
+        
+     
+        let totalHeight = topMargin +
+                         imageHeight +
+                         imageToLabelSpacing +
+                         speciesLabelHeight +
+                         labelSpacing +
+                         dateLabelHeight +
+                         bottomMargin
+        
+        return CGSize(width: itemWidth, height: totalHeight)
     }
-    
+
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { [weak self] _ in
@@ -340,7 +358,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             self.historyCollectionView.collectionViewLayout.invalidateLayout()
         }, completion: nil)
     }
-    
     
     @IBAction func startButtonTapped(_ sender: UIButton) {
         startIdentificationFlow(from: self.options)

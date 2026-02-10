@@ -21,7 +21,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="170" height="240"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="WTt-mn-LXx">
-                                <rect key="frame" x="8" y="8" width="154" height="168"/>
+                                <rect key="frame" x="8" y="8" width="154" height="177"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
                                         <integer key="value" value="12"/>
@@ -29,25 +29,21 @@
                                     <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
                                 </userDefinedRuntimeAttributes>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalCompressionResistancePriority="1000" text="Bird Name" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eDd-Dw-XHU">
-                                <rect key="frame" x="8" y="184" width="126" height="27"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="249" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="1000" text="Bird Name" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eDd-Dw-XHU">
+                                <rect key="frame" x="8" y="193" width="73.333333333333329" height="18"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="15"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cn0-fm-kv9">
-                                <rect key="frame" x="134" y="184" width="28" height="48"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="28" id="FZ5-9k-xZL"/>
-                                    <constraint firstAttribute="height" constant="48" id="Wr6-bJ-CeH"/>
-                                </constraints>
+                                <rect key="frame" x="103" y="193" width="59" height="39"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" image="ellipsis" catalog="system">
                                     <color key="baseForegroundColor" systemColor="labelColor"/>
                                 </buttonConfiguration>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="1000" text="55%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v6R-9I-fj8">
-                                <rect key="frame" x="8" y="215" width="154" height="17"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="1000" text="55%" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v6R-9I-fj8">
+                                <rect key="frame" x="8" y="215" width="73.333333333333329" height="17"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <color key="textColor" systemColor="secondaryLabelColor"/>
                                 <nil key="highlightedColor"/>
@@ -60,14 +56,14 @@
                             <constraint firstItem="WTt-mn-LXx" firstAttribute="leading" secondItem="zUh-5Y-gxn" secondAttribute="leading" constant="8" id="J1C-N5-KHE"/>
                             <constraint firstAttribute="bottom" secondItem="v6R-9I-fj8" secondAttribute="bottom" constant="8" id="KIV-18-dUd"/>
                             <constraint firstItem="WTt-mn-LXx" firstAttribute="top" secondItem="zUh-5Y-gxn" secondAttribute="top" constant="8" id="Mdb-2t-2US"/>
-                            <constraint firstItem="cn0-fm-kv9" firstAttribute="leading" secondItem="eDd-Dw-XHU" secondAttribute="trailing" id="Oq1-YE-8Bl"/>
+                            <constraint firstItem="cn0-fm-kv9" firstAttribute="leading" secondItem="eDd-Dw-XHU" secondAttribute="trailing" constant="21.666666666666671" id="Oq1-YE-8Bl"/>
                             <constraint firstAttribute="trailing" secondItem="cn0-fm-kv9" secondAttribute="trailing" constant="8" id="Qot-QI-vS5"/>
                             <constraint firstItem="cn0-fm-kv9" firstAttribute="top" secondItem="WTt-mn-LXx" secondAttribute="bottom" constant="8" id="S14-cf-EbB"/>
                             <constraint firstItem="eDd-Dw-XHU" firstAttribute="top" secondItem="WTt-mn-LXx" secondAttribute="bottom" constant="8" id="SJu-gq-Fhv"/>
                             <constraint firstItem="v6R-9I-fj8" firstAttribute="leading" secondItem="zUh-5Y-gxn" secondAttribute="leading" constant="8" id="bhg-kE-UEW"/>
                             <constraint firstAttribute="bottom" secondItem="cn0-fm-kv9" secondAttribute="bottom" constant="8" id="dqg-yf-ofA"/>
                             <constraint firstAttribute="trailing" secondItem="WTt-mn-LXx" secondAttribute="trailing" constant="8" id="md9-Jh-osD"/>
-                            <constraint firstAttribute="trailing" secondItem="v6R-9I-fj8" secondAttribute="trailing" constant="8" id="oXl-Ds-LkD"/>
+                            <constraint firstItem="cn0-fm-kv9" firstAttribute="leading" secondItem="v6R-9I-fj8" secondAttribute="trailing" constant="21.666666666666671" id="oXl-Ds-LkD"/>
                         </constraints>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
@@ -115,7 +111,7 @@
                 <outlet property="percentageLabel" destination="v6R-9I-fj8" id="Yv1-yX-7I8"/>
                 <outlet property="resultImageView" destination="WTt-mn-LXx" id="UZ6-ip-7yy"/>
             </connections>
-            <point key="canvasLocation" x="-145.03816793893128" y="167.95774647887325"/>
+            <point key="canvasLocation" x="-145.03816793893128" y="166.90140845070422"/>
         </collectionViewCell>
     </objects>
     <resources>
