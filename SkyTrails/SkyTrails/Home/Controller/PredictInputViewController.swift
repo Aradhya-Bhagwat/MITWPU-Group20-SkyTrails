@@ -194,4 +194,3 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             return cell
         }
     }
-

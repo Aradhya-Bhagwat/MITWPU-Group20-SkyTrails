@@ -395,16 +395,8 @@ class HomeManager {
     }
 }
 
-struct DynamicMapCard {
-    enum CardType {
-        case combined(migration: MigrationPrediction, hotspot: HotspotPrediction)
-    }
-
-    let type: CardType
-
-    static func combined(migration: MigrationPrediction, hotspot: HotspotPrediction) -> DynamicMapCard {
-        DynamicMapCard(type: .combined(migration: migration, hotspot: hotspot))
-    }
+enum DynamicMapCard {
+    case combined(migration: MigrationPrediction, hotspot: HotspotPrediction)
 }
 
 struct MigrationPrediction {

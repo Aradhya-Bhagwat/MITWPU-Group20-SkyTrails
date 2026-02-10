@@ -57,6 +57,30 @@ final class CommunityObservation {
     var likesCount: Int
     var imageName: String?
     var birdName: String?
+
+    var displayBirdName: String {
+        birdName ?? observationTitle
+    }
+
+    var displayImageName: String {
+        imageName ?? "default_bird"
+    }
+
+    var observationDescription: String? {
+        observationTitle
+    }
+
+    var timestamp: String? {
+        ISO8601DateFormatter().string(from: observedAt)
+    }
+
+    var photoURL: String? {
+        imageName
+    }
+
+    var displayUser: (name: String, observations: Int, profileImageName: String) {
+        (name: username, observations: likesCount, profileImageName: userAvatar ?? "person.circle.fill")
+    }
     
     init(
         id: UUID = UUID(),

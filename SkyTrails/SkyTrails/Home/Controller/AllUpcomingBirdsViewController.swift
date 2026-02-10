@@ -9,8 +9,8 @@ import UIKit
 
 class AllUpcomingBirdsViewController: UIViewController {
     
-    var watchlistData: [UpcomingBird] = []
-    var recommendationsData: [UpcomingBird] = []
+    var watchlistData: [UpcomingBirdResult] = []
+    var recommendationsData: [Bird] = []
     
     private var cachedItemSize: NSCollectionLayoutSize?
         
@@ -62,10 +62,12 @@ class AllUpcomingBirdsViewController: UIViewController {
             return
         }
         
-         let allSpeciesData = PredictionEngine.shared.allSpecies
-        selectionVC.allSpecies = allSpeciesData
-        let watchlistTitles = watchlistData.map { $0.title }
-        let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.name) }.map { $0.id }
+        let allSpeciesData = WatchlistManager.shared.fetchAllBirds()
+        selectionVC.allSpecies = allSpeciesData.map {
+            SpeciesData(id: $0.id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+        }
+        let watchlistTitles = watchlistData.map { $0.bird.commonName }
+        let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.commonName) }.map { $0.id.uuidString }
         selectionVC.selectedSpecies = Set(preSelectedIDs)
         navigationController?.pushViewController(selectionVC, animated: true)
     }
@@ -153,8 +155,23 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
 
-        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-        cell.configure(with: item)
+        if indexPath.section == 0 {
+            let item = watchlistData[indexPath.row]
+            let upcomingBird = UpcomingBird(
+                imageName: item.bird.staticImageName,
+                title: item.bird.commonName,
+                date: item.statusText
+            )
+            cell.configure(with: upcomingBird)
+        } else {
+            let bird = recommendationsData[indexPath.row]
+            let upcomingBird = UpcomingBird(
+                imageName: bird.staticImageName,
+                title: bird.commonName,
+                date: "Recommended"
+            )
+            cell.configure(with: upcomingBird)
+        }
         
         return cell
     }
@@ -178,21 +195,32 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
 
 extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-        if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
-            let (start, end) = HomeManager.shared.parseDateRange(item.date)
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        let startDate = Date()
+        let endDate = Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+
+        if indexPath.section == 0 {
+            let item = watchlistData[indexPath.row]
             let input = BirdDateInput(
-                species: species,
-                startDate: start ?? Date(),
-                endDate: end ?? Date()
+                species: SpeciesData(id: item.bird.id.uuidString, name: item.bird.commonName, imageName: item.bird.staticImageName),
+                startDate: startDate,
+                endDate: endDate
             )
-            let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
             if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
                 mapVC.predictionInputs = [input]
                 self.navigationController?.pushViewController(mapVC, animated: true)
             }
         } else {
-            print("Species data not found for: \(item.title)")
+            let bird = recommendationsData[indexPath.row]
+            let input = BirdDateInput(
+                species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+                startDate: startDate,
+                endDate: endDate
+            )
+            if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+                mapVC.predictionInputs = [input]
+                self.navigationController?.pushViewController(mapVC, animated: true)
+            }
         }
     }
 }

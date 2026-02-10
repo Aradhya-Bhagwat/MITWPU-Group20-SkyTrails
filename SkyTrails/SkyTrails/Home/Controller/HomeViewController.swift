@@ -49,15 +49,15 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAllSpots" {
             if let destinationVC = segue.destination as? AllSpotsViewController {
-                destinationVC.watchlistSpots = homeScreenData?.watchlistSpots ?? []
-                destinationVC.recommendedSpots = homeScreenData?.recommendedSpots ?? []
+                destinationVC.watchlistData = homeScreenData?.watchlistSpots ?? []
+                destinationVC.recommendationsData = homeScreenData?.recommendedSpots ?? []
             }
         }
 
         if segue.identifier == "ShowAllBirds" {
             if let destinationVC = segue.destination as? AllUpcomingBirdsViewController {
-                destinationVC.upcomingBirds = homeScreenData?.upcomingBirds ?? []
-                destinationVC.recommendedBirds = homeScreenData?.recommendedBirds ?? []
+                destinationVC.watchlistData = homeScreenData?.upcomingBirds ?? []
+                destinationVC.recommendationsData = homeScreenData?.recommendedBirds ?? []
             }
         }
     }
@@ -238,12 +238,16 @@ extension HomeViewController {
         let startDate = Date()
         let endDate = Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
 
+        let input = BirdDateInput(
+            species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+            startDate: startDate,
+            endDate: endDate
+        )
+
         // Navigate to prediction map
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-            // Convert Bird to your legacy format if needed
-            mapVC.birdToPredict = bird
-            mapVC.dateRange = (startDate, endDate)
+            mapVC.predictionInputs = [input]
             self.navigationController?.pushViewController(mapVC, animated: true)
         }
     }
@@ -656,19 +660,18 @@ extension HomeViewController {
             
             switch cardData {
             case .combined(let migration, _):
-                if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == migration.birdName }) {
-                    let (start, end) = HomeManager.shared.parseDateRange(migration.dateRange)
-                    let input = BirdDateInput(
-                        species: species,
-                        startDate: start ?? Date(),
-                        endDate: end ?? Date()
-                    )
-                    
-                    let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-                    if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-                        mapVC.predictionInputs = [input]
-                        self.navigationController?.pushViewController(mapVC, animated: true)
-                    }
+                guard let bird = WatchlistManager.shared.findBird(byName: migration.birdName) else { return }
+                let (start, end) = homeManager.parseDateRange(migration.dateRange)
+                let input = BirdDateInput(
+                    species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+                    startDate: start ?? Date(),
+                    endDate: end ?? Date()
+                )
+
+                let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+                if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+                    mapVC.predictionInputs = [input]
+                    self.navigationController?.pushViewController(mapVC, animated: true)
                 }
             }
 				

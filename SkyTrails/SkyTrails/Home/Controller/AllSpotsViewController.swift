@@ -9,8 +9,8 @@ import UIKit
 
 class AllSpotsViewController: UIViewController {
     
-    var watchlistData: [PopularSpot] = []
-    var recommendationsData: [PopularSpot] = []
+    var watchlistData: [PopularSpotResult] = []
+    var recommendationsData: [PopularSpotResult] = []
     private var cachedItemSize: NSCollectionLayoutSize?
     
     @IBOutlet weak var collectionView: UICollectionView!
@@ -145,7 +145,7 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         
         // 💡 CONFIGURE WITH INT: Ensure your Grid cell's configure method accepts Int
         cell.configure(
-            image: UIImage(named: item.imageName),
+            image: UIImage(named: item.imageName ?? "default_spot"),
             title: item.title,
             speciesCount: activeCount
         )
@@ -174,14 +174,15 @@ extension AllSpotsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
 
-        guard let lat = item.latitude, let lon = item.longitude else { return }
+        let lat = item.latitude
+        let lon = item.longitude
         
         // 1. Prepare search criteria
         var inputData = PredictionInputData()
         inputData.locationName = item.title
         inputData.latitude = lat
         inputData.longitude = lon
-        inputData.areaValue = Int(item.radius ?? 5.0)
+        inputData.areaValue = Int(item.radius)
         inputData.startDate = Date()
         // Match the live-week logic by setting a 1-week window
         inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
@@ -190,7 +191,7 @@ extension AllSpotsViewController: UICollectionViewDelegate {
         let predictions = HomeManager.shared.getLivePredictions(
             for: lat,
             lon: lon,
-            radiusKm: item.radius ?? 5.0
+            radiusKm: item.radius
         )
         
         // 3. Navigate to Output
