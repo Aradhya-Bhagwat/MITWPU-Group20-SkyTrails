@@ -102,7 +102,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         } else {
             cell.contentView.layer.borderWidth = 1
             cell.contentView.layer.borderColor = UIColor.systemGray4.cgColor
-            cell.contentView.backgroundColor = .white
+            cell.contentView.backgroundColor = .systemBackground
         }
     }
     
