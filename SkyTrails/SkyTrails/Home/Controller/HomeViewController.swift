@@ -13,7 +13,15 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     @IBOutlet weak var homeCollectionView: UICollectionView!
     
 
-    let homeData = HomeModels()
+    private let homeManager = HomeManager.shared
+    private var homeScreenData: HomeScreenData?
+
+    // UI Data (converted for collection view)
+    private var upcomingBirds: [UpcomingBirdUI] = []
+    private var spots: [PopularSpotUI] = []
+    private var observations: [CommunityObservation] = []
+    private var news: [NewsItem] = []
+
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
     override func viewDidLoad() {
@@ -22,6 +30,12 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         self.navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
         setupCollectionView()
+        loadHomeData()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Refresh data when returning to screen
+        refreshHomeData()
     }
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
             super.viewWillTransition(to: size, with: coordinator)
@@ -35,15 +49,15 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAllSpots" {
             if let destinationVC = segue.destination as? AllSpotsViewController {
-                destinationVC.watchlistData = homeData.watchlistSpots
-                destinationVC.recommendationsData = homeData.recommendedSpots
+                destinationVC.watchlistSpots = homeScreenData?.watchlistSpots ?? []
+                destinationVC.recommendedSpots = homeScreenData?.recommendedSpots ?? []
             }
         }
-        
+
         if segue.identifier == "ShowAllBirds" {
             if let destinationVC = segue.destination as? AllUpcomingBirdsViewController {
-                destinationVC.watchlistData = homeData.watchlistBirds
-                destinationVC.recommendationsData = homeData.recommendedBirds
+                destinationVC.upcomingBirds = homeScreenData?.upcomingBirds ?? []
+                destinationVC.recommendedBirds = homeScreenData?.recommendedBirds ?? []
             }
         }
     }
@@ -108,7 +122,99 @@ extension HomeViewController {
         homeCollectionView.collectionViewLayout = createLayout()
             
     }
-	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, birds: [SpotBird]) {
+
+    // MARK: - Data Loading
+
+    private func loadHomeData() {
+        Task { @MainActor in
+            // Get user location (implement based on your LocationService)
+            let userLocation = getUserLocation()
+
+            // Load all home screen data
+            homeScreenData = await homeManager.getHomeScreenData(userLocation: userLocation)
+
+            // Convert to UI models
+            convertToUIModels()
+
+            // Reload collection view
+            homeCollectionView.reloadData()
+        }
+    }
+
+    private func refreshHomeData() {
+        Task { @MainActor in
+            let userLocation = getUserLocation()
+            homeScreenData = await homeManager.getHomeScreenData(userLocation: userLocation)
+            convertToUIModels()
+            homeCollectionView.reloadData()
+        }
+    }
+
+    private func getUserLocation() -> CLLocationCoordinate2D? {
+        // Option 1: Use current GPS location
+        // return LocationService.shared.currentLocation
+
+        // Option 2: Use saved home location
+        return LocationPreferences.shared.homeLocation
+
+        // Option 3: Return nil and let HomeManager handle fallback
+        // return nil
+    }
+
+    private func convertToUIModels() {
+        guard let data = homeScreenData else { return }
+
+        // Convert upcoming birds
+        upcomingBirds = data.upcomingBirds.map { result in
+            UpcomingBirdUI(
+                imageName: result.bird.staticImageName,
+                title: result.bird.commonName,
+                date: result.statusText
+            )
+        }
+
+        // Add recommended birds if watchlist is empty
+        if upcomingBirds.isEmpty {
+            upcomingBirds = data.recommendedBirds.map { bird in
+                UpcomingBirdUI(
+                    imageName: bird.staticImageName,
+                    title: bird.commonName,
+                    date: "Recommended"
+                )
+            }
+        }
+
+        // Convert spots
+        spots = (data.watchlistSpots.isEmpty ? data.recommendedSpots : data.watchlistSpots)
+            .map { spot in
+                PopularSpotUI(
+                    id: spot.id,
+                    imageName: spot.imageName ?? "default_spot",
+                    title: spot.title,
+                    location: spot.location,
+                    latitude: spot.latitude,
+                    longitude: spot.longitude,
+                    speciesCount: spot.speciesCount,
+                    radius: spot.radius
+                )
+            }
+
+        // Observations (already in correct format)
+        observations = data.recentObservations
+
+        // News - load separately if needed
+        loadNews()
+    }
+
+    private func loadNews() {
+        // If you have a separate news service:
+        // news = NewsService.shared.getLatestNews()
+
+        // Or keep static for now:
+        news = [] // Load from JSON or server
+    }
+
+	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult]) {
 			
 		var inputData = PredictionInputData()
 		inputData.locationName = name
@@ -118,7 +224,6 @@ extension HomeViewController {
 		inputData.startDate = Date()
         inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
 		
-        let predictions = HomeManager.shared.getLivePredictions(for: lat, lon: lon, radiusKm: radius)
 		let storyboard = UIStoryboard(name: "Home", bundle: nil)
 		if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
 			self.navigationController?.pushViewController(predictMapVC, animated: true)
@@ -127,6 +232,21 @@ extension HomeViewController {
 			predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
 		}
 	}
+
+    private func navigateToBirdPrediction(bird: Bird, statusText: String) {
+        // Create input based on bird's valid months or current week
+        let startDate = Date()
+        let endDate = Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+
+        // Navigate to prediction map
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+            // Convert Bird to your legacy format if needed
+            mapVC.birdToPredict = bird
+            mapVC.dateRange = (startDate, endDate)
+            self.navigationController?.pushViewController(mapVC, animated: true)
+        }
+    }
     private func createLayout() -> UICollectionViewLayout {
         
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
@@ -326,18 +446,20 @@ extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
 
-        if section == 0 {
-            return HomeManager.shared.getDynamicMapCards().count
-        } else if section == 1 {
-            return homeData.homeScreenBirds.count
-        } else if section == 2 {
-            return min(homeData.homeScreenSpots.count, 5)
-        } else if section == 3 {
-            return homeData.communityObservations.count
-        } else if section == 4 {
-            return homeData.latestNews.count
+        switch section {
+        case 0: // Migration cards
+            return homeManager.getDynamicMapCards().count
+        case 1: // Upcoming birds
+            return upcomingBirds.count
+        case 2: // Spots
+            return min(spots.count, 5)
+        case 3: // Community observations
+            return observations.count
+        case 4: // News
+            return news.count
+        default:
+            return 0
         }
-        return 0
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -357,7 +479,7 @@ extension HomeViewController: UICollectionViewDataSource {
         }
         else if indexPath.section == 1 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "UpcomingBirdsCollectionViewCell", for: indexPath) as! UpcomingBirdsCollectionViewCell
-                let item = homeData.homeScreenBirds[indexPath.row]
+                let item = upcomingBirds[indexPath.row]
                 cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date)
                 return cell
             }else if indexPath.section == 2 {
@@ -367,12 +489,11 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! SpotsToVisitCollectionViewCell
             
-            let item = homeData.homeScreenSpots[indexPath.row]
-            let activeCount = HomeManager.shared.spotSpeciesCountCache[item.title] ?? 0
+            let item = spots[indexPath.row]
             cell.configure(
                 image: UIImage(named: item.imageName),
                 title: item.title,
-                speciesCount: activeCount
+                speciesCount: item.speciesCount
             )
             return cell
             
@@ -382,10 +503,10 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! CommunityObservationsCollectionViewCell
             
-            let item = homeData.communityObservations[indexPath.row]
+            let item = observations[indexPath.row]
             cell.configure(
                 with: item,
-                birdImage: UIImage(named: item.displayImageName)
+                birdImage: UIImage(named: item.photoURL ?? "default_bird")
             )
             return cell
         } else if indexPath.section == 4 {
@@ -394,7 +515,7 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! NewsCollectionViewCell
             
-            let item = homeData.latestNews[indexPath.row]
+            let item = news[indexPath.row]
             cell.configure(with: item)
             return cell
         }
@@ -432,7 +553,7 @@ extension HomeViewController: UICollectionViewDataSource {
                  for: indexPath
              ) as! PageControlReusableViewCollectionReusableView
              
-             let observationCount = homeData.communityObservations.count
+             let observationCount = observations.count
              footer.configure(numberOfPages: observationCount, currentPage: 0)
              return footer
          }
@@ -444,7 +565,7 @@ extension HomeViewController: UICollectionViewDataSource {
                  for: indexPath
              ) as! PageControlReusableViewCollectionReusableView
              
-             let count = homeData.latestNews.count
+             let count = news.count
              footer.configure(numberOfPages: count, currentPage: 0)
              return footer
          }
@@ -511,7 +632,7 @@ extension HomeViewController {
                 forElementKind: footerKind,
                 at: IndexPath(item: 0, section: 3)
             ) as? PageControlReusableViewCollectionReusableView {
-                let totalCount = homeData.communityObservations.count
+                let totalCount = observations.count
                 footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
             }
         }
@@ -523,7 +644,7 @@ extension HomeViewController {
                 forElementKind: footerKind,
                 at: IndexPath(item: 0, section: 4)
             ) as? PageControlReusableViewCollectionReusableView {
-                let totalCount = homeData.latestNews.count
+                let totalCount = news.count
                 footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
             }
         }
@@ -552,35 +673,35 @@ extension HomeViewController {
             }
 				
 			case 1:
-				let item = homeData.homeScreenBirds[indexPath.row]
-				if let species = PredictionEngine.shared.allSpecies.first(where: { $0.name == item.title }) {
-					let (start, end) = HomeManager.shared.parseDateRange(item.date)
-					let input = BirdDateInput(
-						species: species,
-						startDate: start ?? Date(),
-						endDate: end ?? Date()
-					)
-					
-					let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-					if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-						mapVC.predictionInputs = [input]
-						self.navigationController?.pushViewController(mapVC, animated: true)
-					}
-				}
+				let item = upcomingBirds[indexPath.row]
+				
+				// Get the actual bird from SwiftData
+				guard let birdResult = homeScreenData?.upcomingBirds[safe: indexPath.row] else { return }
+				let bird = birdResult.bird
+				
+				// Navigate to bird detail/map
+				navigateToBirdPrediction(bird: bird, statusText: item.date)
 				
 			case 2:
-				let item = homeData.homeScreenSpots[indexPath.row]
-				guard let lat = item.latitude, let lon = item.longitude else { return }
+				let item = spots[indexPath.row]
+				
+				// Get live predictions for this spot
+				let predictions = homeManager.getLivePredictions(
+					for: item.latitude,
+					lon: item.longitude,
+					radiusKm: item.radius
+				)
+				
 				navigateToSpotDetails(
 					name: item.title,
-					lat: lat,
-					lon: lon,
-					radius: item.radius ?? 5.0,
-					birds: item.birds ?? []
+					lat: item.latitude,
+					lon: item.longitude,
+					radius: item.radius,
+					predictions: predictions
 				)
 				
 			case 3:
-				let observation = homeData.communityObservations[indexPath.row]
+				let observation = observations[indexPath.row]
 				let storyboard = UIStoryboard(name: "Home", bundle: nil)
 				if let detailVC = storyboard.instantiateViewController(withIdentifier: "CommunityObservationViewController") as? CommunityObservationViewController {
 					detailVC.observation = observation
@@ -588,7 +709,7 @@ extension HomeViewController {
 				}
 				
 			case 4:
-				let item = homeData.latestNews[indexPath.row]
+				let item = news[indexPath.row]
 				if let url = URL(string: item.link) {
 					UIApplication.shared.open(url)
 				}
@@ -638,4 +759,30 @@ extension HomeViewController {
         return section
     }
 	
+}
+
+// MARK: - UI Models
+
+struct UpcomingBirdUI {
+    let imageName: String
+    let title: String
+    let date: String
+}
+
+struct PopularSpotUI {
+    let id: UUID
+    let imageName: String
+    let title: String
+    let location: String
+    let latitude: Double
+    let longitude: Double
+    let speciesCount: Int
+    let radius: Double
+}
+
+// Safe array subscript
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
 }

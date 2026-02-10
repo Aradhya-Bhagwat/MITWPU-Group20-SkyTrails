@@ -39,7 +39,7 @@ final class WatchlistManager: WatchlistRepository {
 		// MARK: - SwiftData
 	
 	private let container: ModelContainer
-	private let context: ModelContext
+	let context: ModelContext  // Made internal for HomeManager access
 	
 		// MARK: - State Management
 	
@@ -60,7 +60,14 @@ final class WatchlistManager: WatchlistRepository {
 				WatchlistShare.self,
 				WatchlistImage.self,
 				ObservedBirdPhoto.self,
-				Bird.self
+				Bird.self,
+				// Integration models
+				Hotspot.self,
+				HotspotSpeciesPresence.self,
+				MigrationSession.self,
+				TrajectoryPath.self,
+				MigrationDataPayload.self,
+				CommunityObservation.self
 			])
 			let config = ModelConfiguration(isStoredInMemoryOnly: false)
 			container = try ModelContainer(for: schema, configurations: [config])
@@ -531,5 +538,198 @@ final class WatchlistManager: WatchlistRepository {
 			entry.observationDate = (entry.status == .observed) ? Date() : nil
 			saveContext()
 		}
+	}
+}
+	//
+	//  WatchlistManager+Queries.swift
+	//  SkyTrails
+	//
+	//  Integration queries for Hotspot, Migration, and Upcoming Birds
+	//
+extension WatchlistManager {
+	
+		// MARK: - Upcoming Birds (Home Module Integration)
+	
+		/// Get birds the user should be notified about based on:
+		/// - They're on watchlist with notify_upcoming enabled
+		/// - They're present at user's location during current/upcoming weeks
+	func getUpcomingBirds(
+		userLocation: CLLocationCoordinate2D,
+		currentWeek: Int,
+		lookAheadWeeks: Int = 4,
+		radiusInKm: Double = 50.0
+	) -> [UpcomingBirdResult] {
+		
+		print("🔔 [WatchlistManager] Getting upcoming birds...")
+		print("🔔 [WatchlistManager] - Location: \(userLocation)")
+		print("🔔 [WatchlistManager] - Current week: \(currentWeek)")
+		print("🔔 [WatchlistManager] - Look ahead: \(lookAheadWeeks) weeks")
+		
+			// 1. Get all watchlist entries with notifications enabled
+		let descriptor = FetchDescriptor<WatchlistEntry>(
+			predicate: #Predicate { entry in
+				entry.notify_upcoming == true && entry.status == .to_observe
+			}
+		)
+		
+		guard let notifyEntries = try? context.fetch(descriptor) else {
+			print("❌ [WatchlistManager] Failed to fetch notify entries")
+			return []
+		}
+		
+		print("📊 [WatchlistManager] Found \(notifyEntries.count) entries with notifications enabled")
+		
+			// 2. For each bird, check if it's present at user's location
+		var results: [UpcomingBirdResult] = []
+		let hotspotManager = HotspotManager(modelContext: context)
+		
+		for entry in notifyEntries {
+			guard let bird = entry.bird else { continue }
+			
+				// Check weeks in the upcoming window
+			for weekOffset in 0...lookAheadWeeks {
+				let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1 // Wrap around year
+				
+				let presentBirds = hotspotManager.getBirdsPresent(
+					at: userLocation,
+					duringWeek: checkWeek,
+					radiusInKm: radiusInKm
+				)
+				
+				if presentBirds.contains(where: { $0.id == bird.id }) {
+					results.append(UpcomingBirdResult(
+						bird: bird,
+						entry: entry,
+						expectedWeek: checkWeek,
+						daysUntil: weekOffset * 7
+					))
+					print("✅ [WatchlistManager] \(bird.commonName) arriving in \(weekOffset) weeks")
+					break // Only add each bird once
+				}
+			}
+		}
+		
+		print("🔔 [WatchlistManager] Found \(results.count) upcoming birds")
+		return results.sorted { $0.daysUntil < $1.daysUntil }
+	}
+	
+		/// Alternative: Get upcoming birds using saved home location preference
+	func getUpcomingBirdsAtHome(
+		lookAheadWeeks: Int = 4,
+		radiusInKm: Double = 50.0
+	) -> [UpcomingBirdResult] {
+		
+			// Get home location from UserDefaults or LocationService
+		guard let homeLocation = LocationPreferences.shared.homeLocation else {
+			print("⚠️ [WatchlistManager] No home location set")
+			return []
+		}
+		
+		let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+		
+		return getUpcomingBirds(
+			userLocation: homeLocation,
+			currentWeek: currentWeek,
+			lookAheadWeeks: lookAheadWeeks,
+			radiusInKm: radiusInKm
+		)
+	}
+	
+		// MARK: - Location-Based Queries
+	
+		/// Get entries observed within radius of a location
+	func getEntriesObservedNear(
+		location: CLLocationCoordinate2D,
+		radiusInKm: Double = 10.0,
+		watchlistId: UUID? = nil
+	) -> [WatchlistEntry] {
+		
+		let descriptor = FetchDescriptor<WatchlistEntry>(
+			predicate: #Predicate { entry in
+				entry.status == .observed && entry.lat != nil && entry.lon != nil
+			}
+		)
+		
+		guard let allObserved = try? context.fetch(descriptor) else { return [] }
+		
+			// Filter by watchlist if specified
+		var filtered = allObserved
+		if let watchlistId = watchlistId {
+			filtered = filtered.filter { $0.watchlist?.id == watchlistId }
+		}
+		
+			// Geospatial filter
+		let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
+		return filtered.filter { entry in
+			guard let lat = entry.lat, let lon = entry.lon else { return false }
+			let entryLoc = CLLocation(latitude: lat, longitude: lon)
+			return entryLoc.distance(from: queryLoc) <= (radiusInKm * 1000)
+		}
+	}
+	
+		// MARK: - Date Range Queries
+	
+		/// Get birds the user should be looking for during a date range
+	func getEntriesInDateRange(
+		start: Date,
+		end: Date,
+		watchlistId: UUID? = nil
+	) -> [WatchlistEntry] {
+		
+		let descriptor = FetchDescriptor<WatchlistEntry>(
+			predicate: #Predicate { entry in
+				entry.status == .to_observe
+			}
+		)
+		
+		guard let entries = try? context.fetch(descriptor) else { return [] }
+		
+		var filtered = entries
+		
+			// Filter by watchlist
+		if let watchlistId = watchlistId {
+			filtered = filtered.filter { $0.watchlist?.id == watchlistId }
+		}
+		
+			// Filter by date range overlap
+		return filtered.filter { entry in
+			guard let rangeStart = entry.toObserveStartDate,
+				  let rangeEnd = entry.toObserveEndDate else {
+				return false
+			}
+			
+				// Check if ranges overlap
+			return rangeStart <= end && rangeEnd >= start
+		}
+	}
+	
+		/// Get entries to observe THIS WEEK
+	func getEntriesForThisWeek(watchlistId: UUID? = nil) -> [WatchlistEntry] {
+		let calendar = Calendar.current
+		guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start,
+			  let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) else {
+			return []
+		}
+		
+		return getEntriesInDateRange(start: weekStart, end: weekEnd, watchlistId: watchlistId)
+	}
+}
+
+	// MARK: - Result Types
+
+struct UpcomingBirdResult: Identifiable {
+	let id = UUID()
+	let bird: Bird
+	let entry: WatchlistEntry
+	let expectedWeek: Int
+	let daysUntil: Int
+	
+	var isArriving: Bool { daysUntil <= 7 }
+	var isPresentNow: Bool { daysUntil == 0 }
+	var statusText: String {
+		if isPresentNow { return "Here now!" }
+		if isArriving { return "Arriving this week" }
+		if daysUntil <= 14 { return "Arriving in \(daysUntil) days" }
+		return "Expected in \(daysUntil / 7) weeks"
 	}
 }

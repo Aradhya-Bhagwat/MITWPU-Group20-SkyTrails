@@ -20,14 +20,14 @@ class WatchlistHomeViewController: UIViewController {
 	
 		// MARK: - Types
 	enum WatchlistSection: Int, CaseIterable {
-		case summary
+		case quickActions
 		case myWatchlist
 		case customWatchlist
 		case sharedWatchlist
 		
 		var title: String {
 			switch self {
-				case .summary: return "Summary"
+				case .quickActions: return "Quick Actions"
 				case .myWatchlist: return "My Watchlist"
 				case .customWatchlist: return "Custom Watchlist"
 				case .sharedWatchlist: return "Shared Watchlist"
@@ -36,9 +36,9 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private struct LayoutConstants {
-		static let summaryHeight: CGFloat = 110
+		static let quickActionsHeight: CGFloat = 140
 		static let myWatchlistHeight: CGFloat = 280
-		static let customWatchlistHeight: CGFloat = 210
+		static let customWatchlistHeight: CGFloat = 280
 		static let sharedWatchlistHeight: CGFloat = 140
 		static let headerHeight: CGFloat = 40
 	}
@@ -116,7 +116,6 @@ class WatchlistHomeViewController: UIViewController {
 		
 			// Cells
 		let cells = [
-			"SummaryCardCollectionViewCell",
 			CustomWatchlistCollectionViewCell.identifier,
 			SharedWatchlistCollectionViewCell.identifier,
 			WatchlistActionCell.identifier
@@ -333,10 +332,10 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		
 		let count: Int
 		switch sectionType {
-			case .summary:
-				count = 3
+			case .quickActions:
+				count = 2
 			case .myWatchlist:
-				count = myWatchlist != nil ? 3 : 0  // 1 main card + 2 action cells
+				count = myWatchlist != nil ? 1 : 0
 			case .customWatchlist:
 				count = customWatchlists.count
 			case .sharedWatchlist:
@@ -353,8 +352,8 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		}
 		
 		switch sectionType {
-			case .summary:
-				return configureSummaryCell(in: collectionView, at: indexPath)
+			case .quickActions:
+				return configureQuickActionCell(in: collectionView, at: indexPath)
 			case .myWatchlist:
 				return configureMyWatchlistCell(in: collectionView, at: indexPath)
 			case .customWatchlist:
@@ -368,23 +367,16 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return }
 		
 		switch sectionType {
-			case .summary:
-				performSegue(withIdentifier: "ShowSmartWatchlist", sender: "allSpecies")
+			case .quickActions:
+				if indexPath.item == 0 {
+					navigateToCreateWatchlist()
+				} else {
+					addFloatingButtonTapped(addFloatingButton)
+				}
 				
 			case .myWatchlist:
-				// Item 0: Main watchlist card
-				if indexPath.item == 0 {
-					if let wl = myWatchlist {
-						performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
-					}
-				}
-				// Item 1: Create new watchlist
-				else if indexPath.item == 1 {
-					navigateToCreateWatchlist()
-				}
-				// Item 2: Add bird to watchlist
-				else if indexPath.item == 2 {
-					addFloatingButtonTapped(addFloatingButton)
+				if let wl = myWatchlist {
+					performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
 				}
 				
 			case .customWatchlist:
@@ -403,67 +395,42 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 // MARK: - Cell Configuration Helpers
 extension WatchlistHomeViewController {
 	
-	private func configureSummaryCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: "SummaryCardCollectionViewCell", for: indexPath) as! SummaryCardCollectionViewCell
+	private func configureQuickActionCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
+		let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
 		
-			// Use Global Stats
-		let totalCount = globalStats?.totalCount ?? 0
-		let observedCount = globalStats?.observedCount ?? 0
-		let rareCount = globalStats?.rareCount ?? 0
-		
-		let data = [
-			(totalCount, "Watchlist", UIColor.systemGreen),
-			(observedCount, "Observed", UIColor.systemBlue),
-			(rareCount, "Rare", UIColor.systemOrange)
-		]
-		
-		if indexPath.item < data.count {
-			let item = data[indexPath.item]
-			cell.configure(number: "\(item.0)", title: item.1, color: item.2)
-		}
-		return cell
-	}
-	
-	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		// Item 0: Main MyWatchlist card
 		if indexPath.item == 0 {
-			let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
-			
-			if let watchlist = myWatchlist {
-				let images = watchlist.previewImages.compactMap { UIImage(named: $0) }
-				
-				let data = WatchlistData(
-					title: watchlist.title,
-					images: images,
-					totalCount: watchlist.stats.totalCount,
-					observedCount: watchlist.stats.observedCount,
-					totalImageCount: watchlist.stats.totalCount
-				)
-				
-				cell.configure(with: data)
-			}
-			return cell
-		}
-		// Item 1: Create new watchlist action
-		else if indexPath.item == 1 {
-			let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
 			cell.configure(
 				icon: "custom.list.bullet.badge.plus",
 				title: "Create Watchlist",
 				color: .systemYellow
 			)
-			return cell
-		}
-		// Item 2: Add bird to watchlist action
-		else {
-			let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
+		} else {
 			cell.configure(
 				icon: "custom.bird.fill.badge.plus",
 				title: "Add Bird",
 				color: .systemRed
 			)
-			return cell
 		}
+		return cell
+	}
+	
+	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
+		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
+		
+		if let watchlist = myWatchlist {
+			let images = watchlist.previewImages.compactMap { UIImage(named: $0) }
+			
+			let data = WatchlistData(
+				title: watchlist.title,
+				images: images,
+				totalCount: watchlist.stats.totalCount,
+				observedCount: watchlist.stats.observedCount,
+				totalImageCount: watchlist.stats.totalCount
+			)
+			
+			cell.configure(with: data)
+		}
+		return cell
 	}
 	
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
@@ -509,7 +476,7 @@ extension WatchlistHomeViewController {
 			guard let self = self, let sectionType = WatchlistSection(rawValue: sectionIndex) else { return nil }
 			
 			switch sectionType {
-				case .summary: return self.layoutSummarySection()
+				case .quickActions: return self.layoutQuickActionsSection()
 				case .myWatchlist: return self.layoutMyWatchlistSection()
 				case .customWatchlist: return self.layoutCustomWatchlistSection(env: layoutEnvironment)
 				case .sharedWatchlist: return self.layoutSharedWatchlistSection(env: layoutEnvironment)
@@ -517,12 +484,12 @@ extension WatchlistHomeViewController {
 		}
 	}
 	
-	private func layoutSummarySection() -> NSCollectionLayoutSection {
-		let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0/3.0), heightDimension: .fractionalHeight(1.0))
+	private func layoutQuickActionsSection() -> NSCollectionLayoutSection {
+		let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5), heightDimension: .fractionalHeight(1.0))
 		let item = NSCollectionLayoutItem(layoutSize: itemSize)
 		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
 		
-		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(LayoutConstants.summaryHeight))
+		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(LayoutConstants.quickActionsHeight))
 		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 		
 		let section = NSCollectionLayoutSection(group: group)
@@ -532,49 +499,20 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func layoutMyWatchlistSection() -> NSCollectionLayoutSection {
-		// Main watchlist card (left side, 65% width)
-		let mainItem = NSCollectionLayoutItem(
-			layoutSize: NSCollectionLayoutSize(
-				widthDimension: .fractionalWidth(1.0),
-				heightDimension: .fractionalHeight(1.0)
-			)
+		// Main watchlist card (full width)
+		let itemSize = NSCollectionLayoutSize(
+			widthDimension: .fractionalWidth(1.0),
+			heightDimension: .fractionalHeight(1.0)
 		)
+		let item = NSCollectionLayoutItem(layoutSize: itemSize)
 		
-		let mainGroup = NSCollectionLayoutGroup.horizontal(
-			layoutSize: NSCollectionLayoutSize(
-				widthDimension: .fractionalWidth(0.65),
-				heightDimension: .fractionalHeight(1.0)
-			),
-			subitems: [mainItem]
+		let groupSize = NSCollectionLayoutSize(
+			widthDimension: .fractionalWidth(1.0),
+			heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
 		)
+		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
 		
-		// Action cells (right side, 35% width, stacked vertically)
-		let actionItem = NSCollectionLayoutItem(
-			layoutSize: NSCollectionLayoutSize(
-				widthDimension: .fractionalWidth(1.0),
-				heightDimension: .fractionalHeight(0.5)
-			)
-		)
-		actionItem.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 0)
-		
-		let actionGroup = NSCollectionLayoutGroup.vertical(
-			layoutSize: NSCollectionLayoutSize(
-				widthDimension: .fractionalWidth(0.35),
-				heightDimension: .fractionalHeight(1.0)
-			),
-			subitems: [actionItem, actionItem]
-		)
-		
-		// Combine main card and action cells horizontally
-		let containerGroup = NSCollectionLayoutGroup.horizontal(
-			layoutSize: NSCollectionLayoutSize(
-				widthDimension: .fractionalWidth(1.0),
-				heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
-			),
-			subitems: [mainGroup, actionGroup]
-		)
-		
-		let section = NSCollectionLayoutSection(group: containerGroup)
+		let section = NSCollectionLayoutSection(group: group)
 		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
 		return section
 	}
@@ -646,7 +584,7 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		) as! WatchlistSectionHeaderCollectionReusableView
 		
 		if let sectionType = WatchlistSection(rawValue: indexPath.section) {
-			let showChevron = (sectionType != .summary && sectionType != .myWatchlist)
+			let showChevron = (sectionType != .myWatchlist && sectionType != .quickActions)
 			header.configure(title: sectionType.title, sectionIndex: indexPath.section, showSeeAll: showChevron, delegate: self)
 		}
 		
