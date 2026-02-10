@@ -637,6 +637,60 @@
               "variantId": "6a1f0000-0000-0000-0000-000000000009"
             }
           ]
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440009",
+          "commonName": "European Goldfinch",
+          "scientificName": "Carduelis carduelis",
+          "staticImageName": "european_goldfinch",
+          "family": "Fringillidae",
+          "order_name": "Passeriformes",
+          "rarityLevel": "uncommon",
+          "shape_id": "Passeridae_Fringillidae",
+          "size_category": 1,
+          "validLocations": ["Himalayas", "Urban"],
+          "validMonths": [10,11,12,1,2,3,4],
+          "fieldMarkData": [
+            {
+              "area": "Facemask",
+              "variantId": "6a1f0000-0000-0000-0000-000000000015"
+            },
+            {
+              "area": "Wings",
+              "variantId": "6a1f0000-0000-0000-0000-000000000036"
+            },
+            {
+              "area": "Beak",
+              "variantId": "6a1f0000-0000-0000-0000-000000000009"
+            }
+          ]
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440010",
+          "commonName": "Black-headed Greenfinch",
+          "scientificName": "Chloris ambigua",
+          "staticImageName": "black_headed_greenfinch",
+          "family": "Fringillidae",
+          "order_name": "Passeriformes",
+          "rarityLevel": "uncommon",
+          "shape_id": "Passeridae_Fringillidae",
+          "size_category": 1,
+          "validLocations": ["Himalayas"],
+          "validMonths": [1,2,3,4,5,9,10,11,12],
+          "fieldMarkData": [
+            {
+              "area": "Crown",
+              "variantId": "6a1f0000-0000-0000-0000-00000000000e"
+            },
+            {
+              "area": "Wings",
+              "variantId": "6a1f0000-0000-0000-0000-000000000034"
+            },
+            {
+              "area": "Underparts",
+              "variantId": "6a1f0000-0000-0000-0000-000000000030"
+            }
+          ]
         }
       ]
 
