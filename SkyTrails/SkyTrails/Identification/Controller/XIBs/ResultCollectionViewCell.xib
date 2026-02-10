@@ -49,7 +49,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
-                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="eDd-Dw-XHU" firstAttribute="leading" secondItem="zUh-5Y-gxn" secondAttribute="leading" constant="8" id="6BJ-dL-TwR"/>
                             <constraint firstItem="v6R-9I-fj8" firstAttribute="top" secondItem="eDd-Dw-XHU" secondAttribute="bottom" constant="4" id="EGD-9Y-ISu"/>
@@ -75,7 +75,7 @@
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
-            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="zUh-5Y-gxn" secondAttribute="bottom" id="CMl-jA-Alk"/>
                 <constraint firstItem="zUh-5Y-gxn" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="lKF-Pp-Tc6"/>
@@ -121,6 +121,9 @@
         </systemColor>
         <systemColor name="secondaryLabelColor">
             <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
     </resources>
 </document>

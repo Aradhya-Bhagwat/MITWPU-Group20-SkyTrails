@@ -27,12 +27,12 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         dateLabel.text = nil
         dateLabel.textAlignment = .left
         
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = .systemBackground
         contentView.layer.borderWidth = 0
     }
     
     func configureCell(historyItem: IdentificationSession) {
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = .systemBackground
         
         
         if let bird = historyItem.result?.bird {
@@ -84,7 +84,9 @@ class HistoryCollectionViewCell: UICollectionViewCell {
                     self.contentView.layer.borderWidth = 1.5
                     self.contentView.layer.borderColor = UIColor.systemBlue.cgColor
                 } else {
-                    self.contentView.backgroundColor = .white
+                    self.contentView.layer.borderWidth = 1.0
+                    self.contentView.layer.borderColor = UIColor.systemGray4.cgColor
+                    self.contentView.backgroundColor = .systemBackground
                     self.contentView.layer.borderWidth = 0
                 }
             }

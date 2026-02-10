@@ -67,7 +67,7 @@ class ResultCollectionViewCell: UICollectionViewCell {
             contentView.layer.borderColor = UIColor.systemBlue.cgColor
             contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
         } else {
-            // ← was missing: reset back to unselected state
+           
             contentView.layer.borderWidth = 1.0
             contentView.layer.borderColor = UIColor.systemGray4.cgColor
             contentView.backgroundColor = .white

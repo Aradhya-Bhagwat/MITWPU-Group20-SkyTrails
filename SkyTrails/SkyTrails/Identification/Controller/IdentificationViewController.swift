@@ -175,7 +175,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         warningLabel.isHidden = isValid
         startButton.isEnabled = isValid
         
-        let titleColor: UIColor = isValid ? .black : .systemGray3
+        let titleColor: UIColor = isValid ? .label : .systemGray3
         let shadowOpacity: Float = isValid ? 0.1 : 0.05
         
         startButton.setTitleColor(titleColor, for: .normal)
@@ -212,7 +212,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     func applyCardShadow(to view: UIView) {
-        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowColor = UIColor.label.cgColor
         
     }
     
@@ -242,14 +242,13 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         if let img = UIImage(named: item.category.icon) {
             
             let targetSize = CGSize(width: 28, height: 28)
-            let resized = resize(img, to: targetSize)
+            let resized = resize(img, to: targetSize).withRenderingMode(.alwaysTemplate)
             cell.imageView?.image = resized
             cell.imageView?.contentMode = .scaleAspectFit
             cell.imageView?.frame = CGRect(origin: .zero, size: targetSize)
             cell.imageView?.tintColor = .label
         } else {
-            
-            cell.imageView?.image = UIImage(systemName: "questionmark.circle")
+            cell.imageView?.image = UIImage(systemName: "questionmark.circle")?.withRenderingMode(.alwaysTemplate)
             cell.imageView?.tintColor = .systemGray
         }
         
