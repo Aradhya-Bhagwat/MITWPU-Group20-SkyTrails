@@ -262,24 +262,27 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
         let currentState = options[indexPath.row].isSelected
         options[indexPath.row].isSelected = !currentState
-        
+
         let tappedCategory = options[indexPath.row].category
         let isNowSelected = options[indexPath.row].isSelected
-        
-        // Logic: If Field Marks is selected, Shape must also be selected
+
+        // If Field Marks selected → auto-select Shape (dependency)
         if tappedCategory == .fieldMarks && isNowSelected {
-            if let shapeIndex = options.firstIndex(where: {
-                $0.category == .shape
-            }) {
+            if let shapeIndex = options.firstIndex(where: { $0.category == .shape }) {
                 options[shapeIndex].isSelected = true
             }
         }
-        
+
+        // If Shape deselected → also deselect Field Marks (cascade)
+        if tappedCategory == .shape && !isNowSelected {
+            if let fieldMarksIndex = options.firstIndex(where: { $0.category == .fieldMarks }) {
+                options[fieldMarksIndex].isSelected = false
+            }
+        }
+
         tableView.reloadData()
-        
         updateSelectionState()
     }
-    
     private func setupHistoryFlowLayout() {
         guard let layout = historyCollectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
             return
