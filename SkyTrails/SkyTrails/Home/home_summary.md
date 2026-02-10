@@ -1,124 +1,67 @@
 # Home Module Technical Summary
 
-> **PURPOSE:** This document details the technical state of the Home module's data models, persistence mechanisms, and data flows. It is intended to serve as a context reference for Large Language Models (LLMs) planning a migration to SwiftData.
+> **PURPOSE:** This document details the technical state of the Home module's data models, persistence mechanisms, and data flows. It reflects the post-migration state using SwiftData.
 
-## 1. Data Models (`HomeModels.swift`)
+## 0. Build Mandate (For Agents)
 
-The current data model is built around a monolithic JSON structure (`CoreHomeData`) which acts as the single source of truth. All models conform to `Codable`.
+To build this project for debugging on the target simulator, use the following command:
+```bash
+xcodebuild -project SkyTrails/SkyTrails.xcodeproj -scheme SkyTrails -destination 'platform=iOS Simulator,name=iPad Air 11-inch (M3),OS=26.2' build
+```
 
-### Core Wrapper
-*   **`CoreHomeData`**: The root object decoding `home_data.json`.
-    *   Contains arrays of: `PredictedMigration`, `UpcomingBird`, `BirdCategory`, `PopularSpot`, `DynamicCard`, `CommunityObservation`, `NewsItem`, `SpeciesData`.
+## 1. Data Models
 
-### Entity Models
+The Home module uses a mix of SwiftData entities and lightweight UI-specific structs.
 
-#### 1. Spots & Recommendations
-*   **`PopularSpot`**: Represents a birding location.
-    *   **Properties**: `title`, `location`, `latitude`, `longitude`, `radius`, `imageName`.
-    *   **Relationships**: Contains an array of `SpotBird`.
-*   **`SpotBird`**: Simple wrapper for a bird found at a spot (`name`, `imageName`, `lat`, `lon`).
-*   **`UpcomingBird`**: Simple display model for "Upcoming Birds" list (`title`, `date`, `imageName`).
+### UI Models (`HomeModels.swift` & `HomeViewController.swift`)
+These models are used for display in collection views and are not persisted directly.
+*   **`UpcomingBirdUI`**: Displays upcoming bird sightings (`title`, `date`, `imageName`).
+*   **`PopularSpotUI`**: Displays birding locations (`title`, `location`, `speciesCount`, `imageName`).
+*   **`BirdCategory`**: Static categories for filtering (`icon`, `title`).
+*   **`NewsItem`**: Displays external news links.
+*   **`HomeScreenData`**: A container struct for the complete home screen state, populated by `HomeManager`.
 
-#### 2. Prediction Engine Models
-*   **`SpeciesData`**: Represents a bird species.
-    *   **Properties**: `id`, `name`, `imageName`.
-    *   **Relationships**: Contains a large array of `Sighting`.
-*   **`Sighting`**: Spatio-temporal data point.
-    *   **Properties**: `week` (Int), `lat` (Double), `lon` (Double), `locationName` (String), `probability` (Int?).
-    *   **Note**: This is the primary dataset for the prediction algorithm.
-
-#### 3. Dynamic UI Cards
-*   **`DynamicCard`**: A flexible model used for the top carousel.
-    *   **Nature**: "Schema-on-read". It contains optional fields for both *Migration* (start/end loc, progress) and *Hotspot* (species count, hotspots list) types.
-    *   **Runtime**: Converted to `MapCardType` enum (e.g., `.combined`) by `HomeManager` before display.
-    *   **Complex Fields**: Contains nested `RawCoordinate` and `RawHotspotPin`.
-
-#### 4. Community & News
-*   **`CommunityObservation`**: User generated content.
-    *   **Properties**: `observationId`, `username`, `userAvatar`, `observationTitle`, `location`, `likesCount`, etc.
-    *   **Legacy Support**: Contains `User` object (legacy) and computed compatibility properties (`displayBirdName`, `displayUser`).
-*   **`NewsItem`**: Simple news data (`title`, `description`, `link`, `imageName`).
-
-#### 5. View Models (Non-Persisted)
-*   **`HomeModels`**: A class initialized by `HomeViewController`.
-    *   **Role**: Acts as a ViewModel, flattening `CoreHomeData` into distinct arrays (`watchlistBirds`, `recommendedSpots`) for easy consumption by the UI.
-    *   **Logic**: Contains computed properties like `homeScreenSpots` which toggle between "watchlist" and "recommended" data.
+### SwiftData Entities (Integrated via Managers)
+The module consumes data from the following core entities:
+*   **`Bird`**: Core species data.
+*   **`Hotspot`**: Location data with associated species.
+*   **`MigrationSession`**: Active migration events.
+*   **`CommunityObservation`**: User-contributed sightings.
 
 ## 2. Persistence & Data Management (`HomeManager.swift`)
 
-The `HomeManager` singleton (`shared`) is responsible for the lifecycle of the data.
+`HomeManager` is a singleton facade that integrates multiple specialized managers to provide a unified data source for the Home screen.
 
-### Persistence Strategy
-*   **File-Based**: Reads/Writes to a single `home_data.json` file.
-*   **Load Priority**:
-    1.  **Documents Directory**: Checks for a user-modified version first.
-    2.  **App Bundle**: Falls back to the shipped `home_data.json`.
-*   **Write Back**: If data is loaded from the Bundle, it is immediately saved to the Documents directory to ensure a writable copy exists.
-*   **Serialization**: Uses standard `JSONDecoder` and `JSONEncoder`.
+### Dependency Injection (Internal)
+It delegates complex logic to:
+*   **`WatchlistManager`**: For user-specific birds and locations.
+*   **`HotspotManager`**: For location-based bird presence predictions.
+*   **`MigrationManager`**: For tracking active migration trajectories.
+*   **`CommunityObservationManager`**: For fetching and filtering user sightings.
 
-### Derived Data & Caching
-*   **`spotSpeciesCountCache`**: A dictionary `[String: Int]` mapping Spot Titles to the count of active species.
-    *   **Calculation**: `precalculateSpotSpeciesCounts()` iterates `watchlistSpots` + `recommendedSpots` against *all* `SpeciesData`. It filters sightings by **distance** (within spot radius) and **time** (current week).
-*   **`newsResponse`** & **`predictionData`**: Wrappers extracted from `CoreHomeData` for easier access to specific subsections.
+### Key Logic
+*   **SwiftData Integration**: Uses `WatchlistManager.shared.context` to ensure consistency across the app.
+*   **Location Awareness**: Prioritizes `LocationPreferences.shared.homeLocation` or real-time GPS coordinates to filter content.
+*   **Caching**: Maintains a `spotSpeciesCountCache` for performance during collection view scrolling.
 
 ## 3. Key Data Flows
 
 ### A. Dashboard Initialization
-1.  **App Launch**: `HomeManager.shared` initializes and calls `loadData()`.
-2.  **Decoding**: `home_data.json` is parsed into `CoreHomeData`.
-3.  **Pre-calculation**: `precalculateSpotSpeciesCounts()` runs immediately to populate the cache.
-4.  **View Load**: `HomeViewController` initializes `HomeModels`.
-5.  **Binding**: `HomeModels` grabs references to the arrays in `HomeManager.shared.coreHomeData`.
+1.  **View Load**: `HomeViewController` calls `homeManager.getHomeScreenData(userLocation:)`.
+2.  **Aggregation**: `HomeManager` executes parallel requests to its internal managers.
+3.  **Filtering**:
+    *   `getUpcomingBirds()`: Checks the next 4 weeks of probability data for watchlist birds.
+    *   `getRecommendedSpots()`: Finds `Hotspot` entities within a 100km radius of the user.
+    *   `getActiveMigrations()`: Filters `MigrationSession` entities active in the current week.
+4.  **Binding**: Data is converted to UI models (`UpcomingBirdUI`, etc.) and loaded into the `UICollectionView`.
 
-### B. Prediction "Waterfall" (Algorithm)
-*   **Trigger**: Used when visualizing migration maps or checking specific spots.
-*   **Input**: `PredictionInputData` (Location, Date Range).
-*   **Process**:
-    1.  Access global `predictionData.speciesData`.
-    2.  Iterate all species.
-    3.  Filter `sightings` based on:
-        *   **Week**: Matches input week range (handles year wrap-around).
-        *   **Location**: Matches input Lat/Lon within a calculated buffer.
-*   **Output**: `FinalPredictionResult` (Bird Name, Probability, Matched Location).
+### B. Navigation & Detail Flows
+*   **Spot Selection**: Tapping a spot triggers `getLivePredictions(for:lon:radiusKm:)` to fetch real-time data for that specific location.
+*   **Bird Selection**: Tapping an upcoming bird navigates to the prediction map for that species.
+*   **Migration Cards**: Uses `getDynamicMapCards()` to create a hybrid view showing both the bird's path and nearby hotspots.
 
-### C. Live Spot Detail
-*   **Trigger**: User taps a "Spot to Visit".
-*   **Flow**: `HomeViewController` calls `HomeManager.shared.getLivePredictions(lat, lon, radius)`.
-*   **Action**: Performs a real-time filter of `allSpecies` for the *current week* and *target location* to populate the detail map.
+## 4. Architectural Considerations
 
-## 4. Considerations for Migration
-
-*   **Relationships**: The current model nests heavy data (`sightings`) inside parent objects (`SpeciesData`). SwiftData would likely benefit from normalized relationships (`Species` <->> `Sighting`).
-*   **Dates**: Current models use String representations for many dates. SwiftData migration should standardize on `Date` objects.
-*   **Dynamic Types**: `DynamicCard` combines multiple logical entities. This should likely be split into distinct `Migration` and `Hotspot` entities.
-*   **Computed/Cached Data**: The `spotSpeciesCountCache` is a runtime calculation. In SwiftData, this could potentially be a complex predicate query or a persisted property updated via triggers.
-
-## 5. Feature & Data Logic (Inferred for Database Design)
-
-Based on architectural clarification, the database design must support the following distinct behaviors:
-
-### A. Data Classification
-1.  **Reference Data (Read-Only)**
-    *   **Content**: Bird Species taxonomy, images, and the massive dataset of "base sightings" (probability maps).
-    *   **Usage**: The *Prediction Engine* uses this exclusively.
-    *   **Constraint**: User observations are **never** fed back into this dataset. It is a static (or OTA updated) source of truth.
-
-2.  **User Data (Read/Write)**
-    *   **Content**: Watchlists, personal observations, settings.
-    *   **Storage**: Local persistent store (SwiftData), potentially synced.
-
-### B. Feature Mechanics
-*   **Hotspots (Location-Centric)**
-    *   **Query**: "At *Coordinate X*, during *Week Y*, which birds are present?"
-    *   **Input**: Location + Time.
-    *   **Output**: List of Birds.
-*   **Migration (Species-Centric)**
-    *   **Query**: "Where is *Bird Z* migrating during *Week Y*?"
-    *   **Input**: Species + Time.
-    *   **Output**: Path/Coordinates.
-*   **Community Observations**
-    *   **Source**: Fetched from a remote server.
-    *   **Local Strategy**: The local database acts as a **cache** or temporary store for offline viewing, not the master record.
-*   **Watchlist & Notifications**
-    *   **Behavior**: Items in the watchlist have specific settings (e.g., `notify_upcoming`).
-    *   **Architecture**: A rich SwiftData model already exists in `@Watchlist/Model/` (containing Rules, Entries, Status). The Home module's "Upcoming Birds" should eventually query this rich data source rather than the static `home_data.json`.
+*   **Concurrency**: Data loading is performed in `Task { @MainActor in ... }` blocks to keep the UI responsive.
+*   **State Management**: The `HomeScreenData` struct acts as a snapshot. Refreshing the home screen (e.g., in `viewWillAppear`) re-fetches this entire snapshot from the SwiftData store.
+*   **Legacy Support**: `HomeManager` maintains bridge methods (`predictBirds`, `getRelevantSightings`) to support older view controllers that haven't been fully refactored to the new architecture.

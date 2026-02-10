@@ -135,6 +135,14 @@ extension HomeViewController {
 
             // Convert to UI models
             convertToUIModels()
+            
+            // Debug logging
+            print("🐛 [HomeViewController] Data counts:")
+            print("   - Upcoming birds: \(upcomingBirds.count)")
+            print("   - Spots: \(spots.count)")
+            print("   - Observations: \(observations.count)")
+            print("   - News: \(news.count)")
+            print("   - Migration cards: \(homeManager.getDynamicMapCards().count)")
 
             // Reload collection view
             homeCollectionView.reloadData()
@@ -155,10 +163,12 @@ extension HomeViewController {
         // return LocationService.shared.currentLocation
 
         // Option 2: Use saved home location
-        return LocationPreferences.shared.homeLocation
+        if let homeLocation = LocationPreferences.shared.homeLocation {
+            return homeLocation
+        }
 
-        // Option 3: Return nil and let HomeManager handle fallback
-        // return nil
+        // Option 3: Fallback to Pune for testing
+        return CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
     }
 
     private func convertToUIModels() {
@@ -207,11 +217,22 @@ extension HomeViewController {
     }
 
     private func loadNews() {
-        // If you have a separate news service:
-        // news = NewsService.shared.getLatestNews()
-
-        // Or keep static for now:
-        news = [] // Load from JSON or server
+        // Load from JSON like the seeder does
+        guard let url = Bundle.main.url(forResource: "home_data", withExtension: "json") else {
+            print("⚠️ [HomeViewController] Could not find home_data.json for news")
+            news = []
+            return
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            let jsonData = try decoder.decode(HomeJSONData.self, from: data)
+            news = jsonData.latestNews ?? []
+        } catch {
+            print("⚠️ [HomeViewController] Failed to load news: \(error)")
+            news = []
+        }
     }
 
 	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult]) {
@@ -789,3 +810,4 @@ extension Array {
         return indices.contains(index) ? self[index] : nil
     }
 }
+
