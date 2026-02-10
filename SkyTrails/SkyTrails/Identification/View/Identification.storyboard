@@ -21,7 +21,7 @@
                                 <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4nx-pp-Ahc">
-                                        <rect key="frame" x="0.0" y="0.0" width="402" height="754.66666666666663"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="402" height="1540.3333333333333"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="How would you like to start Identification?" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rkK-99-Cad">
                                                 <rect key="frame" x="16" y="15.999999999999998" width="370" height="20.333333333333329"/>
@@ -91,11 +91,8 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
-                                                <rect key="frame" x="16" y="459.66666666666663" width="370" height="287"/>
+                                                <rect key="frame" x="16" y="459.66666666666663" width="370" height="1072.666666666667"/>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="width" secondItem="vFz-1I-rOM" secondAttribute="height" multiplier="370:287" id="FwB-yS-qvu"/>
-                                                </constraints>
                                                 <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
                                                     <size key="itemSize" width="175" height="133"/>
                                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -198,7 +195,8 @@
                                     </view>
                                 </subviews>
                                 <constraints>
-                                    <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" id="7ke-bu-vMc"/>
+                                    <constraint firstItem="4nx-pp-Ahc" firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="8" id="7ke-bu-vMc"/>
+                                    <constraint firstItem="vFz-1I-rOM" firstAttribute="height" secondItem="dAJ-Zt-q2y" secondAttribute="height" multiplier="0.7" id="8xN-e5-MUo"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="width" secondItem="deH-Bp-JJV" secondAttribute="width" id="Efv-qY-n5z"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="bottom" secondItem="dAJ-Zt-q2y" secondAttribute="bottom" constant="8" id="Y4t-Ae-FoB"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="leading" secondItem="dAJ-Zt-q2y" secondAttribute="leading" id="e9f-aR-f5L"/>
