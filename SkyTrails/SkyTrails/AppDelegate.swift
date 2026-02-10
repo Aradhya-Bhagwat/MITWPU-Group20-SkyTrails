@@ -19,6 +19,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Uncomment the line below, run the app once, then re-comment it.
         // WatchlistManager.shared.addRoseRingedParakeetToMyWatchlist()
         
+        // Seed Home Data (Hotspots, Migrations, Observations)
+        Task {
+            print("🌍 [AppDelegate] Starting Home Data Seeding...")
+            do {
+                try await HomeDataSeeder.shared.seed(modelContext: WatchlistManager.shared.context)
+            } catch {
+                print("❌ [AppDelegate] Home Data Seeding Failed: \(error)")
+            }
+        }
+        
 		return true
 	}
 

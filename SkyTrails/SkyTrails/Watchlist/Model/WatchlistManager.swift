@@ -566,9 +566,10 @@ extension WatchlistManager {
 		print("🔔 [WatchlistManager] - Look ahead: \(lookAheadWeeks) weeks")
 		
 			// 1. Get all watchlist entries with notifications enabled
+		let targetStatus = WatchlistEntryStatus.to_observe
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.notify_upcoming == true && entry.status.rawValue == "to_observe"
+				entry.notify_upcoming == true && entry.status == targetStatus
 			}
 		)
 		
@@ -644,9 +645,10 @@ extension WatchlistManager {
 		watchlistId: UUID? = nil
 	) -> [WatchlistEntry] {
 		
+		let targetStatus = WatchlistEntryStatus.observed
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.status.rawValue == "observed" && entry.lat != nil && entry.lon != nil
+				entry.status == targetStatus && entry.lat != nil && entry.lon != nil
 			}
 		)
 		
@@ -676,9 +678,10 @@ extension WatchlistManager {
 		watchlistId: UUID? = nil
 	) -> [WatchlistEntry] {
 		
+		let targetStatus = WatchlistEntryStatus.to_observe
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.status.rawValue == "to_observe"
+				entry.status == targetStatus
 			}
 		)
 		

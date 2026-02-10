@@ -1,479 +1,1159 @@
 {
-	"predictedMigrations": [
-		{
-			"title": "Migrating Soon",
-			"subtitle": "Expected Movement in Winter",
-			"imageName": "migration_soon_1"
-		},
-		{
-			"title": "Winter Migration",
-			"subtitle": "Birds Traveling Across Regions",
-			"imageName": "migration_soon_2"
-		}
-	],
-	"watchlistBirds": [
-		{
-			"imageName": "arctic_tern",
-			"title": "Arctic Tern",
-			"date": "17 Nov ’25 – 02 Dec ’25"
-		},
-		{
-			"imageName": "brown_headed_barbet_alt",
-			"title": "Brown Headed Barbet",
-			"date": "20 Oct ’25 – 02 Dec ’25"
-		},
-		{
-			"imageName": "eurasian_wigeon",
-			"title": "Eurasian Wigeon",
-			"date": "05 Nov ’25 – 15 Dec ’25"
-		},
-		{
-			"imageName": "rosy_starling",
-			"title": "Rosy Starling",
-			"date": "01 Dec ’25 – 15 Jan ’26"
-		},
-		{
-			"imageName": "demoiselle_crane",
-			"title": "Demoiselle Crane",
-			"date": "10 Dec ’25 – 20 Feb ’26"
-		}
-	],
-	"recommendedBirds": [
-		{
-			"imageName": "northern_pintail",
-			"title": "Northern Pintail",
-			"date": "15 Dec ’25 – 28 Feb ’26"
-		},
-		{
-			"imageName": "bar_headed_goose",
-			"title": "Bar-headed Goose",
-			"date": "20 Dec ’25 – 10 Mar ’26"
-		},
-		{
-			"imageName": "black_winged_stilt",
-			"title": "Black-winged Stilt",
-			"date": "01 Jan ’26 – 30 Mar ’26"
-		},
-		{
-			"imageName": "pied_cuckoo",
-			"title": "Pied Cuckoo",
-			"date": "15 May ’26 – 30 Jul ’26"
-		},
-		{
-			"imageName": "blue_tailed_bee_eater",
-			"title": "Blue-tailed Bee-eater",
-			"date": "01 Apr ’26 – 30 Jun ’26"
-		}
-	],
-	"birdCategories": [
-		{
-			"icon": "shorebirds_icon",
-			"title": "Shorebirds"
-		},
-		{
-			"icon": "forest_icon",
-			"title": "Forest Birds"
-		},
-		{
-			"icon": "raptors_icon",
-			"title": "Raptors"
-		},
-		{
-			"icon": "songbirds_icon",
-			"title": "Songbirds"
-		}
-	],
-	"watchlistSpots": [
-		{
-			"imageName": "spot_kashmir",
-			"title": "Kashmir Valley",
-			"location": "Jammu & Kashmir",
-			"latitude": 34.1,
-			"longitude": 74.8,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_bharatpur",
-			"title": "Keoladeo Sanctuary",
-			"location": "Rajasthan",
-			"latitude": 27.17,
-			"longitude": 77.52,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_sundarbans",
-			"title": "Sundarbans Delta",
-			"location": "West Bengal",
-			"latitude": 21.94,
-			"longitude": 88.89,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_chilika",
-			"title": "Chilika Lake",
-			"location": "Odisha",
-			"latitude": 19.60,
-			"longitude": 85.35,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_ranganathittu",
-			"title": "Ranganathittu",
-			"location": "Karnataka",
-			"latitude": 12.42,
-			"longitude": 76.68,
-			"radius": 5,
-		}
-	],
-	"recommendedSpots": [
-		{
-			"imageName": "spot_thattekkad",
-			"title": "Thattekkad",
-			"location": "Kerala",
-			"latitude": 10.12,
-			"longitude": 76.69,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_nalsarovar",
-			"title": "Nalsarovar",
-			"location": "Gujarat",
-			"latitude": 22.80,
-			"longitude": 72.05,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_kaziranga",
-			"title": "Kaziranga",
-			"location": "Assam",
-			"latitude": 26.65,
-			"longitude": 93.35,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_kumarakom",
-			"title": "Kumarakom",
-			"location": "Kerala",
-			"latitude": 9.61,
-			"longitude": 76.43,
-			"radius": 5,
-		},
-		{
-			"imageName": "spot_salimali",
-			"title": "Salim Ali Sanctuary",
-			"location": "Goa",
-			"latitude": 15.51,
-			"longitude": 73.91,
-			"radius": 5,
-		}
-	],
-    "dynamicCards": [
+  "hotspots": [
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440101",
+      "name": "Okhla Bird Sanctuary",
+      "locality": "Noida, Uttar Pradesh",
+      "lat": 28.5700,
+      "lon": 77.3000,
+      "speciesList": [
         {
-            "cardType": "combined",
-            "birdName": "Wire-tailed Swallow",
-            "birdImageName": "wire_tailed_swallow",
-            "startLocation": "Ayodhya",
-            "endLocation": "Khadakwasla Backwaters",
-            "migrationDateRange": "05 March '26 – 09 June '26",
-            "currentProgress": 0.65,
-            "placeName": "Khadakwasla Backwaters",
-            "placeImage": "spot_khadakwasla",
-            "speciesCount": 5,
-            "distanceString": "12.6 km away",
-            "hotspotDateRange": "28 Nov '25 - 06 Jan '26",
-            "areaBoundary": [
-                {"lat": 18.4200, "lon": 73.7600}
-            ],
-            "radius": 5,
-            "hotspots": [
-                {"lat": 18.4300, "lon": 73.7400, "birdImageName": "flamingo"},
-                {"lat": 18.4220, "lon": 73.7550, "birdImageName": "kingfisher"},
-                {"lat": 18.4100, "lon": 73.7600, "birdImageName": "crow"}
-            ]
-        }
-    ],
-	"communityObservations": [
-		{
-			"observationId": "obs_001",
-			"username": "BirdWatcher_Pro",
-			"userAvatar": "appleUserProfile 1",
-			"birdName": "Kingfisher",
-			"observationTitle": "Spotted a Rare Kingfisher!",
-			"observationDescription": "I was waiting by the riverbank for hours and finally saw this beauty diving for fish. The colors were incredible in the morning light.",
-			"observationImage": "kingfisher",
-			"location": "Sundarbans Delta, West Bengal",
-			"timestamp": "2025-12-15T08:30:00Z",
-			"likesCount": 124,
-			"commentsCount": 18
-		},
-		{
-			"observationId": "obs_002",
-			"username": "NatureLover99",
-			"userAvatar": "appleUserProfile 2",
-			"birdName": "Flamingo",
-			"observationTitle": "Flamingos in Mumbai",
-			"observationDescription": "Thousands of flamingos have arrived at the creek. It's a sea of pink! Truly a mesmerizing sight.",
-			"observationImage": "flamingo",
-			"location": "Thane Creek, Mumbai",
-			"timestamp": "2025-12-20T16:45:00Z",
-			"likesCount": 256,
-			"commentsCount": 42
-		},
-		{
-			"observationId": "obs_003",
-			"username": "AvianExplorer",
-			"userAvatar": "watchlist_user_profile",
-			"birdName": "Great Hornbill",
-			"observationTitle": "Great Hornbill Sighting",
-			"observationDescription": "Heard the distinctive whooshing sound of its wings before I saw it land on a high branch. Majestic bird.",
-			"observationImage": "great_hornbill",
-			"location": "Kaziranga, Assam",
-			"timestamp": "2026-01-02T10:15:00Z",
-			"likesCount": 89,
-			"commentsCount": 12
-		},
-		{
-			"observationId": "obs_004",
-			"username": "CityBirder",
-			"userAvatar": "appleUserProfile 1",
-			"birdName": "Coppersmith Barbet",
-			"observationTitle": "Coppersmith Barbet Call",
-			"observationDescription": "Finally managed to spot the bird making that 'tuk-tuk' sound outside my window. It's so small but loud!",
-			"observationImage": "coppersmith_barbet",
-			"location": "Pune, Maharashtra",
-			"timestamp": "2026-01-05T07:00:00Z",
-			"likesCount": 45,
-			"commentsCount": 5
-		},
-		{
-			"observationId": "obs_005",
-			"username": "WildSoul",
-			"userAvatar": "appleUserProfile 2",
-			"birdName": "Indian Peafowl",
-			"observationTitle": "Indian Peafowl Dance",
-			"observationDescription": "Caught this peacock displaying its feathers. The rainy weather seems to have put it in a good mood.",
-			"observationImage": "indian_peafowl",
-			"location": "Ranthambore, Rajasthan",
-			"timestamp": "2025-11-28T14:20:00Z",
-			"likesCount": 310,
-			"commentsCount": 55
-		}
-	],
-	"latestNews": [
-		{
-			"title": "Rare Migratory Bird Spotted",
-			"description": "A rare Siberian species was seen near the wetlands.",
-			"summary": "Birdwatchers are flocking to the local wetlands after a confirmed sighting of the elusive Siberian Crane.",
-			"imageName": "home_news_rare_migratory",
-			"link": "https://ebird.org/species/grswoo"
-		},
-		{
-			"title": "Climate Impact on Birds",
-			"description": "Researchers predict altered migration routes.",
-			"summary": "New studies suggest rising global temperatures are forcing migratory birds to change their traditional paths.",
-			"imageName": "home_news_climate_change",
-			"link": "https://www.un.org/en/climatechange/what-is-climate-change"
-		}
-	],
-	"speciesData": [
-    {
-      "id": "bird_001",
-      "name": "Arctic Tern",
-      "imageName": "arctic_tern",
-      "sightings": [
-        { "week": 44, "lat": 28.7041, "lon": 77.1025, "locationName": "Delhi", "probability": 85 },
-        { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur", "probability": 85},
-        { "week": 46, "lat": 19.0760, "lon": 72.8777, "locationName": "Mumbai", "probability": 85 },
-        { "week": 47, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune", "probability": 85 },
-        { "week": 48, "lat": 15.2993, "lon": 74.1240, "locationName": "Goa", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_002",
-      "name": "Greater Flamingo",
-      "imageName": "flamingo",
-      "sightings": [
-        { "week": 1, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)", "probability": 85 },
-        { "week": 5, "lat": 19.0100, "lon": 72.8900, "locationName": "Mumbai (Sewri)", "probability": 85 },
-        { "week": 10, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad (Nalsarovar)", "probability": 85 },
-        { "week": 15, "lat": 23.7337, "lon": 69.8597, "locationName": "Kutch", "probability": 85 },
-        { "week": 45, "lat": 18.5000, "lon": 73.8800, "locationName": "Pune (Bhigwan)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_003",
-      "name": "Siberian Crane",
-      "imageName": "siberian_crane",
-      "sightings": [
-        { "week": 48, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi", "probability": 85 },
-        { "week": 50, "lat": 27.1767, "lon": 78.0081, "locationName": "Agra", "probability": 85 },
-        { "week": 52, "lat": 26.1584, "lon": 94.5624, "locationName": "Assam Wetlands", "probability": 85 },
-        { "week": 2, "lat": 28.6800, "lon": 77.1200, "locationName": "Delhi", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_004",
-      "name": "Amur Falcon",
-      "imageName": "amur_falcon",
-      "sightings": [
-        { "week": 40, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland (Doyang)", "probability": 85 },
-        { "week": 41, "lat": 26.1584, "lon": 94.5624, "locationName": "Nagaland", "probability": 85 },
-        { "week": 42, "lat": 25.5788, "lon": 91.8933, "locationName": "Meghalaya", "probability": 85 },
-        { "week": 44, "lat": 18.5400, "lon": 73.8200, "locationName": "Pune (Passage)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_005",
-      "name": "Rosy Starling",
-      "imageName": "rosy_starling",
-      "sightings": [
-        { "week": 4, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune", "probability": 85},
-        { "week": 5, "lat": 18.5300, "lon": 73.8400, "locationName": "Pune", "probability": 85 },
-        { "week": 6, "lat": 19.0600, "lon": 72.8600, "locationName": "Mumbai", "probability": 85 },
-        { "week": 8, "lat": 22.7196, "lon": 75.8577, "locationName": "Indore", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_006",
-      "name": "Bar-headed Goose",
-      "imageName": "bar_headed_goose",
-      "sightings": [
-        { "week": 45, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore", "probability": 85 },
-        { "week": 48, "lat": 12.2958, "lon": 76.6394, "locationName": "Mysore (Karanji)", "probability": 85 },
-        { "week": 50, "lat": 15.3173, "lon": 75.7139, "locationName": "Hubli", "probability": 85 },
-        { "week": 2, "lat": 34.1526, "lon": 77.5770, "locationName": "Ladakh (Summer)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_007",
-      "name": "Demoiselle Crane",
-      "imageName": "demoiselle_crane",
-      "sightings": [
-        { "week": 1, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur (Khichan)", "probability": 85 },
-        { "week": 2, "lat": 26.2389, "lon": 73.0243, "locationName": "Jodhpur", "probability": 85 },
-        { "week": 10, "lat": 26.9300, "lon": 75.8000, "locationName": "Jaipur", "probability": 85 },
-        { "week": 45, "lat": 24.5854, "lon": 73.7125, "locationName": "Udaipur", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_008",
-      "name": "Northern Pintail",
-      "imageName": "northern_pintail",
-      "sightings": [
-        { "week": 50, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata (Santragachi)", "probability": 85 },
-        { "week": 52, "lat": 22.5800, "lon": 88.3800, "locationName": "Kolkata", "probability": 85 },
-        { "week": 4, "lat": 34.1020, "lon": 74.8050, "locationName": "Chilika Lake", "probability": 85 },
-        { "week": 8, "lat": 13.0827, "lon": 80.2707, "locationName": "Chennai (Pulicat)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_009",
-      "name": "Black-winged Stilt",
-      "imageName": "black_winged_stilt",
-      "sightings": [
-        { "week": 15, "lat": 13.0600, "lon": 80.2500, "locationName": "Chennai", "probability": 85 },
-        { "week": 20, "lat": 12.9716, "lon": 77.5946, "locationName": "Bangalore", "probability": 85 },
-        { "week": 25, "lat": 18.5100, "lon": 73.8700, "locationName": "Pune", "probability": 85 },
-        { "week": 30, "lat": 19.0900, "lon": 72.8900, "locationName": "Mumbai", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_010",
-      "name": "Pied Cuckoo",
-      "imageName": "pied_cuckoo",
-      "sightings": [
-        { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)", "probability": 85 },
-        { "week": 22, "lat": 18.5500, "lon": 73.8300, "locationName": "Pune (Monsoon arrival)", "probability": 85 },
-        { "week": 24, "lat": 19.0500, "lon": 72.8500, "locationName": "Mumbai", "probability": 85 },
-        { "week": 26, "lat": 23.0400, "lon": 72.5900, "locationName": "Ahmedabad", "probability": 85 },
-        { "week": 28, "lat": 28.7200, "lon": 77.0800, "locationName": "Delhi", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_011",
-      "name": "Indian Peafowl",
-      "imageName": "indian_peafowl",
-      "sightings": [
-        { "week": 5, "lat": 28.6900, "lon": 77.1300, "locationName": "Delhi (Ridge)", "probability": 85 },
-        { "week": 15, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur", "probability": 85 },
-        { "week": 25, "lat": 26.9000, "lon": 75.7600, "locationName": "Jaipur", "probability": 85 },
-        { "week": 35, "lat": 18.4900, "lon": 73.8300, "locationName": "Pune (Sinhagad)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_012",
-      "name": "Coppersmith Barbet",
-      "imageName": "coppersmith_barbet",
-      "sightings": [
-        { "week": 10, "lat": 19.1000, "lon": 72.9000, "locationName": "Mumbai (SNGP)", "probability": 85 },
-        { "week": 20, "lat": 18.5600, "lon": 73.8800, "locationName": "Pune", "probability": 85 },
-        { "week": 30, "lat": 12.9900, "lon": 77.6100, "locationName": "Bangalore", "probability": 85 },
-        { "week": 40, "lat": 13.1000, "lon": 80.2900, "locationName": "Chennai", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_013",
-      "name": "White-throated Kingfisher",
-      "imageName": "kingfisher",
-      "sightings": [
-        { "week": 12, "lat": 15.3200, "lon": 74.1400, "locationName": "Goa", "probability": 85 },
-        { "week": 24, "lat": 9.9312, "lon": 76.2673, "locationName": "Kochi", "probability": 85 },
-        { "week": 36, "lat": 22.5600, "lon": 88.3500, "locationName": "Kolkata", "probability": 85 },
-        { "week": 48, "lat": 18.5700, "lon": 73.8900, "locationName": "Pune (Mula-Mutha)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_014",
-      "name": "Indian Paradise Flycatcher",
-      "imageName": "paradise_flycatcher",
-      "sightings": [
-        { "week": 42, "lat": 22.7300, "lon": 75.8700, "locationName": "Indore", "probability": 85 },
-        { "week": 45, "lat": 18.5800, "lon": 73.8100, "locationName": "Pune", "probability": 85 },
-        { "week": 48, "lat": 15.2800, "lon": 74.1000, "locationName": "Goa (Winter)", "probability": 85 },
-        { "week": 10, "lat": 32.2190, "lon": 76.3234, "locationName": "Dharamshala (Summer)", "probability": 85 }
-      ]
-    },
-    {
-      "id": "bird_015",
-      "name": "Purple Sunbird",
-      "imageName": "purple_sunbird",
-      "sightings": [
-        { "week": 8, "lat": 28.7300, "lon": 77.0900, "locationName": "Delhi", "probability": 85 },
-        { "week": 16, "lat": 26.8467, "lon": 80.9462, "locationName": "Lucknow", "probability": 85 },
-        { "week": 24, "lat": 25.3176, "lon": 82.9739, "locationName": "Varanasi", "probability": 85 },
-        { "week": 32, "lat": 18.5900, "lon": 73.8000, "locationName": "Pune", "probability": 85 }
-      ]
-    },
-    {
-          "id": "bird_016",
-          "name": "Wire-tailed Swallow",
-          "imageName": "wire_tailed_swallow",
-          "sightings": [
-            { "week": 10, "lat": 11.7906, "lon": 82.1996, "locationName": "Ayodhya", "probability": 85 },
-            { "week": 15, "lat": 12.1000, "lon": 79.8300, "locationName": "Passage Point A", "probability": 85 },
-            { "week": 20, "lat": 13.1000, "lon": 76.8000, "locationName": "Passage Point B", "probability": 85 },
-            { "week": 24, "lat": 18.5204, "lon": 73.8567, "locationName": "Pune", "probability": 85 }
-          ]
-        },
-    {
-          "id": "bird_017",
-          "name": "Brown Headed Barbet",
-          "imageName": "brown_headed_barbet_alt",
-          "sightings": [
-            { "week": 42, "lat": 28.6139, "lon": 77.2090, "locationName": "Delhi Ridge", "probability": 85 },
-            { "week": 45, "lat": 26.9124, "lon": 75.7873, "locationName": "Jaipur Outskirts", "probability": 85 },
-            { "week": 48, "lat": 23.0225, "lon": 72.5714, "locationName": "Ahmedabad Park", "probability": 85 }
-          ]
+          "id": "a1f9e400-e29b-41d4-a716-446655440101",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 85
         },
         {
-          "id": "bird_018",
-          "name": "Eurasian Wigeon",
-          "imageName": "eurasian_wigeon",
-          "sightings": [
-            { "week": 4, "lat": 34.1200, "lon": 74.8100, "locationName": "Hokersar Wetland", "probability": 85},
-            { "week": 47, "lat": 29.9452, "lon": 76.8132, "locationName": "Bhindawas Lake", "probability": 85 },
-            { "week": 50, "lat": 19.8157, "lon": 85.8315, "locationName": "Chilika Lake", "probability": 85 }
-          ]
+          "id": "a1f9e400-e29b-41d4-a716-446655440102",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 90
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440103",
+          "birdId": "550e8400-e29b-41d4-a716-446655440006",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 75
         }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440102",
+      "name": "Pune Urban Gardens",
+      "locality": "Pune, Maharashtra",
+      "lat": 18.5204,
+      "lon": 73.8567,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440104",
+          "birdId": "550e8400-e29b-41d4-a716-446655440001",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 95
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440105",
+          "birdId": "550e8400-e29b-41d4-a716-446655440004",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 80
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440106",
+          "birdId": "550e8400-e29b-41d4-a716-446655440005",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 70
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440103",
+      "name": "Desert National Park",
+      "locality": "Jaisalmer, Rajasthan",
+      "lat": 26.9157,
+      "lon": 70.9083,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440107",
+          "birdId": "550e8400-e29b-41d4-a716-446655440006",
+          "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 1, 2, 3],
+          "probability": 60
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440108",
+          "birdId": "550e8400-e29b-41d4-a716-446655440007",
+          "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 1, 2, 3],
+          "probability": 55
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440104",
+      "name": "Sinhagad Valley",
+      "locality": "Haveli, Maharashtra",
+      "lat": 18.3663,
+      "lon": 73.7559,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440109",
+          "birdId": "550e8400-e29b-41d4-a716-446655440008",
+          "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 1, 2, 3],
+          "probability": 65
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440110",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 70
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440105",
+      "name": "Keoladeo National Park",
+      "locality": "Bharatpur, Rajasthan",
+      "lat": 27.1740,
+      "lon": 77.5240,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440111",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 95
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440112",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 85
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440113",
+          "birdId": "550e8400-e29b-41d4-a716-446655440007",
+          "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 1, 2, 3],
+          "probability": 75
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440106",
+      "name": "Sundarbans National Park",
+      "locality": "West Bengal",
+      "lat": 21.9497,
+      "lon": 89.1833,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440114",
+          "birdId": "550e8400-e29b-41d4-a716-446655440001",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 80
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440115",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 70
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440107",
+      "name": "Kaziranga National Park",
+      "locality": "Assam",
+      "lat": 26.5775,
+      "lon": 93.1711,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440116",
+          "birdId": "550e8400-e29b-41d4-a716-446655440001",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 60
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440117",
+          "birdId": "550e8400-e29b-41d4-a716-446655440004",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 55
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440108",
+      "name": "Ranthambore National Park",
+      "locality": "Rajasthan",
+      "lat": 26.0173,
+      "lon": 76.5026,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440118",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 50
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440119",
+          "birdId": "550e8400-e29b-41d4-a716-446655440005",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 45
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440109",
+      "name": "Bandipur National Park",
+      "locality": "Karnataka",
+      "lat": 11.7422,
+      "lon": 76.4337,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440120",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 65
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440121",
+          "birdId": "550e8400-e29b-41d4-a716-446655440006",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 60
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440110",
+      "name": "Periyar National Park",
+      "locality": "Kerala",
+      "lat": 9.4667,
+      "lon": 77.2333,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440122",
+          "birdId": "550e8400-e29b-41d4-a716-446655440001",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 70
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440123",
+          "birdId": "550e8400-e29b-41d4-a716-446655440004",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 65
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440111",
+      "name": "Gir National Park",
+      "locality": "Gujarat",
+      "lat": 21.1243,
+      "lon": 70.8246,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440124",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 55
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440125",
+          "birdId": "550e8400-e29b-41d4-a716-446655440005",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 50
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440112",
+      "name": "Nagarhole National Park",
+      "locality": "Karnataka",
+      "lat": 12.0833,
+      "lon": 76.0833,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440126",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 75
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440127",
+          "birdId": "550e8400-e29b-41d4-a716-446655440006",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 70
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440113",
+      "name": "Wayanad Wildlife Sanctuary",
+      "locality": "Kerala",
+      "lat": 11.6854,
+      "lon": 76.1320,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440128",
+          "birdId": "550e8400-e29b-41d4-a716-446655440001",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 80
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440129",
+          "birdId": "550e8400-e29b-41d4-a716-446655440004",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 75
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440114",
+      "name": "Jim Corbett National Park",
+      "locality": "Uttarakhand",
+      "lat": 29.5300,
+      "lon": 78.7747,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440130",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 85
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440131",
+          "birdId": "550e8400-e29b-41d4-a716-446655440005",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 80
+        }
+      ]
+    },
+    {
+      "id": "92f9e400-e29b-41d4-a716-446655440115",
+      "name": "Pench National Park",
+      "locality": "Madhya Pradesh",
+      "lat": 21.7000,
+      "lon": 79.2833,
+      "speciesList": [
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440132",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 60
+        },
+        {
+          "id": "a1f9e400-e29b-41d4-a716-446655440133",
+          "birdId": "550e8400-e29b-41d4-a716-446655440006",
+          "validWeeks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52],
+          "probability": 55
+        }
+      ]
+    }
+  ],
+  "migration_sessions": [
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440901",
+      "birdId": "550e8400-e29b-41d4-a716-446655440007",
+      "startWeek": 42,
+      "endWeek": 48,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440901",
+          "week": 42,
+          "lat": 34.00,
+          "lon": 68.00,
+          "probability": 85
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440902",
+          "week": 44,
+          "lat": 30.50,
+          "lon": 72.00,
+          "probability": 90
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440903",
+          "week": 46,
+          "lat": 27.00,
+          "lon": 71.00,
+          "probability": 95
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440904",
+          "week": 48,
+          "lat": 26.90,
+          "lon": 70.90,
+          "probability": 100
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440902",
+      "birdId": "550e8400-e29b-41d4-a716-446655440008",
+      "startWeek": 40,
+      "endWeek": 45,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440905",
+          "week": 40,
+          "lat": 31.00,
+          "lon": 77.00,
+          "probability": 80
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440906",
+          "week": 42,
+          "lat": 23.00,
+          "lon": 75.00,
+          "probability": 85
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440907",
+          "week": 44,
+          "lat": 19.00,
+          "lon": 73.50,
+          "probability": 90
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440908",
+          "week": 45,
+          "lat": 18.36,
+          "lon": 73.75,
+          "probability": 95
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440903",
+      "birdId": "550e8400-e29b-41d4-a716-446655440003",
+      "startWeek": 20,
+      "endWeek": 22,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440909",
+          "week": 20,
+          "lat": 28.50,
+          "lon": 77.20,
+          "probability": 75
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440910",
+          "week": 21,
+          "lat": 28.55,
+          "lon": 77.25,
+          "probability": 80
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440911",
+          "week": 22,
+          "lat": 28.57,
+          "lon": 77.30,
+          "probability": 85
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440904",
+      "birdId": "550e8400-e29b-41d4-a716-446655440001",
+      "startWeek": 10,
+      "endWeek": 15,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440912",
+          "week": 10,
+          "lat": 25.00,
+          "lon": 80.00,
+          "probability": 70
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440913",
+          "week": 12,
+          "lat": 22.00,
+          "lon": 78.00,
+          "probability": 75
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440914",
+          "week": 14,
+          "lat": 19.50,
+          "lon": 76.00,
+          "probability": 80
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440915",
+          "week": 15,
+          "lat": 18.52,
+          "lon": 73.86,
+          "probability": 85
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440905",
+      "birdId": "550e8400-e29b-41d4-a716-446655440004",
+      "startWeek": 35,
+      "endWeek": 40,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440916",
+          "week": 35,
+          "lat": 32.00,
+          "lon": 75.00,
+          "probability": 65
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440917",
+          "week": 37,
+          "lat": 28.00,
+          "lon": 73.00,
+          "probability": 70
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440918",
+          "week": 39,
+          "lat": 24.00,
+          "lon": 71.00,
+          "probability": 75
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440919",
+          "week": 40,
+          "lat": 21.52,
+          "lon": 69.86,
+          "probability": 80
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440906",
+      "birdId": "550e8400-e29b-41d4-a716-446655440005",
+      "startWeek": 25,
+      "endWeek": 30,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440920",
+          "week": 25,
+          "lat": 29.00,
+          "lon": 79.00,
+          "probability": 60
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440921",
+          "week": 27,
+          "lat": 26.00,
+          "lon": 77.00,
+          "probability": 65
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440922",
+          "week": 29,
+          "lat": 23.00,
+          "lon": 75.00,
+          "probability": 70
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440923",
+          "week": 30,
+          "lat": 20.52,
+          "lon": 72.86,
+          "probability": 75
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440907",
+      "birdId": "550e8400-e29b-41d4-a716-446655440006",
+      "startWeek": 45,
+      "endWeek": 52,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440924",
+          "week": 45,
+          "lat": 35.00,
+          "lon": 70.00,
+          "probability": 55
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440925",
+          "week": 47,
+          "lat": 31.00,
+          "lon": 68.00,
+          "probability": 60
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440926",
+          "week": 49,
+          "lat": 27.00,
+          "lon": 66.00,
+          "probability": 65
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440927",
+          "week": 51,
+          "lat": 23.52,
+          "lon": 64.86,
+          "probability": 70
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440928",
+          "week": 52,
+          "lat": 21.92,
+          "lon": 63.86,
+          "probability": 75
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440908",
+      "birdId": "550e8400-e29b-41d4-a716-446655440002",
+      "startWeek": 15,
+      "endWeek": 20,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440929",
+          "week": 15,
+          "lat": 26.00,
+          "lon": 78.00,
+          "probability": 80
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440930",
+          "week": 17,
+          "lat": 24.00,
+          "lon": 76.00,
+          "probability": 85
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440931",
+          "week": 19,
+          "lat": 22.00,
+          "lon": 74.00,
+          "probability": 90
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440932",
+          "week": 20,
+          "lat": 20.57,
+          "lon": 72.30,
+          "probability": 95
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440909",
+      "birdId": "550e8400-e29b-41d4-a716-446655440007",
+      "startWeek": 38,
+      "endWeek": 44,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440933",
+          "week": 38,
+          "lat": 33.00,
+          "lon": 69.00,
+          "probability": 78
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440934",
+          "week": 40,
+          "lat": 29.00,
+          "lon": 67.00,
+          "probability": 82
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440935",
+          "week": 42,
+          "lat": 25.00,
+          "lon": 65.00,
+          "probability": 87
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440936",
+          "week": 44,
+          "lat": 21.92,
+          "lon": 63.86,
+          "probability": 92
+        }
+      ]
+    },
+    {
+      "id": "777e8400-e29b-41d4-a716-446655440910",
+      "birdId": "550e8400-e29b-41d4-a716-446655440008",
+      "startWeek": 30,
+      "endWeek": 36,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440937",
+          "week": 30,
+          "lat": 30.00,
+          "lon": 76.00,
+          "probability": 72
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440938",
+          "week": 32,
+          "lat": 27.00,
+          "lon": 74.00,
+          "probability": 76
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440939",
+          "week": 34,
+          "lat": 24.00,
+          "lon": 72.00,
+          "probability": 81
+        },
+        {
+          "id": "b1f9e400-e29b-41d4-a716-446655440940",
+          "week": 36,
+          "lat": 21.37,
+          "lon": 70.76,
+          "probability": 86
+        }
+      ]
+    }
+  ],
+  "community_observations": [
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440501",
+      "username": "birdwatcher_raj",
+      "userAvatar": "avatar_raj.png",
+      "observationTitle": "White-rumped Munia at Saras Baug",
+      "location": "Pune, Maharashtra",
+      "lat": 18.5210,
+      "lon": 73.8570,
+      "observedAt": "2024-10-12T08:30:00Z",
+      "likesCount": 15,
+      "imageName": "observation_raj_001.jpg",
+      "birdName": "White-rumped Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440502",
+      "username": "nature_lover_priya",
+      "userAvatar": "avatar_priya.png",
+      "observationTitle": "Red-headed Bunting in the Desert",
+      "location": "Jaisalmer, Rajasthan",
+      "lat": 26.9160,
+      "lon": 70.9090,
+      "observedAt": "2024-11-05T16:45:00Z",
+      "likesCount": 28,
+      "imageName": "observation_priya_001.jpg",
+      "birdName": "Red-headed Bunting"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440503",
+      "username": "aviary_expert_aman",
+      "userAvatar": "avatar_aman.png",
+      "observationTitle": "Baya Weaver Nesting Colony",
+      "location": "Okhla Bird Sanctuary, Uttar Pradesh",
+      "lat": 28.5705,
+      "lon": 77.3005,
+      "observedAt": "2024-09-20T07:15:00Z",
+      "likesCount": 42,
+      "imageName": "observation_aman_001.jpg",
+      "birdName": "Baya Weaver"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440504",
+      "username": "birding_guru_sarah",
+      "userAvatar": "avatar_sarah.png",
+      "observationTitle": "Scaly-breasted Munia Feeding",
+      "location": "Pune Urban Gardens, Maharashtra",
+      "lat": 18.5200,
+      "lon": 73.8560,
+      "observedAt": "2024-10-15T09:00:00Z",
+      "likesCount": 19,
+      "imageName": "observation_sarah_001.jpg",
+      "birdName": "Scaly-breasted Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440505",
+      "username": "wildlife_photographer_mike",
+      "userAvatar": "avatar_mike.png",
+      "observationTitle": "First Common Rosefinch of Season",
+      "location": "Sinhagad Valley, Maharashtra",
+      "lat": 18.3660,
+      "lon": 73.7555,
+      "observedAt": "2024-12-02T10:20:00Z",
+      "likesCount": 67,
+      "imageName": "observation_mike_001.jpg",
+      "birdName": "Common Rosefinch"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440506",
+      "username": "eco_warrior_lisa",
+      "userAvatar": "avatar_lisa.png",
+      "observationTitle": "House Sparrow Family",
+      "location": "Mumbai, Maharashtra",
+      "lat": 19.0760,
+      "lon": 72.8777,
+      "observedAt": "2024-08-15T14:30:00Z",
+      "likesCount": 33,
+      "imageName": "observation_lisa_001.jpg",
+      "birdName": "House Sparrow"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440507",
+      "username": "ornithologist_david",
+      "userAvatar": "avatar_david.png",
+      "observationTitle": "Red Avadavat Courtship Display",
+      "location": "Ahmedabad, Gujarat",
+      "lat": 23.0225,
+      "lon": 72.5714,
+      "observedAt": "2024-07-22T11:45:00Z",
+      "likesCount": 51,
+      "imageName": "observation_david_001.jpg",
+      "birdName": "Red Avadavat"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440508",
+      "username": "nature_guide_kiran",
+      "userAvatar": "avatar_kiran.png",
+      "observationTitle": "Indian Silverbill at Waterhole",
+      "location": "Jaipur, Rajasthan",
+      "lat": 26.9124,
+      "lon": 75.7873,
+      "observedAt": "2024-06-10T16:20:00Z",
+      "likesCount": 24,
+      "imageName": "observation_kiran_001.jpg",
+      "birdName": "Indian Silverbill"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440509",
+      "username": "bird_enthusiast_rina",
+      "userAvatar": "avatar_rina.png",
+      "observationTitle": "Baya Weaver Juvenile",
+      "location": "Kolkata, West Bengal",
+      "lat": 22.5726,
+      "lon": 88.3639,
+      "observedAt": "2024-05-28T08:15:00Z",
+      "likesCount": 39,
+      "imageName": "observation_rina_001.jpg",
+      "birdName": "Baya Weaver"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440510",
+      "username": "conservation_volunteer_arun",
+      "userAvatar": "avatar_arun.png",
+      "observationTitle": "White-rumped Munia Migration",
+      "location": "Chennai, Tamil Nadu",
+      "lat": 13.0827,
+      "lon": 80.2707,
+      "observedAt": "2024-11-18T13:40:00Z",
+      "likesCount": 76,
+      "imageName": "observation_arun_001.jpg",
+      "birdName": "White-rumped Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440511",
+      "username": "wildlife_researcher_neha",
+      "userAvatar": "avatar_neha.png",
+      "observationTitle": "Scaly-breasted Munia Breeding",
+      "location": "Bengaluru, Karnataka",
+      "lat": 12.9716,
+      "lon": 77.5946,
+      "observedAt": "2024-03-12T10:10:00Z",
+      "likesCount": 62,
+      "imageName": "observation_neha_001.jpg",
+      "birdName": "Scaly-breasted Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440512",
+      "username": "photographer_vikram",
+      "userAvatar": "avatar_vikram.png",
+      "observationTitle": "Red-headed Bunting Rare Sighting",
+      "location": "Delhi, India",
+      "lat": 28.7041,
+      "lon": 77.1025,
+      "observedAt": "2024-12-10T15:25:00Z",
+      "likesCount": 89,
+      "imageName": "observation_vikram_001.jpg",
+      "birdName": "Red-headed Bunting"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440513",
+      "username": "eco_tourist_maya",
+      "userAvatar": "avatar_maya.png",
+      "observationTitle": "Common Rosefinch Feeding",
+      "location": "Shimla, Himachal Pradesh",
+      "lat": 31.1048,
+      "lon": 77.1734,
+      "observedAt": "2024-09-08T12:55:00Z",
+      "likesCount": 45,
+      "imageName": "observation_maya_001.jpg",
+      "birdName": "Common Rosefinch"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440514",
+      "username": "birdwatcher_sanjay",
+      "userAvatar": "avatar_sanjay.png",
+      "observationTitle": "House Sparrow Urban Adaptation",
+      "location": "Hyderabad, Telangana",
+      "lat": 17.3850,
+      "lon": 78.4867,
+      "observedAt": "2024-04-05T09:30:00Z",
+      "likesCount": 31,
+      "imageName": "observation_sanjay_001.jpg",
+      "birdName": "House Sparrow"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440515",
+      "username": "nature_photographer_isha",
+      "userAvatar": "avatar_isha.png",
+      "observationTitle": "Red Avadavat Flock",
+      "location": "Nagpur, Maharashtra",
+      "lat": 21.1458,
+      "lon": 79.0882,
+      "observedAt": "2024-02-20T16:45:00Z",
+      "likesCount": 53,
+      "imageName": "observation_isha_001.jpg",
+      "birdName": "Red Avadavat"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440516",
+      "username": "conservation_scientist_rahul",
+      "userAvatar": "avatar_rahul.png",
+      "observationTitle": "Indian Silverbill Nesting",
+      "location": "Indore, Madhya Pradesh",
+      "lat": 22.7196,
+      "lon": 75.8577,
+      "observedAt": "2024-08-30T11:20:00Z",
+      "likesCount": 71,
+      "imageName": "observation_rahul_001.jpg",
+      "birdName": "Indian Silverbill"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440517",
+      "username": "birding_teacher_anita",
+      "userAvatar": "avatar_anita.png",
+      "observationTitle": "Baya Weaver Colony Expansion",
+      "location": "Patna, Bihar",
+      "lat": 25.5941,
+      "lon": 85.1376,
+      "observedAt": "2024-07-14T07:50:00Z",
+      "likesCount": 58,
+      "imageName": "observation_anita_001.jpg",
+      "birdName": "Baya Weaver"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440518",
+      "username": "eco_activist_rohit",
+      "userAvatar": "avatar_rohit.png",
+      "observationTitle": "White-rumped Munia Conservation",
+      "location": "Lucknow, Uttar Pradesh",
+      "lat": 26.8467,
+      "lon": 80.9462,
+      "observedAt": "2024-10-25T14:15:00Z",
+      "likesCount": 47,
+      "imageName": "observation_rohit_001.jpg",
+      "birdName": "White-rumped Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440519",
+      "username": "wildlife_writer_poonam",
+      "userAvatar": "avatar_poonam.png",
+      "observationTitle": "Scaly-breasted Munia Behavior",
+      "location": "Bhopal, Madhya Pradesh",
+      "lat": 23.2599,
+      "lon": 77.4126,
+      "observedAt": "2024-05-18T10:40:00Z",
+      "likesCount": 64,
+      "imageName": "observation_poonam_001.jpg",
+      "birdName": "Scaly-breasted Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440520",
+      "username": "bird_researcher_karan",
+      "userAvatar": "avatar_karan.png",
+      "observationTitle": "Red-headed Bunting Migration Stop",
+      "location": "Guwahati, Assam",
+      "lat": 26.1445,
+      "lon": 91.7362,
+      "observedAt": "2024-11-30T13:05:00Z",
+      "likesCount": 83,
+      "imageName": "observation_karan_001.jpg",
+      "birdName": "Red-headed Bunting"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440521",
+      "username": "nature_educator_smita",
+      "userAvatar": "avatar_smita.png",
+      "observationTitle": "Common Rosefinch Habitat",
+      "location": "Dehradun, Uttarakhand",
+      "lat": 30.3165,
+      "lon": 78.0322,
+      "observedAt": "2024-12-15T08:25:00Z",
+      "likesCount": 39,
+      "imageName": "observation_smita_001.jpg",
+      "birdName": "Common Rosefinch"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440522",
+      "username": "photography_enthusiast_ajay",
+      "userAvatar": "avatar_ajay.png",
+      "observationTitle": "House Sparrow Interaction",
+      "location": "Chandigarh",
+      "lat": 30.7333,
+      "lon": 76.7794,
+      "observedAt": "2024-01-10T11:35:00Z",
+      "likesCount": 27,
+      "imageName": "observation_ajay_001.jpg",
+      "birdName": "House Sparrow"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440523",
+      "username": "conservation_officer_meera",
+      "userAvatar": "avatar_meera.png",
+      "observationTitle": "Red Avadavat Population Study",
+      "location": "Ranchi, Jharkhand",
+      "lat": 23.3441,
+      "lon": 85.3096,
+      "observedAt": "2024-06-25T15:50:00Z",
+      "likesCount": 72,
+      "imageName": "observation_meera_001.jpg",
+      "birdName": "Red Avadavat"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440524",
+      "username": "birding_guide_vinay",
+      "userAvatar": "avatar_vinay.png",
+      "observationTitle": "Indian Silverbill Feeding Habits",
+      "location": "Raipur, Chhattisgarh",
+      "lat": 21.2514,
+      "lon": 81.6296,
+      "observedAt": "2024-09-12T12:45:00Z",
+      "likesCount": 41,
+      "imageName": "observation_vinay_001.jpg",
+      "birdName": "Indian Silverbill"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440525",
+      "username": "eco_volunteer_shreya",
+      "userAvatar": "avatar_shreya.png",
+      "observationTitle": "Baya Weaver Nest Construction",
+      "location": "Bhubaneswar, Odisha",
+      "lat": 20.2961,
+      "lon": 85.8245,
+      "observedAt": "2024-04-30T09:15:00Z",
+      "likesCount": 56,
+      "imageName": "observation_shreya_001.jpg",
+      "birdName": "Baya Weaver"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440526",
+      "username": "wildlife_photographer_arjun",
+      "userAvatar": "avatar_arjun.png",
+      "observationTitle": "White-rumped Munia Social Behavior",
+      "location": "Thiruvananthapuram, Kerala",
+      "lat": 8.5241,
+      "lon": 76.9366,
+      "observedAt": "2024-08-05T16:30:00Z",
+      "likesCount": 68,
+      "imageName": "observation_arjun_001.jpg",
+      "birdName": "White-rumped Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440527",
+      "username": "ornithology_student_priya",
+      "userAvatar": "avatar_priya_student.png",
+      "observationTitle": "Scaly-breasted Munia Vocalization",
+      "location": "Mysuru, Karnataka",
+      "lat": 12.2958,
+      "lon": 76.6394,
+      "observedAt": "2024-03-25T14:20:00Z",
+      "likesCount": 49,
+      "imageName": "observation_priya_student_001.jpg",
+      "birdName": "Scaly-breasted Munia"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440528",
+      "username": "nature_documentary_maker_suresh",
+      "userAvatar": "avatar_suresh.png",
+      "observationTitle": "Red-headed Bunting Courtship",
+      "location": "Gangtok, Sikkim",
+      "lat": 27.3314,
+      "lon": 88.6138,
+      "observedAt": "2024-10-08T10:55:00Z",
+      "likesCount": 91,
+      "imageName": "observation_suresh_001.jpg",
+      "birdName": "Red-headed Bunting"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440529",
+      "username": "bird_conservation_ngo_leela",
+      "userAvatar": "avatar_leela.png",
+      "observationTitle": "Common Rosefinch Habitat Protection",
+      "location": "Itanagar, Arunachal Pradesh",
+      "lat": 27.0844,
+      "lon": 93.6053,
+      "observedAt": "2024-11-22T13:10:00Z",
+      "likesCount": 77,
+      "imageName": "observation_leela_001.jpg",
+      "birdName": "Common Rosefinch"
+    },
+    {
+      "id": "333e8400-e29b-41d4-a716-446655440530",
+      "username": "urban_birdwatcher_ravi",
+      "userAvatar": "avatar_ravi.png",
+      "observationTitle": "House Sparrow City Survival",
+      "location": "Visakhapatnam, Andhra Pradesh",
+      "lat": 17.6868,
+      "lon": 83.2185,
+      "observedAt": "2024-02-14T08:45:00Z",
+      "likesCount": 34,
+      "imageName": "observation_ravi_001.jpg",
+      "birdName": "House Sparrow"
+    }
+  ],
+  "birdCategories": [
+    {
+      "icon": "house_sparrow",
+      "title": "Urban Birds"
+    },
+    {
+      "icon": "baya_weaver",
+      "title": "Wetland Species"
+    },
+    {
+      "icon": "common_rosefinch",
+      "title": "Winter Migrants"
+    },
+    {
+      "icon": "red_headed_bunting",
+      "title": "Desert Dwellers"
+    },
+    {
+      "icon": "indian_silverbill",
+      "title": "Seed Eaters"
+    },
+    {
+      "icon": "red_avadavat",
+      "title": "Colorful Finches"
+    }
+  ],
+  "latestNews": [
+    {
+      "title": "Winter Migration Begins",
+      "summary": "Track the arrival of Red-headed Buntings and Common Rosefinches across the subcontinent.",
+      "link": "skytrails://news/migration-2024",
+      "imageName": "news_migration_winter"
+    },
+    {
+      "title": "Urban Birding Tips",
+      "summary": "How to identify Munias and Silverbills in your own backyard gardens.",
+      "link": "skytrails://news/urban-birding",
+      "imageName": "news_urban_tips"
+    },
+    {
+      "title": "Wetland Conservation",
+      "summary": "Join the community effort to protect nesting sites for the Baya Weaver.",
+      "link": "skytrails://news/wetland-save",
+      "imageName": "news_conservation_baya"
+    },
+    {
+      "title": "Bird Photography Workshop",
+      "summary": "Learn professional techniques for capturing stunning bird portraits.",
+      "link": "skytrails://news/photography-workshop",
+      "imageName": "news_photography_workshop"
+    },
+    {
+      "title": "Rare Bird Sighting",
+      "summary": "Spotlight on unusual visitors spotted in unexpected locations.",
+      "link": "skytrails://news/rare-sightings",
+      "imageName": "news_rare_sightings"
+    }
   ]
 }
