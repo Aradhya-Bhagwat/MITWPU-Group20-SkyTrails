@@ -48,11 +48,27 @@ final class Bird {
     // In Bird.swift
     var fieldMarkData: [BirdFieldMarkData]? = []
     
-        @Relationship(deleteRule: .nullify, inverse: \IdentificationResult.bird)
-        var identificationResults: [IdentificationResult]? = []
-
-        @Relationship(deleteRule: .cascade, inverse: \IdentificationCandidate.bird)
-        var identificationCandidates: [IdentificationCandidate]? = []
+    // MARK: - Relationships
+    
+    // Identification
+    @Relationship(deleteRule: .nullify, inverse: \IdentificationResult.bird)
+    var identificationResults: [IdentificationResult]? = []
+    @Relationship(deleteRule: .cascade, inverse: \IdentificationCandidate.bird)
+    var identificationCandidates: [IdentificationCandidate]? = []
+    
+    // Migration (Historical runs)
+    @Relationship(deleteRule: .cascade, inverse: \MigrationSession.bird)
+    var migrationSessions: [MigrationSession]? = []
+    
+    // Hotspots (Using Join Model for seasonality)
+    @Relationship(deleteRule: .cascade, inverse: \HotspotSpeciesPresence.bird)
+    var hotspotPresence: [HotspotSpeciesPresence]? = []
+    
+    // Watchlist Integration (NEW)
+    // .nullify means: if bird is deleted, entries stay but bird reference becomes nil
+    // This prevents deleting bird from deleting all watchlist entries
+    @Relationship(deleteRule: .nullify, inverse: \WatchlistEntry.bird)
+    var watchlistEntries: [WatchlistEntry]? = []
   
     var name: String { return commonName }
 
@@ -93,14 +109,7 @@ final class Bird {
     
 
     
-    static func fromSpotBird(_ spotBird: SpotBird) -> Bird {
-        return Bird(
-            id: UUID(),
-            commonName: spotBird.name,
-            scientificName: "",
-            staticImageName: spotBird.imageName
-        )
-    }
+
     
    
 }

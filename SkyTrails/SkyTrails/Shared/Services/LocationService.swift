@@ -11,6 +11,9 @@ final class LocationService: NSObject {
     private var searchCompleter = MKLocalSearchCompleter()
     private var autocompleteContinuation: CheckedContinuation<[LocationSuggestion], Never>?
     
+    /// Current device location (updated when location services are used)
+    var currentLocation: CLLocationCoordinate2D?
+    
     override private init() {
         super.init()
         searchCompleter.delegate = self

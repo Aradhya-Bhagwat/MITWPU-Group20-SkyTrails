@@ -2,363 +2,487 @@
 //  HomeManager.swift
 //  SkyTrails
 //
-//  Created by SDC-USER on 12/01/26.
+//  Migrated to SwiftData Integration
 //
 
 import Foundation
 import CoreLocation
+import SwiftData
 
+@MainActor
 class HomeManager {
     
     static let shared = HomeManager()
     
-    var coreHomeData: CoreHomeData?
-    var newsResponse: NewsResponse?
-    var predictionData: PredictionDataWrapper?
+    private let modelContext: ModelContext
+    private let watchlistManager: WatchlistManager
+    private let hotspotManager: HotspotManager
+    private let migrationManager: MigrationManager
+    private let observationManager: CommunityObservationManager
+    
+    // Cache for performance
     var spotSpeciesCountCache: [String: Int] = [:]
-
     
     private init() {
-        loadData()
+        // Use WatchlistManager's shared context
+        self.modelContext = WatchlistManager.shared.context
+        self.watchlistManager = WatchlistManager.shared
+        self.hotspotManager = HotspotManager(modelContext: modelContext)
+        self.migrationManager = MigrationManager(modelContext: modelContext)
+        self.observationManager = CommunityObservationManager(modelContext: modelContext)
     }
     
-    // MARK: - Persistence
+    // MARK: - Upcoming Birds (Replaces watchlistBirds/recommendedBirds)
     
-    private func getDocumentsDirectory() -> URL {
-        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    }
-    
-    func saveData() {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
+    /// Get birds the user should see on the home screen
+    /// Combines watchlist + hotspot data
+    func getUpcomingBirds(
+        userLocation: CLLocationCoordinate2D? = nil,
+        lookAheadWeeks: Int = 4,
+        radiusInKm: Double = 50.0
+    ) -> [UpcomingBirdResult] {
         
-        do {
-            if let coreData = coreHomeData {
-                let url = getDocumentsDirectory().appendingPathComponent("home_data.json")
-                let data = try encoder.encode(coreData)
-                try data.write(to: url)
-            }
-        } catch {
-            print("Error saving Home data: \(error)")
-        }
-    }
-    
-    public func loadData() {
-        let decoder = JSONDecoder()
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         
-        // --- 1. Load Core Home Data ---
-        var loadedFromDocuments = false
-        var loadedCoreData = false
-        let coreDataURL = getDocumentsDirectory().appendingPathComponent("home_data.json")
-        
-        // Try Documents
-        if let data = try? Data(contentsOf: coreDataURL) {
-            do {
-                self.coreHomeData = try decoder.decode(CoreHomeData.self, from: data)
-                loadedCoreData = true
-                loadedFromDocuments = true
-            } catch {
-                print("CRITICAL ERROR: Failed to decode home_data.json from Documents: \(error)")
-            }
-        }
-        
-        // Fallback: Bundle
-        if !loadedCoreData {
-            if let bundleURL = Bundle.main.url(forResource: "home_data", withExtension: "json"),
-               let data = try? Data(contentsOf: bundleURL) {
-                do {
-                    self.coreHomeData = try decoder.decode(CoreHomeData.self, from: data)
-                    loadedCoreData = true
-                } catch {
-                    print("CRITICAL ERROR: Failed to decode home_data.json from Bundle: \(error)")
-                }
-            }
-        }
-        
-        // --- 2. Populate Derived Data ---
-        if let core = self.coreHomeData {
-            // Populate News
-            if let news = core.latestNews {
-                self.newsResponse = NewsResponse(latestNews: news)
-            }
-            
-            // Populate Prediction Data
-            if let species = core.speciesData {
-                self.predictionData = PredictionDataWrapper(speciesData: species)
-            }
-        }
-        
-        precalculateSpotSpeciesCounts()
-        // If we loaded successfully from Bundle (and not documents), save to Documents to ensure persistence for next time
-        if loadedCoreData && !loadedFromDocuments {
-            saveData()
-        }
-    }
-    
-    // 💡 ADD THIS NEW FUNCTION:
-        private func precalculateSpotSpeciesCounts() {
-            // Ensure we have spots and bird data before starting
-            guard let watchlist = coreHomeData?.watchlistSpots,
-                  let recommended = coreHomeData?.recommendedSpots,
-                  let allSpecies = predictionData?.speciesData else { return }
-            
-            let allSpots = watchlist + recommended
-            let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-            
-            for spot in allSpots {
-                guard let lat = spot.latitude, let lon = spot.longitude else { continue }
-                
-                let searchLoc = CLLocation(latitude: lat, longitude: lon)
-                let radiusMeters = (spot.radius ?? 5.0) * 1000.0
-                
-                // Search through every bird in the global speciesData
-                let activeBirds = allSpecies.filter { species in
-                    species.sightings.contains { sighting in
-                        // Logic: Is this bird sighting near the spot AND happening this week?
-                        let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
-                        let isNearby = sightingLoc.distance(from: searchLoc) <= radiusMeters
-                        let isCurrentWeek = sighting.week == currentWeek
-                        
-                        return isNearby && isCurrentWeek
-                    }
-                }
-                
-                // Save the number of birds found for this specific spot title
-                spotSpeciesCountCache[spot.title] = activeBirds.count
-            }
-        }
-    
-    // MARK: - Business Logic
-    // MARK: - Business Logic
-
-    func getDynamicMapCards() -> [MapCardType] {
-        guard let core = self.coreHomeData, let dynamicCards = core.dynamicCards else { return [] }
-        let allSpecies = core.speciesData ?? []
-        
-        return dynamicCards.compactMap { raw -> MapCardType? in
-            // 💡 Use the new key names here
-            guard let bName = raw.birdName,
-                  let bImg = raw.birdImageName,
-                  let pName = raw.placeName,
-                  let pImg = raw.placeImage,
-                  let mDate = raw.migrationDateRange,
-                  let hDate = raw.hotspotDateRange else { return nil }
-            
-            var pathPoints: [CLLocationCoordinate2D] = []
-            if let species = allSpecies.first(where: { $0.name == bName }) {
-                pathPoints = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-            }
-            
-            let migration = MigrationPrediction(
-                birdName: bName, birdImageName: bImg, startLocation: raw.startLocation ?? "",
-                endLocation: raw.endLocation ?? "", dateRange: mDate,
-                pathCoordinates: pathPoints, currentProgress: raw.currentProgress ?? 0
+        // Try user's current location first
+        if let location = userLocation {
+            return watchlistManager.getUpcomingBirds(
+                userLocation: location,
+                currentWeek: currentWeek,
+                lookAheadWeeks: lookAheadWeeks,
+                radiusInKm: radiusInKm
             )
-            
-            let boundary = (raw.areaBoundary ?? []).map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-            let hotspots = (raw.hotspots ?? []).map { BirdHotspot(coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon), birdImageName: $0.birdImageName) }
-            
-            let hotspot = HotspotPrediction(
-                placeName: pName, placeImageName: pImg, speciesCount: raw.speciesCount ?? 0,
-                distanceString: raw.distanceString ?? "", dateRange: hDate,
-                areaBoundary: boundary, hotspots: hotspots, radius: raw.radius
+        }
+        
+        // Fallback to home location
+        if let homeLocation = LocationPreferences.shared.homeLocation {
+            return watchlistManager.getUpcomingBirds(
+                userLocation: homeLocation,
+                currentWeek: currentWeek,
+                lookAheadWeeks: lookAheadWeeks,
+                radiusInKm: radiusInKm
             )
-            
-            return MapCardType.combined(migration, hotspot)
         }
+        
+        // No location available - return empty
+        print("⚠️ [HomeManager] No location available for upcoming birds")
+        return []
     }
-
-    // 💡 Private helpers make the code much easier to read
-    private func convertToMigration(_ raw: DynamicCard) -> MigrationPrediction? {
-        guard let bName = raw.birdName,
-              let bImg = raw.birdImageName,
-              let mDate = raw.migrationDateRange else { return nil }
+    
+    /// Get recommended birds based on location (not on watchlist)
+    func getRecommendedBirds(
+        userLocation: CLLocationCoordinate2D,
+        currentWeek: Int? = nil,
+        radiusInKm: Double = 50.0,
+        limit: Int = 10
+    ) -> [Bird] {
         
-        var pathPoints: [CLLocationCoordinate2D] = []
-        if let species = coreHomeData?.speciesData?.first(where: { $0.name == bName }) {
-            pathPoints = species.sightings.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-        }
+        let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
         
-        return MigrationPrediction(
-            birdName: bName,
-            birdImageName: bImg,
-            startLocation: raw.startLocation ?? "",
-            endLocation: raw.endLocation ?? "",
-            dateRange: mDate,
-            pathCoordinates: pathPoints,
-            currentProgress: raw.currentProgress ?? 0
+        // Get birds present at location
+        let birdsAtLocation = hotspotManager.getBirdsPresent(
+            at: userLocation,
+            duringWeek: week,
+            radiusInKm: radiusInKm
         )
-    }
-
-    private func convertToHotspot(_ raw: DynamicCard) -> HotspotPrediction? {
-        guard let pName = raw.placeName,
-              let pImg = raw.placeImage,
-              let hDate = raw.hotspotDateRange else { return nil }
         
-        return HotspotPrediction(
-            placeName: pName,
-            placeImageName: pImg,
-            speciesCount: raw.speciesCount ?? 0,
-            distanceString: raw.distanceString ?? "",
-            dateRange: hDate,
-            areaBoundary: (raw.areaBoundary ?? []).map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) },
-            hotspots: (raw.hotspots ?? []).map { BirdHotspot(coordinate: CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon), birdImageName: $0.birdImageName) },
-            radius: raw.radius
+        // Filter out birds already on watchlist
+        let watchlistBirdIds = Set(
+            watchlistManager.fetchEntries(watchlistID: WatchlistConstants.myWatchlistID)
+                .compactMap { $0.bird?.id }
         )
+        
+        let recommended = birdsAtLocation.filter { !watchlistBirdIds.contains($0.id) }
+        
+        return Array(recommended.prefix(limit))
     }
     
-    fileprivate func waterfallMatchSpecies(_ allSpecies: [SpeciesData], _ isWeek: (Int, Int, Int, Int) -> Bool, _ weekRange: (start: Int, end: Int), _ lat: Double, _ degreeBuffer: Double, _ lon: Double, _ searchLoc: CLLocation, _ radiusMeters: Double, _ matchingBirds: inout [FinalPredictionResult], _ inputIndex: Int) {
-        for species in allSpecies {
-            
-            if let matched = species.sightings.first(where: { sighting in
-                
-                guard isWeek(sighting.week, weekRange.start, weekRange.end, 0) else { return false }
-                
-                
-                if abs(sighting.lat - lat) > degreeBuffer || abs(sighting.lon - lon) > degreeBuffer {
-                    return false
-                }
-                
-                let sightingLoc = CLLocation(latitude: sighting.lat, longitude: sighting.lon)
-                return sightingLoc.distance(from: searchLoc) <= radiusMeters
-            }) {
-                matchingBirds.append(
-                    FinalPredictionResult(
-                        birdName: species.name,
-                        imageName: species.imageName,
-                        matchedInputIndex: inputIndex,
-                        matchedLocation: (lat: matched.lat, lon: matched.lon),
-                        spottingProbability: matched.probability ?? 75
-                        
-                    )
-                )
-            }
-        }
-    }
+    // MARK: - Popular Spots (Replaces watchlistSpots/recommendedSpots)
     
-    func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
-        guard let lat = input.latitude,
-              let lon = input.longitude,
-              let weekRange = input.weekRange,
-              let allSpecies = predictionData?.speciesData else {
-            return []
-        }
+    /// Get spots the user is tracking via watchlist
+    func getWatchlistSpots() -> [PopularSpotResult] {
+        // Get all watchlists with location data
+        let watchlists = watchlistManager.fetchWatchlists()
         
-        let searchLoc = CLLocation(latitude: lat, longitude: lon)
-        let radiusMeters = Double(input.areaValue) * 1000.0
-        
-
-        let degreeBuffer = radiusMeters / 111_000.0
-        
-
-        func isWeek(_ week: Int, withinStart start: Int, end: Int, tolerance: Int = 2) -> Bool {
-
-            
-            let targetStart = (start - tolerance - 1 + 52) % 52 + 1
-            let targetEnd = (end + tolerance - 1 + 52) % 52 + 1
-
-            if targetStart <= targetEnd {
-                return week >= targetStart && week <= targetEnd
-            } else {
-
-                return week >= targetStart || week <= targetEnd
-            }
-        }
-        
-        var matchingBirds: [FinalPredictionResult] = []
-        
-        waterfallMatchSpecies(allSpecies, isWeek, weekRange, lat, degreeBuffer, lon, searchLoc, radiusMeters, &matchingBirds, inputIndex)
-        
-        return matchingBirds
-    }
-    
-    func parseDateRange(_ dateString: String) -> (start: Date?, end: Date?) {
-        let separators = [" – ", " - "]
-        
-        for separator in separators {
-            let components = dateString.components(separatedBy: separator)
-            if components.count == 2 {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "dd MMM ’yy"
-                formatter.locale = Locale(identifier: "en_US_POSIX")
-                
-                let start = formatter.date(from: components[0])
-                let end = formatter.date(from: components[1])
-                return (start, end)
-            }
-        }
-        return (nil, nil)
-    }
-    
-    
-    func getRelevantSightings(for input: BirdDateInput) -> [Sighting] {
-        guard let start = input.startDate, let end = input.endDate else { return [] }
-        
-        let startWeek = Calendar.current.component(.weekOfYear, from: start)
-        let endWeek = Calendar.current.component(.weekOfYear, from: end)
-        
-        var relevantSightings: [Sighting] = []
-        
-        for sighting in input.species.sightings {
-            var isMatch = false
-            
-            if startWeek <= endWeek {
-                if sighting.week >= startWeek && sighting.week <= endWeek { isMatch = true }
-            } else {
-                if sighting.week >= startWeek || sighting.week <= endWeek { isMatch = true }
-            }
-            
-            if !isMatch {
-                let s = sighting.week
-                let sStart = startWeek
-                let sEnd = endWeek
-                
-                let distToStart = min(abs(s - sStart), 52 - abs(s - sStart))
-                let distToEnd = min(abs(s - sEnd), 52 - abs(s - sEnd))
-                
-                if distToStart <= 2 || distToEnd <= 2 { isMatch = true }
-            }
-            
-            if isMatch {
-                relevantSightings.append(sighting)
-            }
-        }
-        
-        if startWeek > endWeek {
-            relevantSightings.sort { s1, s2 in
-                let w1 = s1.week < startWeek ? s1.week + 52 : s1.week
-                let w2 = s2.week < startWeek ? s2.week + 52 : s2.week
-                return w1 < w2
-            }
-        } else {
-            relevantSightings.sort { $0.week < $1.week }
-        }
-        
-        return relevantSightings
-    }
-    
-    // 💡 ADD THIS TO HELP YOUR OUTPUT SCREEN:
-        func getLivePredictions(for lat: Double, lon: Double, radiusKm: Double) -> [FinalPredictionResult] {
-            guard let allSpecies = predictionData?.speciesData else { return [] }
-            
-            let searchLoc = CLLocation(latitude: lat, longitude: lon)
-            let radiusMeters = radiusKm * 1000.0
-            let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-            
-            return allSpecies.compactMap { species in
-                if let match = species.sightings.first(where: { s in
-                    let loc = CLLocation(latitude: s.lat, longitude: s.lon)
-                    return loc.distance(from: searchLoc) <= radiusMeters && s.week == currentWeek
-                }) {
-                    return FinalPredictionResult(
-                        birdName: species.name,
-                        imageName: species.imageName,
-                        matchedInputIndex: 0,
-                        matchedLocation: (lat: match.lat, lon: match.lon),
-                        spottingProbability: match.probability ?? 70 // Use the JSON field we added
-                    )
-                }
+        return watchlists.compactMap { watchlist -> PopularSpotResult? in
+            guard let location = watchlist.location,
+                  let lat = parseLatitude(from: location),
+                  let lon = parseLongitude(from: location) else {
                 return nil
             }
+            
+            let birdCount = watchlist.entries?.count ?? 0
+            let observedCount = watchlist.entries?.filter { $0.status == .observed }.count ?? 0
+            
+            return PopularSpotResult(
+                id: watchlist.id,
+                title: watchlist.title ?? "Unnamed Spot",
+                location: watchlist.locationDisplayName ?? location,
+                latitude: lat,
+                longitude: lon,
+                speciesCount: birdCount,
+                observedCount: observedCount,
+                radius: 5.0, // Default
+                imageName: watchlist.images?.first?.imagePath
+            )
         }
+    }
+    
+    /// Get recommended spots near user (not on watchlist)
+    func getRecommendedSpots(
+        near location: CLLocationCoordinate2D,
+        radiusInKm: Double = 100.0,
+        limit: Int = 10
+    ) -> [PopularSpotResult] {
+        
+        // Get all hotspots near location
+        let descriptor = FetchDescriptor<Hotspot>()
+        guard let allHotspots = try? modelContext.fetch(descriptor) else { return [] }
+        
+        let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
+        let nearbyHotspots = allHotspots.filter { hotspot in
+            let hotspotLoc = CLLocation(latitude: hotspot.lat, longitude: hotspot.lon)
+            return hotspotLoc.distance(from: queryLoc) <= (radiusInKm * 1000)
+        }
+        
+        // Get watchlist spot IDs to filter out
+        let watchlistSpotNames = Set(
+            watchlistManager.fetchWatchlists()
+                .compactMap { $0.location }
+        )
+        
+        let recommended = nearbyHotspots
+            .filter { !watchlistSpotNames.contains($0.name) }
+            .prefix(limit)
+        
+        return recommended.map { hotspot in
+            let speciesCount = hotspot.speciesList?.count ?? 0
+            let distance = queryLoc.distance(from: CLLocation(latitude: hotspot.lat, longitude: hotspot.lon))
+            
+            return PopularSpotResult(
+                id: hotspot.id,
+                title: hotspot.name,
+                location: hotspot.locality ?? "Unknown",
+                latitude: hotspot.lat,
+                longitude: hotspot.lon,
+                speciesCount: speciesCount,
+                observedCount: 0,
+                radius: 5.0,
+                imageName: nil,
+                distanceKm: distance / 1000.0
+            )
+        }
+    }
+    
+    // MARK: - Migration Cards (Dynamic)
+    
+    /// Get active migration events for home screen
+    func getActiveMigrations(limit: Int = 5) -> [MigrationCardResult] {
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        
+        // Get active migration sessions
+        let activeSessions = migrationManager.getActiveMigrations(forWeek: currentWeek)
+        
+        return activeSessions.prefix(limit).compactMap { session -> MigrationCardResult? in
+            guard let bird = session.bird,
+                  let trajectory = migrationManager.getTrajectory(for: bird, duringWeek: currentWeek) else {
+                return nil
+            }
+            
+            let progress = calculateProgress(
+                currentWeek: currentWeek,
+                startWeek: session.startWeek,
+                endWeek: session.endWeek
+            )
+            
+            return MigrationCardResult(
+                bird: bird,
+                session: session,
+                currentPosition: trajectory.mostLikelyPosition,
+                progress: progress,
+                paths: trajectory.pathsAtWeek
+            )
+        }
+    }
+    
+    private func calculateProgress(currentWeek: Int, startWeek: Int, endWeek: Int) -> Float {
+        let totalWeeks = endWeek - startWeek
+        guard totalWeeks > 0 else { return 0.5 }
+        
+        let elapsed = currentWeek - startWeek
+        return Float(elapsed) / Float(totalWeeks)
+    }
+    
+    // MARK: - Community Observations (Dynamic)
+    
+    /// Get recent community observations for home screen
+    func getRecentObservations(
+        near location: CLLocationCoordinate2D? = nil,
+        radiusInKm: Double = 50.0,
+        limit: Int = 10,
+        maxAge: TimeInterval = 7 * 24 * 3600 // 7 days
+    ) -> [CommunityObservation] {
+        
+        if let location = location {
+            return observationManager.getObservations(
+                near: location,
+                radiusInKm: radiusInKm,
+                maxAge: maxAge
+            ).prefix(limit).map { $0 }
+        }
+        
+        // Fallback: Get globally recent observations
+        let descriptor = FetchDescriptor<CommunityObservation>(
+            sortBy: [SortDescriptor(\.observedAt, order: .reverse)]
+        )
+        
+        let cutoff = Date().addingTimeInterval(-maxAge)
+        let allRecent = (try? modelContext.fetch(descriptor)) ?? []
+        
+        return allRecent
+            .filter { $0.observedAt >= cutoff }
+            .prefix(limit)
+            .map { $0 }
+    }
+    
+    // MARK: - Bird Categories (Static - Keep from JSON)
+    
+    func getBirdCategories() -> [BirdCategory] {
+        // These can remain static or be generated from Bird.family
+        return [
+            BirdCategory(icon: "🦆", title: "Waterfowl"),
+            BirdCategory(icon: "🦅", title: "Raptors"),
+            BirdCategory(icon: "🐦", title: "Songbirds"),
+            BirdCategory(icon: "🦉", title: "Owls"),
+            BirdCategory(icon: "🦜", title: "Parrots"),
+            BirdCategory(icon: "🕊️", title: "Doves")
+        ]
+    }
+    
+    // MARK: - Combined Home Data
+    
+    /// Get all data for home screen in one call
+    func getHomeScreenData(
+        userLocation: CLLocationCoordinate2D? = nil
+    ) async -> HomeScreenData {
+        
+        let location = userLocation ?? LocationPreferences.shared.homeLocation
+        
+        return HomeScreenData(
+            upcomingBirds: getUpcomingBirds(userLocation: location),
+            recommendedBirds: location.map { getRecommendedBirds(userLocation: $0) } ?? [],
+            watchlistSpots: getWatchlistSpots(),
+            recommendedSpots: location.map { getRecommendedSpots(near: $0) } ?? [],
+            activeMigrations: getActiveMigrations(),
+            recentObservations: getRecentObservations(near: location),
+            birdCategories: getBirdCategories()
+        )
+    }
+    
+    // MARK: - Legacy Prediction Support (For Backward Compatibility)
+    
+    /// Live predictions at a specific location (replaces getLivePredictions)
+    func getLivePredictions(
+        for lat: Double,
+        lon: Double,
+        radiusKm: Double
+    ) -> [FinalPredictionResult] {
+        
+        let location = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        
+        let birds = hotspotManager.getBirdsPresent(
+            at: location,
+            duringWeek: currentWeek,
+            radiusInKm: radiusKm
+        )
+        
+        return birds.map { bird in
+            FinalPredictionResult(
+                birdName: bird.commonName,
+                imageName: bird.staticImageName,
+                matchedInputIndex: 0,
+                matchedLocation: (lat: lat, lon: lon),
+                spottingProbability: 75 // Default probability
+            )
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func parseLatitude(from locationString: String) -> Double? {
+        // Parse "lat,lon" format or use geocoding
+        let components = locationString.components(separatedBy: ",")
+        if components.count == 2,
+           let lat = Double(components[0].trimmingCharacters(in: .whitespaces)) {
+            return lat
+        }
+        return nil
+    }
+    
+    private func parseLongitude(from locationString: String) -> Double? {
+        let components = locationString.components(separatedBy: ",")
+        if components.count == 2,
+           let lon = Double(components[1].trimmingCharacters(in: .whitespaces)) {
+            return lon
+        }
+        return nil
+    }
+
+    // MARK: - Legacy Compatibility (Bridging Types)
+
+    func getDynamicMapCards() -> [DynamicMapCard] {
+        let migrations = getActiveMigrations()
+
+        return migrations.map { migration in
+            let hotspot = HotspotPrediction(
+                placeName: migration.currentPosition == nil ? "Unknown" : "Hotspot",
+                speciesCount: 0,
+                distanceString: "",
+                dateRange: migration.dateRange,
+                placeImageName: "default_spot",
+                hotspots: []
+            )
+
+            let prediction = MigrationPrediction(
+                birdName: migration.bird.commonName,
+                birdImageName: migration.bird.staticImageName,
+                startLocation: "",
+                endLocation: "",
+                currentProgress: migration.progress,
+                dateRange: migration.dateRange,
+                pathCoordinates: migration.paths.map {
+                    CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
+                }
+            )
+
+            return .combined(migration: prediction, hotspot: hotspot)
+        }
+    }
+
+    func parseDateRange(_ text: String) -> (Date?, Date?) {
+        let parts = text.components(separatedBy: "-")
+        guard parts.count >= 2 else { return (nil, nil) }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+
+        let start = formatter.date(from: parts[0].trimmingCharacters(in: .whitespaces))
+        let end = formatter.date(from: parts[1].trimmingCharacters(in: .whitespaces))
+        return (start, end)
+    }
+
+    func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
+        guard let lat = input.latitude,
+              let lon = input.longitude else {
+            return []
+        }
+
+        return getLivePredictions(for: lat, lon: lon, radiusKm: Double(input.areaValue))
+            .map { result in
+                FinalPredictionResult(
+                    birdName: result.birdName,
+                    imageName: result.imageName,
+                    matchedInputIndex: inputIndex,
+                    matchedLocation: result.matchedLocation,
+                    spottingProbability: result.spottingProbability
+                )
+            }
+    }
+
+    func getRelevantSightings(for input: BirdDateInput) -> [RelevantSighting] {
+        return []
+    }
+}
+
+struct DynamicMapCard {
+    enum CardType {
+        case combined(migration: MigrationPrediction, hotspot: HotspotPrediction)
+    }
+
+    let type: CardType
+
+    static func combined(migration: MigrationPrediction, hotspot: HotspotPrediction) -> DynamicMapCard {
+        DynamicMapCard(type: .combined(migration: migration, hotspot: hotspot))
+    }
+}
+
+struct MigrationPrediction {
+    let birdName: String
+    let birdImageName: String
+    let startLocation: String
+    let endLocation: String
+    let currentProgress: Float
+    let dateRange: String
+    let pathCoordinates: [CLLocationCoordinate2D]
+}
+
+struct HotspotPrediction {
+    let placeName: String
+    let speciesCount: Int
+    let distanceString: String
+    let dateRange: String
+    let placeImageName: String
+    let hotspots: [HotspotBirdSpot]
+}
+
+struct HotspotBirdSpot {
+    let coordinate: CLLocationCoordinate2D
+    let birdImageName: String
+}
+
+struct RelevantSighting {
+    let lat: Double
+    let lon: Double
+    let week: Int
+}
+
+// MARK: - Result Types
+
+struct HomeScreenData {
+    let upcomingBirds: [UpcomingBirdResult]
+    let recommendedBirds: [Bird]
+    let watchlistSpots: [PopularSpotResult]
+    let recommendedSpots: [PopularSpotResult]
+    let activeMigrations: [MigrationCardResult]
+    let recentObservations: [CommunityObservation]
+    let birdCategories: [BirdCategory]
+}
+
+struct PopularSpotResult: Identifiable {
+    let id: UUID
+    let title: String
+    let location: String
+    let latitude: Double
+    let longitude: Double
+    let speciesCount: Int
+    let observedCount: Int
+    let radius: Double
+    let imageName: String?
+    var distanceKm: Double?
+    
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+}
+
+struct MigrationCardResult: Identifiable {
+    let id = UUID()
+    let bird: Bird
+    let session: MigrationSession
+    let currentPosition: CLLocationCoordinate2D?
+    let progress: Float // 0.0 to 1.0
+    let paths: [TrajectoryPath]
+    
+    var dateRange: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        
+        let calendar = Calendar.current
+        if let startDate = calendar.date(from: DateComponents(weekOfYear: session.startWeek)),
+           let endDate = calendar.date(from: DateComponents(weekOfYear: session.endWeek)) {
+            return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        }
+        return "Week \(session.startWeek) - \(session.endWeek)"
+    }
 }
