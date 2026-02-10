@@ -16,122 +16,92 @@
 //
 
 import UIKit
-import AuthenticationServices
+import GoogleSignIn
 
-class StartViewController: UIViewController,
-                           ASAuthorizationControllerDelegate,
-                           ASAuthorizationControllerPresentationContextProviding {
+class StartViewController: UIViewController {
 
     // MARK: - Outlets
 
     @IBOutlet weak var segmentOutlet: UISegmentedControl!
-
     @IBOutlet weak var loginSegmentView: UIView!
     @IBOutlet weak var signupSegmentView: UIView!
-    @IBOutlet weak var appleImageView: UIImageView!
+    @IBOutlet weak var googleImageView: UIImageView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.bringSubviewToFront(signupSegmentView)
-        setupAppleLogin()
+
+        setupGoogleLogin()
     }
 
+    // MARK: - Segment Control
 
     @IBAction func segmentChanged(_ sender: UISegmentedControl) {
 
-        switch sender.selectedSegmentIndex {
-
-        case 0:
+        if sender.selectedSegmentIndex == 0 {
             view.bringSubviewToFront(signupSegmentView)
-
-        case 1:
+        } else {
             view.bringSubviewToFront(loginSegmentView)
-
-        default:
-            break
         }
     }
 
+    // MARK: - Google Setup
 
-    // MARK: - Apple Login Setup (ImageView)
+    private func setupGoogleLogin() {
 
-    private func setupAppleLogin() {
-        appleImageView.isUserInteractionEnabled = true
+        googleImageView.isUserInteractionEnabled = true
 
         let tap = UITapGestureRecognizer(
             target: self,
-            action: #selector(appleLoginTapped)
+            action: #selector(googleLoginTapped)
         )
 
-        appleImageView.addGestureRecognizer(tap)
+        googleImageView.addGestureRecognizer(tap)
     }
 
+    // MARK: - Google Login
 
-    // MARK: - Apple Login Action
+    @objc private func googleLoginTapped() {
 
-    @objc private func appleLoginTapped() {
-
-        let provider = ASAuthorizationAppleIDProvider()
-
-        let request = provider.createRequest()
-
-        // Ask for user info
-        request.requestedScopes = [.fullName, .email]
-
-        let controller = ASAuthorizationController(
-            authorizationRequests: [request]
-        )
-
-        controller.delegate = self
-        controller.presentationContextProvider = self
-
-        controller.performRequests()
-    }
-
-
-    // MARK: - Apple Login Success / Failure
-
-    func authorizationController(
-        controller: ASAuthorizationController,
-        didCompleteWithAuthorization authorization: ASAuthorization
-    ) {
-
-        guard let credential =
-                authorization.credential as? ASAuthorizationAppleIDCredential else {
+        guard let clientID =
+            Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String
+        else {
+            showAlert("Google Client ID missing")
             return
         }
 
-        let userID = credential.user
-        let email = credential.email ?? "apple_user"
+        let config = GIDConfiguration(clientID: clientID)
 
-        // Save login session
-        UserDefaults.standard.set(true, forKey: "isLoggedIn")
-        UserDefaults.standard.set(email, forKey: "userEmail")
-        UserDefaults.standard.set(userID, forKey: "appleUserID")
+        GIDSignIn.sharedInstance.configuration = config
 
-        goToMain()
+        GIDSignIn.sharedInstance.signIn(
+            withPresenting: self
+        ) { result, error in
+
+            if let error = error {
+                print("Google Error:", error.localizedDescription)
+                self.showAlert("Google Login Failed")
+                return
+            }
+
+            guard let user = result?.user else {
+                self.showAlert("Login Failed")
+                return
+            }
+
+            let email = user.profile?.email ?? ""
+            let name = user.profile?.name ?? ""
+
+            print("Logged in:", email)
+
+            // Save login
+            UserDefaults.standard.set(true, forKey: "isLoggedIn")
+            UserDefaults.standard.set(email, forKey: "userEmail")
+            UserDefaults.standard.set(name, forKey: "userName")
+
+            self.goToMain()
+        }
     }
-
-
-    func authorizationController(
-        controller: ASAuthorizationController,
-        didCompleteWithError error: Error
-    ) {
-
-        showAlert("Apple Login Failed")
-        print("Apple SignIn Error:", error.localizedDescription)
-    }
-
-
-    // MARK: - Apple Presentation
-
-    func presentationAnchor(
-        for controller: ASAuthorizationController
-    ) -> ASPresentationAnchor {
-
-        return self.view.window!
-    }
-
 
     // MARK: - Navigation
 
@@ -147,7 +117,7 @@ class StartViewController: UIViewController,
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
 
         let mainVC = storyboard.instantiateViewController(
-            identifier: "RootTabBarController"
+            withIdentifier: "RootTabBarController"
         )
 
         window.rootViewController = mainVC
@@ -159,7 +129,6 @@ class StartViewController: UIViewController,
             animations: nil
         )
     }
-
 
     // MARK: - Alert
 
@@ -177,5 +146,4 @@ class StartViewController: UIViewController,
 
         present(alert, animated: true)
     }
-
 }

@@ -11,7 +11,7 @@
         <!--Start View Controller-->
         <scene sceneID="tt2-wk-n23">
             <objects>
-                <viewController id="eqR-gV-h0r" customClass="StartViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="StartViewController" id="eqR-gV-h0r" customClass="StartViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="KHA-UU-RDG">
                         <rect key="frame" x="0.0" y="0.0" width="744" height="1133"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -120,7 +120,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="LWJ-Ah-7Fb"/>
                     <connections>
-                        <outlet property="appleImageView" destination="Vyt-B7-DmZ" id="3Sb-Zf-ESu"/>
+                        <outlet property="googleImageView" destination="baG-fR-MME" id="N1D-Rd-wic"/>
                         <outlet property="loginSegmentView" destination="ZED-bd-BNm" id="URK-DM-wRm"/>
                         <outlet property="segmentOutlet" destination="GR9-zo-HNw" id="Yy9-aA-axZ"/>
                         <outlet property="signupSegmentView" destination="VAL-rG-YkM" id="aXf-8T-ZST"/>
@@ -184,7 +184,7 @@
                                             <fontDescription key="titleFontDescription" type="boldSystem" pointSize="12"/>
                                         </buttonConfiguration>
                                         <connections>
-                                            <action selector="signUpButtonTapped:" destination="5zl-Tt-EQ3" eventType="primaryActionTriggered" id="pwy-dD-hoF"/>
+                                            <action selector="signupTapped:" destination="5zl-Tt-EQ3" eventType="primaryActionTriggered" id="qc1-SZ-yto"/>
                                         </connections>
                                     </button>
                                 </subviews>
@@ -279,7 +279,7 @@
                                     <fontDescription key="titleFontDescription" type="boldSystem" pointSize="12"/>
                                 </buttonConfiguration>
                                 <connections>
-                                    <action selector="loginButtonTapped:" destination="VYd-mD-4mX" eventType="primaryActionTriggered" id="Kd4-Uu-ggc"/>
+                                    <action selector="loginTapped:" destination="VYd-mD-4mX" eventType="primaryActionTriggered" id="kHg-4f-51A"/>
                                 </connections>
                             </button>
                         </subviews>
