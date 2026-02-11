@@ -212,6 +212,11 @@ struct WatchlistSeeder {
 				status: status,
 				observedBy: dto.observedBy?.first // Simplification for now
 			)
+            
+            // Enable notifications for birds to observe
+            if status == .to_observe {
+                entry.notify_upcoming = true
+            }
 			
 			if status == .observed, let dateInterval = dto.date.first {
 				entry.observationDate = Date(timeIntervalSinceReferenceDate: dateInterval)

@@ -265,17 +265,40 @@ class HomeManager {
     func getHomeScreenData(
         userLocation: CLLocationCoordinate2D? = nil
     ) async -> HomeScreenData {
+        print("[homeseeder] 🟢 [HomeManager] getHomeScreenData called")
         
         let location = userLocation ?? LocationPreferences.shared.homeLocation
+        print("[homeseeder]    - Location used: \(String(describing: location))")
+        
+        let upcomingBirds = getUpcomingBirds(userLocation: location)
+        print("[homeseeder]    - Fetched upcomingBirds: \(upcomingBirds.count)")
+        
+        let recommendedBirds = location.map { getRecommendedBirds(userLocation: $0) } ?? []
+        print("[homeseeder]    - Fetched recommendedBirds: \(recommendedBirds.count)")
+        
+        let watchlistSpots = getWatchlistSpots()
+        print("[homeseeder]    - Fetched watchlistSpots: \(watchlistSpots.count)")
+        
+        let recommendedSpots = location.map { getRecommendedSpots(near: $0) } ?? []
+        print("[homeseeder]    - Fetched recommendedSpots: \(recommendedSpots.count)")
+        
+        let activeMigrations = getActiveMigrations()
+        print("[homeseeder]    - Fetched activeMigrations: \(activeMigrations.count)")
+        
+        let recentObservations = getRecentObservations(near: location)
+        print("[homeseeder]    - Fetched recentObservations: \(recentObservations.count)")
+        
+        let birdCategories = getBirdCategories()
+        print("[homeseeder]    - Fetched birdCategories: \(birdCategories.count)")
         
         return HomeScreenData(
-            upcomingBirds: getUpcomingBirds(userLocation: location),
-            recommendedBirds: location.map { getRecommendedBirds(userLocation: $0) } ?? [],
-            watchlistSpots: getWatchlistSpots(),
-            recommendedSpots: location.map { getRecommendedSpots(near: $0) } ?? [],
-            activeMigrations: getActiveMigrations(),
-            recentObservations: getRecentObservations(near: location),
-            birdCategories: getBirdCategories()
+            upcomingBirds: upcomingBirds,
+            recommendedBirds: recommendedBirds,
+            watchlistSpots: watchlistSpots,
+            recommendedSpots: recommendedSpots,
+            activeMigrations: activeMigrations,
+            recentObservations: recentObservations,
+            birdCategories: birdCategories
         )
     }
     

@@ -18,31 +18,57 @@ final class MigrationManager {
     }
     
     /// Get active migrations for a specific week
-    /// TODO: Implement actual query
     func getActiveMigrations(forWeek week: Int) -> [MigrationSession] {
-        print("⚠️ [MigrationManager] getActiveMigrations() not yet implemented")
-        print("⚠️ [MigrationManager] - Week: \(week)")
+        print("[homeseeder] 🦅 [MigrationManager] Finding active migrations for week \(week)")
         
-        // TODO: Implement actual query:
-        // 1. Query MigrationSession where startWeek <= week <= endWeek
-        // 2. Return results sorted by bird name or progress
+        let descriptor = FetchDescriptor<MigrationSession>(
+            predicate: #Predicate { session in
+                session.startWeek <= week && session.endWeek >= week
+            }
+        )
         
-        return []
+        guard let activeSessions = try? modelContext.fetch(descriptor) else {
+            print("[homeseeder] ❌ [MigrationManager] Fetch active migrations failed")
+            return []
+        }
+        
+        print("[homeseeder] 🦅 [MigrationManager] Found \(activeSessions.count) active sessions")
+        return activeSessions
     }
     
     /// Get trajectory data for a bird during a specific week
-    /// TODO: Implement actual query
     func getTrajectory(for bird: Bird, duringWeek week: Int) -> MigrationTrajectoryResult? {
-        print("⚠️ [MigrationManager] getTrajectory() not yet implemented")
-        print("⚠️ [MigrationManager] - Bird: \(bird.commonName)")
-        print("⚠️ [MigrationManager] - Week: \(week)")
+        // 1. Find session for this bird
+        let birdId = bird.id
+        let descriptor = FetchDescriptor<MigrationSession>(
+            predicate: #Predicate { session in
+                session.bird?.id == birdId &&
+                session.startWeek <= week &&
+                session.endWeek >= week
+            }
+        )
         
-        // TODO: Implement actual query:
-        // 1. Find MigrationSession for bird during week
-        // 2. Extract trajectory paths for that week
-        // 3. Calculate most likely position
+        guard let session = try? modelContext.fetch(descriptor).first else { return nil }
         
-        return nil
+        // 2. Get paths for this week
+        guard let allPaths = session.trajectoryPaths else { return nil }
+        let currentPaths = allPaths.filter { $0.week == week }
+        
+        // 3. Determine most likely position (highest probability)
+        let bestPath = currentPaths.max(by: { ($0.probability ?? 0) < ($1.probability ?? 0) })
+        let position: CLLocationCoordinate2D?
+        if let lat = bestPath?.lat, let lon = bestPath?.lon {
+            position = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        } else {
+            position = nil
+        }
+        
+        return MigrationTrajectoryResult(
+            session: session,
+            pathsAtWeek: currentPaths,
+            requestedWeek: week,
+            mostLikelyPosition: position
+        )
     }
 }
 

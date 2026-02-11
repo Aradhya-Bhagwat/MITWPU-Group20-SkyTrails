@@ -18,23 +18,46 @@ final class CommunityObservationManager {
     }
     
     /// Get community observations near a location
-    /// TODO: Implement actual query
     func getObservations(
         near location: CLLocationCoordinate2D,
-        radiusInKm: Double = 10.0,
+        radiusInKm: Double = 50.0,
         maxAge: TimeInterval? = nil
     ) -> [CommunityObservation] {
-        print("⚠️ [CommunityObservationManager] getObservations() not yet implemented")
-        print("⚠️ [CommunityObservationManager] - Location: \(location)")
-        print("⚠️ [CommunityObservationManager] - Radius: \(radiusInKm)km")
-        print("⚠️ [CommunityObservationManager] - Max age: \(maxAge ?? 0)s")
+        print("[homeseeder] 🔍 [CommunityObservationManager] Fetching observations...")
         
-        // TODO: Implement actual query:
-        // 1. Query CommunityObservation where lat/lon within radius
-        // 2. Filter by observedAt date if maxAge provided
-        // 3. Sort by recency
+        // 1. Base Descriptor
+        var descriptor = FetchDescriptor<CommunityObservation>(
+            sortBy: [SortDescriptor(\.observedAt, order: .reverse)]
+        )
         
-        return []
+        // 2. Filter by date if needed (Predicate)
+        if let maxAge = maxAge {
+            let cutoffDate = Date().addingTimeInterval(-maxAge)
+            descriptor.predicate = #Predicate { obs in
+                obs.observedAt >= cutoffDate
+            }
+        }
+        
+        // 3. Fetch
+        guard let allObservations = try? modelContext.fetch(descriptor) else {
+            print("[homeseeder] ❌ [CommunityObservationManager] Fetch failed")
+            return []
+        }
+        
+        print("[homeseeder] 📊 [CommunityObservationManager] Fetched \(allObservations.count) potential observations")
+        
+        // 4. Filter by location (In-memory)
+        let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
+        
+        let filtered = allObservations.filter { obs in
+            guard let lat = obs.lat, let lon = obs.lon else { return false }
+            let obsLoc = CLLocation(latitude: lat, longitude: lon)
+            return obsLoc.distance(from: queryLoc) <= (radiusInKm * 1000)
+        }
+        
+        print("[homeseeder] 📍 [CommunityObservationManager] \(filtered.count) observations within \(radiusInKm)km of \(location)")
+        
+        return filtered
     }
 }
 
