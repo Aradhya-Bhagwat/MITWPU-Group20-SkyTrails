@@ -24,6 +24,11 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         
         setupCollectionView()
         setupCollectionViewLayout()
+        updateNextButtonState()
+    }
+
+    private func updateNextButtonState() {
+        navigationItem.rightBarButtonItem?.isEnabled = (selectedShapeId != nil)
     }
     
     private func setupCollectionView() {
@@ -114,6 +119,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         
         // 2. Update local UI state
         self.selectedShapeId = selectedShape.id
+        updateNextButtonState()
         
         collectionView.reloadData()
         
@@ -131,6 +137,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
 
     @IBAction func nextTapped(_ sender: UIBarButtonItem) {
+        guard selectedShapeId != nil else { return }
         delegate?.didTapShapes()
     }
 }
