@@ -6,6 +6,7 @@ import SwiftUI
 class IdentificationManager {
     var modelContext: ModelContext
     var currentSession: IdentificationSession?
+    var isReloadFlowActive: Bool = false
     private var locationNameById: [UUID: String] = [:]
     var tempSelectedAreas: [String] = []
     var allShapes: [BirdShape] = []
@@ -363,6 +364,7 @@ class IdentificationManager {
 
     func reset() {
         currentSession = nil
+        isReloadFlowActive = false
         tempSelectedAreas.removeAll()
         selectedLocationId = nil
         selectedSizeCategory = nil
