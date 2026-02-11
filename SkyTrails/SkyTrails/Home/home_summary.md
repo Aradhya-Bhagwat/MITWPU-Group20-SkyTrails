@@ -28,16 +28,20 @@ The module consumes data from the following core entities:
 *   **`MigrationSession`**: Active migration events.
 *   **`CommunityObservation`**: User-contributed sightings.
 
+### JSON Decoding Support (`HomeModels.swift`)
+Internal structs for decoding `home_data.json` are now located in `HomeModels.swift` to ensure visibility across the module:
+*   `HomeJSONData`, `HotspotData`, `SpeciesPresenceData`, `MigrationSessionData`, `TrajectoryPathData`, `CommunityObservationData`.
+
 ## 2. Persistence & Data Management (`HomeManager.swift`)
 
 `HomeManager` is a singleton facade that integrates multiple specialized managers to provide a unified data source for the Home screen.
 
 ### Dependency Injection (Internal)
 It delegates complex logic to:
-*   **`WatchlistManager`**: For user-specific birds and locations.
-*   **`HotspotManager`**: For location-based bird presence predictions.
-*   **`MigrationManager`**: For tracking active migration trajectories.
-*   **`CommunityObservationManager`**: For fetching and filtering user sightings.
+*   **`WatchlistManager`**: For user-specific birds and locations. Fixed `notify_upcoming` predicate issues (SwiftData enum capture limitation) and ensured seeding enables notifications for `to_observe` entries.
+*   **`HotspotManager`**: Fully implemented `getBirdsPresent` with spatial filtering (radius) and seasonal validation.
+*   **`MigrationManager`**: Fully implemented `getActiveMigrations` and `getTrajectory`. Added optimization to `getTrajectory(for: session)` to avoid redundant DB fetches.
+*   **`CommunityObservationManager`**: Fully implemented `getObservations` with date and location filtering.
 
 ### Key Logic
 *   **SwiftData Integration**: Uses `WatchlistManager.shared.context` to ensure consistency across the app.
@@ -47,13 +51,18 @@ It delegates complex logic to:
 ## 3. Key Data Flows
 
 ### A. Dashboard Initialization
-1.  **View Load**: `HomeViewController` calls `homeManager.getHomeScreenData(userLocation:)`.
-2.  **Aggregation**: `HomeManager` executes parallel requests to its internal managers.
-3.  **Filtering**:
+1.  **Data Seeding**: `HomeDataSeeder` (called via `AppDelegate`) robustly populates the DB from `home_data.json` if empty.
+    *   **Hotspots**: Linked with species presence data.
+    *   **Migrations**: Includes trajectory paths.
+    *   **Observations**: Parsed with ISO8601 dates.
+    *   **Assets**: `home_data.json` updated to use real asset names from `Assets.xcassets`.
+2.  **View Load**: `HomeViewController` calls `homeManager.getHomeScreenData(userLocation:)`.
+3.  **Aggregation**: `HomeManager` executes parallel requests to its internal managers.
+4.  **Filtering**:
     *   `getUpcomingBirds()`: Checks the next 4 weeks of probability data for watchlist birds.
     *   `getRecommendedSpots()`: Finds `Hotspot` entities within a 100km radius of the user.
-    *   `getActiveMigrations()`: Filters `MigrationSession` entities active in the current week.
-4.  **Binding**: Data is converted to UI models (`UpcomingBirdUI`, etc.) and loaded into the `UICollectionView`.
+    *   `getActiveMigrations()`: Filters `MigrationSession` entities active in the current week. Fixed logic to ensure trajectory calculation uses valid sessions.
+5.  **Binding**: Data is converted to UI models (`UpcomingBirdUI`, etc.) and loaded into the `UICollectionView`.
 
 ### B. Navigation & Detail Flows
 *   **Spot Selection**: Tapping a spot triggers `getLivePredictions(for:lon:radiusKm:)` to fetch real-time data for that specific location.
@@ -65,3 +74,8 @@ It delegates complex logic to:
 *   **Concurrency**: Data loading is performed in `Task { @MainActor in ... }` blocks to keep the UI responsive.
 *   **State Management**: The `HomeScreenData` struct acts as a snapshot. Refreshing the home screen (e.g., in `viewWillAppear`) re-fetches this entire snapshot from the SwiftData store.
 *   **Legacy Support**: `HomeManager` maintains bridge methods (`predictBirds`, `getRelevantSightings`) to support older view controllers that haven't been fully refactored to the new architecture.
+
+## 5. Troubleshooting & Known Issues
+
+*   **Upcoming Birds Predicate**: SwiftData has a limitation with capturing enum cases in predicates (e.g., `entry.status == .to_observe`). Use raw values or explicit property checks if encountered.
+*   **Seeding**: If data appears missing, verify `HomeDataSeeder` logs. Ensure `home_data.json` dates/weeks align with the current simulation date.

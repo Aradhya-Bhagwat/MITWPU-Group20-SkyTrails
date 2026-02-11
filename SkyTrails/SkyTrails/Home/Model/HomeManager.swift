@@ -185,7 +185,7 @@ class HomeManager {
         
         return activeSessions.prefix(limit).compactMap { session -> MigrationCardResult? in
             guard let bird = session.bird,
-                  let trajectory = migrationManager.getTrajectory(for: bird, duringWeek: currentWeek) else {
+                  let trajectory = migrationManager.getTrajectory(for: session, duringWeek: currentWeek) else {
                 return nil
             }
             
@@ -265,40 +265,17 @@ class HomeManager {
     func getHomeScreenData(
         userLocation: CLLocationCoordinate2D? = nil
     ) async -> HomeScreenData {
-        print("[homeseeder] 🟢 [HomeManager] getHomeScreenData called")
         
         let location = userLocation ?? LocationPreferences.shared.homeLocation
-        print("[homeseeder]    - Location used: \(String(describing: location))")
-        
-        let upcomingBirds = getUpcomingBirds(userLocation: location)
-        print("[homeseeder]    - Fetched upcomingBirds: \(upcomingBirds.count)")
-        
-        let recommendedBirds = location.map { getRecommendedBirds(userLocation: $0) } ?? []
-        print("[homeseeder]    - Fetched recommendedBirds: \(recommendedBirds.count)")
-        
-        let watchlistSpots = getWatchlistSpots()
-        print("[homeseeder]    - Fetched watchlistSpots: \(watchlistSpots.count)")
-        
-        let recommendedSpots = location.map { getRecommendedSpots(near: $0) } ?? []
-        print("[homeseeder]    - Fetched recommendedSpots: \(recommendedSpots.count)")
-        
-        let activeMigrations = getActiveMigrations()
-        print("[homeseeder]    - Fetched activeMigrations: \(activeMigrations.count)")
-        
-        let recentObservations = getRecentObservations(near: location)
-        print("[homeseeder]    - Fetched recentObservations: \(recentObservations.count)")
-        
-        let birdCategories = getBirdCategories()
-        print("[homeseeder]    - Fetched birdCategories: \(birdCategories.count)")
         
         return HomeScreenData(
-            upcomingBirds: upcomingBirds,
-            recommendedBirds: recommendedBirds,
-            watchlistSpots: watchlistSpots,
-            recommendedSpots: recommendedSpots,
-            activeMigrations: activeMigrations,
-            recentObservations: recentObservations,
-            birdCategories: birdCategories
+            upcomingBirds: getUpcomingBirds(userLocation: location),
+            recommendedBirds: location.map { getRecommendedBirds(userLocation: $0) } ?? [],
+            watchlistSpots: getWatchlistSpots(),
+            recommendedSpots: location.map { getRecommendedSpots(near: $0) } ?? [],
+            activeMigrations: getActiveMigrations(),
+            recentObservations: getRecentObservations(near: location),
+            birdCategories: getBirdCategories()
         )
     }
     
@@ -355,23 +332,62 @@ class HomeManager {
     // MARK: - Legacy Compatibility (Bridging Types)
 
     func getDynamicMapCards() -> [DynamicMapCard] {
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        print("🔍 [HomeManager] getDynamicMapCards called - Current week: \(currentWeek)")
+        
         let migrations = getActiveMigrations()
+        print("🔍 [HomeManager] Found \(migrations.count) active migrations")
+        
+        if migrations.isEmpty {
+            print("⚠️ [HomeManager] No active migrations found for current week \(currentWeek)")
+            print("⚠️ [HomeManager] This will cause section 0 to be empty!")
+        }
 
-        return migrations.map { migration in
+        let cards = migrations.map { migration in
+            print("🔍 [HomeManager] Creating card for \(migration.bird.commonName)")
+            print("   - Progress: \(migration.progress)")
+            print("   - Date range: \(migration.dateRange)")
+            print("   - Path points: \(migration.paths.count)")
+            print("   - Current position: \(String(describing: migration.currentPosition))")
+            
+            // Get start and end locations from trajectory
+            let startLocation: String
+            let endLocation: String
+            
+            if let firstPath = migration.paths.first {
+                startLocation = "(\(String(format: "%.2f", firstPath.lat)), \(String(format: "%.2f", firstPath.lon)))"
+            } else {
+                startLocation = "Unknown"
+            }
+            
+            if let lastPath = migration.paths.last {
+                endLocation = "(\(String(format: "%.2f", lastPath.lat)), \(String(format: "%.2f", lastPath.lon)))"
+            } else {
+                endLocation = "Unknown"
+            }
+            
+            // Try to find nearby hotspot for this migration
+            let nearbyHotspots = findNearbyHotspots(for: migration)
+            
             let hotspot = HotspotPrediction(
-                placeName: migration.currentPosition == nil ? "Unknown" : "Hotspot",
-                speciesCount: 0,
-                distanceString: "",
+                placeName: nearbyHotspots.first?.name ?? "Migration Zone",
+                speciesCount: nearbyHotspots.first?.speciesList?.count ?? 0,
+                distanceString: nearbyHotspots.first != nil ? "Nearby" : "N/A",
                 dateRange: migration.dateRange,
-                placeImageName: "default_spot",
-                hotspots: []
+                placeImageName: "default_spot",  // Default image for now
+                hotspots: nearbyHotspots.prefix(3).map { hotspot in
+                    HotspotBirdSpot(
+                        coordinate: CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon),
+                        birdImageName: migration.bird.staticImageName
+                    )
+                }
             )
 
             let prediction = MigrationPrediction(
                 birdName: migration.bird.commonName,
                 birdImageName: migration.bird.staticImageName,
-                startLocation: "",
-                endLocation: "",
+                startLocation: startLocation,
+                endLocation: endLocation,
                 currentProgress: migration.progress,
                 dateRange: migration.dateRange,
                 pathCoordinates: migration.paths.map {
@@ -379,8 +395,26 @@ class HomeManager {
                 }
             )
 
-            return .combined(migration: prediction, hotspot: hotspot)
+            return DynamicMapCard.combined(migration: prediction, hotspot: hotspot)
         }
+        
+        print("✅ [HomeManager] Created \(cards.count) dynamic map cards")
+        return cards
+    }
+    
+    private func findNearbyHotspots(for migration: MigrationCardResult) -> [Hotspot] {
+        guard let currentPos = migration.currentPosition else { return [] }
+        
+        let descriptor = FetchDescriptor<Hotspot>()
+        guard let allHotspots = try? modelContext.fetch(descriptor) else { return [] }
+        
+        let currentLoc = CLLocation(latitude: currentPos.latitude, longitude: currentPos.longitude)
+        let nearby = allHotspots.filter { hotspot in
+            let hotspotLoc = CLLocation(latitude: hotspot.lat, longitude: hotspot.lon)
+            return hotspotLoc.distance(from: currentLoc) <= 100_000 // 100km
+        }
+        
+        return Array(nearby.prefix(3))
     }
 
     func parseDateRange(_ text: String) -> (Date?, Date?) {

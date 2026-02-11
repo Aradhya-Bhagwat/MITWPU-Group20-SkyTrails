@@ -9,7 +9,7 @@
       "speciesList": [
         {
           "id": "96E1D89F-F9BB-465A-837F-7A77774C51CC",
-          "birdId": "A3333333-3333-3333-3333-333333333333",
+          "birdId": "550e8400-e29b-41d4-a716-446655440001",
           "validWeeks": [
             1,
             2,
@@ -68,7 +68,7 @@
         },
         {
           "id": "132F91BE-1038-4699-A454-AB6265F574DE",
-          "birdId": "A1111111-1111-1111-1111-111111111111",
+          "birdId": "550e8400-e29b-41d4-a716-446655440002",
           "validWeeks": [
             1,
             2,
@@ -136,7 +136,7 @@
       "speciesList": [
         {
           "id": "A78A73FD-78DC-40FE-A2ED-C1BA32893099",
-          "birdId": "A4444444-4444-4444-4444-444444444444",
+          "birdId": "550e8400-e29b-41d4-a716-446655440003",
           "validWeeks": [
             1,
             2,
@@ -195,7 +195,7 @@
         },
         {
           "id": "FCC55AF8-5C9D-454C-B9F8-E1BCE30F253F",
-          "birdId": "A5555555-5555-5555-5555-555555555555",
+          "birdId": "550e8400-e29b-41d4-a716-446655440004",
           "validWeeks": [
             1,
             2,
@@ -254,7 +254,7 @@
         },
         {
           "id": "10DEE166-6A84-40D4-8061-EEC1A8DB951F",
-          "birdId": "A6666666-6666-6666-6666-666666666666",
+          "birdId": "550e8400-e29b-41d4-a716-446655440005",
           "validWeeks": [
             20,
             21,
@@ -284,62 +284,187 @@
   ],
   "migration_sessions": [
     {
-      "id": "FDFCDC50-71AA-496F-850F-FFDD9A93B582",
-      "birdId": "A2222222-2222-2222-2222-222222222222",
-      "startWeek": 40,
-      "endWeek": 48,
+      "id": "5fd0d859-0089-4bc6-a4f3-a1d703f01042",
+      "birdId": "550e8400-e29b-41d4-a716-446655440001",
+      "startWeek": 1,
+      "endWeek": 12,
       "hemisphere": "northern",
       "trajectoryPaths": [
         {
-          "id": "BC856243-B375-49DB-8917-1DDADE29E919",
-          "week": 40,
+          "id": "46d365c5-1d7e-4530-9b0c-863e72785d91",
+          "week": 1,
           "lat": 35.0,
           "lon": 70.0,
           "probability": 70
         },
         {
-          "id": "28F9752C-D7DC-49FF-8C77-C6D6D2FB047D",
-          "week": 44,
-          "lat": 28.0,
+          "id": "6111446f-a51f-462a-a2ce-db308c014e4e",
+          "week": 4,
+          "lat": 30.0,
           "lon": 72.0,
           "probability": 85
         },
         {
-          "id": "0E1A1D93-55B9-4AA5-BB06-34613890215D",
-          "week": 48,
+          "id": "1dba08c5-e739-45be-abcc-7a124c8a6d4d",
+          "week": 8,
           "lat": 26.9,
-          "lon": 70.9,
+          "lon": 73.9,
+          "probability": 95
+        },
+        {
+          "id": "65541233-1b48-4a97-8885-414340bf1f9d",
+          "week": 12,
+          "lat": 23.0,
+          "lon": 72.5,
           "probability": 100
         }
       ]
     },
     {
-      "id": "A184CA24-0E05-477D-883D-7A54EB2AD26E",
-      "birdId": "37C2DA3B-80E6-47DB-8320-649D17043E57",
-      "startWeek": 42,
-      "endWeek": 50,
+      "id": "5a6ca4c0-e6bd-4c7b-a475-244eeeb9fa4d",
+      "birdId": "550e8400-e29b-41d4-a716-446655440002",
+      "startWeek": 10,
+      "endWeek": 25,
       "hemisphere": "northern",
       "trajectoryPaths": [
         {
-          "id": "2593DBE2-E095-45AE-B171-233E61F31F6A",
-          "week": 42,
-          "lat": 45.0,
-          "lon": 75.0,
-          "probability": 60
+          "id": "641d90c2-118d-4f36-a358-44e438706981",
+          "week": 10,
+          "lat": 18.5,
+          "lon": 73.8,
+          "probability": 90
         },
         {
-          "id": "B8898A7B-AA75-4F13-9F23-033FBCF3446A",
-          "week": 46,
-          "lat": 35.0,
-          "lon": 77.0,
+          "id": "895ab9be-dda2-4f6f-92db-6c65e7bc4a44",
+          "week": 15,
+          "lat": 23.0,
+          "lon": 74.0,
+          "probability": 85
+        },
+        {
+          "id": "0cbde7ee-a2ff-4814-99de-7a2b9c5f3f8a",
+          "week": 20,
+          "lat": 28.6,
+          "lon": 77.2,
+          "probability": 75
+        },
+        {
+          "id": "4733c12f-adcb-46ad-bb71-3a4da4c63676",
+          "week": 25,
+          "lat": 34.0,
+          "lon": 74.8,
+          "probability": 100
+        }
+      ]
+    },
+    {
+      "id": "90195e54-085c-42b8-b9e2-b71a36cb1258",
+      "birdId": "550e8400-e29b-41d4-a716-446655440003",
+      "startWeek": 20,
+      "endWeek": 35,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "002d44fc-953b-48da-9573-28e183cf0628",
+          "week": 20,
+          "lat": 18.5,
+          "lon": 73.8,
+          "probability": 100
+        },
+        {
+          "id": "74d6fec6-4142-4b44-8cdc-7e2bc99f0364",
+          "week": 25,
+          "lat": 19.0,
+          "lon": 73.5,
+          "probability": 90
+        },
+        {
+          "id": "d71e76eb-ad27-40e7-802f-1b76b3d48426",
+          "week": 30,
+          "lat": 18.8,
+          "lon": 73.6,
+          "probability": 85
+        },
+        {
+          "id": "ee6d3d27-814d-45a9-b3ca-b590252987b6",
+          "week": 35,
+          "lat": 18.5,
+          "lon": 73.8,
+          "probability": 100
+        }
+      ]
+    },
+    {
+      "id": "4533a945-4e86-4c2b-8497-ecbc4e3fe940",
+      "birdId": "550e8400-e29b-41d4-a716-446655440008",
+      "startWeek": 35,
+      "endWeek": 48,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "8ab3e20f-93ca-464b-9ec3-1ea5abc8820b",
+          "week": 35,
+          "lat": 34.0,
+          "lon": 74.8,
+          "probability": 90
+        },
+        {
+          "id": "3164830b-1019-4f69-a51c-6806d9343c02",
+          "week": 40,
+          "lat": 28.6,
+          "lon": 77.2,
+          "probability": 85
+        },
+        {
+          "id": "3d4ed15e-7544-4bdb-8e39-6883f8c319b6",
+          "week": 44,
+          "lat": 23.0,
+          "lon": 72.6,
           "probability": 80
         },
         {
-          "id": "413FE5A5-3668-481D-80D8-9EA9FE3A2E7D",
-          "week": 50,
-          "lat": 28.5,
-          "lon": 77.2,
+          "id": "0b30d3a6-ac6f-4b57-8c8e-7cde4a9082f8",
+          "week": 48,
+          "lat": 18.5,
+          "lon": 73.8,
+          "probability": 100
+        }
+      ]
+    },
+    {
+      "id": "f4e4e68f-cf27-4eb6-b072-0c7611170b67",
+      "birdId": "550e8400-e29b-41d4-a716-446655440007",
+      "startWeek": 42,
+      "endWeek": 52,
+      "hemisphere": "northern",
+      "trajectoryPaths": [
+        {
+          "id": "0e537dbf-ddb1-4b94-9892-71915c8a3701",
+          "week": 42,
+          "lat": 34.0,
+          "lon": 74.8,
           "probability": 95
+        },
+        {
+          "id": "6cadec23-8dfc-4376-a35b-7000beb6041d",
+          "week": 46,
+          "lat": 28.6,
+          "lon": 77.2,
+          "probability": 90
+        },
+        {
+          "id": "c0c05023-30c3-40ac-85fc-e2fdab2c2487",
+          "week": 50,
+          "lat": 23.0,
+          "lon": 74.0,
+          "probability": 85
+        },
+        {
+          "id": "b82e4a79-e6dc-4067-a088-54bd479e7e2a",
+          "week": 52,
+          "lat": 18.5,
+          "lon": 73.8,
+          "probability": 100
         }
       ]
     }

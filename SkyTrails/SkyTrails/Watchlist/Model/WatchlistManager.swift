@@ -553,68 +553,62 @@ extension WatchlistManager {
 		/// Get birds the user should be notified about based on:
 		/// - They're on watchlist with notify_upcoming enabled
 		/// - They're present at user's location during current/upcoming weeks
-	    func getUpcomingBirds(
-	        userLocation: CLLocationCoordinate2D,
-	        currentWeek: Int,
-	        lookAheadWeeks: Int = 4,
-	        radiusInKm: Double = 50.0
-	    ) -> [UpcomingBirdResult] {
-	        
-	        print("[homeseeder] 🔔 [WatchlistManager] Getting upcoming birds...")
-	        print("[homeseeder]    - Location: \(userLocation)")
-	        print("[homeseeder]    - Current week: \(currentWeek)")
-	        
-	                // 1. Get all watchlist entries with notifications enabled
-	                let targetStatus = WatchlistEntryStatus.to_observe
-	                let descriptor = FetchDescriptor<WatchlistEntry>(
-	                    predicate: #Predicate { entry in
-	                        entry.notify_upcoming == true && entry.status == targetStatus
-	                    }
-	                )
-	                
-	                let notifyEntries: [WatchlistEntry]
-	                do {
-	                    notifyEntries = try context.fetch(descriptor)
-	                } catch {
-	                    print("[homeseeder] ❌ [WatchlistManager] Failed to fetch notify entries: \(error)")
-	                    return []
-	                }	        
-	        print("[homeseeder] 📊 [WatchlistManager] Found \(notifyEntries.count) entries with notifications enabled")
-	        
-	        // ... rest of the function ...
-				// 2. For each bird, check if it's present at user's location
-		var results: [UpcomingBirdResult] = []
-		let hotspotManager = HotspotManager(modelContext: context)
-		
-		for entry in notifyEntries {
-			guard let bird = entry.bird else { continue }
-			
-				// Check weeks in the upcoming window
-			for weekOffset in 0...lookAheadWeeks {
-				let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1 // Wrap around year
-				
-				let presentBirds = hotspotManager.getBirdsPresent(
-					at: userLocation,
-					duringWeek: checkWeek,
-					radiusInKm: radiusInKm
-				)
-				
-				if presentBirds.contains(where: { $0.id == bird.id }) {
-					results.append(UpcomingBirdResult(
-						bird: bird,
-						entry: entry,
-						expectedWeek: checkWeek,
-						daysUntil: weekOffset * 7
-					))
-					print("✅ [WatchlistManager] \(bird.commonName) arriving in \(weekOffset) weeks")
-					break // Only add each bird once
-				}
-			}
-		}
-		
-		print("🔔 [WatchlistManager] Found \(results.count) upcoming birds")
-		return results.sorted { $0.daysUntil < $1.daysUntil }
-	}
+    func getUpcomingBirds(
+        userLocation: CLLocationCoordinate2D,
+        currentWeek: Int,
+        lookAheadWeeks: Int = 4,
+        radiusInKm: Double = 50.0
+    ) -> [UpcomingBirdResult] {
+        
+        // 1. Get all watchlist entries with notifications enabled
+        // NOTE: SwiftData doesn't support enum values in predicates, so we fetch all and filter
+        let descriptor = FetchDescriptor<WatchlistEntry>(
+            predicate: #Predicate { entry in
+                entry.notify_upcoming == true
+            }
+        )
+        
+        let notifyEntries: [WatchlistEntry]
+        do {
+            let allNotifyEntries = try context.fetch(descriptor)
+            // Filter to only to_observe status (post-fetch since predicates don't support enum capture)
+            notifyEntries = allNotifyEntries.filter { $0.status == .to_observe }
+        } catch {
+            print("❌ [WatchlistManager] Failed to fetch notify entries: \(error)")
+            return []
+        }
+        
+        // 2. For each bird, check if it's present at user's location
+        var results: [UpcomingBirdResult] = []
+        let hotspotManager = HotspotManager(modelContext: context)
+        
+        for entry in notifyEntries {
+            guard let bird = entry.bird else { continue }
+            
+            // Check weeks in the upcoming window
+            for weekOffset in 0...lookAheadWeeks {
+                let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1 // Wrap around year
+                
+                let presentBirds = hotspotManager.getBirdsPresent(
+                    at: userLocation,
+                    duringWeek: checkWeek,
+                    radiusInKm: radiusInKm
+                )
+                
+                if presentBirds.contains(where: { $0.id == bird.id }) {
+                    results.append(UpcomingBirdResult(
+                        bird: bird,
+                        entry: entry,
+                        expectedWeek: checkWeek,
+                        daysUntil: weekOffset * 7
+                    ))
+                    break // Only add each bird once
+                }
+            }
+        }
+        
+        return results.sorted { $0.daysUntil < $1.daysUntil }
+    }
 	
 		/// Alternative: Get upcoming birds using saved home location preference
 	func getUpcomingBirdsAtHome(
@@ -647,14 +641,17 @@ extension WatchlistManager {
 		watchlistId: UUID? = nil
 	) -> [WatchlistEntry] {
 		
-		let targetStatus = WatchlistEntryStatus.observed
+		// NOTE: SwiftData doesn't support enum values in predicates
 		let descriptor = FetchDescriptor<WatchlistEntry>(
 			predicate: #Predicate { entry in
-				entry.status == targetStatus && entry.lat != nil && entry.lon != nil
+				entry.lat != nil && entry.lon != nil
 			}
 		)
 		
-		guard let allObserved = try? context.fetch(descriptor) else { return [] }
+		guard let allWithLocation = try? context.fetch(descriptor) else { return [] }
+		
+		// Filter to observed status (post-fetch)
+		let allObserved = allWithLocation.filter { $0.status == .observed }
 		
 			// Filter by watchlist if specified
 		var filtered = allObserved
@@ -680,14 +677,13 @@ extension WatchlistManager {
 		watchlistId: UUID? = nil
 	) -> [WatchlistEntry] {
 		
-		let targetStatus = WatchlistEntryStatus.to_observe
-		let descriptor = FetchDescriptor<WatchlistEntry>(
-			predicate: #Predicate { entry in
-				entry.status == targetStatus
-			}
-		)
+		// NOTE: SwiftData doesn't support enum values in predicates
+		let descriptor = FetchDescriptor<WatchlistEntry>()
 		
-		guard let entries = try? context.fetch(descriptor) else { return [] }
+		guard let allEntries = try? context.fetch(descriptor) else { return [] }
+		
+		// Filter to to_observe status (post-fetch)
+		let entries = allEntries.filter { $0.status == .to_observe }
 		
 		var filtered = entries
 		
