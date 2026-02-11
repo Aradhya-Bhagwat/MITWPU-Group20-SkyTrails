@@ -39,9 +39,15 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-
-		applyCardShadow(to: startButton)
+        applyCardShadow(to: startButton)
+        applyTableContainerShadow()
         
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applyTableContainerShadow()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -251,6 +257,21 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     func applyCardShadow(to view: UIView) {
         view.layer.shadowColor = UIColor.label.cgColor
         
+    }
+    
+    private func applyTableContainerShadow() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let shadowColor: UIColor = isDarkMode ? .white : .black
+        
+        containerView.layer.masksToBounds = false
+        containerView.layer.shadowColor = shadowColor.cgColor
+        containerView.layer.shadowOpacity = isDarkMode ? 0.22 : 0.09
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 3)
+        containerView.layer.shadowRadius = 7
+        containerView.layer.shadowPath = UIBezierPath(
+            roundedRect: containerView.bounds,
+            cornerRadius: containerView.layer.cornerRadius
+        ).cgPath
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
