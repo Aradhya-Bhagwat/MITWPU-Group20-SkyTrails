@@ -103,7 +103,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 IdentificationCandidate.self
             ])
             self.modelContainer = try ModelContainer(for: schema)
-            let context = ModelContext(modelContainer!)
+            let context = self.modelContainer!.mainContext
             self.model = IdentificationManager(modelContext: context)
 
             // Seed data if the database is empty
@@ -149,6 +149,32 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         // Map FilterCategory cases to local options
         self.options = FilterCategory.allCases.map { category in
             IdentificationOption(category: category, isSelected: false)
+        }
+    }
+
+    private func applyOptionsFromSession(_ session: IdentificationSession) {
+        let saved = session.selectedFilterCategories ?? []
+        if !saved.isEmpty {
+            let savedSet = Set(saved)
+            options = FilterCategory.allCases.map { category in
+                IdentificationOption(category: category, isSelected: savedSet.contains(category.rawValue))
+            }
+            return
+        }
+
+        options = FilterCategory.allCases.map { category in
+            let isSelected: Bool
+            switch category {
+            case .locationDate:
+                isSelected = session.locationId != nil
+            case .size:
+                isSelected = session.sizeCategory != nil
+            case .shape:
+                isSelected = session.shape != nil
+            case .fieldMarks:
+                isSelected = !(session.selectedMarks?.isEmpty ?? true)
+            }
+            return IdentificationOption(category: category, isSelected: isSelected)
         }
     }
     
@@ -362,6 +388,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     @IBAction func startButtonTapped(_ sender: UIButton) {
+        model.reset()
+        model.selectedMenuOptionRawValues = options
+            .filter { $0.isSelected }
+            .map { $0.category.rawValue }
         startIdentificationFlow(from: self.options)
     }
     
@@ -369,12 +399,17 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         guard !histories.isEmpty else { return }
         let selectedSession = histories[indexPath.row]
         
+        applyOptionsFromSession(selectedSession)
+        model.selectedMenuOptionRawValues = options
+            .filter { $0.isSelected }
+            .map { $0.category.rawValue }
         model.loadSessionAndFilter(session: selectedSession)
         
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
         if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
             resultVC.viewModel = self.model
             resultVC.delegate = self
+            resultVC.historyItem = selectedSession.result
             self.navigationController?.pushViewController(resultVC, animated: true)
         }
     }
@@ -534,6 +569,41 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
     }
     
     func didTapLeftButton() {
+        if let session = model.currentSession {
+            applyOptionsFromSession(session)
+            model.selectedMenuOptionRawValues = options
+                .filter { $0.isSelected }
+                .map { $0.category.rawValue }
+            updateSelectionState()
+            tableView.reloadData()
+            navigationController?.popToRootViewController(animated: false)
+            startIdentificationFlow(from: self.options)
+            return
+        }
+
+        // Reload in an active new flow should preserve the user's current selections
+        // (shape/size/location/fieldmarks) instead of returning to an empty root screen.
+        let hasActiveFlowState =
+            model.selectedShape != nil ||
+            model.selectedSizeCategory != nil ||
+            model.selectedLocation != nil ||
+            !model.selectedFieldMarks.isEmpty ||
+            !model.tempSelectedAreas.isEmpty ||
+            !model.results.isEmpty
+
+        if hasActiveFlowState {
+            if model.selectedMenuOptionRawValues.isEmpty {
+                model.selectedMenuOptionRawValues = options
+                    .filter { $0.isSelected }
+                    .map { $0.category.rawValue }
+            }
+            updateSelectionState()
+            tableView.reloadData()
+            navigationController?.popToRootViewController(animated: false)
+            startIdentificationFlow(from: self.options)
+            return
+        }
+
         navigationController?.popToRootViewController(animated: true)
     }
     

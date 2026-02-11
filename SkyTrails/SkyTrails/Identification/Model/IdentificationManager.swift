@@ -5,6 +5,8 @@ import SwiftUI
 @Observable
 class IdentificationManager {
     var modelContext: ModelContext
+    var currentSession: IdentificationSession?
+    private var locationNameById: [UUID: String] = [:]
     var tempSelectedAreas: [String] = []
     var allShapes: [BirdShape] = []
     var selectedShapeId: String? {
@@ -27,11 +29,22 @@ class IdentificationManager {
     var selectedLocation: String?
     var selectedLocationData: LocationService.LocationData?
     var selectedDate: Date = Date()
+    var selectedMenuOptionRawValues: [String] = []
     var results: [IdentificationCandidate] = []
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         fetchShapes()
+    }
+
+    func registerLocationName(_ name: String, for id: UUID?) {
+        guard let id, !name.isEmpty else { return }
+        locationNameById[id] = name
+    }
+
+    func locationName(for id: UUID?) -> String? {
+        guard let id else { return nil }
+        return locationNameById[id]
     }
     
     func fetchShapes() {
@@ -185,6 +198,73 @@ class IdentificationManager {
     }
 
     func saveSession(winningCandidate: IdentificationCandidate?) {
+        if let sessionToUpdate = currentSession {
+            sessionToUpdate.shape = selectedShape
+            sessionToUpdate.locationId = selectedLocationId
+            registerLocationName(selectedLocation ?? "", for: selectedLocationId)
+            sessionToUpdate.observationDate = selectedDate
+            sessionToUpdate.sizeCategory = selectedSizeCategory
+            sessionToUpdate.status = .completed
+            sessionToUpdate.selectedFilterCategories = selectedMenuOptionRawValues.isEmpty ? nil : selectedMenuOptionRawValues
+
+            if let oldMarks = sessionToUpdate.selectedMarks {
+                for oldMark in oldMarks {
+                    modelContext.delete(oldMark)
+                }
+            }
+
+            var updatedMarks: [IdentificationSessionFieldMark] = []
+            for (_, variant) in selectedFieldMarks {
+                guard let fieldMark = variant.fieldMark else { continue }
+                let sessionMark = IdentificationSessionFieldMark(
+                    session: sessionToUpdate,
+                    fieldMark: fieldMark,
+                    variant: variant,
+                    area: fieldMark.area
+                )
+                modelContext.insert(sessionMark)
+                updatedMarks.append(sessionMark)
+            }
+            sessionToUpdate.selectedMarks = updatedMarks
+            tempSelectedAreas = updatedMarks.map { $0.area }
+
+            let result: IdentificationResult
+            if let existingResult = sessionToUpdate.result {
+                result = existingResult
+            } else {
+                result = IdentificationResult(
+                    session: sessionToUpdate,
+                    userId: sessionToUpdate.userId
+                )
+                sessionToUpdate.result = result
+            }
+            result.bird = winningCandidate?.bird
+
+            if let oldCandidates = result.candidates {
+                for oldCandidate in oldCandidates {
+                    modelContext.delete(oldCandidate)
+                }
+            }
+            result.candidates = []
+
+            var updatedCandidates: [IdentificationCandidate] = []
+            for (index, candidate) in self.results.enumerated() {
+                let newCandidate = IdentificationCandidate(
+                    result: result,
+                    bird: candidate.bird,
+                    confidence: candidate.confidence,
+                    rank: index + 1,
+                    matchScore: candidate.matchScore
+                )
+                modelContext.insert(newCandidate)
+                updatedCandidates.append(newCandidate)
+            }
+            result.candidates = updatedCandidates
+
+            try? modelContext.save()
+            return
+        }
+
         let newSession = IdentificationSession(
             id: UUID(),
             userId: UUID(),
@@ -192,33 +272,54 @@ class IdentificationManager {
             locationId: selectedLocationId,
             observationDate: selectedDate,
             status: .completed,
-            sizeCategory: selectedSizeCategory
+            sizeCategory: selectedSizeCategory,
+            selectedFilterCategories: selectedMenuOptionRawValues.isEmpty ? nil : selectedMenuOptionRawValues
         )
+        registerLocationName(selectedLocation ?? "", for: selectedLocationId)
 
+        var sessionMarks: [IdentificationSessionFieldMark] = []
         for (_, variant) in selectedFieldMarks {
-            if let fieldMark = variant.fieldMark {
-                let sessionMark = IdentificationSessionFieldMark(
-                    session: newSession,
-                    fieldMark: fieldMark,
-                    variant: variant,
-                    area: fieldMark.area
-                )
-                modelContext.insert(sessionMark)
-            }
+            guard let fieldMark = variant.fieldMark else { continue }
+            let sessionMark = IdentificationSessionFieldMark(
+                session: newSession,
+                fieldMark: fieldMark,
+                variant: variant,
+                area: fieldMark.area
+            )
+            modelContext.insert(sessionMark)
+            sessionMarks.append(sessionMark)
         }
+        newSession.selectedMarks = sessionMarks
+        tempSelectedAreas = sessionMarks.map { $0.area }
 
         let result = IdentificationResult(
             session: newSession,
             userId: newSession.userId,
             bird: winningCandidate?.bird
         )
+
+        var finalCandidates: [IdentificationCandidate] = []
+        for (index, candidate) in self.results.enumerated() {
+            let newCandidate = IdentificationCandidate(
+                result: result,
+                bird: candidate.bird,
+                confidence: candidate.confidence,
+                rank: index + 1,
+                matchScore: candidate.matchScore
+            )
+            modelContext.insert(newCandidate)
+            finalCandidates.append(newCandidate)
+        }
+        result.candidates = finalCandidates
         newSession.result = result
-        
+
         modelContext.insert(newSession)
+        currentSession = newSession
         try? modelContext.save()
     }
 
     func loadSessionAndFilter(session: IdentificationSession) {
+        self.currentSession = session
         // Reset state manually to avoid `reset()`'s filter run.
         self.tempSelectedAreas = []
         self.selectedLocationId = nil
@@ -242,6 +343,8 @@ class IdentificationManager {
 
         self.selectedDate = session.observationDate
         self.selectedLocationId = session.locationId
+        self.selectedLocation = locationName(for: session.locationId)
+        self.selectedMenuOptionRawValues = session.selectedFilterCategories ?? []
         
         var newFieldMarks: [UUID: FieldMarkVariant] = [:]
         if let sessionMarks = session.selectedMarks {
@@ -250,6 +353,7 @@ class IdentificationManager {
                     newFieldMarks[fieldMark.id] = variant
                 }
             }
+            self.tempSelectedAreas = sessionMarks.map { $0.area }
         }
         self.selectedFieldMarks = newFieldMarks
         
@@ -258,6 +362,7 @@ class IdentificationManager {
     }
 
     func reset() {
+        currentSession = nil
         tempSelectedAreas.removeAll()
         selectedLocationId = nil
         selectedSizeCategory = nil
@@ -265,6 +370,7 @@ class IdentificationManager {
         selectedLocation = nil
         selectedLocationData = nil
         selectedDate = Date()
+        selectedMenuOptionRawValues = []
         results.removeAll()
         
         // Setting selectedShape to nil triggers its `didSet` observer,

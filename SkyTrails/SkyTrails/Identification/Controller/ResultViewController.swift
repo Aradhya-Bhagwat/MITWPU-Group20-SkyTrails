@@ -32,8 +32,10 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     private func loadData() {
+        let preselectedBirdId: UUID?
         if let history = historyItem {
-            self.birdResults = history.candidates ?? []
+            self.birdResults = (history.candidates?.isEmpty == false) ? (history.candidates ?? []) : viewModel.results
+            preselectedBirdId = history.bird?.id
         } else {
             viewModel.filterBirds(
                 shape: viewModel.selectedShapeId,
@@ -42,7 +44,15 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
                 fieldMarks: Array(viewModel.selectedFieldMarks.values)
             )
             self.birdResults = viewModel.results
+            preselectedBirdId = nil
         }
+
+        if let preselectedBirdId,
+           let selectedItem = birdResults.firstIndex(where: { $0.bird?.id == preselectedBirdId }) {
+            selectedIndexPath = IndexPath(item: selectedItem, section: 0)
+            selectedResult = birdResults[selectedItem].bird
+        }
+        viewModel.results = birdResults
         resultCollectionView.reloadData()
     }
     

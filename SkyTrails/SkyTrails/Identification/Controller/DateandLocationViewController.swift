@@ -22,7 +22,10 @@ class DateandLocationViewController: UIViewController {
         setupUI()
         setupTableView()
         
-        if let currentLoc = viewModel.selectedLocation {
+        if let mappedLocation = viewModel.locationName(for: viewModel.selectedLocationId) {
+            searchQuery = mappedLocation
+            viewModel.selectedLocation = mappedLocation
+        } else if let currentLoc = viewModel.selectedLocation {
             searchQuery = currentLoc
         }
         selectedDate = viewModel.selectedDate
@@ -45,6 +48,11 @@ class DateandLocationViewController: UIViewController {
         // 1. Sync state to manager
         viewModel.selectedDate = selectedDate
         viewModel.selectedLocation = searchQuery.isEmpty ? nil : searchQuery
+        if searchQuery.isEmpty {
+            viewModel.selectedLocationId = nil
+        } else {
+            viewModel.registerLocationName(searchQuery, for: viewModel.selectedLocationId)
+        }
         
         // 2. Trigger the prediction filter
         viewModel.runFilter()
@@ -57,25 +65,20 @@ class DateandLocationViewController: UIViewController {
         print("DateandLocationViewController: updateLocationSelection() called with name: '\(name)'.")
         
         viewModel.selectedLocation = name
+        viewModel.registerLocationName(name, for: viewModel.selectedLocationId)
         searchQuery = name
         searchResults = []
         dateandlocationTableView.reloadData()
         view.endEditing(true)
     }
-   
-    private func getID(for displayName: String) -> UUID? {
-
-        let matchingSuggestion = searchResults.first { suggestion in
-            suggestion.title == displayName
-        }
-        
-        return matchingSuggestion?.id
-    }
     private func fetchCurrentLocationName() {
         Task {
             do {
                 let locationData = try await locationService.getCurrentLocation()
-                await MainActor.run { self.updateLocationSelection(locationData.displayName) }
+                await MainActor.run {
+                    self.viewModel.selectedLocationId = UUID()
+                    self.updateLocationSelection(locationData.displayName)
+                }
             } catch {
                 if let locError = error as? LocationService.LocationError,
                       locError == .locationAccessDenied {
@@ -154,16 +157,16 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             Task {
                 do {
                     let locationData = try await locationService.geocode(query: suggestion.fullText)
-                    await MainActor.run { self.updateLocationSelection(locationData.displayName)
-                        let foundID = self.getID(for: locationData.displayName)
-                                            
-                        
-                        self.viewModel.selectedLocationId = foundID
+                    await MainActor.run {
+                        self.viewModel.selectedLocationId = suggestion.id
+                        self.updateLocationSelection(locationData.displayName)
                     }
                 } catch {
                     // Fallback to the suggestion title if geocoding fails for any reason
-                    await MainActor.run { self.updateLocationSelection(suggestion.title) }
-                    self.viewModel.selectedLocationId = self.getID(for: suggestion.title)
+                    await MainActor.run {
+                        self.viewModel.selectedLocationId = suggestion.id
+                        self.updateLocationSelection(suggestion.title)
+                    }
                                     
                     print("Could not geocode suggestion '\(suggestion.fullText)': \(error)")
                 }
@@ -188,6 +191,9 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
 extension DateandLocationViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchQuery = searchText
+        if searchText.isEmpty {
+            viewModel.selectedLocationId = nil
+        }
         Task {
             if searchText.isEmpty {
                 self.searchResults = []
@@ -207,6 +213,7 @@ extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDele
     }
     
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
+        viewModel.selectedLocationId = UUID()
         updateLocationSelection(name)
     }
 }
