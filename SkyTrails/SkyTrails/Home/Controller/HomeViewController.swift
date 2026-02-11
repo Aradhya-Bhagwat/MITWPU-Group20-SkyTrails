@@ -126,23 +126,26 @@ extension HomeViewController {
     // MARK: - Data Loading
 
     private func loadHomeData() {
+        print("[homeseeder] 🟢 [HomeViewController] loadHomeData called")
         Task { @MainActor in
             // Get user location (implement based on your LocationService)
             let userLocation = getUserLocation()
+            print("[homeseeder] 📍 [HomeViewController] User Location: \(String(describing: userLocation))")
 
             // Load all home screen data
             homeScreenData = await homeManager.getHomeScreenData(userLocation: userLocation)
+            print("[homeseeder] 📥 [HomeViewController] homeScreenData received. Not nil? \(homeScreenData != nil)")
 
             // Convert to UI models
             convertToUIModels()
             
             // Debug logging
-            print("🐛 [HomeViewController] Data counts:")
-            print("   - Upcoming birds: \(upcomingBirds.count)")
-            print("   - Spots: \(spots.count)")
-            print("   - Observations: \(observations.count)")
-            print("   - News: \(news.count)")
-            print("   - Migration cards: \(homeManager.getDynamicMapCards().count)")
+            print("[homeseeder] 🐛 [HomeViewController] Data counts:")
+            print("[homeseeder]    - Upcoming birds: \(upcomingBirds.count)")
+            print("[homeseeder]    - Spots: \(spots.count)")
+            print("[homeseeder]    - Observations: \(observations.count)")
+            print("[homeseeder]    - News: \(news.count)")
+            print("[homeseeder]    - Migration cards: \(homeManager.getDynamicMapCards().count)")
 
             // Reload collection view
             homeCollectionView.reloadData()
@@ -150,6 +153,7 @@ extension HomeViewController {
     }
 
     private func refreshHomeData() {
+        print("[homeseeder] 🔄 [HomeViewController] refreshHomeData called")
         Task { @MainActor in
             let userLocation = getUserLocation()
             homeScreenData = await homeManager.getHomeScreenData(userLocation: userLocation)
@@ -172,7 +176,11 @@ extension HomeViewController {
     }
 
     private func convertToUIModels() {
-        guard let data = homeScreenData else { return }
+        print("[homeseeder] ⚙️ [HomeViewController] convertToUIModels called")
+        guard let data = homeScreenData else {
+            print("[homeseeder] ❌ [HomeViewController] homeScreenData is nil")
+            return
+        }
 
         // Convert upcoming birds
         upcomingBirds = data.upcomingBirds.map { result in
@@ -182,9 +190,11 @@ extension HomeViewController {
                 date: result.statusText
             )
         }
+        print("[homeseeder]    - Converted upcomingBirds: \(upcomingBirds.count)")
 
         // Add recommended birds if watchlist is empty
         if upcomingBirds.isEmpty {
+            print("[homeseeder]    - Watchlist birds empty, fetching recommended")
             upcomingBirds = data.recommendedBirds.map { bird in
                 UpcomingBirdUI(
                     imageName: bird.staticImageName,
@@ -192,6 +202,7 @@ extension HomeViewController {
                     date: "Recommended"
                 )
             }
+            print("[homeseeder]    - Converted recommendedBirds: \(upcomingBirds.count)")
         }
 
         // Convert spots
@@ -208,9 +219,11 @@ extension HomeViewController {
                     radius: spot.radius
                 )
             }
+        print("[homeseeder]    - Converted spots: \(spots.count)")
 
         // Observations (already in correct format)
         observations = data.recentObservations
+        print("[homeseeder]    - Observations: \(observations.count)")
 
         // News - load separately if needed
         loadNews()
@@ -219,7 +232,7 @@ extension HomeViewController {
     private func loadNews() {
         // Load from JSON like the seeder does
         guard let url = Bundle.main.url(forResource: "home_data", withExtension: "json") else {
-            print("⚠️ [HomeViewController] Could not find home_data.json for news")
+            print("[homeseeder] ⚠️ [HomeViewController] Could not find home_data.json for news")
             news = []
             return
         }
@@ -229,8 +242,9 @@ extension HomeViewController {
             let decoder = JSONDecoder()
             let jsonData = try decoder.decode(HomeJSONData.self, from: data)
             news = jsonData.latestNews ?? []
+            print("[homeseeder] 📰 [HomeViewController] Loaded \(news.count) news items")
         } catch {
-            print("⚠️ [HomeViewController] Failed to load news: \(error)")
+            print("[homeseeder] ⚠️ [HomeViewController] Failed to load news: \(error)")
             news = []
         }
     }

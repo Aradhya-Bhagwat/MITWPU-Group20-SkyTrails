@@ -553,34 +553,36 @@ extension WatchlistManager {
 		/// Get birds the user should be notified about based on:
 		/// - They're on watchlist with notify_upcoming enabled
 		/// - They're present at user's location during current/upcoming weeks
-	func getUpcomingBirds(
-		userLocation: CLLocationCoordinate2D,
-		currentWeek: Int,
-		lookAheadWeeks: Int = 4,
-		radiusInKm: Double = 50.0
-	) -> [UpcomingBirdResult] {
-		
-		print("🔔 [WatchlistManager] Getting upcoming birds...")
-		print("🔔 [WatchlistManager] - Location: \(userLocation)")
-		print("🔔 [WatchlistManager] - Current week: \(currentWeek)")
-		print("🔔 [WatchlistManager] - Look ahead: \(lookAheadWeeks) weeks")
-		
-			// 1. Get all watchlist entries with notifications enabled
-		let targetStatus = WatchlistEntryStatus.to_observe
-		let descriptor = FetchDescriptor<WatchlistEntry>(
-			predicate: #Predicate { entry in
-				entry.notify_upcoming == true && entry.status == targetStatus
-			}
-		)
-		
-		guard let notifyEntries = try? context.fetch(descriptor) else {
-			print("❌ [WatchlistManager] Failed to fetch notify entries")
-			return []
-		}
-		
-		print("📊 [WatchlistManager] Found \(notifyEntries.count) entries with notifications enabled")
-		
-			// 2. For each bird, check if it's present at user's location
+	    func getUpcomingBirds(
+	        userLocation: CLLocationCoordinate2D,
+	        currentWeek: Int,
+	        lookAheadWeeks: Int = 4,
+	        radiusInKm: Double = 50.0
+	    ) -> [UpcomingBirdResult] {
+	        
+	        print("[homeseeder] 🔔 [WatchlistManager] Getting upcoming birds...")
+	        print("[homeseeder]    - Location: \(userLocation)")
+	        print("[homeseeder]    - Current week: \(currentWeek)")
+	        
+	                // 1. Get all watchlist entries with notifications enabled
+	                let targetStatus = WatchlistEntryStatus.to_observe
+	                let descriptor = FetchDescriptor<WatchlistEntry>(
+	                    predicate: #Predicate { entry in
+	                        entry.notify_upcoming == true && entry.status == targetStatus
+	                    }
+	                )
+	                
+	                let notifyEntries: [WatchlistEntry]
+	                do {
+	                    notifyEntries = try context.fetch(descriptor)
+	                } catch {
+	                    print("[homeseeder] ❌ [WatchlistManager] Failed to fetch notify entries: \(error)")
+	                    return []
+	                }	        
+	        print("[homeseeder] 📊 [WatchlistManager] Found \(notifyEntries.count) entries with notifications enabled")
+	        
+	        // ... rest of the function ...
+				// 2. For each bird, check if it's present at user's location
 		var results: [UpcomingBirdResult] = []
 		let hotspotManager = HotspotManager(modelContext: context)
 		
