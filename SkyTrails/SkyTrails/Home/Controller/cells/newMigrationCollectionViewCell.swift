@@ -38,6 +38,7 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        print("[issue1] Cell: awakeFromNib")
         setupUI()
     }
     
@@ -68,6 +69,7 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        print("[issue1] Cell: layoutSubviews frame: \(self.frame)")
         
         guard mapView != nil, birdNameLabel != nil, PlaceName != nil else { return }
         
@@ -111,6 +113,7 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         }
 
         func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
+            print("[issue1] Cell: configure called for \(migration.birdName)")
             birdNameLabel.text = migration.birdName
             birdImageView.image = UIImage(named: migration.birdImageName)
             startLocationLabel.text = migration.startLocation

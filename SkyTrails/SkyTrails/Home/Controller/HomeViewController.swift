@@ -126,34 +126,56 @@ extension HomeViewController {
     // MARK: - Data Loading
 
     private func loadHomeData() {
-        print("[homeseeder] 🟢 [HomeViewController] loadHomeData called")
         Task { @MainActor in
+            print("🔄 [HomeViewController] loadHomeData started")
+            
             // Get user location (implement based on your LocationService)
             let userLocation = getUserLocation()
-            print("[homeseeder] 📍 [HomeViewController] User Location: \(String(describing: userLocation))")
+            print("📍 [HomeViewController] User location: \(String(describing: userLocation))")
 
             // Load all home screen data
             homeScreenData = await homeManager.getHomeScreenData(userLocation: userLocation)
-            print("[homeseeder] 📥 [HomeViewController] homeScreenData received. Not nil? \(homeScreenData != nil)")
 
             // Convert to UI models
             convertToUIModels()
             
-            // Debug logging
-            print("[homeseeder] 🐛 [HomeViewController] Data counts:")
-            print("[homeseeder]    - Upcoming birds: \(upcomingBirds.count)")
-            print("[homeseeder]    - Spots: \(spots.count)")
-            print("[homeseeder]    - Observations: \(observations.count)")
-            print("[homeseeder]    - News: \(news.count)")
-            print("[homeseeder]    - Migration cards: \(homeManager.getDynamicMapCards().count)")
+            // Get migration cards count
+            let migrationCards = homeManager.getDynamicMapCards()
+            
+            // Enhanced debug logging
+            print("\n" + String(repeating: "=", count: 60))
+            print("📊 [HomeViewController] HOME SCREEN DATA SUMMARY")
+            print(String(repeating: "=", count: 60))
+            print("   📅 Current week: \(Calendar.current.component(.weekOfYear, from: Date()))")
+            print("   🗓️  Current date: \(DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none))")
+            print("\n   Section 0 - Migration Cards: \(migrationCards.count)")
+            if migrationCards.isEmpty {
+                print("      ⚠️  WARNING: No migration cards - section 0 will be empty!")
+            } else {
+                for (index, card) in migrationCards.enumerated() {
+                    switch card {
+                    case .combined(let migration, let hotspot):
+                        print("      [\(index)] \(migration.birdName)")
+                        print("          Progress: \(Int(migration.currentProgress * 100))%")
+                        print("          Path points: \(migration.pathCoordinates.count)")
+                        print("          Hotspot: \(hotspot.placeName)")
+                    }
+                }
+            }
+            print("\n   Section 1 - Upcoming Birds: \(upcomingBirds.count)")
+            print("   Section 2 - Spots: \(spots.count)")
+            print("   Section 3 - Observations: \(observations.count)")
+            print("   Section 4 - News: \(news.count)")
+            print(String(repeating: "=", count: 60) + "\n")
 
             // Reload collection view
+            print("🔄 [HomeViewController] Reloading collection view...")
             homeCollectionView.reloadData()
+            print("✅ [HomeViewController] Collection view reloaded")
         }
     }
 
     private func refreshHomeData() {
-        print("[homeseeder] 🔄 [HomeViewController] refreshHomeData called")
         Task { @MainActor in
             let userLocation = getUserLocation()
             homeScreenData = await homeManager.getHomeScreenData(userLocation: userLocation)
@@ -176,11 +198,7 @@ extension HomeViewController {
     }
 
     private func convertToUIModels() {
-        print("[homeseeder] ⚙️ [HomeViewController] convertToUIModels called")
-        guard let data = homeScreenData else {
-            print("[homeseeder] ❌ [HomeViewController] homeScreenData is nil")
-            return
-        }
+        guard let data = homeScreenData else { return }
 
         // Convert upcoming birds
         upcomingBirds = data.upcomingBirds.map { result in
@@ -190,11 +208,9 @@ extension HomeViewController {
                 date: result.statusText
             )
         }
-        print("[homeseeder]    - Converted upcomingBirds: \(upcomingBirds.count)")
 
         // Add recommended birds if watchlist is empty
         if upcomingBirds.isEmpty {
-            print("[homeseeder]    - Watchlist birds empty, fetching recommended")
             upcomingBirds = data.recommendedBirds.map { bird in
                 UpcomingBirdUI(
                     imageName: bird.staticImageName,
@@ -202,7 +218,6 @@ extension HomeViewController {
                     date: "Recommended"
                 )
             }
-            print("[homeseeder]    - Converted recommendedBirds: \(upcomingBirds.count)")
         }
 
         // Convert spots
@@ -219,11 +234,9 @@ extension HomeViewController {
                     radius: spot.radius
                 )
             }
-        print("[homeseeder]    - Converted spots: \(spots.count)")
 
         // Observations (already in correct format)
         observations = data.recentObservations
-        print("[homeseeder]    - Observations: \(observations.count)")
 
         // News - load separately if needed
         loadNews()
@@ -232,7 +245,7 @@ extension HomeViewController {
     private func loadNews() {
         // Load from JSON like the seeder does
         guard let url = Bundle.main.url(forResource: "home_data", withExtension: "json") else {
-            print("[homeseeder] ⚠️ [HomeViewController] Could not find home_data.json for news")
+            print("⚠️ [HomeViewController] Could not find home_data.json for news")
             news = []
             return
         }
@@ -242,9 +255,8 @@ extension HomeViewController {
             let decoder = JSONDecoder()
             let jsonData = try decoder.decode(HomeJSONData.self, from: data)
             news = jsonData.latestNews ?? []
-            print("[homeseeder] 📰 [HomeViewController] Loaded \(news.count) news items")
         } catch {
-            print("[homeseeder] ⚠️ [HomeViewController] Failed to load news: \(error)")
+            print("⚠️ [HomeViewController] Failed to load news: \(error)")
             news = []
         }
     }
@@ -487,7 +499,9 @@ extension HomeViewController: UICollectionViewDataSource {
 
         switch section {
         case 0: // Migration cards
-            return homeManager.getDynamicMapCards().count
+            let count = homeManager.getDynamicMapCards().count
+            print("[issue1] HomeVC: Section 0 items count: \(count)")
+            return count
         case 1: // Upcoming birds
             return upcomingBirds.count
         case 2: // Spots
@@ -503,6 +517,7 @@ extension HomeViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == 0 {
+            print("[issue1] HomeVC: Dequeuing cell for section 0 row \(indexPath.row)")
             let cardType = HomeManager.shared.getDynamicMapCards()[indexPath.row]
             
             switch cardType {

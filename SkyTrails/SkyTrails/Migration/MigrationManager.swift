@@ -19,7 +19,21 @@ final class MigrationManager {
     
     /// Get active migrations for a specific week
     func getActiveMigrations(forWeek week: Int) -> [MigrationSession] {
-        print("[homeseeder] 🦅 [MigrationManager] Finding active migrations for week \(week)")
+        print("\n🔍 [MigrationManager] getActiveMigrations called")
+        print("   📅 Searching for week: \(week)")
+        print("   🔎 Predicate: startWeek <= \(week) AND endWeek >= \(week)")
+        
+        // First, get ALL sessions to debug
+        let allDescriptor = FetchDescriptor<MigrationSession>()
+        if let allSessions = try? modelContext.fetch(allDescriptor) {
+            print("   📊 Total migration sessions in database: \(allSessions.count)")
+            for (index, session) in allSessions.enumerated() {
+                let birdName = session.bird?.commonName ?? "Unknown Bird"
+                let isActive = session.startWeek <= week && session.endWeek >= week
+                let status = isActive ? "✅ ACTIVE" : "❌ INACTIVE"
+                print("      [\(index)] \(birdName): weeks \(session.startWeek)-\(session.endWeek) \(status)")
+            }
+        }
         
         let descriptor = FetchDescriptor<MigrationSession>(
             predicate: #Predicate { session in
@@ -28,33 +42,34 @@ final class MigrationManager {
         )
         
         guard let activeSessions = try? modelContext.fetch(descriptor) else {
-            print("[homeseeder] ❌ [MigrationManager] Fetch active migrations failed")
+            print("   ❌ [MigrationManager] Fetch active migrations FAILED")
             return []
         }
         
-        print("[homeseeder] 🦅 [MigrationManager] Found \(activeSessions.count) active sessions")
+        if activeSessions.isEmpty {
+            print("   ⚠️  [MigrationManager] No active sessions found for week \(week)")
+            print("   💡 Tip: Check if migration data was seeded correctly")
+        } else {
+            print("   ✅ [MigrationManager] Found \(activeSessions.count) active session(s)")
+            for session in activeSessions {
+                print("      - \(session.bird?.commonName ?? "Unknown")")
+            }
+        }
+        
         return activeSessions
     }
     
-    /// Get trajectory data for a bird during a specific week
-    func getTrajectory(for bird: Bird, duringWeek week: Int) -> MigrationTrajectoryResult? {
-        // 1. Find session for this bird
-        let birdId = bird.id
-        let descriptor = FetchDescriptor<MigrationSession>(
-            predicate: #Predicate { session in
-                session.bird?.id == birdId &&
-                session.startWeek <= week &&
-                session.endWeek >= week
-            }
-        )
+    /// Get trajectory data for a session during a specific week
+    func getTrajectory(for session: MigrationSession, duringWeek week: Int) -> MigrationTrajectoryResult? {
+        // 1. Get paths for this week
+        guard let allPaths = session.trajectoryPaths else {
+            print("[homeseeder] ❌ [MigrationManager] Session found but trajectoryPaths is nil")
+            return nil
+        }
         
-        guard let session = try? modelContext.fetch(descriptor).first else { return nil }
-        
-        // 2. Get paths for this week
-        guard let allPaths = session.trajectoryPaths else { return nil }
         let currentPaths = allPaths.filter { $0.week == week }
         
-        // 3. Determine most likely position (highest probability)
+        // 2. Determine most likely position (highest probability)
         let bestPath = currentPaths.max(by: { ($0.probability ?? 0) < ($1.probability ?? 0) })
         let position: CLLocationCoordinate2D?
         if let lat = bestPath?.lat, let lon = bestPath?.lon {
@@ -69,6 +84,28 @@ final class MigrationManager {
             requestedWeek: week,
             mostLikelyPosition: position
         )
+    }
+
+    /// Get trajectory data for a bird during a specific week
+    func getTrajectory(for bird: Bird, duringWeek week: Int) -> MigrationTrajectoryResult? {
+        // 1. Find session for this bird
+        let birdId = bird.id
+        print("[homeseeder] 🦅 [MigrationManager] getTrajectory for bird: \(bird.commonName) (Week \(week))")
+        
+        let descriptor = FetchDescriptor<MigrationSession>(
+            predicate: #Predicate { session in
+                session.bird?.id == birdId &&
+                session.startWeek <= week &&
+                session.endWeek >= week
+            }
+        )
+        
+        guard let session = try? modelContext.fetch(descriptor).first else {
+            print("[homeseeder] ❌ [MigrationManager] No session found for bird \(bird.commonName)")
+            return nil
+        }
+        
+        return getTrajectory(for: session, duringWeek: week)
     }
 }
 

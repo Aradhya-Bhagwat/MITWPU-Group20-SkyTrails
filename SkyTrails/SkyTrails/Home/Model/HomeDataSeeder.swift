@@ -23,20 +23,16 @@ class HomeDataSeeder {
     }
     
     func seed(modelContext: ModelContext) async throws {
-        print("[homeseeder] 🌱 [HomeDataSeeder] seed called")
         // 1. Locate JSON file
         guard let url = Bundle.main.url(forResource: "home_data", withExtension: "json") else {
-            print("[homeseeder] ⚠️ [HomeDataSeeder] home_data.json not found in Bundle.")
             return
         }
-        print("[homeseeder] 📂 [HomeDataSeeder] JSON file found at \(url)")
         
         // 2. Load Data
         let data: Data
         do {
             data = try Data(contentsOf: url)
         } catch {
-            print("[homeseeder] ❌ [HomeDataSeeder] Failed to load data: \(error)")
             throw SeederError.dataCorrupted
         }
         
@@ -46,31 +42,21 @@ class HomeDataSeeder {
         let jsonPayload: HomeJSONData
         do {
             jsonPayload = try decoder.decode(HomeJSONData.self, from: data)
-            print("[homeseeder] 🔓 [HomeDataSeeder] JSON decoded successfully")
         } catch {
-            print("[homeseeder] ❌ [HomeDataSeeder] Decoding failed: \(error)")
             throw SeederError.decodingFailed(error)
         }
         
-        print("[homeseeder] 🌱 [HomeDataSeeder] Starting seed process...")
-        
         // 4. Seed Hotspots
         try await seedHotspots(jsonPayload.hotspots, context: modelContext)
-        print("[homeseeder] ✅ [HomeDataSeeder] Hotspots seeded")
         
         // 5. Seed Migrations
         try await seedMigrations(jsonPayload.migration_sessions, context: modelContext)
-        print("[homeseeder] ✅ [HomeDataSeeder] Migrations seeded")
         
         // 6. Seed Observations
         try await seedObservations(jsonPayload.community_observations, context: modelContext)
-        print("[homeseeder] ✅ [HomeDataSeeder] Observations seeded")
         
         // 7. Save
         try modelContext.save()
-        print("[homeseeder] 💾 [HomeDataSeeder] Context saved")
-        
-        print("[homeseeder] ✅ [HomeDataSeeder] Seeding complete.")
     }
     
     // MARK: - Hotspots
