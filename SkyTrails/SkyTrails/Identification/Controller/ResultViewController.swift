@@ -27,6 +27,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         resultCollectionView.delegate = self
         resultCollectionView.dataSource = self
         setupCollectionViewLayout()
+        updateSaveButtonState()
 
         loadData()
     }
@@ -53,7 +54,12 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             selectedResult = birdResults[selectedItem].bird
         }
         viewModel.results = birdResults
+        updateSaveButtonState()
         resultCollectionView.reloadData()
+    }
+
+    private func updateSaveButtonState() {
+        navigationItem.rightBarButtonItem?.isEnabled = (selectedIndexPath != nil)
     }
     
     // MARK: - CollectionView Layout
@@ -115,11 +121,46 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     // MARK: - Actions
     
     @IBAction func nextTapped(_ sender: Any) {
+        if viewModel.isReloadFlowActive, viewModel.currentSession != nil {
+            showSaveChoiceDialog()
+            return
+        }
+
+        persistAndExit(updateExisting: true)
+    }
+
+    private func showSaveChoiceDialog() {
+        let alert = UIAlertController(
+            title: "Save Changes",
+            message: "Do you want to update this history item or create a new one?",
+            preferredStyle: .actionSheet
+        )
+
+        alert.addAction(UIAlertAction(title: "Update", style: .default) { [weak self] _ in
+            self?.persistAndExit(updateExisting: true)
+        })
+        alert.addAction(UIAlertAction(title: "New", style: .default) { [weak self] _ in
+            self?.persistAndExit(updateExisting: false)
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.barButtonItem = navigationItem.rightBarButtonItem
+        }
+
+        present(alert, animated: true)
+    }
+
+    private func persistAndExit(updateExisting: Bool) {
         let candidateToSave: IdentificationCandidate?
         if let selectedPath = selectedIndexPath {
             candidateToSave = birdResults[selectedPath.item]
         } else {
             candidateToSave = birdResults.first
+        }
+
+        if !updateExisting {
+            viewModel.currentSession = nil
         }
         
         if let candidate = candidateToSave {
@@ -181,6 +222,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let previous = selectedIndexPath
         selectedIndexPath = indexPath
         selectedResult = birdResults[indexPath.item].bird
+        updateSaveButtonState()
 
         // Reload only the affected cells for efficiency
         var toReload = [indexPath]

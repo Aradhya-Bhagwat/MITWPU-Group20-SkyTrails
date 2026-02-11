@@ -177,6 +177,17 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             return IdentificationOption(category: category, isSelected: isSelected)
         }
     }
+
+    private func deselectShapeForReloadKeepingSavedShape() {
+        if let shapeIndex = options.firstIndex(where: { $0.category == .shape }) {
+            options[shapeIndex].isSelected = false
+        }
+
+        // Keep model.selectedShape as-is; only remove Shape from menu flow options.
+        model.selectedMenuOptionRawValues = options
+            .filter { $0.isSelected }
+            .map { $0.category.rawValue }
+    }
     
     private func fetchHistory() {
             guard let context = modelContainer?.mainContext else { return }
@@ -389,6 +400,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     @IBAction func startButtonTapped(_ sender: UIButton) {
         model.reset()
+        model.isReloadFlowActive = false
         model.selectedMenuOptionRawValues = options
             .filter { $0.isSelected }
             .map { $0.category.rawValue }
@@ -403,6 +415,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         model.selectedMenuOptionRawValues = options
             .filter { $0.isSelected }
             .map { $0.category.rawValue }
+        model.isReloadFlowActive = false
         model.loadSessionAndFilter(session: selectedSession)
         
         let storyboard = UIStoryboard(name: "Identification", bundle: nil)
@@ -571,9 +584,8 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
     func didTapLeftButton() {
         if let session = model.currentSession {
             applyOptionsFromSession(session)
-            model.selectedMenuOptionRawValues = options
-                .filter { $0.isSelected }
-                .map { $0.category.rawValue }
+            deselectShapeForReloadKeepingSavedShape()
+            model.isReloadFlowActive = true
             updateSelectionState()
             tableView.reloadData()
             navigationController?.popToRootViewController(animated: false)
@@ -592,11 +604,8 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
             !model.results.isEmpty
 
         if hasActiveFlowState {
-            if model.selectedMenuOptionRawValues.isEmpty {
-                model.selectedMenuOptionRawValues = options
-                    .filter { $0.isSelected }
-                    .map { $0.category.rawValue }
-            }
+            deselectShapeForReloadKeepingSavedShape()
+            model.isReloadFlowActive = true
             updateSelectionState()
             tableView.reloadData()
             navigationController?.popToRootViewController(animated: false)
