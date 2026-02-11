@@ -15,7 +15,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window = UIWindow(windowScene: windowScene)
 
-        let isLoggedIn = false/*UserDefaults.standard.bool(forKey: "isLoggedIn")*/
+        let isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
 
         print("Is Logged In:", isLoggedIn) // Debug
 
@@ -32,14 +32,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         } else {
 
-            // 👉 Load ONBOARD storyboard
-            let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
 
-            let startVC = storyboard.instantiateViewController(
-                withIdentifier: "StartViewController"
+            // 👉 Load MAIN storyboard
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+
+            let mainVC = storyboard.instantiateViewController(
+                withIdentifier: "RootTabBarController"
             )
 
-            window?.rootViewController = startVC
+            window?.rootViewController = mainVC
         }
 
         window?.makeKeyAndVisible()
