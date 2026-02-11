@@ -1,8 +1,6 @@
 //
-//  Bird2.swift
+//  Bird.swift
 //  SkyTrails
-//
-//  Created by SDC-USER on 12/01/26.
 //
 
 import Foundation
@@ -105,12 +103,4 @@ final class Bird {
             self.shape_id = shape_id
             self.size_category = size_category
         }
-
-    
-
-    
-
-    
-   
 }
-

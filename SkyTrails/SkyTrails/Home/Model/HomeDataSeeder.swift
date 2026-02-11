@@ -74,13 +74,15 @@ class HomeDataSeeder {
                 hotspot.locality = item.locality
                 hotspot.lat = item.lat
                 hotspot.lon = item.lon
+                hotspot.imageName = item.imageName
             } else {
                 hotspot = Hotspot(
                     id: item.id,
                     name: item.name,
                     locality: item.locality,
                     lat: item.lat,
-                    lon: item.lon
+                    lon: item.lon,
+                    imageName: item.imageName
                 )
                 context.insert(hotspot)
             }

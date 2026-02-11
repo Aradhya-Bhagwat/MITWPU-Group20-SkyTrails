@@ -195,12 +195,15 @@ class HomeManager {
                 endWeek: session.endWeek
             )
             
+            // Return ALL paths for the trajectory so the map can draw the full path
+            let allPaths = (session.trajectoryPaths ?? []).sorted(by: { $0.week < $1.week })
+            
             return MigrationCardResult(
                 bird: bird,
                 session: session,
                 currentPosition: trajectory.mostLikelyPosition,
                 progress: progress,
-                paths: trajectory.pathsAtWeek
+                paths: allPaths
             )
         }
     }
@@ -368,13 +371,14 @@ class HomeManager {
             
             // Try to find nearby hotspot for this migration
             let nearbyHotspots = findNearbyHotspots(for: migration)
+            let topHotspot = nearbyHotspots.first
             
             let hotspot = HotspotPrediction(
-                placeName: nearbyHotspots.first?.name ?? "Migration Zone",
-                speciesCount: nearbyHotspots.first?.speciesList?.count ?? 0,
-                distanceString: nearbyHotspots.first != nil ? "Nearby" : "N/A",
+                placeName: topHotspot?.name ?? "Migration Zone",
+                speciesCount: topHotspot?.speciesList?.count ?? 0,
+                distanceString: topHotspot != nil ? "Nearby" : "N/A",
                 dateRange: migration.dateRange,
-                placeImageName: "default_spot",  // Default image for now
+                placeImageName: topHotspot?.imageName ?? "default_spot",
                 hotspots: nearbyHotspots.prefix(3).map { hotspot in
                     HotspotBirdSpot(
                         coordinate: CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon),
@@ -528,8 +532,20 @@ struct MigrationCardResult: Identifiable {
         formatter.dateFormat = "MMM d"
         
         let calendar = Calendar.current
-        if let startDate = calendar.date(from: DateComponents(weekOfYear: session.startWeek)),
-           let endDate = calendar.date(from: DateComponents(weekOfYear: session.endWeek)) {
+        let currentYear = calendar.component(.year, from: Date())
+        
+        var startComponents = DateComponents()
+        startComponents.weekOfYear = session.startWeek
+        startComponents.yearForWeekOfYear = currentYear
+        startComponents.weekday = 2 // Monday
+        
+        var endComponents = DateComponents()
+        endComponents.weekOfYear = session.endWeek
+        endComponents.yearForWeekOfYear = currentYear
+        endComponents.weekday = 2 // Monday
+        
+        if let startDate = calendar.date(from: startComponents),
+           let endDate = calendar.date(from: endComponents) {
             return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
         }
         return "Week \(session.startWeek) - \(session.endWeek)"
