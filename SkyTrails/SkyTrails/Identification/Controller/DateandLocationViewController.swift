@@ -12,6 +12,7 @@ class DateandLocationViewController: UIViewController {
     weak var delegate: IdentificationFlowStepDelegate?
     
     private var selectedDate: Date = Date()
+    private var hasDateSelection: Bool = false
     private var searchQuery: String = ""
     private var searchResults: [LocationService.LocationSuggestion] = []
     
@@ -29,6 +30,13 @@ class DateandLocationViewController: UIViewController {
             searchQuery = currentLoc
         }
         selectedDate = viewModel.selectedDate
+        hasDateSelection = !Calendar.current.isDateInToday(selectedDate)
+        updateNextButtonState()
+    }
+
+    private func updateNextButtonState() {
+        let hasLocationSelection = !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        navigationItem.rightBarButtonItem?.isEnabled = hasDateSelection || hasLocationSelection
     }
     
     private func setupUI() {
@@ -45,6 +53,8 @@ class DateandLocationViewController: UIViewController {
     }
    
     @IBAction func nextTapped(_ sender: Any) {
+        guard navigationItem.rightBarButtonItem?.isEnabled == true else { return }
+
         // 1. Sync state to manager
         viewModel.selectedDate = selectedDate
         viewModel.selectedLocation = searchQuery.isEmpty ? nil : searchQuery
@@ -70,6 +80,7 @@ class DateandLocationViewController: UIViewController {
         searchResults = []
         dateandlocationTableView.reloadData()
         view.endEditing(true)
+        updateNextButtonState()
     }
     private func fetchCurrentLocationName() {
         Task {
@@ -194,6 +205,7 @@ extension DateandLocationViewController: UISearchBarDelegate {
         if searchText.isEmpty {
             viewModel.selectedLocationId = nil
         }
+        updateNextButtonState()
         Task {
             if searchText.isEmpty {
                 self.searchResults = []
@@ -210,6 +222,8 @@ extension DateandLocationViewController: UISearchBarDelegate {
 extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDelegate {
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
         selectedDate = date
+        hasDateSelection = true
+        updateNextButtonState()
     }
     
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {

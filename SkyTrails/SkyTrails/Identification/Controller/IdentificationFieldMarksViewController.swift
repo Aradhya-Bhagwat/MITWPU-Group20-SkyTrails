@@ -42,6 +42,11 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         
         // Reload collection view to reflect selections
         Categories.reloadData()
+        updateNextButtonState()
+    }
+
+    private func updateNextButtonState() {
+        navigationItem.rightBarButtonItem?.isEnabled = !selectedFieldMarks.isEmpty
     }
     
     override func viewDidLayoutSubviews() {
@@ -159,6 +164,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         
         let categoryName = availableMarks[index].area
         updateLayer(category: categoryName)
+        updateNextButtonState()
     }
     
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
@@ -170,6 +176,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         collectionView.reloadItems(at: [indexPath])
         let categoryName = availableMarks[index].area
         updateLayer(category: categoryName)
+        updateNextButtonState()
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -187,6 +194,8 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     @IBAction func nextTapped(_ sender: Any) {
+        guard !selectedFieldMarks.isEmpty else { return }
+
         // Map the selected indices to the actual model objects for the manager
         let selectedMarkObjects = selectedFieldMarks.compactMap { index -> BirdFieldMark? in
             availableMarks.indices.contains(index) ? availableMarks[index] : nil

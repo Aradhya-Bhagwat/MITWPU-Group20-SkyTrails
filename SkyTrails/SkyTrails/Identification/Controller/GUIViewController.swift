@@ -37,10 +37,15 @@ class GUIViewController: UIViewController {
         
         loadData()
         setupCanvas()
+        updateNextButtonState()
         
         if !categories.isEmpty {
             selectCategory(at: 0)
         }
+    }
+
+    private func updateNextButtonState() {
+        navigationItem.rightBarButtonItem?.isEnabled = !selectedVariations.isEmpty
     }
     
     override func viewDidLayoutSubviews() {
@@ -171,6 +176,7 @@ class GUIViewController: UIViewController {
     }
     
     @IBAction func nextTapped(_ sender: Any) {
+        guard !selectedVariations.isEmpty else { return }
         // The viewModel.filterBirds logic remains unchanged as requested,
         // we just ensure the manager's internal filter is triggered.
         delegate?.didFinishStep()
@@ -216,6 +222,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             
             variationsCollectionView.reloadData()
             updateCanvas(category: currentMark.area, variant: variant.name)
+            updateNextButtonState()
         }
     }
     
