@@ -104,6 +104,7 @@ struct HotspotData: Decodable {
     let locality: String?
     let lat: Double
     let lon: Double
+    let imageName: String?
     let speciesList: [SpeciesPresenceData]?
 }
 

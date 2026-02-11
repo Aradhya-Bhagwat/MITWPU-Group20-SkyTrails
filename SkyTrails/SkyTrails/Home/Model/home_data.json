@@ -6,6 +6,7 @@
       "locality": "Noida, Uttar Pradesh",
       "lat": 28.57,
       "lon": 77.3,
+      "imageName": "spot_bharatpur",
       "speciesList": [
         {
           "id": "96E1D89F-F9BB-465A-837F-7A77774C51CC",
@@ -133,6 +134,7 @@
       "locality": "Pune, Maharashtra",
       "lat": 18.5204,
       "lon": 73.8567,
+      "imageName": "spot_kaziranga",
       "speciesList": [
         {
           "id": "A78A73FD-78DC-40FE-A2ED-C1BA32893099",
