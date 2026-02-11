@@ -11,44 +11,61 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="history_cell" id="gTV-IL-0wX" customClass="HistoryCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
-            <rect key="frame" x="0.0" y="0.0" width="184" height="198"/>
+            <rect key="frame" x="0.0" y="0.0" width="200" height="214"/>
             <autoresizingMask key="autoresizingMask"/>
             <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                <rect key="frame" x="0.0" y="0.0" width="184" height="198"/>
+                <rect key="frame" x="0.0" y="0.0" width="200" height="214"/>
                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 <subviews>
-                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7a1-04-YJM">
-                        <rect key="frame" x="8" y="8" width="168" height="126"/>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="LaN-X3-c9G">
+                        <rect key="frame" x="8" y="8" width="184" height="198"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7a1-04-YJM">
+                                <rect key="frame" x="8" y="8" width="168" height="126"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="7a1-04-YJM" secondAttribute="height" multiplier="4:3" id="C4L-4H-6Pz"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1jK-Ka-RvL">
+                                <rect key="frame" x="8" y="142" width="168" height="18"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V79-tv-Ttn">
+                                <rect key="frame" x="8" y="162" width="168" height="16"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <color key="textColor" systemColor="secondaryLabelColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstAttribute="width" secondItem="7a1-04-YJM" secondAttribute="height" multiplier="4:3" id="mgU-HQ-w17"/>
+                            <constraint firstItem="7a1-04-YJM" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" constant="8" id="3Br-h6-bc3"/>
+                            <constraint firstItem="V79-tv-Ttn" firstAttribute="top" secondItem="1jK-Ka-RvL" secondAttribute="bottom" constant="2" id="58a-tM-xkR"/>
+                            <constraint firstItem="V79-tv-Ttn" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" constant="8" id="LXu-0z-qf9"/>
+                            <constraint firstAttribute="trailing" secondItem="1jK-Ka-RvL" secondAttribute="trailing" constant="8" id="ZxU-P4-z0j"/>
+                            <constraint firstItem="1jK-Ka-RvL" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" constant="8" id="aBS-dV-4oQ"/>
+                            <constraint firstAttribute="trailing" secondItem="V79-tv-Ttn" secondAttribute="trailing" constant="8" id="cK0-ij-7tj"/>
+                            <constraint firstAttribute="trailing" secondItem="7a1-04-YJM" secondAttribute="trailing" constant="8" id="ekB-W0-vLd"/>
+                            <constraint firstItem="1jK-Ka-RvL" firstAttribute="top" secondItem="7a1-04-YJM" secondAttribute="bottom" constant="8" id="xMY-Q3-ORq"/>
+                            <constraint firstItem="7a1-04-YJM" firstAttribute="top" secondItem="LaN-X3-c9G" secondAttribute="top" constant="8" id="ybC-au-Uqs"/>
                         </constraints>
-                    </imageView>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1jK-Ka-RvL">
-                        <rect key="frame" x="8" y="142" width="168" height="18"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
-                        <nil key="highlightedColor"/>
-                    </label>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V79-tv-Ttn">
-                        <rect key="frame" x="8" y="158" width="168" height="24"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                        <color key="textColor" systemColor="secondaryLabelColor"/>
-                        <nil key="highlightedColor"/>
-                    </label>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                <integer key="value" value="16"/>
+                            </userDefinedRuntimeAttribute>
+                            <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                        </userDefinedRuntimeAttributes>
+                    </view>
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
-                <constraint firstAttribute="trailing" secondItem="7a1-04-YJM" secondAttribute="trailing" constant="8" id="0QT-Gh-Pbx"/>
-                <constraint firstAttribute="bottom" secondItem="V79-tv-Ttn" secondAttribute="bottom" constant="16" id="FH0-Vk-kbQ"/>
-                <constraint firstItem="1jK-Ka-RvL" firstAttribute="top" secondItem="7a1-04-YJM" secondAttribute="bottom" constant="8" id="TDI-cd-fbA"/>
-                <constraint firstItem="1jK-Ka-RvL" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="8" id="WQl-F6-fUA"/>
-                <constraint firstAttribute="trailing" secondItem="V79-tv-Ttn" secondAttribute="trailing" constant="8" id="cHp-2X-vWZ"/>
-                <constraint firstItem="7a1-04-YJM" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="8" id="m5J-vp-c9g"/>
-                <constraint firstItem="V79-tv-Ttn" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="8" id="n9d-K2-U58"/>
-                <constraint firstItem="7a1-04-YJM" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="8" id="pit-be-v1Z"/>
-                <constraint firstAttribute="trailing" secondItem="1jK-Ka-RvL" secondAttribute="trailing" constant="8" id="sej-QH-Kdo"/>
-                <constraint firstItem="1jK-Ka-RvL" firstAttribute="bottom" secondItem="V79-tv-Ttn" secondAttribute="top" constant="2" id="uhD-jC-xyQ"/>
+                <constraint firstAttribute="trailing" secondItem="LaN-X3-c9G" secondAttribute="trailing" constant="8" id="7fs-Qh-5HS"/>
+                <constraint firstItem="LaN-X3-c9G" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" constant="8" id="Iyg-lA-MMw"/>
+                <constraint firstAttribute="bottom" secondItem="LaN-X3-c9G" secondAttribute="bottom" constant="8" id="Tqr-RX-Sm0"/>
+                <constraint firstItem="LaN-X3-c9G" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="8" id="ilW-oF-Dlr"/>
             </constraints>
             <size key="customSize" width="184" height="198"/>
             <userDefinedRuntimeAttributes>
@@ -58,6 +75,7 @@
                 <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
             </userDefinedRuntimeAttributes>
             <connections>
+                <outlet property="containeView" destination="LaN-X3-c9G" id="oFt-JP-YYY"/>
                 <outlet property="dateLabel" destination="V79-tv-Ttn" id="5dF-T4-SZ2"/>
                 <outlet property="historyImageView" destination="7a1-04-YJM" id="EOh-dm-yOB"/>
                 <outlet property="specieNameLabel" destination="1jK-Ka-RvL" id="Jea-pf-c1h"/>

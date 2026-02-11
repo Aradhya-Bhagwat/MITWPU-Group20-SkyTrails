@@ -7,28 +7,24 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var specieNameLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
     
+    @IBOutlet weak var containeView: UIView!
     override func awakeFromNib() {
         super.awakeFromNib()
         contentView.layer.cornerRadius = 16
+        contentView.layer.borderWidth = 1.0
+        contentView.layer.borderColor = UIColor.systemGray4.cgColor
         contentView.clipsToBounds = true
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        // Reset properties to default state to avoid UI bugs during scrolling
         historyImageView.image = nil
-        historyImageView.tintColor = nil
-        historyImageView.contentMode = .scaleAspectFill
-        
         specieNameLabel.text = nil
-        specieNameLabel.textAlignment = .left
-        specieNameLabel.font = .systemFont(ofSize: 16, weight: .bold) // Default font
-        
         dateLabel.text = nil
-        dateLabel.textAlignment = .left
-        
+       
+        contentView.layer.borderWidth = 1.0
+        contentView.layer.borderColor = UIColor.systemGray4.cgColor
         contentView.backgroundColor = .systemBackground
-        contentView.layer.borderWidth = 0
     }
     
     func configureCell(historyItem: IdentificationSession) {
@@ -80,19 +76,17 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         didSet {
             UIView.animate(withDuration: 0.2) {
                 if self.isSelected {
-                    self.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.12)
-                    self.contentView.layer.borderWidth = 1.5
+                    self.contentView.layer.borderWidth = 3.0 // Matches ResultCell
                     self.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+                    self.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
                 } else {
                     self.contentView.layer.borderWidth = 1.0
                     self.contentView.layer.borderColor = UIColor.systemGray4.cgColor
                     self.contentView.backgroundColor = .systemBackground
-                    self.contentView.layer.borderWidth = 0
                 }
             }
         }
     }
-
     private func formatDate(_ date: Date) -> String {
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "d MMM yyyy"
