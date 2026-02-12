@@ -23,8 +23,14 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        
-        }
+        setupAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        setupAppearance()
+    }
     
     override func layoutSubviews() {
             super.layoutSubviews()
@@ -33,6 +39,9 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
         
             applyGradientLayer()
             userProfileImageView.layer.cornerRadius = userProfileImageView.frame.height / 2
+            if traitCollection.userInterfaceStyle != .dark {
+                layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+            }
         }
     
     func configure(with observation: CommunityObservation, birdImage: UIImage?) {
@@ -88,5 +97,30 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             
             birdImageView.layer.insertSublayer(gradient, at: 0)
         }
+
+    private func setupAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        cardContainerView.backgroundColor = .secondarySystemBackground
+        cardContainerView.layer.cornerRadius = 16
+        cardContainerView.layer.masksToBounds = true
+        layer.cornerRadius = 16
+        layer.masksToBounds = false
+
+        if isDarkMode {
+            layer.shadowOpacity = 0
+            layer.shadowRadius = 0
+            layer.shadowOffset = .zero
+            layer.shadowPath = nil
+        } else {
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.08
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        }
+    }
 
 }

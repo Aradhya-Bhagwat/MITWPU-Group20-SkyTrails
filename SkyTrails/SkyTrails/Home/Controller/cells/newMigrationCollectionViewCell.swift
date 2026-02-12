@@ -40,18 +40,22 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         super.awakeFromNib()
         print("[issue1] Cell: awakeFromNib")
         setupUI()
+        applySemanticAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     
     private func setupUI() {
+        backgroundColor = .clear
         contentView.backgroundColor = .clear
             
         cardContainerView?.layer.cornerRadius = 16
         cardContainerView?.layer.masksToBounds = true
-        
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.1
-        layer.shadowOffset = CGSize(width: 0, height: 4)
-        layer.shadowRadius = 8
+        layer.cornerRadius = 16
         layer.masksToBounds = false
         
         [birdImageView, PlaceImage].forEach { imgView in
@@ -66,6 +70,29 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         mapView?.isZoomEnabled = false
         mapView?.isScrollEnabled = false
     }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        cardContainerView?.backgroundColor = .secondarySystemBackground
+        overlayContentView1?.backgroundColor = .secondarySystemBackground
+        overlayContentView2?.backgroundColor = .secondarySystemBackground
+
+        if isDarkMode {
+            layer.shadowOpacity = 0
+            layer.shadowRadius = 0
+            layer.shadowOffset = .zero
+            layer.shadowPath = nil
+        } else {
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.08
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        }
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -73,7 +100,9 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         
         guard mapView != nil, birdNameLabel != nil, PlaceName != nil else { return }
         
-        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        if traitCollection.userInterfaceStyle != .dark {
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        }
         let currentWidth = self.bounds.width
         
         if currentWidth < 500 {

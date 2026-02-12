@@ -29,8 +29,16 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         self.title = "Home"
         self.navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
+        applySemanticAppearance()
         setupCollectionView()
         loadHomeData()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        homeCollectionView.reloadData()
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -64,10 +72,15 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 }
 
 extension HomeViewController {
+    private func applySemanticAppearance() {
+        view.backgroundColor = .systemBackground
+        homeCollectionView?.backgroundColor = .clear
+    }
+
     func setupCollectionView() {
         homeCollectionView.delegate = self
         homeCollectionView.dataSource = self
-        homeCollectionView.backgroundColor = .white
+        homeCollectionView.backgroundColor = .clear
             
      
         homeCollectionView.register(
@@ -878,4 +891,3 @@ extension Array {
         return indices.contains(index) ? self[index] : nil
     }
 }
-

@@ -18,21 +18,23 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        setupUI()   
+        setupUI()
+        applySemanticAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     private func setupUI() {
         self.backgroundColor = .clear
         
-        contentView.backgroundColor = .systemBackground
+        contentView.backgroundColor = .clear
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
-        contentView.layer.shadowColor = UIColor.black.cgColor
-        contentView.layer.shadowOpacity = 0.15
-        contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        contentView.layer.shadowRadius = 8
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
         
-        cardContainerView2.backgroundColor = .systemBackground
+        cardContainerView2.backgroundColor = .secondarySystemBackground
         cardContainerView2.layer.cornerRadius = 16
         cardContainerView2.layer.masksToBounds = true
         
@@ -48,13 +50,36 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         dateLabel2.textColor = .secondaryLabel
         
     }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        cardContainerView2.backgroundColor = .secondarySystemBackground
+
+        if isDarkMode {
+            contentView.layer.shadowOpacity = 0
+            contentView.layer.shadowRadius = 0
+            contentView.layer.shadowOffset = .zero
+            contentView.layer.shadowPath = nil
+        } else {
+            contentView.layer.shadowColor = UIColor.black.cgColor
+            contentView.layer.shadowOpacity = 0.08
+            contentView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            contentView.layer.shadowRadius = 6
+            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        }
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         
         guard titleLabel2 != nil, dateLabel2 != nil else { return }
         
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        if traitCollection.userInterfaceStyle != .dark {
+            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        }
         
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0
@@ -110,5 +135,4 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         }
     
 }
-
 
