@@ -20,8 +20,11 @@
                     <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zUh-5Y-gxn">
                         <rect key="frame" x="0.0" y="0.0" width="170" height="240"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="WTt-mn-LXx">
-                                <rect key="frame" x="8" y="8" width="154" height="177"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="WTt-mn-LXx">
+                                <rect key="frame" x="8" y="8" width="154" height="154"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" secondItem="WTt-mn-LXx" secondAttribute="width" id="pLw-CM-Bxv"/>
+                                </constraints>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
                                         <integer key="value" value="12"/>
@@ -29,22 +32,22 @@
                                     <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
                                 </userDefinedRuntimeAttributes>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="249" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="1000" text="Bird Name" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eDd-Dw-XHU">
-                                <rect key="frame" x="8" y="193" width="73.333333333333329" height="18"/>
-                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="15"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="249" horizontalCompressionResistancePriority="751" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eDd-Dw-XHU">
+                                <rect key="frame" x="8" y="170" width="84.666666666666671" height="41"/>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cn0-fm-kv9">
-                                <rect key="frame" x="103" y="193" width="59" height="39"/>
+                                <rect key="frame" x="114.33333333333333" y="170" width="47.666666666666671" height="62"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" image="ellipsis" catalog="system">
                                     <color key="baseForegroundColor" systemColor="labelColor"/>
                                 </buttonConfiguration>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="1000" text="55%" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v6R-9I-fj8">
-                                <rect key="frame" x="8" y="215" width="73.333333333333329" height="17"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="1000" text="55%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v6R-9I-fj8">
+                                <rect key="frame" x="8" y="215" width="30" height="17"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                 <color key="textColor" systemColor="secondaryLabelColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -52,18 +55,17 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="eDd-Dw-XHU" firstAttribute="leading" secondItem="zUh-5Y-gxn" secondAttribute="leading" constant="8" id="6BJ-dL-TwR"/>
-                            <constraint firstItem="v6R-9I-fj8" firstAttribute="top" secondItem="eDd-Dw-XHU" secondAttribute="bottom" constant="4" id="EGD-9Y-ISu"/>
+                            <constraint firstItem="v6R-9I-fj8" firstAttribute="top" secondItem="eDd-Dw-XHU" secondAttribute="bottom" constant="2" id="EGD-9Y-ISu"/>
                             <constraint firstItem="WTt-mn-LXx" firstAttribute="leading" secondItem="zUh-5Y-gxn" secondAttribute="leading" constant="8" id="J1C-N5-KHE"/>
                             <constraint firstAttribute="bottom" secondItem="v6R-9I-fj8" secondAttribute="bottom" constant="8" id="KIV-18-dUd"/>
                             <constraint firstItem="WTt-mn-LXx" firstAttribute="top" secondItem="zUh-5Y-gxn" secondAttribute="top" constant="8" id="Mdb-2t-2US"/>
                             <constraint firstItem="cn0-fm-kv9" firstAttribute="leading" secondItem="eDd-Dw-XHU" secondAttribute="trailing" constant="21.666666666666671" id="Oq1-YE-8Bl"/>
                             <constraint firstAttribute="trailing" secondItem="cn0-fm-kv9" secondAttribute="trailing" constant="8" id="Qot-QI-vS5"/>
-                            <constraint firstItem="cn0-fm-kv9" firstAttribute="top" secondItem="WTt-mn-LXx" secondAttribute="bottom" constant="8" id="S14-cf-EbB"/>
-                            <constraint firstItem="eDd-Dw-XHU" firstAttribute="top" secondItem="WTt-mn-LXx" secondAttribute="bottom" constant="8" id="SJu-gq-Fhv"/>
+                            <constraint firstItem="cn0-fm-kv9" firstAttribute="top" secondItem="WTt-mn-LXx" secondAttribute="bottom" constant="6" id="S14-cf-EbB"/>
+                            <constraint firstItem="eDd-Dw-XHU" firstAttribute="top" secondItem="WTt-mn-LXx" secondAttribute="bottom" constant="6" id="SJu-gq-Fhv"/>
                             <constraint firstItem="v6R-9I-fj8" firstAttribute="leading" secondItem="zUh-5Y-gxn" secondAttribute="leading" constant="8" id="bhg-kE-UEW"/>
                             <constraint firstAttribute="bottom" secondItem="cn0-fm-kv9" secondAttribute="bottom" constant="8" id="dqg-yf-ofA"/>
                             <constraint firstAttribute="trailing" secondItem="WTt-mn-LXx" secondAttribute="trailing" constant="8" id="md9-Jh-osD"/>
-                            <constraint firstItem="cn0-fm-kv9" firstAttribute="leading" secondItem="v6R-9I-fj8" secondAttribute="trailing" constant="21.666666666666671" id="oXl-Ds-LkD"/>
                         </constraints>
                     </view>
                 </subviews>
@@ -93,7 +95,7 @@
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
