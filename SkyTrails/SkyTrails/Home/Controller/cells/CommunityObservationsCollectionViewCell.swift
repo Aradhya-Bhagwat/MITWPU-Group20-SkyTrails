@@ -100,10 +100,11 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
 
     private func setupAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        cardContainerView.backgroundColor = .secondarySystemBackground
+        cardContainerView.backgroundColor = cardColor
         cardContainerView.layer.cornerRadius = 16
         cardContainerView.layer.masksToBounds = true
         layer.cornerRadius = 16

@@ -25,6 +25,7 @@ class BirdSelectionViewController: UIViewController {
         
         self.selectedSpecies = Set(existingInputs.map { $0.species.id })
         self.title = "Select Species"
+        applySemanticAppearance()
         
         setupNavigationBar()
         setupCollectionView()
@@ -32,7 +33,7 @@ class BirdSelectionViewController: UIViewController {
         SearchBar.delegate = self
         SearchBar.placeholder = "Search"
         SearchBar.searchBarStyle = .minimal
-        SearchBar.backgroundColor = .systemBackground
+        SearchBar.backgroundColor = .clear
 
         let speciesData = WatchlistManager.shared.fetchAllBirds()
         self.allSpecies = speciesData.map {
@@ -40,15 +41,23 @@ class BirdSelectionViewController: UIViewController {
         }.sorted { $0.name < $1.name }
         self.filteredSpecies = allSpecies
     }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        searchCollection.reloadData()
+    }
     
     private func setupNavigationBar() {
         let nextButton = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(didTapNext))
+        nextButton.tintColor = .systemBlue
         navigationItem.rightBarButtonItem = nextButton
     }
     
     private func setupCollectionView() {
         searchCollection.collectionViewLayout = createLayout()
-        searchCollection.backgroundColor = .systemBackground
+        searchCollection.backgroundColor = .clear
         
         // Register Cell
         searchCollection.register(
@@ -58,6 +67,19 @@ class BirdSelectionViewController: UIViewController {
         
         searchCollection.dataSource = self
         searchCollection.delegate = self
+    }
+
+    private func applySemanticAppearance() {
+        view.backgroundColor = .systemBackground
+        searchCollection?.backgroundColor = .clear
+        SearchBar?.tintColor = .systemBlue
+        SearchBar?.searchTextField.textColor = .label
+        SearchBar?.searchTextField.backgroundColor = .tertiarySystemBackground
+        SearchBar?.searchTextField.attributedPlaceholder = NSAttributedString(
+            string: "Search",
+            attributes: [.foregroundColor: UIColor.secondaryLabel]
+        )
+        navigationItem.rightBarButtonItem?.tintColor = .systemBlue
     }
     
     // Layout logic from AllUpcomingBirdsViewController
@@ -190,12 +212,16 @@ extension BirdSelectionViewController: UICollectionViewDataSource, UICollectionV
         cell.DateLabel.isHidden = true
         
         // Handle selection state
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let baseColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         if selectedSpecies.contains(species.id) {
             cell.containerView.layer.borderWidth = 3.0
             cell.containerView.layer.borderColor = UIColor.systemBlue.cgColor
+            cell.containerView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.18 : 0.10)
         } else {
             cell.containerView.layer.borderWidth = 0.0
             cell.containerView.layer.borderColor = UIColor.clear.cgColor
+            cell.containerView.backgroundColor = baseColor
         }
         
         return cell

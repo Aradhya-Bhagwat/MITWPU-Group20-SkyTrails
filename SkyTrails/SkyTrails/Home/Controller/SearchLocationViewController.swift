@@ -28,15 +28,31 @@ class SearchLocationViewController: UIViewController {
         setupUI()
         setupSearch()
         setupLocationServices()
+        applySemanticAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        tableView.reloadData()
     }
     
     private func setupUI() {
-            self.view.backgroundColor = .systemBackground
-        
-            tableView.delegate = self
-            tableView.dataSource = self
-            tableView.tableFooterView = UIView()
-        }
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.tableFooterView = UIView()
+    }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let rowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        view.backgroundColor = .systemBackground
+        tableView.backgroundColor = rowColor
+        tableView.separatorColor = isDarkMode
+            ? UIColor.systemGray3.withAlphaComponent(0.45)
+            : UIColor.systemGray4.withAlphaComponent(0.6)
+    }
         
     private func setupSearch() {
         searchCompleter.delegate = self
@@ -136,6 +152,9 @@ class SearchLocationViewController: UIViewController {
         }
         
         func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            let isDarkMode = traitCollection.userInterfaceStyle == .dark
+            let rowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+            let selectedColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
             
             if indexPath.section == 0 {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as? SearchCell else {
@@ -143,6 +162,8 @@ class SearchLocationViewController: UIViewController {
                 }
                 cell.searchBar.delegate = self
                 cell.searchBar.text = searchQuery
+                cell.backgroundColor = rowColor
+                cell.contentView.backgroundColor = rowColor
                 
                 if searchQuery.isEmpty && !cell.searchBar.isFirstResponder {
                     cell.searchBar.becomeFirstResponder()
@@ -155,7 +176,14 @@ class SearchLocationViewController: UIViewController {
                 var content = cell.defaultContentConfiguration()
                 content.text = result.title
                 content.secondaryText = result.subtitle
+                content.textProperties.color = .label
+                content.secondaryTextProperties.color = .secondaryLabel
                 cell.contentConfiguration = content
+                cell.backgroundColor = rowColor
+                cell.contentView.backgroundColor = rowColor
+                let selectedBackgroundView = UIView()
+                selectedBackgroundView.backgroundColor = selectedColor
+                cell.selectedBackgroundView = selectedBackgroundView
                 return cell
             }
             else {
@@ -163,7 +191,14 @@ class SearchLocationViewController: UIViewController {
                 var content = cell.defaultContentConfiguration()
                 content.text = "Current Location"
                 content.image = UIImage(systemName: "location.fill")
+                content.textProperties.color = .label
+                content.imageProperties.tintColor = .systemBlue
                 cell.contentConfiguration = content
+                cell.backgroundColor = rowColor
+                cell.contentView.backgroundColor = rowColor
+                let selectedBackgroundView = UIView()
+                selectedBackgroundView.backgroundColor = selectedColor
+                cell.selectedBackgroundView = selectedBackgroundView
                 return cell
             }
         }

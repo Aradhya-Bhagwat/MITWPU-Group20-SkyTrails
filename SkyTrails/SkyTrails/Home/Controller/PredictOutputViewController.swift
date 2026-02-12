@@ -19,12 +19,19 @@ class PredictOutputViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        applySemanticAppearance()
         
         setupNavigation()
         organizeData()
         setupCollectionView()
         setupPageControl()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        collectionView?.reloadData()
     }
     
     override func viewDidLayoutSubviews() {
@@ -83,10 +90,18 @@ class PredictOutputViewController: UIViewController {
         pageControl.currentPage = 0
         pageControl.hidesForSinglePage = true
         pageControl.pageIndicatorTintColor = .systemGray4
-        pageControl.currentPageIndicatorTintColor = .label
+        pageControl.currentPageIndicatorTintColor = .systemBlue
         pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
         
         view.addSubview(pageControl)
+    }
+
+    private func applySemanticAppearance() {
+        view.backgroundColor = .systemBackground
+        collectionView?.backgroundColor = .clear
+        pageControl.pageIndicatorTintColor = .systemGray4
+        pageControl.currentPageIndicatorTintColor = .systemBlue
+        navigationItem.rightBarButtonItem?.tintColor = .systemBlue
     }
     
     @objc func pageControlChanged(_ sender: UIPageControl) {
@@ -159,9 +174,12 @@ class BirdResultCell: UITableViewCell {
         birdImageView.layer.cornerRadius = 8
         
         birdNameLabel.font = UIFont.preferredFont(forTextStyle: .headline)
+        birdNameLabel.textColor = .label
         
         contentView.addSubview(birdImageView)
         contentView.addSubview(birdNameLabel)
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
     }
     
     required init?(coder: NSCoder) {

@@ -77,10 +77,11 @@ class NewsCollectionViewCell: UICollectionViewCell {
 
     private func setupAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        containerView.backgroundColor = .secondarySystemBackground
+        containerView.backgroundColor = cardColor
         containerView.layer.cornerRadius = 16
         containerView.layer.masksToBounds = true
         layer.cornerRadius = 16

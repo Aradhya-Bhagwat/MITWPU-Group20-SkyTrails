@@ -20,6 +20,13 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
      
         setupStyle()
+        applySemanticAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     private func setupStyle() {
         
@@ -29,10 +36,6 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
-        contentView.layer.shadowColor = UIColor.black.cgColor
-        contentView.layer.shadowOpacity = 0.15
-        contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        contentView.layer.shadowRadius = 8
         
         birImage.contentMode = .scaleAspectFill
         birImage.clipsToBounds = true
@@ -40,10 +43,33 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
 
         containerView.backgroundColor = .systemBackground
         containerView.layer.cornerRadius = 12
+        containerView.layer.masksToBounds = true
         
         titleLabel.textColor = .label
         
         DateLabel.textColor = .secondaryLabel
+    }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        containerView.backgroundColor = cardColor
+
+        if isDarkMode {
+            contentView.layer.shadowOpacity = 0
+            contentView.layer.shadowRadius = 0
+            contentView.layer.shadowOffset = .zero
+            contentView.layer.shadowPath = nil
+        } else {
+            contentView.layer.shadowColor = UIColor.black.cgColor
+            contentView.layer.shadowOpacity = 0.08
+            contentView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            contentView.layer.shadowRadius = 6
+            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        }
     }
     
 
@@ -51,7 +77,9 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        if traitCollection.userInterfaceStyle != .dark {
+            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        }
         
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0

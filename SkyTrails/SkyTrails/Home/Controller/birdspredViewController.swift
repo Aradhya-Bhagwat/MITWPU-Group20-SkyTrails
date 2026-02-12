@@ -35,6 +35,7 @@ class birdspredViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupMap()
+        applySemanticAppearance()
         
         if !predictionInputs.isEmpty {
             currentSpeciesIndex = 0
@@ -43,6 +44,20 @@ class birdspredViewController: UIViewController {
             pillView.isHidden = true
             infoCardView.isHidden = true
         }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        if traitCollection.userInterfaceStyle != .dark {
+            pillView.layer.shadowPath = UIBezierPath(roundedRect: pillView.bounds, cornerRadius: 20).cgPath
+            infoCardView.layer.shadowPath = UIBezierPath(roundedRect: infoCardView.bounds, cornerRadius: 24).cgPath
+        }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     
     private func setupUI() {
@@ -100,6 +115,40 @@ class birdspredViewController: UIViewController {
         
         let cardTap = UITapGestureRecognizer(target: self, action: #selector(didTapCard))
         infoCardView.addGestureRecognizer(cardTap)
+    }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        view.backgroundColor = .systemBackground
+        navigationItem.rightBarButtonItem?.tintColor = .systemBlue
+        pageControl.pageIndicatorTintColor = .systemGray4
+        pageControl.currentPageIndicatorTintColor = .systemBlue
+        pillLabel.textColor = .label
+        titleLabel.textColor = .label
+        subtitleLabel.textColor = .secondaryLabel
+
+        if isDarkMode {
+            pillView.layer.shadowOpacity = 0
+            pillView.layer.shadowRadius = 0
+            pillView.layer.shadowOffset = .zero
+            pillView.layer.shadowPath = nil
+            infoCardView.layer.shadowOpacity = 0
+            infoCardView.layer.shadowRadius = 0
+            infoCardView.layer.shadowOffset = .zero
+            infoCardView.layer.shadowPath = nil
+        } else {
+            pillView.layer.shadowColor = UIColor.black.cgColor
+            pillView.layer.shadowOpacity = 0.08
+            pillView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            pillView.layer.shadowRadius = 6
+            pillView.layer.shadowPath = UIBezierPath(roundedRect: pillView.bounds, cornerRadius: 20).cgPath
+
+            infoCardView.layer.shadowColor = UIColor.black.cgColor
+            infoCardView.layer.shadowOpacity = 0.08
+            infoCardView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            infoCardView.layer.shadowRadius = 6
+            infoCardView.layer.shadowPath = UIBezierPath(roundedRect: infoCardView.bounds, cornerRadius: 24).cgPath
+        }
     }
     
     private func setupMap() {

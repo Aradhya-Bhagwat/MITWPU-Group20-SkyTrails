@@ -34,7 +34,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
         
-        cardContainerView2.backgroundColor = .secondarySystemBackground
+        cardContainerView2.backgroundColor = .systemBackground
         cardContainerView2.layer.cornerRadius = 16
         cardContainerView2.layer.masksToBounds = true
         
@@ -53,10 +53,11 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
 
     private func applySemanticAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        cardContainerView2.backgroundColor = .secondarySystemBackground
+        cardContainerView2.backgroundColor = cardColor
 
         if isDarkMode {
             contentView.layer.shadowOpacity = 0
@@ -135,4 +136,3 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         }
     
 }
-
