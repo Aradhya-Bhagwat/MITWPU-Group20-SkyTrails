@@ -101,41 +101,75 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
         }
     }
     
-        override func prepareForReuse() {
-            super.prepareForReuse()
-            birdImageView.image = nil
-            PlaceImage.image = nil
-            birdNameLabel.text = nil
-            PlaceName.text = nil
-            progressView.progress = 0
-            mapView.removeAnnotations(mapView.annotations)
-            mapView.removeOverlays(mapView.overlays)
-        }
+    private var currentTask: Task<Void, Never>?
 
-        func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
-            print("[issue1] Cell: configure called for \(migration.birdName)")
-            birdNameLabel.text = migration.birdName
-            birdImageView.image = UIImage(named: migration.birdImageName)
-            startLocationLabel.text = migration.startLocation
-            endLocationLabel.text = migration.endLocation
-            progressView.progress = migration.currentProgress
-            
-            let separators = [" – ", " - ", "   "]
-            var dateComponents: [String] = []
-            for sep in separators {
-                let parts = migration.dateRange.components(separatedBy: sep)
-                if parts.count >= 2 {
-                    dateComponents = parts.map { $0.trimmingCharacters(in: .whitespaces) }
-                    break
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        currentTask?.cancel()
+        currentTask = nil
+        birdImageView.image = nil
+        PlaceImage.image = nil
+        birdNameLabel.text = nil
+        PlaceName.text = nil
+        progressView.progress = 0
+        mapView.removeAnnotations(mapView.annotations)
+        mapView.removeOverlays(mapView.overlays)
+    }
+
+    func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
+        currentTask?.cancel()
+        print("[issue1] Cell: configure called for \(migration.birdName)")
+        birdNameLabel.text = migration.birdName
+        birdImageView.image = UIImage(named: migration.birdImageName)
+        startLocationLabel.text = migration.startLocation
+        endLocationLabel.text = migration.endLocation
+        progressView.progress = migration.currentProgress
+        
+        let separators = [" – ", " - ", "   "]
+        var dateComponents: [String] = []
+        for sep in separators {
+            let parts = migration.dateRange.components(separatedBy: sep)
+            if parts.count >= 2 {
+                dateComponents = parts.map { $0.trimmingCharacters(in: .whitespaces) }
+                break
+            }
+        }
+        
+        if dateComponents.count >= 2 {
+            startDateLabel.text = dateComponents[0]
+            endDateLabel.text = dateComponents[1]
+        }
+        
+        // Asynchronously fetch place names using LocationService
+        currentTask = Task { @MainActor in
+            if let startCoord = migration.pathCoordinates.first {
+                if let name = await LocationService.shared.reverseGeocode(lat: startCoord.latitude, lon: startCoord.longitude) {
+                    if !Task.isCancelled {
+                        self.startLocationLabel.text = name
+                        
+                        // Update start pin title if it exists
+                        if let startPin = self.mapView.annotations.first(where: { abs($0.coordinate.latitude - startCoord.latitude) < 0.0001 && abs($0.coordinate.longitude - startCoord.longitude) < 0.0001 }) as? MKPointAnnotation {
+                            startPin.title = "Start: \(name)"
+                        }
+                    }
                 }
             }
             
-            if dateComponents.count >= 2 {
-                startDateLabel.text = dateComponents[0]
-                endDateLabel.text = dateComponents[1]
+            if let endCoord = migration.pathCoordinates.last {
+                if let name = await LocationService.shared.reverseGeocode(lat: endCoord.latitude, lon: endCoord.longitude) {
+                    if !Task.isCancelled {
+                        self.endLocationLabel.text = name
+                        
+                        // Update end pin title if it exists
+                        if let endPin = self.mapView.annotations.first(where: { abs($0.coordinate.latitude - endCoord.latitude) < 0.0001 && abs($0.coordinate.longitude - endCoord.longitude) < 0.0001 }) as? MKPointAnnotation {
+                             endPin.title = "Destination: \(name)"
+                        }
+                    }
+                }
             }
-            
-            PlaceName.text = hotspot.placeName
+        }
+        
+        PlaceName.text = hotspot.placeName
             NoSpecies.text = "\(hotspot.speciesCount) Species spotted"
             Distance.text = hotspot.distanceString
             DateLabel.text = hotspot.dateRange

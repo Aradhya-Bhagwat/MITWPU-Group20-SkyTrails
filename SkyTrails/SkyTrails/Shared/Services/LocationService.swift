@@ -71,11 +71,14 @@ final class LocationService: NSObject {
     /// Reverse geocoding: Convert coordinates to place name
     func reverseGeocode(lat: Double, lon: Double) async -> String? {
         let location = CLLocation(latitude: lat, longitude: lon)
-        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+        let geocoder = CLGeocoder()
         
         do {
-            let response = try await request.mapItems
-            return response.first?.name
+            let placemarks = try await geocoder.reverseGeocodeLocation(location)
+            guard let placemark = placemarks.first else { return nil }
+            
+            // Prefer locality (city) or name (specific place)
+            return placemark.locality ?? placemark.name ?? placemark.country
         } catch {
             print("❌ [LocationService] Reverse geocoding failed: \(error.localizedDescription)")
             return nil
