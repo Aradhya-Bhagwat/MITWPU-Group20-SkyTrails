@@ -13,6 +13,9 @@ import CoreLocation
 final class HotspotManager {
     private let modelContext: ModelContext
     
+    // Cache: key = "lat_lon_week_radius", value = [Bird]
+    private var birdsCache: [String: [Bird]] = [:]
+    
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
@@ -23,6 +26,12 @@ final class HotspotManager {
         duringWeek week: Int,
         radiusInKm: Double = 50.0
     ) -> [Bird] {
+        // 0. Check Cache
+        let cacheKey = "\(location.latitude)_\(location.longitude)_\(week)_\(radiusInKm)"
+        if let cached = birdsCache[cacheKey] {
+            return cached
+        }
+        
         print("[homeseeder] 🔍 [HotspotManager] Finding birds at \(location.latitude), \(location.longitude) for week \(week)")
         
         // 1. Fetch all hotspots (spatial query optimization would happen here in production)
@@ -57,6 +66,8 @@ final class HotspotManager {
         
         print("[homeseeder] 🦜 [HotspotManager] Found \(uniqueBirds.count) unique bird species present")
         
-        return Array(uniqueBirds)
+        let result = Array(uniqueBirds)
+        birdsCache[cacheKey] = result
+        return result
     }
 }

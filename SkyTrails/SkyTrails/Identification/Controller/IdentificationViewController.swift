@@ -137,7 +137,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 updateSelectionState() // Disable button while seeding
                 Task { @MainActor in
                     do {
-                        try IdentificationSeeder.seed(context: context)
+					try IdentificationSeeder.shared.seed(context: context)
                         // Must re-fetch shapes after seeding
                         self.model.fetchShapes()
                         self.isSeeding = false

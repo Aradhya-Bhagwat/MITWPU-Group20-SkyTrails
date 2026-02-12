@@ -1,573 +1,963 @@
 {
-  "hotspots": [
-    {
-      "id": "3F2111CA-CDF5-49E5-9064-AC686AF63EF8",
-      "name": "Okhla Bird Sanctuary",
-      "locality": "Noida, Uttar Pradesh",
-      "lat": 28.57,
-      "lon": 77.3,
-      "imageName": "spot_bharatpur",
-      "speciesList": [
+    "hotspots": [
         {
-          "id": "96E1D89F-F9BB-465A-837F-7A77774C51CC",
-          "birdId": "550e8400-e29b-41d4-a716-446655440001",
-          "validWeeks": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36,
-            37,
-            38,
-            39,
-            40,
-            41,
-            42,
-            43,
-            44,
-            45,
-            46,
-            47,
-            48,
-            49,
-            50,
-            51,
-            52
-          ],
-          "probability": 85
+            "id": "3F2111CA-CDF5-49E5-9064-AC686AF63EF8",
+            "name": "Okhla Bird Sanctuary",
+            "locality": "Noida, Uttar Pradesh",
+            "lat": 28.57,
+            "lon": 77.3,
+            "imageName": "spot_bharatpur",
+            "speciesList": [
+                {
+                    "id": "96E1D89F-F9BB-465A-837F-7A77774C51CC",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440001",
+                    "validWeeks": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26,
+                        27,
+                        28,
+                        29,
+                        30,
+                        31,
+                        32,
+                        33,
+                        34,
+                        35,
+                        36,
+                        37,
+                        38,
+                        39,
+                        40,
+                        41,
+                        42,
+                        43,
+                        44,
+                        45,
+                        46,
+                        47,
+                        48,
+                        49,
+                        50,
+                        51,
+                        52
+                    ],
+                    "probability": 85
+                },
+                {
+                    "id": "132F91BE-1038-4699-A454-AB6265F574DE",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440002",
+                    "validWeeks": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26,
+                        27,
+                        28,
+                        29,
+                        30,
+                        31,
+                        32,
+                        33,
+                        34,
+                        35,
+                        36,
+                        37,
+                        38,
+                        39,
+                        40,
+                        41,
+                        42,
+                        43,
+                        44,
+                        45,
+                        46,
+                        47,
+                        48,
+                        49,
+                        50,
+                        51,
+                        52
+                    ],
+                    "probability": 90
+                }
+            ]
         },
         {
-          "id": "132F91BE-1038-4699-A454-AB6265F574DE",
-          "birdId": "550e8400-e29b-41d4-a716-446655440002",
-          "validWeeks": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36,
-            37,
-            38,
-            39,
-            40,
-            41,
-            42,
-            43,
-            44,
-            45,
-            46,
-            47,
-            48,
-            49,
-            50,
-            51,
-            52
-          ],
-          "probability": 90
+            "id": "DFD8E91F-B258-4D84-9642-41AC5CF85D84",
+            "name": "Saras Baug Gardens",
+            "locality": "Pune, Maharashtra",
+            "lat": 18.5204,
+            "lon": 73.8567,
+            "imageName": "spot_kaziranga",
+            "speciesList": [
+                {
+                    "id": "FADDDCBC-4FEF-4507-9A65-D2E6AF54A704",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440001",
+                    "validWeeks": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12
+                    ],
+                    "probability": 95
+                },
+                {
+                    "id": "4543C5DB-9E35-448A-9529-097577926E3A",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440002",
+                    "validWeeks": [
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14
+                    ],
+                    "probability": 85
+                },
+                {
+                    "id": "A78A73FD-78DC-40FE-A2ED-C1BA32893099",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440003",
+                    "validWeeks": [
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16
+                    ],
+                    "probability": 95
+                },
+                {
+                    "id": "FCC55AF8-5C9D-454C-B9F8-E1BCE30F253F",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440004",
+                    "validWeeks": [
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15
+                    ],
+                    "probability": 80
+                },
+                {
+                    "id": "10DEE166-6A84-40D4-8061-EEC1A8DB951F",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440005",
+                    "validWeeks": [
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17
+                    ],
+                    "probability": 60
+                },
+                {
+                    "id": "8D1B1540-0DFE-4587-9190-6342EE827E61",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440006",
+                    "validWeeks": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14
+                    ],
+                    "probability": 90
+                }
+            ]
         }
-      ]
-    },
-    {
-      "id": "DFD8E91F-B258-4D84-9642-41AC5CF85D84",
-      "name": "Saras Baug Gardens",
-      "locality": "Pune, Maharashtra",
-      "lat": 18.5204,
-      "lon": 73.8567,
-      "imageName": "spot_kaziranga",
-      "speciesList": [
+    ],
+    "migration_sessions": [
         {
-          "id": "A78A73FD-78DC-40FE-A2ED-C1BA32893099",
-          "birdId": "550e8400-e29b-41d4-a716-446655440003",
-          "validWeeks": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36,
-            37,
-            38,
-            39,
-            40,
-            41,
-            42,
-            43,
-            44,
-            45,
-            46,
-            47,
-            48,
-            49,
-            50,
-            51,
-            52
-          ],
-          "probability": 95
+            "id": "A99E315E-132C-487F-9C3C-38B7E059A1DE",
+            "birdId": "550e8400-e29b-41d4-a716-446655440001",
+            "startWeek": 1,
+            "endWeek": 12,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "EFDAE25B-9BB3-4854-A176-D0E6D66B13E2",
+                    "week": 1,
+                    "lat": 10.0,
+                    "lon": 70.0,
+                    "probability": 20
+                },
+                {
+                    "id": "79D86C72-A87E-40C2-93A1-DCDF44A752B6",
+                    "week": 2,
+                    "lat": 11.5,
+                    "lon": 71.0,
+                    "probability": 30
+                },
+                {
+                    "id": "A2BFA33B-07B2-4290-91B9-462BDF8AD84B",
+                    "week": 3,
+                    "lat": 13.0,
+                    "lon": 71.5,
+                    "probability": 45
+                },
+                {
+                    "id": "BDB1606B-5453-400D-ABE9-22F1EC54841D",
+                    "week": 4,
+                    "lat": 14.5,
+                    "lon": 72.0,
+                    "probability": 60
+                },
+                {
+                    "id": "F9BBB6DD-4A7A-40EA-B8E3-CC3A0F300134",
+                    "week": 5,
+                    "lat": 16.0,
+                    "lon": 72.8,
+                    "probability": 75
+                },
+                {
+                    "id": "407B910E-CDE2-4340-80C6-05A8FD6CDF31",
+                    "week": 6,
+                    "lat": 17.5,
+                    "lon": 73.4,
+                    "probability": 85
+                },
+                {
+                    "id": "5876CC70-77DF-445D-A993-88B5CDCFCA5D",
+                    "week": 7,
+                    "lat": 18.5204,
+                    "lon": 73.8567,
+                    "probability": 95
+                },
+                {
+                    "id": "1DF36EB3-8C06-4247-A85A-C2677975CE3F",
+                    "week": 8,
+                    "lat": 19.5,
+                    "lon": 74.2,
+                    "probability": 80
+                },
+                {
+                    "id": "88285E83-1EBE-4270-BD1B-64C3C1F6979F",
+                    "week": 9,
+                    "lat": 21.0,
+                    "lon": 75.0,
+                    "probability": 65
+                },
+                {
+                    "id": "4B94A6FA-7D6D-4E06-A2CC-7290A5246BA9",
+                    "week": 10,
+                    "lat": 22.5,
+                    "lon": 76.0,
+                    "probability": 50
+                },
+                {
+                    "id": "94BD7F06-53D7-49F0-A59E-0514C65E1A86",
+                    "week": 11,
+                    "lat": 24.0,
+                    "lon": 77.0,
+                    "probability": 35
+                },
+                {
+                    "id": "5D8B97B6-D1B7-4A74-B641-EABED2293421",
+                    "week": 12,
+                    "lat": 25.5,
+                    "lon": 78.0,
+                    "probability": 20
+                }
+            ]
         },
         {
-          "id": "FCC55AF8-5C9D-454C-B9F8-E1BCE30F253F",
-          "birdId": "550e8400-e29b-41d4-a716-446655440004",
-          "validWeeks": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36,
-            37,
-            38,
-            39,
-            40,
-            41,
-            42,
-            43,
-            44,
-            45,
-            46,
-            47,
-            48,
-            49,
-            50,
-            51,
-            52
-          ],
-          "probability": 80
+            "id": "FA27F7B2-16A7-493E-B704-A8FE589D259E",
+            "birdId": "550e8400-e29b-41d4-a716-446655440002",
+            "startWeek": 2,
+            "endWeek": 14,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "9FFAB2D4-B876-481F-AB92-73CCC137B690",
+                    "week": 2,
+                    "lat": 11.0,
+                    "lon": 71.0,
+                    "probability": 15
+                },
+                {
+                    "id": "D9FD25E0-656A-45ED-BA61-2A318E134729",
+                    "week": 3,
+                    "lat": 12.5,
+                    "lon": 71.8,
+                    "probability": 25
+                },
+                {
+                    "id": "73712DF5-4373-417E-9ED9-94A925D239CB",
+                    "week": 4,
+                    "lat": 14.0,
+                    "lon": 72.2,
+                    "probability": 40
+                },
+                {
+                    "id": "9B3BB21A-A31B-43A2-B303-592FA888DF10",
+                    "week": 5,
+                    "lat": 15.5,
+                    "lon": 72.8,
+                    "probability": 60
+                },
+                {
+                    "id": "8A367F0B-17C6-431B-A17A-4F4B0E72BF43",
+                    "week": 6,
+                    "lat": 17.0,
+                    "lon": 73.4,
+                    "probability": 80
+                },
+                {
+                    "id": "B17A8F81-C73D-488E-B30D-36E7684A4C56",
+                    "week": 7,
+                    "lat": 18.5204,
+                    "lon": 73.8567,
+                    "probability": 90
+                },
+                {
+                    "id": "2D80687A-AB6E-4F09-9BA0-A0BF4FF405B6",
+                    "week": 8,
+                    "lat": 19.8,
+                    "lon": 74.3,
+                    "probability": 85
+                },
+                {
+                    "id": "6CAEB35B-4FB6-4CC6-857B-61EA48FB5C5F",
+                    "week": 9,
+                    "lat": 21.2,
+                    "lon": 75.1,
+                    "probability": 75
+                },
+                {
+                    "id": "0B81D82F-8A07-4201-9BF8-541312F820C7",
+                    "week": 10,
+                    "lat": 22.6,
+                    "lon": 76.2,
+                    "probability": 60
+                },
+                {
+                    "id": "B16F717D-FCFE-4F11-9CC5-A570D325D9F4",
+                    "week": 11,
+                    "lat": 23.8,
+                    "lon": 77.4,
+                    "probability": 45
+                },
+                {
+                    "id": "095529C4-974A-4A23-A1C8-39267641BBB6",
+                    "week": 12,
+                    "lat": 25.0,
+                    "lon": 78.6,
+                    "probability": 30
+                },
+                {
+                    "id": "2B1BF9CE-2A32-4C53-BA8C-9DAF90B194E4",
+                    "week": 13,
+                    "lat": 26.2,
+                    "lon": 79.8,
+                    "probability": 20
+                },
+                {
+                    "id": "0D3DF495-3FBB-4C03-8305-8E26679C70D3",
+                    "week": 14,
+                    "lat": 27.5,
+                    "lon": 81.0,
+                    "probability": 10
+                }
+            ]
         },
         {
-          "id": "10DEE166-6A84-40D4-8061-EEC1A8DB951F",
-          "birdId": "550e8400-e29b-41d4-a716-446655440005",
-          "validWeeks": [
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
-            32,
-            33,
-            34,
-            35,
-            36,
-            37,
-            38,
-            39
-          ],
-          "probability": 60
+            "id": "B377BB63-85F8-4734-800E-7D112FA0EABF",
+            "birdId": "550e8400-e29b-41d4-a716-446655440003",
+            "startWeek": 3,
+            "endWeek": 16,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "C04E0C6E-D601-44B3-B7A3-081A3E283A59",
+                    "week": 3,
+                    "lat": 12.0,
+                    "lon": 71.5,
+                    "probability": 10
+                },
+                {
+                    "id": "11EA5BCE-0D85-483F-8B33-64807F5B8C99",
+                    "week": 4,
+                    "lat": 13.5,
+                    "lon": 72.0,
+                    "probability": 20
+                },
+                {
+                    "id": "A0470531-A108-4F1E-922E-B011583FF367",
+                    "week": 5,
+                    "lat": 15.0,
+                    "lon": 72.6,
+                    "probability": 35
+                },
+                {
+                    "id": "053B55F8-3C47-484E-9CB6-3DDFFD6755CA",
+                    "week": 6,
+                    "lat": 16.5,
+                    "lon": 73.2,
+                    "probability": 55
+                },
+                {
+                    "id": "992AF369-8F44-49B6-9F1D-1399553F780C",
+                    "week": 7,
+                    "lat": 18.5204,
+                    "lon": 73.8567,
+                    "probability": 85
+                },
+                {
+                    "id": "DD7D2E6C-6F16-40B8-A68E-F6D4E05281BA",
+                    "week": 8,
+                    "lat": 20.0,
+                    "lon": 74.5,
+                    "probability": 90
+                },
+                {
+                    "id": "DC3B53AF-098F-4C5A-8BD3-84B47B628AF2",
+                    "week": 9,
+                    "lat": 21.5,
+                    "lon": 75.5,
+                    "probability": 80
+                },
+                {
+                    "id": "B02471E4-1AAF-4D1C-9FEB-2946EFDAC375",
+                    "week": 10,
+                    "lat": 23.0,
+                    "lon": 76.5,
+                    "probability": 70
+                },
+                {
+                    "id": "0A65DA83-B761-4303-A03A-59B276FBF0FC",
+                    "week": 11,
+                    "lat": 24.5,
+                    "lon": 77.5,
+                    "probability": 55
+                },
+                {
+                    "id": "B9F824F1-3AAD-4D4A-B180-73E73C646A0F",
+                    "week": 12,
+                    "lat": 26.0,
+                    "lon": 78.5,
+                    "probability": 40
+                },
+                {
+                    "id": "11C97760-72B3-4D5F-AF15-8AD60787E53E",
+                    "week": 13,
+                    "lat": 27.5,
+                    "lon": 79.5,
+                    "probability": 30
+                },
+                {
+                    "id": "37AB2FAC-9F6A-4B56-957B-C4460D7D3AA7",
+                    "week": 14,
+                    "lat": 29.0,
+                    "lon": 80.5,
+                    "probability": 20
+                },
+                {
+                    "id": "2A5F34B9-9F57-4FA6-950A-485A52C6D0DC",
+                    "week": 15,
+                    "lat": 30.5,
+                    "lon": 81.5,
+                    "probability": 15
+                },
+                {
+                    "id": "5BF464DA-F9C6-4262-A666-88FAFC284A8E",
+                    "week": 16,
+                    "lat": 32.0,
+                    "lon": 82.5,
+                    "probability": 10
+                }
+            ]
+        },
+        {
+            "id": "38BB74B4-F0FB-4EF5-888D-A5FA82921F6A",
+            "birdId": "550e8400-e29b-41d4-a716-446655440004",
+            "startWeek": 4,
+            "endWeek": 15,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "78F6C5CB-AA75-4236-8377-112AED559E49",
+                    "week": 4,
+                    "lat": 13.0,
+                    "lon": 72.0,
+                    "probability": 15
+                },
+                {
+                    "id": "A17BB52B-3107-4A32-A70A-8560359F39F6",
+                    "week": 5,
+                    "lat": 14.8,
+                    "lon": 72.6,
+                    "probability": 25
+                },
+                {
+                    "id": "20F62E13-6B0E-4284-A159-73049C287918",
+                    "week": 6,
+                    "lat": 16.6,
+                    "lon": 73.2,
+                    "probability": 45
+                },
+                {
+                    "id": "D5B5E77E-837D-45FC-B16B-285B8C13D4CD",
+                    "week": 7,
+                    "lat": 18.5204,
+                    "lon": 73.8567,
+                    "probability": 80
+                },
+                {
+                    "id": "69D41D95-1425-49F4-81F7-5BFBC0582AB9",
+                    "week": 8,
+                    "lat": 20.2,
+                    "lon": 74.4,
+                    "probability": 75
+                },
+                {
+                    "id": "F8A36A4A-88EE-409C-93BA-874FA90025C9",
+                    "week": 9,
+                    "lat": 22.0,
+                    "lon": 75.2,
+                    "probability": 65
+                },
+                {
+                    "id": "DB4BD49E-75B4-4DD3-9B34-01FAD62D6F14",
+                    "week": 10,
+                    "lat": 23.8,
+                    "lon": 76.0,
+                    "probability": 55
+                },
+                {
+                    "id": "5282AC8E-94C2-4DCD-92FA-7672C2FBF3FD",
+                    "week": 11,
+                    "lat": 25.6,
+                    "lon": 76.8,
+                    "probability": 45
+                },
+                {
+                    "id": "EDFD895F-F128-474B-844E-960CB7E2A811",
+                    "week": 12,
+                    "lat": 27.4,
+                    "lon": 77.6,
+                    "probability": 35
+                },
+                {
+                    "id": "61665242-9691-44F3-BFF7-56496C7A5CC9",
+                    "week": 13,
+                    "lat": 29.2,
+                    "lon": 78.4,
+                    "probability": 25
+                },
+                {
+                    "id": "48F10C35-A4C1-4BAD-A14F-BACC6C764311",
+                    "week": 14,
+                    "lat": 31.0,
+                    "lon": 79.2,
+                    "probability": 15
+                },
+                {
+                    "id": "76110958-B9EB-4B5E-8D53-2C8FC9D4AD89",
+                    "week": 15,
+                    "lat": 32.8,
+                    "lon": 80.0,
+                    "probability": 10
+                }
+            ]
+        },
+        {
+            "id": "CD350172-C1DB-428C-893E-AA0C893AB781",
+            "birdId": "550e8400-e29b-41d4-a716-446655440005",
+            "startWeek": 5,
+            "endWeek": 17,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "D92A48E3-E11B-4EB3-BB77-454C103693ED",
+                    "week": 5,
+                    "lat": 14.0,
+                    "lon": 72.4,
+                    "probability": 10
+                },
+                {
+                    "id": "9F8754B1-BD96-49D3-A485-7BCD21BB4B8A",
+                    "week": 6,
+                    "lat": 16.2,
+                    "lon": 73.2,
+                    "probability": 20
+                },
+                {
+                    "id": "178E8E94-FD13-47CB-B1E2-751E2445FC4C",
+                    "week": 7,
+                    "lat": 18.5204,
+                    "lon": 73.8567,
+                    "probability": 60
+                },
+                {
+                    "id": "EA489A6B-AF90-4C2B-AFBA-29291F9531AA",
+                    "week": 8,
+                    "lat": 20.6,
+                    "lon": 74.6,
+                    "probability": 80
+                },
+                {
+                    "id": "111DDDA0-E858-44CD-A977-6DA130AD79EB",
+                    "week": 9,
+                    "lat": 22.8,
+                    "lon": 75.4,
+                    "probability": 70
+                },
+                {
+                    "id": "6C1F3B92-F7A0-4708-AB41-2D81CBAE9930",
+                    "week": 10,
+                    "lat": 25.0,
+                    "lon": 76.2,
+                    "probability": 60
+                },
+                {
+                    "id": "619B5EF4-C88D-42F0-B541-ADEE7BA6E44D",
+                    "week": 11,
+                    "lat": 27.2,
+                    "lon": 77.0,
+                    "probability": 50
+                },
+                {
+                    "id": "D7F6B338-773B-438A-9F85-9DFCF888346E",
+                    "week": 12,
+                    "lat": 29.4,
+                    "lon": 77.8,
+                    "probability": 40
+                },
+                {
+                    "id": "51085CC9-0856-4601-928F-2C3BD760FD1E",
+                    "week": 13,
+                    "lat": 31.6,
+                    "lon": 78.6,
+                    "probability": 30
+                },
+                {
+                    "id": "2C39414F-4E2A-46CE-903A-ABC19643E356",
+                    "week": 14,
+                    "lat": 33.8,
+                    "lon": 79.4,
+                    "probability": 20
+                },
+                {
+                    "id": "D613717B-A2C7-4258-B87A-547B3D5BFC19",
+                    "week": 15,
+                    "lat": 36.0,
+                    "lon": 80.2,
+                    "probability": 15
+                },
+                {
+                    "id": "A02F9009-DA8C-45DA-B0C5-24BE18E9549F",
+                    "week": 16,
+                    "lat": 38.2,
+                    "lon": 81.0,
+                    "probability": 10
+                },
+                {
+                    "id": "A2AC735A-5975-4B7A-A96A-701256A01CD5",
+                    "week": 17,
+                    "lat": 40.4,
+                    "lon": 81.8,
+                    "probability": 5
+                }
+            ]
+        },
+        {
+            "id": "BE331F44-0E8F-47D0-9F01-DC7F0EE8D5E8",
+            "birdId": "550e8400-e29b-41d4-a716-446655440006",
+            "startWeek": 1,
+            "endWeek": 14,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "894E36DA-EF4D-4DA4-8EBC-EC3E963359DC",
+                    "week": 1,
+                    "lat": 10.0,
+                    "lon": 70.0,
+                    "probability": 10
+                },
+                {
+                    "id": "6C488D56-68FB-40AC-9171-C4922B8C063B",
+                    "week": 2,
+                    "lat": 11.5,
+                    "lon": 70.8,
+                    "probability": 20
+                },
+                {
+                    "id": "ED2D4AEE-FB3B-45DC-BAD8-EA07BF2697A6",
+                    "week": 3,
+                    "lat": 13.0,
+                    "lon": 71.5,
+                    "probability": 35
+                },
+                {
+                    "id": "92D45C0E-A475-41D9-AD62-779728A0F166",
+                    "week": 4,
+                    "lat": 14.5,
+                    "lon": 72.2,
+                    "probability": 50
+                },
+                {
+                    "id": "D62ED0A8-1F7A-4D05-A868-1415942F0139",
+                    "week": 5,
+                    "lat": 16.0,
+                    "lon": 73.0,
+                    "probability": 70
+                },
+                {
+                    "id": "596CBDB4-401B-4A2E-9367-A74870DAB0CE",
+                    "week": 6,
+                    "lat": 17.5,
+                    "lon": 73.4,
+                    "probability": 85
+                },
+                {
+                    "id": "56B23431-5159-466C-8247-2BF683FC66E2",
+                    "week": 7,
+                    "lat": 18.5204,
+                    "lon": 73.8567,
+                    "probability": 90
+                },
+                {
+                    "id": "37F7AEE5-CDD4-4057-90C4-D91C72568EB7",
+                    "week": 8,
+                    "lat": 19.8,
+                    "lon": 74.3,
+                    "probability": 80
+                },
+                {
+                    "id": "C89F7269-F7E6-47CA-A31A-65925137BF45",
+                    "week": 9,
+                    "lat": 21.2,
+                    "lon": 75.0,
+                    "probability": 65
+                },
+                {
+                    "id": "91F5915F-66F4-4EB1-83AC-D4C7D2E943DE",
+                    "week": 10,
+                    "lat": 22.6,
+                    "lon": 75.8,
+                    "probability": 50
+                },
+                {
+                    "id": "76F207E9-9FFB-44A2-A6C3-9F35C8B691FE",
+                    "week": 11,
+                    "lat": 24.0,
+                    "lon": 76.6,
+                    "probability": 35
+                },
+                {
+                    "id": "3635A8DE-5681-4EF3-96FA-E77FB1C42C07",
+                    "week": 12,
+                    "lat": 25.4,
+                    "lon": 77.4,
+                    "probability": 25
+                },
+                {
+                    "id": "0D72C1CD-291F-469C-95DA-7BD8C35E9B43",
+                    "week": 13,
+                    "lat": 26.8,
+                    "lon": 78.2,
+                    "probability": 15
+                },
+                {
+                    "id": "6D0EA03F-278B-41BA-8727-1D732BE96DFB",
+                    "week": 14,
+                    "lat": 28.2,
+                    "lon": 79.0,
+                    "probability": 10
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "migration_sessions": [
-    {
-      "id": "5fd0d859-0089-4bc6-a4f3-a1d703f01042",
-      "birdId": "550e8400-e29b-41d4-a716-446655440001",
-      "startWeek": 1,
-      "endWeek": 12,
-      "hemisphere": "northern",
-      "trajectoryPaths": [
+    ],
+    "community_observations": [
         {
-          "id": "46d365c5-1d7e-4530-9b0c-863e72785d91",
-          "week": 1,
-          "lat": 35.0,
-          "lon": 70.0,
-          "probability": 70
+            "id": "37E96C96-BAE1-4A33-AE6E-8AAFC566B8FA",
+            "username": "bird_lover_99",
+            "userAvatar": "avatar_1",
+            "observationTitle": "Spotted House Sparrow near the lake",
+            "location": "Pune, Maharashtra",
+            "lat": 18.5204,
+            "lon": 73.8567,
+            "observedAt": "2026-02-11T10:21:10.632854Z",
+            "likesCount": 10,
+            "imageName": "house_sparrow",
+            "birdName": "House Sparrow"
         },
         {
-          "id": "6111446f-a51f-462a-a2ce-db308c014e4e",
-          "week": 4,
-          "lat": 30.0,
-          "lon": 72.0,
-          "probability": 85
+            "id": "29E95C34-72D6-4845-A663-8BD95B01F9CD",
+            "username": "nature_pro",
+            "userAvatar": "avatar_2",
+            "observationTitle": "Spotted Red-headed Bunting near the lake",
+            "location": "Pune, Maharashtra",
+            "lat": 18.5214,
+            "lon": 73.85770000000001,
+            "observedAt": "2026-02-09T10:21:10.632867Z",
+            "likesCount": 15,
+            "imageName": "red_headed_bunting",
+            "birdName": "Red-headed Bunting"
         },
         {
-          "id": "1dba08c5-e739-45be-abcc-7a124c8a6d4d",
-          "week": 8,
-          "lat": 26.9,
-          "lon": 73.9,
-          "probability": 95
+            "id": "56ACCBD0-0067-4D55-B19C-32FD8FECED14",
+            "username": "sky_watcher",
+            "userAvatar": "avatar_3",
+            "observationTitle": "Spotted Baya Weaver near the lake",
+            "location": "Pune, Maharashtra",
+            "lat": 18.522399999999998,
+            "lon": 73.8587,
+            "observedAt": "2026-02-07T10:21:10.632874Z",
+            "likesCount": 20,
+            "imageName": "baya_weaver",
+            "birdName": "Baya Weaver"
         },
         {
-          "id": "65541233-1b48-4a97-8885-414340bf1f9d",
-          "week": 12,
-          "lat": 23.0,
-          "lon": 72.5,
-          "probability": 100
+            "id": "641D40AB-F3EB-49DC-B726-E62487D2EF89",
+            "username": "pune_birder",
+            "userAvatar": "avatar_4",
+            "observationTitle": "Spotted White-rumped Munia near the lake",
+            "location": "Pune, Maharashtra",
+            "lat": 18.5234,
+            "lon": 73.8597,
+            "observedAt": "2026-02-05T10:21:10.632879Z",
+            "likesCount": 25,
+            "imageName": "white_rumped_munia",
+            "birdName": "White-rumped Munia"
+        },
+        {
+            "id": "6C5E06F9-78CB-4F53-81E0-F408C8177CB3",
+            "username": "bird_lover_99",
+            "userAvatar": "avatar_5",
+            "observationTitle": "Spotted Scaly-breasted Munia near the lake",
+            "location": "Pune, Maharashtra",
+            "lat": 18.5244,
+            "lon": 73.86070000000001,
+            "observedAt": "2026-02-03T10:21:10.632885Z",
+            "likesCount": 30,
+            "imageName": "scaly_breasted_munia",
+            "birdName": "Scaly-breasted Munia"
         }
-      ]
-    },
-    {
-      "id": "5a6ca4c0-e6bd-4c7b-a475-244eeeb9fa4d",
-      "birdId": "550e8400-e29b-41d4-a716-446655440002",
-      "startWeek": 10,
-      "endWeek": 25,
-      "hemisphere": "northern",
-      "trajectoryPaths": [
+    ],
+    "birdCategories": [
         {
-          "id": "641d90c2-118d-4f36-a358-44e438706981",
-          "week": 10,
-          "lat": 18.5,
-          "lon": 73.8,
-          "probability": 90
+            "icon": "indian_roller",
+            "title": "Urban Birds"
         },
         {
-          "id": "895ab9be-dda2-4f6f-92db-6c65e7bc4a44",
-          "week": 15,
-          "lat": 23.0,
-          "lon": 74.0,
-          "probability": 85
+            "icon": "brown_headed_barbet",
+            "title": "Seed Eaters"
         },
         {
-          "id": "0cbde7ee-a2ff-4814-99de-7a2b9c5f3f8a",
-          "week": 20,
-          "lat": 28.6,
-          "lon": 77.2,
-          "probability": 75
+            "icon": "brown_headed_barbet",
+            "title": "Wetland Species"
         },
         {
-          "id": "4733c12f-adcb-46ad-bb71-3a4da4c63676",
-          "week": 25,
-          "lat": 34.0,
-          "lon": 74.8,
-          "probability": 100
+            "icon": "himalayan_monal",
+            "title": "Himalayan Migrants"
         }
-      ]
-    },
-    {
-      "id": "90195e54-085c-42b8-b9e2-b71a36cb1258",
-      "birdId": "550e8400-e29b-41d4-a716-446655440003",
-      "startWeek": 20,
-      "endWeek": 35,
-      "hemisphere": "northern",
-      "trajectoryPaths": [
+    ],
+    "latestNews": [
         {
-          "id": "002d44fc-953b-48da-9573-28e183cf0628",
-          "week": 20,
-          "lat": 18.5,
-          "lon": 73.8,
-          "probability": 100
+            "title": "Baya Weaver Nesting Season",
+            "summary": "The monsoon brings spectacular nesting displays across Central India.",
+            "link": "https://example.com/baya-weaver",
+            "imageName": "spot_ranganathittu"
         },
         {
-          "id": "74d6fec6-4142-4b44-8cdc-7e2bc99f0364",
-          "week": 25,
-          "lat": 19.0,
-          "lon": 73.5,
-          "probability": 90
-        },
-        {
-          "id": "d71e76eb-ad27-40e7-802f-1b76b3d48426",
-          "week": 30,
-          "lat": 18.8,
-          "lon": 73.6,
-          "probability": 85
-        },
-        {
-          "id": "ee6d3d27-814d-45a9-b3ca-b590252987b6",
-          "week": 35,
-          "lat": 18.5,
-          "lon": 73.8,
-          "probability": 100
+            "title": "New Hotspot Discovered",
+            "summary": "Check out the recently identified birding trail in the Western Ghats.",
+            "link": "https://example.com/new-hotspot",
+            "imageName": "pied_cuckoo"
         }
-      ]
-    },
-    {
-      "id": "4533a945-4e86-4c2b-8497-ecbc4e3fe940",
-      "birdId": "550e8400-e29b-41d4-a716-446655440008",
-      "startWeek": 35,
-      "endWeek": 48,
-      "hemisphere": "northern",
-      "trajectoryPaths": [
-        {
-          "id": "8ab3e20f-93ca-464b-9ec3-1ea5abc8820b",
-          "week": 35,
-          "lat": 34.0,
-          "lon": 74.8,
-          "probability": 90
-        },
-        {
-          "id": "3164830b-1019-4f69-a51c-6806d9343c02",
-          "week": 40,
-          "lat": 28.6,
-          "lon": 77.2,
-          "probability": 85
-        },
-        {
-          "id": "3d4ed15e-7544-4bdb-8e39-6883f8c319b6",
-          "week": 44,
-          "lat": 23.0,
-          "lon": 72.6,
-          "probability": 80
-        },
-        {
-          "id": "0b30d3a6-ac6f-4b57-8c8e-7cde4a9082f8",
-          "week": 48,
-          "lat": 18.5,
-          "lon": 73.8,
-          "probability": 100
-        }
-      ]
-    },
-    {
-      "id": "f4e4e68f-cf27-4eb6-b072-0c7611170b67",
-      "birdId": "550e8400-e29b-41d4-a716-446655440007",
-      "startWeek": 42,
-      "endWeek": 52,
-      "hemisphere": "northern",
-      "trajectoryPaths": [
-        {
-          "id": "0e537dbf-ddb1-4b94-9892-71915c8a3701",
-          "week": 42,
-          "lat": 34.0,
-          "lon": 74.8,
-          "probability": 95
-        },
-        {
-          "id": "6cadec23-8dfc-4376-a35b-7000beb6041d",
-          "week": 46,
-          "lat": 28.6,
-          "lon": 77.2,
-          "probability": 90
-        },
-        {
-          "id": "c0c05023-30c3-40ac-85fc-e2fdab2c2487",
-          "week": 50,
-          "lat": 23.0,
-          "lon": 74.0,
-          "probability": 85
-        },
-        {
-          "id": "b82e4a79-e6dc-4067-a088-54bd479e7e2a",
-          "week": 52,
-          "lat": 18.5,
-          "lon": 73.8,
-          "probability": 100
-        }
-      ]
-    }
-  ],
-  "community_observations": [
-    {
-      "id": "37E96C96-BAE1-4A33-AE6E-8AAFC566B8FA",
-      "username": "bird_lover_99",
-      "userAvatar": "avatar_1",
-      "observationTitle": "Spotted House Sparrow near the lake",
-      "location": "Pune, Maharashtra",
-      "lat": 18.5204,
-      "lon": 73.8567,
-      "observedAt": "2026-02-11T10:21:10.632854Z",
-      "likesCount": 10,
-      "imageName": "house_sparrow",
-      "birdName": "House Sparrow"
-    },
-    {
-      "id": "29E95C34-72D6-4845-A663-8BD95B01F9CD",
-      "username": "nature_pro",
-      "userAvatar": "avatar_2",
-      "observationTitle": "Spotted Red-headed Bunting near the lake",
-      "location": "Pune, Maharashtra",
-      "lat": 18.5214,
-      "lon": 73.85770000000001,
-      "observedAt": "2026-02-09T10:21:10.632867Z",
-      "likesCount": 15,
-      "imageName": "oriental_magpie_robin",
-      "birdName": "Red-headed Bunting"
-    },
-    {
-      "id": "56ACCBD0-0067-4D55-B19C-32FD8FECED14",
-      "username": "sky_watcher",
-      "userAvatar": "avatar_3",
-      "observationTitle": "Spotted Baya Weaver near the lake",
-      "location": "Pune, Maharashtra",
-      "lat": 18.522399999999998,
-      "lon": 73.8587,
-      "observedAt": "2026-02-07T10:21:10.632874Z",
-      "likesCount": 20,
-      "imageName": "blue_throated_barbet",
-      "birdName": "Baya Weaver"
-    },
-    {
-      "id": "641D40AB-F3EB-49DC-B726-E62487D2EF89",
-      "username": "pune_birder",
-      "userAvatar": "avatar_4",
-      "observationTitle": "Spotted White-rumped Munia near the lake",
-      "location": "Pune, Maharashtra",
-      "lat": 18.5234,
-      "lon": 73.8597,
-      "observedAt": "2026-02-05T10:21:10.632879Z",
-      "likesCount": 25,
-      "imageName": "indian_grey_hornbill",
-      "birdName": "White-rumped Munia"
-    },
-    {
-      "id": "6C5E06F9-78CB-4F53-81E0-F408C8177CB3",
-      "username": "bird_lover_99",
-      "userAvatar": "avatar_5",
-      "observationTitle": "Spotted Scaly-breasted Munia near the lake",
-      "location": "Pune, Maharashtra",
-      "lat": 18.5244,
-      "lon": 73.86070000000001,
-      "observedAt": "2026-02-03T10:21:10.632885Z",
-      "likesCount": 30,
-      "imageName": "black_winged_stilt",
-      "birdName": "Scaly-breasted Munia"
-    }
-  ],
-  "birdCategories": [
-    {
-      "icon": "indian_roller",
-      "title": "Urban Birds"
-    },
-    {
-      "icon": "brown_headed_barbet",
-      "title": "Seed Eaters"
-    },
-    {
-      "icon": "brown_headed_barbet",
-      "title": "Wetland Species"
-    },
-    {
-      "icon": "himalayan_monal",
-      "title": "Himalayan Migrants"
-    }
-  ],
-  "latestNews": [
-    {
-      "title": "Baya Weaver Nesting Season",
-      "summary": "The monsoon brings spectacular nesting displays across Central India.",
-      "link": "https://example.com/baya-weaver",
-      "imageName": "spot_ranganathittu"
-    },
-    {
-      "title": "New Hotspot Discovered",
-      "summary": "Check out the recently identified birding trail in the Western Ghats.",
-      "link": "https://example.com/new-hotspot",
-      "imageName": "pied_cuckoo"
-    }
-  ]
+    ]
 }

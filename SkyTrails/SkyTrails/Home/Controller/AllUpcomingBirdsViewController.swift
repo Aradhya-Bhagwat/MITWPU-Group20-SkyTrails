@@ -10,7 +10,7 @@ import UIKit
 class AllUpcomingBirdsViewController: UIViewController {
     
     var watchlistData: [UpcomingBirdResult] = []
-    var recommendationsData: [Bird] = []
+    var recommendationsData: [RecommendedBirdResult] = []
     
     private var cachedItemSize: NSCollectionLayoutSize?
         
@@ -164,11 +164,11 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
             )
             cell.configure(with: upcomingBird)
         } else {
-            let bird = recommendationsData[indexPath.row]
+            let result = recommendationsData[indexPath.row]
             let upcomingBird = UpcomingBird(
-                imageName: bird.staticImageName,
-                title: bird.commonName,
-                date: "Recommended"
+                imageName: result.bird.staticImageName,
+                title: result.bird.commonName,
+                date: result.dateRange
             )
             cell.configure(with: upcomingBird)
         }
@@ -211,9 +211,9 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
                 self.navigationController?.pushViewController(mapVC, animated: true)
             }
         } else {
-            let bird = recommendationsData[indexPath.row]
+            let result = recommendationsData[indexPath.row]
             let input = BirdDateInput(
-                species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+                species: SpeciesData(id: result.bird.id.uuidString, name: result.bird.commonName, imageName: result.bird.staticImageName),
                 startDate: startDate,
                 endDate: endDate
             )

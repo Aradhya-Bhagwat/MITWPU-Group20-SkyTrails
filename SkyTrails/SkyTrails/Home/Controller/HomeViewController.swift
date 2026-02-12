@@ -200,8 +200,12 @@ extension HomeViewController {
     private func convertToUIModels() {
         guard let data = homeScreenData else { return }
 
-        // Convert upcoming birds
-        upcomingBirds = data.upcomingBirds.map { result in
+        print("[upcomingbirdsdebug] HomeViewController.convertToUIModels: Received data")
+        print("[upcomingbirdsdebug] - My watchlist birds count: \(data.myWatchlistBirds.count)")
+        print("[upcomingbirdsdebug] - Recommended birds count: \(data.recommendedBirds.count)")
+
+        // Convert MY watchlist birds (present at location, to_observe only)
+        let watchlistUI = data.myWatchlistBirds.map { result in
             UpcomingBirdUI(
                 imageName: result.bird.staticImageName,
                 title: result.bird.commonName,
@@ -209,16 +213,36 @@ extension HomeViewController {
             )
         }
 
-        // Add recommended birds if watchlist is empty
-        if upcomingBirds.isEmpty {
-            upcomingBirds = data.recommendedBirds.map { bird in
-                UpcomingBirdUI(
-                    imageName: bird.staticImageName,
-                    title: bird.commonName,
-                    date: "Recommended"
-                )
-            }
+        // Convert recommended birds (all birds at location)
+        let recommendedUI = data.recommendedBirds.map { result in
+            UpcomingBirdUI(
+                imageName: result.bird.staticImageName,
+                title: result.bird.commonName,
+                date: result.dateRange
+            )
         }
+        
+        // Option B: Fill with watchlist birds first, then add recommended to reach 6 total
+        var combinedBirds: [UpcomingBirdUI] = []
+        
+        // Add all watchlist birds (up to 6)
+        combinedBirds.append(contentsOf: watchlistUI.prefix(6))
+        
+        // Fill remaining slots with recommended birds
+        let remainingSlots = 6 - combinedBirds.count
+        if remainingSlots > 0 {
+            // Filter out recommended birds that are already in watchlist (by name to avoid duplicates)
+            let watchlistBirdNames = Set(watchlistUI.map { $0.title })
+            let uniqueRecommended = recommendedUI.filter { !watchlistBirdNames.contains($0.title) }
+            
+            combinedBirds.append(contentsOf: uniqueRecommended.prefix(remainingSlots))
+        }
+        
+        upcomingBirds = combinedBirds
+        
+        print("[upcomingbirdsdebug] Total upcoming birds to display: \(upcomingBirds.count)")
+        print("[upcomingbirdsdebug] - Watchlist: \(min(watchlistUI.count, 6)), Recommended: \(upcomingBirds.count - min(watchlistUI.count, 6))")
+
 
         // Convert spots
         spots = (data.watchlistSpots.isEmpty ? data.recommendedSpots : data.watchlistSpots)
@@ -728,12 +752,27 @@ extension HomeViewController {
 			case 1:
 				let item = upcomingBirds[indexPath.row]
 				
-				// Get the actual bird from SwiftData
-				guard let birdResult = homeScreenData?.upcomingBirds[safe: indexPath.row] else { return }
-				let bird = birdResult.bird
+				// Determine source object (Watchlist vs Recommended)
+                let watchlistCount = homeScreenData?.myWatchlistBirds.count ?? 0
+                
+                let bird: Bird
+                let statusText: String
+                
+                if indexPath.row < watchlistCount {
+                    // It's a watchlist item
+                    guard let result = homeScreenData?.myWatchlistBirds[safe: indexPath.row] else { return }
+                    bird = result.bird
+                    statusText = result.statusText
+                } else {
+                    // It's a recommended item
+                    let recommendedIndex = indexPath.row - watchlistCount
+                    guard let recResult = homeScreenData?.recommendedBirds[safe: recommendedIndex] else { return }
+                    bird = recResult.bird
+                    statusText = recResult.dateRange
+                }
 				
 				// Navigate to bird detail/map
-				navigateToBirdPrediction(bird: bird, statusText: item.date)
+				navigateToBirdPrediction(bird: bird, statusText: statusText)
 				
 			case 2:
 				let item = spots[indexPath.row]

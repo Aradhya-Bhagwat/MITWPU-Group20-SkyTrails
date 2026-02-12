@@ -228,7 +228,7 @@ struct WatchlistSeeder {
 	
 	@MainActor
 	private static func findOrCreateBird(from dto: JSONBirdDTO, in context: ModelContext) -> Bird {
-			// Efficient fetch by ID
+		// Efficient fetch by ID
 		let id = dto.id
 		let descriptor = FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
 			bird.id == id
@@ -247,20 +247,17 @@ struct WatchlistSeeder {
 			return existingByName
 		}
 		
-			// Map Rarity String to Enum
-		let rarityString = dto.rarity.first?.lowercased() ?? "common"
-		let rarity: BirdRarityLevel = (rarityString == "rare") ? .rare : (rarityString == "very_rare" ? .very_rare : .common)
-		
-		let newBird = Bird(
+		print("❌ [WatchlistSeeder] Missing bird \(dto.id) (\(dto.name)). Bird database should be seeded first.")
+		let placeholder = Bird(
 			id: dto.id,
 			commonName: dto.name,
 			scientificName: dto.scientificName,
 			staticImageName: dto.images.first ?? "placeholder",
-			rarityLevel: rarity,
+			rarityLevel: .common,
 			validLocations: dto.location
 		)
-		context.insert(newBird)
-		return newBird
+		context.insert(placeholder)
+		return placeholder
 	}
 	
 	enum SeederError: Error, LocalizedError {

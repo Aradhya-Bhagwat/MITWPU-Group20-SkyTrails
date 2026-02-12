@@ -51,6 +51,15 @@ final class WatchlistManager: WatchlistRepository {
 	private init() {
 		do {
 			print("🚀 [WatchlistManager] Initializing...")
+            
+            // 0. Ensure Application Support Directory Exists
+            let fileManager = FileManager.default
+            if let supportDir = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+                if !fileManager.fileExists(atPath: supportDir.path) {
+                    try fileManager.createDirectory(at: supportDir, withIntermediateDirectories: true, attributes: nil)
+                    print("✅ [WatchlistManager] Created Application Support directory")
+                }
+            }
 			
 				// 1. Init Container
 			let schema = Schema([
@@ -74,36 +83,7 @@ final class WatchlistManager: WatchlistRepository {
 			context = container.mainContext
 			print("✅ [WatchlistManager] SwiftData container initialized")
 			
-			let hasSeededKey = "kAppHasSeededData_v1"
-			if !UserDefaults.standard.bool(forKey: hasSeededKey) {
-				print("🗑️ [WatchlistManager] First launch or reset: clearing and seeding database...")
-				
-				let descriptor = FetchDescriptor<Watchlist>()
-				if let existing = try? context.fetch(descriptor) {
-					existing.forEach { context.delete($0) }
-				}
-				
-				let birdDescriptor = FetchDescriptor<Bird>()
-				if let existingBirds = try? context.fetch(birdDescriptor) {
-					existingBirds.forEach { context.delete($0) }
-					print("✅ [WatchlistManager] Cleared \(existingBirds.count) existing birds")
-				}
-				
-				try? context.save()
-				print("✅ [WatchlistManager] Cleared watchlists and birds")
-				
-				// Perform Seeding
-				do {
-					try WatchlistSeeder.seed(context: context)
-					UserDefaults.standard.set(true, forKey: hasSeededKey)
-					print("✅ [WatchlistManager] Seeding completed successfully")
-				} catch {
-					print("❌ [WatchlistManager] Seeding failed: \(error)")
-					// Don't fatal error - allow app to continue
-				}
-			} else {
-				print("ℹ️ [WatchlistManager] Database already seeded. Skipping wipe.")
-			}
+		print("ℹ️ [WatchlistManager] Watchlist seeding deferred to AppDelegate")
 			
 				// 3. Notify Legacy Observers
 			isDataLoaded = true
@@ -116,6 +96,32 @@ final class WatchlistManager: WatchlistRepository {
 			// Post-Init Notification for legacy support
 		DispatchQueue.main.async { [weak self] in
 			self?.notifyDataLoaded(success: true)
+		}
+	}
+
+	@MainActor
+	func seedIfNeeded() {
+		let hasSeededKey = "kAppHasSeededData_v1"
+		guard !UserDefaults.standard.bool(forKey: hasSeededKey) else {
+			print("ℹ️ [WatchlistManager] Database already seeded. Skipping watchlist seed.")
+			return
+		}
+
+		print("🗑️ [WatchlistManager] First launch or reset: clearing watchlists...")
+		let descriptor = FetchDescriptor<Watchlist>()
+		if let existing = try? context.fetch(descriptor) {
+			existing.forEach { context.delete($0) }
+		}
+		try? context.save()
+		print("✅ [WatchlistManager] Cleared watchlists")
+
+		do {
+			try WatchlistSeeder.seed(context: context)
+			UserDefaults.standard.set(true, forKey: hasSeededKey)
+			print("✅ [WatchlistManager] Watchlist seeding completed successfully")
+		} catch {
+			print("❌ [WatchlistManager] Watchlist seeding failed: \(error)")
+			// Don't fatal error - allow app to continue
 		}
 	}
 	
@@ -596,12 +602,13 @@ extension WatchlistManager {
                 )
                 
                 if presentBirds.contains(where: { $0.id == bird.id }) {
-                    results.append(UpcomingBirdResult(
-                        bird: bird,
-                        entry: entry,
-                        expectedWeek: checkWeek,
-                        daysUntil: weekOffset * 7
-                    ))
+                        results.append(UpcomingBirdResult(
+                            bird: bird,
+                            entry: entry,
+                            expectedWeek: checkWeek,
+                            daysUntil: weekOffset * 7,
+                            migrationDateRange: nil
+                        ))
                     break // Only add each bird once
                 }
             }
@@ -724,10 +731,12 @@ struct UpcomingBirdResult: Identifiable {
 	let entry: WatchlistEntry
 	let expectedWeek: Int
 	let daysUntil: Int
+	let migrationDateRange: String?
 	
 	var isArriving: Bool { daysUntil <= 7 }
 	var isPresentNow: Bool { daysUntil == 0 }
 	var statusText: String {
+		if let range = migrationDateRange { return range }
 		if isPresentNow { return "Here now!" }
 		if isArriving { return "Arriving this week" }
 		if daysUntil <= 14 { return "Arriving in \(daysUntil) days" }
