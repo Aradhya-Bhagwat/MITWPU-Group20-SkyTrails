@@ -19,11 +19,27 @@ class IdentificationSizeViewController: UIViewController {
         birdSlider.minimumValue = 0
         birdSlider.maximumValue = 4
         birdSlider.isContinuous = false
+        applySemanticAppearance()
         
         // Load existing selected size from viewModel if available
         let initialSize = viewModel.selectedSizeCategory ?? 0
         birdSlider.value = Float(initialSize)
         updateBirdDisplay(for: initialSize)
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+    }
+
+    private func applySemanticAppearance() {
+        birdLabel.textColor = .label
+        smallBirdNameLabel.textColor = .secondaryLabel
+        largeBirdNameLabel.textColor = .secondaryLabel
+        birdSlider.minimumTrackTintColor = .systemBlue
+        birdSlider.maximumTrackTintColor = .systemGray4
+        birdSlider.thumbTintColor = .systemBlue
     }
  
     @IBAction func sliderChanged(_ sender: UISlider) {

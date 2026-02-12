@@ -39,15 +39,19 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        applyCardShadow(to: startButton)
-        applyTableContainerShadow()
+        applyTableContainerShadow(to: containerView)
+        updateSelectionState()
         
     }
     
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
-        applyTableContainerShadow()
+        applyTableAppearance()
+        applyTableContainerShadow(to: containerView)
+        updateSelectionState()
+        tableView.reloadData()
+        historyCollectionView.reloadData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -82,6 +86,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         historyCollectionView.delegate = self
         historyCollectionView.dataSource = self
         
+        applyTableAppearance()
         setupHistoryFlowLayout()
         
         tableView.reloadData()
@@ -214,15 +219,36 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     func updateSelectionState() {
         let selectedCount = options.filter { $0.isSelected }.count
         let isValid = selectedCount >= 2 && !isSeeding
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
         
         warningLabel.isHidden = isValid
         startButton.isEnabled = isValid
         
         let titleColor: UIColor = isValid ? .label : .systemGray3
-        let shadowOpacity: Float = isValid ? 0.1 : 0.05
+        let shadowOpacity: Float = isValid ? 0.12 : 0.06
+        let shadowRadius: CGFloat = isValid ? 7 : 4
+        let shadowOffset = CGSize(width: 0, height: isValid ? 3 : 2)
         
         startButton.setTitleColor(titleColor, for: .normal)
-        startButton.layer.shadowOpacity = shadowOpacity
+        startButton.layer.cornerRadius = 16
+        startButton.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        startButton.layer.masksToBounds = false
+
+        if isDarkMode {
+            startButton.layer.shadowOpacity = 0
+            startButton.layer.shadowRadius = 0
+            startButton.layer.shadowOffset = .zero
+            startButton.layer.shadowPath = nil
+        } else {
+            startButton.layer.shadowColor = UIColor.black.cgColor
+            startButton.layer.shadowOpacity = shadowOpacity
+            startButton.layer.shadowRadius = shadowRadius
+            startButton.layer.shadowOffset = shadowOffset
+            startButton.layer.shadowPath = UIBezierPath(
+                roundedRect: startButton.bounds,
+                cornerRadius: startButton.layer.cornerRadius
+            ).cgPath
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -243,6 +269,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let historyItem = histories[indexPath.row]
             historyCell.configureCell(historyItem: historyItem)
         }
+        applyHistoryCardAppearance(to: historyCell)
         
         return historyCell
     }
@@ -253,25 +280,78 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         historyCollectionView.isUserInteractionEnabled = !isEmpty
         historyCollectionView.alpha = isEmpty ? 0.6 : 1.0
     }
-    
-    func applyCardShadow(to view: UIView) {
-        view.layer.shadowColor = UIColor.label.cgColor
-        
+
+    private func applyTableAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let tableCardColor = isDarkMode
+            ? UIColor.secondarySystemBackground
+            : UIColor.systemBackground
+
+        tableView.backgroundColor = tableCardColor
+        tableView.separatorColor = isDarkMode
+            ? UIColor.systemGray3.withAlphaComponent(0.45)
+            : UIColor.systemGray4.withAlphaComponent(0.6)
+    }
+
+    private func applyHistoryCardAppearance(to cell: UICollectionViewCell) {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardSurfaceColor: UIColor = .secondarySystemBackground
+        cell.layer.masksToBounds = false
+        cell.layer.cornerRadius = 16
+        cell.contentView.layer.cornerRadius = 16
+        cell.contentView.clipsToBounds = true
+        cell.contentView.backgroundColor = cardSurfaceColor
+
+        if let historyCell = cell as? HistoryCollectionViewCell {
+            historyCell.containeView.layer.cornerRadius = 16
+            historyCell.containeView.layer.masksToBounds = true
+            historyCell.containeView.backgroundColor = cardSurfaceColor
+        }
+
+        if isDarkMode {
+            cell.layer.shadowOpacity = 0
+            cell.layer.shadowRadius = 0
+            cell.layer.shadowOffset = .zero
+            cell.layer.shadowPath = nil
+        } else {
+            cell.layer.shadowColor = UIColor.black.cgColor
+            cell.layer.shadowOpacity = 0.08
+            cell.layer.shadowOffset = CGSize(width: 0, height: 3)
+            cell.layer.shadowRadius = 6
+            cell.layer.shadowPath = UIBezierPath(
+                roundedRect: cell.bounds,
+                cornerRadius: cell.layer.cornerRadius
+            ).cgPath
+        }
     }
     
-    private func applyTableContainerShadow() {
+ 
+    
+    private func applyTableContainerShadow(to view: UIView) {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
-        let shadowColor: UIColor = isDarkMode ? .white : .black
+        let tableCardColor = isDarkMode
+            ? UIColor.secondarySystemBackground
+            : UIColor.systemBackground
         
-        containerView.layer.masksToBounds = false
-        containerView.layer.shadowColor = shadowColor.cgColor
-        containerView.layer.shadowOpacity = isDarkMode ? 0.22 : 0.09
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 3)
-        containerView.layer.shadowRadius = 7
-        containerView.layer.shadowPath = UIBezierPath(
-            roundedRect: containerView.bounds,
-            cornerRadius: containerView.layer.cornerRadius
-        ).cgPath
+        view.layer.cornerRadius = 16
+        view.backgroundColor = tableCardColor
+        view.layer.masksToBounds = false
+
+        if isDarkMode {
+            view.layer.shadowOpacity = 0
+            view.layer.shadowRadius = 0
+            view.layer.shadowOffset = .zero
+            view.layer.shadowPath = nil
+        } else {
+            view.layer.shadowColor = UIColor.black.cgColor
+            view.layer.shadowOpacity = 0.09
+            view.layer.shadowOffset = CGSize(width: 0, height: 3)
+            view.layer.shadowRadius = 7
+            view.layer.shadowPath = UIBezierPath(
+                roundedRect: view.bounds,
+                cornerRadius: view.layer.cornerRadius
+            ).cgPath
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -292,9 +372,21 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let rowColor = isDarkMode
+            ? UIColor.secondarySystemBackground
+            : UIColor.systemBackground
         
         let item = options[indexPath.row]
         cell.textLabel?.text = item.category.rawValue // Using rawValue from FilterCategory
+        cell.textLabel?.textColor = .label
+        cell.backgroundColor = rowColor
+        cell.contentView.backgroundColor = rowColor
+        cell.tintColor = .systemBlue
+
+        let selectedBackgroundView = UIView()
+        selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+        cell.selectedBackgroundView = selectedBackgroundView
         
         // Using icon property from FilterCategory
         if let img = UIImage(named: item.category.icon) {

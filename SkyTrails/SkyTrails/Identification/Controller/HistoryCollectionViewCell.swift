@@ -8,12 +8,59 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var dateLabel: UILabel!
     
     @IBOutlet weak var containeView: UIView!
+
+    private func applySelectionAppearance() {
+        updateCellUI(isSelected: isSelected)
+    }
+
+    private func updateCellUI(isSelected: Bool) {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        layer.cornerRadius = 16
+        layer.masksToBounds = false
+        contentView.layer.cornerRadius = 16
+        contentView.layer.masksToBounds = true
+
+        if isSelected {
+            if isDarkMode {
+                contentView.layer.borderWidth = 0
+                contentView.layer.borderColor = UIColor.clear.cgColor
+                contentView.backgroundColor = .secondarySystemBackground
+            } else {
+                contentView.layer.borderWidth = 3
+                contentView.layer.borderColor = UIColor.systemBlue.cgColor
+                contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            }
+        } else {
+            contentView.layer.borderWidth = isDarkMode ? 0 : 1
+            contentView.layer.borderColor = isDarkMode ? UIColor.clear.cgColor : UIColor.systemGray4.cgColor
+            contentView.backgroundColor = unselectedColor
+        }
+
+        containeView.backgroundColor = contentView.backgroundColor
+
+        if isDarkMode {
+            layer.shadowOpacity = 0
+            layer.shadowRadius = 0
+            layer.shadowOffset = .zero
+            layer.shadowPath = nil
+        } else {
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.08
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
+            layer.shadowPath = UIBezierPath(
+                roundedRect: bounds,
+                cornerRadius: layer.cornerRadius
+            ).cgPath
+        }
+    }
+
     override func awakeFromNib() {
         super.awakeFromNib()
-        contentView.layer.cornerRadius = 16
-        contentView.layer.borderWidth = 1.0
-        contentView.layer.borderColor = UIColor.systemGray4.cgColor
         contentView.clipsToBounds = true
+        applySelectionAppearance()
     }
 
     override func prepareForReuse() {
@@ -22,14 +69,20 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         specieNameLabel.text = nil
         dateLabel.text = nil
        
-        contentView.layer.borderWidth = 1.0
-        contentView.layer.borderColor = UIColor.systemGray4.cgColor
-        contentView.backgroundColor = .systemBackground
+        applySelectionAppearance()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        applySelectionAppearance()
     }
     
     func configureCell(historyItem: IdentificationSession) {
-        contentView.backgroundColor = .systemBackground
-        
+        applySelectionAppearance()
+        specieNameLabel.textAlignment = .natural
+        specieNameLabel.textColor = .label
+        dateLabel.textAlignment = .natural
+        dateLabel.textColor = .secondaryLabel
         
         if let bird = historyItem.result?.bird {
             specieNameLabel.text = bird.commonName
@@ -40,14 +93,14 @@ class HistoryCollectionViewCell: UICollectionViewCell {
             } else {
              
                 historyImageView.image = UIImage(systemName: "bird.fill")
-                historyImageView.tintColor = .systemGray4
+                historyImageView.tintColor = .secondaryLabel
                 historyImageView.contentMode = .scaleAspectFit
             }
         } else {
           
             specieNameLabel.text = "Unknown Species"
             historyImageView.image = UIImage(systemName: "questionmark.circle.fill")
-            historyImageView.tintColor = .systemGray4
+            historyImageView.tintColor = .secondaryLabel
             historyImageView.contentMode = .scaleAspectFit
         }
 
@@ -60,7 +113,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     
     func showEmptyState() {
         historyImageView.image = UIImage(systemName: "clock.arrow.circlepath")
-        historyImageView.tintColor = .systemGray3
+        historyImageView.tintColor = .tertiaryLabel
         historyImageView.contentMode = .scaleAspectFit
 
         specieNameLabel.text = "No history yet"
@@ -75,17 +128,15 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     override var isSelected: Bool {
         didSet {
             UIView.animate(withDuration: 0.2) {
-                if self.isSelected {
-                    self.contentView.layer.borderWidth = 3.0 // Matches ResultCell
-                    self.contentView.layer.borderColor = UIColor.systemBlue.cgColor
-                    self.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-                } else {
-                    self.contentView.layer.borderWidth = 1.0
-                    self.contentView.layer.borderColor = UIColor.systemGray4.cgColor
-                    self.contentView.backgroundColor = .systemBackground
-                }
+                self.applySelectionAppearance()
             }
         }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySelectionAppearance()
     }
     private func formatDate(_ date: Date) -> String {
         let outputFormatter = DateFormatter()

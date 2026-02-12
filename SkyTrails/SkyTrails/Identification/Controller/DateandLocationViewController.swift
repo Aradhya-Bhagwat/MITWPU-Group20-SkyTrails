@@ -22,6 +22,8 @@ class DateandLocationViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupTableView()
+        applyTableAppearance()
+        applyContainerAppearance()
         
         if let mappedLocation = viewModel.locationName(for: viewModel.selectedLocationId) {
             searchQuery = mappedLocation
@@ -32,6 +34,19 @@ class DateandLocationViewController: UIViewController {
         selectedDate = viewModel.selectedDate
         hasDateSelection = !Calendar.current.isDateInToday(selectedDate)
         updateNextButtonState()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        applyContainerAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applyTableAppearance()
+        applyContainerAppearance()
+        dateandlocationTableView.reloadData()
     }
 
     private func updateNextButtonState() {
@@ -50,6 +65,41 @@ class DateandLocationViewController: UIViewController {
         
         dateandlocationTableView.delegate = self
         dateandlocationTableView.dataSource = self
+        dateandlocationTableView.rowHeight = UITableView.automaticDimension
+        dateandlocationTableView.estimatedRowHeight = 56
+        dateandlocationTableView.tableFooterView = UIView(frame: .zero)
+    }
+
+    private func applyTableAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let rowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        dateandlocationTableView.backgroundColor = rowColor
+        dateandlocationTableView.separatorColor = isDarkMode
+            ? UIColor.systemGray3.withAlphaComponent(0.45)
+            : UIColor.systemGray4.withAlphaComponent(0.6)
+    }
+
+    private func applyContainerAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        tableContainerView.layer.cornerRadius = 16
+        tableContainerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        tableContainerView.layer.masksToBounds = false
+
+        if isDarkMode {
+            tableContainerView.layer.shadowOpacity = 0
+            tableContainerView.layer.shadowRadius = 0
+            tableContainerView.layer.shadowOffset = .zero
+            tableContainerView.layer.shadowPath = nil
+        } else {
+            tableContainerView.layer.shadowColor = UIColor.black.cgColor
+            tableContainerView.layer.shadowOpacity = 0.09
+            tableContainerView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            tableContainerView.layer.shadowRadius = 7
+            tableContainerView.layer.shadowPath = UIBezierPath(
+                roundedRect: tableContainerView.bounds,
+                cornerRadius: tableContainerView.layer.cornerRadius
+            ).cgPath
+        }
     }
    
     @IBAction func nextTapped(_ sender: Any) {
@@ -121,10 +171,22 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let rowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
             cell.delegate = self
             cell.datePicker.date = selectedDate // Set the date picker's date
+            let dateRowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+            cell.selectionStyle = .none
+            cell.backgroundColor = dateRowColor
+            cell.contentView.backgroundColor = dateRowColor
+            for subview in cell.contentView.subviews {
+                subview.backgroundColor = dateRowColor
+            }
+            cell.titleLabel.textColor = .label
+            cell.datePicker.tintColor = .systemBlue
             return cell
         }
         
@@ -133,6 +195,9 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
                 let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as! SearchCell
                 cell.searchBar.delegate = self
                 cell.searchBar.text = searchQuery
+                cell.selectionStyle = .none
+                cell.backgroundColor = rowColor
+                cell.contentView.backgroundColor = rowColor
                 return cell
             }
             
@@ -141,6 +206,13 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "suggestionCell")
             cell.textLabel?.text = item.title
             cell.detailTextLabel?.text = item.subtitle
+            cell.textLabel?.textColor = .label
+            cell.detailTextLabel?.textColor = .secondaryLabel
+            cell.backgroundColor = rowColor
+            cell.contentView.backgroundColor = rowColor
+            let selectedBackgroundView = UIView()
+            selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+            cell.selectedBackgroundView = selectedBackgroundView
             return cell
         }
 
@@ -154,6 +226,13 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
                 cell.imageView?.image = UIImage(systemName: "location.fill")
                 cell.accessoryType = .disclosureIndicator
             }
+            cell.textLabel?.textColor = .label
+            cell.imageView?.tintColor = .systemBlue
+            cell.backgroundColor = rowColor
+            cell.contentView.backgroundColor = rowColor
+            let selectedBackgroundView = UIView()
+            selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+            cell.selectedBackgroundView = selectedBackgroundView
             return cell
         }
         

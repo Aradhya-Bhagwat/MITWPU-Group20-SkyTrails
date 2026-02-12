@@ -33,12 +33,10 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="JQK-ZE-Y0b" secondAttribute="trailing" constant="16" id="5UK-iz-6zj"/>
-                            <constraint firstItem="mng-Rx-3O0" firstAttribute="top" secondItem="VPV-wN-VhZ" secondAttribute="top" id="Eog-MY-aDq"/>
+                            <constraint firstItem="mng-Rx-3O0" firstAttribute="centerY" secondItem="VPV-wN-VhZ" secondAttribute="centerY" id="Eog-MY-aDq"/>
                             <constraint firstItem="mng-Rx-3O0" firstAttribute="leading" secondItem="VPV-wN-VhZ" secondAttribute="leading" constant="16" id="Ibo-Bo-PO3"/>
-                            <constraint firstItem="JQK-ZE-Y0b" firstAttribute="leading" secondItem="mng-Rx-3O0" secondAttribute="trailing" constant="116" id="YEI-Zs-nZ8"/>
-                            <constraint firstAttribute="bottom" secondItem="mng-Rx-3O0" secondAttribute="bottom" id="gtB-ee-HPi"/>
-                            <constraint firstAttribute="bottom" secondItem="JQK-ZE-Y0b" secondAttribute="bottom" constant="8" id="uGQ-bu-Kd4"/>
-                            <constraint firstItem="JQK-ZE-Y0b" firstAttribute="top" secondItem="VPV-wN-VhZ" secondAttribute="top" constant="8" id="zhn-3B-l0D"/>
+                            <constraint firstItem="JQK-ZE-Y0b" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="mng-Rx-3O0" secondAttribute="trailing" constant="12" id="YEI-Zs-nZ8"/>
+                            <constraint firstItem="JQK-ZE-Y0b" firstAttribute="centerY" secondItem="VPV-wN-VhZ" secondAttribute="centerY" id="zhn-3B-l0D"/>
                         </constraints>
                     </view>
                 </subviews>

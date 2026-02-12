@@ -14,6 +14,7 @@ protocol ResultCellDelegate: AnyObject {
 
 class ResultCollectionViewCell: UICollectionViewCell {
 
+    @IBOutlet weak var cardContainerView: UIView!
     @IBOutlet weak var resultImageView: UIImageView!
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var percentageLabel: UILabel!
@@ -29,20 +30,23 @@ class ResultCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
+        contentView.layer.cornerRadius = 12
+        contentView.layer.masksToBounds = true
+        cardContainerView.layer.cornerRadius = 12
+        cardContainerView.layer.masksToBounds = true
         setupMenu()
+        updateSelectionAppearance()
     }
 
     // MARK: - Reuse
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        // Reset selection state so recycled cells don't carry stale borders
-        contentView.layer.borderWidth = 1
-        contentView.layer.borderColor = UIColor.systemGray4.cgColor
-        contentView.backgroundColor = .white
         resultImageView.image = nil
         nameLabel.text = nil
         percentageLabel.text = nil
+        isSelectedCell = false
+        updateSelectionAppearance()
     }
 
     // MARK: - Configuration
@@ -51,27 +55,76 @@ class ResultCollectionViewCell: UICollectionViewCell {
         resultImageView.image = image
         nameLabel.text = name
         percentageLabel.text = percentage + "%"
+        nameLabel.textColor = .label
+        percentageLabel.textColor = .secondaryLabel
+        menuButton.tintColor = .secondaryLabel
     }
     
     func configureHistory(image: UIImage?, name: String, date: String) {
         resultImageView.image = image
         nameLabel.text = name
         percentageLabel.text = date
+        nameLabel.textColor = .label
+        percentageLabel.textColor = .secondaryLabel
+        menuButton.tintColor = .secondaryLabel
     }
 
     // MARK: - Selection Appearance
 
     private func updateSelectionAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        layer.cornerRadius = 12
+        layer.masksToBounds = false
+        contentView.layer.cornerRadius = 12
+        contentView.layer.masksToBounds = true
+
         if isSelectedCell {
-            contentView.layer.borderWidth = 3.0
-            contentView.layer.borderColor = UIColor.systemBlue.cgColor
-            contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            if isDarkMode {
+                contentView.layer.borderWidth = 0
+                contentView.layer.borderColor = UIColor.clear.cgColor
+                contentView.backgroundColor = .secondarySystemBackground
+                cardContainerView.backgroundColor = .secondarySystemBackground
+            } else {
+                contentView.layer.borderWidth = 3
+                contentView.layer.borderColor = UIColor.systemBlue.cgColor
+                contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+                cardContainerView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            }
         } else {
-           
-            contentView.layer.borderWidth = 1.0
-            contentView.layer.borderColor = UIColor.systemGray4.cgColor
-            contentView.backgroundColor = .white
+            contentView.layer.borderWidth = isDarkMode ? 0 : 1
+            contentView.layer.borderColor = isDarkMode ? UIColor.clear.cgColor : UIColor.systemGray4.cgColor
+            contentView.backgroundColor = unselectedColor
+            cardContainerView.backgroundColor = unselectedColor
         }
+
+        if isDarkMode {
+            layer.shadowOpacity = 0
+            layer.shadowRadius = 0
+            layer.shadowOffset = .zero
+            layer.shadowPath = nil
+        } else {
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.08
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
+            layer.shadowPath = UIBezierPath(
+                roundedRect: bounds,
+                cornerRadius: layer.cornerRadius
+            ).cgPath
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateSelectionAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        updateSelectionAppearance()
     }
 
     // MARK: - Context Menu
