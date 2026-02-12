@@ -18,6 +18,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTraitChangeHandling()
 
         resultCollectionView.register(
             UINib(nibName: "ResultCollectionViewCell", bundle: nil),
@@ -33,9 +34,13 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         loadData()
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         resultCollectionView.reloadData()
     }
 

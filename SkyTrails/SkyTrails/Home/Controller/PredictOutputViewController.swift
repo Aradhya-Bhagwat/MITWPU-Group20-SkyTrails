@@ -19,6 +19,7 @@ class PredictOutputViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTraitChangeHandling()
         applySemanticAppearance()
         
         setupNavigation()
@@ -27,9 +28,13 @@ class PredictOutputViewController: UIViewController {
         setupPageControl()
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         applySemanticAppearance()
         collectionView?.reloadData()
     }

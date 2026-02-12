@@ -15,6 +15,7 @@ class IdentificationSizeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTraitChangeHandling()
         
         birdSlider.minimumValue = 0
         birdSlider.maximumValue = 4
@@ -27,9 +28,13 @@ class IdentificationSizeViewController: UIViewController {
         updateBirdDisplay(for: initialSize)
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         applySemanticAppearance()
     }
 

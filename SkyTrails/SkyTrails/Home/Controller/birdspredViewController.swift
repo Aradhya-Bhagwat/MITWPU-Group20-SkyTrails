@@ -33,6 +33,7 @@ class birdspredViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTraitChangeHandling()
         setupUI()
         setupMap()
         applySemanticAppearance()
@@ -54,9 +55,13 @@ class birdspredViewController: UIViewController {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         applySemanticAppearance()
     }
     

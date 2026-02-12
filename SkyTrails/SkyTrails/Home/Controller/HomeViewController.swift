@@ -26,6 +26,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var cachedSpotsCardWidth: CGFloat?
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTraitChangeHandling()
         self.title = "Home"
         self.navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
@@ -34,9 +35,13 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         loadHomeData()
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         applySemanticAppearance()
         homeCollectionView.reloadData()
     }

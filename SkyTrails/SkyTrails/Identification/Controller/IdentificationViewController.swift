@@ -44,16 +44,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
     }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
-        applyTableAppearance()
-        applyTableContainerShadow(to: containerView)
-        updateSelectionState()
-        tableView.reloadData()
-        historyCollectionView.reloadData()
-    }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         // Refresh history when view appears (in case new sessions were saved)
@@ -65,6 +55,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupTraitChangeHandling()
         
         // Initialize SwiftData and Manager
         setupModel()
@@ -92,6 +83,20 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         tableView.reloadData()
         historyCollectionView.reloadData()
         updateSelectionState()
+    }
+
+    private func handleUserInterfaceStyleChange() {
+        applyTableAppearance()
+        applyTableContainerShadow(to: containerView)
+        updateSelectionState()
+        tableView.reloadData()
+        historyCollectionView.reloadData()
+    }
+
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
     }
     
     public func resetIdentificationOptions() {

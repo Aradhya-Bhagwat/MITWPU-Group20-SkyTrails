@@ -23,7 +23,7 @@
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
-            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
                 <constraint firstAttribute="trailing" secondItem="X0N-NL-Wxr" secondAttribute="trailing" id="6Uq-4B-Soz"/>
                 <constraint firstItem="X0N-NL-Wxr" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="gqv-wx-mFZ"/>
@@ -36,5 +36,9 @@
             <point key="canvasLocation" x="-118" y="115"/>
         </collectionViewCell>
     </objects>
-    <resources/>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
 </document>

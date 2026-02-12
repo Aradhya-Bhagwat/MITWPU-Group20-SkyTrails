@@ -30,6 +30,7 @@ class ResultCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
+        setupTraitChangeHandling()
         contentView.layer.cornerRadius = 12
         contentView.layer.masksToBounds = true
         cardContainerView.layer.cornerRadius = 12
@@ -74,6 +75,8 @@ class ResultCollectionViewCell: UICollectionViewCell {
     private func updateSelectionAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        let selectedColor: UIColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+        let unselectedBorderColor: UIColor = isDarkMode ? .systemGray3 : .systemGray4
 
         layer.cornerRadius = 12
         layer.masksToBounds = false
@@ -81,20 +84,13 @@ class ResultCollectionViewCell: UICollectionViewCell {
         contentView.layer.masksToBounds = true
 
         if isSelectedCell {
-            if isDarkMode {
-                contentView.layer.borderWidth = 0
-                contentView.layer.borderColor = UIColor.clear.cgColor
-                contentView.backgroundColor = .secondarySystemBackground
-                cardContainerView.backgroundColor = .secondarySystemBackground
-            } else {
-                contentView.layer.borderWidth = 3
-                contentView.layer.borderColor = UIColor.systemBlue.cgColor
-                contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-                cardContainerView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-            }
+            contentView.layer.borderWidth = 3
+            contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            contentView.backgroundColor = selectedColor
+            cardContainerView.backgroundColor = selectedColor
         } else {
-            contentView.layer.borderWidth = isDarkMode ? 0 : 1
-            contentView.layer.borderColor = isDarkMode ? UIColor.clear.cgColor : UIColor.systemGray4.cgColor
+            contentView.layer.borderWidth = 1
+            contentView.layer.borderColor = unselectedBorderColor.cgColor
             contentView.backgroundColor = unselectedColor
             cardContainerView.backgroundColor = unselectedColor
         }
@@ -121,9 +117,13 @@ class ResultCollectionViewCell: UICollectionViewCell {
         updateSelectionAppearance()
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         updateSelectionAppearance()
     }
 
