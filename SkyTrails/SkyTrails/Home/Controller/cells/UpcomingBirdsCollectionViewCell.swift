@@ -17,6 +17,13 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         setupUI()
+        applySemanticAppearance()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     
     private func setupUI() {
@@ -24,13 +31,7 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
-        contentView.layer.shadowColor = UIColor.black.cgColor
-        contentView.layer.shadowOpacity = 0.15
-        contentView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        contentView.layer.shadowRadius = 8
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
-        
-        cardContainerView.backgroundColor = .systemBackground
+        cardContainerView.backgroundColor = .secondarySystemBackground
         cardContainerView.layer.cornerRadius = 16
         cardContainerView.layer.masksToBounds = true
 
@@ -44,14 +45,36 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
         dateLabel.textColor = .secondaryLabel
         
         }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        cardContainerView.backgroundColor = .secondarySystemBackground
+
+        if isDarkMode {
+            contentView.layer.shadowOpacity = 0
+            contentView.layer.shadowRadius = 0
+            contentView.layer.shadowOffset = .zero
+            contentView.layer.shadowPath = nil
+        } else {
+            contentView.layer.shadowColor = UIColor.black.cgColor
+            contentView.layer.shadowOpacity = 0.08
+            contentView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            contentView.layer.shadowRadius = 6
+            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        }
+    }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         
         // Guard against uninitialized outlets during layout passes
         guard cardContainerView != nil, dateLabel != nil, titleLabel != nil else { return }
-        
-        contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        if traitCollection.userInterfaceStyle != .dark {
+            contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath
+        }
     
         let currentWidth = self.bounds.width
         let titleRatio: CGFloat = 17.0 / 200.0

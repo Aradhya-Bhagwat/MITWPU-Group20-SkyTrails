@@ -15,14 +15,24 @@ class PageControlReusableViewCollectionReusableView: UICollectionReusableView {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        pageControl.pageIndicatorTintColor = UIColor.systemGray4
-        pageControl.currentPageIndicatorTintColor = UIColor.black
+        applySemanticAppearance()
         pageControl.hidesForSinglePage = true
         self.backgroundColor = .clear
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     
     func configure(numberOfPages: Int, currentPage: Int) {
             pageControl.numberOfPages = numberOfPages
             pageControl.currentPage = currentPage
         }
+
+    private func applySemanticAppearance() {
+        pageControl.pageIndicatorTintColor = UIColor.systemGray4
+        pageControl.currentPageIndicatorTintColor = UIColor.systemBlue
+    }
 }

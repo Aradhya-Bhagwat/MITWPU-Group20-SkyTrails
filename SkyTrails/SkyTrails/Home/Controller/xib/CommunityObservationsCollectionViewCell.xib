@@ -72,11 +72,6 @@
                             <constraint firstItem="dhX-r8-PAN" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="84" id="vaO-nG-0dY"/>
                             <constraint firstItem="Bx5-fr-Hvh" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="xN5-LZ-jUI"/>
                         </constraints>
-                        <userDefinedRuntimeAttributes>
-                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                <integer key="value" value="16"/>
-                            </userDefinedRuntimeAttribute>
-                        </userDefinedRuntimeAttributes>
                     </view>
                 </subviews>
             </view>

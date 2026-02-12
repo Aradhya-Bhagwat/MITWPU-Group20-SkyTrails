@@ -49,11 +49,6 @@
                             <constraint firstItem="TIj-ML-RLm" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" id="f9J-gw-kH8"/>
                             <constraint firstAttribute="trailing" secondItem="TIj-ML-RLm" secondAttribute="trailing" id="gDG-iH-Zyy"/>
                         </constraints>
-                        <userDefinedRuntimeAttributes>
-                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                <integer key="value" value="16"/>
-                            </userDefinedRuntimeAttribute>
-                        </userDefinedRuntimeAttributes>
                     </view>
                 </subviews>
             </view>
