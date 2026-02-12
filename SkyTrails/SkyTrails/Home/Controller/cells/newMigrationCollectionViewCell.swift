@@ -73,12 +73,13 @@ class newMigrationCollectionViewCell: UICollectionViewCell, MKMapViewDelegate {
 
     private func applySemanticAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        cardContainerView?.backgroundColor = .secondarySystemBackground
-        overlayContentView1?.backgroundColor = .secondarySystemBackground
-        overlayContentView2?.backgroundColor = .secondarySystemBackground
+        cardContainerView?.backgroundColor = cardColor
+        overlayContentView1?.backgroundColor = cardColor
+        overlayContentView2?.backgroundColor = cardColor
 
         if isDarkMode {
             layer.shadowOpacity = 0

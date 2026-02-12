@@ -20,10 +20,16 @@ class AllUpcomingBirdsViewController: UIViewController {
      
         super.viewDidLoad()
         self.title = "All Upcoming Birds"
-        self.view.backgroundColor = .systemBackground
-                
+        applySemanticAppearance()
         setupNavigationBar()
         setupCollectionView()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        collectionView.reloadData()
     }
     
   
@@ -45,6 +51,12 @@ class AllUpcomingBirdsViewController: UIViewController {
         
         collectionView.dataSource = self
         collectionView.delegate = self
+        collectionView.backgroundColor = .clear
+    }
+
+    private func applySemanticAppearance() {
+        view.backgroundColor = .systemBackground
+        collectionView?.backgroundColor = .clear
     }
 
     private func setupNavigationBar() {

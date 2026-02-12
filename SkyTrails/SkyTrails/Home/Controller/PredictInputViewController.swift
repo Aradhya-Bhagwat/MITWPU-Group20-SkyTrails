@@ -20,6 +20,7 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
     @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        applySemanticAppearance()
 		
 		collectionView.register(
 			UINib(nibName: PredictionInputCellCollectionViewCell.identifier, bundle: nil),
@@ -31,6 +32,13 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
         setupPageControl()
         validateInputs()
         applyHeightConstraint()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        collectionView.reloadData()
     }
     
     private func applyHeightConstraint() {
@@ -80,6 +88,16 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             pageControl.currentPage = 0
             pageControl.hidesForSinglePage = true
             pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
+            pageControl.pageIndicatorTintColor = .systemGray4
+            pageControl.currentPageIndicatorTintColor = .systemBlue
+    }
+
+    private func applySemanticAppearance() {
+        view.backgroundColor = .systemBackground
+        collectionView?.backgroundColor = .clear
+        pageControl?.pageIndicatorTintColor = .systemGray4
+        pageControl?.currentPageIndicatorTintColor = .systemBlue
+        doneButton?.tintColor = .systemBlue
     }
     
     func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {

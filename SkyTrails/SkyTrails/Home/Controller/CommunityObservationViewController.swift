@@ -21,25 +21,24 @@ class CommunityObservationViewController: UIViewController {
     
     var observation: CommunityObservation?
     var observationId: String?
+    private var locationBackgroundView: UIView?
+    private var notesBackgroundView: UIView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        view.backgroundColor = .systemGray6
+
         navigationItem.largeTitleDisplayMode = .never
         
         birdImageView.layer.cornerRadius = 24
         birdImageView.clipsToBounds = true
         
-        styleCard(dateCardView)
-        
         locationStackView.isLayoutMarginsRelativeArrangement = true
         locationStackView.layoutMargins = UIEdgeInsets(top: 20, left: 16, bottom: 20, right: 16)
-        locationStackView.addBackground(color: .white, cornerRadius: 20)
-        
+
         notesStackView.isLayoutMarginsRelativeArrangement = true
         notesStackView.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-        notesStackView.addBackground(color: .white, cornerRadius: 20)
+        setupStackBackgrounds()
+        applySemanticAppearance()
         
         if let obs = observation {
             configureView(with: obs)
@@ -47,16 +46,18 @@ class CommunityObservationViewController: UIViewController {
             loadData(for: id)
         }
     }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+    }
     
-    func styleCard(_ view: UIView?) {
-        guard let view = view else { return }
-        view.layer.cornerRadius = 20
-        view.backgroundColor = .white
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.08
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.masksToBounds = false
+    private func setupStackBackgrounds() {
+        locationBackgroundView = locationStackView.ensureBackgroundView()
+        notesBackgroundView = notesStackView.ensureBackgroundView()
+        locationBackgroundView?.layer.cornerRadius = 20
+        notesBackgroundView?.layer.cornerRadius = 20
     }
     
     func loadData(for id: String) {
@@ -83,19 +84,55 @@ class CommunityObservationViewController: UIViewController {
         datePicker.isUserInteractionEnabled = false
         timePicker.isUserInteractionEnabled = false
     }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        view.backgroundColor = .systemBackground
+        dateCardView.backgroundColor = cardColor
+        dateCardView.layer.cornerRadius = 20
+        dateCardView.layer.masksToBounds = false
+
+        locationBackgroundView?.backgroundColor = cardColor
+        locationBackgroundView?.layer.masksToBounds = false
+        notesBackgroundView?.backgroundColor = cardColor
+        notesBackgroundView?.layer.masksToBounds = false
+
+        [userNameLabel, locationNameLabel, notesLabel].forEach { $0?.textColor = .label }
+        datePicker.tintColor = .systemBlue
+        timePicker.tintColor = .systemBlue
+        datePicker.overrideUserInterfaceStyle = .unspecified
+        timePicker.overrideUserInterfaceStyle = .unspecified
+
+        if isDarkMode {
+            [dateCardView, locationBackgroundView, notesBackgroundView].forEach { view in
+                view?.layer.shadowOpacity = 0
+                view?.layer.shadowRadius = 0
+                view?.layer.shadowOffset = .zero
+                view?.layer.shadowPath = nil
+            }
+        } else {
+            [dateCardView, locationBackgroundView, notesBackgroundView].forEach { view in
+                view?.layer.shadowColor = UIColor.black.cgColor
+                view?.layer.shadowOpacity = 0.08
+                view?.layer.shadowOffset = CGSize(width: 0, height: 4)
+                view?.layer.shadowRadius = 12
+                view?.layer.shadowPath = nil
+            }
+        }
+    }
 }
 
 extension UIStackView {
-    func addBackground(color: UIColor, cornerRadius: CGFloat) {
+    func ensureBackgroundView() -> UIView {
+        if let existing = subviews.first(where: { $0.tag == 9991 }) {
+            return existing
+        }
         let subView = UIView(frame: bounds)
-        subView.backgroundColor = color
-        subView.layer.cornerRadius = cornerRadius
+        subView.tag = 9991
         subView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         insertSubview(subView, at: 0)
-        subView.layer.shadowColor = UIColor.black.cgColor
-        subView.layer.shadowOpacity = 0.08
-        subView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        subView.layer.shadowRadius = 12
-        subView.layer.masksToBounds = false
+        return subView
     }
 }

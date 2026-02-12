@@ -18,8 +18,16 @@ class AllSpotsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "All Spots"
+        applySemanticAppearance()
         setupNavigationBar()
         setupCollectionView()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
+        collectionView.reloadData()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -45,6 +53,12 @@ class AllSpotsViewController: UIViewController {
         
         collectionView.dataSource = self
         collectionView.delegate = self
+        collectionView.backgroundColor = .clear
+    }
+
+    private func applySemanticAppearance() {
+        view.backgroundColor = .systemBackground
+        collectionView?.backgroundColor = .clear
     }
     
     private func setupNavigationBar() {

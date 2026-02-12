@@ -31,7 +31,7 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = false
-        cardContainerView.backgroundColor = .secondarySystemBackground
+        cardContainerView.backgroundColor = .systemBackground
         cardContainerView.layer.cornerRadius = 16
         cardContainerView.layer.masksToBounds = true
 
@@ -48,10 +48,11 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
 
     private func applySemanticAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        cardContainerView.backgroundColor = .secondarySystemBackground
+        cardContainerView.backgroundColor = cardColor
 
         if isDarkMode {
             contentView.layer.shadowOpacity = 0

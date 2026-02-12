@@ -22,19 +22,58 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
     override func awakeFromNib() {
         super.awakeFromNib()
         setupUI()
+        applySemanticAppearance()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if traitCollection.userInterfaceStyle != .dark {
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     
     private func setupUI() {
-
-        containerView.backgroundColor = .secondarySystemBackground
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        layer.cornerRadius = 16
+        layer.masksToBounds = false
+        containerView.backgroundColor = .systemBackground
         containerView.layer.cornerRadius = 16
         containerView.clipsToBounds = true
+        titleLabel.textColor = .label
         
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
         tableView.register(BirdResultCell.self, forCellReuseIdentifier: "BirdResultCell")
         tableView.dataSource = self
         tableView.delegate = self
+    }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        containerView.backgroundColor = cardColor
+        titleLabel.textColor = .label
+
+        if isDarkMode {
+            layer.shadowOpacity = 0
+            layer.shadowRadius = 0
+            layer.shadowOffset = .zero
+            layer.shadowPath = nil
+        } else {
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.08
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
+        }
     }
     
     func configure(location: String, data: [FinalPredictionResult]) {
@@ -55,8 +94,13 @@ class PredictionOutputCardCell: UICollectionViewCell, UITableViewDataSource, UIT
         let prediction = predictions[indexPath.row]
         cell.configure(with: prediction.birdName, imageName: prediction.imageName)
         cell.backgroundColor = .clear
-        cell.selectionStyle = .none
+        cell.contentView.backgroundColor = .clear
         cell.selectionStyle = .default
+        let selectedView = UIView()
+        selectedView.backgroundColor = UIColor.systemBlue.withAlphaComponent(
+            traitCollection.userInterfaceStyle == .dark ? 0.24 : 0.10
+        )
+        cell.selectedBackgroundView = selectedView
         
         return cell
     }

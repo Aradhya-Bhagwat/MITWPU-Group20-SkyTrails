@@ -39,6 +39,20 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         setupDatePickers()
         setupSearch()
         setupLocationServices()
+        applySemanticAppearance()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if traitCollection.userInterfaceStyle != .dark {
+            containerView.layer.shadowPath = UIBezierPath(roundedRect: containerView.bounds, cornerRadius: 16).cgPath
+        }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        applySemanticAppearance()
     }
     
     private func setupStyle() {
@@ -47,10 +61,7 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         contentView.backgroundColor = .clear
         containerView.backgroundColor = .systemBackground
         containerView.layer.cornerRadius = 16
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOpacity = 0.1
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
+        containerView.layer.masksToBounds = false
         
         searchBar.searchBarStyle = .minimal
         searchBar.placeholder = "Search Location"
@@ -83,6 +94,43 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         areaStepper.maximumValue = 24
         areaStepper.stepValue = 1
         areaStepper.addTarget(self, action: #selector(stepperChanged), for: .valueChanged)
+    }
+
+    private func applySemanticAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let cardColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        containerView.backgroundColor = cardColor
+
+        [titleLabel, areaLabel].forEach { $0?.textColor = .label }
+        searchBar.barStyle = .default
+        searchBar.searchBarStyle = .minimal
+        searchBar.searchTextField.textColor = .label
+        searchBar.searchTextField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        searchBar.searchTextField.layer.borderWidth = isDarkMode ? 0 : 1
+        searchBar.searchTextField.layer.borderColor = isDarkMode ? UIColor.clear.cgColor : UIColor.systemGray4.cgColor
+        searchBar.searchTextField.layer.cornerRadius = 10
+        searchBar.searchTextField.clipsToBounds = true
+        startDatePicker.tintColor = .systemBlue
+        endDatePicker.tintColor = .systemBlue
+        startDatePicker.overrideUserInterfaceStyle = .unspecified
+        endDatePicker.overrideUserInterfaceStyle = .unspecified
+        areaStepper.tintColor = .systemBlue
+
+        if isDarkMode {
+            containerView.layer.shadowOpacity = 0
+            containerView.layer.shadowRadius = 0
+            containerView.layer.shadowOffset = .zero
+            containerView.layer.shadowPath = nil
+        } else {
+            containerView.layer.shadowColor = UIColor.black.cgColor
+            containerView.layer.shadowOpacity = 0.08
+            containerView.layer.shadowOffset = CGSize(width: 0, height: 3)
+            containerView.layer.shadowRadius = 6
+            containerView.layer.shadowPath = UIBezierPath(roundedRect: containerView.bounds, cornerRadius: 16).cgPath
+        }
     }
 
     @IBAction func didTapDelete(_ sender: Any) {
