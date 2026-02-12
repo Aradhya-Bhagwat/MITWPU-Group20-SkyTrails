@@ -25,6 +25,7 @@ class BirdSelectionViewController: UIViewController {
         
         self.selectedSpecies = Set(existingInputs.map { $0.species.id })
         self.title = "Select Species"
+        setupTraitChangeHandling()
         applySemanticAppearance()
         
         setupNavigationBar()
@@ -42,9 +43,13 @@ class BirdSelectionViewController: UIViewController {
         self.filteredSpecies = allSpecies
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         applySemanticAppearance()
         searchCollection.reloadData()
     }

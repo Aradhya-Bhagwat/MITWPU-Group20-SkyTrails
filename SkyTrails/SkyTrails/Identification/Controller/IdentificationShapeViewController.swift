@@ -99,6 +99,8 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     private func updateCellUI(_ cell: UICollectionViewCell, isSelected: Bool) {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        let selectedColor: UIColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+        let unselectedBorderColor: UIColor = isDarkMode ? .systemGray3 : .systemGray4
 
         cell.layer.cornerRadius = 12
         cell.layer.masksToBounds = false
@@ -106,18 +108,12 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         cell.contentView.layer.masksToBounds = true
         
         if isSelected {
-            if isDarkMode {
-                cell.contentView.layer.borderWidth = 0
-                cell.contentView.layer.borderColor = UIColor.clear.cgColor
-                cell.contentView.backgroundColor = .secondarySystemBackground
-            } else {
-                cell.contentView.layer.borderWidth = 3
-                cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
-                cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-            }
+            cell.contentView.layer.borderWidth = 3
+            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            cell.contentView.backgroundColor = selectedColor
         } else {
-            cell.contentView.layer.borderWidth = isDarkMode ? 0 : 1
-            cell.contentView.layer.borderColor = isDarkMode ? UIColor.clear.cgColor : UIColor.systemGray4.cgColor
+            cell.contentView.layer.borderWidth = 1
+            cell.contentView.layer.borderColor = unselectedBorderColor.cgColor
             cell.contentView.backgroundColor = unselectedColor
         }
 

@@ -6,6 +6,11 @@ class VariationCell: UICollectionViewCell {
 
     private var isSelectedCell = false
 
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        setupTraitChangeHandling()
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         layer.cornerRadius = frame.width / 2
@@ -37,9 +42,13 @@ class VariationCell: UICollectionViewCell {
         layer.borderColor = isSelectedCell ? UIColor.systemBlue.cgColor : borderColor.cgColor
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         updateAppearance()
     }
 }

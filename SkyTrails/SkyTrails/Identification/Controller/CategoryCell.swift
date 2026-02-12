@@ -5,6 +5,11 @@ class CategoryCell: UICollectionViewCell {
 
     private var isSelectedCell = false
 
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        setupTraitChangeHandling()
+    }
+
     override var isSelected: Bool {
         didSet {
             isSelectedCell = isSelected
@@ -46,9 +51,13 @@ class CategoryCell: UICollectionViewCell {
         iconImageView.tintColor = .label
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         updateAppearance()
     }
 }

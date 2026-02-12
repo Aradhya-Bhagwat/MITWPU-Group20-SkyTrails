@@ -59,6 +59,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
+        setupTraitChangeHandling()
         contentView.clipsToBounds = true
         applySelectionAppearance()
     }
@@ -133,11 +134,16 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.handleUserInterfaceStyleChange()
+        }
+    }
+
+    private func handleUserInterfaceStyleChange() {
         applySelectionAppearance()
     }
+
     private func formatDate(_ date: Date) -> String {
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "d MMM yyyy"
