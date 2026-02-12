@@ -82,6 +82,8 @@ class GUIViewController: UIViewController {
         variationsCollectionView.dataSource = self
         categoriesCollectionView.delegate = self
         categoriesCollectionView.dataSource = self
+        variationsCollectionView.backgroundColor = .clear
+        categoriesCollectionView.backgroundColor = .clear
         
         if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             layout.estimatedItemSize = .zero
@@ -193,7 +195,8 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         if collectionView == categoriesCollectionView {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
             let mark = categories[indexPath.row]
-            cell.configure(name: mark.area, iconName: mark.iconName, isSelected: indexPath.row == currentCategoryIndex)
+            let isSelected = indexPath.row == currentCategoryIndex
+            cell.configure(name: mark.area, iconName: mark.iconName, isSelected: isSelected)
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell

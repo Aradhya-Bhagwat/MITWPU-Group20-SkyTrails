@@ -97,17 +97,44 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
     
     private func updateCellUI(_ cell: UICollectionViewCell, isSelected: Bool) {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+
+        cell.layer.cornerRadius = 12
+        cell.layer.masksToBounds = false
         cell.contentView.layer.cornerRadius = 12
         cell.contentView.layer.masksToBounds = true
         
         if isSelected {
-            cell.contentView.layer.borderWidth = 3
-            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
-            cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            if isDarkMode {
+                cell.contentView.layer.borderWidth = 0
+                cell.contentView.layer.borderColor = UIColor.clear.cgColor
+                cell.contentView.backgroundColor = .secondarySystemBackground
+            } else {
+                cell.contentView.layer.borderWidth = 3
+                cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+                cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            }
         } else {
-            cell.contentView.layer.borderWidth = 1
-            cell.contentView.layer.borderColor = UIColor.systemGray4.cgColor
-            cell.contentView.backgroundColor = .systemBackground
+            cell.contentView.layer.borderWidth = isDarkMode ? 0 : 1
+            cell.contentView.layer.borderColor = isDarkMode ? UIColor.clear.cgColor : UIColor.systemGray4.cgColor
+            cell.contentView.backgroundColor = unselectedColor
+        }
+
+        if isDarkMode {
+            cell.layer.shadowOpacity = 0
+            cell.layer.shadowRadius = 0
+            cell.layer.shadowOffset = .zero
+            cell.layer.shadowPath = nil
+        } else {
+            cell.layer.shadowColor = UIColor.black.cgColor
+            cell.layer.shadowOpacity = 0.08
+            cell.layer.shadowOffset = CGSize(width: 0, height: 3)
+            cell.layer.shadowRadius = 6
+            cell.layer.shadowPath = UIBezierPath(
+                roundedRect: cell.bounds,
+                cornerRadius: cell.layer.cornerRadius
+            ).cgPath
         }
     }
     

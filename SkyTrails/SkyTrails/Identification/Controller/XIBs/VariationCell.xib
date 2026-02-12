@@ -30,23 +30,11 @@
                 <constraint firstAttribute="bottom" secondItem="X0N-NL-Wxr" secondAttribute="bottom" id="qNX-B1-9r1"/>
                 <constraint firstItem="X0N-NL-Wxr" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="rC8-du-lFy"/>
             </constraints>
-            <userDefinedRuntimeAttributes>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.borderWidth">
-                    <integer key="value" value="1"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="color" keyPath="layer.borderColor">
-                    <color key="value" systemColor="systemGray5Color"/>
-                </userDefinedRuntimeAttribute>
-            </userDefinedRuntimeAttributes>
             <connections>
                 <outlet property="variationImageView" destination="X0N-NL-Wxr" id="nZ9-hu-MTr"/>
             </connections>
             <point key="canvasLocation" x="-118" y="115"/>
         </collectionViewCell>
     </objects>
-    <resources>
-        <systemColor name="systemGray5Color">
-            <color red="0.8980392157" green="0.8980392157" blue="0.91764705879999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-    </resources>
+    <resources/>
 </document>

@@ -65,12 +65,6 @@
                             <constraint firstAttribute="trailing" secondItem="WTt-mn-LXx" secondAttribute="trailing" constant="8" id="md9-Jh-osD"/>
                             <constraint firstItem="cn0-fm-kv9" firstAttribute="leading" secondItem="v6R-9I-fj8" secondAttribute="trailing" constant="21.666666666666671" id="oXl-Ds-LkD"/>
                         </constraints>
-                        <userDefinedRuntimeAttributes>
-                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                <integer key="value" value="16"/>
-                            </userDefinedRuntimeAttribute>
-                            <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
-                        </userDefinedRuntimeAttributes>
                     </view>
                 </subviews>
             </view>
@@ -83,29 +77,8 @@
                 <constraint firstItem="zUh-5Y-gxn" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="sNf-yC-fME"/>
             </constraints>
             <size key="customSize" width="170" height="240"/>
-            <userDefinedRuntimeAttributes>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                    <integer key="value" value="16"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="NO"/>
-                <userDefinedRuntimeAttribute type="color" keyPath="layer.shadowColor">
-                    <color key="value" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.shadowOpacity">
-                    <real key="value" value="0.080000000000000002"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.shadowRadius">
-                    <integer key="value" value="8"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.shadowOffset.width">
-                    <integer key="value" value="0"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.shadowOffset.height">
-                    <integer key="value" value="4"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
-            </userDefinedRuntimeAttributes>
             <connections>
+                <outlet property="cardContainerView" destination="zUh-5Y-gxn" id="x1j-9v-K4m"/>
                 <outlet property="menuButton" destination="cn0-fm-kv9" id="y16-hJ-2Ib"/>
                 <outlet property="nameLabel" destination="eDd-Dw-XHU" id="8Db-py-iJT"/>
                 <outlet property="percentageLabel" destination="v6R-9I-fj8" id="Yv1-yX-7I8"/>

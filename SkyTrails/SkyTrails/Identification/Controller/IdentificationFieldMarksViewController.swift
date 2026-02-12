@@ -65,6 +65,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         Categories.delegate = self
         Categories.dataSource = self
         Categories.allowsMultipleSelection = true
+        Categories.backgroundColor = .clear
         
         if let layout = Categories.collectionViewLayout as? UICollectionViewFlowLayout {
             layout.scrollDirection = .horizontal

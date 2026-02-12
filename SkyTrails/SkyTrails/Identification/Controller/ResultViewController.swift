@@ -26,12 +26,19 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         
         resultCollectionView.delegate = self
         resultCollectionView.dataSource = self
+        resultCollectionView.backgroundColor = .clear
         setupCollectionViewLayout()
         updateSaveButtonState()
 
         loadData()
     }
-    
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        resultCollectionView.reloadData()
+    }
+
     private func loadData() {
         let preselectedBirdId: UUID?
         if let history = historyItem {
@@ -207,11 +214,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         // ensures correct state on every dequeue — no stale borders on recycled cells.
         cell.isSelectedCell = (selectedIndexPath == indexPath)
 
-        // Apply corner radius here (contentView, not cell layer, to avoid
-        // clipping the shadow applied on the cell layer in the XIB).
-        cell.contentView.layer.cornerRadius = 12
-        cell.contentView.layer.masksToBounds = true
-
         cell.delegate = self
         cell.indexPath = indexPath
         
@@ -229,7 +231,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         if let prev = previous, prev != indexPath { toReload.append(prev) }
         collectionView.reloadItems(at: toReload)
     }
-    
+
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { [weak self] _ in

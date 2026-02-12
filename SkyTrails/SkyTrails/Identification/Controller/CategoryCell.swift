@@ -1,40 +1,54 @@
 import UIKit
 
 class CategoryCell: UICollectionViewCell {
-	@IBOutlet weak var iconImageView: UIImageView!
-		// @IBOutlet weak var nameLabel: UILabel! // Optional if you want text below
-	
+    @IBOutlet weak var iconImageView: UIImageView!
+
+    private var isSelectedCell = false
+
+    override var isSelected: Bool {
+        didSet {
+            isSelectedCell = isSelected
+            updateAppearance()
+        }
+    }
+
     override func layoutSubviews() {
-         super.layoutSubviews()
-         // Ensure correct radius after Auto Layout
-         contentView.layer.cornerRadius = contentView.bounds.width / 2
-     }
+        super.layoutSubviews()
+        layer.cornerRadius = frame.width / 2
+        updateAppearance()
+    }
 
-     override var isSelected: Bool {
-         didSet {
-             updateAppearance()
-         }
-     }
+    func configure(name: String, iconName: String, isSelected: Bool) {
+        iconImageView.image = UIImage(named: iconName) ?? UIImage(named: "id_icn_field_marks")
+        iconImageView.tintColor = .label
+        self.isSelected = isSelected
+        updateAppearance()
+    }
 
-     func configure(name: String, iconName: String, isSelected: Bool) {
-         iconImageView.image = UIImage(named: iconName) ?? UIImage(named: "id_icn_field_marks")
-         self.isSelected = isSelected
-         updateAppearance()
-     }
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        isSelectedCell = false
+        isSelected = false
+        updateAppearance()
+    }
 
-     private func updateAppearance() {
-         if isSelected {
-             contentView.layer.borderWidth = 3
-             contentView.layer.borderColor = UIColor.systemBlue.cgColor
-             contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.12)
-         } else {
-             contentView.layer.borderWidth = 1
-             contentView.layer.borderColor = UIColor.systemGray4.cgColor
-             contentView.backgroundColor = .white
-         }
-     }
-	
-	
-	
-	
+    private func updateAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        let selectedColor: UIColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+        let borderColor: UIColor = isDarkMode ? .systemGray3 : .systemGray4
+        let borderWidth: CGFloat = isDarkMode ? 1 : 1
+
+        layer.masksToBounds = true
+        backgroundColor = isSelectedCell ? selectedColor : unselectedColor
+        layer.borderWidth = isSelectedCell ? 3 : borderWidth
+        layer.borderColor = isSelectedCell ? UIColor.systemBlue.cgColor : borderColor.cgColor
+        iconImageView.tintColor = .label
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle else { return }
+        updateAppearance()
+    }
 }

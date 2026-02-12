@@ -50,12 +50,6 @@
                             <constraint firstItem="1jK-Ka-RvL" firstAttribute="top" secondItem="7a1-04-YJM" secondAttribute="bottom" constant="8" id="xMY-Q3-ORq"/>
                             <constraint firstItem="7a1-04-YJM" firstAttribute="top" secondItem="LaN-X3-c9G" secondAttribute="top" constant="8" id="ybC-au-Uqs"/>
                         </constraints>
-                        <userDefinedRuntimeAttributes>
-                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                <integer key="value" value="16"/>
-                            </userDefinedRuntimeAttribute>
-                            <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
-                        </userDefinedRuntimeAttributes>
                     </view>
                 </subviews>
             </view>
@@ -68,12 +62,6 @@
                 <constraint firstItem="LaN-X3-c9G" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="8" id="ilW-oF-Dlr"/>
             </constraints>
             <size key="customSize" width="184" height="198"/>
-            <userDefinedRuntimeAttributes>
-                <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                    <integer key="value" value="16"/>
-                </userDefinedRuntimeAttribute>
-                <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
-            </userDefinedRuntimeAttributes>
             <connections>
                 <outlet property="containeView" destination="LaN-X3-c9G" id="oFt-JP-YYY"/>
                 <outlet property="dateLabel" destination="V79-tv-Ttn" id="5dF-T4-SZ2"/>
