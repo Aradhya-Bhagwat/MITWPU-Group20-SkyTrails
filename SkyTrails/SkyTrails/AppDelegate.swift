@@ -19,16 +19,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Uncomment the line below, run the app once, then re-comment it.
         // WatchlistManager.shared.addRoseRingedParakeetToMyWatchlist()
         
-        // Seed Home Data (Hotspots, Migrations, Observations)
-        Task {
-            print("🌍 [AppDelegate] Starting Home Data Seeding...")
-            do {
-                try await HomeDataSeeder.shared.seed(modelContext: WatchlistManager.shared.context)
-            } catch {
-                print("❌ [AppDelegate] Home Data Seeding Failed: \(error)")
-            }
-        }
-        
+		// Seed data in order: Birds -> Watchlists -> Home
+		Task { @MainActor in
+			print("🌱 [AppDelegate] Starting sequential database seeding...")
+			let context = WatchlistManager.shared.context
+			
+			do {
+				print("📚 [AppDelegate] Step 1/3: Seeding Bird Database...")
+				try BirdDatabaseSeeder.shared.seed(modelContext: context)
+				print("✅ [AppDelegate] Bird Database seeded successfully")
+			} catch {
+				print("❌ [AppDelegate] CRITICAL: Bird seeding failed: \(error)")
+				return
+			}
+			
+			print("🦆 [AppDelegate] Step 2/3: Seeding Watchlists...")
+			WatchlistManager.shared.seedIfNeeded()
+			
+			print("🏠 [AppDelegate] Step 3/3: Seeding Home Data...")
+			do {
+				try await HomeDataSeeder.shared.seed(modelContext: context)
+				print("✅ [AppDelegate] Home Data seeded successfully")
+			} catch {
+				print("❌ [AppDelegate] Home Data seeding failed: \(error)")
+			}
+			
+			print("✅ [AppDelegate] All seeding complete")
+		}
+		
 		return true
 	}
 
@@ -48,4 +66,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
-

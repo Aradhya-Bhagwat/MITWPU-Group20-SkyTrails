@@ -1,0 +1,124 @@
+🚀 [WatchlistManager] Initializing...
+✅ [WatchlistManager] SwiftData container initialized
+ℹ️ [WatchlistManager] Database already seeded. Skipping wipe.
+🔍 [HomeManager] getDynamicMapCards called - Current week: 7
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+🔍 [HomeManager] Found 0 active migrations
+⚠️ [HomeManager] No active migrations found for current week 7
+⚠️ [HomeManager] This will cause section 0 to be empty!
+✅ [HomeManager] Created 0 dynamic map cards
+[issue1] HomeVC: Section 0 items count: 0
+🔍 [HomeManager] getDynamicMapCards called - Current week: 7
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+🔍 [HomeManager] Found 0 active migrations
+⚠️ [HomeManager] No active migrations found for current week 7
+⚠️ [HomeManager] This will cause section 0 to be empty!
+✅ [HomeManager] Created 0 dynamic map cards
+🌍 [AppDelegate] Starting Home Data Seeding...
+🌱 [HomeDataSeeder] Starting seed process...
+❌ [HomeDataSeeder] Failed to decode JSON: dataCorrupted(Swift.DecodingError.Context(codingPath: [CodingKeys(stringValue: "migration_sessions", intValue: nil), _CodingKey(stringValue: "Index 0", intValue: 0), CodingKeys(stringValue: "id", intValue: nil)], debugDescription: "Attempted to decode UUID from invalid UUID string.", underlyingError: nil))
+❌ [AppDelegate] Home Data Seeding Failed: decodingFailed(Swift.DecodingError.dataCorrupted(Swift.DecodingError.Context(codingPath: [CodingKeys(stringValue: "migration_sessions", intValue: nil), _CodingKey(stringValue: "Index 0", intValue: 0), CodingKeys(stringValue: "id", intValue: nil)], debugDescription: "Attempted to decode UUID from invalid UUID string.", underlyingError: nil)))
+🌱 [HomeDataSeeder] Starting seed process...
+❌ [HomeDataSeeder] Failed to decode JSON: dataCorrupted(Swift.DecodingError.Context(codingPath: [CodingKeys(stringValue: "migration_sessions", intValue: nil), _CodingKey(stringValue: "Index 0", intValue: 0), CodingKeys(stringValue: "id", intValue: nil)], debugDescription: "Attempted to decode UUID from invalid UUID string.", underlyingError: nil))
+⚠️ [SceneDelegate] HomeDataSeeder failed: decodingFailed(Swift.DecodingError.dataCorrupted(Swift.DecodingError.Context(codingPath: [CodingKeys(stringValue: "migration_sessions", intValue: nil), _CodingKey(stringValue: "Index 0", intValue: 0), CodingKeys(stringValue: "id", intValue: nil)], debugDescription: "Attempted to decode UUID from invalid UUID string.", underlyingError: nil)))
+🔄 [HomeViewController] loadHomeData started
+📍 [HomeViewController] User location: Optional(__C.CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567))
+🔍 [WatchlistManager] fetchEntries() called
+🔍 [WatchlistManager] - Watchlist ID: 00000000-0000-0000-0000-000000000000
+🔍 [WatchlistManager] - Filter by status: all
+📋 [WatchlistManager] Fetching from My Watchlist (virtual aggregation)
+📊 [WatchlistManager] Total entries across all watchlists: 69
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+[homeseeder] 🔍 [CommunityObservationManager] Fetching observations...
+[homeseeder] 📊 [CommunityObservationManager] Fetched 0 potential observations
+[homeseeder] 📍 [CommunityObservationManager] 0 observations within 50.0km of CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
+⚠️ [HomeViewController] Failed to load news: dataCorrupted(Swift.DecodingError.Context(codingPath: [CodingKeys(stringValue: "migration_sessions", intValue: nil), _CodingKey(stringValue: "Index 0", intValue: 0), CodingKeys(stringValue: "id", intValue: nil)], debugDescription: "Attempted to decode UUID from invalid UUID string.", underlyingError: nil))
+🔍 [HomeManager] getDynamicMapCards called - Current week: 7
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+🔍 [HomeManager] Found 0 active migrations
+⚠️ [HomeManager] No active migrations found for current week 7
+⚠️ [HomeManager] This will cause section 0 to be empty!
+✅ [HomeManager] Created 0 dynamic map cards
+
+============================================================
+📊 [HomeViewController] HOME SCREEN DATA SUMMARY
+============================================================
+   📅 Current week: 7
+   🗓️  Current date: 11 Feb 2026
+
+   Section 0 - Migration Cards: 0
+      ⚠️  WARNING: No migration cards - section 0 will be empty!
+
+   Section 1 - Upcoming Birds: 0
+   Section 2 - Spots: 0
+   Section 3 - Observations: 0
+   Section 4 - News: 0
+============================================================
+
+🔄 [HomeViewController] Reloading collection view...
+✅ [HomeViewController] Collection view reloaded
+🔍 [WatchlistManager] fetchEntries() called
+🔍 [WatchlistManager] - Watchlist ID: 00000000-0000-0000-0000-000000000000
+🔍 [WatchlistManager] - Filter by status: all
+📋 [WatchlistManager] Fetching from My Watchlist (virtual aggregation)
+📊 [WatchlistManager] Total entries across all watchlists: 69
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+[homeseeder] 🔍 [CommunityObservationManager] Fetching observations...
+[homeseeder] 📊 [CommunityObservationManager] Fetched 0 potential observations
+[homeseeder] 📍 [CommunityObservationManager] 0 observations within 50.0km of CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
+⚠️ [HomeViewController] Failed to load news: dataCorrupted(Swift.DecodingError.Context(codingPath: [CodingKeys(stringValue: "migration_sessions", intValue: nil), _CodingKey(stringValue: "Index 0", intValue: 0), CodingKeys(stringValue: "id", intValue: nil)], debugDescription: "Attempted to decode UUID from invalid UUID string.", underlyingError: nil))
+🔍 [HomeManager] getDynamicMapCards called - Current week: 7
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+🔍 [HomeManager] Found 0 active migrations
+⚠️ [HomeManager] No active migrations found for current week 7
+⚠️ [HomeManager] This will cause section 0 to be empty!
+✅ [HomeManager] Created 0 dynamic map cards
+[issue1] HomeVC: Section 0 items count: 0
+🔍 [HomeManager] getDynamicMapCards called - Current week: 7
+
+🔍 [MigrationManager] getActiveMigrations called
+   📅 Searching for week: 7
+   🔎 Predicate: startWeek <= 7 AND endWeek >= 7
+   📊 Total migration sessions in database: 0
+   ⚠️  [MigrationManager] No active sessions found for week 7
+   💡 Tip: Check if migration data was seeded correctly
+🔍 [HomeManager] Found 0 active migrations
+⚠️ [HomeManager] No active migrations found for current week 7
+⚠️ [HomeManager] This will cause section 0 to be empty!
+✅ [HomeManager] Created 0 dynamic map cards

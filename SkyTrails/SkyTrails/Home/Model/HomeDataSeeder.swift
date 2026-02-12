@@ -62,6 +62,7 @@ class HomeDataSeeder {
     // MARK: - Hotspots
     
     private func seedHotspots(_ data: [HotspotData], context: ModelContext) async throws {
+        print("[upcomingbirdsdebug] Seeder: Processing \(data.count) hotspots for Recommended Birds data")
         for item in data {
             let id = item.id
             let descriptor = FetchDescriptor<Hotspot>(predicate: #Predicate { $0.id == id })
@@ -106,8 +107,15 @@ class HomeDataSeeder {
             if existing.bird == nil {
                 existing.bird = fetchBird(id: data.birdId, context: context)
             }
+            if existing.bird == nil {
+                print("[upcomingbirdsdebug] ⚠️ Seeder: Bird \(data.birdId) missing. This affects Recommended Birds at \(hotspot.name).")
+            }
         } else {
             let bird = fetchBird(id: data.birdId, context: context)
+            if bird == nil {
+                print("[upcomingbirdsdebug] ⚠️ Seeder: Bird \(data.birdId) missing. This affects Recommended Birds at \(hotspot.name).")
+                return
+            }
             let presence = HotspotSpeciesPresence(
                 id: data.id,
                 hotspot: hotspot,
@@ -122,6 +130,7 @@ class HomeDataSeeder {
     // MARK: - Migrations
     
     private func seedMigrations(_ data: [MigrationSessionData], context: ModelContext) async throws {
+        print("[upcomingbirdsdebug] Seeder: Processing \(data.count) migrations for Upcoming/Prediction data")
         for item in data {
             let id = item.id
             let descriptor = FetchDescriptor<MigrationSession>(predicate: #Predicate { $0.id == id })

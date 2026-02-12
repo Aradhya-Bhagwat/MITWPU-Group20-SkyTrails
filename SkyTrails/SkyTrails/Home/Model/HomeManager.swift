@@ -46,26 +46,32 @@ class HomeManager {
         
         // Try user's current location first
         if let location = userLocation {
-            return watchlistManager.getUpcomingBirds(
+            print("[upcomingbirdsdebug] HomeManager.getUpcomingBirds: Fetching for user location: \(location)")
+            let results = watchlistManager.getUpcomingBirds(
                 userLocation: location,
                 currentWeek: currentWeek,
                 lookAheadWeeks: lookAheadWeeks,
                 radiusInKm: radiusInKm
             )
+            print("[upcomingbirdsdebug] HomeManager.getUpcomingBirds: Found \(results.count) birds in watchlist")
+            return results
         }
         
         // Fallback to home location
         if let homeLocation = LocationPreferences.shared.homeLocation {
-            return watchlistManager.getUpcomingBirds(
+            print("[upcomingbirdsdebug] HomeManager.getUpcomingBirds: Fetching for home location: \(homeLocation)")
+            let results = watchlistManager.getUpcomingBirds(
                 userLocation: homeLocation,
                 currentWeek: currentWeek,
                 lookAheadWeeks: lookAheadWeeks,
                 radiusInKm: radiusInKm
             )
+            print("[upcomingbirdsdebug] HomeManager.getUpcomingBirds: Found \(results.count) birds in watchlist (using home location)")
+            return results
         }
         
         // No location available - return empty
-        print("⚠️ [HomeManager] No location available for upcoming birds")
+        print("[upcomingbirdsdebug] ⚠️ HomeManager.getUpcomingBirds: No location available")
         return []
     }
     
@@ -75,9 +81,10 @@ class HomeManager {
         currentWeek: Int? = nil,
         radiusInKm: Double = 50.0,
         limit: Int = 10
-    ) -> [Bird] {
+    ) -> [RecommendedBirdResult] {
         
         let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
+        print("[upcomingbirdsdebug] HomeManager.getRecommendedBirds: Fetching for week \(week) at \(userLocation)")
         
         // Get birds present at location
         let birdsAtLocation = hotspotManager.getBirdsPresent(
@@ -86,15 +93,61 @@ class HomeManager {
             radiusInKm: radiusInKm
         )
         
-        // Filter out birds already on watchlist
-        let watchlistBirdIds = Set(
-            watchlistManager.fetchEntries(watchlistID: WatchlistConstants.myWatchlistID)
-                .compactMap { $0.bird?.id }
+        // Find date range for each bird
+        let results = birdsAtLocation.prefix(limit).map { bird in
+            let dateRange = getMigrationDateRange(for: bird, userLocation: userLocation, radiusInKm: radiusInKm)
+            return RecommendedBirdResult(bird: bird, dateRange: dateRange)
+        }
+        
+        print("[upcomingbirdsdebug] HomeManager.getRecommendedBirds: Returning \(results.count) recommended birds (unfiltered)")
+        
+        return results
+    }
+    
+    /// Get birds from user's watchlist that are currently present at their location
+    func getMyWatchlistBirds(
+        userLocation: CLLocationCoordinate2D,
+        currentWeek: Int? = nil,
+        radiusInKm: Double = 50.0
+    ) -> [UpcomingBirdResult] {
+        
+        let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
+        print("[upcomingbirdsdebug] HomeManager.getMyWatchlistBirds: Fetching for week \(week) at \(userLocation)")
+        
+        // Get birds present at location
+        let birdsAtLocation = hotspotManager.getBirdsPresent(
+            at: userLocation,
+            duringWeek: week,
+            radiusInKm: radiusInKm
         )
+        print("[upcomingbirdsdebug] HomeManager.getMyWatchlistBirds: Found \(birdsAtLocation.count) birds at location")
         
-        let recommended = birdsAtLocation.filter { !watchlistBirdIds.contains($0.id) }
+        // Get watchlist entries (to_observe status only)
+        let watchlistEntries = watchlistManager.fetchEntries(
+            watchlistID: WatchlistConstants.myWatchlistID,
+            status: .to_observe
+        )
+        print("[upcomingbirdsdebug] HomeManager.getMyWatchlistBirds: Found \(watchlistEntries.count) to_observe entries in watchlist")
         
-        return Array(recommended.prefix(limit))
+        // Find intersection: birds in watchlist AND at location
+        var results: [UpcomingBirdResult] = []
+        for entry in watchlistEntries {
+            guard let bird = entry.bird else { continue }
+            
+            if birdsAtLocation.contains(where: { $0.id == bird.id }) {
+                let dateRange = getMigrationDateRange(for: bird, userLocation: userLocation, radiusInKm: radiusInKm)
+                results.append(UpcomingBirdResult(
+                    bird: bird,
+                    entry: entry,
+                    expectedWeek: week,
+                    daysUntil: 0, // Present now
+                    migrationDateRange: dateRange
+                ))
+            }
+        }
+        
+        print("[upcomingbirdsdebug] HomeManager.getMyWatchlistBirds: Returning \(results.count) watchlist birds present at location")
+        return results
     }
     
     // MARK: - Popular Spots (Replaces watchlistSpots/recommendedSpots)
@@ -273,6 +326,7 @@ class HomeManager {
         
         return HomeScreenData(
             upcomingBirds: getUpcomingBirds(userLocation: location),
+            myWatchlistBirds: location.map { getMyWatchlistBirds(userLocation: $0) } ?? [],
             recommendedBirds: location.map { getRecommendedBirds(userLocation: $0) } ?? [],
             watchlistSpots: getWatchlistSpots(),
             recommendedSpots: location.map { getRecommendedSpots(near: $0) } ?? [],
@@ -454,6 +508,80 @@ class HomeManager {
     func getRelevantSightings(for input: BirdDateInput) -> [RelevantSighting] {
         return []
     }
+
+    // MARK: - Migration Helpers
+
+    /// Gets migration date range for a bird at a specific location
+    func getMigrationDateRange(for bird: Bird, userLocation: CLLocationCoordinate2D, radiusInKm: Double) -> String {
+        // 1. Try to find an active migration session for this bird
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        let sessions = migrationManager.getSessions(for: bird)
+        
+        // Find session that passes through user location
+        for session in sessions {
+            let paths = session.trajectoryPaths ?? []
+            let passesThrough = paths.contains { path in
+                let pathLoc = CLLocation(latitude: path.lat, longitude: path.lon)
+                let userLoc = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+                return pathLoc.distance(from: userLoc) <= (radiusInKm * 1000)
+            }
+            
+            if passesThrough {
+                return formatWeekRange(startWeek: session.startWeek, endWeek: session.endWeek)
+            }
+        }
+        
+        // 2. Fallback: Try to get from hotspot validWeeks
+        let descriptor = FetchDescriptor<Hotspot>()
+        if let hotspots = try? modelContext.fetch(descriptor) {
+            let userLoc = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+            let nearbyHotspots = hotspots.filter { hotspot in
+                let hotspotLoc = CLLocation(latitude: hotspot.lat, longitude: hotspot.lon)
+                return hotspotLoc.distance(from: userLoc) <= (radiusInKm * 1000)
+            }
+            
+            for hotspot in nearbyHotspots {
+                if let speciesList = hotspot.speciesList {
+                    if let presence = speciesList.first(where: { $0.bird?.id == bird.id }) {
+                        if let weeks = presence.validWeeks {
+                            let sortedWeeks = weeks.sorted()
+                            if let first = sortedWeeks.first, let last = sortedWeeks.last {
+                                return formatWeekRange(startWeek: first, endWeek: last)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return "Season pending"
+    }
+
+    /// Formats a week range into "d MMM - d MMM" string
+    func formatWeekRange(startWeek: Int, endWeek: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        
+        var startComponents = DateComponents()
+        startComponents.weekOfYear = startWeek
+        startComponents.yearForWeekOfYear = currentYear
+        startComponents.weekday = 2 // Monday
+        
+        var endComponents = DateComponents()
+        endComponents.weekOfYear = endWeek
+        endComponents.yearForWeekOfYear = currentYear
+        endComponents.weekday = 2 // Monday
+        
+        if let startDate = calendar.date(from: startComponents),
+           let endDate = calendar.date(from: endComponents) {
+            return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+        }
+        
+        return "Week \(startWeek) - \(endWeek)"
+    }
 }
 
 enum DynamicMapCard {
@@ -494,12 +622,19 @@ struct RelevantSighting {
 
 struct HomeScreenData {
     let upcomingBirds: [UpcomingBirdResult]
-    let recommendedBirds: [Bird]
+    let myWatchlistBirds: [UpcomingBirdResult]
+    let recommendedBirds: [RecommendedBirdResult]
     let watchlistSpots: [PopularSpotResult]
     let recommendedSpots: [PopularSpotResult]
     let activeMigrations: [MigrationCardResult]
     let recentObservations: [CommunityObservation]
     let birdCategories: [BirdCategory]
+}
+
+struct RecommendedBirdResult: Identifiable {
+    let id = UUID()
+    let bird: Bird
+    let dateRange: String
 }
 
 struct PopularSpotResult: Identifiable {

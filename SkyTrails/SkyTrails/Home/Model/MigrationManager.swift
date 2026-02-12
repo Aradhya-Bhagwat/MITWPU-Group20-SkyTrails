@@ -107,4 +107,15 @@ final class MigrationManager {
         
         return getTrajectory(for: session, duringWeek: week)
     }
+
+    /// Get all migration sessions for a specific bird
+    func getSessions(for bird: Bird) -> [MigrationSession] {
+        let birdId = bird.id
+        let descriptor = FetchDescriptor<MigrationSession>(
+            predicate: #Predicate { session in
+                session.bird?.id == birdId
+            }
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
 }

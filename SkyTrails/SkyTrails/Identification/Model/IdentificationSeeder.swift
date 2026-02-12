@@ -1,7 +1,8 @@
 import Foundation
 import SwiftData
 
-struct IdentificationSeeder {
+@MainActor
+final class IdentificationSeeder {
 
     // MARK: - DTOs (JSON → Swift)
 
@@ -58,8 +59,7 @@ struct IdentificationSeeder {
 
     // MARK: - Seeder Entry
 
-    @MainActor
-    static func seed(context: ModelContext) throws {
+    func seed(context: ModelContext) throws {
 
         let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
         let fieldMarkCount = try context.fetchCount(FetchDescriptor<BirdFieldMark>())
@@ -71,6 +71,8 @@ struct IdentificationSeeder {
         )
         let needsSeeding = shapeCount == 0 || fieldMarkCount == 0 || variantCount == 0 || identificationBirdCount == 0
         guard needsSeeding else { return }
+
+        try BirdDatabaseSeeder.shared.seed(modelContext: context)
 
         guard let url = Bundle.main.url(
             forResource: "bird_database",
@@ -221,4 +223,8 @@ struct IdentificationSeeder {
     enum SeederError: Error {
         case fileNotFound
     }
+}
+
+extension IdentificationSeeder {
+    static let shared = IdentificationSeeder()
 }
