@@ -204,18 +204,19 @@ extension WatchlistHomeViewController {
 		Task {
 			do {
 				let id = try await repository.ensureMyWatchlistExists()
-				navigateToObserved(watchlistId: id)
+				navigateToObserved(watchlistId: id, fromQuickAdd: true)
 			} catch {
 				print("Failed to ensure My Watchlist exists: \(error)")
 			}
 		}
 	}
 	
-	private func navigateToObserved(watchlistId: UUID) {
+	private func navigateToObserved(watchlistId: UUID, fromQuickAdd: Bool = false) {
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
 		vc.bird = nil
 		vc.watchlistId = watchlistId
+        vc.isQuickAdd = fromQuickAdd
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
@@ -226,6 +227,7 @@ extension WatchlistHomeViewController {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
 		vc.mode = .unobserved
 		vc.targetWatchlistId = watchlistId
+        vc.isQuickAdd = true
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	

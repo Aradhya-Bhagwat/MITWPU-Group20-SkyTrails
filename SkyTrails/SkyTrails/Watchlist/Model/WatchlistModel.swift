@@ -60,6 +60,8 @@ final class Watchlist {
     var type: WatchlistType? // Default to custom if missing
     var title: String?
     var location: String?
+    var lat: Double?  // Geocoded from location string
+    var lon: Double?  // Geocoded from location string
     var startDate: Date?
     var endDate: Date?
     var observedCount: Int = 0
@@ -111,6 +113,9 @@ final class WatchlistEntry {
     var toObserveEndDate: Date?
     var observedBy: String? // Name of user who observed it (useful in shared lists)
     
+    var was_auto_added: Bool = false  // Track if added by rules
+    var source_rule_id: UUID?         // Which rule added it (if any)
+    
     // Denormalized Location Data for Quick Access
     var lat: Double?
     var lon: Double?
@@ -151,6 +156,12 @@ final class WatchlistRule {
     var is_active: Bool = true
     var priority: Int = 0
     var created_at: Date = Date()
+    
+    // New fields for rules
+    var radius_km: Double?           // For location rules (default 50)
+    var families: [String]?          // For family rules ["Anatidae", "Laridae"]
+    var shapes: [String]?            // For shape rules ["waterfowl", "raptor"]
+    var manually_removed_bird_ids: [UUID]?  // Track manual removals
     
     init(id: UUID = UUID(), watchlist: Watchlist? = nil, rule_type: WatchlistRuleType, parameters: String) {
         self.id = id
@@ -227,11 +238,15 @@ struct WatchlistStatsDTO: Hashable {
 
 // MARK: - Rule Parameter Models
 
+// Replace existing LocationRuleParams with simplified version
 struct LocationRuleParams: Codable {
-    let latitude: Double
-    let longitude: Double
     let radiusKm: Double
-    let weeks: [Int]? // Optional: specific weeks, or nil for all weeks
+}
+
+// Add new FamilyShapeRuleParams
+struct FamilyShapeRuleParams: Codable {
+    let families: [String]
+    let shapes: [String]
 }
 
 struct DateRangeRuleParams: Codable {

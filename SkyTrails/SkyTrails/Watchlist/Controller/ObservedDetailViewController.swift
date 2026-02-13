@@ -15,9 +15,13 @@ class ObservedDetailViewController: UIViewController {
 	var watchlistId: UUID?
 	
 	var onSave: ((Bird) -> Void)?
+    var isQuickAdd = false  // For Quick Add Flow
 	
 	private var selectedImageName: String?
 	private var selectedLocation: LocationService.LocationData?
+    
+    // Qualified Watchlists Data
+    private var qualifiedWatchlists: [(watchlist: Watchlist, isCurrentlyIn: Bool, matchReason: String)] = []
 	
 		// Location Autocomplete State
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
@@ -32,6 +36,11 @@ class ObservedDetailViewController: UIViewController {
 	@IBOutlet weak var detailsCardView: UIView!
 	@IBOutlet weak var notesCardView: UIView!
 	@IBOutlet weak var locationCardView: UIView!
+    
+    // Qualified Watchlists Section
+    @IBOutlet weak var qualifiedWatchlistsContainer: UIView!
+    @IBOutlet weak var qualifiedWatchlistsTableView: UITableView!
+    @IBOutlet weak var qualifiedWatchlistsHeightConstraint: NSLayoutConstraint!
 	
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
@@ -75,12 +84,73 @@ class ObservedDetailViewController: UIViewController {
 		setupKeyboardHandling()
 		setupLocationServices()
 		setupLocationOptionsInteractions()
+        setupQualifiedWatchlistsSection()
+        
+        // Setup Date Picker action
+        dateTimePicker.addTarget(self, action: #selector(datePickerChanged(_:)), for: .valueChanged)
+        
 		print("Debug: viewDidLoad completed")
 	}
+    
+    @objc func datePickerChanged(_ sender: UIDatePicker) {
+        if entry == nil {
+            // Temporary entry object for checking rules?
+            // Ideally we need an entry object to check rules against.
+            // If entry is nil (new observation), we rely on current UI state.
+            // refreshQualifiedWatchlists needs an entry.
+        }
+        refreshQualifiedWatchlists()
+    }
 	
 	private func setupLocationServices() {
 		print("Debug: setupLocationServices called")
 	}
+    
+    private func setupQualifiedWatchlistsSection() {
+        guard let _ = qualifiedWatchlistsTableView else { return }
+        qualifiedWatchlistsTableView.delegate = self
+        qualifiedWatchlistsTableView.dataSource = self
+        qualifiedWatchlistsTableView.isScrollEnabled = false
+        
+        refreshQualifiedWatchlists()
+    }
+
+    private func refreshQualifiedWatchlists() {
+        // Need a bird to check rules. If no bird (e.g. searching), we can't check yet.
+        let targetBird: Bird? = bird ?? (nameTextField.text.flatMap { manager.findBird(byName: $0) })
+        
+        guard let checkBird = targetBird else {
+            // Clear list if no bird
+            qualifiedWatchlists = []
+            qualifiedWatchlistsTableView?.reloadData()
+            qualifiedWatchlistsHeightConstraint?.constant = 0
+            return
+        }
+        
+        // Construct temp entry from UI state
+        let tempEntry = WatchlistEntry(
+            bird: checkBird,
+            status: .observed,
+            notes: notesTextView.text,
+            observationDate: dateTimePicker.date
+        )
+        tempEntry.lat = selectedLocation?.lat
+        tempEntry.lon = selectedLocation?.lon
+        tempEntry.locationDisplayName = selectedLocation?.displayName
+        
+        Task {
+            let results = await WatchlistManager.shared.getQualifiedWatchlists(for: checkBird, entry: tempEntry)
+            
+            await MainActor.run {
+                self.qualifiedWatchlists = results
+                self.qualifiedWatchlistsTableView?.reloadData()
+                
+                // Update height constraint
+                let rowHeight: CGFloat = 44
+                self.qualifiedWatchlistsHeightConstraint?.constant = CGFloat(results.count) * rowHeight
+            }
+        }
+    }
 	
 	private func setupSearch() {
 		print("Debug: setupSearch called")
@@ -145,6 +215,7 @@ class ObservedDetailViewController: UIViewController {
 		selectedLocation = location
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
+        refreshQualifiedWatchlists()
 	}
 	
 	private func updateLocationSelection(_ name: String, lat: Double? = nil, lon: Double? = nil) {
@@ -157,6 +228,7 @@ class ObservedDetailViewController: UIViewController {
 		}
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
+        refreshQualifiedWatchlists()
 	}
 	
 		// MARK: - Keyboard Handling
@@ -436,11 +508,29 @@ extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchComple
 	}
 	
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tableView == qualifiedWatchlistsTableView {
+            return qualifiedWatchlists.count
+        }
 		print("Debug: tableView numberOfRowsInSection - returning: \(locationSuggestions.count)")
 		return locationSuggestions.count
 	}
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if tableView == qualifiedWatchlistsTableView {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "WatchlistCheckboxCell", for: indexPath)
+            let item = qualifiedWatchlists[indexPath.row]
+            
+            var content = cell.defaultContentConfiguration()
+            content.text = item.watchlist.title
+            content.secondaryText = item.matchReason
+            content.secondaryTextProperties.color = .secondaryLabel
+            content.secondaryTextProperties.font = .systemFont(ofSize: 12)
+            cell.contentConfiguration = content
+            
+            cell.accessoryType = item.isCurrentlyIn ? .checkmark : .none
+            return cell
+        }
+        
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
 		let item = locationSuggestions[indexPath.row]
 		cell.textLabel?.text = item.fullText
@@ -452,6 +542,32 @@ extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchComple
 	}
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if tableView == qualifiedWatchlistsTableView {
+            tableView.deselectRow(at: indexPath, animated: true)
+            
+            let item = qualifiedWatchlists[indexPath.row]
+            // We need the bird object to add/remove
+            let targetBird: Bird? = bird ?? (nameTextField.text.flatMap { manager.findBird(byName: $0) })
+            guard let bird = targetBird else { return }
+            
+            let manager = WatchlistManager.shared
+            
+            if item.isCurrentlyIn {
+                // Remove from watchlist
+                // Since this is UI, we should probably confirm? But Plan says "Track manual removals to prevent re-adding"
+                manager.manuallyRemoveBird(bird.id, from: item.watchlist.id)
+            } else {
+                // Add to watchlist
+                // status depends on current mode, but this is ObservedDetail so likely observed?
+                // But we might be editing an unobserved entry turned observed?
+                // Default to observed if we are in ObservedDetailVC
+                manager.addBirds([bird], to: item.watchlist.id, asObserved: true, fromQuickAdd: false)
+            }
+            
+            refreshQualifiedWatchlists()
+            return
+        }
+        
 		let item = locationSuggestions[indexPath.row]
 		let fullLocationText = item.fullText
 		print("Debug: tableView didSelectRowAt - row \(indexPath.row) selected: '\(fullLocationText)'")

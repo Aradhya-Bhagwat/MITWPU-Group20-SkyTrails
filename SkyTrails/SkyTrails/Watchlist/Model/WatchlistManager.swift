@@ -331,11 +331,12 @@ final class WatchlistManager: WatchlistRepository {
 	
 		// MARK: - Operations
 	
-	func addWatchlist(title: String, location: String, startDate: Date, endDate: Date, type: WatchlistType = .custom, locationDisplayName: String? = nil) {
+	func addWatchlist(title: String, location: String, startDate: Date, endDate: Date, type: WatchlistType = .custom, locationDisplayName: String? = nil) -> Watchlist {
 		let wl = Watchlist(title: title, location: location, locationDisplayName: locationDisplayName, startDate: startDate, endDate: endDate)
 		wl.type = type
 		context.insert(wl)
 		saveContext()
+        return wl
 	}
 	
 	func deleteEntry(entryId: UUID) {
@@ -416,89 +417,100 @@ final class WatchlistManager: WatchlistRepository {
 		return await LocationService.shared.reverseGeocode(lat: lat, lon: lon)
 	}
 	
-	func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) {
-		print("🐦 [WatchlistManager] addBirds() called")
-		print("🐦 [WatchlistManager] - Watchlist ID: \(watchlistId)")
-		print("🐦 [WatchlistManager] - Birds to add: \(birds.count)")
-		print("🐦 [WatchlistManager] - As observed: \(asObserved)")
-		birds.forEach { print("🐦 [WatchlistManager] - Bird: \($0.commonName) (id: \($0.id))") }
-		
-		var targetWatchlistId = watchlistId
-		let myWatchlistId = WatchlistConstants.myWatchlistID
-		
-		if watchlistId == myWatchlistId {
-			print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected. resolving to real watchlist...")
-			let customLists = fetchWatchlists(type: .custom)
-			if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-				targetWatchlistId = existing.id
-				print("✅ [WatchlistManager] Resolved to existing 'My Watchlist' (ID: \(existing.id))")
-			} else if let first = customLists.first {
-				targetWatchlistId = first.id
-				print("✅ [WatchlistManager] Resolved to first available custom watchlist: '\(first.title ?? "Untitled")' (ID: \(first.id))")
-			} else {
-				print("⚠️ [WatchlistManager] No custom watchlists found. Creating 'My Watchlist'...")
-				addWatchlist(title: "My Watchlist", location: "General", startDate: Date(), endDate: Date().addingTimeInterval(31536000))
-					// Fetch it back
-				if let newWl = fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
-					targetWatchlistId = newWl.id
-					print("✅ [WatchlistManager] Created and resolved to 'My Watchlist' (ID: \(newWl.id))")
-				} else {
-					print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
-					return
-				}
-			}
-		}
-		
-		guard let watchlist = getWatchlist(by: targetWatchlistId) else {
-			print("❌ [WatchlistManager] FAILED: Watchlist not found for ID: \(targetWatchlistId)")
-			return
-		}
-		
-		print("✅ [WatchlistManager] Watchlist found: '\(watchlist.title ?? "Untitled")'")
-		
-		let existingEntries = watchlist.entries ?? []
-		print("📊 [WatchlistManager] Existing entries in watchlist: \(existingEntries.count)")
-		
-		var addedCount = 0
-		var skippedCount = 0
-		
-		for bird in birds {
-			let alreadyExists = existingEntries.contains(where: { $0.bird?.id == bird.id })
-			
-			if alreadyExists {
-				print("⏭️  [WatchlistManager] Skipping '\(bird.commonName)' - already exists in watchlist")
-				skippedCount += 1
-			} else {
-				print("➕ [WatchlistManager] Creating entry for '\(bird.commonName)'")
-				let entry = WatchlistEntry(
-					watchlist: watchlist,
-					bird: bird,
-					status: asObserved ? .observed : .to_observe
-				)
-				if asObserved {
-					entry.observationDate = Date()
-					print("📅 [WatchlistManager] Set observation date to: \(Date())")
-				}
-				
-				print("💾 [WatchlistManager] Inserting entry into context (ID: \(entry.id))")
-				context.insert(entry)
-				addedCount += 1
-			}
-		}
-		
-		print("📊 [WatchlistManager] Summary: Added \(addedCount), Skipped \(skippedCount)")
-		
-		if addedCount > 0 {
-			print("💾 [WatchlistManager] Calling saveContext() for \(addedCount) new entries...")
-			saveContext()
-			
-				// Verify entries were saved
-			let afterSave = watchlist.entries ?? []
-			print("✅ [WatchlistManager] After save: watchlist now has \(afterSave.count) entries")
-		} else {
-			print("⚠️  [WatchlistManager] No new entries to save")
-		}
-	}
+    func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool, fromQuickAdd: Bool = false) {
+        print("🐦 [WatchlistManager] addBirds() called")
+        print("🐦 [WatchlistManager] - Watchlist ID: \(watchlistId)")
+        print("🐦 [WatchlistManager] - Birds to add: \(birds.count)")
+        print("🐦 [WatchlistManager] - As observed: \(asObserved)")
+        birds.forEach { print("🐦 [WatchlistManager] - Bird: \($0.commonName) (id: \($0.id))") }
+        
+        var targetWatchlistId = watchlistId
+        let myWatchlistId = WatchlistConstants.myWatchlistID
+        
+        if watchlistId == myWatchlistId {
+            print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected. resolving to real watchlist...")
+            let customLists = fetchWatchlists(type: .custom)
+            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
+                targetWatchlistId = existing.id
+                print("✅ [WatchlistManager] Resolved to existing 'My Watchlist' (ID: \(existing.id))")
+            } else if let first = customLists.first {
+                targetWatchlistId = first.id
+                print("✅ [WatchlistManager] Resolved to first available custom watchlist: '\(first.title ?? "Untitled")' (ID: \(first.id))")
+            } else {
+                print("⚠️ [WatchlistManager] No custom watchlists found. Creating 'My Watchlist'...")
+                addWatchlist(title: "My Watchlist", location: "General", startDate: Date(), endDate: Date().addingTimeInterval(31536000))
+                // Fetch it back
+                if let newWl = fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
+                    targetWatchlistId = newWl.id
+                    print("✅ [WatchlistManager] Created and resolved to 'My Watchlist' (ID: \(newWl.id))")
+                } else {
+                    print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
+                    return
+                }
+            }
+        }
+        
+        guard let watchlist = getWatchlist(by: targetWatchlistId) else {
+            print("❌ [WatchlistManager] FAILED: Watchlist not found for ID: \(targetWatchlistId)")
+            return
+        }
+        
+        print("✅ [WatchlistManager] Watchlist found: '\(watchlist.title ?? "Untitled")'")
+        
+        let existingEntries = watchlist.entries ?? []
+        print("📊 [WatchlistManager] Existing entries in watchlist: \(existingEntries.count)")
+        
+        var addedCount = 0
+        var skippedCount = 0
+        var newlyCreatedEntries: [(Bird, WatchlistEntry)] = []
+        
+        for bird in birds {
+            let alreadyExists = existingEntries.contains(where: { $0.bird?.id == bird.id })
+            
+            if alreadyExists {
+                print("⏭️  [WatchlistManager] Skipping '\(bird.commonName)' - already exists in watchlist")
+                skippedCount += 1
+            } else {
+                print("➕ [WatchlistManager] Creating entry for '\(bird.commonName)'")
+                let entry = WatchlistEntry(
+                    watchlist: watchlist,
+                    bird: bird,
+                    status: asObserved ? .observed : .to_observe
+                )
+                if asObserved {
+                    entry.observationDate = Date()
+                    print("📅 [WatchlistManager] Set observation date to: \(Date())")
+                }
+                
+                print("💾 [WatchlistManager] Inserting entry into context (ID: \(entry.id))")
+                context.insert(entry)
+                addedCount += 1
+                newlyCreatedEntries.append((bird, entry))
+            }
+        }
+        
+        print("📊 [WatchlistManager] Summary: Added \(addedCount), Skipped \(skippedCount)")
+        
+        if addedCount > 0 {
+            print("💾 [WatchlistManager] Calling saveContext() for \(addedCount) new entries...")
+            saveContext()
+            
+            // Verify entries were saved
+            let afterSave = watchlist.entries ?? []
+            print("✅ [WatchlistManager] After save: watchlist now has \(afterSave.count) entries")
+            
+            // Auto-categorization
+            if fromQuickAdd {
+                for (bird, entry) in newlyCreatedEntries {
+                    Task {
+                        await autoCategorizeBird(bird, entry: entry, fromQuickAdd: true)
+                    }
+                }
+            }
+        } else {
+            print("⚠️  [WatchlistManager] No new entries to save")
+        }
+    }
 	
 		// MARK: - Photo Persistence
 	
@@ -721,6 +733,318 @@ extension WatchlistManager {
 		
 		return getEntriesInDateRange(start: weekStart, end: weekEnd, watchlistId: watchlistId)
 	}
+}
+
+// MARK: - Auto-Categorization Engine
+
+extension WatchlistManager {
+    
+    /// Main entry point for auto-categorization when a bird is added via Quick Add
+    func autoCategorizeBird(
+        _ bird: Bird,
+        entry: WatchlistEntry,
+        fromQuickAdd: Bool
+    ) async {
+        guard fromQuickAdd else { return }
+        
+        print("🤖 [AutoCat] Running auto-categorization for \(bird.commonName)")
+        
+        // Get all watchlists
+        let allWatchlists = fetchWatchlists()
+        
+        for watchlist in allWatchlists {
+            // Skip if bird was manually removed from this watchlist
+            if let rules = watchlist.rules,
+               rules.contains(where: {
+                   $0.manually_removed_bird_ids?.contains(bird.id) == true
+               }) {
+                continue
+            }
+            
+            // Check if watchlist has active rules and bird matches
+            if await birdMatchesWatchlistRules(bird, entry: entry, watchlist: watchlist) {
+                // Add bird to this watchlist
+                addBirdToWatchlist(bird, entry: entry, watchlist: watchlist, autoAdded: true)
+            }
+        }
+    }
+    
+    private func birdMatchesWatchlistRules(
+        _ bird: Bird,
+        entry: WatchlistEntry,
+        watchlist: Watchlist
+    ) async -> Bool {
+        guard let rules = watchlist.rules?.filter({ $0.is_active }),
+              !rules.isEmpty else {
+            return false
+        }
+        
+        var hasLocationRule = false
+        var hasDateRule = false
+        var hasFamilyShapeRule = false
+        
+        // Check each rule type
+        for rule in rules {
+            switch rule.rule_type {
+            case .location:
+                hasLocationRule = true
+                if !matchesLocationRule(rule, entry: entry, watchlist: watchlist) {
+                    return false  // Must match if rule exists
+                }
+            case .date_range:
+                hasDateRule = true
+                if !matchesDateRule(rule, entry: entry, watchlist: watchlist) {
+                    return false
+                }
+            case .species_family:
+                hasFamilyShapeRule = true
+                if !matchesFamilyShapeRule(rule, bird: bird) {
+                    return false
+                }
+            default:
+                continue
+            }
+        }
+        
+        // Must have at least one active rule to qualify
+        return hasLocationRule || hasDateRule || hasFamilyShapeRule
+    }
+    
+    // MARK: - Individual Rule Matchers
+    
+    private func matchesFamilyShapeRule(_ rule: WatchlistRule, bird: Bird) -> Bool {
+        guard let jsonData = rule.parameters_json.data(using: .utf8),
+              let params = try? JSONDecoder().decode(FamilyShapeRuleParams.self, from: jsonData) else {
+            return false
+        }
+        
+        // Check family match
+        if let family = bird.family, params.families.contains(family) {
+            return true
+        }
+        
+        // Check shape match
+        if let shapeId = bird.shape_id, params.shapes.contains(shapeId) {
+            return true
+        }
+        
+        return false
+    }
+    
+    private func matchesDateRule(
+        _ rule: WatchlistRule,
+        entry: WatchlistEntry,
+        watchlist: Watchlist
+    ) -> Bool {
+        guard let wlStart = watchlist.startDate,
+              let wlEnd = watchlist.endDate else {
+            return false
+        }
+        
+        // For observed entries
+        if let obsDate = entry.observationDate {
+            return obsDate >= wlStart && obsDate <= wlEnd
+        }
+        
+        // For unobserved entries (check range overlap)
+        if let entryStart = entry.toObserveStartDate,
+           let entryEnd = entry.toObserveEndDate {
+            return entryStart <= wlEnd && entryEnd >= wlStart
+        }
+        
+        return false
+    }
+    
+    private func matchesLocationRule(
+        _ rule: WatchlistRule,
+        entry: WatchlistEntry,
+        watchlist: Watchlist
+    ) -> Bool {
+        // Entry must have location
+        guard let entryLat = entry.lat, let entryLon = entry.lon else {
+            return false
+        }
+        
+        // Watchlist must have location coordinates
+        guard let wlLat = watchlist.lat, let wlLon = watchlist.lon else {
+            return false
+        }
+        
+        // Get radius from rule
+        guard let jsonData = rule.parameters_json.data(using: .utf8),
+              let params = try? JSONDecoder().decode(LocationRuleParams.self, from: jsonData) else {
+            return false
+        }
+        
+        // Calculate distance
+        let entryLoc = CLLocation(latitude: entryLat, longitude: entryLon)
+        let wlLoc = CLLocation(latitude: wlLat, longitude: wlLon)
+        let distanceKm = entryLoc.distance(from: wlLoc) / 1000.0
+        
+        return distanceKm <= params.radiusKm
+    }
+    
+    // MARK: - UI Helpers
+    
+    func getQualifiedWatchlists(for bird: Bird, entry: WatchlistEntry) async -> [(watchlist: Watchlist, isCurrentlyIn: Bool, matchReason: String)] {
+        let allWatchlists = fetchWatchlists(type: .custom)
+        var results: [(Watchlist, Bool, String)] = []
+        
+        for watchlist in allWatchlists {
+            let isIn = watchlist.entries?.contains(where: { $0.bird?.id == bird.id }) ?? false
+            
+            // Check if qualifies
+            if await birdMatchesWatchlistRules(bird, entry: entry, watchlist: watchlist) {
+                let reason = getMatchReason(bird: bird, entry: entry, watchlist: watchlist)
+                results.append((watchlist, isIn, reason))
+            } else {
+                results.append((watchlist, isIn, "Not qualifying"))
+            }
+        }
+        
+        return results
+    }
+    
+    private func getMatchReason(bird: Bird, entry: WatchlistEntry, watchlist: Watchlist) -> String {
+        var reasons: [String] = []
+        
+        if let rules = watchlist.rules?.filter({ $0.is_active }) {
+            for rule in rules {
+                switch rule.rule_type {
+                case .location:
+                    if matchesLocationRule(rule, entry: entry, watchlist: watchlist) {
+                        reasons.append("location")
+                    }
+                case .date_range:
+                    if matchesDateRule(rule, entry: entry, watchlist: watchlist) {
+                        reasons.append("date")
+                    }
+                case .species_family:
+                    if matchesFamilyShapeRule(rule, bird: bird) {
+                        reasons.append("family/shape")
+                    }
+                default:
+                    break
+                }
+            }
+        }
+        
+        return reasons.isEmpty ? "Not qualifying" : reasons.joined(separator: ", ") + " match"
+    }
+    
+    func applyRulesRetroactively(to watchlistId: UUID) async {
+        guard let watchlist = getWatchlist(by: watchlistId),
+              let rules = watchlist.rules?.filter({ $0.is_active }),
+              !rules.isEmpty else {
+            return
+        }
+        
+        print("🔄 [AutoCat] Applying rules retroactively to \(watchlist.title ?? "Unknown")")
+        
+        // Get all entries from ALL watchlists (potential candidates)
+        let allLists = fetchWatchlists()
+        let allEntries = allLists.flatMap { $0.entries ?? [] }
+        
+        var addedCount = 0
+        for entry in allEntries {
+            guard let bird = entry.bird else { continue }
+            
+            // Skip if already in this watchlist
+            if watchlist.entries?.contains(where: { $0.bird?.id == bird.id }) == true {
+                continue
+            }
+            
+            // Check if matches
+            if await birdMatchesWatchlistRules(bird, entry: entry, watchlist: watchlist) {
+                addBirdToWatchlist(bird, entry: entry, watchlist: watchlist, autoAdded: true)
+                addedCount += 1
+            }
+        }
+        
+        print("✅ [AutoCat] Added \(addedCount) birds retroactively")
+    }
+    
+    private func addBirdToWatchlist(
+        _ bird: Bird,
+        entry sourceEntry: WatchlistEntry,
+        watchlist: Watchlist,
+        autoAdded: Bool
+    ) {
+        // Create new entry for this watchlist
+        let newEntry = WatchlistEntry(
+            watchlist: watchlist,
+            bird: bird,
+            status: sourceEntry.status,
+            notes: sourceEntry.notes,
+            observationDate: sourceEntry.observationDate,
+            observedBy: sourceEntry.observedBy
+        )
+        newEntry.lat = sourceEntry.lat
+        newEntry.lon = sourceEntry.lon
+        newEntry.locationDisplayName = sourceEntry.locationDisplayName
+        newEntry.toObserveStartDate = sourceEntry.toObserveStartDate
+        newEntry.toObserveEndDate = sourceEntry.toObserveEndDate
+        newEntry.was_auto_added = autoAdded
+        
+        context.insert(newEntry)
+        saveContext()
+    }
+    
+    func addOrUpdateRule(
+        to watchlistId: UUID,
+        type: WatchlistRuleType,
+        parameters: Encodable,
+        existingRule: WatchlistRule?
+    ) throws {
+        guard let watchlist = getWatchlist(by: watchlistId) else {
+            throw RepositoryError.watchlistNotFound(watchlistId)
+        }
+        
+        let encoder = JSONEncoder()
+        let jsonData = try encoder.encode(parameters)
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            throw NSError(domain: "WatchlistManager", code: -1)
+        }
+        
+        if let rule = existingRule {
+            // Update existing
+            rule.parameters_json = jsonString
+            rule.is_active = true
+        } else {
+            // Create new
+            let rule = WatchlistRule(
+                watchlist: watchlist,
+                rule_type: type,
+                parameters: jsonString
+            )
+            context.insert(rule)
+        }
+        
+        saveContext()
+    }
+    
+    func manuallyRemoveBird(_ birdId: UUID, from watchlistId: UUID) {
+        guard let watchlist = getWatchlist(by: watchlistId) else { return }
+        
+        // Delete entry
+        if let entry = watchlist.entries?.first(where: { $0.bird?.id == birdId }) {
+            deleteEntry(entryId: entry.id)
+        }
+        
+        // Track manual removal to prevent re-adding
+        if let rules = watchlist.rules {
+            for rule in rules {
+                if rule.manually_removed_bird_ids == nil {
+                    rule.manually_removed_bird_ids = []
+                }
+                if !rule.manually_removed_bird_ids!.contains(birdId) {
+                    rule.manually_removed_bird_ids!.append(birdId)
+                }
+            }
+        }
+        
+        saveContext()
+    }
 }
 
 // MARK: - DTO Mapping Extension

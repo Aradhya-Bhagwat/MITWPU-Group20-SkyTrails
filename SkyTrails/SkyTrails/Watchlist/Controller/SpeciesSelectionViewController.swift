@@ -28,6 +28,7 @@ class SpeciesSelectionViewController: UIViewController {
     // MARK: - Properties
     var mode: WatchlistMode = .observed
     var targetWatchlistId: UUID?
+    var isQuickAdd: Bool = false
     
     // Data Source
     private var allBirds: [Bird] = []
@@ -92,8 +93,33 @@ extension SpeciesSelectionViewController {
         print("📋 [SpeciesSelectionVC] Target watchlist ID: \(targetWatchlistId?.description ?? "nil")")
         print("🎯 [SpeciesSelectionVC] Mode: \(mode == .observed ? "observed" : "unobserved")")
         
+        // Handle Quick Add Flow
+        if isQuickAdd {
+            guard let targetId = targetWatchlistId else { return }
+            
+            // Add all selected birds directly
+            manager.addBirds(
+                birdsToProcess,
+                to: targetId,
+                asObserved: (mode == .observed),
+                fromQuickAdd: true
+            )
+            
+            showSuccessToast(message: "Added \(birdsToProcess.count) birds with auto-categorization")
+            navigationController?.popToRootViewController(animated: true)
+            return
+        }
+        
         // Start the wizard loop
         startDetailLoop(birds: birdsToProcess)
+    }
+    
+    private func showSuccessToast(message: String) {
+        let alert = UIAlertController(title: "Success", message: message, preferredStyle: .alert)
+        present(alert, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            alert.dismiss(animated: true)
+        }
     }
     
     private func startDetailLoop(birds: [Bird]) {

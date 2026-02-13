@@ -13,6 +13,8 @@ class UnobservedDetailViewController: UIViewController {
     var entry: WatchlistEntry? // Added
 	var watchlistId: UUID?
 	var onSave: ((Bird) -> Void)?
+    
+    private var qualifiedWatchlists: [(watchlist: Watchlist, isCurrentlyIn: Bool, matchReason: String)] = []
 	
 		// MARK: - Private Properties
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
@@ -30,6 +32,11 @@ class UnobservedDetailViewController: UIViewController {
 	@IBOutlet weak var locationSearchBar: UISearchBar!
 	@IBOutlet weak var detailsCardView: UIView!
 	@IBOutlet weak var locationCardView: UIView!
+    
+    // Qualified Watchlists Section
+    @IBOutlet weak var qualifiedWatchlistsContainer: UIView!
+    @IBOutlet weak var qualifiedWatchlistsTableView: UITableView!
+    @IBOutlet weak var qualifiedWatchlistsHeightConstraint: NSLayoutConstraint!
 	
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
@@ -38,8 +45,53 @@ class UnobservedDetailViewController: UIViewController {
 		setupLocationServices()
 		setupSearch()
 		setupKeyboardHandling()
+        setupQualifiedWatchlistsSection()
 		configureView()
+        
+        startDatePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
+        endDatePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
 	}
+    
+    @objc private func datePickerChanged() {
+        refreshQualifiedWatchlists()
+    }
+    
+    private func setupQualifiedWatchlistsSection() {
+        guard let _ = qualifiedWatchlistsTableView else { return }
+        qualifiedWatchlistsTableView.delegate = self
+        qualifiedWatchlistsTableView.dataSource = self
+        qualifiedWatchlistsTableView.isScrollEnabled = false
+        refreshQualifiedWatchlists()
+    }
+
+    private func refreshQualifiedWatchlists() {
+        guard let checkBird = bird else { return }
+        
+        // Construct temp entry from UI state
+        let tempEntry = WatchlistEntry(
+            bird: checkBird,
+            status: .to_observe,
+            notes: notesTextView.text
+        )
+        tempEntry.toObserveStartDate = startDatePicker.date
+        tempEntry.toObserveEndDate = endDatePicker.date
+        tempEntry.lat = selectedLocation?.lat
+        tempEntry.lon = selectedLocation?.lon
+        tempEntry.locationDisplayName = selectedLocation?.displayName
+        
+        Task {
+            let results = await WatchlistManager.shared.getQualifiedWatchlists(for: checkBird, entry: tempEntry)
+            
+            await MainActor.run {
+                self.qualifiedWatchlists = results
+                self.qualifiedWatchlistsTableView?.reloadData()
+                
+                // Update height constraint
+                let rowHeight: CGFloat = 44
+                self.qualifiedWatchlistsHeightConstraint?.constant = CGFloat(results.count) * rowHeight
+            }
+        }
+    }
 	
 		// MARK: - Setup
 	private func setupUI() {
@@ -318,6 +370,7 @@ class UnobservedDetailViewController: UIViewController {
 		selectedLocation = location
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
+        refreshQualifiedWatchlists()
 	}
 	
 	private func updateLocationSelection(_ name: String, lat: Double? = nil, lon: Double? = nil) {
@@ -329,6 +382,7 @@ class UnobservedDetailViewController: UIViewController {
 		}
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
+        refreshQualifiedWatchlists()
 	}
 }
 
@@ -341,10 +395,28 @@ extension UnobservedDetailViewController: CLLocationManagerDelegate {
 	// MARK: - UITableViewDelegate & DataSource
 extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSource {
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tableView == qualifiedWatchlistsTableView {
+            return qualifiedWatchlists.count
+        }
 		return locationSuggestions.count
 	}
 	
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if tableView == qualifiedWatchlistsTableView {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "WatchlistCheckboxCell", for: indexPath)
+            let item = qualifiedWatchlists[indexPath.row]
+            
+            var content = cell.defaultContentConfiguration()
+            content.text = item.watchlist.title
+            content.secondaryText = item.matchReason
+            content.secondaryTextProperties.color = .secondaryLabel
+            content.secondaryTextProperties.font = .systemFont(ofSize: 12)
+            cell.contentConfiguration = content
+            
+            cell.accessoryType = item.isCurrentlyIn ? .checkmark : .none
+            return cell
+        }
+        
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
 		let result = locationSuggestions[indexPath.row]
 		cell.textLabel?.text = result.fullText
@@ -355,6 +427,25 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
 	}
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if tableView == qualifiedWatchlistsTableView {
+            tableView.deselectRow(at: indexPath, animated: true)
+            
+            let item = qualifiedWatchlists[indexPath.row]
+            guard let bird = bird else { return }
+            let manager = WatchlistManager.shared
+            
+            if item.isCurrentlyIn {
+                // Remove from watchlist
+                manager.manuallyRemoveBird(bird.id, from: item.watchlist.id)
+            } else {
+                // Add to watchlist
+                manager.addBirds([bird], to: item.watchlist.id, asObserved: false, fromQuickAdd: false)
+            }
+            
+            refreshQualifiedWatchlists()
+            return
+        }
+        
 		let item = locationSuggestions[indexPath.row]
 		let query = item.fullText
 		updateLocationSelection(query)
