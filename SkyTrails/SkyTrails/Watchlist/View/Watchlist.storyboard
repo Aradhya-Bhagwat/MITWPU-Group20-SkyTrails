@@ -1018,6 +1018,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="8db-AZ-sI1"/>
                     <connections>
+                        <outlet property="dateCardView" destination="4lS-Lf-WR2" id="edit-date-card-id"/>
                         <outlet property="endDatePicker" destination="QWB-i9-M4X" id="G1o-Ad-iiR"/>
                         <outlet property="inviteContactsView" destination="WoM-F1-gCE" id="kQY-2h-FIa"/>
                         <outlet property="locationOptionsContainer" destination="lpQ-BV-dJE" id="loc-opt-cont-id"/>
@@ -1309,6 +1310,7 @@
                         <outlet property="endLabel" destination="ADy-rz-YZ3" id="3gn-fI-uhX"/>
                         <outlet property="locationCardView" destination="XrQ-Xh-qdH" id="lCv-12-345"/>
                         <outlet property="locationSearchBar" destination="UnobservedLocationSearchBar" id="unobs-loc-bar-id"/>
+                        <outlet property="notesCardView" destination="7iT-Nc-qp1" id="unobs-notes-card-id"/>
                         <outlet property="notesTextView" destination="SAf-x6-zW7" id="FWJ-9U-HH1"/>
                         <outlet property="startDatePicker" destination="7o2-uw-Uu3" id="EHk-vo-9Vg"/>
                         <outlet property="startLabel" destination="2Qv-Pz-pdQ" id="Alp-gC-rJ0"/>
@@ -1544,8 +1546,8 @@
                                 <viewLayoutGuide key="frameLayoutGuide" id="RPO-Rz-A7S"/>
                             </scrollView>
                             <tableView hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Obs-Sugg-Table">
-                                <rect key="frame" x="0.0" y="-72" width="402" height="200"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <rect key="frame" x="0.0" y="884" width="402" height="200"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="200" id="obs-srg-hgt-001"/>
                                 </constraints>
@@ -1558,7 +1560,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="obs-srg-txt-01">
-                                                    <rect key="frame" x="8" y="0.0" width="386" height="51"/>
+                                                    <rect key="frame" x="20" y="0.0" width="362" height="51"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
                                                     <nil key="textColor"/>
@@ -1566,6 +1568,7 @@
                                                 </label>
                                             </subviews>
                                         </tableViewCellContentView>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
@@ -1603,7 +1606,7 @@
     </scenes>
     <inferredMetricsTieBreakers>
         <segue reference="k90-vC-BJg"/>
-        <segue reference="nKR-lt-0XR"/>
+        <segue reference="DTx-dp-kNz"/>
         <segue reference="WlZ-eO-mfp"/>
     </inferredMetricsTieBreakers>
     <resources>

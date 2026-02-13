@@ -196,8 +196,12 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
 		cell.locationLabel.text = rarityString
 		cell.locationLabel.textColor = .systemOrange
 		
-			// Selection State
+		// Selection State
 		cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
+		if traitCollection.userInterfaceStyle == .dark {
+			cell.backgroundColor = .secondarySystemBackground
+			cell.contentView.backgroundColor = .secondarySystemBackground
+		}
 		
 		return cell
     }

@@ -26,6 +26,7 @@ class UnobservedDetailViewController: UIViewController {
 	@IBOutlet weak var startDatePicker: UIDatePicker!
 	@IBOutlet weak var endDatePicker: UIDatePicker!
 	@IBOutlet weak var notesTextView: UITextView!
+    @IBOutlet weak var notesCardView: UIView!
 	@IBOutlet weak var locationSearchBar: UISearchBar!
 	@IBOutlet weak var detailsCardView: UIView!
 	@IBOutlet weak var locationCardView: UIView!
@@ -43,12 +44,22 @@ class UnobservedDetailViewController: UIViewController {
 		// MARK: - Setup
 	private func setupUI() {
 		title = bird?.name ?? "Add Species"
-		view.backgroundColor = .systemGray6
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemGray6
+        suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 		
 		birdImageView.layer.cornerRadius = 24
 		birdImageView.clipsToBounds = true
+        notesTextView.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        notesTextView.textColor = .label
+        notesTextView.layer.cornerRadius = 12
+        notesTextView.layer.masksToBounds = true
+        notesTextView.layer.borderWidth = 0
+        notesTextView.layer.borderColor = UIColor.clear.cgColor
+        styleSearchBar(locationSearchBar, isDarkMode: isDarkMode)
 		
 		styleCard(detailsCardView)
+        styleCard(notesCardView)
 		styleCard(locationCardView)
 		
 		setupLocationOptionsInteractions()
@@ -56,14 +67,24 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	private func styleCard(_ view: UIView) {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		view.layer.cornerRadius = 20
-		view.backgroundColor = .white
+		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
 		view.layer.shadowColor = UIColor.black.cgColor
-		view.layer.shadowOpacity = 0.08
+		view.layer.shadowOpacity = isDarkMode ? 0 : 0.08
 		view.layer.shadowOffset = CGSize(width: 0, height: 4)
 		view.layer.shadowRadius = 12
 		view.layer.masksToBounds = false
 	}
+
+    private func styleSearchBar(_ searchBar: UISearchBar, isDarkMode: Bool) {
+        let textField = searchBar.searchTextField
+        textField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        textField.textColor = .label
+        textField.layer.cornerRadius = 12
+        textField.layer.masksToBounds = true
+        textField.leftView?.tintColor = .secondaryLabel
+    }
 	
 	private func setupNavigationItems() {
 		if bird != nil {
@@ -327,6 +348,9 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
 		let result = locationSuggestions[indexPath.row]
 		cell.textLabel?.text = result.fullText
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        cell.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        cell.textLabel?.textColor = .label
 		return cell
 	}
 	

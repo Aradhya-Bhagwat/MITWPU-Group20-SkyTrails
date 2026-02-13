@@ -157,6 +157,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		
 			// Search Bar
 		searchBar.searchBarStyle = .minimal
+		let searchIsDarkMode = traitCollection.userInterfaceStyle == .dark
+		searchBar.searchTextField.backgroundColor = searchIsDarkMode ? .secondarySystemBackground : .systemBackground
 		searchBar.delegate = self
 		
 			// Segmented Control
@@ -409,6 +411,10 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 			// Map Entry to Cell Configuration
 		cell.shouldShowAvatars = (watchlistType == .shared)
 		cell.configure(with: entry)
+		if traitCollection.userInterfaceStyle == .dark {
+			cell.backgroundColor = .secondarySystemBackground
+			cell.contentView.backgroundColor = .secondarySystemBackground
+		}
 		
 		return cell
 	}
