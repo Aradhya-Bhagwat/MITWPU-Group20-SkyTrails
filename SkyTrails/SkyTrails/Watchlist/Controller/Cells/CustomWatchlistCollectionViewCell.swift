@@ -10,6 +10,7 @@ import UIKit
 class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "CustomWatchlistCollectionViewCell"
+    private var defaultCoverOverImageBackgroundColor: UIColor?
     
     // MARK: - IBOutlets
     @IBOutlet weak var containerView: UIView!
@@ -30,6 +31,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        defaultCoverOverImageBackgroundColor = coverOverImageView.backgroundColor
         setupUI()
         
         self.clipsToBounds = false
@@ -38,13 +40,8 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     private func setupUI() {
         // Container Styling
-        let cardColor = UIColor.secondarySystemGroupedBackground
-        containerView.backgroundColor = cardColor
+        updateCardAppearance()
         containerView.layer.cornerRadius = 16
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOpacity = 0.1
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        containerView.layer.shadowRadius = 6
         containerView.layer.masksToBounds = false
         
         // Image Styling
@@ -67,7 +64,17 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
             $0?.textColor = .secondaryLabel
         }
     }
-    
+
+    private func updateCardAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultCoverOverImageBackgroundColor
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOpacity = isDarkMode ? 0 : 0.1
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        containerView.layer.shadowRadius = 6
+    }
+
     private func setupBadge(_ view: UIView, label: UILabel, color: UIColor, cornerRadius: CGFloat) {
         view.layer.cornerRadius = cornerRadius
         view.backgroundColor = color.withAlphaComponent(0.15)
@@ -77,6 +84,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     }
     
     func configure(with dto: WatchlistSummaryDTO) {
+        updateCardAppearance()
         titleLabel.text = dto.title
         
         // Location
@@ -154,6 +162,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
 	override func layoutSubviews() {
 		super.layoutSubviews()
 			// We call this here to ensure it updates if the cell size changes (e.g. rotation)
+        updateCardAppearance()
 		alignImageTop()
 	}
 	

@@ -10,6 +10,7 @@ import UIKit
 class BirdSmartCell: UITableViewCell {
 	
 	static let identifier = "BirdSmartCell"
+    private var defaultContainerBackgroundColor: UIColor?
 	
 		// MARK: - IBOutlets
 	@IBOutlet weak var containerView: UIView!
@@ -31,6 +32,7 @@ class BirdSmartCell: UITableViewCell {
 	
 	override func awakeFromNib() {
 		super.awakeFromNib()
+        defaultContainerBackgroundColor = containerView.backgroundColor
 		setupUI()
 	}
 	
@@ -39,8 +41,10 @@ class BirdSmartCell: UITableViewCell {
 	}
 	
 	private func setupUI() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
 			// Container Styling
 		containerView.layer.cornerRadius = 12
+        containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultContainerBackgroundColor
 		
 			// Image Styling
 		birdImageView.layer.cornerRadius = 12

@@ -24,6 +24,7 @@ class EditWatchlistDetailViewController: UIViewController {
 	
 		// MARK: - Outlets
 	@IBOutlet weak var titleTextField: UITextField!
+	@IBOutlet weak var dateCardView: UIView!
 	@IBOutlet weak var locationSearchBar: UISearchBar!
 	@IBOutlet weak var locationOptionsContainer: UIView!
 	@IBOutlet weak var startDatePicker: UIDatePicker!
@@ -60,14 +61,22 @@ class EditWatchlistDetailViewController: UIViewController {
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
 		self.title = (watchlistToEdit == nil) ? "New Watchlist" : "Edit Watchlist"
+		let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		
 			// Background & Styling
-		view.backgroundColor = .systemGray6
+		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemGray6
+		titleTextField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+		titleTextField.textColor = .label
+		titleTextField.layer.cornerRadius = 12
+		titleTextField.layer.masksToBounds = true
+		styleSearchBar(locationSearchBar, isDarkMode: isDarkMode)
+		suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+		participantsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+		styleCard(dateCardView, isDarkMode: isDarkMode)
+		styleCard(locationOptionsContainer, isDarkMode: isDarkMode)
 		
 		if let inviteView = inviteContactsView {
-			inviteView.layer.cornerRadius = 12
-			inviteView.backgroundColor = .white
-			inviteView.applyShadow(radius: 8, opacity: 0.05, offset: CGSize(width: 0, height: 2))
+			styleCard(inviteView, isDarkMode: isDarkMode, cornerRadius: 12, shadowRadius: 8, shadowOpacity: 0.05, shadowOffset: CGSize(width: 0, height: 2))
 		}
 		
 			// Visibility Logic
@@ -82,6 +91,32 @@ class EditWatchlistDetailViewController: UIViewController {
 		locationSearchBar.delegate = self
 		
 		setupLocationOptionsInteractions()
+	}
+
+	private func styleSearchBar(_ searchBar: UISearchBar, isDarkMode: Bool) {
+		let textField = searchBar.searchTextField
+		textField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+		textField.textColor = .label
+		textField.layer.cornerRadius = 12
+		textField.layer.masksToBounds = true
+		textField.leftView?.tintColor = .secondaryLabel
+	}
+
+	private func styleCard(
+		_ view: UIView,
+		isDarkMode: Bool,
+		cornerRadius: CGFloat = 20,
+		shadowRadius: CGFloat = 12,
+		shadowOpacity: Float = 0.08,
+		shadowOffset: CGSize = CGSize(width: 0, height: 4)
+	) {
+		view.layer.cornerRadius = cornerRadius
+		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
+		view.layer.shadowColor = UIColor.black.cgColor
+		view.layer.shadowOpacity = isDarkMode ? 0 : shadowOpacity
+		view.layer.shadowOffset = shadowOffset
+		view.layer.shadowRadius = shadowRadius
+		view.layer.masksToBounds = false
 	}
 	
 	private func setupLocationServices() {
@@ -254,11 +289,19 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
 			content.imageProperties.tintColor = .systemBlue
 			cell.contentConfiguration = content
 			cell.selectionStyle = .none
+			if traitCollection.userInterfaceStyle == .dark {
+				cell.backgroundColor = .secondarySystemBackground
+				cell.contentView.backgroundColor = .secondarySystemBackground
+			}
 			return cell
 		} else {
 			let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
 			let item = locationSuggestions[indexPath.row]
 			cell.textLabel?.text = item.fullText
+			if traitCollection.userInterfaceStyle == .dark {
+				cell.backgroundColor = .secondarySystemBackground
+				cell.contentView.backgroundColor = .secondarySystemBackground
+			}
 			return cell
 		}
 	}

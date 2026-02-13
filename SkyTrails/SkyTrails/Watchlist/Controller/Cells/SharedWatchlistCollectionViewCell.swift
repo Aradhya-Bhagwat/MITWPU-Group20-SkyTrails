@@ -10,6 +10,7 @@ import UIKit
 class SharedWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "SharedWatchlistCollectionViewCell"
+    private var defaultContainerBackgroundColor: UIColor = .white
     
     // MARK: - IBOutlets
     @IBOutlet weak var containerView: UIView!
@@ -28,6 +29,7 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        defaultContainerBackgroundColor = containerView.backgroundColor ?? .white
         setupUI()
     }
     
@@ -35,13 +37,9 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         // Container Styling
         self.clipsToBounds = false
         self.contentView.clipsToBounds = false
-        
-        containerView.backgroundColor = .white
+
+        updateCardAppearance()
         containerView.layer.cornerRadius = 16
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOpacity = 0.1
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
         containerView.layer.masksToBounds = false
         
         // Main Image Styling
@@ -57,6 +55,15 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         // Label Styling
         dateLabel.textColor = .secondaryLabel
         locationLabel.textColor = .secondaryLabel
+    }
+
+    private func updateCardAppearance() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultContainerBackgroundColor
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOpacity = isDarkMode ? 0 : 0.1
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        containerView.layer.shadowRadius = 8
     }
     
     private func setupBadge(_ view: UIView, label: UILabel, color: UIColor) {
@@ -76,6 +83,7 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
                    speciesCount: Int,
                    observedCount: Int,
                    userImages: [UIImage]) {
+        updateCardAppearance()
         
         titleLabel.text = title
         self.mainImageView.image = mainImage
@@ -87,6 +95,11 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         blueBadgeLabel.addIcon(text: "\(observedCount)", iconName: "bird.fill")
         
         setupAvatars(images: userImages)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateCardAppearance()
     }
     
     private func setupAvatars(images: [UIImage]) {

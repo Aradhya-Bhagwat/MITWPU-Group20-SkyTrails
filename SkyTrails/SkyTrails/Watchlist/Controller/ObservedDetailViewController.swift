@@ -360,19 +360,42 @@ class ObservedDetailViewController: UIViewController {
 	}
 	
 	func setupStyling() {
-		view.backgroundColor = .systemGray6
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemGray6
+        suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 		birdImageView.layer.cornerRadius = 24
 		birdImageView.clipsToBounds = true
+        nameTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
+        nameTextField.textColor = .label
+        nameTextField.layer.cornerRadius = 12
+        nameTextField.layer.masksToBounds = true
+        notesTextView.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        notesTextView.textColor = .label
+        notesTextView.layer.cornerRadius = 12
+        notesTextView.layer.masksToBounds = true
+        styleSearchBar(locationSearchBar, isDarkMode: isDarkMode)
 		[detailsCardView, notesCardView, locationCardView].forEach { styleCard($0) }
 	}
 	
-	func styleCard(_ view: UIView) {
-		view.layer.cornerRadius = 20
-		view.backgroundColor = .white
-		view.layer.shadowOpacity = 0.08
-		view.layer.shadowOffset = CGSize(width: 0, height: 4)
-		view.layer.shadowRadius = 12
+	func styleCard(_ cardView: UIView) {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+		cardView.layer.cornerRadius = 20
+		cardView.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
+        cardView.layer.shadowColor = UIColor.black.cgColor
+		cardView.layer.shadowOpacity = isDarkMode ? 0 : 0.08
+		cardView.layer.shadowOffset = CGSize(width: 0, height: 4)
+		cardView.layer.shadowRadius = 12
+        cardView.layer.masksToBounds = false
 	}
+
+    private func styleSearchBar(_ searchBar: UISearchBar, isDarkMode: Bool) {
+        let textField = searchBar.searchTextField
+        textField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        textField.textColor = .label
+        textField.layer.cornerRadius = 12
+        textField.layer.masksToBounds = true
+        textField.leftView?.tintColor = .secondaryLabel
+    }
 }
 
 	// MARK: - Protocols & Delegates
@@ -421,6 +444,9 @@ extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchComple
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SuggestionCell", for: indexPath)
 		let item = locationSuggestions[indexPath.row]
 		cell.textLabel?.text = item.fullText
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        cell.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        cell.textLabel?.textColor = .label
 		print("Debug: tableView cellForRowAt - row \(indexPath.row): '\(item.fullText)'")
 		return cell
 	}

@@ -103,7 +103,7 @@
                                             </view>
                                             <view contentMode="scaleToFill" horizontalHuggingPriority="50" translatesAutoresizingMaskIntoConstraints="NO" id="BWi-Gu-xs8">
                                                 <rect key="frame" x="106.33333333333331" y="0.0" width="117.66666666666669" height="40"/>
-                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                             </view>
                                         </subviews>
                                     </stackView>

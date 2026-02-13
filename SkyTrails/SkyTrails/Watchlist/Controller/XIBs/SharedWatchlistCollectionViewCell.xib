@@ -98,7 +98,7 @@
                                     </view>
                                     <view contentMode="scaleToFill" horizontalHuggingPriority="249" horizontalCompressionResistancePriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="Ujg-P4-WLR">
                                         <rect key="frame" x="116" y="0.0" width="704" height="127.33333333333333"/>
-                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="top" spacing="-10" translatesAutoresizingMaskIntoConstraints="NO" id="lRf-ck-N4k">
                                         <rect key="frame" x="828" y="0.0" width="70" height="25"/>
