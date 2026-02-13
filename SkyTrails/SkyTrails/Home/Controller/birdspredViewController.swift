@@ -8,11 +8,8 @@
 import UIKit
 import MapKit
 
-
-
 class birdspredViewController: UIViewController {
 
-    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var pillView: UIView!
     @IBOutlet weak var pillLabel: UILabel!
@@ -163,12 +160,89 @@ class birdspredViewController: UIViewController {
         let span = MKCoordinateSpan(latitudeDelta: 25.0, longitudeDelta: 25.0)
         let region = MKCoordinateRegion(center: center, span: span)
         mapView.setRegion(region, animated: false)
+        
+        // Add Tap Gesture for Path Highlighting
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleMapTap(_:)))
+        mapView.addGestureRecognizer(tap)
+    }
+    
+    @objc private func handleMapTap(_ gesture: UITapGestureRecognizer) {
+        let tapPoint = gesture.location(in: mapView)
+        
+        for overlay in mapView.overlays {
+            if let polyline = overlay as? PredictedPathPolyline {
+                let points = polyline.points()
+                let count = polyline.pointCount
+                var found = false
+                
+                // Simple hit testing against polyline segments
+                for i in 0..<(count - 1) {
+                    let p1 = mapView.convert(points[i].coordinate, toPointTo: mapView)
+                    let p2 = mapView.convert(points[i+1].coordinate, toPointTo: mapView)
+                    
+                    if distanceToSegment(p: tapPoint, v: p1, w: p2) < 20 { // 20pt hit area
+                        found = true
+                        break
+                    }
+                }
+                
+                if found {
+                    polyline.isSelected.toggle()
+                    if let renderer = mapView.renderer(for: polyline) {
+                        renderer.setNeedsDisplay()
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Geometry Helpers
+    
+    private func distanceToSegment(p: CGPoint, v: CGPoint, w: CGPoint) -> CGFloat {
+        let l2 = dist2(v, w)
+        if l2 == 0 { return dist2(p, v).squareRoot() }
+        var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2
+        t = max(0, min(1, t))
+        let projection = CGPoint(x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y))
+        return dist2(p, projection).squareRoot()
+    }
+
+    private func dist2(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
+        return (p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y)
+    }
+    
+    private func updateMapForCurrentBird() {
+        mapView.removeAnnotations(mapView.annotations)
+        mapView.removeOverlays(mapView.overlays)
+        
+        guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
+        
+        let input = predictionInputs[currentSpeciesIndex]
+        let relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
+        
+        var coordinates: [CLLocationCoordinate2D] = []
+        
+        for sighting in relevantSightings {
+            let coord = CLLocationCoordinate2D(latitude: sighting.lat, longitude: sighting.lon)
+            coordinates.append(coord)
+        }
+        
+        if coordinates.count > 1 {
+            let polyline = PredictedPathPolyline(coordinates: coordinates, count: coordinates.count)
+            mapView.addOverlay(polyline)
+            
+            // Zoom to show path
+            let polylineRect = polyline.boundingMapRect
+            mapView.setVisibleMapRect(polylineRect, edgePadding: UIEdgeInsets(top: 50, left: 50, bottom: 250, right: 50), animated: true)
+        }
     }
     
     private func updateCardForCurrentIndex() {
         guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
         
         let input = predictionInputs[currentSpeciesIndex]
+        print("🔍 [birdspredVC] Updating card for \(input.species.name)")
+        print("🔍 [birdspredVC] Received dates - Start: \(String(describing: input.startDate)), End: \(String(describing: input.endDate))")
         
         birdImageView.image = UIImage(named: input.species.imageName)
         titleLabel.text = input.species.name
@@ -186,47 +260,6 @@ class birdspredViewController: UIViewController {
         pageControl.currentPage = currentSpeciesIndex
         
         pillLabel.text = "\(predictionInputs.count) Species"
-    }
-    
-    private func updateMapForCurrentBird() {
-        mapView.removeAnnotations(mapView.annotations)
-        mapView.removeOverlays(mapView.overlays)
-        
-        guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
-        
-        let input = predictionInputs[currentSpeciesIndex]
-        let relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
-        
-        var coordinates: [CLLocationCoordinate2D] = []
-        var annotations: [MKPointAnnotation] = []
-        
-        for sighting in relevantSightings {
-            let coord = CLLocationCoordinate2D(latitude: sighting.lat, longitude: sighting.lon)
-            coordinates.append(coord)
-            
-            let point = MKPointAnnotation()
-            point.coordinate = coord
-            point.title = input.species.name
-            point.subtitle = "Week \(sighting.week)"
-            annotations.append(point)
-        }
-        
-        mapView.addAnnotations(annotations)
-        
-        if coordinates.count > 1 {
-            let polyline = PredictedPathPolyline(coordinates: coordinates, count: coordinates.count)
-            mapView.addOverlay(polyline)
-        }
-        
-        if !coordinates.isEmpty {
-            var zoomRect = MKMapRect.null
-            for annotation in annotations {
-                let annotationPoint = MKMapPoint(annotation.coordinate)
-                let pointRect = MKMapRect(x: annotationPoint.x, y: annotationPoint.y, width: 0.1, height: 0.1)
-                zoomRect = zoomRect.union(pointRect)
-            }
-            mapView.setVisibleMapRect(zoomRect, edgePadding: UIEdgeInsets(top: 50, left: 50, bottom: 250, right: 50), animated: true)
-        }
     }
     
     @objc private func didTapPill() {
@@ -290,6 +323,10 @@ class birdspredViewController: UIViewController {
 extension birdspredViewController: MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let polyline = overlay as? PredictedPathPolyline {
+            return ArrowPolylineRenderer(overlay: polyline)
+        }
+        
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
             renderer.lineWidth = 4
@@ -298,8 +335,6 @@ extension birdspredViewController: MKMapViewDelegate {
             
             if overlay is ProgressPathPolyline {
                 renderer.strokeColor = .systemBlue
-            } else if overlay is PredictedPathPolyline {
-                renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.3)
             } else {
                 renderer.strokeColor = .systemBlue 
             }
@@ -311,19 +346,79 @@ extension birdspredViewController: MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard !(annotation is MKUserLocation) else { return nil }
+        // No custom annotations needed for now
+        return nil
+    }
+}
+
+// MARK: - Arrow Renderer
+
+class ArrowPolylineRenderer: MKPolylineRenderer {
+    override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
         
-        let identifier = "BirdPin"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+        let predictedPolyline = self.overlay as? PredictedPathPolyline
+        let isHighlighted = predictedPolyline?.isSelected ?? false
         
-        if annotationView == nil {
-            annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-            annotationView?.canShowCallout = true
-            annotationView?.markerTintColor = .systemBlue
-            annotationView?.glyphImage = UIImage(systemName: "bird")
+        // Style lines
+        if isHighlighted {
+            self.strokeColor = .systemBlue
+            self.lineWidth = 6
         } else {
-            annotationView?.annotation = annotation
+            self.strokeColor = UIColor.systemBlue.withAlphaComponent(0.6)
+            self.lineWidth = 4
         }
         
-        return annotationView
+        super.draw(mapRect, zoomScale: zoomScale, in: context)
+        
+        // Draw arrows
+        guard let polyline = self.polyline as? MKPolyline else { return }
+        
+        // Arrow styling
+        let arrowColor = isHighlighted ? UIColor.systemYellow.cgColor : UIColor.white.cgColor
+        context.setFillColor(arrowColor)
+        
+        let mapPoints = polyline.points()
+        let pointCount = polyline.pointCount
+        
+        if pointCount < 2 { return }
+        
+        // Iterate segments
+        for i in 0..<(pointCount - 1) {
+            let start = mapPoints[i]
+            let end = mapPoints[i+1]
+            
+            // Calculate Midpoint
+            let midX = (start.x + end.x) / 2
+            let midY = (start.y + end.y) / 2
+            let midPoint = MKMapPoint(x: midX, y: midY)
+            
+            // Optimization: Skip if not visible
+            if !mapRect.contains(midPoint) { continue }
+            
+            // Convert to screen/context point
+            let point = self.point(for: midPoint)
+            
+            // Calculate Angle
+            let startPt = self.point(for: start)
+            let endPt = self.point(for: end)
+            let angle = atan2(endPt.y - startPt.y, endPt.x - startPt.x)
+            
+            // Draw
+            context.saveGState()
+            context.translateBy(x: point.x, y: point.y)
+            context.rotate(by: angle)
+            
+            // Arrow size - roughly 10pt
+            let arrowSize: CGFloat = 10.0 / zoomScale
+            
+            context.beginPath()
+            context.move(to: CGPoint(x: arrowSize/2, y: 0)) // Tip
+            context.addLine(to: CGPoint(x: -arrowSize/2, y: -arrowSize/2)) // Bottom Left
+            context.addLine(to: CGPoint(x: -arrowSize/2, y: arrowSize/2)) // Bottom Right
+            context.closePath()
+            context.fillPath()
+            
+            context.restoreGState()
+        }
     }
 }
