@@ -4,7 +4,7 @@
 > **Note to Agents:** This file serves as the source of truth for the Home module's data architecture. If you add new models, change data flow, or modify how view controllers consume data, you **MUST** update this file to reflect those changes.
 
 ## Overview
-The Home module has been migrated to **SwiftData** for persistence and data management. It uses a centralized `HomeManager` that coordinates between specialized managers for hotspots, migrations, community observations, and watchlists. Initial data is seeded from `home_data.json` via the `HomeDataSeeder`.
+The Home module has been migrated to **SwiftData** for persistence and data management. It uses a centralized `HomeManager` (which now includes `HotspotManager`, `MigrationManager`, and `CommunityObservationManager` logic) to coordinate data. Models for hotspots, migrations, and observations are consolidated in `HomeModels.swift`. Initial data is seeded from `home_data.json` via the `HomeDataSeeder`.
 
 ## Data Flow Architecture
 
@@ -14,13 +14,13 @@ The Home module has been migrated to **SwiftData** for persistence and data mana
 3.  **Relationships:** The seeder ensures relationships between `Bird`, `Hotspot`, `MigrationSession`, and `CommunityObservation` are correctly established.
 
 ### 2. Specialized Managers
-*   **HotspotManager:** Manages `Hotspot` and `HotspotSpeciesPresence`. Handles queries for birds present at specific locations.
-*   **MigrationManager:** Manages `MigrationSession` and `TrajectoryPath`. Calculates active migrations for the current week.
-*   **CommunityObservationManager:** Manages `CommunityObservation`. Handles local and global observation feeds.
+*   **HotspotManager:** (Merged into `HomeManager.swift`) Manages `Hotspot` and `HotspotSpeciesPresence`.
+*   **MigrationManager:** (Merged into `HomeManager.swift`) Manages `MigrationSession` and `TrajectoryPath`.
+*   **CommunityObservationManager:** (Merged into `HomeManager.swift`) Manages `CommunityObservation`.
 *   **WatchlistManager:** Manages `Watchlist` and `WatchlistEntry`. Central source for user-tracked species and spots.
 
 ### 3. Home Management (`HomeManager.swift`)
-The `HomeManager` is a singleton that provides a high-level API for the Home screen:
+The `HomeManager` is a singleton that provides a high-level API for the Home screen and now contains the logic for Hotspots, Migrations, and Community Observations to reduce file count.
 *   **HomeScreenData:** A combined struct containing all data needed for the `HomeViewController`.
 *   **Active Migrations:** Provides `MigrationCardResult` objects (used for the "Prediction" carousel).
 *   **Upcoming Birds:** Intersects user watchlist with local species presence.

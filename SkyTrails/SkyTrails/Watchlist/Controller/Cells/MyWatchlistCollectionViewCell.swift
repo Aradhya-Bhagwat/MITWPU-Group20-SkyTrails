@@ -76,7 +76,12 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	
 	func configure(with data: WatchlistData) {
 		titleLabel.text = "All my birds"
-		speciesCountLabel.text = "\(data.totalCount)"
+		
+        // Updated to show Unobserved instead of Total
+        let unobservedCount = data.totalCount - data.observedCount
+		speciesCountLabel.text = "\(unobservedCount)"
+        speciesTitleLabel.text = "Unobserved"
+        
 		observedCountLabel.text = "\(data.observedCount)"
 		
 		let images = data.images
