@@ -361,7 +361,7 @@ class ObservedDetailViewController: UIViewController {
 	
 	func setupStyling() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
-		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemGray6
+		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
         suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 		birdImageView.layer.cornerRadius = 24
 		birdImageView.clipsToBounds = true
@@ -369,7 +369,7 @@ class ObservedDetailViewController: UIViewController {
         nameTextField.textColor = .label
         nameTextField.layer.cornerRadius = 12
         nameTextField.layer.masksToBounds = true
-        notesTextView.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        notesTextView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         notesTextView.textColor = .label
         notesTextView.layer.cornerRadius = 12
         notesTextView.layer.masksToBounds = true
@@ -390,7 +390,7 @@ class ObservedDetailViewController: UIViewController {
 
     private func styleSearchBar(_ searchBar: UISearchBar, isDarkMode: Bool) {
         let textField = searchBar.searchTextField
-        textField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+        textField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         textField.textColor = .label
         textField.layer.cornerRadius = 12
         textField.layer.masksToBounds = true
