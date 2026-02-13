@@ -1,21 +1,229 @@
 //
-//  LocationRuleParams.swift
+//  WatchlistModel.swift
 //  SkyTrails
 //
-//  Created by SDC-USER on 10/02/26.
-//
-
-
-//
-//  WatchlistRuleEngine.swift
-//  SkyTrails
-//
-//  Automated rule processing for watchlists
+//  Created by SDC-USER on 13/02/26.
 //
 
 import Foundation
 import SwiftData
 import CoreLocation
+
+// MARK: - Constants
+
+enum WatchlistConstants {
+    static let myWatchlistID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+    static let defaultOwnerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+}
+
+// MARK: - Enums
+
+enum WatchlistType: String, Codable {
+    case custom        // User-created with automation rules
+    case shared        // Shared among multiple users
+    case my_watchlist  // Virtual/derived - aggregation (Logic handled in Manager)
+}
+
+enum WatchlistEntryStatus: String, Codable {
+    case to_observe
+    case observed
+}
+
+enum WatchlistSharePermission: String, Codable {
+    case view
+    case edit
+    case admin
+}
+
+enum WatchlistRuleType: String, Codable {
+    case location
+    case date_range
+    case species_family
+    case rarity_level
+    case migration_pattern
+}
+
+enum WatchlistMode {
+    case observed
+    case unobserved
+}
+
+// MARK: - Core Watchlist Models
+
+@Model
+final class Watchlist {
+    // Default owner ID for single-user offline mode
+    static let defaultOwnerId = WatchlistConstants.defaultOwnerID
+    
+    @Attribute(.unique) var id: UUID
+    var owner_id: UUID = Watchlist.defaultOwnerId // In a real app with Auth, this links to User
+    var type: WatchlistType? // Default to custom if missing
+    var title: String?
+    var location: String?
+    var startDate: Date?
+    var endDate: Date?
+    var observedCount: Int = 0
+    var speciesCount: Int = 0
+    var created_at: Date = Date()
+    var updated_at: Date?
+    var locationDisplayName: String?
+    
+    // Relationships
+    @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.watchlist) var entries: [WatchlistEntry]?
+    @Relationship(deleteRule: .cascade, inverse: \WatchlistRule.watchlist) var rules: [WatchlistRule]?
+    @Relationship(deleteRule: .cascade, inverse: \WatchlistShare.watchlist) var shares: [WatchlistShare]?
+    @Relationship(deleteRule: .cascade, inverse: \WatchlistImage.watchlist) var images: [WatchlistImage]?
+    
+    init(
+        id: UUID = UUID(),
+        owner_id: UUID = Watchlist.defaultOwnerId,
+        type: WatchlistType = .custom,
+        title: String? = nil,
+        location: String? = nil,
+        locationDisplayName: String? = nil,
+        startDate: Date? = nil,
+        endDate: Date? = nil
+    ) {
+        self.id = id
+        self.owner_id = owner_id
+        self.type = type
+        self.title = title
+        self.location = location
+        self.locationDisplayName = locationDisplayName
+        self.startDate = startDate
+        self.endDate = endDate
+        self.created_at = Date()
+    }
+}
+
+@Model
+final class WatchlistEntry {
+    @Attribute(.unique) var id: UUID
+    var watchlist: Watchlist?
+    var bird: Bird? // Reference to the Bird Reference Data
+    
+    var nickname: String?
+    var status: WatchlistEntryStatus
+    var notes: String?
+    var addedDate: Date = Date()
+    var observationDate: Date?
+    var toObserveStartDate: Date?
+    var toObserveEndDate: Date?
+    var observedBy: String? // Name of user who observed it (useful in shared lists)
+    
+    // Denormalized Location Data for Quick Access
+    var lat: Double?
+    var lon: Double?
+    var locationDisplayName: String?
+    
+    var priority: Int = 0
+    var notify_upcoming: Bool = false
+    var target_date_range: String? // Text description like "Oct - Nov"
+    
+    @Relationship(deleteRule: .cascade, inverse: \ObservedBirdPhoto.watchlistEntry) var photos: [ObservedBirdPhoto]?
+    
+    init(
+        id: UUID = UUID(),
+        watchlist: Watchlist? = nil,
+        bird: Bird? = nil,
+        status: WatchlistEntryStatus = .to_observe,
+        notes: String? = nil,
+        observationDate: Date? = nil,
+        observedBy: String? = nil
+    ) {
+        self.id = id
+        self.watchlist = watchlist
+        self.bird = bird
+        self.status = status
+        self.notes = notes
+        self.observationDate = observationDate
+        self.observedBy = observedBy
+        self.addedDate = Date()
+    }
+}
+
+@Model
+final class WatchlistRule {
+    @Attribute(.unique) var id: UUID
+    var watchlist: Watchlist?
+    var rule_type: WatchlistRuleType
+    var parameters_json: String // SwiftData doesn't support raw JSON types well, store as String
+    var is_active: Bool = true
+    var priority: Int = 0
+    var created_at: Date = Date()
+    
+    init(id: UUID = UUID(), watchlist: Watchlist? = nil, rule_type: WatchlistRuleType, parameters: String) {
+        self.id = id
+        self.watchlist = watchlist
+        self.rule_type = rule_type
+        self.parameters_json = parameters
+    }
+}
+
+@Model
+final class WatchlistShare {
+    @Attribute(.unique) var id: UUID
+    var watchlist: Watchlist?
+    var user_id: UUID // The user it is shared WITH
+    var permission: WatchlistSharePermission
+    var shared_at: Date = Date()
+    var shared_by_user_id: UUID?
+    
+    init(id: UUID = UUID(), watchlist: Watchlist? = nil, user_id: UUID, permission: WatchlistSharePermission = .view) {
+        self.id = id
+        self.watchlist = watchlist
+        self.user_id = user_id
+        self.permission = permission
+    }
+}
+
+@Model
+final class WatchlistImage {
+    @Attribute(.unique) var id: UUID
+    var watchlist: Watchlist?
+    var imagePath: String
+    var uploaded_at: Date = Date()
+    
+    init(id: UUID = UUID(), watchlist: Watchlist? = nil, imagePath: String) {
+        self.id = id
+        self.watchlist = watchlist
+        self.imagePath = imagePath
+    }
+}
+
+@Model
+final class ObservedBirdPhoto {
+    @Attribute(.unique) var id: UUID
+    var watchlistEntry: WatchlistEntry?
+    var imagePath: String
+    var captured_at: Date?
+    var uploaded_at: Date = Date()
+    
+    init(id: UUID = UUID(), watchlistEntry: WatchlistEntry? = nil, imagePath: String) {
+        self.id = id
+        self.watchlistEntry = watchlistEntry
+        self.imagePath = imagePath
+    }
+}
+
+// MARK: - DTOs (Domain Models)
+
+struct WatchlistSummaryDTO: Hashable {
+    let id: UUID
+    let title: String
+    let subtitle: String // Location
+    let dateText: String // "Oct - Nov"
+    let image: String?
+    let previewImages: [String] // For My Watchlist grid
+    let stats: WatchlistStatsDTO
+    let type: WatchlistType
+}
+
+struct WatchlistStatsDTO: Hashable {
+    let observedCount: Int
+    let totalCount: Int
+    let rareCount: Int
+}
 
 // MARK: - Rule Parameter Models
 
@@ -46,6 +254,8 @@ struct MigrationPatternRuleParams: Codable {
 
 // MARK: - Rule Engine Extension
 
+// Note: Extension is placed here because it depends on Rule Parameter Models above.
+// It is kept in this file to consolidate all Watchlist-related model logic.
 extension WatchlistManager {
     
     /// Apply all active rules to a watchlist and auto-add birds
@@ -290,5 +500,66 @@ extension WatchlistManager {
             saveContext()
             print("🗑️ [RuleEngine] Deleted rule \(ruleId)")
         }
+    }
+}
+
+// MARK: - Repository Protocol
+
+protocol WatchlistRepository {
+    func loadDashboardData() async throws -> (myWatchlist: WatchlistSummaryDTO?, custom: [WatchlistSummaryDTO], shared: [WatchlistSummaryDTO], globalStats: WatchlistStatsDTO)
+    func deleteWatchlist(id: UUID) async throws
+    func ensureMyWatchlistExists() async throws -> UUID
+    func getPersonalWatchlists() -> [Watchlist]
+}
+
+// MARK: - User Preferences
+
+final class LocationPreferences {
+    static let shared = LocationPreferences()
+    
+    private let defaults = UserDefaults.standard
+    private let homeLatKey = "kUserHomeLatitude"
+    private let homeLonKey = "kUserHomeLongitude"
+    private let homeNameKey = "kUserHomeLocationName"
+    
+    private init() {}
+    
+    var homeLocation: CLLocationCoordinate2D? {
+        get {
+            guard defaults.object(forKey: homeLatKey) != nil else { return nil }
+            let lat = defaults.double(forKey: homeLatKey)
+            let lon = defaults.double(forKey: homeLonKey)
+            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        }
+        set {
+            if let location = newValue {
+                defaults.set(location.latitude, forKey: homeLatKey)
+                defaults.set(location.longitude, forKey: homeLonKey)
+            } else {
+                defaults.removeObject(forKey: homeLatKey)
+                defaults.removeObject(forKey: homeLonKey)
+            }
+        }
+    }
+    
+    var homeLocationName: String? {
+        get { defaults.string(forKey: homeNameKey) }
+        set { defaults.set(newValue, forKey: homeNameKey) }
+    }
+    
+    func setHomeLocation(_ coordinate: CLLocationCoordinate2D, name: String? = nil) async {
+        homeLocation = coordinate
+        
+        if let name = name {
+            homeLocationName = name
+        } else {
+            // Reverse geocode to get name
+            homeLocationName = await LocationService.shared.reverseGeocode(
+                lat: coordinate.latitude,
+                lon: coordinate.longitude
+            )
+        }
+        
+        print("🏠 [LocationPreferences] Home location set to: \(homeLocationName ?? "Unknown")")
     }
 }
