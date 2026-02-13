@@ -45,17 +45,14 @@ class WatchlistHomeViewController: UIViewController {
 	
 	
 	@IBOutlet weak var summaryCardCollectionView: UICollectionView!
-	@IBOutlet weak var addFloatingButton: UIButton!
+
 	
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
 		setupCollectionView()
-		addFloatingButton.configuration = .glass()
-		addFloatingButton.tintColor = .blue
-		let image = UIImage(named: "custom.bird.fill.badge.plus")
-		addFloatingButton.setImage(image, for: .normal)
+		
 		
 		loadData()
 	}
@@ -206,28 +203,6 @@ extension WatchlistHomeViewController {
 		present(alert, animated: true)
 	}
 	
-		// MARK: - Floating Action Button
-	@IBAction func addFloatingButtonTapped(_ sender: UIButton) {
-		let alert = UIAlertController(title: "Add to watchlist", message: nil, preferredStyle: .actionSheet)
-		
-		alert.addAction(UIAlertAction(title: "Add to observed", style: .default) { [weak self] _ in
-			self?.showObservedDetail()
-		})
-		
-		alert.addAction(UIAlertAction(title: "Add to unobserved", style: .default) { [weak self] _ in
-			self?.showSpeciesSelection()
-		})
-		
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-		
-		if let popover = alert.popoverPresentationController {
-			popover.sourceView = sender
-			popover.sourceRect = sender.bounds
-		}
-		
-		present(alert, animated: true)
-	}
-	
 	private func showObservedDetail() {
 		Task {
 			do {
@@ -371,7 +346,25 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				if indexPath.item == 0 {
 					navigateToCreateWatchlist()
 				} else {
-					addFloatingButtonTapped(addFloatingButton)
+					let alert = UIAlertController(title: "Add to watchlist", message: nil, preferredStyle: .actionSheet)
+					
+					alert.addAction(UIAlertAction(title: "Add to observed", style: .default) { [weak self] _ in
+						self?.showObservedDetail()
+					})
+					
+					alert.addAction(UIAlertAction(title: "Add to unobserved", style: .default) { [weak self] _ in
+						self?.showSpeciesSelection()
+					})
+					
+					alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+					
+					if let popover = alert.popoverPresentationController,
+					   let sourceView = collectionView.cellForItem(at: indexPath) {
+						popover.sourceView = sourceView
+						popover.sourceRect = sourceView.bounds
+					}
+					
+					present(alert, animated: true)
 				}
 				
 			case .myWatchlist:
