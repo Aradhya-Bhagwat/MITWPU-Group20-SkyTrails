@@ -323,9 +323,14 @@ extension HomeViewController {
 	}
 
     private func navigateToBirdPrediction(bird: Bird, statusText: String) {
-        // Create input based on bird's valid months or current week
-        let startDate = Date()
-        let endDate = Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+        print("🔍 [HomeVC] Navigating to prediction for \(bird.commonName) with statusText: \(statusText)")
+
+        let (parsedStart, parsedEnd) = homeManager.parseDateRange(statusText)
+        let startDate = parsedStart ?? Date()
+        let endDate = parsedEnd ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+
+        print("🔍 [HomeVC] Parsed dates - Start: \(String(describing: parsedStart)), End: \(String(describing: parsedEnd))")
+        print("🔍 [HomeVC] Final dates used - Start: \(startDate), End: \(endDate)")
 
         let input = BirdDateInput(
             species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),

@@ -7,7 +7,9 @@
 
 import MapKit
 
-class PredictedPathPolyline: MKPolyline {}
+class PredictedPathPolyline: MKPolyline {
+    var isSelected: Bool = false
+}
 class ProgressPathPolyline: MKPolyline {}
 class CurrentLocationAnnotation: MKPointAnnotation {}
 class HotspotBoundaryPolygon: MKPolygon {}

@@ -213,31 +213,36 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
 extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-        let startDate = Date()
-        let endDate = Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+        let bird: Bird
+        let dateString: String
 
         if indexPath.section == 0 {
             let item = watchlistData[indexPath.row]
-            let input = BirdDateInput(
-                species: SpeciesData(id: item.bird.id.uuidString, name: item.bird.commonName, imageName: item.bird.staticImageName),
-                startDate: startDate,
-                endDate: endDate
-            )
-            if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-                mapVC.predictionInputs = [input]
-                self.navigationController?.pushViewController(mapVC, animated: true)
-            }
+            bird = item.bird
+            dateString = item.statusText
+            print("🔍 [AllUpcomingBirdsVC] Selected watchlist bird: \(bird.commonName), Date string: \(dateString)")
         } else {
             let result = recommendationsData[indexPath.row]
-            let input = BirdDateInput(
-                species: SpeciesData(id: result.bird.id.uuidString, name: result.bird.commonName, imageName: result.bird.staticImageName),
-                startDate: startDate,
-                endDate: endDate
-            )
-            if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-                mapVC.predictionInputs = [input]
-                self.navigationController?.pushViewController(mapVC, animated: true)
-            }
+            bird = result.bird
+            dateString = result.dateRange
+            print("🔍 [AllUpcomingBirdsVC] Selected recommended bird: \(bird.commonName), Date string: \(dateString)")
+        }
+
+        let (parsedStart, parsedEnd) = HomeManager.shared.parseDateRange(dateString)
+        let finalStart = parsedStart ?? Date()
+        let finalEnd = parsedEnd ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: finalStart) ?? finalStart
+
+        print("🔍 [AllUpcomingBirdsVC] Parsed dates - Start: \(String(describing: parsedStart)), End: \(String(describing: parsedEnd))")
+        print("🔍 [AllUpcomingBirdsVC] Final dates - Start: \(finalStart), End: \(finalEnd)")
+
+        let input = BirdDateInput(
+            species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+            startDate: finalStart,
+            endDate: finalEnd
+        )
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+            mapVC.predictionInputs = [input]
+            self.navigationController?.pushViewController(mapVC, animated: true)
         }
     }
 }

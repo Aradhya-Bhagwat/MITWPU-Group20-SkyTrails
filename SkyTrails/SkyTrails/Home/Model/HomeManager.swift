@@ -481,9 +481,23 @@ class HomeManager {
 
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
+        let currentYear = Calendar.current.component(.year, from: Date())
 
-        let start = formatter.date(from: parts[0].trimmingCharacters(in: .whitespaces))
-        let end = formatter.date(from: parts[1].trimmingCharacters(in: .whitespaces))
+        var start = formatter.date(from: parts[0].trimmingCharacters(in: .whitespaces))
+        var end = formatter.date(from: parts[1].trimmingCharacters(in: .whitespaces))
+
+        let calendar = Calendar.current
+        if let s = start {
+            var comps = calendar.dateComponents([.month, .day], from: s)
+            comps.year = currentYear
+            start = calendar.date(from: comps)
+        }
+        if let e = end {
+            var comps = calendar.dateComponents([.month, .day], from: e)
+            comps.year = currentYear
+            end = calendar.date(from: comps)
+        }
+
         return (start, end)
     }
 
@@ -506,7 +520,45 @@ class HomeManager {
     }
 
     func getRelevantSightings(for input: BirdDateInput) -> [RelevantSighting] {
-        return []
+        guard let birdId = UUID(uuidString: input.species.id) else { return [] }
+
+        let birdDescriptor = FetchDescriptor<Bird>(
+            predicate: #Predicate { bird in
+                bird.id == birdId
+            }
+        )
+
+        guard let bird = try? modelContext.fetch(birdDescriptor).first else { return [] }
+
+        let sessions = migrationManager.getSessions(for: bird)
+        guard !sessions.isEmpty else { return [] }
+
+        let calendar = Calendar.current
+        let fallbackWeek = calendar.component(.weekOfYear, from: Date())
+        let startWeek = input.startDate?.weekOfYear ?? fallbackWeek
+        let endWeek = input.endDate?.weekOfYear ?? ((startWeek + 4 - 1) % 52 + 1)
+
+        let isWrapping = endWeek < startWeek
+
+        var sightings: [RelevantSighting] = []
+        for session in sessions {
+            guard let paths = session.trajectoryPaths else { continue }
+
+            let relevantPaths = paths.filter { path in
+                if isWrapping {
+                    return path.week >= startWeek || path.week <= endWeek
+                }
+                return path.week >= startWeek && path.week <= endWeek
+            }
+
+            for path in relevantPaths {
+                sightings.append(
+                    RelevantSighting(lat: path.lat, lon: path.lon, week: path.week)
+                )
+            }
+        }
+
+        return sightings.sorted { $0.week < $1.week }
     }
 
     // MARK: - Migration Helpers
@@ -557,10 +609,10 @@ class HomeManager {
         return "Season pending"
     }
 
-    /// Formats a week range into "d MMM - d MMM" string
+    /// Formats a week range into "MMM d - MMM d" string
     func formatWeekRange(startWeek: Int, endWeek: Int) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM"
+        formatter.dateFormat = "MMM d"
         
         let calendar = Calendar.current
         let currentYear = calendar.component(.year, from: Date())
