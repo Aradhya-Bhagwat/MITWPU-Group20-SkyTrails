@@ -64,8 +64,8 @@ class EditWatchlistDetailViewController: UIViewController {
 		let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		
 			// Background & Styling
-		view.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemGray6
-		titleTextField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
+		titleTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 		titleTextField.textColor = .label
 		titleTextField.layer.cornerRadius = 12
 		titleTextField.layer.masksToBounds = true
@@ -95,7 +95,7 @@ class EditWatchlistDetailViewController: UIViewController {
 
 	private func styleSearchBar(_ searchBar: UISearchBar, isDarkMode: Bool) {
 		let textField = searchBar.searchTextField
-		textField.backgroundColor = isDarkMode ? .tertiarySystemBackground : .systemBackground
+		textField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 		textField.textColor = .label
 		textField.layer.cornerRadius = 12
 		textField.layer.masksToBounds = true

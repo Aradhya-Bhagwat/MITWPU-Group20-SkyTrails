@@ -20,10 +20,6 @@
                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="whv-fJ-5Ro">
                         <rect key="frame" x="0.0" y="0.0" width="1273" height="351"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="chevron.right" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="ZS2-T8-FPk">
-                                <rect key="frame" x="1248.3333333333333" y="13.999999999999998" width="12.666666666666742" height="16.666666666666664"/>
-                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            </imageView>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ASx-DQ-GKO">
                                 <rect key="frame" x="0.0" y="0.0" width="351" height="351"/>
                                 <constraints>
@@ -142,13 +138,11 @@
                             <constraint firstAttribute="trailing" secondItem="tww-NN-K0y" secondAttribute="trailing" constant="12" id="22g-WC-t86"/>
                             <constraint firstItem="ASx-DQ-GKO" firstAttribute="leading" secondItem="whv-fJ-5Ro" secondAttribute="leading" id="25u-Xk-OdK"/>
                             <constraint firstAttribute="bottom" secondItem="tww-NN-K0y" secondAttribute="bottom" constant="12" id="6cg-M4-Sp0"/>
-                            <constraint firstAttribute="trailing" secondItem="ZS2-T8-FPk" secondAttribute="trailing" constant="12" id="8m0-RW-XCO"/>
                             <constraint firstItem="tww-NN-K0y" firstAttribute="leading" secondItem="ASx-DQ-GKO" secondAttribute="trailing" constant="12" id="Alh-2p-Fx1"/>
                             <constraint firstItem="ASx-DQ-GKO" firstAttribute="top" secondItem="whv-fJ-5Ro" secondAttribute="top" id="Jw9-AL-Dst"/>
                             <constraint firstItem="tww-NN-K0y" firstAttribute="top" relation="greaterThanOrEqual" secondItem="AoX-iU-Obu" secondAttribute="bottom" constant="8" id="VuI-FJ-Nid"/>
                             <constraint firstItem="AoX-iU-Obu" firstAttribute="leading" secondItem="ASx-DQ-GKO" secondAttribute="trailing" constant="12" id="Wt7-TZ-xqy"/>
                             <constraint firstAttribute="bottom" secondItem="ASx-DQ-GKO" secondAttribute="bottom" id="cFi-Ui-mfZ"/>
-                            <constraint firstItem="ZS2-T8-FPk" firstAttribute="top" secondItem="whv-fJ-5Ro" secondAttribute="top" constant="12" id="jkT-k6-Ztv"/>
                             <constraint firstItem="AoX-iU-Obu" firstAttribute="top" secondItem="whv-fJ-5Ro" secondAttribute="top" constant="12" id="zXj-K1-7MQ"/>
                         </constraints>
                     </view>
@@ -178,8 +172,7 @@
         </collectionViewCell>
     </objects>
     <resources>
-        <image name="watchlist_user_profile" width="22" height="22"/>
-        <image name="chevron.right" catalog="system" width="97" height="128"/>
+        <image name="watchlist_user_profile" width="86.666664123535156" height="93.333335876464844"/>
         <systemColor name="secondaryLabelColor">
             <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
