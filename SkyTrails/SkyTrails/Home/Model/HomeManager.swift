@@ -222,7 +222,7 @@ class HomeManager {
                 speciesCount: speciesCount,
                 observedCount: 0,
                 radius: 5.0,
-                imageName: nil,
+                imageName: hotspot.imageName,
                 distanceKm: distance / 1000.0
             )
         }
@@ -433,7 +433,7 @@ class HomeManager {
                 speciesCount: topHotspot?.speciesList?.count ?? 0,
                 distanceString: topHotspot != nil ? "Nearby" : "N/A",
                 dateRange: migration.dateRange,
-                placeImageName: topHotspot?.imageName ?? "default_spot",
+                placeImageName: topHotspot?.imageName ?? "placeholder_image",
                 hotspots: nearbyHotspots.prefix(3).map { hotspot in
                     HotspotBirdSpot(
                         coordinate: CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon),

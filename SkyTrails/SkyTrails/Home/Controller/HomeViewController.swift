@@ -267,7 +267,7 @@ extension HomeViewController {
             .map { spot in
                 PopularSpotUI(
                     id: spot.id,
-                    imageName: spot.imageName ?? "default_spot",
+                    imageName: spot.imageName ?? "placeholder_image",
                     title: spot.title,
                     location: spot.location,
                     latitude: spot.latitude,

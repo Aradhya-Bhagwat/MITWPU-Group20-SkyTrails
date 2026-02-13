@@ -134,7 +134,7 @@
             "locality": "Pune, Maharashtra",
             "lat": 18.5204,
             "lon": 73.8567,
-            "imageName": "spot_kaziranga",
+            "imageName": "spot_saras_baug_gardens",
             "speciesList": [
                 {
                     "id": "FADDDCBC-4FEF-4507-9A65-D2E6AF54A704",
@@ -264,7 +264,7 @@
             "locality": "Pune, Maharashtra",
             "lat": 18.5415,
             "lon": 73.7943,
-            "imageName": "spot_bharatpur",
+            "imageName": "spot_pashan_lake",
             "speciesList": [
                 {
                     "id": "990AF643-4CDE-4BAD-BFC6-CD6F5E0CAAD6",
@@ -510,7 +510,7 @@
             "locality": "Pune, Maharashtra",
             "lat": 18.4392,
             "lon": 73.7694,
-            "imageName": "spot_bharatpur",
+            "imageName": "spot_khadakwasla",
             "speciesList": [
                 {
                     "id": "BF2BFCB7-E963-4379-9463-A480C8F19F91",
