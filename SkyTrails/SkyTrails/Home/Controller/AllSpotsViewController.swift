@@ -164,7 +164,7 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         
         // 💡 CONFIGURE WITH INT: Ensure your Grid cell's configure method accepts Int
         cell.configure(
-            image: UIImage(named: item.imageName ?? "default_spot"),
+            image: UIImage(named: item.imageName ?? "placeholder_image"),
             title: item.title,
             speciesCount: activeCount
         )
