@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="YsJ-D8-tqN">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="vMp-Jx-g6V">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
@@ -15,18 +15,83 @@
                     <view key="view" contentMode="scaleToFill" id="lum-M4-Rrd">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Er7-Oc-lkE">
+                                <rect key="frame" x="146.66666666666666" y="188" width="100" height="100"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="100" id="SGn-mB-GMW"/>
+                                    <constraint firstAttribute="width" constant="100" id="taO-9U-dgV"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tanmay Dani" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mmi-tb-dP7">
+                                <rect key="frame" x="16" y="304" width="361" height="24"/>
+                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="20"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Mog-z5-ml9">
+                                <rect key="frame" x="16" y="336" width="361" height="34.333333333333314"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="tanmayvdani@gmail.com"/>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yuU-dh-UBS">
+                                <rect key="frame" x="16" y="734" width="361" height="50"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="EEZ-dI-60s"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Logout">
+                                    <color key="baseBackgroundColor" systemColor="systemRedColor"/>
+                                </buttonConfiguration>
+                            </button>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="JiI-xb-Tv7"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="JiI-xb-Tv7" firstAttribute="trailing" secondItem="yuU-dh-UBS" secondAttribute="trailing" constant="16" id="5jQ-ye-FcN"/>
+                            <constraint firstItem="yuU-dh-UBS" firstAttribute="bottom" secondItem="JiI-xb-Tv7" secondAttribute="bottom" id="5tZ-4r-gUH"/>
+                            <constraint firstItem="JiI-xb-Tv7" firstAttribute="trailing" secondItem="Mog-z5-ml9" secondAttribute="trailing" constant="16" id="A0W-VV-c9B"/>
+                            <constraint firstItem="yuU-dh-UBS" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="E4L-P4-GaS"/>
+                            <constraint firstItem="Er7-Oc-lkE" firstAttribute="centerX" secondItem="lum-M4-Rrd" secondAttribute="centerX" id="bCV-pX-V5h"/>
+                            <constraint firstItem="JiI-xb-Tv7" firstAttribute="trailing" secondItem="mmi-tb-dP7" secondAttribute="trailing" constant="16" id="gUg-Zn-s0f"/>
+                            <constraint firstItem="Mog-z5-ml9" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="h8e-E9-kKp"/>
+                            <constraint firstItem="mmi-tb-dP7" firstAttribute="top" secondItem="Er7-Oc-lkE" secondAttribute="bottom" constant="16" id="i4I-O5-RwW"/>
+                            <constraint firstItem="Mog-z5-ml9" firstAttribute="top" secondItem="mmi-tb-dP7" secondAttribute="bottom" constant="8" id="kHN-FK-fNs"/>
+                            <constraint firstItem="Er7-Oc-lkE" firstAttribute="top" secondItem="JiI-xb-Tv7" secondAttribute="top" constant="16" id="tL0-kk-dXZ"/>
+                            <constraint firstItem="mmi-tb-dP7" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="xIw-KZ-mGP"/>
+                        </constraints>
                     </view>
+                    <navigationItem key="navigationItem" id="WBR-9l-1ha"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="BU5-Vu-cVr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="746" y="131"/>
+            <point key="canvasLocation" x="1672.5190839694656" y="130.98591549295776"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="Xkb-65-qtw">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="vMp-Jx-g6V" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="2dU-ej-XPd">
+                        <rect key="frame" x="0.0" y="118" width="393" height="54"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="YsJ-D8-tqN" kind="relationship" relationship="rootViewController" id="Fq9-mZ-UJh"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Vgg-Wo-CjJ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="745.80152671755718" y="130.98591549295776"/>
         </scene>
     </scenes>
     <resources>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemRedColor">
+            <color red="1" green="0.23137254900000001" blue="0.18823529410000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
