@@ -201,8 +201,12 @@ class ObservedDetailViewController: UIViewController {
 			let alert = UIAlertController(title: "Delete Observation", message: "Are you sure?", preferredStyle: .alert)
 			alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 			alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-				self?.manager.deleteEntry(entryId: entry.id)
-				self?.navigationController?.popViewController(animated: true)
+                do {
+                    try self?.manager.deleteEntry(entryId: entry.id)
+                    self?.navigationController?.popViewController(animated: true)
+                } catch {
+                    print("❌ Error deleting entry: \(error)")
+                }
 			}))
 			present(alert, animated: true)
 		} else {
@@ -240,20 +244,24 @@ class ObservedDetailViewController: UIViewController {
 		if let existingEntry = entry {
 			print("✏️  [ObservedDetailVC] Editing existing entry: \(existingEntry.id)")
 				// Update using manager
-			manager.updateEntry(
-				entryId: existingEntry.id,
-				notes: notesTextView.text,
-				observationDate: dateTimePicker.date,
-				lat: selectedLocation?.lat,
-				lon: selectedLocation?.lon,
-				locationDisplayName: selectedLocation?.displayName
-			)
-				// Persist newly picked photo if the user changed it
-			if let photoName = selectedImageName {
-				manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
-				print("📸 [ObservedDetailVC] Photo attached to existing entry: \(photoName)")
-			}
-			print("✅ [ObservedDetailVC] Updated existing entry")
+            do {
+                try manager.updateEntry(
+                    entryId: existingEntry.id,
+                    notes: notesTextView.text,
+                    observationDate: dateTimePicker.date,
+                    lat: selectedLocation?.lat,
+                    lon: selectedLocation?.lon,
+                    locationDisplayName: selectedLocation?.displayName
+                )
+                    // Persist newly picked photo if the user changed it
+                if let photoName = selectedImageName {
+                    try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
+                    print("📸 [ObservedDetailVC] Photo attached to existing entry: \(photoName)")
+                }
+                print("✅ [ObservedDetailVC] Updated existing entry")
+            } catch {
+                print("❌ [ObservedDetailVC] ERROR updating entry: \(error)")
+            }
 		} else if let wId = watchlistId {
 			print("➕ [ObservedDetailVC] Creating new entry")
 			print("📋 [ObservedDetailVC] Watchlist ID: \(wId)")
@@ -272,24 +280,29 @@ class ObservedDetailViewController: UIViewController {
 			}
 			
 			print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
-			manager.addBirds([birdToUse], to: wId, asObserved: true)
-			
-			if let newEntry = manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
-					// Update the newly created entry with notes and the specific date picked by user
-				manager.updateEntry(
-					entryId: newEntry.id,
-					notes: notesTextView.text,
-					observationDate: dateTimePicker.date,
-					lat: selectedLocation?.lat,
-					lon: selectedLocation?.lon,
-					locationDisplayName: selectedLocation?.displayName
-				)
-				
-					// Persist newly picked photo to the entry
-				if let photoName = selectedImageName {
-					manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
-					print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
-				}
+            do {
+                try manager.addBirds([birdToUse], to: wId, asObserved: true)
+                
+                if let newEntry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
+                        // Update the newly created entry with notes and the specific date picked by user
+                    try manager.updateEntry(
+                        entryId: newEntry.id,
+                        notes: notesTextView.text,
+                        observationDate: dateTimePicker.date,
+                        lat: selectedLocation?.lat,
+                        lon: selectedLocation?.lon,
+                        locationDisplayName: selectedLocation?.displayName
+                    )
+                    
+                        // Persist newly picked photo to the entry
+                    if let photoName = selectedImageName {
+                        try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
+                        print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
+                    }
+                }
+            } catch {
+                print("❌ [ObservedDetailVC] ERROR creating entry: \(error)")
+            }
 			}
 			
 			print("📞 [ObservedDetailVC] Calling onSave callback")

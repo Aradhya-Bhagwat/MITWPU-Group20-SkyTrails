@@ -86,49 +86,53 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	private func refreshData() {
-		switch watchlistType {
-			case .myWatchlist:
-				self.title = "My Watchlist"
-				self.currentWatchlistId = WatchlistConstants.myWatchlistID
-				self.sourceWatchlists = manager.fetchWatchlists()
-				
-			case .custom, .shared:
-				guard let id = currentWatchlistId else { return }
-				let observed = manager.fetchEntries(watchlistID: id, status: .observed)
-				let toObserve = manager.fetchEntries(watchlistID: id, status: .to_observe)
-				
-					// Get title safely
-				let title = manager.getWatchlist(by: id)?.title ?? "Watchlist"
-				updateSingleWatchlistData(observed: observed, toObserve: toObserve, title: title)
-				
-			case .allSpecies:
-					// This mode aggregates EVERYTHING
-				let allWls = manager.fetchWatchlists()
-				var uniqueObserved: [WatchlistEntry] = []
-				var uniqueToObserve: [WatchlistEntry] = []
-				var seenObs = Set<String>()
-				var seenToObs = Set<String>()
-				
-				for wl in allWls {
-					let obs = manager.fetchEntries(watchlistID: wl.id, status: .observed)
-					let toObs = manager.fetchEntries(watchlistID: wl.id, status: .to_observe)
-					
-					for entry in obs {
-						if let name = entry.bird?.name, !seenObs.contains(name) {
-							seenObs.insert(name)
-							uniqueObserved.append(entry)
-						}
-					}
-					for entry in toObs {
-						if let name = entry.bird?.name, !seenToObs.contains(name) {
-							seenToObs.insert(name)
-							uniqueToObserve.append(entry)
-						}
-					}
-				}
-				
-				updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "All Species")
-		}
+        do {
+            switch watchlistType {
+                case .myWatchlist:
+                    self.title = "My Watchlist"
+                    self.currentWatchlistId = WatchlistConstants.myWatchlistID
+                    self.sourceWatchlists = try manager.fetchWatchlists()
+                    
+                case .custom, .shared:
+                    guard let id = currentWatchlistId else { return }
+                    let observed = try manager.fetchEntries(watchlistID: id, status: .observed)
+                    let toObserve = try manager.fetchEntries(watchlistID: id, status: .to_observe)
+                    
+                        // Get title safely
+                    let title = (try? manager.getWatchlist(by: id))??.title ?? "Watchlist"
+                    updateSingleWatchlistData(observed: observed, toObserve: toObserve, title: title)
+                    
+                case .allSpecies:
+                        // This mode aggregates EVERYTHING
+                    let allWls = try manager.fetchWatchlists()
+                    var uniqueObserved: [WatchlistEntry] = []
+                    var uniqueToObserve: [WatchlistEntry] = []
+                    var seenObs = Set<String>()
+                    var seenToObs = Set<String>()
+                    
+                    for wl in allWls {
+                        let obs = try manager.fetchEntries(watchlistID: wl.id, status: .observed)
+                        let toObs = try manager.fetchEntries(watchlistID: wl.id, status: .to_observe)
+                        
+                        for entry in obs {
+                            if let name = entry.bird?.name, !seenObs.contains(name) {
+                                seenObs.insert(name)
+                                uniqueObserved.append(entry)
+                            }
+                        }
+                        for entry in toObs {
+                            if let name = entry.bird?.name, !seenToObs.contains(name) {
+                                seenToObs.insert(name)
+                                uniqueToObserve.append(entry)
+                            }
+                        }
+                    }
+                    
+                    updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "All Species")
+            }
+        } catch {
+            print("❌ [SmartWatchlistViewController] Error refreshing data: \(error)")
+        }
 		
 		applyFilters()
 	}
@@ -179,7 +183,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		
 		if watchlistType == .myWatchlist {
 			let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
-				let entries = manager.fetchEntries(watchlistID: watchlist.id, status: isObserved ? .observed : .to_observe)
+				let entries = (try? manager.fetchEntries(watchlistID: watchlist.id, status: isObserved ? .observed : .to_observe)) ?? []
 				let matching = entries.filter { entry in
 					guard let bird = entry.bird else { return false }
 					return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)

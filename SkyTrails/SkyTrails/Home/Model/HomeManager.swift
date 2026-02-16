@@ -14,7 +14,6 @@ class HomeManager {
     
     static let shared = HomeManager()
     
-    private let modelContext: ModelContext
     private let watchlistManager: WatchlistManager
     private let hotspotManager: HotspotManager
     private let migrationManager: MigrationManager
@@ -33,7 +32,6 @@ class HomeManager {
     
     // Internal init for testing
     init(
-        modelContext: ModelContext = WatchlistManager.shared.context,
         watchlistManager: WatchlistManager = WatchlistManager.shared,
         hotspotManager: HotspotManager? = nil,
         migrationManager: MigrationManager? = nil,
@@ -42,12 +40,14 @@ class HomeManager {
         locationService: LocationServiceProtocol = LocationService.shared,
         logger: LoggingServiceProtocol = LoggingService.shared
     ) {
-        self.modelContext = modelContext
         self.watchlistManager = watchlistManager
         self.logger = logger
-        self.hotspotManager = hotspotManager ?? HotspotManager(modelContext: modelContext, logger: logger)
-        self.migrationManager = migrationManager ?? MigrationManager(modelContext: modelContext, logger: logger)
-        self.observationManager = observationManager ?? CommunityObservationManager(modelContext: modelContext, logger: logger)
+        
+        let context = watchlistManager.context
+        self.hotspotManager = hotspotManager ?? HotspotManager(modelContext: context, logger: logger)
+        self.migrationManager = migrationManager ?? MigrationManager(modelContext: context, logger: logger)
+        self.observationManager = observationManager ?? CommunityObservationManager(modelContext: context, logger: logger)
+        
         self.newsService = newsService
         self.locationService = locationService
     }
@@ -243,7 +243,7 @@ class HomeManager {
         let descriptor = FetchDescriptor<Hotspot>()
         let allHotspots: [Hotspot]
         do {
-            allHotspots = try modelContext.fetch(descriptor)
+            allHotspots = try watchlistManager.fetchAll(Hotspot.self, descriptor: descriptor)
         } catch {
             logger.log(error: error, context: "HomeManager.getRecommendedSpots")
             allHotspots = []
@@ -370,7 +370,7 @@ class HomeManager {
         let cutoff = Date().addingTimeInterval(-maxAge)
         let allRecent: [CommunityObservation]
         do {
-            allRecent = try modelContext.fetch(descriptor)
+            allRecent = try watchlistManager.fetchAll(CommunityObservation.self, descriptor: descriptor)
         } catch {
             logger.log(error: error, context: "HomeManager.getRecentObservations")
             throw error
@@ -420,7 +420,7 @@ class HomeManager {
         let descriptor = FetchDescriptor<Hotspot>()
         let hotspots: [Hotspot]
         do {
-            hotspots = try modelContext.fetch(descriptor)
+            hotspots = try watchlistManager.fetchAll(Hotspot.self, descriptor: descriptor)
         } catch {
             logger.log(error: error, context: "HomeManager.getMigrationDateRange")
             hotspots = []
@@ -501,7 +501,7 @@ class HomeManager {
         let descriptor = FetchDescriptor<Hotspot>()
         let allHotspots: [Hotspot]
         do {
-            allHotspots = try modelContext.fetch(descriptor)
+            allHotspots = try watchlistManager.fetchAll(Hotspot.self, descriptor: descriptor)
         } catch {
             logger.log(error: error, context: "HomeManager.findNearbyHotspots")
             allHotspots = []
@@ -569,7 +569,7 @@ class HomeManager {
 
         let bird: Bird?
         do {
-            bird = try modelContext.fetch(birdDescriptor).first
+            bird = try watchlistManager.fetchOne(Bird.self, descriptor: birdDescriptor)
         } catch {
             logger.log(error: error, context: "HomeManager.getRelevantSightings")
             bird = nil

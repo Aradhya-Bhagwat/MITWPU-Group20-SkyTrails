@@ -133,7 +133,7 @@ class EditWatchlistDetailViewController: UIViewController {
 	
     private func configureInitialData() {
         if let id = watchlistIdToEdit {
-            self.watchlistToEdit = manager.getWatchlist(by: id)
+            self.watchlistToEdit = try? manager.getWatchlist(by: id)
         }
         initializeParticipants()
         populateDataForEdit()
@@ -252,9 +252,20 @@ class EditWatchlistDetailViewController: UIViewController {
 		}
 		
 			// 2. Create New Watchlist
-        manager.addWatchlist(title: title, location: location, startDate: startDate, endDate: endDate, type: watchlistType, locationDisplayName: selectedLocation?.displayName ?? location)
-		
-		navigationController?.popViewController(animated: true)
+        do {
+            try manager.addWatchlist(
+                title: title,
+                location: location,
+                startDate: startDate,
+                endDate: endDate,
+                type: watchlistType,
+                locationDisplayName: selectedLocation?.displayName ?? location
+            )
+            navigationController?.popViewController(animated: true)
+        } catch {
+            print("❌ [EditWatchlistDetailViewController] Failed to add watchlist: \(error)")
+            presentAlert(title: "Save Failed", message: error.localizedDescription)
+        }
 	}
 	
 		// MARK: - Helpers

@@ -280,8 +280,12 @@ extension CustomWatchlistViewController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             Task {
-                try? await self?.repository.deleteWatchlist(id: dto.id)
-                self?.loadData()
+                do {
+                    try await self?.repository.deleteWatchlist(id: dto.id)
+                    self?.loadData()
+                } catch {
+                    print("❌ [CustomWatchlistVC] Error deleting watchlist: \(error)")
+                }
             }
         }))
         

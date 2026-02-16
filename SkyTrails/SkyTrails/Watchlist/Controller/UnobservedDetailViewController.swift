@@ -240,14 +240,14 @@ class UnobservedDetailViewController: UIViewController {
         			existingEntry.toObserveEndDate = endDate
         
         			
-        
-        			manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
-        
-        			
-        
-        			print("✅ [UnobservedDetailVC] Updated existing entry, popping view controller")
-        
-        			navigationController?.popViewController(animated: true)
+                    do {
+                        try manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
+                        
+                        print("✅ [UnobservedDetailVC] Updated existing entry, popping view controller")
+                        navigationController?.popViewController(animated: true)
+                    } catch {
+                        print("❌ [UnobservedDetailVC] Error updating entry: \(error)")
+                    }
         
         			
         
@@ -262,38 +262,27 @@ class UnobservedDetailViewController: UIViewController {
         			print("📋 [UnobservedDetailVC] Watchlist ID: \(wId)")
         
         			
-        
-        			manager.addBirds([bird], to: wId, asObserved: false)
-        
-        			
-        
-        			if let newEntry = manager.findEntry(birdId: bird.id, watchlistId: wId) {
-        
-        				print("✅ [UnobservedDetailVC] Found new entry: \(newEntry.id)")
-        
-        				
-        
-        				// Set dates (in memory)
-        
-        				newEntry.toObserveStartDate = startDate
-        
-        				newEntry.toObserveEndDate = endDate
-        
-        				
-        
-        				// Call updateEntry to set notes and SAVE everything
-        
-        				manager.updateEntry(entryId: newEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
-        
-        				
-        
-        				print("✅ [UnobservedDetailVC] Entry properties updated and saved")
-        
-        			} else {
-        
-        				print("❌ [UnobservedDetailVC] ERROR: Could not find newly created entry!")
-        
-        			}
+                    do {
+                        try manager.addBirds([bird], to: wId, asObserved: false)
+                        
+                        if let newEntry = try? manager.findEntry(birdId: bird.id, watchlistId: wId) {
+            
+                            print("✅ [UnobservedDetailVC] Found new entry: \(newEntry.id)")
+                            
+                            // Set dates (in memory)
+                            newEntry.toObserveStartDate = startDate
+                            newEntry.toObserveEndDate = endDate
+                            
+                            // Call updateEntry to set notes and SAVE everything
+                            try manager.updateEntry(entryId: newEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
+                            
+                            print("✅ [UnobservedDetailVC] Entry properties updated and saved")
+                        } else {
+                            print("❌ [UnobservedDetailVC] ERROR: Could not find newly created entry!")
+                        }
+                    } catch {
+                        print("❌ [UnobservedDetailVC] ERROR creating entry: \(error)")
+                    }
         
         			
         
