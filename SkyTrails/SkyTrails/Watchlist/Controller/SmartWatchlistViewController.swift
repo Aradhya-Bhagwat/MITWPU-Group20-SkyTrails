@@ -70,7 +70,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
 		
 			// Fetch fresh object to determine type, then pass ID
-		if let watchlist = manager.getWatchlist(by: id) {
+		if let watchlist = try? manager.getWatchlist(by: id) {
 			vc.watchlistType = (watchlist.type == .shared) ? .shared : .custom
 			navigationController?.pushViewController(vc, animated: true)
 		}
@@ -343,7 +343,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	private func deleteEntry(_ entry: WatchlistEntry) {
-		manager.deleteEntry(entryId: entry.id)
+		try? manager.deleteEntry(entryId: entry.id)
 		refreshData()
 	}
 	

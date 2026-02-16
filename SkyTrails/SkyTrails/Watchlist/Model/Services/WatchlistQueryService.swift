@@ -135,7 +135,7 @@ final class WatchlistQueryService {
                 case .uncommon: level = 2
                 case .rare: level = 3
                 case .very_rare: level = 4
-                case .endangered: level = 5
+                case .extremely_rare: level = 5
                 }
                 return rarityLevels.contains(level)
             }
@@ -204,14 +204,14 @@ final class WatchlistQueryService {
         }
     }
     
-    private func rarityToInt(_ rarity: BirdRarityLevel?) -> Int {
+    private func rarityToInt(_ rarity: RarityLevel?) -> Int {
         guard let rarity = rarity else { return 0 }
         switch rarity {
         case .common: return 1
         case .uncommon: return 2
         case .rare: return 3
         case .very_rare: return 4
-        case .endangered: return 5
+        case .extremely_rare: return 5
         }
     }
     

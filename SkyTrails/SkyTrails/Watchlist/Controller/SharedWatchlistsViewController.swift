@@ -28,7 +28,7 @@ class SharedWatchlistsViewController: UIViewController {
 
     // Computed property to access shared watchlists from Singleton
     var allSharedWatchlists: [Watchlist] {
-        return manager.fetchWatchlists(type: .shared)
+        return (try? manager.fetchWatchlists(type: .shared)) ?? []
     }
 
     // MARK: - Lifecycle
@@ -231,7 +231,7 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         let userImages: [UIImage] = [] // Placeholder
 
         // Map Stats (observed vs total entries)
-        let stats = manager.getStats(for: item.id)
+        let stats = (try? manager.getStats(for: item.id)) ?? (0,0)
 
         // Get Image
         var image: UIImage? = nil

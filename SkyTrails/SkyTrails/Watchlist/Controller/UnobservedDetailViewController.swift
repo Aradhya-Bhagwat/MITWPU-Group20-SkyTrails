@@ -206,7 +206,7 @@ class UnobservedDetailViewController: UIViewController {
             let alert = UIAlertController(title: "Delete Bird", message: "Delete this bird from watchlist?", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-                self?.manager.deleteEntry(entryId: entryId)
+                try? self?.manager.deleteEntry(entryId: entryId)
                 self?.navigationController?.popViewController(animated: true)
             }))
             present(alert, animated: true)
