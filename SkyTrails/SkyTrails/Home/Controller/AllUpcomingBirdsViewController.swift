@@ -3,6 +3,7 @@
 //  SkyTrails
 //
 //  Created by SDC-USER on 10/12/25.
+//  Refactored to Strict MVC
 //
 
 import UIKit
@@ -17,7 +18,6 @@ class AllUpcomingBirdsViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
 
     override func viewDidLoad() {
-     
         super.viewDidLoad()
         self.title = "All Upcoming Birds"
         setupTraitChangeHandling()
@@ -37,9 +37,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         collectionView.reloadData()
     }
     
-  
     private func setupCollectionView() {
-
         collectionView.collectionViewLayout = createLayout()
         
         collectionView.register(
@@ -47,7 +45,6 @@ class AllUpcomingBirdsViewController: UIViewController {
             forCellWithReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier
         )
         
-
         collectionView.register(
             UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil),
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
@@ -65,17 +62,15 @@ class AllUpcomingBirdsViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
-            let predictImage = UIImage(named: "upcomingBirds")
-            let predictButton = UIBarButtonItem(image: predictImage, style: .plain, target: self, action: #selector(didTapPredict))
-            predictButton.tintColor = .systemBlue
-            self.navigationItem.rightBarButtonItem = predictButton
-        }
+        let predictImage = UIImage(named: "upcomingBirds")
+        let predictButton = UIBarButtonItem(image: predictImage, style: .plain, target: self, action: #selector(didTapPredict))
+        predictButton.tintColor = .systemBlue
+        self.navigationItem.rightBarButtonItem = predictButton
+    }
             
-        @objc private func didTapPredict() {
-        
+    @objc private func didTapPredict() {
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else {
-
             return
         }
         
@@ -90,67 +85,67 @@ class AllUpcomingBirdsViewController: UIViewController {
     }
         
     private func createLayout() -> UICollectionViewLayout {
-            return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
-                guard let self = self else { return nil }
-            
-                let containerWidth = layoutEnvironment.container.effectiveContentSize.width
-                if self.cachedItemSize == nil {
-                    guard let windowScene = self.view.window?.windowScene else { return nil }
-                    let screenBounds = windowScene.screen.bounds
-                    let portraitWidth = min(screenBounds.width, screenBounds.height)
-                    let padding: CGFloat = 16.0
-                    let spacing: CGFloat = 16.0
-                    let maxCardWidth: CGFloat = 300.0
-                    let minColumns = 2
-            
-                    var columnCount = minColumns
-                    var calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
-                    
-                    while calculatedWidth > maxCardWidth {
-                        columnCount += 1
-                        calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
-                    }
-                    
-                    let heightMultiplier: CGFloat = 91.0 / 88.0
-                    let calculatedHeight = calculatedWidth * heightMultiplier
-                    self.cachedItemSize = NSCollectionLayoutSize(
-                        widthDimension: .absolute(calculatedWidth),
-                        heightDimension: .absolute(calculatedHeight)
-                    )
+        return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
+            guard let self = self else { return nil }
+        
+            let containerWidth = layoutEnvironment.container.effectiveContentSize.width
+            if self.cachedItemSize == nil {
+                guard let windowScene = self.view.window?.windowScene else { return nil }
+                let screenBounds = windowScene.screen.bounds
+                let portraitWidth = min(screenBounds.width, screenBounds.height)
+                let padding: CGFloat = 16.0
+                let spacing: CGFloat = 16.0
+                let maxCardWidth: CGFloat = 300.0
+                let minColumns = 2
+        
+                var columnCount = minColumns
+                var calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                
+                while calculatedWidth > maxCardWidth {
+                    columnCount += 1
+                    calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                 }
-                guard let fixedSize = self.cachedItemSize else { return nil }
-                let itemWidth = fixedSize.widthDimension.dimension
-                let interItemSpacing: CGFloat = 8
-                let estimatedColumns = Int((containerWidth + interItemSpacing) / (itemWidth + interItemSpacing))
-                let actualColumns = max(1, estimatedColumns)
-                let groupItemSize = NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1.0/CGFloat(actualColumns)),
-                    heightDimension: .fractionalHeight(1.0)
-                )
-                let item = NSCollectionLayoutItem(layoutSize: groupItemSize)
-                item.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
                 
-                let groupHeight = fixedSize.heightDimension.dimension
-                let groupSize = NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1.0),
-                    heightDimension: .absolute(groupHeight)
+                let heightMultiplier: CGFloat = 91.0 / 88.0
+                let calculatedHeight = calculatedWidth * heightMultiplier
+                self.cachedItemSize = NSCollectionLayoutSize(
+                    widthDimension: .absolute(calculatedWidth),
+                    heightDimension: .absolute(calculatedHeight)
                 )
-                
-                let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-                let section = NSCollectionLayoutSection(group: group)
-                section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
-                let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(44))
-                let header = NSCollectionLayoutBoundarySupplementaryItem(
-                    layoutSize: headerSize,
-                    elementKind: UICollectionView.elementKindSectionHeader,
-                    alignment: .top
-                )
-                section.boundarySupplementaryItems = [header]
-                
-                return section
             }
+            guard let fixedSize = self.cachedItemSize else { return nil }
+            let itemWidth = fixedSize.widthDimension.dimension
+            let interItemSpacing: CGFloat = 8
+            let estimatedColumns = Int((containerWidth + interItemSpacing) / (itemWidth + interItemSpacing))
+            let actualColumns = max(1, estimatedColumns)
+            let groupItemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0/CGFloat(actualColumns)),
+                heightDimension: .fractionalHeight(1.0)
+            )
+            let item = NSCollectionLayoutItem(layoutSize: groupItemSize)
+            item.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+            
+            let groupHeight = fixedSize.heightDimension.dimension
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .absolute(groupHeight)
+            )
+            
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+            let section = NSCollectionLayoutSection(group: group)
+            section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
+            let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(44))
+            let header = NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: headerSize,
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )
+            section.boundarySupplementaryItems = [header]
+            
+            return section
         }
     }
+}
 
 extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
     
@@ -220,20 +215,15 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
             let item = watchlistData[indexPath.row]
             bird = item.bird
             dateString = item.statusText
-            print("🔍 [AllUpcomingBirdsVC] Selected watchlist bird: \(bird.commonName), Date string: \(dateString)")
         } else {
             let result = recommendationsData[indexPath.row]
             bird = result.bird
             dateString = result.dateRange
-            print("🔍 [AllUpcomingBirdsVC] Selected recommended bird: \(bird.commonName), Date string: \(dateString)")
         }
 
         let (parsedStart, parsedEnd) = HomeManager.shared.parseDateRange(dateString)
         let finalStart = parsedStart ?? Date()
         let finalEnd = parsedEnd ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: finalStart) ?? finalStart
-
-        print("🔍 [AllUpcomingBirdsVC] Parsed dates - Start: \(String(describing: parsedStart)), End: \(String(describing: parsedEnd))")
-        print("🔍 [AllUpcomingBirdsVC] Final dates - Start: \(finalStart), End: \(finalEnd)")
 
         let input = BirdDateInput(
             species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
