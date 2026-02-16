@@ -244,24 +244,29 @@ class ObservedDetailViewController: UIViewController {
 		if let existingEntry = entry {
 			print("✏️  [ObservedDetailVC] Editing existing entry: \(existingEntry.id)")
 				// Update using manager
-            do {
-                try manager.updateEntry(
-                    entryId: existingEntry.id,
-                    notes: notesTextView.text,
-                    observationDate: dateTimePicker.date,
-                    lat: selectedLocation?.lat,
-                    lon: selectedLocation?.lon,
-                    locationDisplayName: selectedLocation?.displayName
-                )
-                    // Persist newly picked photo if the user changed it
-                if let photoName = selectedImageName {
-                    try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
-                    print("📸 [ObservedDetailVC] Photo attached to existing entry: \(photoName)")
-                }
-                print("✅ [ObservedDetailVC] Updated existing entry")
-            } catch {
-                print("❌ [ObservedDetailVC] ERROR updating entry: \(error)")
-            }
+			do {
+				try manager.updateEntry(
+					entryId: existingEntry.id,
+					notes: notesTextView.text,
+					observationDate: dateTimePicker.date,
+					lat: selectedLocation?.lat,
+					lon: selectedLocation?.lon,
+					locationDisplayName: selectedLocation?.displayName
+				)
+					// Persist newly picked photo if the user changed it
+				if let photoName = selectedImageName {
+					try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
+					print("📸 [ObservedDetailVC] Photo attached to existing entry: \(photoName)")
+				}
+				print("✅ [ObservedDetailVC] Updated existing entry")
+				
+				if let bird = existingEntry.bird {
+					print("📞 [ObservedDetailVC] Calling onSave callback for existing bird")
+					onSave?(bird)
+				}
+			} catch {
+				print("❌ [ObservedDetailVC] ERROR updating entry: \(error)")
+			}
 		} else if let wId = watchlistId {
 			print("➕ [ObservedDetailVC] Creating new entry")
 			print("📋 [ObservedDetailVC] Watchlist ID: \(wId)")
@@ -280,36 +285,39 @@ class ObservedDetailViewController: UIViewController {
 			}
 			
 			print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
-            do {
-                try manager.addBirds([birdToUse], to: wId, asObserved: true)
-                
-                if let newEntry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
-                        // Update the newly created entry with notes and the specific date picked by user
-                    try manager.updateEntry(
-                        entryId: newEntry.id,
-                        notes: notesTextView.text,
-                        observationDate: dateTimePicker.date,
-                        lat: selectedLocation?.lat,
-                        lon: selectedLocation?.lon,
-                        locationDisplayName: selectedLocation?.displayName
-                    )
-                    
-                        // Persist newly picked photo to the entry
-                    if let photoName = selectedImageName {
-                        try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
-                        print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
-                    }
-                }
-            } catch {
-                print("❌ [ObservedDetailVC] ERROR creating entry: \(error)")
-            }
+			do {
+				try manager.addBirds([birdToUse], to: wId, asObserved: true)
+				
+				if let newEntry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
+						// Update the newly created entry with notes and the specific date picked by user
+					try manager.updateEntry(
+						entryId: newEntry.id,
+						notes: notesTextView.text,
+						observationDate: dateTimePicker.date,
+						lat: selectedLocation?.lat,
+						lon: selectedLocation?.lon,
+						locationDisplayName: selectedLocation?.displayName
+					)
+					
+						// Persist newly picked photo to the entry
+					if let photoName = selectedImageName {
+						try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
+						print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
+					}
+				}
+				
+				print("📞 [ObservedDetailVC] Calling onSave callback for new bird")
+				onSave?(birdToUse)
+			} catch {
+				print("❌ [ObservedDetailVC] ERROR creating entry: \(error)")
 			}
-			
-			print("📞 [ObservedDetailVC] Calling onSave callback")
-			onSave?(birdToUse)
 		} else {
 			print("⚠️  [ObservedDetailVC] No watchlistId available")
 		}
+		
+		print("✅ [ObservedDetailVC] Complete, popping view controller")
+		navigationController?.popViewController(animated: true)
+	}
 		
 		print("✅ [ObservedDetailVC] Complete, popping view controller")
 		navigationController?.popViewController(animated: true)

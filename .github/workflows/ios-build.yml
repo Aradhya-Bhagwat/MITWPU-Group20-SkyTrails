@@ -21,10 +21,14 @@ jobs:
       - name: List available simulators
         run: xcrun simctl list devices
 
+      - name: Install xcpretty
+        run: sudo gem install xcpretty
+
       - name: Build
         run: |
+          set -o pipefail
           xcodebuild \
             -project SkyTrails/SkyTrails.xcodeproj \
             -scheme SkyTrails \
             -destination 'generic/platform=iOS Simulator' \
-            clean build
+            clean build | xcpretty
