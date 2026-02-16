@@ -8,6 +8,9 @@
 
 import Foundation
 import SwiftData
+
+// Type alias for compatibility
+typealias RarityLevel = BirdRarityLevel
 import CoreLocation
 
 @MainActor

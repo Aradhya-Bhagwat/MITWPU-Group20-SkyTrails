@@ -9,6 +9,9 @@
 import Foundation
 import SwiftData
 
+// Type alias for compatibility
+typealias RarityLevel = BirdRarityLevel
+
 @MainActor
 final class WatchlistPersistenceService {
     

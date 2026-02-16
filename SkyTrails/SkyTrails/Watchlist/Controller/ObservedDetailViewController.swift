@@ -318,10 +318,6 @@ class ObservedDetailViewController: UIViewController {
 		print("✅ [ObservedDetailVC] Complete, popping view controller")
 		navigationController?.popViewController(animated: true)
 	}
-		
-		print("✅ [ObservedDetailVC] Complete, popping view controller")
-		navigationController?.popViewController(animated: true)
-	}
 	
 	func configure(with entry: WatchlistEntry) {
 		print("Debug: configure(with:) called for entry: \(entry.id)")
@@ -417,7 +413,6 @@ class ObservedDetailViewController: UIViewController {
         textField.layer.masksToBounds = true
         textField.leftView?.tintColor = .secondaryLabel
     }
-}
 
 	// MARK: - Protocols & Delegates
 extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate, UITableViewDataSource, UITableViewDelegate, CLLocationManagerDelegate, UIGestureRecognizerDelegate {
