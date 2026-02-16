@@ -178,10 +178,10 @@ class HomeManager {
             radiusInKm: radiusInKm
         )
         
-        let watchlistEntries = watchlistManager.fetchEntries(
+        let watchlistEntries = (try? watchlistManager.fetchEntries(
             watchlistID: WatchlistConstants.myWatchlistID,
             status: .to_observe
-        )
+        )) ?? []
         
         var results: [UpcomingBirdResult] = []
         let locationBirdIds = Set(birdsAtLocation.map { $0.id })
@@ -206,7 +206,7 @@ class HomeManager {
     // MARK: - Spots
     
     func getWatchlistSpots() -> [PopularSpotResult] {
-        let watchlists = watchlistManager.fetchWatchlists()
+        let watchlists = (try? watchlistManager.fetchWatchlists()) ?? []
         
         return watchlists.compactMap { watchlist -> PopularSpotResult? in
             guard let location = watchlist.location,
@@ -254,7 +254,7 @@ class HomeManager {
             return locationService.distance(from: location, to: hotspotLoc) <= (radiusInKm * 1000)
         }
         
-        let watchlistSpotNames = Set(watchlistManager.fetchWatchlists().compactMap { $0.location })
+        let watchlistSpotNames = Set((try? watchlistManager.fetchWatchlists())?.compactMap { $0.location } ?? [])
         
         let recommended = nearbyHotspots
             .filter { !watchlistSpotNames.contains($0.name) }
