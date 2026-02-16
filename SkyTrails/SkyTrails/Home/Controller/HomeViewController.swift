@@ -146,7 +146,7 @@ extension HomeViewController {
     // MARK: - Data Loading
 
     private func loadHomeData() {
-        Task { [weak self] @MainActor in
+        Task { @MainActor [weak self] in
             guard let self = self else { return }
             
             let userLocation = self.getUserLocation()
@@ -171,7 +171,7 @@ extension HomeViewController {
     }
 
     private func refreshHomeData() {
-        Task { [weak self] @MainActor in
+        Task { @MainActor [weak self] in
             guard let self = self else { return }
             let userLocation = self.getUserLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
