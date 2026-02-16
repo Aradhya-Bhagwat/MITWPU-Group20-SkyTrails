@@ -645,10 +645,3 @@ extension UICollectionReusableView {
 		return String(describing: self)
 	}
 }
-
-// Safe Array Access
-extension Collection {
-	subscript (safe index: Index) -> Element? {
-		return indices.contains(index) ? self[index] : nil
-	}
-}

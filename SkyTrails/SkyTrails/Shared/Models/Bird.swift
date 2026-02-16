@@ -14,6 +14,10 @@ enum BirdRarityLevel: String, Codable {
     case very_rare
     case endangered
 }
+
+// Type alias for backward compatibility
+typealias RarityLevel = BirdRarityLevel
+
 struct BirdFieldMarkData: Codable, Hashable {
     var area: String
     var variantId: UUID
