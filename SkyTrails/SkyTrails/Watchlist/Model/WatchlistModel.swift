@@ -9,13 +9,6 @@ import Foundation
 import SwiftData
 import CoreLocation
 
-// MARK: - Constants
-
-enum WatchlistConstants {
-    static let myWatchlistID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
-    static let defaultOwnerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
-}
-
 // MARK: - Enums
 
 enum WatchlistType: String, Codable {
@@ -206,360 +199,141 @@ final class ObservedBirdPhoto {
     }
 }
 
-// MARK: - DTOs (Domain Models)
+// MARK: - Entity to Domain Model Transformations
 
-struct WatchlistSummaryDTO: Hashable {
-    let id: UUID
-    let title: String
-    let subtitle: String // Location
-    let dateText: String // "Oct - Nov"
-    let image: String?
-    let previewImages: [String] // For My Watchlist grid
-    let stats: WatchlistStatsDTO
-    let type: WatchlistType
-}
-
-struct WatchlistStatsDTO: Hashable {
-    let observedCount: Int
-    let totalCount: Int
-    let rareCount: Int
-}
-
-// MARK: - Rule Parameter Models
-
-struct LocationRuleParams: Codable {
-    let latitude: Double
-    let longitude: Double
-    let radiusKm: Double
-    let weeks: [Int]? // Optional: specific weeks, or nil for all weeks
-}
-
-struct DateRangeRuleParams: Codable {
-    let startDate: Date
-    let endDate: Date
-}
-
-struct SpeciesFamilyRuleParams: Codable {
-    let families: [String] // e.g., ["Anatidae", "Laridae"]
-}
-
-struct RarityRuleParams: Codable {
-    let levels: [String] // e.g., ["rare", "very_rare"]
-}
-
-struct MigrationPatternRuleParams: Codable {
-    let strategies: [String] // e.g., ["long_distance", "altitudinal"]
-    let hemisphere: String? // Optional: "northern" or "southern"
-}
-
-// MARK: - Rule Engine Extension
-
-// Note: Extension is placed here because it depends on Rule Parameter Models above.
-// It is kept in this file to consolidate all Watchlist-related model logic.
-extension WatchlistManager {
-    
-    /// Apply all active rules to a watchlist and auto-add birds
-    func applyRules(to watchlistId: UUID) async {
-        print("🤖 [RuleEngine] Applying rules to watchlist \(watchlistId)")
+extension Watchlist {
+    /// Convert persistence entity to domain DTO
+    func toDomain() -> WatchlistDetailDTO {
+        let identifier = WatchlistIdentifier.from(uuid: self.id, type: self.type)
         
-        guard let watchlist = getWatchlist(by: watchlistId),
-              let rules = watchlist.rules?.filter({ $0.is_active }) else {
-            print("⚠️ [RuleEngine] No watchlist or no active rules")
-            return
-        }
-        
-        print("🤖 [RuleEngine] Found \(rules.count) active rules")
-        
-        var candidateBirds: Set<Bird> = []
-        
-        for rule in rules.sorted(by: { $0.priority > $1.priority }) {
-            print("🔧 [RuleEngine] Processing rule: \(rule.rule_type.rawValue) (priority: \(rule.priority))")
-            
-            switch rule.rule_type {
-            case .location:
-                candidateBirds.formUnion(await applyLocationRule(rule))
-            case .date_range:
-                candidateBirds.formUnion(applyDateRangeRule(rule))
-            case .species_family:
-                candidateBirds.formUnion(applySpeciesFamilyRule(rule))
-            case .rarity_level:
-                candidateBirds.formUnion(applyRarityRule(rule))
-            case .migration_pattern:
-                candidateBirds.formUnion(applyMigrationRule(rule))
-            }
-        }
-        
-        print("🤖 [RuleEngine] Total candidate birds: \(candidateBirds.count)")
-        
-        // Add birds to watchlist (avoiding duplicates)
-        if !candidateBirds.isEmpty {
-            addBirds(Array(candidateBirds), to: watchlistId, asObserved: false)
-        }
-    }
-    
-    // MARK: - Individual Rule Processors
-    
-    private func applyLocationRule(_ rule: WatchlistRule) async -> Set<Bird> {
-        print("📍 [RuleEngine] Applying location rule")
-        
-        guard let jsonData = rule.parameters_json.data(using: .utf8),
-              let params = try? JSONDecoder().decode(LocationRuleParams.self, from: jsonData) else {
-            print("❌ [RuleEngine] Failed to parse location rule params")
-            return []
-        }
-        
-        let location = CLLocationCoordinate2D(latitude: params.latitude, longitude: params.longitude)
-        let hotspotManager = HotspotManager(modelContext: context)
-        
-        var allBirds = Set<Bird>()
-        
-        if let weeks = params.weeks {
-            // Specific weeks
-            for week in weeks {
-                let birds = hotspotManager.getBirdsPresent(
-                    at: location,
-                    duringWeek: week,
-                    radiusInKm: params.radiusKm
-                )
-                allBirds.formUnion(birds)
-            }
+        let dateRange: String?
+        if let start = self.startDate, let end = self.endDate {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            dateRange = "\(formatter.string(from: start)) - \(formatter.string(from: end))"
         } else {
-            // All weeks (1-52)
-            for week in 1...52 {
-                let birds = hotspotManager.getBirdsPresent(
-                    at: location,
-                    duringWeek: week,
-                    radiusInKm: params.radiusKm
-                )
-                allBirds.formUnion(birds)
-            }
+            dateRange = nil
         }
         
-        print("📍 [RuleEngine] Location rule found \(allBirds.count) birds")
-        return allBirds
-    }
-    
-    private func applyDateRangeRule(_ rule: WatchlistRule) -> Set<Bird> {
-        print("📅 [RuleEngine] Applying date range rule")
-        
-        guard let jsonData = rule.parameters_json.data(using: .utf8),
-              let params = try? JSONDecoder().decode(DateRangeRuleParams.self, from: jsonData) else {
-            print("❌ [RuleEngine] Failed to parse date range rule params")
-            return []
-        }
-        
-        // Get calendar months from date range
-        let calendar = Calendar.current
-        let startMonth = calendar.component(.month, from: params.startDate)
-        let endMonth = calendar.component(.month, from: params.endDate)
-        
-        // Fetch all birds
-        let descriptor = FetchDescriptor<Bird>()
-        guard let allBirds = try? context.fetch(descriptor) else { return [] }
-        
-        // Filter birds that are valid during this date range
-        let validBirds = allBirds.filter { bird in
-            guard let validMonths = bird.validMonths else { return false }
-            
-            // Check if any valid month falls in the range
-            if startMonth <= endMonth {
-                return validMonths.contains(where: { $0 >= startMonth && $0 <= endMonth })
-            } else {
-                // Range crosses year boundary
-                return validMonths.contains(where: { $0 >= startMonth || $0 <= endMonth })
-            }
-        }
-        
-        print("📅 [RuleEngine] Date range rule found \(validBirds.count) birds")
-        return Set(validBirds)
-    }
-    
-    private func applySpeciesFamilyRule(_ rule: WatchlistRule) -> Set<Bird> {
-        print("🦆 [RuleEngine] Applying species family rule")
-        
-        guard let jsonData = rule.parameters_json.data(using: .utf8),
-              let params = try? JSONDecoder().decode(SpeciesFamilyRuleParams.self, from: jsonData) else {
-            print("❌ [RuleEngine] Failed to parse species family rule params")
-            return []
-        }
-        
-        let descriptor = FetchDescriptor<Bird>()
-        guard let allBirds = try? context.fetch(descriptor) else { return [] }
-        
-        let matchingBirds = allBirds.filter { bird in
-            guard let family = bird.family else { return false }
-            return params.families.contains(family)
-        }
-        
-        print("🦆 [RuleEngine] Species family rule found \(matchingBirds.count) birds")
-        return Set(matchingBirds)
-    }
-    
-    private func applyRarityRule(_ rule: WatchlistRule) -> Set<Bird> {
-        print("💎 [RuleEngine] Applying rarity rule")
-        
-        guard let jsonData = rule.parameters_json.data(using: .utf8),
-              let params = try? JSONDecoder().decode(RarityRuleParams.self, from: jsonData) else {
-            print("❌ [RuleEngine] Failed to parse rarity rule params")
-            return []
-        }
-        
-        let descriptor = FetchDescriptor<Bird>()
-        guard let allBirds = try? context.fetch(descriptor) else { return [] }
-        
-        let matchingBirds = allBirds.filter { bird in
-            guard let rarityLevel = bird.rarityLevel else { return false }
-            return params.levels.contains(rarityLevel.rawValue)
-        }
-        
-        print("💎 [RuleEngine] Rarity rule found \(matchingBirds.count) birds")
-        return Set(matchingBirds)
-    }
-    
-    private func applyMigrationRule(_ rule: WatchlistRule) -> Set<Bird> {
-        print("🛫 [RuleEngine] Applying migration pattern rule")
-        
-        guard let jsonData = rule.parameters_json.data(using: .utf8),
-              let params = try? JSONDecoder().decode(MigrationPatternRuleParams.self, from: jsonData) else {
-            print("❌ [RuleEngine] Failed to parse migration pattern rule params")
-            return []
-        }
-        
-        let descriptor = FetchDescriptor<Bird>()
-        guard let allBirds = try? context.fetch(descriptor) else { return [] }
-        
-        let matchingBirds = allBirds.filter { bird in
-            guard let strategy = bird.migration_strategy else { return false }
-            
-            let strategyMatches = params.strategies.contains(strategy)
-            
-            if let hemisphere = params.hemisphere {
-                return strategyMatches && bird.hemisphere == hemisphere
-            }
-            
-            return strategyMatches
-        }
-        
-        print("🛫 [RuleEngine] Migration pattern rule found \(matchingBirds.count) birds")
-        return Set(matchingBirds)
-    }
-    
-    // MARK: - Rule Management
-    
-    /// Add a rule to a watchlist
-    func addRule(
-        to watchlistId: UUID,
-        type: WatchlistRuleType,
-        parameters: Encodable,
-        priority: Int = 0
-    ) throws {
-        guard let watchlist = getWatchlist(by: watchlistId) else {
-            throw RepositoryError.watchlistNotFound(watchlistId)
-        }
-        
-        let encoder = JSONEncoder()
-        let jsonData = try encoder.encode(parameters)
-        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-            throw NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode parameters"])
-        }
-        
-        let rule = WatchlistRule(
-            watchlist: watchlist,
-            rule_type: type,
-            parameters: jsonString
-        )
-        rule.priority = priority
-        
-        context.insert(rule)
-        saveContext()
-        
-        print("✅ [RuleEngine] Added \(type.rawValue) rule to watchlist")
-    }
-    
-    /// Toggle rule active status
-    func toggleRule(ruleId: UUID) {
-        let descriptor = FetchDescriptor<WatchlistRule>(
-            predicate: #Predicate { $0.id == ruleId }
+        let stats = WatchlistStatsDTO(
+            observedCount: self.observedCount,
+            totalCount: self.speciesCount,
+            rareCount: self.entries?.filter { $0.bird?.rarityLevel?.rawValue == "rare" || $0.bird?.rarityLevel?.rawValue == "very_rare" }.count ?? 0
         )
         
-        if let rule = try? context.fetch(descriptor).first {
-            rule.is_active = !rule.is_active
-            saveContext()
-            print("🔧 [RuleEngine] Toggled rule \(ruleId) to \(rule.is_active ? "active" : "inactive")")
-        }
-    }
-    
-    /// Delete a rule
-    func deleteRule(ruleId: UUID) {
-        let descriptor = FetchDescriptor<WatchlistRule>(
-            predicate: #Predicate { $0.id == ruleId }
+        return WatchlistDetailDTO(
+            id: identifier,
+            title: self.title ?? "Unnamed Watchlist",
+            location: self.location,
+            locationDisplayName: self.locationDisplayName,
+            dateRange: dateRange,
+            stats: stats,
+            type: self.type ?? .custom,
+            images: self.images?.compactMap { $0.imagePath } ?? [],
+            rules: self.rules?.map { $0.toDomain() } ?? [],
+            isVirtual: identifier.isVirtual
         )
+    }
+    
+    /// Convert persistence entity to summary DTO
+    func toSummary(previewImages: [String] = []) -> WatchlistSummaryDTO {
+        let identifier = WatchlistIdentifier.from(uuid: self.id, type: self.type)
         
-        if let rule = try? context.fetch(descriptor).first {
-            context.delete(rule)
-            saveContext()
-            print("🗑️ [RuleEngine] Deleted rule \(ruleId)")
-        }
-    }
-}
-
-// MARK: - Repository Protocol
-
-protocol WatchlistRepository {
-    func loadDashboardData() async throws -> (myWatchlist: WatchlistSummaryDTO?, custom: [WatchlistSummaryDTO], shared: [WatchlistSummaryDTO], globalStats: WatchlistStatsDTO)
-    func deleteWatchlist(id: UUID) async throws
-    func ensureMyWatchlistExists() async throws -> UUID
-    func getPersonalWatchlists() -> [Watchlist]
-}
-
-// MARK: - User Preferences
-
-final class LocationPreferences {
-    static let shared = LocationPreferences()
-    
-    private let defaults = UserDefaults.standard
-    private let homeLatKey = "kUserHomeLatitude"
-    private let homeLonKey = "kUserHomeLongitude"
-    private let homeNameKey = "kUserHomeLocationName"
-    
-    private init() {}
-    
-    var homeLocation: CLLocationCoordinate2D? {
-        get {
-            guard defaults.object(forKey: homeLatKey) != nil else { return nil }
-            let lat = defaults.double(forKey: homeLatKey)
-            let lon = defaults.double(forKey: homeLonKey)
-            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        }
-        set {
-            if let location = newValue {
-                defaults.set(location.latitude, forKey: homeLatKey)
-                defaults.set(location.longitude, forKey: homeLonKey)
-            } else {
-                defaults.removeObject(forKey: homeLatKey)
-                defaults.removeObject(forKey: homeLonKey)
-            }
-        }
-    }
-    
-    var homeLocationName: String? {
-        get { defaults.string(forKey: homeNameKey) }
-        set { defaults.set(newValue, forKey: homeNameKey) }
-    }
-    
-    func setHomeLocation(_ coordinate: CLLocationCoordinate2D, name: String? = nil) async {
-        homeLocation = coordinate
+        let subtitle = self.locationDisplayName ?? self.location ?? "No location"
         
-        if let name = name {
-            homeLocationName = name
+        let dateText: String
+        if let start = self.startDate, let end = self.endDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            dateText = "\(formatter.string(from: start)) - \(formatter.string(from: end))"
         } else {
-            // Reverse geocode to get name
-            homeLocationName = await LocationService.shared.reverseGeocode(
-                lat: coordinate.latitude,
-                lon: coordinate.longitude
+            dateText = "Season pending"
+        }
+        
+        let stats = WatchlistStatsDTO(
+            observedCount: self.observedCount,
+            totalCount: self.speciesCount,
+            rareCount: self.entries?.filter { $0.bird?.rarityLevel?.rawValue == "rare" || $0.bird?.rarityLevel?.rawValue == "very_rare" }.count ?? 0
+        )
+        
+        return WatchlistSummaryDTO(
+            id: identifier,
+            title: self.title ?? "Unnamed Watchlist",
+            subtitle: subtitle,
+            dateText: dateText,
+            image: self.images?.first?.imagePath,
+            previewImages: previewImages,
+            stats: stats,
+            type: self.type ?? .custom
+        )
+    }
+}
+
+extension WatchlistEntry {
+    /// Convert persistence entity to domain DTO
+    func toDomain() -> WatchlistEntryDTO? {
+        guard let bird = self.bird else { return nil }
+        guard let watchlist = self.watchlist else { return nil }
+        
+        let watchlistID = WatchlistIdentifier.from(uuid: watchlist.id, type: watchlist.type)
+        
+        let location: LocationDTO?
+        if let lat = self.lat, let lon = self.lon {
+            location = LocationDTO(
+                latitude: lat,
+                longitude: lon,
+                displayName: self.locationDisplayName
             )
+        } else {
+            location = nil
         }
         
-        print("🏠 [LocationPreferences] Home location set to: \(homeLocationName ?? "Unknown")")
+        return WatchlistEntryDTO(
+            id: self.id,
+            watchlistID: watchlistID,
+            bird: bird.toReference(),
+            status: self.status,
+            notes: self.notes,
+            addedDate: self.addedDate,
+            observationDate: self.observationDate,
+            toObserveStartDate: self.toObserveStartDate,
+            toObserveEndDate: self.toObserveEndDate,
+            observedBy: self.observedBy,
+            location: location,
+            photos: self.photos?.compactMap { $0.imagePath } ?? [],
+            priority: self.priority,
+            notifyUpcoming: self.notify_upcoming,
+            targetDateRange: self.target_date_range
+        )
+    }
+}
+
+extension WatchlistRule {
+    /// Convert persistence entity to domain DTO
+    func toDomain() -> WatchlistRuleDTO {
+        let params = RuleParameters.from(type: self.rule_type, json: self.parameters_json) 
+            ?? .location(LocationRuleParams(lat: 0, lon: 0, radiusKm: 0, validWeeks: nil))
+        
+        return WatchlistRuleDTO(
+            id: self.id,
+            type: self.rule_type,
+            parameters: params,
+            isActive: self.is_active,
+            priority: self.priority
+        )
+    }
+}
+
+extension Bird {
+    /// Convert Bird entity to reference DTO for use in watchlist entries
+    func toReference() -> BirdReferenceDTO {
+        BirdReferenceDTO(
+            id: self.id,
+            commonName: self.commonName,
+            scientificName: self.scientificName,
+            staticImageName: self.staticImageName,
+            rarityLevel: self.rarityLevel.map { Int($0.rawValue.hashValue) },
+            family: self.family
+        )
     }
 }

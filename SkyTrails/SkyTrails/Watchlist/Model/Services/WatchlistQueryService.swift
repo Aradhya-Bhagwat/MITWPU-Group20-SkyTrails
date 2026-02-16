@@ -1,0 +1,391 @@
+//
+//  WatchlistQueryService.swift
+//  SkyTrails
+//
+//  Complex queries, filtering, sorting, and aggregation logic
+//  Strict MVC Refactoring
+//
+
+import Foundation
+import SwiftData
+import CoreLocation
+
+@MainActor
+final class WatchlistQueryService {
+    
+    private let context: ModelContext
+    private let persistence: WatchlistPersistenceService
+    
+    init(context: ModelContext, persistence: WatchlistPersistenceService) {
+        self.context = context
+        self.persistence = persistence
+    }
+    
+    // MARK: - Dashboard Data
+    
+    func loadDashboardData() async throws -> (
+        myWatchlist: WatchlistSummaryDTO?,
+        custom: [WatchlistSummaryDTO],
+        shared: [WatchlistSummaryDTO],
+        globalStats: WatchlistStatsDTO
+    ) {
+        print("📊 [QueryService] Loading dashboard data...")
+        
+        let allLists = try persistence.fetchWatchlists()
+        print("📊 [QueryService] Fetched \(allLists.count) total watchlists")
+        
+        // Filter & Map using entity extensions
+        let customLists = allLists.filter { $0.type == .custom }.map { $0.toSummary() }
+        let sharedLists = allLists.filter { $0.type == .shared }.map { $0.toSummary() }
+        
+        print("📊 [QueryService] Custom: \(customLists.count), Shared: \(sharedLists.count)")
+        
+        // Build My Watchlist (Virtual Aggregation)
+        let myWatchlist = buildMyWatchlistDTO(from: allLists)
+        print("📊 [QueryService] My Watchlist: \(myWatchlist.stats.observedCount)/\(myWatchlist.stats.totalCount)")
+        
+        // Calculate Global Stats
+        let allEntries = allLists.flatMap { $0.entries ?? [] }
+        let globalStats = calculateStats(from: allEntries)
+        print("📊 [QueryService] Global Stats: \(globalStats.observedCount)/\(globalStats.totalCount)")
+        
+        return (myWatchlist, customLists, sharedLists, globalStats)
+    }
+    
+    func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
+        // Aggregate ALL entries from ALL watchlists
+        let allEntries = allLists.flatMap { $0.entries ?? [] }
+        
+        // Remove duplicates by bird ID (keep observed status if exists)
+        var uniqueEntries: [UUID: WatchlistEntry] = [:]
+        for entry in allEntries {
+            if let birdId = entry.bird?.id {
+                if let existing = uniqueEntries[birdId] {
+                    // Prefer observed status
+                    if entry.status == .observed && existing.status != .observed {
+                        uniqueEntries[birdId] = entry
+                    }
+                } else {
+                    uniqueEntries[birdId] = entry
+                }
+            }
+        }
+        
+        let uniqueEntriesArray = Array(uniqueEntries.values)
+        let stats = calculateStats(from: uniqueEntriesArray)
+        
+        // Get preview images (up to 4 unique birds)
+        let previewImages = uniqueEntriesArray
+            .compactMap { $0.bird?.staticImageName }
+            .prefix(4)
+            .map { String($0) }
+        
+        return WatchlistSummaryDTO(
+            id: .virtual,
+            title: "My Watchlist",
+            subtitle: "All Birds",
+            dateText: "",
+            image: previewImages.first,
+            previewImages: Array(previewImages),
+            stats: stats,
+            type: .my_watchlist
+        )
+    }
+    
+    // MARK: - Filtered & Sorted Queries
+    
+    func fetchEntries(
+        identifier: WatchlistIdentifier,
+        filter: WatchlistQueryFilter = .none,
+        sort: WatchlistSortOption = .addedDateNewest
+    ) throws -> [WatchlistEntryDTO] {
+        let entries: [WatchlistEntry]
+        
+        if identifier.isVirtual {
+            // Virtual "My Watchlist" - aggregate all entries
+            let allLists = try persistence.fetchWatchlists()
+            entries = allLists.flatMap { $0.entries ?? [] }
+        } else if let uuid = identifier.uuid {
+            entries = try persistence.fetchEntries(watchlistID: uuid)
+        } else {
+            return []
+        }
+        
+        // Apply filters
+        var filtered = entries
+        
+        if let status = filter.status {
+            filtered = filtered.filter { $0.status == status }
+        }
+        
+        if let searchText = filter.searchText, !searchText.isEmpty {
+            let lowercased = searchText.lowercased()
+            filtered = filtered.filter { entry in
+                entry.bird?.commonName.lowercased().contains(lowercased) ?? false ||
+                entry.bird?.scientificName?.lowercased().contains(lowercased) ?? false
+            }
+        }
+        
+        if let rarityLevels = filter.rarityLevels, !rarityLevels.isEmpty {
+            filtered = filtered.filter { entry in
+                guard let rarity = entry.bird?.rarityLevel else { return false }
+                let level: Int
+                switch rarity {
+                case .common: level = 1
+                case .uncommon: level = 2
+                case .rare: level = 3
+                case .very_rare: level = 4
+                case .endangered: level = 5
+                }
+                return rarityLevels.contains(level)
+            }
+        }
+        
+        if let families = filter.families, !families.isEmpty {
+            filtered = filtered.filter { entry in
+                guard let family = entry.bird?.family else { return false }
+                return families.contains(family)
+            }
+        }
+        
+        if let hasPhotos = filter.hasPhotos {
+            filtered = filtered.filter { entry in
+                let photoCount = entry.photos?.count ?? 0
+                return hasPhotos ? photoCount > 0 : photoCount == 0
+            }
+        }
+        
+        if let dateRange = filter.dateRange {
+            filtered = filtered.filter { entry in
+                guard let observationDate = entry.observationDate else { return false }
+                return observationDate >= dateRange.start && observationDate <= dateRange.end
+            }
+        }
+        
+        // Apply sorting
+        filtered = applySorting(entries: filtered, sort: sort)
+        
+        // Convert to DTOs
+        return filtered.compactMap { $0.toDomain() }
+    }
+    
+    private func applySorting(entries: [WatchlistEntry], sort: WatchlistSortOption) -> [WatchlistEntry] {
+        switch sort {
+        case .addedDateNewest:
+            return entries.sorted { $0.addedDate > $1.addedDate }
+        case .addedDateOldest:
+            return entries.sorted { $0.addedDate < $1.addedDate }
+        case .birdNameAZ:
+            return entries.sorted { ($0.bird?.commonName ?? "") < ($1.bird?.commonName ?? "") }
+        case .birdNameZA:
+            return entries.sorted { ($0.bird?.commonName ?? "") > ($1.bird?.commonName ?? "") }
+        case .observationDateNewest:
+            return entries.sorted {
+                guard let date1 = $0.observationDate, let date2 = $1.observationDate else {
+                    return $0.observationDate != nil
+                }
+                return date1 > date2
+            }
+        case .observationDateOldest:
+            return entries.sorted {
+                guard let date1 = $0.observationDate, let date2 = $1.observationDate else {
+                    return $0.observationDate != nil
+                }
+                return date1 < date2
+            }
+        case .priority:
+            return entries.sorted { $0.priority > $1.priority }
+        case .rarity:
+            return entries.sorted {
+                let level1 = rarityToInt($0.bird?.rarityLevel)
+                let level2 = rarityToInt($1.bird?.rarityLevel)
+                return level1 > level2
+            }
+        }
+    }
+    
+    private func rarityToInt(_ rarity: BirdRarityLevel?) -> Int {
+        guard let rarity = rarity else { return 0 }
+        switch rarity {
+        case .common: return 1
+        case .uncommon: return 2
+        case .rare: return 3
+        case .very_rare: return 4
+        case .endangered: return 5
+        }
+    }
+    
+    // MARK: - Stats
+    
+    func getStats(for identifier: WatchlistIdentifier) throws -> WatchlistStatsDTO {
+        if identifier.isVirtual {
+            // Aggregate stats from all watchlists
+            let allLists = try persistence.fetchWatchlists()
+            let allEntries = allLists.flatMap { $0.entries ?? [] }
+            return calculateStats(from: allEntries)
+        } else if let uuid = identifier.uuid {
+            let entries = try persistence.fetchEntries(watchlistID: uuid)
+            return calculateStats(from: entries)
+        }
+        
+        return .empty
+    }
+    
+    func getGlobalObservedCount() throws -> Int {
+        let allEntries = try persistence.fetchAllEntries()
+        return allEntries.filter { $0.status == .observed }.count
+    }
+    
+    private func calculateStats(from entries: [WatchlistEntry]) -> WatchlistStatsDTO {
+        let observedCount = entries.filter { $0.status == .observed }.count
+        let rareCount = entries.filter {
+            $0.status == .observed &&
+            ($0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare)
+        }.count
+        
+        return WatchlistStatsDTO(
+            observedCount: observedCount,
+            totalCount: entries.count,
+            rareCount: rareCount
+        )
+    }
+    
+    // MARK: - Location-Based Queries
+    
+    func getEntriesObservedNear(
+        location: CLLocationCoordinate2D,
+        radiusInKm: Double = 10.0,
+        watchlistID: WatchlistIdentifier? = nil
+    ) throws -> [WatchlistEntryDTO] {
+        
+        var allEntries: [WatchlistEntry]
+        
+        if let identifier = watchlistID, !identifier.isVirtual, let uuid = identifier.uuid {
+            allEntries = try persistence.fetchEntries(watchlistID: uuid, status: .observed)
+        } else {
+            allEntries = try persistence.fetchAllEntries().filter { $0.status == .observed }
+        }
+        
+        // Filter entries with location data
+        let withLocation = allEntries.filter { $0.lat != nil && $0.lon != nil }
+        
+        // Geospatial filter
+        let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
+        let nearby = withLocation.filter { entry in
+            guard let lat = entry.lat, let lon = entry.lon else { return false }
+            let entryLoc = CLLocation(latitude: lat, longitude: lon)
+            return entryLoc.distance(from: queryLoc) <= (radiusInKm * 1000)
+        }
+        
+        return nearby.compactMap { $0.toDomain() }
+    }
+    
+    // MARK: - Date Range Queries
+    
+    func getEntriesInDateRange(
+        start: Date,
+        end: Date,
+        watchlistID: WatchlistIdentifier? = nil
+    ) throws -> [WatchlistEntryDTO] {
+        
+        var entries: [WatchlistEntry]
+        
+        if let identifier = watchlistID, !identifier.isVirtual, let uuid = identifier.uuid {
+            entries = try persistence.fetchEntries(watchlistID: uuid, status: .to_observe)
+        } else {
+            entries = try persistence.fetchAllEntries().filter { $0.status == .to_observe }
+        }
+        
+        // Filter by date range overlap
+        let filtered = entries.filter { entry in
+            guard let rangeStart = entry.toObserveStartDate,
+                  let rangeEnd = entry.toObserveEndDate else {
+                return false
+            }
+            
+            // Check if ranges overlap
+            return rangeStart <= end && rangeEnd >= start
+        }
+        
+        return filtered.compactMap { $0.toDomain() }
+    }
+    
+    func getEntriesForThisWeek(watchlistID: WatchlistIdentifier? = nil) throws -> [WatchlistEntryDTO] {
+        let calendar = Calendar.current
+        guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: Date())?.start,
+              let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) else {
+            return []
+        }
+        
+        return try getEntriesInDateRange(start: weekStart, end: weekEnd, watchlistID: watchlistID)
+    }
+    
+    // MARK: - Integration Queries (Home Module)
+    
+    func getUpcomingBirds(
+        userLocation: CLLocationCoordinate2D,
+        currentWeek: Int,
+        lookAheadWeeks: Int = 4,
+        radiusInKm: Double = 50.0
+    ) throws -> [UpcomingBirdResult] {
+        
+        // Get all watchlist entries with notifications enabled
+        let allEntries = try persistence.fetchAllEntries()
+        let notifyEntries = allEntries.filter {
+            $0.notify_upcoming && $0.status == .to_observe
+        }
+        
+        // For each bird, check if it's present at user's location
+        var results: [UpcomingBirdResult] = []
+        let hotspotManager = HotspotManager(modelContext: context)
+        
+        for entry in notifyEntries {
+            guard let bird = entry.bird else { continue }
+            
+            // Check weeks in the upcoming window
+            for weekOffset in 0...lookAheadWeeks {
+                let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1 // Wrap around year
+                
+                let presentBirds = hotspotManager.getBirdsPresent(
+                    at: userLocation,
+                    duringWeek: checkWeek,
+                    radiusInKm: radiusInKm
+                )
+                
+                if presentBirds.contains(where: { $0.id == bird.id }) {
+                    results.append(UpcomingBirdResult(
+                        bird: bird,
+                        entry: entry,
+                        expectedWeek: checkWeek,
+                        daysUntil: weekOffset * 7,
+                        migrationDateRange: nil
+                    ))
+                    break // Only add each bird once
+                }
+            }
+        }
+        
+        return results.sorted { $0.daysUntil < $1.daysUntil }
+    }
+}
+
+// MARK: - Supporting Types
+
+struct UpcomingBirdResult: Identifiable {
+    let id = UUID()
+    let bird: Bird
+    let entry: WatchlistEntry
+    let expectedWeek: Int
+    let daysUntil: Int
+    let migrationDateRange: String?
+    
+    var isArriving: Bool { daysUntil <= 7 }
+    var isPresentNow: Bool { daysUntil == 0 }
+    var statusText: String {
+        if let range = migrationDateRange { return range }
+        if isPresentNow { return "Here now!" }
+        if isArriving { return "Arriving this week" }
+        if daysUntil <= 14 { return "Arriving in \(daysUntil) days" }
+        return "Expected in \(daysUntil / 7) weeks"
+    }
+}
