@@ -3,6 +3,7 @@
 //  SkyTrails
 //
 //  Created by SDC-USER on 10/12/25.
+//  Refactored to Strict MVC
 //
 
 import UIKit
@@ -43,7 +44,6 @@ class AllSpotsViewController: UIViewController {
     }
     
     private func setupCollectionView() {
-
         collectionView.collectionViewLayout = createLayout()
         collectionView.register(
             UINib(nibName: GridSpotsToVisitCollectionViewCell.identifier, bundle: nil),
@@ -159,10 +159,9 @@ extension AllSpotsViewController: UICollectionViewDataSource {
 
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
         
-        // 💡 FETCH DYNAMIC DATA: Get the pre-calculated count from HomeManager
-        let activeCount = HomeManager.shared.spotSpeciesCountCache[item.title] ?? 0
+        // Use NSCache safely
+        let activeCount = HomeManager.shared.spotSpeciesCountCache.object(forKey: item.title as NSString)?.intValue ?? item.speciesCount
         
-        // 💡 CONFIGURE WITH INT: Ensure your Grid cell's configure method accepts Int
         cell.configure(
             image: UIImage(named: item.imageName ?? "placeholder_image"),
             title: item.title,
@@ -196,24 +195,20 @@ extension AllSpotsViewController: UICollectionViewDelegate {
         let lat = item.latitude
         let lon = item.longitude
         
-        // 1. Prepare search criteria
         var inputData = PredictionInputData()
         inputData.locationName = item.title
         inputData.latitude = lat
         inputData.longitude = lon
         inputData.areaValue = Int(item.radius)
         inputData.startDate = Date()
-        // Match the live-week logic by setting a 1-week window
         inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
         
-        // 2. 💡 LIVE PREDICTION: Perform the dynamic search against global speciesData
         let predictions = HomeManager.shared.getLivePredictions(
             for: lat,
             lon: lon,
             radiusKm: item.radius
         )
         
-        // 3. Navigate to Output
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
             self.navigationController?.pushViewController(predictMapVC, animated: true)

@@ -2,21 +2,46 @@ import Foundation
 import CoreLocation
 import MapKit
 
+protocol LocationServiceProtocol: Sendable {
+    func parseCoordinate(from locationString: String) -> CLLocationCoordinate2D?
+    func distance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> CLLocationDistance
+}
+
 /// A centralized service for geocoding and location-related operations in the Watchlist module.
 @MainActor
-final class LocationService: NSObject {
+final class LocationService: NSObject, LocationServiceProtocol {
     static let shared = LocationService()
     
     private let locationManager = CLLocationManager()
     private var searchCompleter = MKLocalSearchCompleter()
     private var autocompleteContinuation: CheckedContinuation<[LocationSuggestion], Never>?
+    private let logger: LoggingServiceProtocol
     
     /// Current device location (updated when location services are used)
     var currentLocation: CLLocationCoordinate2D?
     
-    override private init() {
+    init(logger: LoggingServiceProtocol = LoggingService.shared) {
+        self.logger = logger
         super.init()
         searchCompleter.delegate = self
+    }
+    
+    // MARK: - Protocol Methods
+    
+    func parseCoordinate(from locationString: String) -> CLLocationCoordinate2D? {
+        let components = locationString.components(separatedBy: ",")
+        guard components.count == 2,
+              let lat = Double(components[0].trimmingCharacters(in: .whitespaces)),
+              let lon = Double(components[1].trimmingCharacters(in: .whitespaces)) else {
+            return nil
+        }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+    
+    func distance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> CLLocationDistance {
+        let fromLoc = CLLocation(latitude: from.latitude, longitude: from.longitude)
+        let toLoc = CLLocation(latitude: to.latitude, longitude: to.longitude)
+        return fromLoc.distance(from: toLoc)
     }
     
     // MARK: - Core Types
@@ -80,7 +105,7 @@ final class LocationService: NSObject {
             // Prefer locality (city) or name (specific place)
             return placemark.locality ?? placemark.name ?? placemark.country
         } catch {
-            print("❌ [LocationService] Reverse geocoding failed: \(error.localizedDescription)")
+            logger.log(error: error, context: "LocationService.reverseGeocode")
             return nil
         }
     }
@@ -161,7 +186,7 @@ extension LocationService: MKLocalSearchCompleterDelegate {
     
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
         // Only report error if it's not a cancellation (though MKLocalSearchCompleter doesn't typically error on cancel)
-        print("❌ [LocationService] Autocomplete failed: \(error.localizedDescription)")
+        logger.log(error: error, context: "LocationService.autocomplete")
         autocompleteContinuation?.resume(returning: [])
         autocompleteContinuation = nil
     }
