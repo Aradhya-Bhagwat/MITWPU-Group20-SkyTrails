@@ -387,7 +387,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
+		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.identifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = myWatchlist {
 			let images = watchlist.previewImages.compactMap { UIImage(named: $0) }

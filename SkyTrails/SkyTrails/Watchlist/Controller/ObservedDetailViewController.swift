@@ -547,11 +547,13 @@ extension ObservedDetailViewController: UISearchBarDelegate, MKLocalSearchComple
             
             let item = qualifiedWatchlists[indexPath.row]
             // We need the bird object to add/remove
-            let targetBird: Bird? = bird ?? (nameTextField.text.flatMap { manager.findBird(byName: $0) })
-            guard let bird = targetBird else { return }
-            
+
             let manager = WatchlistManager.shared
-            
+			let targetBird: Bird? = bird ?? (nameTextField.text.flatMap { manager.findBird(byName: $0) })
+			
+			guard let bird = targetBird else { return }
+			
+			
             if item.isCurrentlyIn {
                 // Remove from watchlist
                 // Since this is UI, we should probably confirm? But Plan says "Track manual removals to prevent re-adding"

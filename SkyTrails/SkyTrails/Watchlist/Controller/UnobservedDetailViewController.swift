@@ -1,6 +1,7 @@
 import UIKit
 import MapKit
 import CoreLocation
+import SwiftData
 
 @MainActor
 class UnobservedDetailViewController: UIViewController {

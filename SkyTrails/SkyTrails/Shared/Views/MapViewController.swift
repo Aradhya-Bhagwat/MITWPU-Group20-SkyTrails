@@ -125,35 +125,24 @@ class MapViewController: UIViewController {
     func reverseGeocode(_ coord: CLLocationCoordinate2D) {
         let location = CLLocation(latitude: coord.latitude,
                                   longitude: coord.longitude)
-        //concurent view it does not block ui
+        let geocoder = CLGeocoder()
+        
         Task { [weak self] in
             guard let self else { return }
 
             do {
-             
-                guard let request = MKReverseGeocodingRequest(location: location) else {
-                    await MainActor.run {
-                        self.selectedLocationName = "Location"
-                        self.searchBar.text = "Location"
-                    }
-                    return
+                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                let name = placemarks.first?.name ?? "Location"
+
+                await MainActor.run {
+                    self.selectedLocationName = name
+                    self.searchBar.text = name
                 }
-                //sends request to map and return mkmapItem
-                let response = try await request.mapItems
-                let item = response.first
-
-                let name = item?.name ?? "Location"
-
-                self.selectedLocationName = name
-                self.searchBar.text = name
-
-
-
             } catch {
-               
+                await MainActor.run {
                     self.selectedLocationName = "Location"
                     self.searchBar.text = "Location"
-                
+                }
             }
         }
     }

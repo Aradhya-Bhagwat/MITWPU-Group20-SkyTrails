@@ -240,7 +240,10 @@ struct WatchlistStatsDTO: Hashable {
 
 // Replace existing LocationRuleParams with simplified version
 struct LocationRuleParams: Codable {
+    let latitude: Double
+    let longitude: Double
     let radiusKm: Double
+    let weeks: [Int]?
 }
 
 // Add new FamilyShapeRuleParams

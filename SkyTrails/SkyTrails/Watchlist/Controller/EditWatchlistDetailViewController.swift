@@ -193,6 +193,8 @@ class EditWatchlistDetailViewController: UIViewController {
         radiusSlider.value = Float(locationRadius)
         radiusSlider.addTarget(self, action: #selector(radiusSliderChanged), for: .valueChanged)
         
+        radiusMapView.delegate = self
+        
         updateRulesVisibility()
     }
 
@@ -388,7 +390,12 @@ class EditWatchlistDetailViewController: UIViewController {
         
         // Location Rule
         if locationToggle.isOn && watchlist.lat != nil && watchlist.lon != nil {
-            let params = LocationRuleParams(radiusKm: locationRadius)
+            let params = LocationRuleParams(
+                latitude: watchlist.lat!,
+                longitude: watchlist.lon!,
+                radiusKm: locationRadius,
+                weeks: nil
+            )
             try? manager.addOrUpdateRule(
                 to: watchlist.id,
                 type: .location,
@@ -669,8 +676,8 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchC
 	func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {}
 }
 
-// MARK: - MapSelectionDelegate
-extension EditWatchlistDetailViewController: MapSelectionDelegate {
+// MARK: - Map Delegate
+extension EditWatchlistDetailViewController: MapSelectionDelegate, MKMapViewDelegate {
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
         updateLocationSelection(LocationService.LocationData(displayName: name, lat: lat, lon: lon))
     }
