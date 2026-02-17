@@ -15,34 +15,32 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window = UIWindow(windowScene: windowScene)
 
-        let isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
+        let storyboard: UIStoryboard
+        let rootVC: UIViewController
 
-        print("Is Logged In:", isLoggedIn) // Debug
+        // ✅ Check using UserSession (NOT UserDefaults)
+        if UserSession.shared.isLoggedIn() {
 
-        if isLoggedIn {
+            storyboard = UIStoryboard(name: "Main", bundle: nil)
 
-            // 👉 Load MAIN storyboard
-            let storyboard = UIStoryboard(name: "Main", bundle: nil)
-
-            let mainVC = storyboard.instantiateViewController(
+            rootVC = storyboard.instantiateViewController(
                 withIdentifier: "RootTabBarController"
             )
 
-            window?.rootViewController = mainVC
+            print("Auto Login: TRUE")
 
         } else {
 
+            storyboard = UIStoryboard(name: "Onboard", bundle: nil)
 
-            // 👉 Load MAIN storyboard
-            let storyboard = UIStoryboard(name: "Main", bundle: nil)
-
-            let mainVC = storyboard.instantiateViewController(
-                withIdentifier: "RootTabBarController"
+            rootVC = storyboard.instantiateViewController(
+                withIdentifier: "StartViewController"
             )
 
-            window?.rootViewController = mainVC
+            print("Auto Login: FALSE")
         }
 
+        window?.rootViewController = rootVC
         window?.makeKeyAndVisible()
     }
 

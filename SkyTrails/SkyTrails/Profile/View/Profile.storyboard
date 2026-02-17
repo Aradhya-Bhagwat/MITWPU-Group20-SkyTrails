@@ -11,7 +11,7 @@
         <!--Profile View Controller-->
         <scene sceneID="gBE-Lu-VGS">
             <objects>
-                <viewController id="YsJ-D8-tqN" customClass="ProfileViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProfileViewController" id="YsJ-D8-tqN" customClass="ProfileViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="lum-M4-Rrd">
                         <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -43,6 +43,9 @@
                                 <buttonConfiguration key="configuration" style="filled" title="Logout">
                                     <color key="baseBackgroundColor" systemColor="systemRedColor"/>
                                 </buttonConfiguration>
+                                <connections>
+                                    <action selector="logoutTapped:" destination="YsJ-D8-tqN" eventType="touchUpInside" id="XXP-3E-NKg"/>
+                                </connections>
                             </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="JiI-xb-Tv7"/>
@@ -62,6 +65,11 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="WBR-9l-1ha"/>
+                    <connections>
+                        <outlet property="emailButton" destination="Mog-z5-ml9" id="6cl-O3-zUn"/>
+                        <outlet property="nameLabel" destination="mmi-tb-dP7" id="s8e-Fo-NoB"/>
+                        <outlet property="profileImageView" destination="Er7-Oc-lkE" id="cBb-pe-Jsw"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="BU5-Vu-cVr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>

@@ -56,6 +56,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         attachHomeTitleProfileImageViewIfNeeded()
         // Refresh data when returning to screen
         refreshHomeData()
+        loadUserProfileImage()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -70,18 +71,73 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     }
 
     private func setupHomeTitleProfileImageView() {
+
         homeTitleProfileImageView.translatesAutoresizingMaskIntoConstraints = false
-        homeTitleProfileImageView.image = UIImage(named: "watchlist_user_profile") ?? UIImage(systemName: "person.crop.circle.fill")
+
         homeTitleProfileImageView.contentMode = .scaleAspectFill
         homeTitleProfileImageView.clipsToBounds = true
         homeTitleProfileImageView.layer.cornerRadius = 18
+
         homeTitleProfileImageView.isUserInteractionEnabled = true
         homeTitleProfileImageView.accessibilityLabel = "Profile"
+        loadUserProfileImage()
 
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapHomeTitleProfileImage))
+        let tapGesture = UITapGestureRecognizer(
+            target: self,
+            action: #selector(didTapHomeTitleProfileImage)
+        )
+
         homeTitleProfileImageView.addGestureRecognizer(tapGesture)
     }
+    
+    private func loadUserProfileImage() {
 
+        guard let user = UserSession.shared.getUser() else {
+
+            // Default if no user
+            homeTitleProfileImageView.image =
+                UIImage(systemName: "person.crop.circle.fill")
+
+            return
+        }
+
+        let photo = user.profilePhoto
+
+        // Google image (URL)
+        if photo.starts(with: "http") {
+
+            loadImage(from: photo)
+
+        } else if !photo.isEmpty {
+
+            // Local image
+            homeTitleProfileImageView.image =
+                UIImage(named: photo)
+
+        } else {
+
+            // Fallback
+            homeTitleProfileImageView.image =
+                UIImage(systemName: "person.crop.circle.fill")
+        }
+    }
+    
+    private func loadImage(from urlString: String) {
+
+        guard let url = URL(string: urlString) else { return }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+
+            if let data = try? Data(contentsOf: url),
+               let image = UIImage(data: data) {
+
+                DispatchQueue.main.async {
+
+                    self.homeTitleProfileImageView.image = image
+                }
+            }
+        }
+    }
     private func attachHomeTitleProfileImageViewIfNeeded() {
         guard let navBar = navigationController?.navigationBar else { return }
         guard homeTitleProfileImageView.superview == nil else { return }

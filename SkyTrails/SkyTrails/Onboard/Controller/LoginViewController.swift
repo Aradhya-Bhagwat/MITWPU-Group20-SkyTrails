@@ -2,15 +2,24 @@ import UIKit
 
 class LoginViewController: UIViewController {
 
+    // MARK: - Outlets
+
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
 
+    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
+
         setupPassword()
+        hideKeyboardWhenTapped()
     }
 
+    // MARK: - Password Setup
+
     private func setupPassword() {
+
         passwordTextField.isSecureTextEntry = true
         addEyeButton(to: passwordTextField)
     }
@@ -52,6 +61,8 @@ class LoginViewController: UIViewController {
         login()
     }
 
+    // MARK: - Login Logic
+
     private func login() {
 
         guard let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
@@ -68,6 +79,7 @@ class LoginViewController: UIViewController {
             return
         }
 
+        // Get password from Keychain
         guard let savedPassword =
                 KeychainManager.shared.getPassword(email: email) else {
 
@@ -75,29 +87,40 @@ class LoginViewController: UIViewController {
             return
         }
 
-        if savedPassword == password {
-
-            // Save session
-            UserDefaults.standard.set(true, forKey: "isLoggedIn")
-            UserDefaults.standard.set(email, forKey: "userEmail")
-
-            goToMain()
-
-        } else {
+        guard savedPassword == password else {
             showAlert("Wrong password")
+            return
         }
+
+        // Load user data
+        let user = User(
+            name: "User",
+            gender: "Not Specified",
+            email: email,
+            profilePhoto: "defaultProfile"
+        )
+
+        // Save session
+        UserSession.shared.saveUser(user)
+
+        goToMain()
     }
+
+    // MARK: - Navigation
 
     private func goToMain() {
 
         guard let scene =
                 UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = scene.windows.first else { return }
+              let window =
+                scene.windows.first(where: { $0.isKeyWindow }) else {
+            return
+        }
 
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
 
         let mainVC = storyboard.instantiateViewController(
-            identifier: "RootTabBarController"
+            withIdentifier: "RootTabBarController"
         )
 
         window.rootViewController = mainVC
@@ -110,6 +133,8 @@ class LoginViewController: UIViewController {
         )
     }
 
+    // MARK: - Alert
+
     private func showAlert(_ msg: String) {
 
         let alert = UIAlertController(
@@ -118,8 +143,26 @@ class LoginViewController: UIViewController {
             preferredStyle: .alert
         )
 
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(
+            UIAlertAction(title: "OK", style: .default)
+        )
 
         present(alert, animated: true)
+    }
+
+    // MARK: - Keyboard
+
+    private func hideKeyboardWhenTapped() {
+
+        let tap = UITapGestureRecognizer(
+            target: self,
+            action: #selector(dismissKeyboard)
+        )
+
+        view.addGestureRecognizer(tap)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
 }

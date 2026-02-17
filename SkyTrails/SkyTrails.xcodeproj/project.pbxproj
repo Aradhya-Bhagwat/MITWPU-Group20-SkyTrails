@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		199620152F446D1B00E28D06 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 199620142F446D1B00E28D06 /* Auth */; };
+		199620172F446D1B00E28D06 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 199620162F446D1B00E28D06 /* Functions */; };
+		199620192F446D1B00E28D06 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 199620182F446D1B00E28D06 /* PostgREST */; };
+		1996201B2F446D1B00E28D06 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 1996201A2F446D1B00E28D06 /* Realtime */; };
+		1996201D2F446D1B00E28D06 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 1996201C2F446D1B00E28D06 /* Storage */; };
 		19C6C1762F3DA3DC00F3E6F7 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 19C6C1752F3DA3DC00F3E6F7 /* GoogleSignIn */; };
 		19C6C1782F3DA3DC00F3E6F7 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 19C6C1772F3DA3DC00F3E6F7 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
@@ -43,6 +48,11 @@
 			files = (
 				19C6C1762F3DA3DC00F3E6F7 /* GoogleSignIn in Frameworks */,
 				19C6C1782F3DA3DC00F3E6F7 /* GoogleSignInSwift in Frameworks */,
+				1996201D2F446D1B00E28D06 /* Storage in Frameworks */,
+				199620172F446D1B00E28D06 /* Functions in Frameworks */,
+				1996201B2F446D1B00E28D06 /* Realtime in Frameworks */,
+				199620152F446D1B00E28D06 /* Auth in Frameworks */,
+				199620192F446D1B00E28D06 /* PostgREST in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,6 +97,11 @@
 			packageProductDependencies = (
 				19C6C1752F3DA3DC00F3E6F7 /* GoogleSignIn */,
 				19C6C1772F3DA3DC00F3E6F7 /* GoogleSignInSwift */,
+				199620142F446D1B00E28D06 /* Auth */,
+				199620162F446D1B00E28D06 /* Functions */,
+				199620182F446D1B00E28D06 /* PostgREST */,
+				1996201A2F446D1B00E28D06 /* Realtime */,
+				1996201C2F446D1B00E28D06 /* Storage */,
 			);
 			productName = SkyTrails;
 			productReference = 195BFE662ED4530C00774A9F /* SkyTrails.app */;
@@ -118,6 +133,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				19C6C1742F3DA3DC00F3E6F7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 195BFE672ED4530C00774A9F /* Products */;
@@ -367,6 +383,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
 		19C6C1742F3DA3DC00F3E6F7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
@@ -378,6 +402,31 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		199620142F446D1B00E28D06 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		199620162F446D1B00E28D06 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		199620182F446D1B00E28D06 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		1996201A2F446D1B00E28D06 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		1996201C2F446D1B00E28D06 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 199620132F446D1B00E28D06 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
 		19C6C1752F3DA3DC00F3E6F7 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 19C6C1742F3DA3DC00F3E6F7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

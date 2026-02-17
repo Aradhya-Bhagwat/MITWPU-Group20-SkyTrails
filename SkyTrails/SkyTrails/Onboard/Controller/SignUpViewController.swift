@@ -76,10 +76,14 @@ class SignUpViewController: UIViewController {
 
     private func register() {
 
-        guard let name = nameTextField.text, !name.isEmpty,
-              let email = emailTextField.text, !email.isEmpty,
-              let pass = passwordTextField.text, !pass.isEmpty,
-              let confirm = confirmPasswordTextField.text, !confirm.isEmpty else {
+        guard let name = nameTextField.text?.trimmingCharacters(in: .whitespaces),
+              let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
+              let pass = passwordTextField.text,
+              let confirm = confirmPasswordTextField.text,
+              !name.isEmpty,
+              !email.isEmpty,
+              !pass.isEmpty,
+              !confirm.isEmpty else {
 
             show("Please fill all fields")
             return
@@ -100,26 +104,30 @@ class SignUpViewController: UIViewController {
             return
         }
 
-        // Save to Keychain
-        let saved = KeychainManager.shared.save(
+        // Save password in Keychain
+        let success = KeychainManager.shared.save(
             email: email,
             password: pass
         )
 
-        if saved {
+        guard success else {
+            show("Account already exists")
+            return
+        }
 
-            // Save session
-            UserDefaults.standard.set(true, forKey: "isLoggedIn")
-            UserDefaults.standard.set(email, forKey: "userEmail")
-            UserDefaults.standard.set(name, forKey: "userName")
+        // Create User model
+        let user = User(
+            name: name,
+            gender: "Not Specified",
+            email: email,
+            profilePhoto: "defaultProfile"
+        )
 
-            show("Account created successfully!") {
-                self.goToMain()
-            }
+        // Save session
+        UserSession.shared.saveUser(user)
 
-        } else {
-
-            show("Account already exists or signup failed")
+        show("Account created successfully!") {
+            self.goToMain()
         }
     }
 
