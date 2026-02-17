@@ -324,6 +324,22 @@ struct WatchlistQueryFilter {
     var hasPhotos: Bool?
     var dateRange: (start: Date, end: Date)?
     
+    nonisolated init(
+        status: WatchlistEntryStatus? = nil,
+        searchText: String? = nil,
+        rarityLevels: [Int]? = nil,
+        families: [String]? = nil,
+        hasPhotos: Bool? = nil,
+        dateRange: (start: Date, end: Date)? = nil
+    ) {
+        self.status = status
+        self.searchText = searchText
+        self.rarityLevels = rarityLevels
+        self.families = families
+        self.hasPhotos = hasPhotos
+        self.dateRange = dateRange
+    }
+    
     static let none = WatchlistQueryFilter()
 }
 

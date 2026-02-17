@@ -78,7 +78,7 @@ class CommunityObservationViewController: UIViewController {
             birdImageView.image = UIImage(systemName: "photo")
         }
         
-        userNameLabel.text = "by \(observation.username ?? "Unknown")"
+        userNameLabel.text = "by \(observation.username)"
         locationNameLabel.numberOfLines = 0
         locationNameLabel.text = observation.location
         notesLabel.numberOfLines = 0

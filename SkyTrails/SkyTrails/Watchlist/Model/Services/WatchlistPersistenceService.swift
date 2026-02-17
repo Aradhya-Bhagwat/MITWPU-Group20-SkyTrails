@@ -50,7 +50,7 @@ final class WatchlistPersistenceService {
     }
     
     func fetchWatchlists(type: WatchlistType? = nil) throws -> [Watchlist] {
-        var descriptor = FetchDescriptor<Watchlist>(
+        let descriptor = FetchDescriptor<Watchlist>(
             sortBy: [SortDescriptor(\.created_at, order: .reverse)]
         )
         
@@ -374,7 +374,7 @@ final class WatchlistPersistenceService {
         rarityLevel: RarityLevel = .common
     ) throws -> Bird {
         // Check for duplicate
-        if let existing = try fetchBird(byCommonName: commonName) {
+        if try fetchBird(byCommonName: commonName) != nil {
             throw WatchlistError.duplicateEntry(birdName: commonName)
         }
         

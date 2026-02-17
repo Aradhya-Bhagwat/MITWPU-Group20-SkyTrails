@@ -104,7 +104,7 @@ final class WatchlistQueryService {
     
     func fetchEntries(
         identifier: WatchlistIdentifier,
-        filter: WatchlistQueryFilter = .none,
+        filter: WatchlistQueryFilter = WatchlistQueryFilter(),
         sort: WatchlistSortOption = .addedDateNewest
     ) throws -> [WatchlistEntryDTO] {
         let entries: [WatchlistEntry]

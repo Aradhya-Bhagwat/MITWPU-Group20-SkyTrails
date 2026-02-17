@@ -401,7 +401,7 @@ final class WatchlistManager: WatchlistRepository {
     }
     
     func attachPhoto(entryId: UUID, imageName: String) throws {
-        try photos.attachExistingPhoto(to: entryId, imagePath: imageName)
+        _ = try photos.attachExistingPhoto(to: entryId, imagePath: imageName)
         
         // Refresh cover image
         if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
