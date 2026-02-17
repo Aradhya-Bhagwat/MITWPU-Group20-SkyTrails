@@ -32,24 +32,27 @@ class HomeManager {
     
     // Internal init for testing
     init(
-        watchlistManager: WatchlistManager = WatchlistManager.shared,
+        watchlistManager: WatchlistManager? = nil,
         hotspotManager: HotspotManager? = nil,
         migrationManager: MigrationManager? = nil,
         observationManager: CommunityObservationManager? = nil,
-        newsService: NewsServiceProtocol = NewsService(),
-        locationService: LocationServiceProtocol = LocationService.shared,
-        logger: LoggingServiceProtocol = LoggingService.shared
+        newsService: NewsServiceProtocol? = nil,
+        locationService: LocationServiceProtocol? = nil,
+        logger: LoggingServiceProtocol? = nil
     ) {
-        self.watchlistManager = watchlistManager
-        self.logger = logger
+        let actualLogger = logger ?? LoggingService.shared
+        let actualWatchlistManager = watchlistManager ?? WatchlistManager.shared
         
-        let context = watchlistManager.context
-        self.hotspotManager = hotspotManager ?? HotspotManager(modelContext: context, logger: logger)
-        self.migrationManager = migrationManager ?? MigrationManager(modelContext: context, logger: logger)
-        self.observationManager = observationManager ?? CommunityObservationManager(modelContext: context, logger: logger)
+        self.watchlistManager = actualWatchlistManager
+        self.logger = actualLogger
         
-        self.newsService = newsService
-        self.locationService = locationService
+        let context = actualWatchlistManager.context
+        self.hotspotManager = hotspotManager ?? HotspotManager(modelContext: context, logger: actualLogger)
+        self.migrationManager = migrationManager ?? MigrationManager(modelContext: context, logger: actualLogger)
+        self.observationManager = observationManager ?? CommunityObservationManager(modelContext: context, logger: actualLogger)
+        
+        self.newsService = newsService ?? NewsService()
+        self.locationService = locationService ?? LocationService.shared
     }
     
     // MARK: - Core Data Fetching
@@ -633,9 +636,9 @@ final class HotspotManager {
         return cache
     }()
     
-    init(modelContext: ModelContext, logger: LoggingServiceProtocol = LoggingService.shared) {
+    init(modelContext: ModelContext, logger: LoggingServiceProtocol? = nil) {
         self.modelContext = modelContext
-        self.logger = logger
+        self.logger = logger ?? LoggingService.shared
     }
     
     func getBirdsPresent(
@@ -684,9 +687,9 @@ final class MigrationManager {
     private let modelContext: ModelContext
     private let logger: LoggingServiceProtocol
     
-    init(modelContext: ModelContext, logger: LoggingServiceProtocol = LoggingService.shared) {
+    init(modelContext: ModelContext, logger: LoggingServiceProtocol? = nil) {
         self.modelContext = modelContext
-        self.logger = logger
+        self.logger = logger ?? LoggingService.shared
     }
     
     func getActiveMigrations(forWeek week: Int) async -> [MigrationSession] {
@@ -745,9 +748,9 @@ final class CommunityObservationManager {
     private let modelContext: ModelContext
     private let logger: LoggingServiceProtocol
     
-    init(modelContext: ModelContext, logger: LoggingServiceProtocol = LoggingService.shared) {
+    init(modelContext: ModelContext, logger: LoggingServiceProtocol? = nil) {
         self.modelContext = modelContext
-        self.logger = logger
+        self.logger = logger ?? LoggingService.shared
     }
     
     func getObservations(

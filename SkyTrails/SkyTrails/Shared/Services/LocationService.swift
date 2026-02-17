@@ -20,8 +20,8 @@ final class LocationService: NSObject, LocationServiceProtocol {
     /// Current device location (updated when location services are used)
     var currentLocation: CLLocationCoordinate2D?
     
-    init(logger: LoggingServiceProtocol = LoggingService.shared) {
-        self.logger = logger
+    init(logger: LoggingServiceProtocol? = nil) {
+        self.logger = logger ?? LoggingService.shared
         super.init()
         searchCompleter.delegate = self
     }

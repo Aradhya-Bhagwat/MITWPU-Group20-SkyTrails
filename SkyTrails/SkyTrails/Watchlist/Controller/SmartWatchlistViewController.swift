@@ -444,12 +444,10 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		performSegue(withIdentifier: "ShowObservedDetail", sender: entry)
 	}
 	
-	func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-		let entry: WatchlistEntry
-		let wId: UUID? = currentWatchlistId
-		
-		if watchlistType == .myWatchlist {
-			entry = filteredSections[indexPath.section][indexPath.row]
+		func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+			let entry: WatchlistEntry
+			
+			if watchlistType == .myWatchlist {			entry = filteredSections[indexPath.section][indexPath.row]
 		} else {
 			entry = currentList[indexPath.row]
 		}

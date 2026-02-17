@@ -371,7 +371,7 @@ class ArrowPolylineRenderer: MKPolylineRenderer {
         super.draw(mapRect, zoomScale: zoomScale, in: context)
         
         // Draw arrows
-        guard let polyline = self.polyline as? MKPolyline else { return }
+        let polyline = self.polyline
         
         // Arrow styling
         let arrowColor = isHighlighted ? UIColor.systemYellow.cgColor : UIColor.white.cgColor

@@ -151,7 +151,6 @@ extension WatchlistHomeViewController {
 				if indexPath.item < sharedWatchlists.count {
 					selectedDTO = sharedWatchlists[indexPath.item]
 				}
-			default: break
 		}
 		
 		if let dto = selectedDTO {
@@ -572,11 +571,11 @@ extension WatchlistHomeViewController {
 		let group: NSCollectionLayoutGroup
 		if isWide {
 			// 2-column grid on iPad
-			group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
+			group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 2)
 			group.interItemSpacing = .fixed(12)
 		} else {
 			// Single column on iPhone
-			group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 1)
+			group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 1)
 		}
 		
 		let section = NSCollectionLayoutSection(group: group)

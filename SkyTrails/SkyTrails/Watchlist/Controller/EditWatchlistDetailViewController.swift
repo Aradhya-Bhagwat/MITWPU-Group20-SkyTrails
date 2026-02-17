@@ -557,7 +557,7 @@ class EditWatchlistDetailViewController: UIViewController {
 			popover.sourceRect = inviteContactsView.bounds
 		}
 		
-        activityVC.completionWithItemsHandler = { [weak self] (_, completed, _, _) in
+        activityVC.completionWithItemsHandler = { (_, completed, _, _) in
         }
 		
 		present(activityVC, animated: true)
