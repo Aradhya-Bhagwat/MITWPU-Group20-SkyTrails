@@ -130,7 +130,7 @@ class HomeDataSeeder {
     // MARK: - Migrations
     
     private func seedMigrations(_ data: [MigrationSessionData], context: ModelContext) async throws {
-        print("[upcomingbirdsdebug] Seeder: Processing \(data.count) migrations for Upcoming/Prediction data")
+        print("🌱 [PredictionDebug] HomeDataSeeder: Processing \(data.count) migrations for Upcoming/Prediction data")
         for item in data {
             let id = item.id
             let descriptor = FetchDescriptor<MigrationSession>(predicate: #Predicate { $0.id == id })
@@ -144,6 +144,7 @@ class HomeDataSeeder {
                 if session.bird == nil {
                      session.bird = fetchBird(id: item.birdId, context: context)
                 }
+                print("🌱 [PredictionDebug]   Updating existing migration - ID: \(id), Bird: \(session.bird?.commonName ?? "Missing")")
             } else {
                 let bird = fetchBird(id: item.birdId, context: context)
                 session = MigrationSession(
@@ -154,12 +155,16 @@ class HomeDataSeeder {
                     hemisphere: item.hemisphere
                 )
                 context.insert(session)
+                print("🌱 [PredictionDebug]   Inserted new migration - ID: \(id), Bird: \(bird?.commonName ?? "Missing")")
             }
             
             if let paths = item.trajectoryPaths {
+                print("🌱 [PredictionDebug]   Seeding \(paths.count) trajectory paths for \(session.bird?.commonName ?? "Unknown")")
                 for pathData in paths {
                     try seedTrajectory(pathData, for: session, context: context)
                 }
+            } else {
+                print("⚠️ [PredictionDebug]   No trajectory paths for \(session.bird?.commonName ?? "Unknown")")
             }
         }
     }

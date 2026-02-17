@@ -27,7 +27,7 @@
                         13,
                         14,
                         15,
-                        /Users/sdc-user/projectcode2/SkyTrails/SkyTrails/SkyTrails/Home/Controller/BirdDateInputViewController.swift                    16,
+                        16,
                         17,
                         18,
                         19,
@@ -506,7 +506,7 @@
         },
         {
             "id": "0B7F943F-19DE-4A8C-821F-BB94B671C617",
-            "name": "Khadakwasla Lake",
+            "name": "Khadakwasla Backwaters",
             "locality": "Pune, Maharashtra",
             "lat": 18.4392,
             "lon": 73.7694,
@@ -1349,6 +1349,66 @@
                     "lat": 28.2,
                     "lon": 79.0,
                     "probability": 10
+                }
+            ]
+        }
+    ],
+    "migration_sessions": [
+        {
+            "id": "B6C7D8E9-F0A1-4B2C-8D3E-5F6A7B8C9D0E",
+            "birdId": "550e8400-e29b-41d4-a716-446655440003",
+            "startWeek": 4,
+            "endWeek": 12,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "C1D2E3F4-A5B6-4C7D-8E9F-0A1B2C3D4E5F",
+                    "week": 4,
+                    "lat": 28.57,
+                    "lon": 77.3,
+                    "probability": 90
+                },
+                {
+                    "id": "D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A",
+                    "week": 5,
+                    "lat": 27.17,
+                    "lon": 77.5,
+                    "probability": 85
+                },
+                {
+                    "id": "E3F4A5B6-C7D8-4E9F-0A1B-2C3D4E5F6A7B",
+                    "week": 6,
+                    "lat": 24.0,
+                    "lon": 76.5,
+                    "probability": 70
+                },
+                {
+                    "id": "F4A5B6C7-D8E9-4F0A-1B2C-3D4E5F6A7B8C",
+                    "week": 7,
+                    "lat": 21.0,
+                    "lon": 75.5,
+                    "probability": 60
+                },
+                {
+                    "id": "A5B6C7D8-E9F0-4A1B-2C3D-4E5F6A7B8C9D",
+                    "week": 8,
+                    "lat": 18.28,
+                    "lon": 74.77,
+                    "probability": 95
+                },
+                {
+                    "id": "B6C7D8E9-F0A1-4B2C-8D3E-5F6A7B8C9D0E",
+                    "week": 9,
+                    "lat": 18.43,
+                    "lon": 73.75,
+                    "probability": 90
+                },
+                {
+                    "id": "C7D8E9F0-A1B2-4C3D-4E5F-6A7B8C9D0E1F",
+                    "week": 10,
+                    "lat": 15.0,
+                    "lon": 74.0,
+                    "probability": 50
                 }
             ]
         }

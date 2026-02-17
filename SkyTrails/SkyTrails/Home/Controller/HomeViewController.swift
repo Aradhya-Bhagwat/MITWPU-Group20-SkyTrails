@@ -207,12 +207,6 @@ extension HomeViewController {
         )
         
         homeCollectionView.register(
-            UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil),
-            forSupplementaryViewOfKind: "MigrationPageControlFooter",
-            withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier
-        )
-        
-        homeCollectionView.register(
             UINib(nibName: "UpcomingBirdsCollectionViewCell", bundle: nil),
             forCellWithReuseIdentifier: "UpcomingBirdsCollectionViewCell"
         )
@@ -228,8 +222,8 @@ extension HomeViewController {
         )
         
         homeCollectionView.register(
-            UINib(nibName: newMigrationCollectionViewCell.identifier, bundle: nil),
-            forCellWithReuseIdentifier: newMigrationCollectionViewCell.identifier
+            UINib(nibName: NewMigrationCollectionViewCell.identifier, bundle: Bundle(for: NewMigrationCollectionViewCell.self)),
+            forCellWithReuseIdentifier: NewMigrationCollectionViewCell.identifier
         )
         
         homeCollectionView.register(
@@ -258,13 +252,16 @@ extension HomeViewController {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
             
+            print("📱 [PredictionDebug] HomeViewController: Loading home data")
             let userLocation = self.getUserLocation()
+            print("📱 [PredictionDebug]   User location: \(userLocation?.latitude ?? 0), \(userLocation?.longitude ?? 0)")
 
             // Load all home screen data
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             self.homeScreenData = data
 
             if let errorMessage = data.errorMessage {
+                print("❌ [PredictionDebug]   Error message: \(errorMessage)")
                 self.showErrorAlert(message: errorMessage)
             }
 
@@ -275,18 +272,29 @@ extension HomeViewController {
             self.news = data.news
             self.migrationCards = data.migrationCards
             
+            print("📱 [PredictionDebug]   Migration cards count: \(self.migrationCards.count)")
+            if let first = self.migrationCards.first {
+                switch first {
+                case .combined(let migration, let hotspot):
+                    print("📱 [PredictionDebug]     First card: \(migration.birdName) at \(hotspot.placeName), birds: \(hotspot.birdSpecies.count)")
+                }
+            }
+            
             self.homeCollectionView.reloadData()
+            print("📱 [PredictionDebug]   homeCollectionView reloaded")
         }
     }
 
     private func refreshHomeData() {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
+            print("📱 [PredictionDebug] HomeViewController: Refreshing home data")
             let userLocation = self.getUserLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             
             self.homeScreenData = data
             if let errorMessage = data.errorMessage {
+                print("❌ [PredictionDebug]   Error message during refresh: \(errorMessage)")
                 self.showErrorAlert(message: errorMessage)
             }
             self.upcomingBirds = data.displayableUpcomingBirds
@@ -294,6 +302,8 @@ extension HomeViewController {
             self.observations = data.recentObservations
             self.news = data.news
             self.migrationCards = data.migrationCards
+            
+            print("📱 [PredictionDebug]   Migration cards count after refresh: \(self.migrationCards.count)")
             
             self.homeCollectionView.reloadData()
         }
@@ -551,13 +561,10 @@ extension HomeViewController {
         
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        let footerKind = "MigrationPageControlFooter"
-        let footerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(30))
-        let footer = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: footerSize, elementKind: footerKind, alignment: .bottom)
         
         section.orthogonalScrollingBehavior = .groupPagingCentered
         section.interGroupSpacing = 40
-        section.boundarySupplementaryItems = [createSectionHeaderLayout(), footer]
+        section.boundarySupplementaryItems = [createSectionHeaderLayout()]
         section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
         
         return section
@@ -573,7 +580,10 @@ extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView,
                         numberOfItemsInSection section: Int) -> Int {
         switch section {
-        case 0: return migrationCards.count
+        case 0: 
+            let count = min(migrationCards.count, 1)
+            print("📱 [PredictionDebug] numberOfItemsInSection(0) = \(count)")
+            return count
         case 1: return upcomingBirds.count
         case 2: return min(spots.count, 5)
         case 3: return observations.count
@@ -589,9 +599,9 @@ extension HomeViewController: UICollectionViewDataSource {
             switch cardType {
             case .combined(let migration, let hotspot):
                 let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: newMigrationCollectionViewCell.identifier,
+                    withReuseIdentifier: NewMigrationCollectionViewCell.identifier,
                     for: indexPath
-                ) as! newMigrationCollectionViewCell
+                ) as! NewMigrationCollectionViewCell
                 
                 cell.configure(migration: migration, hotspot: hotspot)
                 return cell
@@ -648,21 +658,9 @@ extension HomeViewController: UICollectionViewDataSource {
                          at indexPath: IndexPath) -> UICollectionReusableView {
          
          let communityFooterKind = "CommunityPageControlFooter"
-         let migrationFooterKind = "MigrationPageControlFooter"
          let newsFooterKind = "NewsPageControlFooter"
          
-         if kind == migrationFooterKind && indexPath.section == 0 {
-             let footer = collectionView.dequeueReusableSupplementaryView(
-                 ofKind: kind,
-                 withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier,
-                 for: indexPath
-             ) as! PageControlReusableViewCollectionReusableView
-             
-             let totalMapCardCount = migrationCards.count
-             footer.configure(numberOfPages: totalMapCardCount, currentPage: 0)
-             return footer
-         }
-         else if kind == communityFooterKind && indexPath.section == 3 {
+         if kind == communityFooterKind && indexPath.section == 3 {
              let footer = collectionView.dequeueReusableSupplementaryView(
                  ofKind: kind,
                  withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier,
@@ -724,18 +722,7 @@ extension HomeViewController: UICollectionViewDataSource {
 extension HomeViewController {
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if indexPath.section == 0 {
-            let footerKind = "MigrationPageControlFooter"
-            
-            if let footer = collectionView.supplementaryView(
-                forElementKind: footerKind,
-                at: IndexPath(item: 0, section: 0)
-            ) as? PageControlReusableViewCollectionReusableView {
-                let totalCount = migrationCards.count
-                footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
-            }
-        }
-        else if indexPath.section == 3 {
+        if indexPath.section == 3 {
             let footerKind = "CommunityPageControlFooter"
 
             if let footer = collectionView.supplementaryView(
