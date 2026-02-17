@@ -92,12 +92,22 @@ class StartViewController: UIViewController {
             let email = user.profile?.email ?? ""
             let name = user.profile?.name ?? ""
 
-            print("Logged in:", email)
+            // Get Google profile image URL
+            let imageURL =
+                user.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
 
-            // Save login
-            UserDefaults.standard.set(true, forKey: "isLoggedIn")
-            UserDefaults.standard.set(email, forKey: "userEmail")
-            UserDefaults.standard.set(name, forKey: "userName")
+            print("Google Photo:", imageURL)
+
+            // Create User model
+            let googleUser = User(
+                name: name,
+                gender: "Not Specified",
+                email: email,
+                profilePhoto: imageURL
+            )
+
+            // Save session
+            UserSession.shared.saveUser(googleUser)
 
             self.goToMain()
         }
