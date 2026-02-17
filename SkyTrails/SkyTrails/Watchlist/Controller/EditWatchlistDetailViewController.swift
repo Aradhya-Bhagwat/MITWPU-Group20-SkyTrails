@@ -47,6 +47,31 @@ class EditWatchlistDetailViewController: UIViewController {
 		// Internal State
 	private var participants: [Participant] = []
 	
+	// MARK: - Rule Configuration UI
+	private var rulesContainerView: UIView!
+	
+	// Species Rule
+	private var speciesRuleToggle: UISwitch!
+	private var speciesRuleLabel: UILabel!
+	private var shapeCollectionView: UICollectionView!
+	private var availableShapes: [BirdShape] = []
+	private var selectedShapeId: String?
+	
+	// Location Rule
+	private var locationRuleToggle: UISwitch!
+	private var locationRuleLabel: UILabel!
+	private var locationRuleButton: UIButton!
+	private var locationRuleInfoLabel: UILabel!
+	private var selectedRuleLocation: CLLocationCoordinate2D?
+	private var selectedRuleRadius: Double = 50.0
+	private var selectedRuleLocationDisplayName: String?
+	
+	// Date Rule
+	private var dateRuleToggle: UISwitch!
+	private var dateRuleLabel: UILabel!
+	private var dateRuleStartPicker: UIDatePicker!
+	private var dateRuleEndPicker: UIDatePicker!
+	
 		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -131,12 +156,301 @@ class EditWatchlistDetailViewController: UIViewController {
 		}
 	}
 	
-    private func configureInitialData() {
+	private func configureInitialData() {
         if let id = watchlistIdToEdit {
             self.watchlistToEdit = try? manager.getWatchlist(by: id)
         }
         initializeParticipants()
         populateDataForEdit()
+        loadAvailableShapes()
+        // Delay rules UI setup to ensure view hierarchy is ready
+        DispatchQueue.main.async {
+            self.setupRulesUI()
+            self.populateRuleDataForEdit()
+        }
+    }
+    
+    // MARK: - Rules Setup
+    private func loadAvailableShapes() {
+        // Fetch shapes that have birds associated with them
+        let allShapes = (try? manager.fetchAll(BirdShape.self)) ?? []
+        let allBirds = manager.fetchAllBirds()
+        let usedShapeIds = Set(allBirds.compactMap { $0.shape_id })
+        availableShapes = allShapes.filter { usedShapeIds.contains($0.id) }
+    }
+    
+    private func setupRulesUI() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        
+        // Find the scroll view
+        guard let scrollView = view.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView else {
+            print("⚠️ Could not find scroll view")
+            return
+        }
+        
+        // Find the main stack view - it's the first arranged subview that's a stack view
+        // The scroll view contains the content layout guide, frame layout guide, and content view
+        let mainStackView: UIStackView
+        if let stackView = scrollView.subviews.compactMap({ $0 as? UIStackView }).first {
+            mainStackView = stackView
+        } else if let stackView = scrollView.subviews.flatMap({ $0.subviews }).compactMap({ $0 as? UIStackView }).first {
+            mainStackView = stackView
+        } else {
+            print("⚠️ Could not find stack view in scroll view")
+            return
+        }
+        
+        // Create rules container
+        rulesContainerView = UIView()
+        rulesContainerView.translatesAutoresizingMaskIntoConstraints = false
+        rulesContainerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
+        rulesContainerView.layer.cornerRadius = 20
+        rulesContainerView.layer.shadowColor = UIColor.black.cgColor
+        rulesContainerView.layer.shadowOpacity = isDarkMode ? 0 : 0.08
+        rulesContainerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        rulesContainerView.layer.shadowRadius = 12
+        rulesContainerView.layer.masksToBounds = false
+        
+        // Title
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "Auto-Assignment Rules"
+        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textColor = .label
+        rulesContainerView.addSubview(titleLabel)
+        
+        // Stack view for rules
+        let rulesStack = UIStackView()
+        rulesStack.translatesAutoresizingMaskIntoConstraints = false
+        rulesStack.axis = .vertical
+        rulesStack.spacing = 20
+        rulesStack.alignment = .fill
+        rulesContainerView.addSubview(rulesStack)
+        
+        // Species Rule Section
+        let speciesSection = createRuleSection(title: "Species Filter")
+        speciesRuleToggle = UISwitch()
+        speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
+        addToggleToSection(section: speciesSection, toggle: speciesRuleToggle)
+        
+        // Shape collection view (hidden by default)
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumInteritemSpacing = 12
+        layout.minimumLineSpacing = 12
+        layout.itemSize = CGSize(width: 80, height: 100)
+        
+        shapeCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        shapeCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        shapeCollectionView.backgroundColor = .clear
+        shapeCollectionView.showsHorizontalScrollIndicator = false
+        shapeCollectionView.delegate = self
+        shapeCollectionView.dataSource = self
+        shapeCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "ShapeCell")
+        shapeCollectionView.isHidden = true
+        shapeCollectionView.heightAnchor.constraint(equalToConstant: 100).isActive = true
+        speciesSection.addArrangedSubview(shapeCollectionView)
+        
+        rulesStack.addArrangedSubview(speciesSection)
+        
+        // Location Rule Section
+        let locationSection = createRuleSection(title: "Location Filter")
+        locationRuleToggle = UISwitch()
+        locationRuleToggle.addTarget(self, action: #selector(locationRuleToggled), for: .valueChanged)
+        addToggleToSection(section: locationSection, toggle: locationRuleToggle)
+        
+        locationRuleButton = UIButton(type: .system)
+        locationRuleButton.translatesAutoresizingMaskIntoConstraints = false
+        locationRuleButton.setTitle("Select Location on Map", for: .normal)
+        locationRuleButton.addTarget(self, action: #selector(didTapLocationRuleMap), for: .touchUpInside)
+        locationRuleButton.isHidden = true
+        locationSection.addArrangedSubview(locationRuleButton)
+        
+        locationRuleInfoLabel = UILabel()
+        locationRuleInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        locationRuleInfoLabel.font = .systemFont(ofSize: 14)
+        locationRuleInfoLabel.textColor = .secondaryLabel
+        locationRuleInfoLabel.numberOfLines = 0
+        locationRuleInfoLabel.isHidden = true
+        locationSection.addArrangedSubview(locationRuleInfoLabel)
+        
+        rulesStack.addArrangedSubview(locationSection)
+        
+        // Date Rule Section
+        let dateSection = createRuleSection(title: "Date Filter")
+        dateRuleToggle = UISwitch()
+        dateRuleToggle.addTarget(self, action: #selector(dateRuleToggled), for: .valueChanged)
+        addToggleToSection(section: dateSection, toggle: dateRuleToggle)
+        
+        let datePickersStack = UIStackView()
+        datePickersStack.translatesAutoresizingMaskIntoConstraints = false
+        datePickersStack.axis = .vertical
+        datePickersStack.spacing = 12
+        datePickersStack.isHidden = true
+        
+        let startLabel = UILabel()
+        startLabel.text = "Start Date"
+        startLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        datePickersStack.addArrangedSubview(startLabel)
+        
+        dateRuleStartPicker = UIDatePicker()
+        dateRuleStartPicker.datePickerMode = .date
+        datePickersStack.addArrangedSubview(dateRuleStartPicker)
+        
+        let endLabel = UILabel()
+        endLabel.text = "End Date"
+        endLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        datePickersStack.addArrangedSubview(endLabel)
+        
+        dateRuleEndPicker = UIDatePicker()
+        dateRuleEndPicker.datePickerMode = .date
+        datePickersStack.addArrangedSubview(dateRuleEndPicker)
+        
+        dateSection.addArrangedSubview(datePickersStack)
+        datePickersStack.accessibilityIdentifier = "DatePickersStack"
+        
+        rulesStack.addArrangedSubview(dateSection)
+        
+        // Constraints for container subviews
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
+            titleLabel.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: rulesContainerView.trailingAnchor, constant: -16),
+            
+            rulesStack.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            rulesStack.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
+            rulesStack.trailingAnchor.constraint(equalTo: rulesContainerView.trailingAnchor, constant: -16),
+            rulesStack.bottomAnchor.constraint(equalTo: rulesContainerView.bottomAnchor, constant: -16)
+        ])
+        
+        // Insert into the scroll view's stack view at the appropriate position (after date section)
+        if let dateSectionIndex = mainStackView.arrangedSubviews.firstIndex(where: { view -> Bool in
+            // Find the date section view (it has a label with "Date" text)
+            if let label = view.subviews.first(where: { $0 is UILabel }) as? UILabel {
+                return label.text == "Date"
+            }
+            return false
+        }) {
+            // Insert after the date section and its corresponding view
+            let insertIndex = min(dateSectionIndex + 2, mainStackView.arrangedSubviews.count)
+            mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex)
+        } else {
+            // Fallback: add at the end
+            mainStackView.addArrangedSubview(rulesContainerView)
+        }
+    }
+    
+    private func createRuleSection(title: String) -> UIStackView {
+        let section = UIStackView()
+        section.translatesAutoresizingMaskIntoConstraints = false
+        section.axis = .vertical
+        section.spacing = 12
+        section.alignment = .fill
+        
+        let headerStack = UIStackView()
+        headerStack.axis = .horizontal
+        headerStack.alignment = .center
+        headerStack.distribution = .equalSpacing
+        
+        let label = UILabel()
+        label.text = title
+        label.font = .systemFont(ofSize: 17, weight: .semibold)
+        label.textColor = .label
+        headerStack.addArrangedSubview(label)
+        
+        section.addArrangedSubview(headerStack)
+        
+        return section
+    }
+    
+    private func addToggleToSection(section: UIStackView, toggle: UISwitch) {
+        if let header = section.arrangedSubviews.first as? UIStackView {
+            header.addArrangedSubview(toggle)
+        }
+    }
+    
+    @objc private func speciesRuleToggled() {
+        shapeCollectionView.isHidden = !speciesRuleToggle.isOn
+        if speciesRuleToggle.isOn {
+            shapeCollectionView.reloadData()
+        }
+    }
+    
+    @objc private func locationRuleToggled() {
+        locationRuleButton.isHidden = !locationRuleToggle.isOn
+        locationRuleInfoLabel.isHidden = !locationRuleToggle.isOn
+    }
+    
+    @objc private func dateRuleToggled() {
+        if let dateSection = dateRuleToggle.superview?.superview as? UIStackView,
+           let datePickersStack = dateSection.arrangedSubviews.last(where: { $0.accessibilityIdentifier == "DatePickersStack" }) {
+            datePickersStack.isHidden = !dateRuleToggle.isOn
+        }
+    }
+    
+    @objc private func didTapLocationRuleMap() {
+        let mapVC = WatchlistLocationRuleMapViewController()
+        mapVC.delegate = self
+        navigationController?.pushViewController(mapVC, animated: true)
+    }
+    
+    private func populateRuleDataForEdit() {
+        guard let watchlist = watchlistToEdit else { return }
+        
+        // Ensure UI is set up before trying to populate it
+        guard speciesRuleToggle != nil else {
+            print("⚠️ Rules UI not set up yet, skipping populateRuleDataForEdit")
+            return
+        }
+        
+        // Species Rule
+        speciesRuleToggle.isOn = watchlist.speciesRuleEnabled
+        selectedShapeId = watchlist.speciesRuleShapeId
+        shapeCollectionView.isHidden = !watchlist.speciesRuleEnabled
+        if watchlist.speciesRuleEnabled {
+            shapeCollectionView.reloadData()
+        }
+        
+        // Location Rule
+        locationRuleToggle.isOn = watchlist.locationRuleEnabled
+        locationRuleButton.isHidden = !watchlist.locationRuleEnabled
+        locationRuleInfoLabel.isHidden = !watchlist.locationRuleEnabled
+        if let lat = watchlist.locationRuleLat, let lon = watchlist.locationRuleLon {
+            selectedRuleLocation = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            selectedRuleRadius = watchlist.locationRuleRadiusKm
+            
+            // Use stored display name if available, otherwise will geocode
+            if let displayName = watchlist.locationRuleDisplayName {
+                selectedRuleLocationDisplayName = displayName
+                locationRuleInfoLabel.text = "Within \(Int(selectedRuleRadius))km of \(displayName)"
+            } else {
+                locationRuleInfoLabel.text = "Within \(Int(selectedRuleRadius))km of selected location"
+                // Reverse geocode to get the name
+                Task {
+                    if let name = await locationService.reverseGeocode(lat: lat, lon: lon) {
+                        await MainActor.run {
+                            self.selectedRuleLocationDisplayName = name
+                            self.locationRuleInfoLabel.text = "Within \(Int(self.selectedRuleRadius))km of \(name)"
+                            self.watchlistToEdit?.locationRuleDisplayName = name
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Date Rule
+        dateRuleToggle.isOn = watchlist.dateRuleEnabled
+        if let startDate = watchlist.dateRuleStartDate {
+            dateRuleStartPicker.date = startDate
+        }
+        if let endDate = watchlist.dateRuleEndDate {
+            dateRuleEndPicker.date = endDate
+        }
+        // Show/hide date pickers based on toggle
+        if let dateSection = dateRuleToggle.superview?.superview as? UIStackView,
+           let datePickersStack = dateSection.arrangedSubviews.last(where: { $0.accessibilityIdentifier == "DatePickersStack" }) {
+            datePickersStack.isHidden = !watchlist.dateRuleEnabled
+        }
     }
 
 	
@@ -246,6 +560,31 @@ class EditWatchlistDetailViewController: UIViewController {
 			watchlist.locationDisplayName = selectedLocation?.displayName ?? location
             watchlist.startDate = startDate
             watchlist.endDate = endDate
+            
+            // Save rule configuration
+            watchlist.speciesRuleEnabled = speciesRuleToggle.isOn
+            watchlist.speciesRuleShapeId = speciesRuleToggle.isOn ? selectedShapeId : nil
+            
+            watchlist.locationRuleEnabled = locationRuleToggle.isOn
+            if locationRuleToggle.isOn, let ruleLocation = selectedRuleLocation {
+                watchlist.locationRuleLat = ruleLocation.latitude
+                watchlist.locationRuleLon = ruleLocation.longitude
+                watchlist.locationRuleRadiusKm = selectedRuleRadius
+                watchlist.locationRuleDisplayName = selectedRuleLocationDisplayName
+            } else {
+                watchlist.locationRuleLat = nil
+                watchlist.locationRuleLon = nil
+                watchlist.locationRuleDisplayName = nil
+            }
+            
+            watchlist.dateRuleEnabled = dateRuleToggle.isOn
+            if dateRuleToggle.isOn {
+                watchlist.dateRuleStartDate = dateRuleStartPicker.date
+                watchlist.dateRuleEndDate = dateRuleEndPicker.date
+            } else {
+                watchlist.dateRuleStartDate = nil
+                watchlist.dateRuleEndDate = nil
+            }
             
 			navigationController?.popViewController(animated: true)
 			return
@@ -379,4 +718,81 @@ extension EditWatchlistDetailViewController: MapSelectionDelegate {
         updateLocationSelection(LocationService.LocationData(displayName: name, lat: lat, lon: lon))
     }
 }
+
+// MARK: - WatchlistLocationRuleDelegate
+extension EditWatchlistDetailViewController: WatchlistLocationRuleDelegate {
+    func didSelectLocationRule(location: CLLocationCoordinate2D, radiusKm: Double, displayName: String) {
+        selectedRuleLocation = location
+        selectedRuleRadius = radiusKm
+        selectedRuleLocationDisplayName = displayName
+        locationRuleInfoLabel.text = "Within \(Int(radiusKm))km of \(displayName)"
+    }
+}
+
+// MARK: - UICollectionView Delegate & DataSource
+extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return availableShapes.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ShapeCell", for: indexPath)
+        let shape = availableShapes[indexPath.item]
+        
+        // Configure cell
+        cell.contentView.subviews.forEach { $0.removeFromSuperview() }
+        cell.contentView.layer.cornerRadius = 12
+        cell.contentView.layer.masksToBounds = true
+        
+        let isSelected = (shape.id == selectedShapeId)
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        
+        if isSelected {
+            cell.contentView.layer.borderWidth = 3
+            cell.contentView.layer.borderColor = UIColor.systemBlue.cgColor
+            cell.contentView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+        } else {
+            cell.contentView.layer.borderWidth = 1
+            cell.contentView.layer.borderColor = (isDarkMode ? UIColor.systemGray3 : UIColor.systemGray4).cgColor
+            cell.contentView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        }
+        
+        // Image
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        imageView.image = UIImage(named: shape.icon)
+        cell.contentView.addSubview(imageView)
+        
+        // Label
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = shape.name
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        cell.contentView.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 8),
+            imageView.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 40),
+            imageView.heightAnchor.constraint(equalToConstant: 40),
+            
+            label.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4),
+            label.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 4),
+            label.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -4),
+            label.bottomAnchor.constraint(lessThanOrEqualTo: cell.contentView.bottomAnchor, constant: -4)
+        ])
+        
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let shape = availableShapes[indexPath.item]
+        selectedShapeId = shape.id
+        collectionView.reloadData()
+    }
+}
+
 // MARK: - UI Utilities

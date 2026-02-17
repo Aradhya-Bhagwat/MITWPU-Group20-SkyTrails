@@ -273,9 +273,8 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             } catch {
                 print("❌ [ObservedDetailVC] ERROR updating entry: \(error)")
             }
-        } else if let wId = watchlistId {
-            print("➕ [ObservedDetailVC] Creating new entry")
-            print("📋 [ObservedDetailVC] Watchlist ID: \(wId)")
+        } else {
+            print("➕ [ObservedDetailVC] Creating new entry with rule matching")
             
             // New Entry
             let birdToUse: Bird
@@ -290,35 +289,44 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                 birdToUse = manager.createBird(name: name)
             }
             
-            print("💾 [ObservedDetailVC] Adding bird to watchlist as observed")
+            print("💾 [ObservedDetailVC] Adding bird with rule matching")
             do {
-                try manager.addBirds([birdToUse], to: wId, asObserved: true)
+                let location = selectedLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+                let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
+                    bird: birdToUse,
+                    location: location,
+                    observationDate: dateTimePicker.date,
+                    notes: notesTextView.text,
+                    asObserved: true
+                )
                 
-                if let newEntry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: wId) {
-                    // Update the newly created entry with notes and the specific date picked by user
-                    try manager.updateEntry(
-                        entryId: newEntry.id,
-                        notes: notesTextView.text,
-                        observationDate: dateTimePicker.date,
-                        lat: selectedLocation?.lat,
-                        lon: selectedLocation?.lon,
-                        locationDisplayName: selectedLocation?.displayName
-                    )
-                    
-                    // Persist newly picked photo to the entry
-                    if let photoName = selectedImageName {
-                        try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
-                        print("📸 [ObservedDetailVC] Photo attached to new entry: \(photoName)")
+                print("✅ [ObservedDetailVC] Bird added to \(matchedWatchlistIds.count) watchlist(s)")
+                
+                // Attach photos to all matched entries
+                if let photoName = selectedImageName {
+                    for watchlistId in matchedWatchlistIds {
+                        if let entry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: watchlistId) {
+                            try manager.attachPhoto(entryId: entry.id, imageName: photoName)
+                        }
                     }
+                    print("📸 [ObservedDetailVC] Photo attached to entries")
                 }
                 
                 print("📞 [ObservedDetailVC] Calling onSave callback for new bird")
                 onSave?(birdToUse)
+            } catch WatchlistError.noMatchingWatchlists {
+                print("❌ [ObservedDetailVC] No matching watchlists found")
+                let alert = UIAlertController(
+                    title: "No Matching Watchlists",
+                    message: "Bird could not find any matching watchlists",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
+                return
             } catch {
                 print("❌ [ObservedDetailVC] ERROR creating entry: \(error)")
             }
-        } else {
-            print("⚠️  [ObservedDetailVC] No watchlistId available")
         }
         
         print("✅ [ObservedDetailVC] Complete, popping view controller")

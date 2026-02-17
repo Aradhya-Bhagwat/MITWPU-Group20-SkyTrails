@@ -61,6 +61,23 @@ final class Watchlist {
     var updated_at: Date?
     var locationDisplayName: String?
     
+    // MARK: - Rule Configuration
+    // Species Rule
+    var speciesRuleEnabled: Bool = false
+    var speciesRuleShapeId: String?
+    
+    // Location Rule
+    var locationRuleEnabled: Bool = false
+    var locationRuleLat: Double?
+    var locationRuleLon: Double?
+    var locationRuleRadiusKm: Double = 50.0
+    var locationRuleDisplayName: String?
+    
+    // Date Rule
+    var dateRuleEnabled: Bool = false
+    var dateRuleStartDate: Date?
+    var dateRuleEndDate: Date?
+    
     // Relationships
     @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.watchlist) var entries: [WatchlistEntry]?
     @Relationship(deleteRule: .cascade, inverse: \WatchlistRule.watchlist) var rules: [WatchlistRule]?

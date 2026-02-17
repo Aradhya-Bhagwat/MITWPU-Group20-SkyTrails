@@ -253,33 +253,36 @@ class UnobservedDetailViewController: UIViewController {
         
         			
         
-        		} else if let wId = watchlistId, let bird = bird {
+			} else if let bird = bird {
         
-        			print("➕ [UnobservedDetailVC] Creating new entry")
+        			print("➕ [UnobservedDetailVC] Creating new entry with rule matching")
         
         			print("🐦 [UnobservedDetailVC] Bird: \(bird.commonName)")
         
-        			print("📋 [UnobservedDetailVC] Watchlist ID: \(wId)")
-        
         			
                     do {
-                        try manager.addBirds([bird], to: wId, asObserved: false)
+                        let location = selectedLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+                        let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
+                            bird: bird,
+                            location: location,
+                            observationDate: startDatePicker.date,
+                            notes: notes,
+                            asObserved: false
+                        )
                         
-                        if let newEntry = try? manager.findEntry(birdId: bird.id, watchlistId: wId) {
-            
-                            print("✅ [UnobservedDetailVC] Found new entry: \(newEntry.id)")
-                            
-                            // Set dates (in memory)
-                            newEntry.toObserveStartDate = startDate
-                            newEntry.toObserveEndDate = endDate
-                            
-                            // Call updateEntry to set notes and SAVE everything
-                            try manager.updateEntry(entryId: newEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
-                            
-                            print("✅ [UnobservedDetailVC] Entry properties updated and saved")
-                        } else {
-                            print("❌ [UnobservedDetailVC] ERROR: Could not find newly created entry!")
-                        }
+                        print("✅ [UnobservedDetailVC] Bird added to \(matchedWatchlistIds.count) watchlist(s)")
+                        
+                        print("✅ [UnobservedDetailVC] Entry properties updated and saved")
+                    } catch WatchlistError.noMatchingWatchlists {
+                        print("❌ [UnobservedDetailVC] No matching watchlists found")
+                        let alert = UIAlertController(
+                            title: "No Matching Watchlists",
+                            message: "Bird could not find any matching watchlists",
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        present(alert, animated: true)
+                        return
                     } catch {
                         print("❌ [UnobservedDetailVC] ERROR creating entry: \(error)")
                     }
@@ -297,7 +300,7 @@ class UnobservedDetailViewController: UIViewController {
         			navigationController?.popViewController(animated: true)
         
         		} else {
-            print("⚠️  [UnobservedDetailVC] No entry or bird/watchlistId - just popping")
+            print("⚠️  [UnobservedDetailVC] No entry or bird - just popping")
             navigationController?.popViewController(animated: true)
         }
 	}

@@ -421,6 +421,99 @@ final class WatchlistManager: WatchlistRepository {
         try persistence.deleteRule(id: ruleId)
     }
     
+    // MARK: - Rule-Based Bird Matching
+    
+    /// Adds a bird to all watchlists that match the active rules
+    /// - Parameters:
+    ///   - bird: The bird to add
+    ///   - location: Observation location (required for location rule matching)
+    ///   - observationDate: Observation date (required for date rule matching)
+    ///   - notes: Optional notes for the entry
+    ///   - asObserved: Whether to mark as observed or to_observe
+    /// - Returns: Array of watchlist IDs where the bird was added
+    /// - Throws: WatchlistError.noMatchingWatchlists if no watchlists match
+    func addBirdWithRuleMatching(
+        bird: Bird,
+        location: CLLocationCoordinate2D?,
+        observationDate: Date?,
+        notes: String?,
+        asObserved: Bool
+    ) throws -> [UUID] {
+        print("🎯 [WatchlistManager] addBirdWithRuleMatching() called for: \(bird.commonName)")
+        
+        // Fetch all custom watchlists
+        let allWatchlists = try persistence.fetchWatchlists(type: .custom)
+        var matchedWatchlistIds: [UUID] = []
+        
+        for watchlist in allWatchlists {
+            var isMatch = false
+            
+            // Check Species Rule
+            if watchlist.speciesRuleEnabled, let shapeId = watchlist.speciesRuleShapeId {
+                if bird.shape_id == shapeId || bird.shape_id == nil {
+                    print("✅ Species rule MATCH for watchlist: \(watchlist.title ?? "Unnamed")")
+                    isMatch = true
+                }
+            }
+            
+            // Check Location Rule
+            if !isMatch && watchlist.locationRuleEnabled,
+               let watchlistLat = watchlist.locationRuleLat,
+               let watchlistLon = watchlist.locationRuleLon,
+               let birdLocation = location {
+                let watchlistLocation = CLLocation(latitude: watchlistLat, longitude: watchlistLon)
+                let birdCLLocation = CLLocation(latitude: birdLocation.latitude, longitude: birdLocation.longitude)
+                let distance = watchlistLocation.distance(from: birdCLLocation) / 1000.0 // Convert to km
+                
+                if distance <= watchlist.locationRuleRadiusKm {
+                    print("✅ Location rule MATCH for watchlist: \(watchlist.title ?? "Unnamed") (distance: \(Int(distance))km)")
+                    isMatch = true
+                }
+            }
+            
+            // Check Date Rule
+            if !isMatch && watchlist.dateRuleEnabled,
+               let startDate = watchlist.dateRuleStartDate,
+               let endDate = watchlist.dateRuleEndDate,
+               let birdDate = observationDate {
+                if birdDate >= startDate && birdDate <= endDate {
+                    print("✅ Date rule MATCH for watchlist: \(watchlist.title ?? "Unnamed")")
+                    isMatch = true
+                }
+            }
+            
+            // If any rule matched, add bird to this watchlist
+            if isMatch {
+                let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
+                _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.id, birds: [bird], status: status)
+                
+                // Update the entry with notes and location if provided
+                if let newEntry = try? findEntry(birdId: bird.id, watchlistId: watchlist.id) {
+                    try persistence.updateEntry(
+                        id: newEntry.id,
+                        notes: notes,
+                        observationDate: asObserved ? observationDate : nil,
+                        lat: location?.latitude,
+                        lon: location?.longitude,
+                        locationDisplayName: nil,
+                        toObserveStartDate: asObserved ? nil : observationDate,
+                        toObserveEndDate: asObserved ? nil : observationDate
+                    )
+                }
+                
+                matchedWatchlistIds.append(watchlist.id)
+            }
+        }
+        
+        if matchedWatchlistIds.isEmpty {
+            print("❌ [WatchlistManager] No watchlists matched the rules")
+            throw WatchlistError.noMatchingWatchlists
+        }
+        
+        print("✅ [WatchlistManager] Bird added to \(matchedWatchlistIds.count) watchlist(s)")
+        return matchedWatchlistIds
+    }
+    
     // Query Operations
     func getUpcomingBirds(
         userLocation: CLLocationCoordinate2D,

@@ -72,6 +72,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			// Fetch fresh object to determine type, then pass ID
 		if let watchlist = try? manager.getWatchlist(by: id) {
 			vc.watchlistType = (watchlist.type == .shared) ? .shared : .custom
+			vc.watchlistIdToEdit = id
 			navigationController?.pushViewController(vc, animated: true)
 		}
 	}
