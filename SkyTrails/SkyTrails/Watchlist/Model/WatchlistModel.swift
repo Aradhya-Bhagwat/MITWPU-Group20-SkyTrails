@@ -60,6 +60,7 @@ final class Watchlist {
     var created_at: Date = Date()
     var updated_at: Date?
     var locationDisplayName: String?
+    var coverImagePath: String? // Cached path to most recent bird image
     
     // MARK: - Rule Configuration
     // Species Rule
@@ -278,11 +279,48 @@ extension Watchlist {
             title: self.title ?? "Unnamed Watchlist",
             subtitle: subtitle,
             dateText: dateText,
-            image: self.images?.first?.imagePath,
+            image: self.coverImagePath,
             previewImages: previewImages,
             stats: stats,
             type: self.type ?? .custom
         )
+    }
+    
+    /// Updates the cached cover image based on the most recent bird entry
+    func updateCoverImage() {
+        guard let entries = self.entries, !entries.isEmpty else {
+            self.coverImagePath = nil
+            return
+        }
+        
+        // Get most recent observed entry (by observationDate)
+        let observedEntries = entries.filter { $0.status == .observed && $0.observationDate != nil }
+        let mostRecentObserved = observedEntries.max(by: { 
+            ($0.observationDate ?? Date.distantPast) < ($1.observationDate ?? Date.distantPast) 
+        })
+        
+        // Get most recent to-observe entry (by addedDate)
+        let toObserveEntries = entries.filter { $0.status == .to_observe }
+        let mostRecentToObserve = toObserveEntries.max(by: { $0.addedDate < $1.addedDate })
+        
+        // Compare which is newer
+        let observedDate = mostRecentObserved?.observationDate ?? Date.distantPast
+        let toObserveDate = mostRecentToObserve?.addedDate ?? Date.distantPast
+        
+        let mostRecentEntry = observedDate > toObserveDate ? mostRecentObserved : mostRecentToObserve
+        
+        // Extract image path
+        if let entry = mostRecentEntry {
+            if let photoPath = entry.photos?.first?.imagePath {
+                self.coverImagePath = photoPath
+            } else if let staticImage = entry.bird?.staticImageName {
+                self.coverImagePath = staticImage
+            } else {
+                self.coverImagePath = nil
+            }
+        } else {
+            self.coverImagePath = nil
+        }
     }
 }
 

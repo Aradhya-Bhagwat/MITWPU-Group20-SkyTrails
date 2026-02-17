@@ -293,6 +293,11 @@ final class WatchlistManager: WatchlistRepository {
         
         let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
         _ = try persistence.addBirdsToWatchlist(watchlistID: targetWatchlistId, birds: birds, status: status)
+        
+        // Refresh cover image
+        if let watchlist = try? persistence.fetchWatchlist(id: targetWatchlistId) {
+            refreshCoverImage(for: watchlist)
+        }
     }
     
     func updateEntry(
@@ -313,14 +318,30 @@ final class WatchlistManager: WatchlistRepository {
             toObserveStartDate: nil,
             toObserveEndDate: nil
         )
+        
+        // Refresh cover image if observation date changed
+        if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
+            refreshCoverImage(for: watchlist)
+        }
     }
     
     func deleteEntry(entryId: UUID) throws {
+        let watchlist = (try? persistence.fetchEntry(id: entryId))?.watchlist
         try persistence.deleteEntry(id: entryId)
+        
+        // Refresh cover image
+        if let watchlist = watchlist {
+            refreshCoverImage(for: watchlist)
+        }
     }
     
     func toggleObservationStatus(entryId: UUID) throws {
         try persistence.toggleEntryStatus(id: entryId)
+        
+        // Refresh cover image
+        if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
+            refreshCoverImage(for: watchlist)
+        }
     }
     
     // Bird Operations
@@ -382,6 +403,20 @@ final class WatchlistManager: WatchlistRepository {
     
     func attachPhoto(entryId: UUID, imageName: String) throws {
         try photos.attachExistingPhoto(to: entryId, imagePath: imageName)
+        
+        // Refresh cover image
+        if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
+            refreshCoverImage(for: watchlist)
+        }
+    }
+    
+    // MARK: - Internal Helpers
+    
+    private func refreshCoverImage(for watchlist: Watchlist) {
+        Task {
+            watchlist.updateCoverImage()
+            try? context.save()
+        }
     }
     
     // Rule Operations
@@ -486,6 +521,9 @@ final class WatchlistManager: WatchlistRepository {
             if isMatch {
                 let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
                 _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.id, birds: [bird], status: status)
+                
+                // Refresh cover image
+                refreshCoverImage(for: watchlist)
                 
                 // Update the entry with notes and location if provided
                 if let newEntry = try? findEntry(birdId: bird.id, watchlistId: watchlist.id) {

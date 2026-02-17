@@ -58,6 +58,10 @@ final class WatchlistRuleService {
                 birds: Array(candidateBirds),
                 status: .to_observe
             )
+            
+            // Refresh cover image
+            watchlist.updateCoverImage()
+            try? context.save()
         }
     }
     
