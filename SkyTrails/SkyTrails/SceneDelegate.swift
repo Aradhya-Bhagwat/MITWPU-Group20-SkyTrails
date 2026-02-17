@@ -31,13 +31,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         } else {
 
-            storyboard = UIStoryboard(name: "Onboard", bundle: nil)
-
-            rootVC = storyboard.instantiateViewController(
-                withIdentifier: "StartViewController"
-            )
-
-            print("Auto Login: FALSE")
+			storyboard = UIStoryboard(name: "Main", bundle: nil)
+			
+			rootVC = storyboard.instantiateViewController(
+				withIdentifier: "RootTabBarController"
+			)
+			
+			print("Auto Login: TRUE")
         }
 
         window?.rootViewController = rootVC

@@ -21,7 +21,7 @@
                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CCw-5P-5vO">
                         <rect key="frame" x="0.0" y="0.0" width="361" height="420"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="t2H-Jn-PyP">
+                            <mapView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" zoomEnabled="NO" scrollEnabled="NO" rotateEnabled="NO" pitchEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t2H-Jn-PyP">
                                 <rect key="frame" x="8" y="8" width="345" height="185"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="t2H-Jn-PyP" secondAttribute="height" multiplier="345:185" id="TBI-Ht-fF1"/>
@@ -106,6 +106,16 @@
                 <constraint firstItem="CCw-5P-5vO" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="efu-YN-sAI"/>
             </constraints>
             <size key="customSize" width="567" height="295"/>
+            <connections>
+                <outlet property="birdListCollectionView" destination="x9l-tl-FS4" id="wHi-xa-zUa"/>
+                <outlet property="distanceLabel" destination="73T-IU-Y8o" id="NbT-bq-1AZ"/>
+                <outlet property="mapView" destination="t2H-Jn-PyP" id="jef-UP-ADZ"/>
+                <outlet property="subtitleLabel" destination="utf-ez-1hj" id="3tW-tT-c7W"/>
+                <outlet property="tag1View" destination="lfu-pa-rr1" id="ZNm-Cb-cqN"/>
+                <outlet property="tag2View" destination="rZj-4x-jkf" id="CzV-RP-IWw"/>
+                <outlet property="tagsStackView" destination="MAs-dr-jkn" id="3Gq-rX-tzz"/>
+                <outlet property="titleLabel" destination="s67-5B-vEC" id="0um-gm-BJc"/>
+            </connections>
             <point key="canvasLocation" x="278.62595419847327" y="217.60563380281693"/>
         </collectionViewCell>
     </objects>

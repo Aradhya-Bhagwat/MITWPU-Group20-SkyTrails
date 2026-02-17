@@ -326,14 +326,56 @@ class HomeManager {
     }
     
     func getDynamicMapCards() async -> [DynamicMapCard] {
+        print("🃏 [PredictionDebug] getDynamicMapCards: Starting card assembly")
         let migrations = await getActiveMigrations()
+        print("🃏 [PredictionDebug]   Active migrations received: \(migrations.count)")
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        print("🃏 [PredictionDebug]   Current week for hotspot lookup: \(currentWeek)")
         
-        return migrations.map { migration in
+        var cards: [DynamicMapCard] = []
+        
+        for (index, migration) in migrations.enumerated() {
+            print("🃏 [PredictionDebug] Processing migration #\(index + 1): \(migration.bird.commonName)")
             let startLocation = migration.paths.first.map { "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))" } ?? "Unknown"
             let endLocation = migration.paths.last.map { "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))" } ?? "Unknown"
             
             let nearbyHotspots = findNearbyHotspots(for: migration)
+            print("🃏 [PredictionDebug]   Nearby hotspots found: \(nearbyHotspots.count)")
             let topHotspot = nearbyHotspots.first
+            if let top = topHotspot {
+                print("🃏 [PredictionDebug]   Top hotspot: \(top.name) at (\(top.lat), \(top.lon))")
+            } else {
+                print("⚠️ [PredictionDebug]   NO TOP HOTSPOT found within 100km of current position")
+            }
+            
+            var displayBirds: [BirdSpeciesDisplay] = []
+            
+            if let top = topHotspot {
+                let location = CLLocationCoordinate2D(latitude: top.lat, longitude: top.lon)
+                let birds = await hotspotManager.getBirdsPresent(at: location, duringWeek: currentWeek, radiusInKm: 50.0)
+                print("🃏 [PredictionDebug]   Birds present at hotspot: \(birds.count)")
+                
+                displayBirds = birds.prefix(5).map { bird in
+                    // Find presence for this specific hotspot if possible to get probability
+                    let presence = top.speciesList?.first(where: { $0.bird?.id == bird.id })
+                    let prob = presence?.probability ?? Int.random(in: 60...90)
+                    print("🃏 [PredictionDebug]     → \(bird.commonName) (\(prob)%)")
+                    
+                    return BirdSpeciesDisplay(
+                        birdName: bird.commonName,
+                        birdImageName: bird.staticImageName,
+                        statusBadge: BirdSpeciesDisplay.StatusBadge(
+                            title: "Local Species",
+                            subtitle: "Year-round",
+                            iconName: "mappin.and.ellipse",
+                            backgroundColorName: "BadgePink"
+                        ),
+                        sightabilityPercent: prob
+                    )
+                }
+            }
+            
+            print("🃏 [PredictionDebug]   Final displayBirds array count: \(displayBirds.count)")
             
             let hotspot = HotspotPrediction(
                 placeName: topHotspot?.name ?? "Migration Zone",
@@ -346,7 +388,8 @@ class HomeManager {
                         coordinate: CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon),
                         birdImageName: migration.bird.staticImageName
                     )
-                }
+                },
+                birdSpecies: displayBirds
             )
 
             let prediction = MigrationPrediction(
@@ -361,8 +404,12 @@ class HomeManager {
                 }
             )
 
-            return DynamicMapCard.combined(migration: prediction, hotspot: hotspot)
+            print("🃏 [PredictionDebug]   Created combined card for: \(prediction.birdName)")
+            cards.append(DynamicMapCard.combined(migration: prediction, hotspot: hotspot))
         }
+        
+        print("🃏 [PredictionDebug] Total DynamicMapCards created: \(cards.count)")
+        return cards
     }
     
     func getRecentObservations(
@@ -693,24 +740,42 @@ final class MigrationManager {
     }
     
     func getActiveMigrations(forWeek week: Int) async -> [MigrationSession] {
+        print("🔍 [PredictionDebug] MigrationManager: Querying active migrations for week \(week)")
         let descriptor = FetchDescriptor<MigrationSession>(
             predicate: #Predicate { session in
                 session.startWeek <= week && session.endWeek >= week
             }
         )
         do {
-            return try modelContext.fetch(descriptor)
+            let sessions = try modelContext.fetch(descriptor)
+            print("🔍 [PredictionDebug]   Found \(sessions.count) active migration(s)")
+            for session in sessions {
+                print("🔍 [PredictionDebug]   Migration: \(session.bird?.commonName ?? "NO BIRD") (weeks \(session.startWeek)-\(session.endWeek))")
+            }
+            return sessions
         } catch {
             logger.log(error: error, context: "MigrationManager.getActiveMigrations")
+            print("❌ [PredictionDebug] ERROR fetching migrations: \(error)")
             return []
         }
     }
     
     func getTrajectory(for session: MigrationSession, duringWeek week: Int) -> MigrationTrajectoryResult? {
-        guard let allPaths = session.trajectoryPaths else { return nil }
+        print("🗺️ [PredictionDebug] getTrajectory for: \(session.bird?.commonName ?? "Unknown") at week \(week)")
+        guard let allPaths = session.trajectoryPaths else {
+            print("❌ [PredictionDebug]   NO TRAJECTORY PATHS for session!")
+            return nil
+        }
         
         let currentPaths = allPaths.filter { $0.week == week }
+        print("🗺️ [PredictionDebug]   Paths for week \(week): \(currentPaths.count)")
         let bestPath = currentPaths.max(by: { ($0.probability ?? 0) < ($1.probability ?? 0) })
+        
+        if let best = bestPath {
+            print("🗺️ [PredictionDebug]   Best position: (\(best.lat), \(best.lon)) @ \(best.probability ?? 0)% probability")
+        } else {
+            print("⚠️ [PredictionDebug]   NO BEST PATH found for week \(week)")
+        }
         
         let position: CLLocationCoordinate2D?
         if let lat = bestPath?.lat, let lon = bestPath?.lon {

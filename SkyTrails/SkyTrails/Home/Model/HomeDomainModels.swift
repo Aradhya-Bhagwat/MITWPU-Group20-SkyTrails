@@ -230,6 +230,21 @@ struct HotspotPrediction {
     let dateRange: String
     let placeImageName: String
     let hotspots: [HotspotBirdSpot]
+    let birdSpecies: [BirdSpeciesDisplay] // Added for nested list
+}
+
+struct BirdSpeciesDisplay: Hashable {
+    let birdName: String
+    let birdImageName: String
+    let statusBadge: StatusBadge
+    let sightabilityPercent: Int
+    
+    struct StatusBadge: Hashable {
+        let title: String
+        let subtitle: String
+        let iconName: String
+        let backgroundColorName: String // e.g., "BadgePink", "BadgeBlue"
+    }
 }
 
 struct HotspotBirdSpot {
