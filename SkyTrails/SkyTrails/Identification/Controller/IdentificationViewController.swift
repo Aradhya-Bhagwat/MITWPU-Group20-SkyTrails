@@ -34,7 +34,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     // Updated to Implicitly Unwrapped Optional because it requires context to init
     var model: IdentificationManager!
-    var modelContainer: ModelContainer?
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -106,22 +105,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     private func setupModel() {
-        do {
-            // Initialize the container with relevant Schema
-            let schema = Schema([
-                Bird.self,
-                BirdShape.self,
-                BirdFieldMark.self,
-                FieldMarkVariant.self,
-                IdentificationSession.self,
-                IdentificationSessionFieldMark.self,
-                IdentificationResult.self,
-                IdentificationCandidate.self
-            ])
-            self.modelContainer = try ModelContainer(for: schema)
-            let context = self.modelContainer!.mainContext
-            self.model = IdentificationManager(modelContext: context)
+        // Use the shared context from WatchlistManager to avoid store conflicts
+        let context = WatchlistManager.shared.context
+        self.model = IdentificationManager(modelContext: context)
 
+        do {
             // Seed data if the database is empty
             let birdCount = try context.fetchCount(FetchDescriptor<Bird>())
             let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
@@ -142,7 +130,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 updateSelectionState() // Disable button while seeding
                 Task { @MainActor in
                     do {
-					try IdentificationSeeder.shared.seed(context: context)
+                        try IdentificationSeeder.shared.seed(context: context)
                         // Must re-fetch shapes after seeding
                         self.model.fetchShapes()
                         self.isSeeding = false
@@ -156,8 +144,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 }
             }
         } catch {
-            print("Failed to create ModelContainer: \(error)")
-            // Handle error appropriately (e.g., show alert)
+            print("Failed to access SwiftData context: \(error)")
         }
     }
     
@@ -206,7 +193,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     private func fetchHistory() {
-            guard let context = modelContainer?.mainContext else { return }
+        let context = WatchlistManager.shared.context
             
            
         do {
@@ -219,7 +206,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             print("Error fetching history: \(error)")
             self.histories = []
         }
-        }
+    }
     
     func updateSelectionState() {
         let selectedCount = options.filter { $0.isSelected }.count
