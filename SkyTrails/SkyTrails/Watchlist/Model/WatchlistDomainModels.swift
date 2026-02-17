@@ -265,16 +265,27 @@ enum RuleParameters: Hashable {
         
         switch type {
         case .location:
-            return try? decoder.decode(LocationRuleParams.self, from: data).map { .location($0) }
+            if let params = try? decoder.decode(LocationRuleParams.self, from: data) {
+                return .location(params)
+            }
         case .date_range:
-            return try? decoder.decode(DateRangeRuleParams.self, from: data).map { .dateRange($0) }
+            if let params = try? decoder.decode(DateRangeRuleParams.self, from: data) {
+                return .dateRange(params)
+            }
         case .species_family:
-            return try? decoder.decode(SpeciesFamilyRuleParams.self, from: data).map { .speciesFamily($0) }
+            if let params = try? decoder.decode(SpeciesFamilyRuleParams.self, from: data) {
+                return .speciesFamily(params)
+            }
         case .rarity_level:
-            return try? decoder.decode(RarityRuleParams.self, from: data).map { .rarity($0) }
+            if let params = try? decoder.decode(RarityRuleParams.self, from: data) {
+                return .rarity(params)
+            }
         case .migration_pattern:
-            return try? decoder.decode(MigrationPatternRuleParams.self, from: data).map { .migration($0) }
+            if let params = try? decoder.decode(MigrationPatternRuleParams.self, from: data) {
+                return .migration(params)
+            }
         }
+        return nil
     }
 }
 

@@ -163,13 +163,13 @@ extension WatchlistHomeViewController {
 		let alert = UIAlertController(title: dto.title, message: nil, preferredStyle: .actionSheet)
 		
 		alert.addAction(UIAlertAction(title: "Edit", style: .default) { [weak self] _ in
-			self?.navigateToEdit(watchlistId: dto.id, type: dto.type)
+			self?.navigateToEdit(watchlistId: dto.legacyUUID, type: dto.type)
 		})
 		
 		alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
 			Task {
 				do {
-					try await self?.repository.deleteWatchlist(id: dto.id)
+					try await self?.repository.deleteWatchlist(id: dto.legacyUUID)
 					self?.loadData()
 				} catch {
 					let errorAlert = UIAlertController(
@@ -220,7 +220,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func showSpeciesSelection() {
-		guard let watchlistId = myWatchlist?.id else { return }
+		guard let watchlistId = myWatchlist?.legacyUUID else { return }
 		
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
@@ -283,7 +283,7 @@ extension WatchlistHomeViewController {
 					destVC.watchlistType = .custom
 					destVC.watchlistTitle = dto.title
 				}
-				destVC.currentWatchlistId = dto.id
+				destVC.currentWatchlistId = dto.legacyUUID
 			}
 		}
 	}

@@ -194,7 +194,7 @@ extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionV
         if let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController {
             smartVC.watchlistType = .custom
             smartVC.watchlistTitle = dto.title
-            smartVC.currentWatchlistId = dto.id
+			smartVC.currentWatchlistId = dto.legacyUUID
             navigationController?.pushViewController(smartVC, animated: true)
         }
     }
@@ -249,7 +249,7 @@ extension CustomWatchlistViewController {
             let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
             if let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController {
                 vc.watchlistType = .custom
-                vc.watchlistIdToEdit = dto.id
+				vc.watchlistIdToEdit = dto.legacyUUID
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         }))
@@ -281,7 +281,7 @@ extension CustomWatchlistViewController {
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             Task {
                 do {
-                    try await self?.repository.deleteWatchlist(id: dto.id)
+					try await self?.repository.deleteWatchlist(id: dto.legacyUUID)
                     self?.loadData()
                 } catch {
                     print("❌ [CustomWatchlistVC] Error deleting watchlist: \(error)")

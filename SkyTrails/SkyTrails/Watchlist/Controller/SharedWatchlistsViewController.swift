@@ -231,7 +231,7 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         let userImages: [UIImage] = [] // Placeholder
 
         // Map Stats (observed vs total entries)
-        let stats = (try? manager.getStats(for: item.id)) ?? (0,0)
+        let stats = (try? manager.getStats(for: item.id)) ?? (observed: 0, total: 0)
 
         // Get Image
         var image: UIImage? = nil

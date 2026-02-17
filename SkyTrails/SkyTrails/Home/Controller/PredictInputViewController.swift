@@ -132,18 +132,23 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
     }
         
     @IBAction func didTapDone(_ sender: Any) {
-        var allResults: [FinalPredictionResult] = []
-        for (index, input) in inputData.enumerated() {
-            let resultsForCard = HomeManager.shared.predictBirds(for: input, inputIndex: index)
-            allResults.append(contentsOf: resultsForCard)
-        }
+        Task {
+            var allResults: [FinalPredictionResult] = []
+            for (index, input) in inputData.enumerated() {
+                let resultsForCard = await HomeManager.shared.predictBirds(for: input, inputIndex: index)
+                allResults.append(contentsOf: resultsForCard)
+            }
 
-        let uniqueResults = Array(Set(allResults))
-        if let parentVC = self.navigationController?.parent as? PredictMapViewController {
-            parentVC.navigateToOutput(
-                inputs: inputData,
-                predictions: uniqueResults
-            )
+            let uniqueResults = Array(Set(allResults))
+            
+            await MainActor.run {
+                if let parentVC = self.navigationController?.parent as? PredictMapViewController {
+                    parentVC.navigateToOutput(
+                        inputs: inputData,
+                        predictions: uniqueResults
+                    )
+                }
+            }
         }
     }
     
