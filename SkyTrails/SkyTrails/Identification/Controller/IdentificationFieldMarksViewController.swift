@@ -111,12 +111,28 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         let cleanCategory = cleanForFilename(category)
         
         let isSelected = isCategorySelected(name: category)
-        
-        let baseName = isSelected ?
-            "canvas_\(shapeID)_\(cleanCategory)_color" :
-            "id_canvas_\(shapeID)_\(cleanCategory)_default"
-        
-        layer.image = UIImage(named: baseName)
+
+        let defaultName = "id_canvas_\(shapeID)_\(cleanCategory)_default"
+        let defaultImage = UIImage(named: defaultName)
+        if isSelected {
+            let selectedAssetNames = [
+                "canvas_\(shapeID)_\(cleanCategory)_color",
+                "canvas_\(shapeID)_\(cleanCategory)_selection 1",
+                "canvas_\(shapeID)_\(cleanCategory)_selection 2",
+                "canvas_\(shapeID)_\(cleanCategory)_selection 3",
+                "canvas_\(shapeID)_\(cleanCategory)_selection"
+            ]
+            let selectedImages = selectedAssetNames.compactMap { UIImage(named: $0) }
+
+            if let defaultData = defaultImage?.pngData(),
+               let distinctSelected = selectedImages.first(where: { $0.pngData() != defaultData }) {
+                layer.image = distinctSelected
+            } else {
+                layer.image = selectedImages.first ?? defaultImage
+            }
+        } else {
+            layer.image = defaultImage
+        }
     }
     
     func isCategorySelected(name: String) -> Bool {
