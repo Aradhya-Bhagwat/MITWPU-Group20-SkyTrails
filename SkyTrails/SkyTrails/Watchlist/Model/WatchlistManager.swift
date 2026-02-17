@@ -79,6 +79,14 @@ final class WatchlistManager: WatchlistRepository {
                 WatchlistImage.self,
                 ObservedBirdPhoto.self,
                 Bird.self,
+                // Identification models
+                BirdShape.self,
+                BirdFieldMark.self,
+                FieldMarkVariant.self,
+                IdentificationSession.self,
+                IdentificationSessionFieldMark.self,
+                IdentificationResult.self,
+                IdentificationCandidate.self,
                 // Integration models
                 Hotspot.self,
                 HotspotSpeciesPresence.self,
