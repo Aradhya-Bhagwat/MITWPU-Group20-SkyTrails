@@ -20,6 +20,7 @@ struct Participant {
 class EditWatchlistDetailViewController: UIViewController {
 
 	private let manager = WatchlistManager.shared
+	private let repository: WatchlistRepository = WatchlistManager.shared
 	private let locationService = LocationService.shared
 	
 		// MARK: - Outlets
@@ -311,6 +312,20 @@ class EditWatchlistDetailViewController: UIViewController {
         
         rulesStack.addArrangedSubview(dateSection)
         
+        // Delete Button (only show when editing existing watchlist)
+        if watchlistIdToEdit != nil {
+            let deleteButton = UIButton(type: .system)
+            deleteButton.translatesAutoresizingMaskIntoConstraints = false
+            deleteButton.setTitle("Delete Watchlist", for: .normal)
+            deleteButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+            deleteButton.setTitleColor(.systemRed, for: .normal)
+            deleteButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+            deleteButton.layer.cornerRadius = 12
+            deleteButton.addTarget(self, action: #selector(didTapDeleteWatchlist), for: .touchUpInside)
+            deleteButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+            rulesStack.addArrangedSubview(deleteButton)
+        }
+        
         // Constraints for container subviews
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
@@ -392,6 +407,30 @@ class EditWatchlistDetailViewController: UIViewController {
         let mapVC = WatchlistLocationRuleMapViewController()
         mapVC.delegate = self
         navigationController?.pushViewController(mapVC, animated: true)
+    }
+    
+    @objc private func didTapDeleteWatchlist() {
+        guard let watchlist = watchlistToEdit else { return }
+        
+        let alert = UIAlertController(
+            title: "Delete Watchlist",
+            message: "Are you sure you want to delete '\(watchlist.title ?? "this watchlist")'?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            Task {
+                do {
+                    try await self?.repository.deleteWatchlist(id: watchlist.id)
+                    self?.navigationController?.popViewController(animated: true)
+                } catch {
+                    self?.presentAlert(title: "Delete Failed", message: error.localizedDescription)
+                }
+            }
+        }))
+        
+        present(alert, animated: true)
     }
     
     private func populateRuleDataForEdit() {
