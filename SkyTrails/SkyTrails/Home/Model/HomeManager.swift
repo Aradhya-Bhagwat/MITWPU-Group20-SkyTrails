@@ -238,7 +238,7 @@ class HomeManager {
                 speciesCount: birdCount,
                 observedCount: observedCount,
                 radius: 5.0,
-                imageName: watchlist.images?.first?.imagePath
+                imageName: watchlist.coverImagePath
             )
         }
     }
