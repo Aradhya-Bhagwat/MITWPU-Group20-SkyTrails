@@ -408,6 +408,7 @@ enum WatchlistError: Error, LocalizedError {
     case invalidVirtualOperation(String)
     case invalidDateRange
     case locationServiceUnavailable
+    case noMatchingWatchlists
     
     var errorDescription: String? {
         switch self {
@@ -431,6 +432,8 @@ enum WatchlistError: Error, LocalizedError {
             return "End date must be after start date"
         case .locationServiceUnavailable:
             return "Location services are unavailable"
+        case .noMatchingWatchlists:
+            return "Bird could not find any matching watchlists"
         }
     }
 }

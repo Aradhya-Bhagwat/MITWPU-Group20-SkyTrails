@@ -86,3 +86,5 @@ docs/html
 local.properties
 SkyTrails/SkyTrails.xcodeproj/project.pbxproj
 SkyTrails/SkyTrails/Watchlist/watchlist_summary.md
+
+SkyTrails_Model_Layer_Documentation.md
