@@ -15,6 +15,8 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     
     private let homeManager = HomeManager.shared
     private var homeScreenData: HomeScreenData?
+    private let homeTitleProfileImageView = UIImageView()
+    private var homeTitleProfileImageConstraints: [NSLayoutConstraint] = []
 
     // UI Data (cached for collection view)
     private var upcomingBirds: [UpcomingBirdUI] = []
@@ -32,6 +34,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         self.title = "Home"
         self.navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
+        setupHomeTitleProfileImageView()
         applySemanticAppearance()
         setupCollectionView()
         loadHomeData()
@@ -50,10 +53,60 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        attachHomeTitleProfileImageViewIfNeeded()
         // Refresh data when returning to screen
         refreshHomeData()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        homeTitleProfileImageView.removeFromSuperview()
+        NSLayoutConstraint.deactivate(homeTitleProfileImageConstraints)
+        homeTitleProfileImageConstraints.removeAll()
+    }
+    
+    @IBAction func profileTapped(_ sender: Any) {
+        navigateToProfile()
+    }
+
+    private func setupHomeTitleProfileImageView() {
+        homeTitleProfileImageView.translatesAutoresizingMaskIntoConstraints = false
+        homeTitleProfileImageView.image = UIImage(named: "watchlist_user_profile") ?? UIImage(systemName: "person.crop.circle.fill")
+        homeTitleProfileImageView.contentMode = .scaleAspectFill
+        homeTitleProfileImageView.clipsToBounds = true
+        homeTitleProfileImageView.layer.cornerRadius = 18
+        homeTitleProfileImageView.isUserInteractionEnabled = true
+        homeTitleProfileImageView.accessibilityLabel = "Profile"
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapHomeTitleProfileImage))
+        homeTitleProfileImageView.addGestureRecognizer(tapGesture)
+    }
+
+    private func attachHomeTitleProfileImageViewIfNeeded() {
+        guard let navBar = navigationController?.navigationBar else { return }
+        guard homeTitleProfileImageView.superview == nil else { return }
+
+        navBar.addSubview(homeTitleProfileImageView)
+        homeTitleProfileImageConstraints = [
+            homeTitleProfileImageView.widthAnchor.constraint(equalToConstant: 36),
+            homeTitleProfileImageView.heightAnchor.constraint(equalToConstant: 36),
+            homeTitleProfileImageView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor, constant: -16),
+            homeTitleProfileImageView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor, constant: -8)
+        ]
+        NSLayoutConstraint.activate(homeTitleProfileImageConstraints)
+    }
+
+    @objc private func didTapHomeTitleProfileImage() {
+        navigateToProfile()
+    }
+
+    private func navigateToProfile() {
+        let storyboard = UIStoryboard(name: "Profile", bundle: nil)
+        if let profileVC = storyboard.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController {
+            navigationController?.pushViewController(profileVC, animated: true)
+        }
+    }
+    
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         cachedUpcomingBirdCardWidth = nil
