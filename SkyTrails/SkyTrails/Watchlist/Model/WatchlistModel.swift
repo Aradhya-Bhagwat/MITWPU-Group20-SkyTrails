@@ -83,7 +83,6 @@ final class Watchlist {
     @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.watchlist) var entries: [WatchlistEntry]?
     @Relationship(deleteRule: .cascade, inverse: \WatchlistRule.watchlist) var rules: [WatchlistRule]?
     @Relationship(deleteRule: .cascade, inverse: \WatchlistShare.watchlist) var shares: [WatchlistShare]?
-    @Relationship(deleteRule: .cascade, inverse: \WatchlistImage.watchlist) var images: [WatchlistImage]?
     
     init(
         id: UUID = UUID(),
@@ -189,20 +188,6 @@ final class WatchlistShare {
 }
 
 @Model
-final class WatchlistImage {
-    @Attribute(.unique) var id: UUID
-    var watchlist: Watchlist?
-    var imagePath: String
-    var uploaded_at: Date = Date()
-    
-    init(id: UUID = UUID(), watchlist: Watchlist? = nil, imagePath: String) {
-        self.id = id
-        self.watchlist = watchlist
-        self.imagePath = imagePath
-    }
-}
-
-@Model
 final class ObservedBirdPhoto {
     @Attribute(.unique) var id: UUID
     var watchlistEntry: WatchlistEntry?
@@ -247,7 +232,7 @@ extension Watchlist {
             dateRange: dateRange,
             stats: stats,
             type: self.type ?? .custom,
-            images: self.images?.compactMap { $0.imagePath } ?? [],
+            images: [self.coverImagePath].compactMap { $0 },
             rules: self.rules?.map { $0.toDomain() } ?? [],
             isVirtual: identifier.isVirtual
         )

@@ -235,8 +235,17 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
 
         // Get Image
         var image: UIImage? = nil
-        if let path = item.images?.first?.imagePath {
-            image = UIImage(named: path)
+        if let path = item.coverImagePath {
+            image = UIImage(named: path) // Fallback to bundle asset
+            
+            // Try loading from documents if not in bundle
+            if image == nil {
+                let fileManager = FileManager.default
+                let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
+                let imagePath = photosDirectory.appendingPathComponent(path)
+                image = UIImage(contentsOfFile: imagePath.path)
+            }
         }
 
         cell.configure(

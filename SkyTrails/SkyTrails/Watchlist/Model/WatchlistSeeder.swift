@@ -19,7 +19,6 @@ struct WatchlistSeeder {
 		let endDate: TimeInterval
 		let observedBirds: [JSONBirdDTO]
 		let toObserveBirds: [JSONBirdDTO]
-		let mainImageName: String?
 	}
 	
 	private struct JSONSharedWatchlistDTO: Codable {
@@ -29,7 +28,6 @@ struct WatchlistSeeder {
 		let dateRange: String
 		let startDate: TimeInterval?
 		let endDate: TimeInterval?
-		let mainImageName: String?
 		let stats: JSONSharedStatsDTO
 		let userImages: [String]
 		let observedBirds: [JSONBirdDTO]
@@ -88,6 +86,17 @@ struct WatchlistSeeder {
 			throw SeederError.seedingFailed("Shared watchlists", error)
 		}
 		
+        // 3.5. Generate cover image summary
+        do {
+            let descriptor = FetchDescriptor<Watchlist>()
+            let allWatchlists = try context.fetch(descriptor)
+            let withCover = allWatchlists.filter { $0.coverImagePath != nil }.count
+            let withoutCover = allWatchlists.count - withCover
+            print("📸 [WatchlistSeeder] Cover images: \(withCover) with images, \(withoutCover) without")
+        } catch {
+            print("⚠️ [WatchlistSeeder] Could not generate cover image summary: \(error)")
+        }
+        
 			// 4. Save
 		do {
 			try context.save()
@@ -137,12 +146,6 @@ struct WatchlistSeeder {
 				endDate: Date(timeIntervalSinceReferenceDate: dto.endDate)
 			)
 			
-			if let img = dto.mainImageName {
-				let image = WatchlistImage(watchlist: watchlist, imagePath: img)
-				context.insert(image)
-				print("    🖼️ Added image: \(img)")
-			}
-			
 			context.insert(watchlist)
 			
 			let observedCount = dto.observedBirds.count
@@ -151,6 +154,9 @@ struct WatchlistSeeder {
 			
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
+            
+            // Update cover image based on entries
+            watchlist.updateCoverImage()
 		}
 	}
 	
@@ -183,12 +189,6 @@ struct WatchlistSeeder {
 				endDate: dto.endDate.map { Date(timeIntervalSinceReferenceDate: $0) }
 			)
 			
-			if let imageName = dto.mainImageName {
-				let image = WatchlistImage(watchlist: watchlist, imagePath: imageName)
-				context.insert(image)
-				print("    🖼️ Added image: \(imageName)")
-			}
-			
 			context.insert(watchlist)
 			
 			let observedCount = dto.observedBirds.count
@@ -197,6 +197,9 @@ struct WatchlistSeeder {
 			
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
+            
+            // Update cover image based on entries
+            watchlist.updateCoverImage()
 		}
 	}
 	
