@@ -146,16 +146,17 @@ class DateandLocationViewController: UIViewController {
                     self.updateLocationSelection(locationData.displayName)
                 }
             } catch {
+                let message: String
                 if let locError = error as? LocationService.LocationError,
-                      locError == .locationAccessDenied {
-                    print("Failed to get current location: \(error)")
-                    let alert = UIAlertController(title: "Location Error", message: "Could not fetch current location. Please check your settings.", preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    await MainActor.run { self.present(alert, animated: true) }
-                       return
-                   }
+                   locError == .locationAccessDenied {
+                    message = "Location access is denied. Please allow location access in Settings."
+                } else {
+                    message = "Could not fetch current location right now. Please try again."
+                }
 
-                
+                let alert = UIAlertController(title: "Location Error", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                await MainActor.run { self.present(alert, animated: true) }
             }
         }
     }

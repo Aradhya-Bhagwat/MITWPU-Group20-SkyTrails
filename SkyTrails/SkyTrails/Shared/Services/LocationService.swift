@@ -114,36 +114,69 @@ final class LocationService: NSObject, LocationServiceProtocol {
     
     /// Get current device location with reverse-geocoded name
     func getCurrentLocation() async throws -> LocationData {
-        let authStatus = locationManager.authorizationStatus
+        try await ensureLocationAuthorization()
         
-        switch authStatus {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-            // In a real app, we might wait for auth change, but for now we'll throw
-            throw LocationError.locationAccessDenied
-        case .restricted, .denied:
-            throw LocationError.locationAccessDenied
-        case .authorizedAlways, .authorizedWhenInUse:
-            return try await withCheckedThrowingContinuation { continuation in
-                LocationRequestDelegate.requestLocation(manager: locationManager) { result in
-                    switch result {
-                    case .success(let location):
-                        Task {
-                            let name = await self.reverseGeocode(
-                                lat: location.coordinate.latitude,
-                                lon: location.coordinate.longitude
-                            ) ?? "Current Location"
-                            
-                            continuation.resume(returning: LocationData(
-                                displayName: name,
-                                lat: location.coordinate.latitude,
-                                lon: location.coordinate.longitude
-                            ))
+        return try await withCheckedThrowingContinuation { continuation in
+            LocationRequestDelegate.requestLocation(manager: locationManager) { result in
+                switch result {
+                case .success(let location):
+                    Task {
+                        let name = await self.reverseGeocode(
+                            lat: location.coordinate.latitude,
+                            lon: location.coordinate.longitude
+                        ) ?? "Current Location"
+                        
+                        continuation.resume(returning: LocationData(
+                            displayName: name,
+                            lat: location.coordinate.latitude,
+                            lon: location.coordinate.longitude
+                        ))
+                    }
+                case .failure(let error):
+                    if let clError = error as? CLError {
+                        switch clError.code {
+                        case .denied:
+                            continuation.resume(throwing: LocationError.locationAccessDenied)
+                        case .locationUnknown:
+                            continuation.resume(throwing: LocationError.locationNotFound)
+                        default:
+                            continuation.resume(throwing: LocationError.serviceUnavailable)
                         }
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(throwing: LocationError.serviceUnavailable)
                     }
                 }
+            }
+        }
+    }
+
+    private func ensureLocationAuthorization() async throws {
+        guard CLLocationManager.locationServicesEnabled() else {
+            throw LocationError.serviceUnavailable
+        }
+
+        let currentStatus = locationManager.authorizationStatus
+        switch currentStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            return
+        case .restricted, .denied:
+            throw LocationError.locationAccessDenied
+        case .notDetermined:
+            let resolvedStatus = await withCheckedContinuation { continuation in
+                AuthorizationRequestDelegate.requestAuthorization(manager: locationManager) { status in
+                    continuation.resume(returning: status)
+                }
+            }
+
+            switch resolvedStatus {
+            case .authorizedAlways, .authorizedWhenInUse:
+                return
+            case .restricted, .denied:
+                throw LocationError.locationAccessDenied
+            case .notDetermined:
+                throw LocationError.serviceUnavailable
+            @unknown default:
+                throw LocationError.serviceUnavailable
             }
         @unknown default:
             throw LocationError.serviceUnavailable
@@ -196,6 +229,7 @@ extension LocationService: MKLocalSearchCompleterDelegate {
 private class LocationRequestDelegate: NSObject, CLLocationManagerDelegate {
     private var completion: (Result<CLLocation, Error>) -> Void
     private let manager: CLLocationManager
+    private var isResolved = false
     
     static func requestLocation(manager: CLLocationManager, completion: @escaping (Result<CLLocation, Error>) -> Void) {
         let delegate = LocationRequestDelegate(manager: manager, completion: completion)
@@ -213,6 +247,7 @@ private class LocationRequestDelegate: NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard !isResolved else { return }
         if let location = locations.last {
             completion(.success(location))
         } else {
@@ -222,11 +257,54 @@ private class LocationRequestDelegate: NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        guard !isResolved else { return }
         completion(.failure(error))
         cleanup()
     }
     
     private func cleanup() {
+        isResolved = true
         objc_setAssociatedObject(manager, "request_delegate", nil, .OBJC_ASSOCIATION_RETAIN)
+    }
+}
+
+private class AuthorizationRequestDelegate: NSObject, CLLocationManagerDelegate {
+    private let manager: CLLocationManager
+    private var completion: (CLAuthorizationStatus) -> Void
+    private var isResolved = false
+
+    static func requestAuthorization(manager: CLLocationManager, completion: @escaping (CLAuthorizationStatus) -> Void) {
+        let delegate = AuthorizationRequestDelegate(manager: manager, completion: completion)
+        manager.delegate = delegate
+        manager.requestWhenInUseAuthorization()
+
+        // Keep delegate alive until authorization callback resolves.
+        objc_setAssociatedObject(manager, "auth_request_delegate", delegate, .OBJC_ASSOCIATION_RETAIN)
+    }
+
+    private init(manager: CLLocationManager, completion: @escaping (CLAuthorizationStatus) -> Void) {
+        self.manager = manager
+        self.completion = completion
+        super.init()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard !isResolved else { return }
+        let status = manager.authorizationStatus
+        guard status != .notDetermined else { return }
+        completion(status)
+        cleanup()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        guard !isResolved else { return }
+        guard status != .notDetermined else { return }
+        completion(status)
+        cleanup()
+    }
+
+    private func cleanup() {
+        isResolved = true
+        objc_setAssociatedObject(manager, "auth_request_delegate", nil, .OBJC_ASSOCIATION_RETAIN)
     }
 }
