@@ -102,21 +102,44 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         leftBadgeLabel.addIcon(text: "\(dto.stats.totalCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
         
-        // Cover Image
-		if let imageName = dto.image, let image = UIImage(named: imageName) {
-			coverImageView.image = image
-				// Reset contentsRect before calculating to ensure clean state
-			coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-				// Apply alignment
-			alignImageTop()
-		} else {
-			coverImageView.image = nil
-			coverImageView.backgroundColor = .systemGray5
-			coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-		}
+        // Cover Image with three-tier loading
+        if let imageName = dto.image {
+            // Try 1: User-uploaded photo from Documents
+            if let userPhoto = loadUserPhoto(named: imageName) {
+                coverImageView.image = userPhoto
+                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+                alignImageTop()
+            }
+            // Try 2: Static asset from bundle
+            else if let assetImage = UIImage(named: imageName) {
+                coverImageView.image = assetImage
+                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+                alignImageTop()
+            }
+            // Try 3: Fallback to placeholder
+            else {
+                coverImageView.image = nil
+                coverImageView.backgroundColor = .systemGray5
+                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+            }
+        } else {
+            // No image name provided - show placeholder
+            coverImageView.image = nil
+            coverImageView.backgroundColor = .systemGray5
+            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+        }
     }
     
     // MARK: - Helpers
+    
+    private func loadUserPhoto(named imageName: String) -> UIImage? {
+        let fileManager = FileManager.default
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
+        let imagePath = photosDirectory.appendingPathComponent(imageName)
+        
+        return UIImage(contentsOfFile: imagePath.path)
+    }
     
     private func isDateValid(start: Date, end: Date) -> Bool {
         return start != end
