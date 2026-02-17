@@ -286,6 +286,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
 		vc.bird = bird
 		vc.watchlistId = currentWatchlistId
+		vc.shouldUseRuleMatching = false
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
@@ -294,6 +295,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
 		vc.mode = mode
 		vc.targetWatchlistId = currentWatchlistId
+		vc.shouldUseRuleMatching = false
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	

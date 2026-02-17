@@ -152,8 +152,9 @@ class BirdSmartCell: UITableViewCell {
 	private static func loadImage(for entry: WatchlistEntry) -> UIImage {
 			// 1. Check for a user-captured photo saved to the app's support directory
 		if let photoPath = entry.photos?.first?.imagePath {
-			let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-			let fileURL = supportDir.appendingPathComponent(photoPath)
+			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
+			let fileURL = photoDir.appendingPathComponent(photoPath)
 			if let image = UIImage(contentsOfFile: fileURL.path) {
 				return image
 			}

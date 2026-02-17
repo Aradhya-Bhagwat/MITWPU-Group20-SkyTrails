@@ -216,6 +216,7 @@ extension WatchlistHomeViewController {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
 		vc.bird = nil
 		vc.watchlistId = watchlistId
+		vc.shouldUseRuleMatching = true
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
@@ -226,6 +227,7 @@ extension WatchlistHomeViewController {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
 		vc.mode = .unobserved
 		vc.targetWatchlistId = watchlistId
+		vc.shouldUseRuleMatching = true
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
@@ -388,7 +390,18 @@ extension WatchlistHomeViewController {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = myWatchlist {
-			let images = watchlist.previewImages.compactMap { UIImage(named: $0) }
+			// Load images: bundled assets first, then user photos from disk
+			let images = watchlist.previewImages.compactMap { imagePath -> UIImage? in
+				// 1. Try bundled asset first
+				if let bundledImage = UIImage(named: imagePath) {
+					return bundledImage
+				}
+				// 2. Try loading from Documents/ObservedBirdPhotos/
+				let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+				let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
+				let fileURL = photoDir.appendingPathComponent(imagePath)
+				return UIImage(contentsOfFile: fileURL.path)
+			}
 			
 			let data = WatchlistData(
 				title: watchlist.title,

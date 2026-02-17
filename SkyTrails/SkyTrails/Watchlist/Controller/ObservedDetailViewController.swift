@@ -14,6 +14,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     var bird: Bird? // Kept for 'New Observation' flow where entry doesn't exist yet
     var entry: WatchlistEntry? // The existing entry being edited
     var watchlistId: UUID?
+    var shouldUseRuleMatching: Bool = false
     
     var onSave: ((Bird) -> Void)?
     
@@ -274,7 +275,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                 print("❌ [ObservedDetailVC] ERROR updating entry: \(error)")
             }
         } else {
-            print("➕ [ObservedDetailVC] Creating new entry with rule matching")
+            print("➕ [ObservedDetailVC] Creating new entry")
             
             // New Entry
             let birdToUse: Bird
@@ -289,27 +290,54 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                 birdToUse = manager.createBird(name: name)
             }
             
-            print("💾 [ObservedDetailVC] Adding bird with rule matching")
+            print("💾 [ObservedDetailVC] Adding bird")
             do {
                 let location = selectedLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-                let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
-                    bird: birdToUse,
-                    location: location,
-                    observationDate: dateTimePicker.date,
-                    notes: notesTextView.text,
-                    asObserved: true
-                )
                 
-                print("✅ [ObservedDetailVC] Bird added to \(matchedWatchlistIds.count) watchlist(s)")
-                
-                // Attach photos to all matched entries
-                if let photoName = selectedImageName {
-                    for watchlistId in matchedWatchlistIds {
-                        if let entry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: watchlistId) {
-                            try manager.attachPhoto(entryId: entry.id, imageName: photoName)
+                if shouldUseRuleMatching {
+                    let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
+                        bird: birdToUse,
+                        location: location,
+                        observationDate: dateTimePicker.date,
+                        notes: notesTextView.text,
+                        asObserved: true
+                    )
+                    
+                    print("✅ [ObservedDetailVC] Bird added to \(matchedWatchlistIds.count) watchlist(s) via rule matching")
+                    
+                    // Attach photos to all matched entries
+                    if let photoName = selectedImageName {
+                        for watchlistId in matchedWatchlistIds {
+                            if let entry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: watchlistId) {
+                                try manager.attachPhoto(entryId: entry.id, imageName: photoName)
+                            }
+                        }
+                        print("📸 [ObservedDetailVC] Photo attached to entries")
+                    }
+                } else {
+                    guard let targetWatchlistId = watchlistId else {
+                        print("❌ [ObservedDetailVC] No target watchlist ID")
+                        return
+                    }
+                    
+                    try manager.addBirds([birdToUse], to: targetWatchlistId, asObserved: true)
+                    
+                    if let newEntry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: targetWatchlistId) {
+                        try manager.updateEntry(
+                            entryId: newEntry.id,
+                            notes: notesTextView.text,
+                            observationDate: dateTimePicker.date,
+                            lat: location?.latitude,
+                            lon: location?.longitude,
+                            locationDisplayName: selectedLocation?.displayName
+                        )
+                        
+                        if let photoName = selectedImageName {
+                            try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
+                            print("📸 [ObservedDetailVC] Photo attached to entry")
                         }
                     }
-                    print("📸 [ObservedDetailVC] Photo attached to entries")
+                    print("✅ [ObservedDetailVC] Bird added directly to watchlist: \(targetWatchlistId)")
                 }
                 
                 print("📞 [ObservedDetailVC] Calling onSave callback for new bird")
@@ -378,8 +406,9 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     /// Priority: user-captured photo on disk → bundled asset → system placeholder.
     private static func loadImage(for entry: WatchlistEntry) -> UIImage {
         if let photoPath = entry.photos?.first?.imagePath {
-            let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            let fileURL = supportDir.appendingPathComponent(photoPath)
+            let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
+            let fileURL = photoDir.appendingPathComponent(photoPath)
             if let image = UIImage(contentsOfFile: fileURL.path) {
                 return image
             }
@@ -548,12 +577,24 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             
             birdImageView.image = image
             
-            // Persist to applicationSupportDirectory so it survives app launches
+            // Persist to Documents/ObservedBirdPhotos/ where WatchlistPhotoService expects it
             let filename = "bird_photo_\(UUID().uuidString).png"
-            if let data = image.pngData() {
-                let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                let fileURL = supportDir.appendingPathComponent(filename)
+            if let data = image.jpegData(compressionQuality: 0.8) {
+                let fileManager = FileManager.default
+                guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                    print("❌ [ObservedDetailVC] Could not access documents directory")
+                    return
+                }
+                
+                let photoDir = documentsURL.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
+                let fileURL = photoDir.appendingPathComponent(filename)
+                
                 do {
+                    // Create directory if it doesn't exist
+                    if !fileManager.fileExists(atPath: photoDir.path) {
+                        try fileManager.createDirectory(at: photoDir, withIntermediateDirectories: true)
+                    }
+                    
                     try data.write(to: fileURL)
                     selectedImageName = filename
                     print("📸 [ObservedDetailVC] Photo saved to disk: \(filename)")

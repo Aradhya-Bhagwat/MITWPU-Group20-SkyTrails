@@ -28,6 +28,7 @@ class SpeciesSelectionViewController: UIViewController {
     // MARK: - Properties
     var mode: WatchlistMode = .observed
     var targetWatchlistId: UUID?
+    var shouldUseRuleMatching: Bool = false
     
     // Data Source
     private var allBirds: [Bird] = []
@@ -127,6 +128,7 @@ extension SpeciesSelectionViewController {
             let vc = storyboard.instantiateViewController(withIdentifier: Constants.unobservedVCId) as! UnobservedDetailViewController
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
+            vc.shouldUseRuleMatching = shouldUseRuleMatching
             vc.onSave = { [weak self] savedBird in
                 self?.handleSave(bird: savedBird)
             }
@@ -135,6 +137,7 @@ extension SpeciesSelectionViewController {
             let vc = storyboard.instantiateViewController(withIdentifier: Constants.observedVCId) as! ObservedDetailViewController
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
+            vc.shouldUseRuleMatching = shouldUseRuleMatching
             vc.onSave = { [weak self] savedBird in
                 self?.handleSave(bird: savedBird)
             }
