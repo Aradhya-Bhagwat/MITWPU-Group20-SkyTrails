@@ -702,19 +702,23 @@ extension HomeViewController {
         case 2:
             let item = spots[indexPath.row]
             
-            let predictions = homeManager.getLivePredictions(
-                for: item.latitude,
-                lon: item.longitude,
-                radiusKm: item.radius
-            )
-            
-            navigateToSpotDetails(
-                name: item.title,
-                lat: item.latitude,
-                lon: item.longitude,
-                radius: item.radius,
-                predictions: predictions
-            )
+            Task {
+                let predictions = await homeManager.getLivePredictions(
+                    for: item.latitude,
+                    lon: item.longitude,
+                    radiusKm: item.radius
+                )
+                
+                await MainActor.run {
+                    navigateToSpotDetails(
+                        name: item.title,
+                        lat: item.latitude,
+                        lon: item.longitude,
+                        radius: item.radius,
+                        predictions: predictions
+                    )
+                }
+            }
             
         case 3:
             let observation = observations[indexPath.row]

@@ -261,7 +261,7 @@ final class WatchlistManager: WatchlistRepository {
         // Resolve virtual "My Watchlist" ID to real watchlist
         if watchlistId == myWatchlistId {
             print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected, resolving...")
-            let customLists = fetchWatchlists(type: .custom)
+            let customLists = try fetchWatchlists(type: .custom)
             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
                 targetWatchlistId = existing.id
             } else if let first = customLists.first {
@@ -274,7 +274,7 @@ final class WatchlistManager: WatchlistRepository {
                     startDate: Date(),
                     endDate: Date().addingTimeInterval(31536000)
                 )
-                if let newWl = fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
+                if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
                     targetWatchlistId = newWl.id
                 } else {
                     print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
@@ -360,7 +360,7 @@ final class WatchlistManager: WatchlistRepository {
         // Resolve virtual My Watchlist ID
         var targetId = watchlistId
         if watchlistId == WatchlistConstants.myWatchlistID {
-            let customLists = fetchWatchlists(type: .custom)
+            let customLists = try fetchWatchlists(type: .custom)
             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
                 targetId = existing.id
             } else if let first = customLists.first {
@@ -419,8 +419,8 @@ final class WatchlistManager: WatchlistRepository {
         currentWeek: Int,
         lookAheadWeeks: Int = 4,
         radiusInKm: Double = 50.0
-    ) throws -> [UpcomingBirdResult] {
-        return try query.getUpcomingBirds(
+    ) async throws -> [UpcomingBirdResult] {
+        return try await query.getUpcomingBirds(
             userLocation: userLocation,
             currentWeek: currentWeek,
             lookAheadWeeks: lookAheadWeeks,
@@ -431,12 +431,12 @@ final class WatchlistManager: WatchlistRepository {
     func getUpcomingBirdsAtHome(
         lookAheadWeeks: Int = 4,
         radiusInKm: Double = 50.0
-    ) throws -> [UpcomingBirdResult] {
+    ) async throws -> [UpcomingBirdResult] {
         guard let homeLocation = LocationPreferences.shared.homeLocation else {
             return []
         }
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-        return try getUpcomingBirds(
+        return try await getUpcomingBirds(
             userLocation: homeLocation,
             currentWeek: currentWeek,
             lookAheadWeeks: lookAheadWeeks,

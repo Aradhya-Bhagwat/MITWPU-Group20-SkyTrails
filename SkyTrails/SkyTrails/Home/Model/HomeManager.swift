@@ -64,12 +64,21 @@ class HomeManager {
         
         // Parallel fetching
         async let upcoming = getUpcomingBirds(userLocation: location)
-        async let myWatchlist = location.map { getMyWatchlistBirds(userLocation: $0) } ?? []
-        async let recommended = location.map { getRecommendedBirds(userLocation: $0) } ?? []
+        async let myWatchlist: [UpcomingBirdResult] = {
+            if let loc = location { return await getMyWatchlistBirds(userLocation: loc) }
+            return []
+        }()
+        async let recommended: [RecommendedBirdResult] = {
+            if let loc = location { return await getRecommendedBirds(userLocation: loc) }
+            return []
+        }()
         async let watchlistSpots = getWatchlistSpots()
-        async let recommendedSpots = location.map { getRecommendedSpots(near: $0) } ?? []
+        async let recommendedSpots: [PopularSpotResult] = {
+            if let loc = location { return await getRecommendedSpots(near: loc) }
+            return []
+        }()
         async let mapCards = getDynamicMapCards()
-        async let observations = try getRecentObservations(near: location)
+        async let observations = getRecentObservations(near: location)
         async let news = newsService.fetchNews()
         
         do {
@@ -89,7 +98,7 @@ class HomeManager {
                 watchlistSpots,
                 recommendedSpots,
                 mapCards,
-                observations,
+                try observations,
                 news
             )
 
@@ -131,16 +140,16 @@ class HomeManager {
         userLocation: CLLocationCoordinate2D? = nil,
         lookAheadWeeks: Int = 4,
         radiusInKm: Double = 50.0
-    ) -> [UpcomingBirdResult] {
+    ) async -> [UpcomingBirdResult] {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         
         if let location = userLocation ?? LocationPreferences.shared.homeLocation {
-             return watchlistManager.getUpcomingBirds(
+             return (try? await watchlistManager.getUpcomingBirds(
                 userLocation: location,
                 currentWeek: currentWeek,
                 lookAheadWeeks: lookAheadWeeks,
                 radiusInKm: radiusInKm
-            )
+            )) ?? []
         }
         return []
     }
@@ -150,10 +159,10 @@ class HomeManager {
         currentWeek: Int? = nil,
         radiusInKm: Double = 50.0,
         limit: Int = 10
-    ) -> [RecommendedBirdResult] {
+    ) async -> [RecommendedBirdResult] {
         let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
         
-        let birdsAtLocation = hotspotManager.getBirdsPresent(
+        let birdsAtLocation = await hotspotManager.getBirdsPresent(
             at: userLocation,
             duringWeek: week,
             radiusInKm: radiusInKm
@@ -169,10 +178,10 @@ class HomeManager {
         userLocation: CLLocationCoordinate2D,
         currentWeek: Int? = nil,
         radiusInKm: Double = 50.0
-    ) -> [UpcomingBirdResult] {
+    ) async -> [UpcomingBirdResult] {
         let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
         
-        let birdsAtLocation = hotspotManager.getBirdsPresent(
+        let birdsAtLocation = await hotspotManager.getBirdsPresent(
             at: userLocation,
             duringWeek: week,
             radiusInKm: radiusInKm
@@ -205,7 +214,7 @@ class HomeManager {
     
     // MARK: - Spots
     
-    func getWatchlistSpots() -> [PopularSpotResult] {
+    func getWatchlistSpots() async -> [PopularSpotResult] {
         let watchlists = (try? watchlistManager.fetchWatchlists()) ?? []
         
         return watchlists.compactMap { watchlist -> PopularSpotResult? in
@@ -238,7 +247,7 @@ class HomeManager {
         near location: CLLocationCoordinate2D,
         radiusInKm: Double = 100.0,
         limit: Int = 10
-    ) -> [PopularSpotResult] {
+    ) async -> [PopularSpotResult] {
         
         let descriptor = FetchDescriptor<Hotspot>()
         let allHotspots: [Hotspot]
@@ -285,9 +294,9 @@ class HomeManager {
     
     // MARK: - Migration & Community
     
-    func getActiveMigrations(limit: Int = 5) -> [MigrationCardResult] {
+    func getActiveMigrations(limit: Int = 5) async -> [MigrationCardResult] {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-        let activeSessions = migrationManager.getActiveMigrations(forWeek: currentWeek)
+        let activeSessions = await migrationManager.getActiveMigrations(forWeek: currentWeek)
         
         return activeSessions.prefix(limit).compactMap { session -> MigrationCardResult? in
             guard let bird = session.bird,
@@ -313,8 +322,8 @@ class HomeManager {
         }
     }
     
-    func getDynamicMapCards() -> [DynamicMapCard] {
-        let migrations = getActiveMigrations()
+    func getDynamicMapCards() async -> [DynamicMapCard] {
+        let migrations = await getActiveMigrations()
         
         return migrations.map { migration in
             let startLocation = migration.paths.first.map { "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))" } ?? "Unknown"
@@ -519,11 +528,11 @@ class HomeManager {
     
     // MARK: - Legacy Compatibility
 
-    func getLivePredictions(for lat: Double, lon: Double, radiusKm: Double) -> [FinalPredictionResult] {
+    func getLivePredictions(for lat: Double, lon: Double, radiusKm: Double) async -> [FinalPredictionResult] {
         let location = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         
-        let birds = hotspotManager.getBirdsPresent(
+        let birds = await hotspotManager.getBirdsPresent(
             at: location,
             duringWeek: currentWeek,
             radiusInKm: radiusKm
@@ -540,13 +549,13 @@ class HomeManager {
         }
     }
     
-    func predictBirds(for input: PredictionInputData, inputIndex: Int) -> [FinalPredictionResult] {
+    func predictBirds(for input: PredictionInputData, inputIndex: Int) async -> [FinalPredictionResult] {
         guard let lat = input.latitude,
               let lon = input.longitude else {
             return []
         }
 
-        return getLivePredictions(for: lat, lon: lon, radiusKm: Double(input.areaValue))
+        return await getLivePredictions(for: lat, lon: lon, radiusKm: Double(input.areaValue))
             .map { result in
                 FinalPredictionResult(
                     birdName: result.birdName,
@@ -633,7 +642,7 @@ final class HotspotManager {
         at location: CLLocationCoordinate2D,
         duringWeek week: Int,
         radiusInKm: Double = 50.0
-    ) -> [Bird] {
+    ) async -> [Bird] {
         let cacheKey = "\(location.latitude)_\(location.longitude)_\(week)_\(radiusInKm)" as NSString
         if let cached = birdsCache.object(forKey: cacheKey) as? [Bird] {
             return cached
@@ -680,7 +689,7 @@ final class MigrationManager {
         self.logger = logger
     }
     
-    func getActiveMigrations(forWeek week: Int) -> [MigrationSession] {
+    func getActiveMigrations(forWeek week: Int) async -> [MigrationSession] {
         let descriptor = FetchDescriptor<MigrationSession>(
             predicate: #Predicate { session in
                 session.startWeek <= week && session.endWeek >= week
@@ -756,18 +765,17 @@ final class CommunityObservationManager {
         let maxLon = location.longitude + deltaLon
         
         let cutoffDate = maxAge.map { Date().addingTimeInterval(-$0) }
+        let past = cutoffDate ?? Date.distantPast
         
         // SwiftData Predicate for spatial and temporal filtering
         let descriptor = FetchDescriptor<CommunityObservation>(
             predicate: #Predicate<CommunityObservation> { obs in
-                guard let lat = obs.lat, let lon = obs.lon else { return false }
-                let withinLat = lat >= minLat && lat <= maxLat
-                let withinLon = lon >= minLon && lon <= maxLon
-                
-                if let cutoff = cutoffDate {
-                    return withinLat && withinLon && obs.observedAt >= cutoff
+                if let lat = obs.lat, let lon = obs.lon {
+                    return lat >= minLat && lat <= maxLat &&
+                           lon >= minLon && lon <= maxLon &&
+                           (cutoffDate == nil || obs.observedAt >= past)
                 } else {
-                    return withinLat && withinLon
+                    return false
                 }
             },
             sortBy: [SortDescriptor(\.observedAt, order: .reverse)]

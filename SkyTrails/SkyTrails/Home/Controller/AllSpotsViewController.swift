@@ -203,17 +203,21 @@ extension AllSpotsViewController: UICollectionViewDelegate {
         inputData.startDate = Date()
         inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
         
-        let predictions = HomeManager.shared.getLivePredictions(
-            for: lat,
-            lon: lon,
-            radiusKm: item.radius
-        )
-        
-        let storyboard = UIStoryboard(name: "Home", bundle: nil)
-        if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
-            self.navigationController?.pushViewController(predictMapVC, animated: true)
-            predictMapVC.loadViewIfNeeded()
-            predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+        Task {
+            let predictions = await HomeManager.shared.getLivePredictions(
+                for: lat,
+                lon: lon,
+                radiusKm: item.radius
+            )
+            
+            await MainActor.run {
+                let storyboard = UIStoryboard(name: "Home", bundle: nil)
+                if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+                    self.navigationController?.pushViewController(predictMapVC, animated: true)
+                    predictMapVC.loadViewIfNeeded()
+                    predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+                }
+            }
         }
     }
 }

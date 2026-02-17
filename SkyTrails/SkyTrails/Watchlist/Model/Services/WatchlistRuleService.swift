@@ -93,7 +93,7 @@ final class WatchlistRuleService {
         if let weeks = params.validWeeks {
             // Specific weeks
             for week in weeks {
-                let birds = hotspotManager.getBirdsPresent(
+                let birds = await hotspotManager.getBirdsPresent(
                     at: location,
                     duringWeek: week,
                     radiusInKm: params.radiusKm
@@ -103,7 +103,7 @@ final class WatchlistRuleService {
         } else {
             // All weeks (1-52)
             for week in 1...52 {
-                let birds = hotspotManager.getBirdsPresent(
+                let birds = await hotspotManager.getBirdsPresent(
                     at: location,
                     duringWeek: week,
                     radiusInKm: params.radiusKm
@@ -173,7 +173,7 @@ final class WatchlistRuleService {
             case .uncommon: rarityInt = 2
             case .rare: rarityInt = 3
             case .very_rare: rarityInt = 4
-            case .extremely_rare: rarityInt = 5
+            case .endangered: rarityInt = 5
             }
             
             return params.levels.contains(rarityInt)

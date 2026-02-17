@@ -122,7 +122,7 @@ final class WatchlistQueryService {
             let lowercased = searchText.lowercased()
             filtered = filtered.filter { entry in
                 entry.bird?.commonName.lowercased().contains(lowercased) ?? false ||
-                entry.bird?.scientificName?.lowercased().contains(lowercased) ?? false
+                entry.bird?.scientificName.lowercased().contains(lowercased) ?? false
             }
         }
         
@@ -135,7 +135,7 @@ final class WatchlistQueryService {
                 case .uncommon: level = 2
                 case .rare: level = 3
                 case .very_rare: level = 4
-                case .extremely_rare: level = 5
+                case .endangered: level = 5
                 }
                 return rarityLevels.contains(level)
             }
@@ -211,7 +211,7 @@ final class WatchlistQueryService {
         case .uncommon: return 2
         case .rare: return 3
         case .very_rare: return 4
-        case .extremely_rare: return 5
+        case .endangered: return 5
         }
     }
     
@@ -327,7 +327,7 @@ final class WatchlistQueryService {
         currentWeek: Int,
         lookAheadWeeks: Int = 4,
         radiusInKm: Double = 50.0
-    ) throws -> [UpcomingBirdResult] {
+    ) async throws -> [UpcomingBirdResult] {
         
         // Get all watchlist entries with notifications enabled
         let allEntries = try persistence.fetchAllEntries()
@@ -346,7 +346,7 @@ final class WatchlistQueryService {
             for weekOffset in 0...lookAheadWeeks {
                 let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1 // Wrap around year
                 
-                let presentBirds = hotspotManager.getBirdsPresent(
+                let presentBirds = await hotspotManager.getBirdsPresent(
                     at: userLocation,
                     duringWeek: checkWeek,
                     radiusInKm: radiusInKm
