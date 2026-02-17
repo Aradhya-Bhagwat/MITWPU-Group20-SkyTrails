@@ -28,6 +28,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var historyCollectionView: UICollectionView!
+    @IBOutlet weak var historyCollectionHeightConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
@@ -40,6 +41,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
         applyTableContainerShadow(to: containerView)
         updateSelectionState()
+        updateHistoryCollectionHeight()
         
     }
     
@@ -50,6 +52,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         updateHistoryInteraction()
         tableView.reloadData()
         historyCollectionView.reloadData()
+        scheduleHistoryCollectionHeightUpdate()
     }
     
     override func viewDidLoad() {
@@ -75,12 +78,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         tableView.dataSource = self
         historyCollectionView.delegate = self
         historyCollectionView.dataSource = self
+        historyCollectionView.isScrollEnabled = false
         
         applyTableAppearance()
         setupHistoryFlowLayout()
         
         tableView.reloadData()
         historyCollectionView.reloadData()
+        scheduleHistoryCollectionHeightUpdate()
         updateSelectionState()
     }
 
@@ -90,6 +95,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         updateSelectionState()
         tableView.reloadData()
         historyCollectionView.reloadData()
+        scheduleHistoryCollectionHeightUpdate()
     }
 
     private func setupTraitChangeHandling() {
@@ -435,6 +441,21 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         layout.sectionInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
     }
 
+    private func scheduleHistoryCollectionHeightUpdate() {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateHistoryCollectionHeight()
+        }
+    }
+
+    private func updateHistoryCollectionHeight() {
+        historyCollectionView.layoutIfNeeded()
+        let contentHeight = historyCollectionView.collectionViewLayout.collectionViewContentSize.height
+        let newHeight = max(contentHeight, 1)
+        if abs(historyCollectionHeightConstraint.constant - newHeight) > 0.5 {
+            historyCollectionHeightConstraint.constant = newHeight
+        }
+    }
+
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -472,18 +493,33 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         let imageHorizontalMargins: CGFloat = 16
         let imageWidth = itemWidth - imageHorizontalMargins
         let imageHeight = imageWidth * (3.0 / 4.0)
-        
- 
+
+        // Match vertical spacing to HistoryCollectionViewCell.xib.
         let topMargin: CGFloat = 8
-        let imageToLabelSpacing: CGFloat = 8
+        let imageToLabelSpacing: CGFloat = 6
         let labelSpacing: CGFloat = 2
-        let bottomMargin: CGFloat = 16
-        
- 
-        let speciesLabelHeight: CGFloat = 36
-        let dateLabelHeight: CGFloat = 18
-        
-     
+        let bottomMargin: CGFloat = 8
+
+        let speciesText: String
+        if histories.isEmpty {
+            speciesText = "No history yet"
+        } else {
+            speciesText = histories[indexPath.row].result?.bird?.commonName ?? "Unknown Species"
+        }
+
+        let speciesFont = UIFont.systemFont(ofSize: 15)
+        let maxSpeciesLabelHeight = ceil(speciesFont.lineHeight * 2)
+        let measuredSpeciesHeight = ceil(
+            (speciesText as NSString).boundingRect(
+                with: CGSize(width: imageWidth, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: [.font: speciesFont],
+                context: nil
+            ).height
+        )
+        let speciesLabelHeight = min(maxSpeciesLabelHeight, measuredSpeciesHeight)
+        let dateLabelHeight = ceil(UIFont.systemFont(ofSize: 13).lineHeight)
+
         let totalHeight = topMargin +
                          imageHeight +
                          imageToLabelSpacing +
@@ -501,6 +537,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             guard let self = self, self.historyCollectionView != nil else { return }
             self.historyCollectionView.collectionViewLayout.invalidateLayout()
         }, completion: nil)
+        coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+            self?.scheduleHistoryCollectionHeightUpdate()
+        }
     }
     
     @IBAction func startButtonTapped(_ sender: UIButton) {

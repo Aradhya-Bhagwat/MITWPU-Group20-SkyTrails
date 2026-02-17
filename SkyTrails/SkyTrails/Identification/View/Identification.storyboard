@@ -139,7 +139,7 @@
                                     </view>
                                 </subviews>
                                 <constraints>
-                                    <constraint firstItem="vFz-1I-rOM" firstAttribute="height" secondItem="dAJ-Zt-q2y" secondAttribute="height" multiplier="0.7" id="8xN-e5-MUo"/>
+                                    <constraint firstItem="vFz-1I-rOM" firstAttribute="height" constant="220" id="8xN-e5-MUo"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="width" secondItem="deH-Bp-JJV" secondAttribute="width" id="Efv-qY-n5z"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="bottom" secondItem="dAJ-Zt-q2y" secondAttribute="bottom" constant="8" id="Y4t-Ae-FoB"/>
                                     <constraint firstItem="4nx-pp-Ahc" firstAttribute="leading" secondItem="dAJ-Zt-q2y" secondAttribute="leading" id="e9f-aR-f5L"/>
@@ -162,6 +162,7 @@
                     <navigationItem key="navigationItem" title="Identification" id="h4S-7J-WvE"/>
                     <connections>
                         <outlet property="containerView" destination="sz8-14-rMC" id="dpZ-1y-dAK"/>
+                        <outlet property="historyCollectionHeightConstraint" destination="8xN-e5-MUo" id="AaW-IQ-44a"/>
                         <outlet property="historyCollectionView" destination="vFz-1I-rOM" id="Vi4-jj-4kl"/>
                         <outlet property="startButton" destination="FQA-lr-sA1" id="ObG-E6-yqv"/>
                         <outlet property="tableView" destination="6lX-AX-Dd8" id="4SF-by-AcE"/>
