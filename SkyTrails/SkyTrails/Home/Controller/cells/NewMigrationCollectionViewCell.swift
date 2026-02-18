@@ -35,14 +35,14 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         birdListCollectionView.dataSource = self
         birdListCollectionView.register(UINib(nibName: subcardViewCell.identifier, bundle: Bundle(for: subcardViewCell.self)), forCellWithReuseIdentifier: subcardViewCell.identifier)
         
-        let layout = UICollectionViewFlowLayout()
+        let layout = SnappingFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 250, height: 90)
         layout.minimumLineSpacing = 12
         layout.sectionInset = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         birdListCollectionView.collectionViewLayout = layout
         birdListCollectionView.showsHorizontalScrollIndicator = false
         birdListCollectionView.backgroundColor = .clear
+        birdListCollectionView.decelerationRate = .fast
     }
     
     override func layoutSubviews() {
@@ -51,9 +51,26 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
     
     private func updateNestedLayout() {
+        let cardHeight = self.bounds.height
+        let cardWidth = self.bounds.width
+        
+        // 1. Scale Fonts
+        let heightRatio = cardHeight / 440.0
+        
+        // Title: Min 17, max scales with height
+        let titleSize = max(17, 17 * heightRatio)
+        titleLabel.font = .systemFont(ofSize: titleSize, weight: .bold)
+        
+        // Others: Min 12, max scales with height
+        let otherSize = max(12, 12 * heightRatio)
+        subtitleLabel.font = .systemFont(ofSize: otherSize)
+        weekLabel.font = .systemFont(ofSize: otherSize)
+        
+        // Distance label needs special handling for attributed string size
+        updateDistanceLabelFont(size: otherSize)
+        
+        // 2. Scale Nested CollectionView Items
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-            let cardHeight = self.bounds.height
-            
             // Proportional height based on design ratio (90/440)
             var itemHeight = cardHeight * (90.0 / 440.0)
             var itemWidth = itemHeight * (25.0 / 9.0)
@@ -70,6 +87,33 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
                 layout.invalidateLayout()
             }
         }
+    }
+    
+    private func updateDistanceLabelFont(size: CGFloat) {
+        guard let existingText = distanceLabel.attributedText?.string else { return }
+        // The string starts with symbol attachment + " - " + distance
+        // We need to re-create it to scale the symbol too
+        
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: size, weight: .semibold)
+        let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
+            .withTintColor(.systemGray, renderingMode: .alwaysOriginal)
+        
+        let attachment = NSTextAttachment()
+        attachment.image = symbolImage
+        attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
+        
+        let attributedString = NSMutableAttributedString(attachment: attachment)
+        
+        // Extract just the distance part (everything after " - ") or use the whole string if logic fails
+        let cleanText: String
+        if existingText.contains(" - ") {
+            cleanText = existingText.components(separatedBy: " - ").last ?? existingText
+        } else {
+            cleanText = existingText
+        }
+        
+        attributedString.append(NSAttributedString(string: " - \(cleanText)", attributes: [.font: UIFont.systemFont(ofSize: size, weight: .semibold)]))
+        distanceLabel.attributedText = attributedString
     }
     
     private func setupAppearance() {

@@ -25,57 +25,84 @@ class subcardViewCell: UICollectionViewCell {
         setupAppearance()
     }
     
-    private func setupAppearance() {
-        contentView.backgroundColor = .systemBackground
-        contentView.layer.cornerRadius = 12
-        contentView.layer.masksToBounds = true
-        
-        birdImageView.layer.cornerRadius = 8
-        birdImageView.contentMode = .scaleAspectFill
-        
-        statusBadgeContainer.layer.cornerRadius = 6
-        
-        // Border for the cell to distinguish it from the parent card
-        contentView.layer.borderWidth = 1
-        contentView.layer.borderColor = UIColor.systemGray6.cgColor
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateFonts()
     }
     
-    func configure(with birdData: BirdSpeciesDisplay) {
-        print("🐦 [PredictionDebug] subcardViewCell configure: \(birdData.birdName)")
-        birdNameLabel.text = birdData.birdName
+    private func updateFonts() {
+        let currentHeight = self.bounds.height
+        let ratio = currentHeight / 90.0
+        let fontSize = max(12, 12 * ratio)
         
-        if let image = UIImage(named: birdData.birdImageName) {
-            birdImageView.image = image
-            print("🐦 [PredictionDebug]   ✅ Image loaded: \(birdData.birdImageName)")
-        } else {
-            birdImageView.image = UIImage(systemName: "bird.fill")
-            birdImageView.tintColor = .systemGray4
-            print("⚠️ [PredictionDebug]   ❌ Image NOT FOUND: \(birdData.birdImageName)")
-        }
         
-        // Badge
-        badgeTitleLabel.text = birdData.statusBadge.title
-        badgeSubtitleLabel.text = birdData.statusBadge.subtitle
-        
-        let badgeColor: UIColor
-        switch birdData.statusBadge.backgroundColorName {
-        case "systemGreen":  badgeColor = .systemGreen
-        case "systemBlue":   badgeColor = .systemBlue
-        case "systemOrange": badgeColor = .systemOrange
-        case "systemPink", "BadgePink": badgeColor = .systemPink
-        default:
-            // Fall back to named asset, then grey
-            badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
-        }
-        statusBadgeContainer.backgroundColor = badgeColor.withAlphaComponent(0.15)
-        print("🐦 [PredictionDebug]   Badge color: \(birdData.statusBadge.backgroundColorName)")
-        
-        if !birdData.statusBadge.iconName.isEmpty {
-            badgeIconImageView.image = UIImage(systemName: birdData.statusBadge.iconName)
-        }
-        
-        // Sightability
-        sightabilityTextLabel.text = "Sightability - \(birdData.sightabilityPercent)%"
-        print("🐦 [PredictionDebug]   Sightability set to \(birdData.sightabilityPercent)%")
+        birdNameLabel.font = .systemFont(ofSize: fontSize, weight: .semibold)
+        badgeTitleLabel.font = .systemFont(ofSize: fontSize)
+        badgeSubtitleLabel.font = .systemFont(ofSize: fontSize)
+        sightabilityIconLabel.font = .systemFont(ofSize: fontSize)
+        sightabilityTextLabel.font = .systemFont(ofSize: fontSize)
     }
-}
+    private func setupAppearance() {
+            contentView.backgroundColor = .systemBackground
+            contentView.layer.cornerRadius = 12
+            contentView.layer.masksToBounds = true
+            
+            birdImageView.layer.cornerRadius = 8
+            birdImageView.contentMode = .scaleAspectFill
+            
+            statusBadgeContainer.layer.cornerRadius = 6
+            
+            // Border for the cell to distinguish it from the parent card
+            contentView.layer.borderWidth = 1
+            contentView.layer.borderColor = UIColor.systemGray6.cgColor
+        
+            let config = UIImage.SymbolConfiguration(scale: .small)
+            
+            // 2. Load the image (Note: "binoculars.fill" is plural)
+            if let image = UIImage(systemName: "binoculars.fill", withConfiguration: config) {
+                // 3. Create an attachment
+                let attachment = NSTextAttachment()
+                attachment.image = image.withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+                sightabilityIconLabel.attributedText = NSAttributedString(attachment: attachment)
+            }
+        }
+        
+        func configure(with birdData: BirdSpeciesDisplay) {
+            print("🐦 [PredictionDebug] subcardViewCell configure: \(birdData.birdName)")
+            birdNameLabel.text = birdData.birdName
+            
+            if let image = UIImage(named: birdData.birdImageName) {
+                birdImageView.image = image
+                print("🐦 [PredictionDebug]   ✅ Image loaded: \(birdData.birdImageName)")
+            } else {
+                birdImageView.image = UIImage(systemName: "bird.fill")
+                birdImageView.tintColor = .systemGray4
+                print("⚠️ [PredictionDebug]   ❌ Image NOT FOUND: \(birdData.birdImageName)")
+            }
+            
+            // Badge
+            badgeTitleLabel.text = birdData.statusBadge.title
+            badgeSubtitleLabel.text = birdData.statusBadge.subtitle
+            
+            let badgeColor: UIColor
+            switch birdData.statusBadge.backgroundColorName {
+            case "systemGreen":  badgeColor = .systemGreen
+            case "systemBlue":   badgeColor = .systemBlue
+            case "systemOrange": badgeColor = .systemOrange
+            case "systemPink", "BadgePink": badgeColor = .systemPink
+            default:
+                // Fall back to named asset, then grey
+                badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
+            }
+            statusBadgeContainer.backgroundColor = badgeColor.withAlphaComponent(0.15)
+            print("🐦 [PredictionDebug]   Badge color: \(birdData.statusBadge.backgroundColorName)")
+            
+            if !birdData.statusBadge.iconName.isEmpty {
+                badgeIconImageView.image = UIImage(systemName: birdData.statusBadge.iconName)
+            }
+            
+            // Sightability
+            sightabilityTextLabel.text = "Sightability - \(birdData.sightabilityPercent)%"
+            print("🐦 [PredictionDebug]   Sightability set to \(birdData.sightabilityPercent)%")
+        }
+    }
