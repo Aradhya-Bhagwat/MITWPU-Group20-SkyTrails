@@ -42,9 +42,9 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
 
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 12
-        layout.minimumLineSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
+        layout.minimumInteritemSpacing = 8
+        layout.minimumLineSpacing = 12
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         shapeCollectionView.collectionViewLayout = layout
     }
 
@@ -53,27 +53,24 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else { return .zero }
 
-        let minItemWidth: CGFloat = 100
+        let minItemWidth: CGFloat = 120
         let maxItemsPerRow: CGFloat = 4
-        let interItemSpacing = layout.minimumInteritemSpacing
-        let sectionInsets = layout.sectionInset.left + layout.sectionInset.right
-        let availableWidth = collectionView.bounds.width - sectionInsets
-
+        let availableWidth = collectionView.bounds.width
+            - layout.sectionInset.left
+            - layout.sectionInset.right
+        
         var itemsPerRow: CGFloat = 1
         while true {
-            let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
-            let potentialWidth = (availableWidth - potentialTotalSpacing) / itemsPerRow
-            if potentialWidth >= minItemWidth {
+            let potentialWidth = (availableWidth - (layout.minimumInteritemSpacing * (itemsPerRow - 1))) / itemsPerRow
+            if potentialWidth >= minItemWidth && itemsPerRow < maxItemsPerRow {
                 itemsPerRow += 1
             } else {
-                itemsPerRow -= 1
+                if potentialWidth < minItemWidth && itemsPerRow > 1 { itemsPerRow -= 1 }
                 break
             }
         }
-    
-        itemsPerRow = max(1, min(itemsPerRow, maxItemsPerRow))
-        let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
-        let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
+        
+        let itemWidth = (availableWidth - (layout.minimumInteritemSpacing * (itemsPerRow - 1))) / itemsPerRow
         return CGSize(width: itemWidth, height: itemWidth)
     }
 
