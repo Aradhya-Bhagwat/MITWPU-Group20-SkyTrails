@@ -419,6 +419,19 @@
     },
     "birds": [
         {
+            "id": "550e8400-e29b-41d4-a716-446655440007",
+            "commonName": "Amur Falcon",
+            "scientificName": "Falco amurensis",
+            "staticImageName": "amur_falcon",
+            "family": "Falconidae",
+            "order_name": "Falconiformes",
+            "rarityLevel": "common",
+            "shape_id": "Accipitridae",
+            "size_category": 2,
+            "descriptionText": "A small raptor that breeds in Siberia and migrates across India to Southern Africa.",
+            "conservation_status": "Least Concern"
+        },
+        {
             "id": "550e8400-e29b-41d4-a716-446655440001",
             "commonName": "House Sparrow",
             "scientificName": "Passer domesticus",
