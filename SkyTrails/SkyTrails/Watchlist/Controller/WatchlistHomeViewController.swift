@@ -37,7 +37,13 @@ class WatchlistHomeViewController: UIViewController {
 		static let myWatchlistHeight: CGFloat = 280
 		static let customWatchlistHeight: CGFloat = 280
 		static let sharedWatchlistHeight: CGFloat = 140
+		static let emptyStateHeight: CGFloat = 200
 		static let headerHeight: CGFloat = 40
+	}
+
+	private var isMyWatchlistEmptyState: Bool {
+		guard let watchlist = myWatchlist else { return true }
+		return watchlist.stats.totalCount == 0
 	}
 	
 	
@@ -123,6 +129,10 @@ class WatchlistHomeViewController: UIViewController {
 			UINib(nibName: MyWatchlistCollectionViewCell.identifier, bundle: nil),
 			forCellWithReuseIdentifier: MyWatchlistCollectionViewCell.identifier
 		)
+		summaryCardCollectionView.register(
+			UINib(nibName: WatchlitEmptyCollectionViewCell.identifier, bundle: nil),
+			forCellWithReuseIdentifier: WatchlitEmptyCollectionViewCell.identifier
+		)
 		
 		summaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
 	}
@@ -142,7 +152,9 @@ extension WatchlistHomeViewController {
 		
 		switch sectionType {
 			case .myWatchlist:
-				selectedDTO = myWatchlist
+				if !isMyWatchlistEmptyState, indexPath.item == 0 {
+					selectedDTO = myWatchlist
+				}
 			case .customWatchlist:
 				if indexPath.item < customWatchlists.count {
 					selectedDTO = customWatchlists[indexPath.item]
@@ -306,9 +318,9 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		let count: Int
 		switch sectionType {
 			case .myWatchlist:
-				count = myWatchlist != nil ? 3 : 2
+				count = isMyWatchlistEmptyState ? myWatchlistEmptyStateActions().count : 3
 			case .customWatchlist:
-				count = customWatchlists.count
+				count = customWatchlists.isEmpty ? 1 : customWatchlists.count
 			case .sharedWatchlist:
 				count = sharedWatchlists.count
 		}
@@ -324,10 +336,13 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		
 		switch sectionType {
 			case .myWatchlist:
-				if indexPath.item == 0 && myWatchlist != nil {
+				if isMyWatchlistEmptyState {
+					return configureMyWatchlistEmptyStateCell(in: collectionView, at: indexPath)
+				}
+				if indexPath.item == 0 {
 					return configureMyWatchlistCell(in: collectionView, at: indexPath)
 				} else {
-					let actionIndex = myWatchlist != nil ? indexPath.item - 1 : indexPath.item
+					let actionIndex = indexPath.item - 1
 					if actionIndex == 0 {
 						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Add Observed", color: .systemGreen)
 					} else {
@@ -335,6 +350,14 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 					}
 				}
 			case .customWatchlist:
+				if customWatchlists.isEmpty {
+					return configureWatchlistEmptyStateCell(
+						in: collectionView,
+						at: indexPath,
+						title: "No custom watchlists yet",
+						subtitle: "Create a watchlist to organize birds you want to track"
+					)
+				}
 				return configureCustomWatchlistCell(in: collectionView, at: indexPath)
 			case .sharedWatchlist:
 				return configureSharedWatchlistCell(in: collectionView, at: indexPath)
@@ -346,12 +369,16 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		
 		switch sectionType {
 			case .myWatchlist:
-				if indexPath.item == 0 && myWatchlist != nil {
+				if isMyWatchlistEmptyState {
+					handleMyWatchlistEmptyStateAction(at: indexPath.item)
+					return
+				}
+				if indexPath.item == 0 {
 					if let wl = myWatchlist {
 						performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
 					}
 				} else {
-					let actionIndex = myWatchlist != nil ? indexPath.item - 1 : indexPath.item
+					let actionIndex = indexPath.item - 1
 					if actionIndex == 0 {
 						showObservedDetail()
 					} else {
@@ -360,11 +387,13 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				}
 				
 			case .customWatchlist:
+				guard !customWatchlists.isEmpty else { return }
 				if indexPath.item < customWatchlists.count {
 					performSegue(withIdentifier: "ShowSmartWatchlist", sender: customWatchlists[indexPath.item])
 				}
 				
 			case .sharedWatchlist:
+				guard !sharedWatchlists.isEmpty else { return }
 				if indexPath.item < sharedWatchlists.count {
 					performSegue(withIdentifier: "ShowSmartWatchlist", sender: sharedWatchlists[indexPath.item])
 				}
@@ -374,6 +403,39 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 
 // MARK: - Cell Configuration Helpers
 extension WatchlistHomeViewController {
+
+	private func myWatchlistEmptyStateActions() -> [(title: String, color: UIColor, icon: String, isEnabled: Bool)] {
+		return [
+			(title: "Add Observed", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
+			(title: "Add Unobserved", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
+			(title: "Create Watchlist", color: .systemBlue, icon: "custom.list.number.badge.plus", isEnabled: true)
+		]
+	}
+
+	private func configureMyWatchlistEmptyStateCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
+		let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
+		let actions = myWatchlistEmptyStateActions()
+		guard actions.indices.contains(indexPath.item) else { return cell }
+		let action = actions[indexPath.item]
+		cell.configure(icon: action.icon, title: action.title, color: action.color)
+		cell.isUserInteractionEnabled = action.isEnabled
+		return cell
+	}
+
+	private func handleMyWatchlistEmptyStateAction(at index: Int) {
+		let actions = myWatchlistEmptyStateActions()
+		guard actions.indices.contains(index), actions[index].isEnabled else { return }
+		switch index {
+			case 0:
+				showObservedDetail()
+			case 1:
+				showSpeciesSelection()
+			case 2:
+				navigateToCreateWatchlist()
+			default:
+				return
+		}
+	}
 	
 	private func configureAddBirdActionCell(in cv: UICollectionView, at indexPath: IndexPath, title: String, color: UIColor) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
@@ -382,6 +444,26 @@ extension WatchlistHomeViewController {
 			title: title,
 			color: color
 		)
+		cell.isUserInteractionEnabled = true
+		return cell
+	}
+
+	private func configureWatchlistEmptyStateCell(
+		in cv: UICollectionView,
+		at indexPath: IndexPath,
+		title: String,
+		subtitle: String
+	) -> UICollectionViewCell {
+		let cell = cv.dequeueReusableCell(
+			withReuseIdentifier: WatchlitEmptyCollectionViewCell.identifier,
+			for: indexPath
+		) as! WatchlitEmptyCollectionViewCell
+		cell.configure(
+			imageName: "watchlist_empty_bird",
+			title: title,
+			subtitle: subtitle
+		)
+		cell.isUserInteractionEnabled = false
 		return cell
 	}
 	
@@ -466,7 +548,7 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func layoutMyWatchlistSection() -> NSCollectionLayoutSection {
-		if myWatchlist != nil {
+		if !isMyWatchlistEmptyState {
 			// Layout: 80% MyWatchlist card + 20% vertical action cells
 			
 			// Main card item (80% width)
@@ -510,33 +592,58 @@ extension WatchlistHomeViewController {
 			section.boundarySupplementaryItems = [createHeader()]
 			return section
 			
-		} else {
-			// Layout: Just 2 action cells vertically at full width
-			
-			let actionItem = NSCollectionLayoutItem(
+			} else {
+				// Layout: exact 8 + card + 8 + card + 8 + card + 8
+				let actionCount = max(myWatchlistEmptyStateActions().count, 1)
+				let actionGroup = NSCollectionLayoutGroup.custom(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(1.0),
+						heightDimension: .absolute(140)
+					)
+				) { environment in
+					let groupWidth = environment.container.effectiveContentSize.width
+					let groupHeight = environment.container.effectiveContentSize.height
+					let sideSpacing: CGFloat = 8
+					let betweenSpacing: CGFloat = 8
+					let totalSpacing = (sideSpacing * 2) + (betweenSpacing * CGFloat(max(actionCount - 1, 0)))
+					let itemWidth = (groupWidth - totalSpacing) / CGFloat(actionCount)
+					
+					return (0..<actionCount).map { index in
+						let x = sideSpacing + CGFloat(index) * (itemWidth + betweenSpacing)
+						return NSCollectionLayoutGroupCustomItem(
+							frame: CGRect(x: x, y: 0, width: itemWidth, height: groupHeight)
+						)
+					}
+				}
+				
+				let section = NSCollectionLayoutSection(group: actionGroup)
+				section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
+				section.boundarySupplementaryItems = [createHeader()]
+				return section
+			}
+		}
+	
+	private func layoutCustomWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+		if customWatchlists.isEmpty {
+			let item = NSCollectionLayoutItem(
 				layoutSize: NSCollectionLayoutSize(
 					widthDimension: .fractionalWidth(1.0),
 					heightDimension: .fractionalHeight(1.0)
 				)
 			)
-			actionItem.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)
-			
-			let actionGroup = NSCollectionLayoutGroup.vertical(
+			let group = NSCollectionLayoutGroup.horizontal(
 				layoutSize: NSCollectionLayoutSize(
 					widthDimension: .fractionalWidth(1.0),
-					heightDimension: .absolute(140)
+					heightDimension: .absolute(LayoutConstants.emptyStateHeight)
 				),
-				subitems: [actionItem]
+				subitems: [item]
 			)
-			
-			let section = NSCollectionLayoutSection(group: actionGroup)
+			let section = NSCollectionLayoutSection(group: group)
 			section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
-			section.boundarySupplementaryItems = [createHeader()]
+			section.boundarySupplementaryItems = []
 			return section
 		}
-	}
-	
-	private func layoutCustomWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+
 		let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
 		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 12)
 		
@@ -549,7 +656,7 @@ extension WatchlistHomeViewController {
 		let section = NSCollectionLayoutSection(group: group)
 		section.orthogonalScrollingBehavior = .continuous
 		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
-		section.boundarySupplementaryItems = [createHeader()]
+		section.boundarySupplementaryItems = shouldShowHeader(for: .customWatchlist) ? [createHeader()] : []
 		return section
 	}
 	
@@ -580,8 +687,19 @@ extension WatchlistHomeViewController {
 		
 		let section = NSCollectionLayoutSection(group: group)
 		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
-		section.boundarySupplementaryItems = [createHeader()]
+		section.boundarySupplementaryItems = shouldShowHeader(for: .sharedWatchlist) ? [createHeader()] : []
 		return section
+	}
+
+	private func shouldShowHeader(for sectionType: WatchlistSection) -> Bool {
+		switch sectionType {
+		case .customWatchlist:
+			return !customWatchlists.isEmpty
+		case .sharedWatchlist:
+			return !sharedWatchlists.isEmpty
+		default:
+			return true
+		}
 	}
 	
 	private func createHeader() -> NSCollectionLayoutBoundarySupplementaryItem {
@@ -614,22 +732,23 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 				showPlus = false
 			case .customWatchlist:
 				// Show both chevron and plus
-				showChevron = true
-				showPlus = true
+				showChevron = shouldShowHeader(for: .customWatchlist)
+				showPlus = shouldShowHeader(for: .customWatchlist)
 			case .sharedWatchlist:
 				// Show both chevron and plus
-				showChevron = true
-				showPlus = true
+				showChevron = shouldShowHeader(for: .sharedWatchlist)
+				showPlus = shouldShowHeader(for: .sharedWatchlist)
 			}
 			
 			header.configure(
-				title: sectionType.title,
+				title: shouldShowHeader(for: sectionType) ? sectionType.title : "",
 				sectionIndex: indexPath.section,
 				showChevron: showChevron,
 				showPlus: showPlus,
 				delegate: self,
 				onPlusButtonTap: { [weak self] in
-					self?.navigateToCreateWatchlist()
+					guard let self = self, self.shouldShowHeader(for: sectionType) else { return }
+					self.navigateToCreateWatchlist()
 				}
 			)
 		}
@@ -639,6 +758,7 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 	
 	func didTapSeeAll(in section: Int) {
 		guard let sectionType = WatchlistSection(rawValue: section) else { return }
+		guard shouldShowHeader(for: sectionType) else { return }
 		switch sectionType {
 			case .customWatchlist:
 				performSegue(withIdentifier: "ShowCustomWatchlistGrid", sender: self)
