@@ -471,17 +471,17 @@ extension WatchlistHomeViewController {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = myWatchlist {
-			// Load images: bundled assets first, then user photos from disk
+			// Load images: user photos from disk first, then bundled assets
 			let images = watchlist.previewImages.compactMap { imagePath -> UIImage? in
-				// 1. Try bundled asset first
-				if let bundledImage = UIImage(named: imagePath) {
-					return bundledImage
-				}
-				// 2. Try loading from Documents/ObservedBirdPhotos/
+				// 1. Try loading from Documents/ObservedBirdPhotos/ first
 				let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 				let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 				let fileURL = photoDir.appendingPathComponent(imagePath)
-				return UIImage(contentsOfFile: fileURL.path)
+				if let diskImage = UIImage(contentsOfFile: fileURL.path) {
+					return diskImage
+				}
+				// 2. Fall back to bundled asset
+				return UIImage(named: imagePath)
 			}
 			
 			let data = WatchlistData(
