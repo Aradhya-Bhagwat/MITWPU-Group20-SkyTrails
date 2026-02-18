@@ -326,6 +326,48 @@ extension HomeViewController {
         self.present(alert, animated: true)
     }
 
+    private func showLocationRequiredAlert() {
+        let alert = UIAlertController(
+            title: "Location Required",
+            message: "To provide personalized birding recommendations, we need your home location. Would you like to use your current location?",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Use Current Location", style: .default) { [weak self] _ in
+            self?.useCurrentLocationAsHome()
+        })
+
+        alert.addAction(UIAlertAction(title: "Go to Profile", style: .default) { [weak self] _ in
+            self?.navigateToProfile()
+        })
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        self.present(alert, animated: true)
+    }
+
+
+    private func useCurrentLocationAsHome() {
+        Task {
+            do {
+                let locationData = try await LocationService.shared.getCurrentLocation()
+                let coord = CLLocationCoordinate2D(latitude: locationData.lat, longitude: locationData.lon)
+                await LocationPreferences.shared.setHomeLocation(coord, name: locationData.displayName)
+                
+                // Refresh data once location is set
+                self.loadHomeData()
+            } catch {
+                print("❌ [Home] Error getting current location: \(error)")
+                let errorAlert = UIAlertController(
+                    title: "Location Unavailable",
+                    message: "Could not determine your current location. Please ensure location services are enabled or set it manually in your profile.",
+                    preferredStyle: .alert
+                )
+                errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(errorAlert, animated: true)
+            }
+        }
+    }
+
 	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult]) {
 			
 		var inputData = PredictionInputData()
