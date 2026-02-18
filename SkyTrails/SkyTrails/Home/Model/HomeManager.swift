@@ -407,14 +407,14 @@ class HomeManager {
             let badge: BirdSpeciesDisplay.StatusBadge
             if weeks.contains(currentWeek) {
                 badge = BirdSpeciesDisplay.StatusBadge(
-                    title: "Present Now",
-                    subtitle: "Migrating Through",
+                    title: "Present",
+                    subtitle: "Migrating",
                     iconName: "arrow.triangle.turn.up.right.circle.fill",
                     backgroundColorName: "systemGreen"
                 )
             } else if let earliest = weeks.min(), earliest == currentWeek + 1 {
                 badge = BirdSpeciesDisplay.StatusBadge(
-                    title: "Arriving Soon",
+                    title: "Arriving",
                     subtitle: "Next Week",
                     iconName: "calendar.badge.plus",
                     backgroundColorName: "systemBlue"

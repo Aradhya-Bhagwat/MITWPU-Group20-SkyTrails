@@ -23,6 +23,10 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var birdListCollectionView: UICollectionView!
     
     private var birdSpecies: [BirdSpeciesDisplay] = []
+    private var selectedBirdIndex: Int = 0
+    private let expandedWidthRatio: CGFloat = 25.0 / 9.0
+    private let compactWidthRatio: CGFloat = 5.0 / 6.0
+    private let nestedItemHeightRatio: CGFloat = 90.0 / 440.0
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -35,14 +39,14 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         birdListCollectionView.dataSource = self
         birdListCollectionView.register(UINib(nibName: subcardViewCell.identifier, bundle: Bundle(for: subcardViewCell.self)), forCellWithReuseIdentifier: subcardViewCell.identifier)
         
-        let layout = SnappingFlowLayout()
+        let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumLineSpacing = 12
         layout.sectionInset = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         birdListCollectionView.collectionViewLayout = layout
         birdListCollectionView.showsHorizontalScrollIndicator = false
         birdListCollectionView.backgroundColor = .clear
-        birdListCollectionView.decelerationRate = .fast
+        birdListCollectionView.decelerationRate = .normal
     }
     
     override func layoutSubviews() {
@@ -52,7 +56,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     
     private func updateNestedLayout() {
         let cardHeight = self.bounds.height
-        let cardWidth = self.bounds.width
         
         // 1. Scale Fonts
         let heightRatio = cardHeight / 440.0
@@ -71,22 +74,30 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         
         // 2. Scale Nested CollectionView Items
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-            // Proportional height based on design ratio (90/440)
-            var itemHeight = cardHeight * (90.0 / 440.0)
-            var itemWidth = itemHeight * (25.0 / 9.0)
-            
-            // Cap width at 400px to maintain readability on large screens
-            if itemWidth > 400 {
-                itemWidth = 400
-                itemHeight = itemWidth * (9.0 / 25.0)
-            }
-            
-            let newSize = CGSize(width: itemWidth, height: itemHeight)
+            let itemHeight = nestedItemHeight(cardHeight: cardHeight)
+            let compactItemWidth = compactItemWidth(itemHeight: itemHeight)
+            let newSize = CGSize(width: compactItemWidth, height: itemHeight)
             if layout.itemSize != newSize {
                 layout.itemSize = newSize
                 layout.invalidateLayout()
             }
         }
+    }
+    
+    private func nestedItemHeight(cardHeight: CGFloat) -> CGFloat {
+        return cardHeight * nestedItemHeightRatio
+    }
+    
+    private func expandedItemWidth(itemHeight: CGFloat) -> CGFloat {
+        var width = itemHeight * expandedWidthRatio
+        if width > 400 {
+            width = 400
+        }
+        return width
+    }
+    
+    private func compactItemWidth(itemHeight: CGFloat) -> CGFloat {
+        return itemHeight * compactWidthRatio
     }
     
     private func updateDistanceLabelFont(size: CGFloat) {
@@ -155,8 +166,11 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         distanceLabel.attributedText = attributedString
         
         self.birdSpecies = hotspot.birdSpecies
+        selectedBirdIndex = 0
         print("🎨 [PredictionDebug]   birdListCollectionView.reloadData() with \(self.birdSpecies.count) items")
         birdListCollectionView.reloadData()
+        birdListCollectionView.layoutIfNeeded()
+        alignToSelectedCard(animated: false)
         
         setupMapPath(coordinates: migration.pathCoordinates)
     }
@@ -174,7 +188,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
 }
 
-extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollectionViewDelegate {
+extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return birdSpecies.count
     }
@@ -182,7 +196,80 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as! subcardViewCell
         cell.configure(with: birdSpecies[indexPath.row])
+        cell.setExpanded(indexPath.row == selectedBirdIndex)
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        updateSelectedBirdIndex(indexPath.item, animated: true)
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+        let itemHeight = nestedItemHeight(cardHeight: bounds.height)
+        let isSelected = indexPath.item == selectedBirdIndex
+        let width = isSelected ? expandedItemWidth(itemHeight: itemHeight) : compactItemWidth(itemHeight: itemHeight)
+        return CGSize(width: width, height: itemHeight)
+    }
+    
+    private func updateSelectedBirdIndex(_ newIndex: Int, animated: Bool) {
+        guard !birdSpecies.isEmpty else { return }
+        let clamped = min(max(newIndex, 0), birdSpecies.count - 1)
+        let oldIndex = selectedBirdIndex
+        guard clamped != oldIndex else {
+            if animated {
+                alignToSelectedCard(animated: true)
+            }
+            return
+        }
+        
+        selectedBirdIndex = clamped
+        birdListCollectionView.performBatchUpdates({
+            birdListCollectionView.reloadItems(at: [IndexPath(item: oldIndex, section: 0), IndexPath(item: clamped, section: 0)])
+        })
+        alignToSelectedCard(animated: animated)
+    }
+    
+    private func alignToSelectedCard(animated: Bool) {
+        guard !birdSpecies.isEmpty else { return }
+        birdListCollectionView.layoutIfNeeded()
+        let x = targetOffsetX(for: selectedBirdIndex)
+        birdListCollectionView.setContentOffset(CGPoint(x: x, y: 0), animated: animated)
+    }
+    
+    private func targetOffsetX(for index: Int) -> CGFloat {
+        guard let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
+            return birdListCollectionView.contentOffset.x
+        }
+        
+        let clamped = min(max(index, 0), birdSpecies.count - 1)
+        let indexPath = IndexPath(item: clamped, section: 0)
+        
+        let rawX: CGFloat
+        if clamped == birdSpecies.count - 1 {
+            rawX = maxScrollableOffsetX()
+        } else if let attributes = layout.layoutAttributesForItem(at: indexPath) {
+            rawX = attributes.frame.minX - layout.sectionInset.left
+        } else {
+            rawX = birdListCollectionView.contentOffset.x
+        }
+        
+        return clampOffsetX(rawX)
+    }
+    
+    private func maxScrollableOffsetX() -> CGFloat {
+        let maxX = birdListCollectionView.contentSize.width - birdListCollectionView.bounds.width + birdListCollectionView.contentInset.right
+        let minX = -birdListCollectionView.contentInset.left
+        return max(minX, maxX)
+    }
+    
+    private func clampOffsetX(_ x: CGFloat) -> CGFloat {
+        let minX = -birdListCollectionView.contentInset.left
+        let maxX = maxScrollableOffsetX()
+        return min(max(x, minX), maxX)
     }
 }
 
