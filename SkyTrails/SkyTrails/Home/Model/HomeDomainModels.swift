@@ -225,10 +225,14 @@ struct MigrationPrediction {
 
 struct HotspotPrediction {
     let placeName: String
+    let locationDetail: String // Added: City, State
+    let weekNumber: String // Added: e.g. "Week 8"
     let speciesCount: Int
     let distanceString: String
     let dateRange: String
     let placeImageName: String
+    let terrainTag: String // Added
+    let seasonTag: String // Added
     let hotspots: [HotspotBirdSpot]
     let birdSpecies: [BirdSpeciesDisplay] // Added for nested list
 }

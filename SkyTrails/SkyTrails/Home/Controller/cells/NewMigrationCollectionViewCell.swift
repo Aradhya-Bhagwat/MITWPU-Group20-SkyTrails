@@ -16,6 +16,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var distanceLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
+    @IBOutlet weak var weekLabel: UILabel!
     @IBOutlet weak var tagsStackView: UIStackView!
     @IBOutlet weak var tag1View: UIView!
     @IBOutlet weak var tag2View: UIView!
@@ -44,6 +45,33 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         birdListCollectionView.backgroundColor = .clear
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateNestedLayout()
+    }
+    
+    private func updateNestedLayout() {
+        if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+            let cardHeight = self.bounds.height
+            
+            // Proportional height based on design ratio (90/440)
+            var itemHeight = cardHeight * (90.0 / 440.0)
+            var itemWidth = itemHeight * (25.0 / 9.0)
+            
+            // Cap width at 400px to maintain readability on large screens
+            if itemWidth > 400 {
+                itemWidth = 400
+                itemHeight = itemWidth * (9.0 / 25.0)
+            }
+            
+            let newSize = CGSize(width: itemWidth, height: itemHeight)
+            if layout.itemSize != newSize {
+                layout.itemSize = newSize
+                layout.invalidateLayout()
+            }
+        }
+    }
+    
     private func setupAppearance() {
         contentView.backgroundColor = .systemBackground
         contentView.layer.cornerRadius = 16
@@ -65,8 +93,22 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
         print("🎨 [PredictionDebug] Cell configure: \(hotspot.placeName), birds: \(hotspot.birdSpecies.count)")
         titleLabel.text = hotspot.placeName
-        distanceLabel.text = hotspot.distanceString
-        subtitleLabel.text = hotspot.dateRange
+        subtitleLabel.text = hotspot.locationDetail
+        weekLabel.text = hotspot.weekNumber
+        
+        // Attributed string for distance with SF Symbol
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+        let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
+            .withTintColor(.systemGray, renderingMode: .alwaysOriginal)
+        
+        let attachment = NSTextAttachment()
+        attachment.image = symbolImage
+        // Adjust y offset to align with text
+        attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
+        
+        let attributedString = NSMutableAttributedString(attachment: attachment)
+        attributedString.append(NSAttributedString(string: " - \(hotspot.distanceString)"))
+        distanceLabel.attributedText = attributedString
         
         self.birdSpecies = hotspot.birdSpecies
         print("🎨 [PredictionDebug]   birdListCollectionView.reloadData() with \(self.birdSpecies.count) items")

@@ -588,13 +588,13 @@ extension HomeViewController {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let screenWidth = self.view.bounds.width
         let absoluteCardWidth = screenWidth - 32
-        let calculatedHeight: CGFloat
         
-        if screenWidth < 550 {
-            // Fixed height: map (185) + labels (~60) + subcard row (90) + padding
-            calculatedHeight = 380
-        } else {
-            calculatedHeight = absoluteCardWidth * (83.0 / 254.0)
+        // Use aspect ratio 361:440
+        var calculatedHeight = absoluteCardWidth * (440.0 / 361.0)
+        
+        // Limit height to 650 if screen width crosses 400
+        if screenWidth > 400 {
+            calculatedHeight = min(calculatedHeight, 650)
         }
 
         let groupSize = NSCollectionLayoutSize(
