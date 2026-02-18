@@ -215,6 +215,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     func updateSelectionState() {
+        guard isViewLoaded,
+              let warningLabel = warningLabel,
+              let startButton = startButton else { return }
         let selectedCount = options.filter { $0.isSelected }.count
         let isValid = selectedCount >= 2 && !isSeeding
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
@@ -448,6 +451,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
 
     private func updateHistoryCollectionHeight() {
+        guard isViewLoaded,
+              let historyCollectionView = historyCollectionView,
+              let historyCollectionHeightConstraint = historyCollectionHeightConstraint else { return }
         historyCollectionView.layoutIfNeeded()
         let contentHeight = historyCollectionView.collectionViewLayout.collectionViewContentSize.height
         let newHeight = max(contentHeight, 1)
