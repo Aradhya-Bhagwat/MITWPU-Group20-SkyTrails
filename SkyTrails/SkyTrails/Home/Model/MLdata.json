@@ -1,0 +1,103 @@
+{
+	"birdId": "550e8400-e29b-41d4-a716-446655440007",
+	"startWeek": 40,
+	"endWeek": 52,
+	"trajectoryPaths": [
+		{
+			"week": 40,
+			"lat": 26.3137,
+			"lon": 94.5143,
+			"probability": 35
+		},
+		{
+			"week": 41,
+			"lat": 26.0713,
+			"lon": 94.4814,
+			"probability": 1
+		},
+		{
+			"week": 42,
+			"lat": 26.0713,
+			"lon": 94.4814,
+			"probability": 1
+		},
+		{
+			"week": 43,
+			"lat": 26.5372,
+			"lon": 94.8174,
+			"probability": 1
+		},
+		{
+			"week": 44,
+			"lat": 26.0897,
+			"lon": 94.2125,
+			"probability": 0
+		},
+		{
+			"week": 45,
+			"lat": 26.0897,
+			"lon": 94.2125,
+			"probability": 0
+		},
+		{
+			"week": 46,
+			"lat": 23.9758,
+			"lon": 92.878,
+			"probability": 0
+		},
+		{
+			"week": 47,
+			"lat": 26.5372,
+			"lon": 94.8174,
+			"probability": 1
+		},
+		{
+			"week": 48,
+			"lat": 26.3137,
+			"lon": 94.5143,
+			"probability": 16
+		},
+		{
+			"week": 49,
+			"lat": 19.3183,
+			"lon": 72.8987,
+			"probability": 11
+		},
+		{
+			"week": 50,
+			"lat": 18.8339,
+			"lon": 73.4175,
+			"probability": 5
+		},
+		{
+			"week": 51,
+			"lat": 18.8339,
+			"lon": 73.4175,
+			"probability": 7
+		},
+		{
+			"week": 52,
+			"lat": 18.8339,
+			"lon": 73.4175,
+			"probability": 7
+		}
+	],
+	"hotspotScores": [
+		{
+			"hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678",
+			"probability": 95
+		},
+		{
+			"hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890",
+			"probability": 98
+		},
+		{
+			"hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012",
+			"probability": 90
+		},
+		{
+			"hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234",
+			"probability": 75
+		}
+	]
+}

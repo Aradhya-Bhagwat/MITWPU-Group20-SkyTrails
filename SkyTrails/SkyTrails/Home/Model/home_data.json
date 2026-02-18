@@ -1,6 +1,70 @@
 {
     "hotspots": [
         {
+            "id": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678",
+            "name": "Pangti Village",
+            "locality": "Nagaland",
+            "lat": 26.3137,
+            "lon": 94.5143,
+            "imageName": "amur_falcon",
+            "speciesList": [
+                {
+                    "id": "A1B2C3D4-E5F6-4789-01BC-DEF234567891",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440007",
+                    "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48],
+                    "probability": 95
+                }
+            ]
+        },
+        {
+            "id": "C1B2A3D4-E5F6-4789-01BC-DEF234567890",
+            "name": "Doyang Reservoir",
+            "locality": "Nagaland",
+            "lat": 26.3137,
+            "lon": 94.5143,
+            "imageName": "amur_falcon",
+            "speciesList": [
+                {
+                    "id": "B2C3D4E5-F6A7-4890-12CD-EF3456789012",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440007",
+                    "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48],
+                    "probability": 98
+                }
+            ]
+        },
+        {
+            "id": "D2C3B4A5-F6E7-4890-12CD-EF3456789012",
+            "name": "Umrangso",
+            "locality": "Assam",
+            "lat": 25.5,
+            "lon": 92.7,
+            "imageName": "amur_falcon",
+            "speciesList": [
+                {
+                    "id": "C3D4E5F6-A7B8-4901-23DE-F45678901234",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440007",
+                    "validWeeks": [40, 41, 42, 43, 44, 45, 46, 47, 48],
+                    "probability": 90
+                }
+            ]
+        },
+        {
+            "id": "E3D4C5B6-A7B8-4901-23DE-F45678901234",
+            "name": "Lonavala",
+            "locality": "Maharashtra",
+            "lat": 18.75,
+            "lon": 73.4,
+            "imageName": "amur_falcon",
+            "speciesList": [
+                {
+                    "id": "D4E5F6A7-B8C9-4012-34EF-567890123456",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440007",
+                    "validWeeks": [48, 49, 50, 51, 52],
+                    "probability": 75
+                }
+            ]
+        },
+        {
             "id": "3F2111CA-CDF5-49E5-9064-AC686AF63EF8",
             "name": "Okhla Bird Sanctuary",
             "locality": "Noida, Uttar Pradesh",
