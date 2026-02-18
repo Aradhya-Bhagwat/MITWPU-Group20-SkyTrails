@@ -35,6 +35,7 @@ class WatchlistHomeViewController: UIViewController {
 	
 	private struct LayoutConstants {
 		static let myWatchlistHeight: CGFloat = 280
+		static let actionCellHeight: CGFloat = 130
 		static let customWatchlistHeight: CGFloat = 280
 		static let sharedWatchlistHeight: CGFloat = 140
 		static let emptyStateHeight: CGFloat = 200
@@ -540,88 +541,147 @@ extension WatchlistHomeViewController {
 			guard let self = self, let sectionType = WatchlistSection(rawValue: sectionIndex) else { return nil }
 			
 			switch sectionType {
-				case .myWatchlist: return self.layoutMyWatchlistSection()
+				case .myWatchlist: return self.layoutMyWatchlistSection(env: layoutEnvironment)
 				case .customWatchlist: return self.layoutCustomWatchlistSection(env: layoutEnvironment)
 				case .sharedWatchlist: return self.layoutSharedWatchlistSection(env: layoutEnvironment)
 			}
 		}
 	}
 	
-	private func layoutMyWatchlistSection() -> NSCollectionLayoutSection {
+	private func layoutMyWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
+		let containerWidth = env.container.effectiveContentSize.width
+		let isWide = containerWidth > 700 // iPad / large-class width
+
 		if !isMyWatchlistEmptyState {
-			// Layout: 80% MyWatchlist card + 20% vertical action cells
-			
-			// Main card item (80% width)
-			let mainCardItem = NSCollectionLayoutItem(
-				layoutSize: NSCollectionLayoutSize(
-					widthDimension: .fractionalWidth(0.8),
-					heightDimension: .fractionalHeight(1.0)
+			if isWide {
+				// iPad layout: 80% MyWatchlist card + 20% vertical action cells (side by side)
+
+				// Main card item (80% width)
+				let mainCardItem = NSCollectionLayoutItem(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(0.8),
+						heightDimension: .fractionalHeight(1.0)
+					)
 				)
-			)
-			mainCardItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 4)
-			
-			// Action cell items (each takes 50% of vertical group)
-			let actionItem = NSCollectionLayoutItem(
-				layoutSize: NSCollectionLayoutSize(
-					widthDimension: .fractionalWidth(1.0),
-					heightDimension: .fractionalHeight(0.5)
-				)
-			)
-			actionItem.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 0)
-			
-			// Vertical group for the 2 action cells (20% width)
-			let actionGroup = NSCollectionLayoutGroup.vertical(
-				layoutSize: NSCollectionLayoutSize(
-					widthDimension: .fractionalWidth(0.2),
-					heightDimension: .fractionalHeight(1.0)
-				),
-				subitems: [actionItem, actionItem]
-			)
-			
-			// Horizontal container: main card + action group
-			let containerGroup = NSCollectionLayoutGroup.horizontal(
-				layoutSize: NSCollectionLayoutSize(
-					widthDimension: .fractionalWidth(1.0),
-					heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
-				),
-				subitems: [mainCardItem, actionGroup]
-			)
-			
-			let section = NSCollectionLayoutSection(group: containerGroup)
-			section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
-			section.boundarySupplementaryItems = [createHeader()]
-			return section
-			
-			} else {
-				// Layout: exact 8 + card + 8 + card + 8 + card + 8
-				let actionCount = max(myWatchlistEmptyStateActions().count, 1)
-				let actionGroup = NSCollectionLayoutGroup.custom(
+				mainCardItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 4)
+
+				// Action cell items (each takes 50% of vertical group)
+				let actionItem = NSCollectionLayoutItem(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
-						heightDimension: .absolute(140)
+						heightDimension: .fractionalHeight(0.5)
 					)
-				) { environment in
-					let groupWidth = environment.container.effectiveContentSize.width
-					let groupHeight = environment.container.effectiveContentSize.height
-					let sideSpacing: CGFloat = 8
-					let betweenSpacing: CGFloat = 8
-					let totalSpacing = (sideSpacing * 2) + (betweenSpacing * CGFloat(max(actionCount - 1, 0)))
-					let itemWidth = (groupWidth - totalSpacing) / CGFloat(actionCount)
-					
-					return (0..<actionCount).map { index in
-						let x = sideSpacing + CGFloat(index) * (itemWidth + betweenSpacing)
-						return NSCollectionLayoutGroupCustomItem(
-							frame: CGRect(x: x, y: 0, width: itemWidth, height: groupHeight)
-						)
-					}
-				}
-				
-				let section = NSCollectionLayoutSection(group: actionGroup)
-				section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
-				section.boundarySupplementaryItems = [createHeader()]
+				)
+				actionItem.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 0)
+
+				// Vertical group for the 2 action cells (20% width)
+				let actionGroup = NSCollectionLayoutGroup.vertical(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(0.2),
+						heightDimension: .fractionalHeight(1.0)
+					),
+					subitems: [actionItem, actionItem]
+				)
+
+				// Horizontal container: main card + action group
+				let containerGroup = NSCollectionLayoutGroup.horizontal(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(1.0),
+						heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+					),
+					subitems: [mainCardItem, actionGroup]
+				)
+
+				let section = NSCollectionLayoutSection(group: containerGroup)
+				section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
+				section.boundarySupplementaryItems = []
+				return section
+
+			} else {
+				// iPhone layout: MyWatchlist full width on row 1,
+				// two action cells side by side on row 2
+
+				// Row 1: Main card full width
+				let mainCardItem = NSCollectionLayoutItem(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(1.0),
+						heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+					)
+				)
+				mainCardItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+
+				let mainCardGroup = NSCollectionLayoutGroup.horizontal(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(1.0),
+						heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+					),
+					subitems: [mainCardItem]
+				)
+
+				// Row 2: Two action cells side by side
+				let actionItem = NSCollectionLayoutItem(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(0.5),
+						heightDimension: .fractionalHeight(1.0)
+					)
+				)
+				actionItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+
+				let actionGroup = NSCollectionLayoutGroup.horizontal(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(1.0),
+						heightDimension: .absolute(LayoutConstants.actionCellHeight)
+					),
+					subitems: [actionItem, actionItem]
+				)
+				actionGroup.interItemSpacing = .fixed(8)
+
+				// Vertical outer group: row 1 (main card) + row 2 (actions)
+				let outerGroup = NSCollectionLayoutGroup.vertical(
+					layoutSize: NSCollectionLayoutSize(
+						widthDimension: .fractionalWidth(1.0),
+						heightDimension: .absolute(LayoutConstants.myWatchlistHeight + 8 + LayoutConstants.actionCellHeight)
+					),
+					subitems: [mainCardGroup, actionGroup]
+				)
+				outerGroup.interItemSpacing = .fixed(8)
+
+				let section = NSCollectionLayoutSection(group: outerGroup)
+				section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
+				section.boundarySupplementaryItems = []
 				return section
 			}
+
+		} else {
+			// Empty state: exact 8 + card + 8 + card + 8 + card + 8
+			let actionCount = max(myWatchlistEmptyStateActions().count, 1)
+			let actionGroup = NSCollectionLayoutGroup.custom(
+				layoutSize: NSCollectionLayoutSize(
+					widthDimension: .fractionalWidth(1.0),
+					heightDimension: .absolute(140)
+				)
+			) { environment in
+				let groupWidth = environment.container.effectiveContentSize.width
+				let groupHeight = environment.container.effectiveContentSize.height
+				let sideSpacing: CGFloat = 8
+				let betweenSpacing: CGFloat = 8
+				let totalSpacing = (sideSpacing * 2) + (betweenSpacing * CGFloat(max(actionCount - 1, 0)))
+				let itemWidth = (groupWidth - totalSpacing) / CGFloat(actionCount)
+
+				return (0..<actionCount).map { index in
+					let x = sideSpacing + CGFloat(index) * (itemWidth + betweenSpacing)
+					return NSCollectionLayoutGroupCustomItem(
+						frame: CGRect(x: x, y: 0, width: itemWidth, height: groupHeight)
+					)
+				}
+			}
+
+			let section = NSCollectionLayoutSection(group: actionGroup)
+			section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 20, trailing: 0)
+			section.boundarySupplementaryItems = []
+			return section
 		}
+	}
 	
 	private func layoutCustomWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
 		if customWatchlists.isEmpty {
@@ -693,12 +753,12 @@ extension WatchlistHomeViewController {
 
 	private func shouldShowHeader(for sectionType: WatchlistSection) -> Bool {
 		switch sectionType {
+		case .myWatchlist:
+			return false
 		case .customWatchlist:
 			return !customWatchlists.isEmpty
 		case .sharedWatchlist:
 			return !sharedWatchlists.isEmpty
-		default:
-			return true
 		}
 	}
 	
