@@ -476,10 +476,14 @@ class HomeManager {
 
         let hotspotPrediction = HotspotPrediction(
             placeName: top.hotspot.name,
+            locationDetail: top.hotspot.locality ?? "Observation Point",
+            weekNumber: formatWeekDescription(week: currentWeek),
             speciesCount: top.migratingBirds.count,
             distanceString: distanceString,
             dateRange: "Weeks \(weekRange.first!)-\(weekRange.last!)",
             placeImageName: top.hotspot.imageName ?? "placeholder_image",
+            terrainTag: "Nature",
+            seasonTag: "Summer",
             hotspots: [HotspotBirdSpot(
                 coordinate: topHotspotLoc,
                 birdImageName: primaryBird.staticImageName
@@ -490,6 +494,40 @@ class HomeManager {
         print("🃏 [PredictionDebug]   Final displayBirds count: \(displayBirds.count)")
         print("🃏 [PredictionDebug] Total DynamicMapCards created: 1")
         return [DynamicMapCard.combined(migration: migrationPrediction, hotspot: hotspotPrediction)]
+    }
+
+    func formatWeekDescription(week: Int) -> String {
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        
+        var components = DateComponents()
+        components.weekOfYear = week
+        components.yearForWeekOfYear = currentYear
+        components.weekday = 2 // Monday
+        
+        guard let date = calendar.date(from: components) else {
+            return "Week \(week)"
+        }
+        
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMM"
+        let monthName = monthFormatter.string(from: date)
+        
+        let day = calendar.component(.day, from: date)
+        let weekInMonth: String
+        if day <= 7 {
+            weekInMonth = "1st week"
+        } else if day <= 14 {
+            weekInMonth = "2nd week"
+        } else if day <= 21 {
+            weekInMonth = "3rd week"
+        } else if day <= 28 {
+            weekInMonth = "4th week"
+        } else {
+            weekInMonth = "5th week"
+        }
+        
+        return "\(monthName) \(weekInMonth)"
     }
     
     func getRecentObservations(
