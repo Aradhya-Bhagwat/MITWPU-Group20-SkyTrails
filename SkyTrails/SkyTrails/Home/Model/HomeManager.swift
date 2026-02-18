@@ -80,7 +80,7 @@ class HomeManager {
             if let loc = location { return await getRecommendedSpots(near: loc) }
             return []
         }()
-        async let mapCards = getDynamicMapCards()
+        async let mapCards = getDynamicMapCards(userLocation: location)
         async let observations = getRecentObservations(near: location)
         async let news = newsService.fetchNews()
         
@@ -325,91 +325,171 @@ class HomeManager {
         }
     }
     
-    func getDynamicMapCards() async -> [DynamicMapCard] {
+    func getDynamicMapCards(userLocation: CLLocationCoordinate2D? = nil) async -> [DynamicMapCard] {
         print("🃏 [PredictionDebug] getDynamicMapCards: Starting card assembly")
-        let migrations = await getActiveMigrations()
-        print("🃏 [PredictionDebug]   Active migrations received: \(migrations.count)")
-        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-        print("🃏 [PredictionDebug]   Current week for hotspot lookup: \(currentWeek)")
-        
-        var cards: [DynamicMapCard] = []
-        
-        for (index, migration) in migrations.enumerated() {
-            print("🃏 [PredictionDebug] Processing migration #\(index + 1): \(migration.bird.commonName)")
-            let startLocation = migration.paths.first.map { "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))" } ?? "Unknown"
-            let endLocation = migration.paths.last.map { "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))" } ?? "Unknown"
-            
-            let nearbyHotspots = findNearbyHotspots(for: migration)
-            print("🃏 [PredictionDebug]   Nearby hotspots found: \(nearbyHotspots.count)")
-            let topHotspot = nearbyHotspots.first
-            if let top = topHotspot {
-                print("🃏 [PredictionDebug]   Top hotspot: \(top.name) at (\(top.lat), \(top.lon))")
-            } else {
-                print("⚠️ [PredictionDebug]   NO TOP HOTSPOT found within 100km of current position")
-            }
-            
-            var displayBirds: [BirdSpeciesDisplay] = []
-            
-            if let top = topHotspot {
-                let location = CLLocationCoordinate2D(latitude: top.lat, longitude: top.lon)
-                let birds = await hotspotManager.getBirdsPresent(at: location, duringWeek: currentWeek, radiusInKm: 50.0)
-                print("🃏 [PredictionDebug]   Birds present at hotspot: \(birds.count)")
-                
-                displayBirds = birds.prefix(5).map { bird in
-                    // Find presence for this specific hotspot if possible to get probability
-                    let presence = top.speciesList?.first(where: { $0.bird?.id == bird.id })
-                    let prob = presence?.probability ?? Int.random(in: 60...90)
-                    print("🃏 [PredictionDebug]     → \(bird.commonName) (\(prob)%)")
-                    
-                    return BirdSpeciesDisplay(
-                        birdName: bird.commonName,
-                        birdImageName: bird.staticImageName,
-                        statusBadge: BirdSpeciesDisplay.StatusBadge(
-                            title: "Local Species",
-                            subtitle: "Year-round",
-                            iconName: "mappin.and.ellipse",
-                            backgroundColorName: "BadgePink"
-                        ),
-                        sightabilityPercent: prob
-                    )
-                }
-            }
-            
-            print("🃏 [PredictionDebug]   Final displayBirds array count: \(displayBirds.count)")
-            
-            let hotspot = HotspotPrediction(
-                placeName: topHotspot?.name ?? "Migration Zone",
-                speciesCount: topHotspot?.speciesList?.count ?? 0,
-                distanceString: topHotspot != nil ? "Nearby" : "N/A",
-                dateRange: migration.dateRange,
-                placeImageName: topHotspot?.imageName ?? "placeholder_image",
-                hotspots: nearbyHotspots.prefix(3).map { hotspot in
-                    HotspotBirdSpot(
-                        coordinate: CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon),
-                        birdImageName: migration.bird.staticImageName
-                    )
-                },
-                birdSpecies: displayBirds
-            )
 
-            let prediction = MigrationPrediction(
-                birdName: migration.bird.commonName,
-                birdImageName: migration.bird.staticImageName,
-                startLocation: startLocation,
-                endLocation: endLocation,
-                currentProgress: migration.progress,
-                dateRange: migration.dateRange,
-                pathCoordinates: migration.paths.map {
-                    CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
-                }
-            )
-
-            print("🃏 [PredictionDebug]   Created combined card for: \(prediction.birdName)")
-            cards.append(DynamicMapCard.combined(migration: prediction, hotspot: hotspot))
+        // 1. Require user location — prefer passed-in value, fall back to live service
+        guard let userLocation = userLocation ?? locationService.currentLocation else {
+            print("⚠️ [PredictionDebug] getDynamicMapCards: No user location available")
+            return []
         }
-        
-        print("🃏 [PredictionDebug] Total DynamicMapCards created: \(cards.count)")
-        return cards
+        print("🃏 [PredictionDebug]   User location: \(userLocation.latitude), \(userLocation.longitude)")
+
+        // 2. Find all hotspots within 100 km of user, sorted closest-first
+        let nearbyHotspots = findNearbyHotspots(near: userLocation, radiusKm: 100.0)
+        print("🃏 [PredictionDebug]   Hotspots within 100km: \(nearbyHotspots.count)")
+        guard !nearbyHotspots.isEmpty else {
+            print("⚠️ [PredictionDebug]   No hotspots found near user — returning empty")
+            return []
+        }
+
+        // 3. Build week range: current week + next 4 (wrap at 52)
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        let weekRange = (currentWeek...(currentWeek + 4)).map { ($0 - 1) % 52 + 1 }
+        print("🃏 [PredictionDebug]   Week range: \(weekRange)")
+
+        // 4. Gather active migrations for context (bird IDs + path data)
+        let migrations = await getActiveMigrations()
+        let migratingBirdIds = Set(migrations.compactMap { $0.bird.id })
+        let migrationsByBirdId: [UUID: MigrationCardResult] = Dictionary(
+            migrations.map { ($0.bird.id, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        print("🃏 [PredictionDebug]   Active migrating species: \(migratingBirdIds.count)")
+
+        // 5. Score every nearby hotspot
+        struct HotspotScore {
+            let hotspot: Hotspot
+            let migratingBirds: [(bird: Bird, weeks: [Int])]
+            let distance: Double   // metres
+            let score: Double      // higher = better
+        }
+
+        var scoredHotspots: [HotspotScore] = []
+
+        for hotspot in nearbyHotspots {
+            let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
+
+            // Query birds present at this hotspot (small radius — it's the hotspot itself)
+            let birdsWithWeeks = await hotspotManager.getBirdsPresent(
+                at: hotspotLoc,
+                duringWeeks: weekRange,
+                radiusInKm: 10.0
+            )
+
+            // Keep only actively migrating birds
+            let migratingBirds = birdsWithWeeks.filter { migratingBirdIds.contains($0.bird.id) }
+            guard !migratingBirds.isEmpty else {
+                print("🃏 [PredictionDebug]   Hotspot '\(hotspot.name)': 0 migrating birds — skip")
+                continue
+            }
+
+            let distance = locationService.distance(from: userLocation, to: hotspotLoc)
+            // Score: prioritise species count, break ties by proximity
+            let score = Double(migratingBirds.count) * 1_000.0 - distance
+
+            print("🃏 [PredictionDebug]   Hotspot '\(hotspot.name)': \(migratingBirds.count) birds, \(Int(distance/1000))km, score \(Int(score))")
+            scoredHotspots.append(HotspotScore(hotspot: hotspot, migratingBirds: migratingBirds, distance: distance, score: score))
+        }
+
+        // 6. Pick single best hotspot
+        guard let top = scoredHotspots.max(by: { $0.score < $1.score }) else {
+            print("⚠️ [PredictionDebug]   No hotspots with migrating birds found — returning empty")
+            return []
+        }
+        print("🃏 [PredictionDebug]   Selected top hotspot: '\(top.hotspot.name)'")
+
+        // 7. Build bird sub-cards
+        let displayBirds: [BirdSpeciesDisplay] = top.migratingBirds.map { birdData in
+            let bird = birdData.bird
+            let weeks = birdData.weeks
+
+            let badge: BirdSpeciesDisplay.StatusBadge
+            if weeks.contains(currentWeek) {
+                badge = BirdSpeciesDisplay.StatusBadge(
+                    title: "Present Now",
+                    subtitle: "Migrating Through",
+                    iconName: "arrow.triangle.turn.up.right.circle.fill",
+                    backgroundColorName: "systemGreen"
+                )
+            } else if let earliest = weeks.min(), earliest == currentWeek + 1 {
+                badge = BirdSpeciesDisplay.StatusBadge(
+                    title: "Arriving Soon",
+                    subtitle: "Next Week",
+                    iconName: "calendar.badge.plus",
+                    backgroundColorName: "systemBlue"
+                )
+            } else {
+                let arrivalWeek = weeks.min() ?? (currentWeek + 2)
+                badge = BirdSpeciesDisplay.StatusBadge(
+                    title: "Coming Soon",
+                    subtitle: "Week \(arrivalWeek)",
+                    iconName: "clock.fill",
+                    backgroundColorName: "systemOrange"
+                )
+            }
+
+            let probability = top.hotspot.speciesList?
+                .first(where: { $0.bird?.id == bird.id })?
+                .probability ?? 70
+
+            print("🃏 [PredictionDebug]     → \(bird.commonName), weeks: \(weeks), prob: \(probability)%")
+            return BirdSpeciesDisplay(
+                birdName: bird.commonName,
+                birdImageName: bird.staticImageName,
+                statusBadge: badge,
+                sightabilityPercent: probability
+            )
+        }
+
+        // 8. Pick primary bird (highest probability at this hotspot) for trajectory overlay
+        let primaryBird = top.migratingBirds.max { a, b in
+            let pa = top.hotspot.speciesList?.first(where: { $0.bird?.id == a.bird.id })?.probability ?? 0
+            let pb = top.hotspot.speciesList?.first(where: { $0.bird?.id == b.bird.id })?.probability ?? 0
+            return pa < pb
+        }?.bird ?? top.migratingBirds[0].bird
+
+        let primaryMigration = migrationsByBirdId[primaryBird.id]
+
+        // 9. Distance string
+        let distanceKm = Int(top.distance / 1000)
+        let distanceString = distanceKm == 0 ? "Nearby" : "\(distanceKm) km"
+
+        // 10. Assemble card models
+        let topHotspotLoc = CLLocationCoordinate2D(latitude: top.hotspot.lat, longitude: top.hotspot.lon)
+
+        let migrationPrediction = MigrationPrediction(
+            birdName: primaryBird.commonName,
+            birdImageName: primaryBird.staticImageName,
+            startLocation: primaryMigration?.paths.first.map {
+                "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))"
+            } ?? "South",
+            endLocation: primaryMigration?.paths.last.map {
+                "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))"
+            } ?? "North",
+            currentProgress: primaryMigration?.progress ?? 0.5,
+            dateRange: "Weeks \(weekRange.first!)-\(weekRange.last!)",
+            pathCoordinates: primaryMigration?.paths.map {
+                CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
+            } ?? []
+        )
+
+        let hotspotPrediction = HotspotPrediction(
+            placeName: top.hotspot.name,
+            speciesCount: top.migratingBirds.count,
+            distanceString: distanceString,
+            dateRange: "Weeks \(weekRange.first!)-\(weekRange.last!)",
+            placeImageName: top.hotspot.imageName ?? "placeholder_image",
+            hotspots: [HotspotBirdSpot(
+                coordinate: topHotspotLoc,
+                birdImageName: primaryBird.staticImageName
+            )],
+            birdSpecies: displayBirds
+        )
+
+        print("🃏 [PredictionDebug]   Final displayBirds count: \(displayBirds.count)")
+        print("🃏 [PredictionDebug] Total DynamicMapCards created: 1")
+        return [DynamicMapCard.combined(migration: migrationPrediction, hotspot: hotspotPrediction)]
     }
     
     func getRecentObservations(
@@ -554,9 +634,7 @@ class HomeManager {
         return (start, end)
     }
     
-    private func findNearbyHotspots(for migration: MigrationCardResult) -> [Hotspot] {
-        guard let currentPos = migration.currentPosition else { return [] }
-        
+    private func findNearbyHotspots(near location: CLLocationCoordinate2D, radiusKm: Double = 100.0) -> [Hotspot] {
         let descriptor = FetchDescriptor<Hotspot>()
         let allHotspots: [Hotspot]
         do {
@@ -565,15 +643,20 @@ class HomeManager {
             logger.log(error: error, context: "HomeManager.findNearbyHotspots")
             allHotspots = []
         }
-        
-        let currentLoc = CLLocationCoordinate2D(latitude: currentPos.latitude, longitude: currentPos.longitude)
-        
+
+        let radiusMeters = radiusKm * 1000
+
         let nearby = allHotspots.filter { hotspot in
             let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
-            return locationService.distance(from: currentLoc, to: hotspotLoc) <= 100_000
+            return locationService.distance(from: location, to: hotspotLoc) <= radiusMeters
         }
-        
-        return Array(nearby.prefix(3))
+
+        // Sort closest first
+        return nearby.sorted { h1, h2 in
+            let d1 = locationService.distance(from: location, to: CLLocationCoordinate2D(latitude: h1.lat, longitude: h1.lon))
+            let d2 = locationService.distance(from: location, to: CLLocationCoordinate2D(latitude: h2.lat, longitude: h2.lon))
+            return d1 < d2
+        }
     }
     
     // MARK: - Legacy Compatibility
@@ -726,6 +809,47 @@ final class HotspotManager {
         let result = Array(uniqueBirds)
         birdsCache.setObject(result as NSArray, forKey: cacheKey)
         return result
+    }
+
+    /// Returns birds present at the given location during ANY of the specified weeks,
+    /// along with the sorted list of matching weeks for each bird.
+    func getBirdsPresent(
+        at location: CLLocationCoordinate2D,
+        duringWeeks weeks: [Int],
+        radiusInKm: Double = 50.0
+    ) async -> [(bird: Bird, weeks: [Int])] {
+        let descriptor = FetchDescriptor<Hotspot>()
+        let allHotspots: [Hotspot]
+        do {
+            allHotspots = try modelContext.fetch(descriptor)
+        } catch {
+            logger.log(error: error, context: "HotspotManager.getBirdsPresent(duringWeeks:)")
+            allHotspots = []
+        }
+
+        let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
+        let nearbyHotspots = allHotspots.filter { hotspot in
+            let hotspotLoc = CLLocation(latitude: hotspot.lat, longitude: hotspot.lon)
+            return hotspotLoc.distance(from: queryLoc) <= (radiusInKm * 1000)
+        }
+
+        var birdWeekMap: [UUID: Set<Int>] = [:]
+        var birdMap: [UUID: Bird] = [:]
+
+        for hotspot in nearbyHotspots {
+            guard let speciesList = hotspot.speciesList else { continue }
+            for presence in speciesList {
+                guard let bird = presence.bird, let validWeeks = presence.validWeeks else { continue }
+                let matchingWeeks = weeks.filter { validWeeks.contains($0) }
+                guard !matchingWeeks.isEmpty else { continue }
+                birdWeekMap[bird.id, default: []].formUnion(matchingWeeks)
+                birdMap[bird.id] = bird
+            }
+        }
+
+        return birdMap.values.map { bird in
+            (bird: bird, weeks: Array(birdWeekMap[bird.id] ?? []).sorted())
+        }
     }
 }
 

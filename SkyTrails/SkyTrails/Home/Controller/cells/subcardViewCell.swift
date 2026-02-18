@@ -57,13 +57,18 @@ class subcardViewCell: UICollectionViewCell {
         badgeTitleLabel.text = birdData.statusBadge.title
         badgeSubtitleLabel.text = birdData.statusBadge.subtitle
         
-        if let badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) {
-            statusBadgeContainer.backgroundColor = badgeColor
-            print("🐦 [PredictionDebug]   ✅ Badge color loaded: \(birdData.statusBadge.backgroundColorName)")
-        } else {
-            statusBadgeContainer.backgroundColor = .systemPink.withAlphaComponent(0.1)
-            print("⚠️ [PredictionDebug]   ❌ Badge color NOT FOUND: \(birdData.statusBadge.backgroundColorName)")
+        let badgeColor: UIColor
+        switch birdData.statusBadge.backgroundColorName {
+        case "systemGreen":  badgeColor = .systemGreen
+        case "systemBlue":   badgeColor = .systemBlue
+        case "systemOrange": badgeColor = .systemOrange
+        case "systemPink", "BadgePink": badgeColor = .systemPink
+        default:
+            // Fall back to named asset, then grey
+            badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
         }
+        statusBadgeContainer.backgroundColor = badgeColor.withAlphaComponent(0.15)
+        print("🐦 [PredictionDebug]   Badge color: \(birdData.statusBadge.backgroundColorName)")
         
         if !birdData.statusBadge.iconName.isEmpty {
             badgeIconImageView.image = UIImage(systemName: birdData.statusBadge.iconName)

@@ -749,6 +749,98 @@
                     "probability": 68
                 }
             ]
+        },
+        {
+            "id": "F1A2B3C4-D5E6-7F89-0A1B-2C3D4E5F6A7B",
+            "name": "Bhandardara Lake",
+            "locality": "Ahmednagar, Maharashtra",
+            "lat": 19.55,
+            "lon": 73.75,
+            "imageName": "spot_bhandardara",
+            "speciesList": [
+                {
+                    "id": "B1C2D3E4-F5A6-7B89-0C1D-2E3F4A5B6C7D",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440001",
+                    "validWeeks": [7, 8, 9, 10],
+                    "probability": 85
+                },
+                {
+                    "id": "C2D3E4F5-A6B7-8C90-1D2E-3F4A5B6C7D8E",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440002",
+                    "validWeeks": [7, 8, 9, 10, 11],
+                    "probability": 80
+                },
+                {
+                    "id": "D3E4F5A6-B7C8-9D01-2E3F-4A5B6C7D8E9F",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440003",
+                    "validWeeks": [7, 8, 9, 10, 11, 12],
+                    "probability": 90
+                },
+                {
+                    "id": "E4F5A6B7-C8D9-0E12-3F4A-5B6C7D8E9F0A",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440004",
+                    "validWeeks": [7, 8, 9, 10, 11],
+                    "probability": 75
+                },
+                {
+                    "id": "F5A6B7C8-D9E0-1F23-4A5B-6C7D8E9F0A1B",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440005",
+                    "validWeeks": [8, 9, 10, 11, 12],
+                    "probability": 70
+                },
+                {
+                    "id": "A6B7C8D9-E0F1-2A34-5B6C-7D8E9F0A1B2C",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440006",
+                    "validWeeks": [7, 8, 9, 10],
+                    "probability": 85
+                }
+            ]
+        },
+        {
+            "id": "B2C3D4E5-F6A7-8B90-1C2D-3E4F5A6B7C8D",
+            "name": "Ahmednagar Bird Reserve",
+            "locality": "Ahmednagar, Maharashtra",
+            "lat": 19.1,
+            "lon": 74.7,
+            "imageName": "spot_ahmednagar",
+            "speciesList": [
+                {
+                    "id": "C3D4E5F6-A7B8-9C01-2D3E-4F5A6B7C8D9E",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440001",
+                    "validWeeks": [7, 8, 9],
+                    "probability": 80
+                },
+                {
+                    "id": "D4E5F6A7-B8C9-0D12-3E4F-5A6B7C8D9E0F",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440002",
+                    "validWeeks": [7, 8, 9, 10],
+                    "probability": 85
+                },
+                {
+                    "id": "E5F6A7B8-C9D0-1E23-4F5A-6B7C8D9E0F1A",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440003",
+                    "validWeeks": [8, 9, 10, 11],
+                    "probability": 75
+                },
+                {
+                    "id": "F6A7B8C9-D0E1-2F34-5A6B-7C8D9E0F1A2B",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440004",
+                    "validWeeks": [8, 9, 10],
+                    "probability": 80
+                },
+                {
+                    "id": "A7B8C9D0-E1F2-3A45-6B7C-8D9E0F1A2B3C",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440005",
+                    "validWeeks": [8, 9, 10, 11],
+                    "probability": 65
+                },
+                {
+                    "id": "B8C9D0E1-F2A3-4B56-7C8D-9E0F1A2B3C4D",
+                    "birdId": "550e8400-e29b-41d4-a716-446655440006",
+                    "validWeeks": [7, 8, 9, 10],
+                    "probability": 80
+                }
+            ]
         }
     ],
     "migration_sessions": [
@@ -1351,9 +1443,7 @@
                     "probability": 10
                 }
             ]
-        }
-    ],
-    "migration_sessions": [
+        },
         {
             "id": "B6C7D8E9-F0A1-4B2C-8D3E-5F6A7B8C9D0E",
             "birdId": "550e8400-e29b-41d4-a716-446655440003",

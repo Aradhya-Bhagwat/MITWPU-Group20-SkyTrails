@@ -3,13 +3,14 @@ import CoreLocation
 import MapKit
 
 protocol LocationServiceProtocol: Sendable {
+    var currentLocation: CLLocationCoordinate2D? { get }
     func parseCoordinate(from locationString: String) -> CLLocationCoordinate2D?
     func distance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> CLLocationDistance
 }
 
 /// A centralized service for geocoding and location-related operations in the Watchlist module.
 @MainActor
-final class LocationService: NSObject, LocationServiceProtocol {
+final class LocationService: NSObject, LocationServiceProtocol, CLLocationManagerDelegate {
     static let shared = LocationService()
     
     private let locationManager = CLLocationManager()
@@ -24,6 +25,13 @@ final class LocationService: NSObject, LocationServiceProtocol {
         self.logger = logger ?? LoggingService.shared
         super.init()
         searchCompleter.delegate = self
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        // Start updates if already authorized (e.g. re-launch after first grant)
+        let status = locationManager.authorizationStatus
+        if status == .authorizedAlways || status == .authorizedWhenInUse {
+            locationManager.startUpdatingLocation()
+        }
     }
     
     // MARK: - Protocol Methods
@@ -121,6 +129,9 @@ final class LocationService: NSObject, LocationServiceProtocol {
                 switch result {
                 case .success(let location):
                     Task {
+                        // Persist immediately so currentLocation is available without waiting for reverse-geocode
+                        await MainActor.run { self.currentLocation = location.coordinate }
+
                         let name = await self.reverseGeocode(
                             lat: location.coordinate.latitude,
                             lon: location.coordinate.longitude
@@ -183,6 +194,31 @@ final class LocationService: NSObject, LocationServiceProtocol {
         }
     }
     
+    // MARK: - CLLocationManagerDelegate (continuous updates)
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        // Only update if this is from the manager owned by LocationService itself
+        // (helper delegates use their own manager instances passed in)
+        guard manager === locationManager else { return }
+        currentLocation = location.coordinate
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        guard manager === locationManager else { return }
+        if status == .authorizedAlways || status == .authorizedWhenInUse {
+            locationManager.startUpdatingLocation()
+        }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard manager === locationManager else { return }
+        let status = manager.authorizationStatus
+        if status == .authorizedAlways || status == .authorizedWhenInUse {
+            locationManager.startUpdatingLocation()
+        }
+    }
+
     // MARK: - Autocomplete
     
     /// Get location suggestions for autocomplete
