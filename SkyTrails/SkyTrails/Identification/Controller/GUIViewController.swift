@@ -59,14 +59,14 @@ class GUIViewController: UIViewController {
     
     private func loadData() {
         // Aligning with Manager: Get marks based on tempSelectedAreas strings
-        guard let selectedAreas = Optional(viewModel.tempSelectedAreas), !selectedAreas.isEmpty else {
+        guard !viewModel.tempSelectedAreas.isEmpty else {
             self.categories = []
             return
         }
         
         // Filter the marks belonging to the selected shape
         let allMarksForShape = viewModel.selectedShape?.fieldMarks ?? []
-        self.categories = allMarksForShape.filter { selectedAreas.contains($0.area) }
+        self.categories = allMarksForShape.filter { viewModel.tempSelectedAreas.contains($0.area) }
         
         // Sync already selected variations from the viewModel if they exist
         for mark in categories {
