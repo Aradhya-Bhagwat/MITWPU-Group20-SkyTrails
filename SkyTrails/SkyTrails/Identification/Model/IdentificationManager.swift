@@ -60,25 +60,42 @@ class IdentificationManager {
     
     func availableShapesForSelectedSize() -> [BirdShape] {
         print("DEBUG: availableShapesForSelectedSize called. Size range: \(selectedSizeRange)")
-        guard !selectedSizeRange.isEmpty else { return allShapes }
-        
+
         do {
-            let predicate = #Predicate<Bird> { bird in
-                if let sizeCategory = bird.size_category {
-                    return selectedSizeRange.contains(sizeCategory)
-                } else {
-                    return false
+            let birdsInScope: [Bird]
+            if selectedSizeRange.isEmpty {
+                birdsInScope = try modelContext.fetch(FetchDescriptor<Bird>())
+            } else {
+                let predicate = #Predicate<Bird> { bird in
+                    if let sizeCategory = bird.size_category {
+                        return selectedSizeRange.contains(sizeCategory)
+                    } else {
+                        return false
+                    }
+                }
+                birdsInScope = try modelContext.fetch(FetchDescriptor<Bird>(predicate: predicate))
+            }
+
+            let birdShapeIds = Set(birdsInScope.compactMap { $0.shape_id })
+            var visibleShapeIds = birdShapeIds
+
+            let needsFieldMarks = selectedMenuOptionRawValues.contains(FilterCategory.fieldMarks.rawValue)
+            if needsFieldMarks {
+                let marks = try modelContext.fetch(FetchDescriptor<BirdFieldMark>())
+                let markShapeIds = Set(marks.compactMap { $0.shape?.id })
+                let intersection = birdShapeIds.intersection(markShapeIds)
+                if !intersection.isEmpty {
+                    visibleShapeIds = intersection
+                } else if !markShapeIds.isEmpty {
+                    visibleShapeIds = markShapeIds
                 }
             }
 
-            let birdDescriptor = FetchDescriptor<Bird>(predicate: predicate)
-            let birdsInSize = try modelContext.fetch(birdDescriptor)
-            let validShapeIds = Set(birdsInSize.compactMap { $0.shape_id })
-            let filtered = allShapes.filter { validShapeIds.contains($0.id) }
-            return filtered
-            
+            let filtered = allShapes.filter { visibleShapeIds.contains($0.id) }
+            return filtered.isEmpty ? allShapes : filtered
+
         } catch {
-            print("Error fetching birds for size range: \(error)")
+            print("Error fetching shapes for current filters: \(error)")
             return allShapes
         }
     }

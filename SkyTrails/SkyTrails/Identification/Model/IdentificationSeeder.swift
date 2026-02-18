@@ -64,12 +64,28 @@ final class IdentificationSeeder {
         let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
         let fieldMarkCount = try context.fetchCount(FetchDescriptor<BirdFieldMark>())
         let variantCount = try context.fetchCount(FetchDescriptor<FieldMarkVariant>())
+        let linkedFieldMarkCount = try context.fetchCount(
+            FetchDescriptor<BirdFieldMark>(predicate: #Predicate<BirdFieldMark> { mark in
+                mark.shape != nil
+            })
+        )
+        let linkedVariantCount = try context.fetchCount(
+            FetchDescriptor<FieldMarkVariant>(predicate: #Predicate<FieldMarkVariant> { variant in
+                variant.fieldMark != nil
+            })
+        )
         let identificationBirdCount = try context.fetchCount(
             FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
                 bird.shape_id != nil && bird.size_category != nil
             })
         )
-        let needsSeeding = shapeCount == 0 || fieldMarkCount == 0 || variantCount == 0 || identificationBirdCount == 0
+        let needsSeeding =
+            shapeCount == 0 ||
+            fieldMarkCount == 0 ||
+            variantCount == 0 ||
+            identificationBirdCount == 0 ||
+            linkedFieldMarkCount < fieldMarkCount ||
+            linkedVariantCount < variantCount
         guard needsSeeding else { return }
 
         try BirdDatabaseSeeder.shared.seed(modelContext: context)
@@ -88,21 +104,37 @@ final class IdentificationSeeder {
         var shapeMap = Dictionary(uniqueKeysWithValues: existingShapes.map { ($0.id, $0) })
 
         let existingFieldMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
-        let existingFieldMarkIds = Set(existingFieldMarks.map { $0.id })
         var fieldMarkMap: [String: BirdFieldMark] = [:]
         for fieldMark in existingFieldMarks {
             fieldMarkMap[fieldMark.id.uuidString.lowercased()] = fieldMark
         }
 
         let existingVariants = try context.fetch(FetchDescriptor<FieldMarkVariant>())
-        let existingVariantIds = Set(existingVariants.map { $0.id })
+        var variantMap: [String: FieldMarkVariant] = [:]
+        for variant in existingVariants {
+            variantMap[variant.id.uuidString.lowercased()] = variant
+        }
 
         let existingBirds = try context.fetch(FetchDescriptor<Bird>())
         let existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
 
         // MARK: - Step 1: Create Shapes
         for shapeDTO in db.reference_data.shapes {
-            if shapeMap[shapeDTO.id] != nil { continue }
+            if let existing = shapeMap[shapeDTO.id] {
+                var didUpdate = false
+                if existing.name != shapeDTO.name {
+                    existing.name = shapeDTO.name
+                    didUpdate = true
+                }
+                if existing.icon != shapeDTO.icon {
+                    existing.icon = shapeDTO.icon
+                    didUpdate = true
+                }
+                if didUpdate {
+                    context.insert(existing)
+                }
+                continue
+            }
             let shape = BirdShape(
                 id: shapeDTO.id,
                 name: shapeDTO.name,
@@ -114,8 +146,24 @@ final class IdentificationSeeder {
 
         // MARK: - Step 2: Create Field Marks
         for fieldMarkDTO in db.reference_data.fieldMarks {
+            let fieldMarkKey = fieldMarkDTO.id.lowercased()
             let fieldMarkId = UUID(uuidString: fieldMarkDTO.id) ?? UUID()
-            if existingFieldMarkIds.contains(fieldMarkId) { continue }
+            if let existing = fieldMarkMap[fieldMarkKey] {
+                var didUpdate = false
+                if existing.area != fieldMarkDTO.area {
+                    existing.area = fieldMarkDTO.area
+                    didUpdate = true
+                }
+                if existing.shape?.id != fieldMarkDTO.shapeId,
+                   let shape = shapeMap[fieldMarkDTO.shapeId] {
+                    existing.shape = shape
+                    didUpdate = true
+                }
+                if didUpdate {
+                    context.insert(existing)
+                }
+                continue
+            }
             let fieldMark = BirdFieldMark(area: fieldMarkDTO.area)
             fieldMark.id = fieldMarkId
             
@@ -125,13 +173,29 @@ final class IdentificationSeeder {
             }
             
             context.insert(fieldMark)
-            fieldMarkMap[fieldMarkDTO.id.lowercased()] = fieldMark
+            fieldMarkMap[fieldMarkKey] = fieldMark
         }
 
         // MARK: - Step 3: Create Variants
         for variantDTO in db.reference_data.variants {
+            let variantKey = variantDTO.id.lowercased()
             let variantId = UUID(uuidString: variantDTO.id) ?? UUID()
-            if existingVariantIds.contains(variantId) { continue }
+            if let existing = variantMap[variantKey] {
+                var didUpdate = false
+                if existing.name != variantDTO.name {
+                    existing.name = variantDTO.name
+                    didUpdate = true
+                }
+                if existing.fieldMark?.id.uuidString.lowercased() != variantDTO.fieldMarkId.lowercased(),
+                   let fieldMark = fieldMarkMap[variantDTO.fieldMarkId.lowercased()] {
+                    existing.fieldMark = fieldMark
+                    didUpdate = true
+                }
+                if didUpdate {
+                    context.insert(existing)
+                }
+                continue
+            }
             let variant = FieldMarkVariant(name: variantDTO.name)
             variant.id = variantId
             
@@ -141,6 +205,7 @@ final class IdentificationSeeder {
             }
             
             context.insert(variant)
+            variantMap[variantKey] = variant
         }
 
         // MARK: - Step 4: Create Birds

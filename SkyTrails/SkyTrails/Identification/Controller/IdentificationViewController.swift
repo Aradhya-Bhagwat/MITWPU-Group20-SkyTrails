@@ -121,16 +121,32 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
             let fieldMarkCount = try context.fetchCount(FetchDescriptor<BirdFieldMark>())
             let variantCount = try context.fetchCount(FetchDescriptor<FieldMarkVariant>())
+            let linkedFieldMarkCount = try context.fetchCount(
+                FetchDescriptor<BirdFieldMark>(predicate: #Predicate<BirdFieldMark> { mark in
+                    mark.shape != nil
+                })
+            )
+            let linkedVariantCount = try context.fetchCount(
+                FetchDescriptor<FieldMarkVariant>(predicate: #Predicate<FieldMarkVariant> { variant in
+                    variant.fieldMark != nil
+                })
+            )
             let identificationBirdCount = try context.fetchCount(
                 FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
                     bird.shape_id != nil && bird.size_category != nil
                 })
             )
-            print("DEBUG: Seed check counts -> birds: \(birdCount), shapes: \(shapeCount)")
+            print("DEBUG: Seed check counts -> birds: \(birdCount), shapes: \(shapeCount), fieldMarks: \(fieldMarkCount), variants: \(variantCount), linkedFieldMarks: \(linkedFieldMarkCount), linkedVariants: \(linkedVariantCount)")
             if birdCount > 0 && shapeCount == 0 {
                 print("WARNING: Birds exist but shapes are missing. IdentificationSeeder may be skipped.")
             }
-            let needsSeeding = shapeCount == 0 || fieldMarkCount == 0 || variantCount == 0 || identificationBirdCount == 0
+            let needsSeeding =
+                shapeCount == 0 ||
+                fieldMarkCount == 0 ||
+                variantCount == 0 ||
+                identificationBirdCount == 0 ||
+                linkedFieldMarkCount < fieldMarkCount ||
+                linkedVariantCount < variantCount
             if needsSeeding {
                 isSeeding = true
                 updateSelectionState() // Disable button while seeding
