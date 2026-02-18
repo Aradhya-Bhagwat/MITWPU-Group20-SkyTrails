@@ -75,15 +75,15 @@ final class WatchlistQueryService {
         let stats = calculateStats(from: uniqueEntriesArray)
         
         // Get preview images (up to 4 unique birds)
-        // Priority: bundled assets first, then user photos
+        // Priority: user photos first, then bundled assets
         let previewImages = uniqueEntriesArray
             .compactMap { entry -> String? in
-                // 1. Try bundled asset first
-                if let staticName = entry.bird?.staticImageName {
-                    return staticName
+                // 1. Try user photo first
+                if let photoPath = entry.photos?.first?.imagePath {
+                    return photoPath
                 }
-                // 2. Fall back to user photo
-                return entry.photos?.first?.imagePath
+                // 2. Fall back to bundled asset
+                return entry.bird?.staticImageName
             }
             .prefix(4)
             .map { String($0) }
