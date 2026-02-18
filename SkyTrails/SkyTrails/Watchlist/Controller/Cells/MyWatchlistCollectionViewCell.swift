@@ -90,6 +90,8 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		if images.indices.contains(0) {
 			image1.isHidden = false
 			image1.image = images[0]
+			image1.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+			alignImageTop(image1)
 		} else {
 			image1.isHidden = true
 		}
@@ -98,6 +100,8 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		if images.indices.contains(1) {
 			image2.isHidden = false
 			image2.image = images[1]
+			image2.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+			alignImageTop(image2)
 		} else {
 			image2.isHidden = true
 		}
@@ -106,6 +110,8 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		if images.indices.contains(2) {
 			stackContainerView.isHidden = false
 			stackFrontImage.image = images[2]
+			stackFrontImage.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+			alignImageTop(stackFrontImage)
 			
 				// Determine if we need the "depth" effect (back image)
 				// We show it if there are more than 3 images in total
@@ -118,6 +124,8 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 					// If not, just reuse the 3rd image to create the visual bulk.
 				let backImg = images.indices.contains(3) ? images[3] : images[2]
 				stackBackImage.image = backImg
+				stackBackImage.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+				alignImageTop(stackBackImage)
 				
 				addBlurToBackImage()
 			} else {
@@ -128,7 +136,44 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		}
 	}
 	
-		// MARK: - Styling
+		// MARK: - Image Alignment Helper
+
+	private func alignImageTop(_ imageView: UIImageView) {
+		guard let image = imageView.image else { return }
+
+		let viewWidth = imageView.bounds.width
+		let viewHeight = imageView.bounds.height
+
+		// Guard to prevent division by zero if layout hasn't happened yet
+		guard viewWidth > 0, viewHeight > 0, image.size.width > 0, image.size.height > 0 else { return }
+
+		let viewRatio = viewWidth / viewHeight
+		let imageRatio = image.size.width / image.size.height
+
+		if imageRatio < viewRatio {
+			// CASE: Image is "Taller" than the view (e.g., Portrait bird photo in a landscape card)
+			// Behavior: Scale width to fit, align top, cut off bottom.
+
+			// 1. Calculate how much we scaled the image down to fit the width
+			let scale = viewWidth / image.size.width
+
+			// 2. Calculate the "height" of the view in the coordinates of the original image
+			let visibleHeightInImage = viewHeight / scale
+
+			// 3. Normalize this (0.0 to 1.0) for the layer
+			let normalizedHeight = visibleHeightInImage / image.size.height
+
+			// 4. Set the rect: (x:0, y:0) is Top-Left. Width is full (1.0). Height is the calculated portion.
+			imageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: normalizedHeight)
+
+		} else {
+			// CASE: Image is "Wider" or equal (e.g., Panorama)
+			// Behavior: Reset to default (full rect).
+			imageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+		}
+	}
+
+	// MARK: - Styling
 	
 	private func setupStyling() {
 			// Main Card Styling
@@ -179,7 +224,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	}
 	
 	private func addBlurToBackImage() {
-			// Ensure we don't double add blurs
+		// Ensure we don't double add blurs
 		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
 		
 		let blurEffect = UIBlurEffect(style: .regular)
@@ -190,5 +235,14 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		blurView.alpha = 0.5 // Adjust opacity to control how "faded" it looks
 		
 		stackBackImage.addSubview(blurView)
+	}
+
+	override func layoutSubviews() {
+		super.layoutSubviews()
+		// Re-align images when cell size changes (e.g. rotation)
+		alignImageTop(image1)
+		alignImageTop(image2)
+		alignImageTop(stackFrontImage)
+		alignImageTop(stackBackImage)
 	}
 }

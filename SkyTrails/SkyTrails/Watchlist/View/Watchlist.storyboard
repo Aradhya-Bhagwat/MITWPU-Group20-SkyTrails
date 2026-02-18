@@ -1027,9 +1027,10 @@
                                         <rect key="frame" x="0.0" y="0.0" width="402" height="2277"/>
                                         <subviews>
                                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="1Bj-th-8bY">
-                                                <rect key="frame" x="20" y="24" width="362" height="220"/>
+                                                <rect key="frame" x="31" y="10" width="300" height="200"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="height" constant="220" id="UFl-sc-HHf"/>
+                                                    <constraint firstAttribute="height" constant="200" id="UFl-sc-HHf"/>
+                                                    <constraint firstAttribute="width" constant="300" id="UFl-sc-WdC"/>
                                                 </constraints>
                                                 <userDefinedRuntimeAttributes>
                                                     <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
