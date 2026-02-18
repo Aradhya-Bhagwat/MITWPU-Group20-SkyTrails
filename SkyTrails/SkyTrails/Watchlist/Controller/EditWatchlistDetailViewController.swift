@@ -423,7 +423,7 @@ class EditWatchlistDetailViewController: UIViewController {
             Task {
                 do {
                     try await self?.repository.deleteWatchlist(id: watchlist.id)
-                    self?.navigationController?.popViewController(animated: true)
+                    self?.navigateToWatchlistHomeAfterDelete()
                 } catch {
                     self?.presentAlert(title: "Delete Failed", message: error.localizedDescription)
                 }
@@ -431,6 +431,16 @@ class EditWatchlistDetailViewController: UIViewController {
         }))
         
         present(alert, animated: true)
+    }
+
+    private func navigateToWatchlistHomeAfterDelete() {
+        guard let nav = navigationController else { return }
+
+        if let homeVC = nav.viewControllers.first(where: { $0 is WatchlistHomeViewController }) {
+            nav.popToViewController(homeVC, animated: true)
+        } else {
+            nav.popToRootViewController(animated: true)
+        }
     }
     
     private func populateRuleDataForEdit() {
