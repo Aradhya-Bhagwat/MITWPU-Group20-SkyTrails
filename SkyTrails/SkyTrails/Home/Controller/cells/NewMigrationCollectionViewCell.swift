@@ -35,10 +35,14 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private final class BirdPinAnnotation: NSObject, MKAnnotation {
         let coordinate: CLLocationCoordinate2D
         let birdImageName: String
+        let birdIndex: Int
+        let pinColor: UIColor
 
-        init(coordinate: CLLocationCoordinate2D, birdImageName: String) {
+        init(coordinate: CLLocationCoordinate2D, birdImageName: String, birdIndex: Int, pinColor: UIColor) {
             self.coordinate = coordinate
             self.birdImageName = birdImageName
+            self.birdIndex = birdIndex
+            self.pinColor = pinColor
             super.init()
         }
     }
@@ -221,20 +225,15 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
         var mapRect = MKMapRect.null
 
-        if !pathCoordinates.isEmpty {
-            let polyline = MKPolyline(coordinates: pathCoordinates, count: pathCoordinates.count)
-            mapView.addOverlay(polyline)
-            mapRect = mapRect.isNull ? polyline.boundingMapRect : mapRect.union(polyline.boundingMapRect)
-        }
+        _ = pathCoordinates // Keep the input for future use; intentionally not rendered on this card.
 
         let radiusCircle = MKCircle(center: hotspotCenter, radius: radiusKm * 1000)
         mapView.addOverlay(radiusCircle)
         mapRect = mapRect.isNull ? radiusCircle.boundingMapRect : mapRect.union(radiusCircle.boundingMapRect)
 
-        for spot in birdPins {
-            let annotation = BirdPinAnnotation(coordinate: spot.coordinate, birdImageName: spot.birdImageName)
+        for annotation in deconflictedAnnotations(from: birdPins) {
             mapView.addAnnotation(annotation)
-            let point = MKMapPoint(spot.coordinate)
+            let point = MKMapPoint(annotation.coordinate)
             let pointRect = MKMapRect(x: point.x, y: point.y, width: 1, height: 1)
             mapRect = mapRect.isNull ? pointRect : mapRect.union(pointRect)
         }
@@ -242,6 +241,113 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         if !mapRect.isNull {
             let padding = UIEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
             mapView.setVisibleMapRect(mapRect, edgePadding: padding, animated: false)
+        }
+
+        refreshPinSelectionState()
+    }
+
+    private func deconflictedAnnotations(from pins: [HotspotBirdSpot]) -> [BirdPinAnnotation] {
+        let keyFor: (CLLocationCoordinate2D) -> String = { coordinate in
+            let lat = String(format: "%.5f", coordinate.latitude)
+            let lon = String(format: "%.5f", coordinate.longitude)
+            return "\(lat),\(lon)"
+        }
+
+        var countByKey: [String: Int] = [:]
+        var baseByKey: [String: CLLocationCoordinate2D] = [:]
+        for pin in pins {
+            let key = keyFor(pin.coordinate)
+            countByKey[key, default: 0] += 1
+            if baseByKey[key] == nil {
+                baseByKey[key] = pin.coordinate
+            }
+        }
+
+        var seenByKey: [String: Int] = [:]
+        var result: [BirdPinAnnotation] = []
+        result.reserveCapacity(pins.count)
+
+        for (index, pin) in pins.enumerated() {
+            let key = keyFor(pin.coordinate)
+            let totalInGroup = countByKey[key] ?? 1
+            let seen = seenByKey[key, default: 0]
+            seenByKey[key] = seen + 1
+
+            let coordinate: CLLocationCoordinate2D
+            if totalInGroup > 1, let base = baseByKey[key] {
+                let radiusMeters: Double = 60.0
+                let metersPerDegreeLat: Double = 111_000.0
+                let metersPerDegreeLon = max(1.0, cos(base.latitude * .pi / 180.0) * 111_000.0)
+                let angle = (2.0 * Double.pi * Double(seen)) / Double(totalInGroup)
+                let dLat = (radiusMeters * sin(angle)) / metersPerDegreeLat
+                let dLon = (radiusMeters * cos(angle)) / metersPerDegreeLon
+                coordinate = CLLocationCoordinate2D(
+                    latitude: base.latitude + dLat,
+                    longitude: base.longitude + dLon
+                )
+            } else {
+                coordinate = pin.coordinate
+            }
+
+            result.append(
+                BirdPinAnnotation(
+                    coordinate: coordinate,
+                    birdImageName: pin.birdImageName,
+                    birdIndex: index,
+                    pinColor: pinColor(for: pin.birdImageName, index: index)
+                )
+            )
+        }
+
+        return result
+    }
+
+    private func pinColor(for birdImageName: String, index: Int) -> UIColor {
+        let palette: [UIColor] = [
+            .systemBlue, .systemGreen, .systemOrange, .systemPink,
+            .systemTeal, .systemIndigo, .systemMint, .systemBrown
+        ]
+        let hash = abs((birdImageName + "\(index)").hashValue)
+        return palette[hash % palette.count]
+    }
+
+    private func refreshPinSelectionState() {
+        for annotation in mapView.annotations {
+            guard let birdAnnotation = annotation as? BirdPinAnnotation,
+                  let view = mapView.view(for: birdAnnotation) as? MKMarkerAnnotationView else {
+                continue
+            }
+            let isSelected = birdAnnotation.birdIndex == selectedBirdIndex
+            applyPinStyle(view, baseColor: birdAnnotation.pinColor, isSelected: isSelected)
+            view.layer.zPosition = isSelected ? 1000 : 0
+            if isSelected {
+                mapView.bringSubviewToFront(view)
+            }
+        }
+    }
+
+    private func applyPinStyle(_ view: MKMarkerAnnotationView, baseColor: UIColor, isSelected: Bool) {
+        view.markerTintColor = baseColor
+        view.glyphTintColor = .white
+
+        let targetTransform: CGAffineTransform
+        let targetAlpha: CGFloat
+        if isSelected {
+            targetTransform = CGAffineTransform(scaleX: 1.18, y: 1.18)
+            targetAlpha = 1.0
+            view.zPriority = .max
+        } else {
+            // Keep all pins visible, but make non-selected ones lighter/smaller.
+            targetTransform = CGAffineTransform(scaleX: 0.82, y: 0.82)
+            targetAlpha = 0.72
+            view.zPriority = .defaultUnselected
+        }
+
+        if view.transform != targetTransform || view.alpha != targetAlpha {
+            UIView.animate(withDuration: 0.22, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
+                view.transform = targetTransform
+                view.alpha = targetAlpha
+            }
         }
     }
 }
@@ -288,6 +394,8 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
         birdListCollectionView.performBatchUpdates({
             birdListCollectionView.reloadItems(at: [IndexPath(item: oldIndex, section: 0), IndexPath(item: clamped, section: 0)])
         })
+        
+        refreshPinSelectionState()
         alignToSelectedCard(animated: animated)
     }
     
@@ -360,17 +468,17 @@ extension NewMigrationCollectionViewCell: MKMapViewDelegate {
         guard let birdAnnotation = annotation as? BirdPinAnnotation else { return nil }
 
         let identifier = "BirdPinAnnotationView"
-        let view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) ?? MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+        let view = (mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView)
+            ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
         view.annotation = annotation
-
-        let birdImage = UIImage(named: birdAnnotation.birdImageName) ?? UIImage(systemName: "bird.fill")
-        view.image = birdImage
-        view.frame.size = CGSize(width: 28, height: 28)
-        view.layer.cornerRadius = 14
-        view.clipsToBounds = true
-        view.layer.borderWidth = 1.5
-        view.layer.borderColor = UIColor.systemBackground.cgColor
         view.canShowCallout = false
+        view.glyphImage = UIImage(systemName: "bird.fill")
+        view.displayPriority = .required
+        view.collisionMode = .none
+        view.clusteringIdentifier = nil
+        view.titleVisibility = .hidden
+        view.subtitleVisibility = .hidden
+        applyPinStyle(view, baseColor: birdAnnotation.pinColor, isSelected: birdAnnotation.birdIndex == selectedBirdIndex)
 
         return view
     }
@@ -388,7 +496,6 @@ extension NewMigrationCollectionViewCell: MKMapViewDelegate {
             renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7)
             renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08)
             renderer.lineWidth = 1.5
-            renderer.lineDashPattern = [3, 4]
             return renderer
         }
         return MKOverlayRenderer()

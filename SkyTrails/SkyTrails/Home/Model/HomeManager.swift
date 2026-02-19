@@ -457,7 +457,7 @@ class HomeManager {
 
         // 10. Assemble card models
         let topHotspotLoc = CLLocationCoordinate2D(latitude: top.hotspot.lat, longitude: top.hotspot.lon)
-        let pinRadiusKm = 5.0
+        let pinRadiusKm = 0.5
         let pinRadiusMeters = pinRadiusKm * 1000.0
 
         let migrationPrediction = MigrationPrediction(
@@ -476,18 +476,23 @@ class HomeManager {
             } ?? []
         )
 
-        let birdPins: [HotspotBirdSpot] = top.migratingBirds.compactMap { birdData in
-            guard let migration = migrationsByBirdId[birdData.bird.id],
-                  let nearest = nearestTrajectoryCoordinate(
-                    to: topHotspotLoc,
-                    from: migration.paths
-                  ),
-                  nearest.distanceMeters <= pinRadiusMeters else {
-                return nil
+        let birdPins: [HotspotBirdSpot] = top.migratingBirds.map { birdData in
+            let coordinate: CLLocationCoordinate2D
+
+            if let migration = migrationsByBirdId[birdData.bird.id],
+               let nearest = nearestTrajectoryCoordinate(
+                to: topHotspotLoc,
+                from: migration.paths
+               ),
+               nearest.distanceMeters <= pinRadiusMeters {
+                coordinate = nearest.coordinate
+            } else {
+                // Ensure every displayed bird has a pin on this card.
+                coordinate = topHotspotLoc
             }
 
             return HotspotBirdSpot(
-                coordinate: nearest.coordinate,
+                coordinate: coordinate,
                 birdImageName: birdData.bird.staticImageName
             )
         }
