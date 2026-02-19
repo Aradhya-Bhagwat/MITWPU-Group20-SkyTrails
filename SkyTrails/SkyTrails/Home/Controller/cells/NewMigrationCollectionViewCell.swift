@@ -19,6 +19,8 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var weekLabel: UILabel!
     @IBOutlet weak var tagsStackView: UIStackView!
     @IBOutlet weak var tag1View: UIView!
+    @IBOutlet weak var terrainTagImageView: UIImageView!
+    @IBOutlet weak var terrainTagLabel: UILabel!
     @IBOutlet weak var tag2View: UIView!
     @IBOutlet weak var seasonTagImageView: UIImageView!
     @IBOutlet weak var seasonTagLabel: UILabel!
@@ -29,6 +31,17 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private let expandedWidthRatio: CGFloat = 25.0 / 9.0
     private let compactWidthRatio: CGFloat = 5.0 / 6.0
     private let nestedItemHeightRatio: CGFloat = 90.0 / 440.0
+
+    private final class BirdPinAnnotation: NSObject, MKAnnotation {
+        let coordinate: CLLocationCoordinate2D
+        let birdImageName: String
+
+        init(coordinate: CLLocationCoordinate2D, birdImageName: String) {
+            self.coordinate = coordinate
+            self.birdImageName = birdImageName
+            super.init()
+        }
+    }
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -56,6 +69,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         updateNestedLayout()
         
         // Ensure capsule shape for tags
+        tag1View.layer.cornerRadius = tag1View.bounds.height / 2
         tag2View.layer.cornerRadius = tag2View.bounds.height / 2
         seasonTagImageView.layer.cornerRadius = seasonTagImageView.bounds.height / 2
     }
@@ -74,6 +88,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         let otherSize = max(12, 12 * heightRatio)
         subtitleLabel.font = .systemFont(ofSize: otherSize)
         weekLabel.font = .systemFont(ofSize: otherSize)
+        terrainTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
         seasonTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
         
         // Distance label needs special handling for attributed string size
@@ -142,7 +157,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         mapView.layer.cornerRadius = 12
         mapView.delegate = self
         
-        tag1View.layer.cornerRadius = 8
+        tag1View.layer.masksToBounds = true
+        terrainTagImageView.contentMode = .scaleAspectFit
+        terrainTagImageView.layer.masksToBounds = true
         tag2View.layer.masksToBounds = true
         seasonTagImageView.contentMode = .scaleAspectFill
         seasonTagImageView.layer.masksToBounds = true
@@ -159,6 +176,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         titleLabel.text = hotspot.placeName
         subtitleLabel.text = hotspot.locationDetail
         weekLabel.text = hotspot.weekNumber
+        terrainTagLabel.text = hotspot.terrainTag
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
         seasonTagImageView.image = UIImage(named: seasonAssetName(for: hotspot.seasonTag))
         tag2View.backgroundColor = seasonTagBackgroundColor(for: hotspot.seasonTag)
@@ -184,19 +202,47 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         birdListCollectionView.layoutIfNeeded()
         alignToSelectedCard(animated: false)
         
-        setupMapPath(coordinates: migration.pathCoordinates)
+        setupMap(
+            pathCoordinates: migration.pathCoordinates,
+            hotspotCenter: hotspot.centerCoordinate,
+            birdPins: hotspot.hotspots,
+            radiusKm: hotspot.pinRadiusKm
+        )
     }
     
-    private func setupMapPath(coordinates: [CLLocationCoordinate2D]) {
+    private func setupMap(
+        pathCoordinates: [CLLocationCoordinate2D],
+        hotspotCenter: CLLocationCoordinate2D,
+        birdPins: [HotspotBirdSpot],
+        radiusKm: Double
+    ) {
         mapView.removeOverlays(mapView.overlays)
-        guard !coordinates.isEmpty else { return }
-        
-        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-        mapView.addOverlay(polyline)
-        
-        // Zoom to polyline
-        let padding = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
-        mapView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: padding, animated: true)
+        mapView.removeAnnotations(mapView.annotations)
+
+        var mapRect = MKMapRect.null
+
+        if !pathCoordinates.isEmpty {
+            let polyline = MKPolyline(coordinates: pathCoordinates, count: pathCoordinates.count)
+            mapView.addOverlay(polyline)
+            mapRect = mapRect.isNull ? polyline.boundingMapRect : mapRect.union(polyline.boundingMapRect)
+        }
+
+        let radiusCircle = MKCircle(center: hotspotCenter, radius: radiusKm * 1000)
+        mapView.addOverlay(radiusCircle)
+        mapRect = mapRect.isNull ? radiusCircle.boundingMapRect : mapRect.union(radiusCircle.boundingMapRect)
+
+        for spot in birdPins {
+            let annotation = BirdPinAnnotation(coordinate: spot.coordinate, birdImageName: spot.birdImageName)
+            mapView.addAnnotation(annotation)
+            let point = MKMapPoint(spot.coordinate)
+            let pointRect = MKMapRect(x: point.x, y: point.y, width: 1, height: 1)
+            mapRect = mapRect.isNull ? pointRect : mapRect.union(pointRect)
+        }
+
+        if !mapRect.isNull {
+            let padding = UIEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+            mapView.setVisibleMapRect(mapRect, edgePadding: padding, animated: false)
+        }
     }
 }
 
@@ -310,12 +356,39 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
 }
 
 extension NewMigrationCollectionViewCell: MKMapViewDelegate {
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        guard let birdAnnotation = annotation as? BirdPinAnnotation else { return nil }
+
+        let identifier = "BirdPinAnnotationView"
+        let view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) ?? MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+        view.annotation = annotation
+
+        let birdImage = UIImage(named: birdAnnotation.birdImageName) ?? UIImage(systemName: "bird.fill")
+        view.image = birdImage
+        view.frame.size = CGSize(width: 28, height: 28)
+        view.layer.cornerRadius = 14
+        view.clipsToBounds = true
+        view.layer.borderWidth = 1.5
+        view.layer.borderColor = UIColor.systemBackground.cgColor
+        view.canShowCallout = false
+
+        return view
+    }
+
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
             renderer.strokeColor = .systemBlue
             renderer.lineWidth = 3
             renderer.lineDashPattern = [2, 4]
+            return renderer
+        }
+        if let circle = overlay as? MKCircle {
+            let renderer = MKCircleRenderer(circle: circle)
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08)
+            renderer.lineWidth = 1.5
+            renderer.lineDashPattern = [3, 4]
             return renderer
         }
         return MKOverlayRenderer()

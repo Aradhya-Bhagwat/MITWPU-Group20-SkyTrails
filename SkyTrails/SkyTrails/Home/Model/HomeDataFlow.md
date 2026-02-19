@@ -72,6 +72,13 @@ The JSON serves as the primary seed for SwiftData.
 ### Prediction Logic
 `HomeManager.getLivePredictions()` queries the `HotspotManager` for species present at a specific coordinate and radius during the current week.
 
+### Dynamic Map Card Pin Logic
+`HomeManager.getDynamicMapCards()` now computes one map pin per migrating bird for the selected top hotspot by:
+1. Taking the hotspot center coordinate.
+2. Finding each bird's nearest migration trajectory coordinate to that center.
+3. Keeping only points within a 5km radius.
+These pins are passed to `HotspotPrediction.hotspots`, while `HotspotPrediction.centerCoordinate` and `HotspotPrediction.pinRadiusKm` are used by `NewMigrationCollectionViewCell` to render the 5km radius overlay and fit map bounds.
+
 ### Relevant Sightings Logic
 `HomeManager.getRelevantSightings()` returns trajectory points for the selected bird by week range (with year wrap handling) so `birdspredViewController` can draw the migration path.
 

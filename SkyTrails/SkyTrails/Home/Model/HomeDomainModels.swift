@@ -233,6 +233,8 @@ struct HotspotPrediction {
     let placeImageName: String
     let terrainTag: String // Added
     let seasonTag: String // Added
+    let centerCoordinate: CLLocationCoordinate2D
+    let pinRadiusKm: Double
     let hotspots: [HotspotBirdSpot]
     let birdSpecies: [BirdSpeciesDisplay] // Added for nested list
 }

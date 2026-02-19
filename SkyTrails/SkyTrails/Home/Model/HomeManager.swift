@@ -457,6 +457,8 @@ class HomeManager {
 
         // 10. Assemble card models
         let topHotspotLoc = CLLocationCoordinate2D(latitude: top.hotspot.lat, longitude: top.hotspot.lon)
+        let pinRadiusKm = 5.0
+        let pinRadiusMeters = pinRadiusKm * 1000.0
 
         let migrationPrediction = MigrationPrediction(
             birdName: primaryBird.commonName,
@@ -474,6 +476,22 @@ class HomeManager {
             } ?? []
         )
 
+        let birdPins: [HotspotBirdSpot] = top.migratingBirds.compactMap { birdData in
+            guard let migration = migrationsByBirdId[birdData.bird.id],
+                  let nearest = nearestTrajectoryCoordinate(
+                    to: topHotspotLoc,
+                    from: migration.paths
+                  ),
+                  nearest.distanceMeters <= pinRadiusMeters else {
+                return nil
+            }
+
+            return HotspotBirdSpot(
+                coordinate: nearest.coordinate,
+                birdImageName: birdData.bird.staticImageName
+            )
+        }
+
         let hotspotPrediction = HotspotPrediction(
             placeName: top.hotspot.name,
             locationDetail: top.hotspot.locality ?? "Observation Point",
@@ -484,10 +502,9 @@ class HomeManager {
             placeImageName: top.hotspot.imageName ?? "placeholder_image",
             terrainTag: "Nature",
             seasonTag: seasonTag(for: weekRange),
-            hotspots: [HotspotBirdSpot(
-                coordinate: topHotspotLoc,
-                birdImageName: primaryBird.staticImageName
-            )],
+            centerCoordinate: topHotspotLoc,
+            pinRadiusKm: pinRadiusKm,
+            hotspots: birdPins,
             birdSpecies: displayBirds
         )
 
@@ -537,6 +554,24 @@ class HomeManager {
             return startText
         }
         return "\(startText) - \(endText)"
+    }
+
+    private func nearestTrajectoryCoordinate(
+        to center: CLLocationCoordinate2D,
+        from paths: [TrajectoryPath]
+    ) -> (coordinate: CLLocationCoordinate2D, distanceMeters: Double)? {
+        var best: (coordinate: CLLocationCoordinate2D, distanceMeters: Double)?
+
+        for path in paths {
+            let coordinate = CLLocationCoordinate2D(latitude: path.lat, longitude: path.lon)
+            let distance = locationService.distance(from: center, to: coordinate)
+
+            if best == nil || distance < (best?.distanceMeters ?? .greatestFiniteMagnitude) {
+                best = (coordinate: coordinate, distanceMeters: distance)
+            }
+        }
+
+        return best
     }
     
     private func seasonTag(for weeks: [Int]) -> String {
