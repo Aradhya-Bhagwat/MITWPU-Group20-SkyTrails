@@ -20,6 +20,8 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var tagsStackView: UIStackView!
     @IBOutlet weak var tag1View: UIView!
     @IBOutlet weak var tag2View: UIView!
+    @IBOutlet weak var seasonTagImageView: UIImageView!
+    @IBOutlet weak var seasonTagLabel: UILabel!
     @IBOutlet weak var birdListCollectionView: UICollectionView!
     
     private var birdSpecies: [BirdSpeciesDisplay] = []
@@ -52,6 +54,10 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         updateNestedLayout()
+        
+        // Ensure capsule shape for tags
+        tag2View.layer.cornerRadius = tag2View.bounds.height / 2
+        seasonTagImageView.layer.cornerRadius = seasonTagImageView.bounds.height / 2
     }
     
     private func updateNestedLayout() {
@@ -68,6 +74,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         let otherSize = max(12, 12 * heightRatio)
         subtitleLabel.font = .systemFont(ofSize: otherSize)
         weekLabel.font = .systemFont(ofSize: otherSize)
+        seasonTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
         
         // Distance label needs special handling for attributed string size
         updateDistanceLabelFont(size: otherSize)
@@ -136,7 +143,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         mapView.delegate = self
         
         tag1View.layer.cornerRadius = 8
-        tag2View.layer.cornerRadius = 8
+        tag2View.layer.masksToBounds = true
+        seasonTagImageView.contentMode = .scaleAspectFill
+        seasonTagImageView.layer.masksToBounds = true
         
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = 0.08
@@ -150,6 +159,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         titleLabel.text = hotspot.placeName
         subtitleLabel.text = hotspot.locationDetail
         weekLabel.text = hotspot.weekNumber
+        seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
+        seasonTagImageView.image = UIImage(named: seasonAssetName(for: hotspot.seasonTag))
+        tag2View.backgroundColor = seasonTagBackgroundColor(for: hotspot.seasonTag)
         
         // Attributed string for distance with SF Symbol
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
@@ -270,6 +282,30 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
         let minX = -birdListCollectionView.contentInset.left
         let maxX = maxScrollableOffsetX()
         return min(max(x, minX), maxX)
+    }
+    
+    private func seasonAssetName(for season: String) -> String {
+        if season == "Rainy" {
+            return "Rainy "
+        }
+        return season
+    }
+    
+    private func seasonTagBackgroundColor(for season: String) -> UIColor {
+        switch season {
+        case "Summer":
+            return UIColor(red: 0.85, green: 0.95, blue: 0.45, alpha: 0.4) // light lime yellow
+        case "Spring":
+            return UIColor(red: 0.95, green: 0.60, blue: 0.80, alpha: 0.4) // light pink-magenta
+        case "Autumn":
+            return UIColor(red: 1.00, green: 0.70, blue: 0.45, alpha: 0.4) // light orange
+        case "Winter":
+            return UIColor.systemBlue.withAlphaComponent(0.4) // light system blue
+        case "Rainy":
+            return UIColor.systemGray.withAlphaComponent(0.4) // light gray
+        default:
+            return UIColor.systemGray5.withAlphaComponent(0.4)
+        }
     }
 }
 

@@ -49,6 +49,10 @@ class subcardViewCell: UICollectionViewCell {
         updateFonts()
         updateExpandedBadgeCircle()
         updateExpandedBadgeIcon()
+        layer.shadowPath = UIBezierPath(
+            roundedRect: contentView.bounds,
+            cornerRadius: contentView.layer.cornerRadius
+        ).cgPath
     }
     
     private func updateFonts() {
@@ -69,6 +73,7 @@ class subcardViewCell: UICollectionViewCell {
             contentView.backgroundColor = .systemBackground
             contentView.layer.cornerRadius = 12
             contentView.layer.masksToBounds = true
+            layer.masksToBounds = false
             
             birdImageView.layer.cornerRadius = 8
             birdImageView.contentMode = .scaleAspectFill
@@ -77,9 +82,12 @@ class subcardViewCell: UICollectionViewCell {
             compactBirdImageView?.layer.cornerRadius = 8
             compactBirdImageView?.clipsToBounds = true
             
-            // Border for the cell to distinguish it from the parent card
-            contentView.layer.borderWidth = 1
-            contentView.layer.borderColor = UIColor.systemGray6.cgColor
+            contentView.layer.borderWidth = 0
+            contentView.layer.borderColor = UIColor.clear.cgColor
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.12
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
         
             let config = UIImage.SymbolConfiguration(scale: .small)
             
