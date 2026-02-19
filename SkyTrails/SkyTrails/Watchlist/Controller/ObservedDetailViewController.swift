@@ -27,6 +27,8 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     @IBOutlet weak var suggestionsTableView: UITableView!
     @IBOutlet weak var birdImageContainerView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
+    @IBOutlet weak var glassBackgroundPlaceholder: UIView!
+    
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var dateTimePicker: UIDatePicker!
     @IBOutlet weak var notesTextView: UITextView!
@@ -78,6 +80,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         setupKeyboardHandling()
         setupLocationServices()
         setupLocationOptionsInteractions()
+        updateGlassVisibility()
         print("Debug: viewDidLoad completed")
     }
     
@@ -421,9 +424,29 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     }
     
     func setupStyling() {
+        print("[glassdebug] setupStyling called")
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
         suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        
+        // Setup Glass/Background View
+        glassBackgroundPlaceholder.layer.cornerRadius = 24
+        glassBackgroundPlaceholder.layer.cornerCurve = .continuous
+        glassBackgroundPlaceholder.clipsToBounds = true
+        
+        if #available(iOS 26.0, *) {
+            print("[glassdebug] iOS 26.0+ detected, initializing UIGlassView")
+            // Changed style to .regular to ensure it's visible on dark backgrounds
+            let glassView: UIGlassView = UIGlassView(style: UIGlassView.Style.regular)
+            glassView.frame = glassBackgroundPlaceholder.bounds
+            glassView.autoresizingMask = [UIView.AutoresizingMask.flexibleWidth, UIView.AutoresizingMask.flexibleHeight]
+            glassBackgroundPlaceholder.addSubview(glassView)
+            glassBackgroundPlaceholder.backgroundColor = UIColor.clear
+            print("[glassdebug] UIGlassView added to glassBackgroundPlaceholder with style .regular")
+        } else {
+            print("[glassdebug] Below iOS 26.0, using standard background")
+            glassBackgroundPlaceholder.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
+        }
         
         birdImageView.layer.cornerRadius = 24
         birdImageView.clipsToBounds = true
@@ -437,6 +460,23 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         notesTextView.layer.masksToBounds = true
         styleSearchBar(locationSearchBar, isDarkMode: isDarkMode)
         [detailsCardView, notesCardView, locationCardView].forEach { styleCard($0) }
+    }
+    
+    private func updateGlassVisibility() {
+        let isPlaceholder = isUsingPlaceholder()
+        print("[glassdebug] updateGlassVisibility called. isPlaceholder: \(isPlaceholder)")
+        glassBackgroundPlaceholder.isHidden = !isPlaceholder
+        print("[glassdebug] glassBackgroundPlaceholder.isHidden set to: \(!isPlaceholder)")
+    }
+    
+    private func isUsingPlaceholder() -> Bool {
+        guard let image = birdImageView.image else { 
+            print("[glassdebug] isUsingPlaceholder: No image found, returning true")
+            return true 
+        }
+        let isSymbol = image.isSymbolImage
+        print("[glassdebug] isUsingPlaceholder: Image found. isSymbolImage: \(isSymbol)")
+        return isSymbol
     }
     
     func styleCard(_ cardView: UIView) {
@@ -459,7 +499,88 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         textField.leftView?.tintColor = .secondaryLabel
     }
 }
-    // MARK: - Protocols & Delegates
+
+// MARK: - iOS 26 Liquid Glass Shim
+// This provides a compatible API for older iOS versions while being ready for the iOS 26 rendering engine.
+@available(iOS 13.0, *)
+public class UIGlassView: UIView {
+    public enum Style: Int {
+        case regular = 0
+        case clear = 1
+        case soft = 2
+    }
+    
+    public var style: Style = .regular
+    public var allowsMorphing: Bool = false
+    public var pressIllumination: Bool = false
+    
+    private var visualEffectView: UIVisualEffectView?
+    private var nativeGlassView: UIView?
+    
+    public init(style: Style) {
+        self.style = style
+        super.init(frame: .zero)
+        setupEffect()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupEffect()
+    }
+    
+    private func setupEffect() {
+        // Attempt to find the system-provided UIGlassView to use the real Liquid Glass engine
+        if let nativeClass = NSClassFromString("UIGlassView") as? UIView.Type, 
+           nativeClass != UIGlassView.self {
+            print("[glassdebug] Native UIGlassView class found! Attempting to use native Liquid Glass engine.")
+            // Real UIGlassView init(style:)
+            let nativeView = nativeClass.init()
+            nativeView.frame = self.bounds
+            nativeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            
+            // Set style and properties via KVC since we don't have the header at compile time
+            nativeView.setValue(self.style.rawValue, forKey: "style")
+            nativeView.setValue(self.allowsMorphing, forKey: "allowsMorphing")
+            nativeView.setValue(self.pressIllumination, forKey: "pressIllumination")
+            
+            addSubview(nativeView)
+            self.nativeGlassView = nativeView
+            print("[glassdebug] Native Liquid Glass engine successfully initialized.")
+        } else {
+            print("[glassdebug] Native UIGlassView not found in runtime. Falling back to enhanced Frosted Glass shim.")
+            let blurStyle: UIBlurEffect.Style
+            switch style {
+            case .regular: blurStyle = .systemMaterial
+            case .clear:   blurStyle = .systemUltraThinMaterial
+            case .soft:    blurStyle = .systemThinMaterial
+            }
+            
+            let blurEffect = UIBlurEffect(style: blurStyle)
+            let effectView = UIVisualEffectView(effect: blurEffect)
+            effectView.frame = self.bounds
+            effectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            addSubview(effectView)
+            self.visualEffectView = effectView
+            
+            // Add crystal-like border to simulate high-refraction glass edges
+            self.layer.borderWidth = 0.5
+            self.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+            
+            // For .clear style, reduce opacity to make it look more like crystal/lens
+            if style == .clear {
+                effectView.alpha = 0.7
+            }
+        }
+    }
+    
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        visualEffectView?.frame = self.bounds
+        nativeGlassView?.frame = self.bounds
+    }
+}
+
+// MARK: - Protocols & Delegates
     extension ObservedDetailViewController{
         
         func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -578,6 +699,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             guard let image = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage else { return }
             
             birdImageView.image = image
+            updateGlassVisibility()
             
             // Persist to Documents/ObservedBirdPhotos/ where WatchlistPhotoService expects it
             let filename = "bird_photo_\(UUID().uuidString).png"

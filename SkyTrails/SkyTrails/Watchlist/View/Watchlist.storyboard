@@ -1329,6 +1329,15 @@
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Yw6-TV-4fH">
                                                 <rect key="frame" x="20" y="24" width="362" height="220"/>
                                                 <subviews>
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="glass-bg-placeholder">
+                                                        <rect key="frame" x="31" y="10" width="225" height="150"/>
+                                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                        <userDefinedRuntimeAttributes>
+                                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                <integer key="value" value="24"/>
+                                                            </userDefinedRuntimeAttribute>
+                                                        </userDefinedRuntimeAttributes>
+                                                    </view>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2Pe-sK-fWr">
                                                         <rect key="frame" x="31" y="10" width="225" height="150"/>
                                                         <constraints>
@@ -1344,6 +1353,10 @@
                                                 </subviews>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="centerX" secondItem="2Pe-sK-fWr" secondAttribute="centerX" id="glass-center-x"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="centerY" secondItem="2Pe-sK-fWr" secondAttribute="centerY" id="glass-center-y"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="width" secondItem="2Pe-sK-fWr" secondAttribute="width" id="glass-width"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="height" secondItem="2Pe-sK-fWr" secondAttribute="height" id="glass-height"/>
                                                     <constraint firstItem="2Pe-sK-fWr" firstAttribute="centerY" secondItem="Yw6-TV-4fH" secondAttribute="centerY" id="4bV-eT-bOd"/>
                                                     <constraint firstItem="2Pe-sK-fWr" firstAttribute="centerX" secondItem="Yw6-TV-4fH" secondAttribute="centerX" id="cCG-ai-Kgp"/>
                                                     <constraint firstAttribute="height" constant="220" id="l9i-e4-x3A"/>
@@ -1580,6 +1593,7 @@
                     <connections>
                         <outlet property="birdImageContainerView" destination="Yw6-TV-4fH" id="bird-cont-id-01"/>
                         <outlet property="birdImageView" destination="2Pe-sK-fWr" id="oas-3Y-UT7"/>
+                        <outlet property="glassBackgroundPlaceholder" destination="glass-bg-placeholder" id="glass-outlet-id"/>
                         <outlet property="dateLabel" destination="8nZ-5d-hox" id="9zi-Rf-wh7"/>
                         <outlet property="dateTimePicker" destination="2dj-q9-RH4" id="b8J-zu-JSU"/>
                         <outlet property="detailsCardView" destination="Z2D-L9-Pra" id="8gO-2l-nH9"/>
