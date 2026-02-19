@@ -25,6 +25,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     private var locationSuggestions: [LocationService.LocationSuggestion] = []
     
     @IBOutlet weak var suggestionsTableView: UITableView!
+    @IBOutlet weak var birdImageContainerView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var dateTimePicker: UIDatePicker!
@@ -67,7 +68,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         } else {
             // Completely new
             self.navigationItem.title = "New Observation"
-            birdImageView.image = UIImage(systemName: "camera.fill")
+            birdImageView.image = UIImage(named: "custom.bird.viewfinder.badge.plus") ?? UIImage(systemName: "camera.fill")
             birdImageView.tintColor = .systemGray
             let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
             navigationItem.rightBarButtonItem = saveButton
@@ -423,6 +424,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
         suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        
         birdImageView.layer.cornerRadius = 24
         birdImageView.clipsToBounds = true
         nameTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
