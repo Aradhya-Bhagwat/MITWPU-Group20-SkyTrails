@@ -1329,11 +1329,11 @@
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Yw6-TV-4fH">
                                                 <rect key="frame" x="20" y="24" width="362" height="220"/>
                                                 <subviews>
-                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2Pe-sK-fWr">
-                                                        <rect key="frame" x="31" y="10" width="300" height="200"/>
+                                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2Pe-sK-fWr">
+                                                        <rect key="frame" x="31" y="10" width="225" height="150"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="200" id="Mss-7d-81P"/>
-                                                            <constraint firstAttribute="width" constant="300" id="PHx-nb-Tyl"/>
+                                                            <constraint firstAttribute="height" constant="150" id="Mss-7d-81P"/>
+                                                            <constraint firstAttribute="width" constant="225" id="PHx-nb-Tyl"/>
                                                         </constraints>
                                                         <userDefinedRuntimeAttributes>
                                                             <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
@@ -1578,6 +1578,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="xd6-8e-6Id"/>
                     <connections>
+                        <outlet property="birdImageContainerView" destination="Yw6-TV-4fH" id="bird-cont-id-01"/>
                         <outlet property="birdImageView" destination="2Pe-sK-fWr" id="oas-3Y-UT7"/>
                         <outlet property="dateLabel" destination="8nZ-5d-hox" id="9zi-Rf-wh7"/>
                         <outlet property="dateTimePicker" destination="2dj-q9-RH4" id="b8J-zu-JSU"/>
