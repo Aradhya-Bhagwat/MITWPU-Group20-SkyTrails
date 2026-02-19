@@ -70,11 +70,12 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         } else {
             // Completely new
             self.navigationItem.title = "New Observation"
-            birdImageView.image = UIImage(named: "custom.bird.viewfinder.badge.plus") ?? UIImage(systemName: "camera.fill")
-            birdImageView.tintColor = .systemGray
+            birdImageView.image = UIImage(named: "custom.bird.viewfinder.badge.plus")
+			birdImageView.tintColor = .systemBlue
+			birdImageView.transform = CGAffineTransform(scaleX: 0.75, y: 0.75)
             let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
             navigationItem.rightBarButtonItem = saveButton
-            print("Debug: viewDidLoad - configured for completely new observation")
+
         }
         
         setupKeyboardHandling()
@@ -471,7 +472,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         glassBackgroundPlaceholder.isHidden = !isPlaceholder
         
         if isPlaceholder {
-            birdImageView.tintColor = .systemBlue
+
             print("[glassdebug] updateGlassVisibility: Placeholder detected, set tint to blue")
         } else {
             birdImageView.tintColor = nil
