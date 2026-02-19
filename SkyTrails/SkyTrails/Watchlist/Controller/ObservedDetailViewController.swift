@@ -429,20 +429,21 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
         suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         
-        // Setup Glass/Background View
+        // Setup Glass/Background View (Button)
         glassBackgroundPlaceholder.layer.cornerRadius = 24
         glassBackgroundPlaceholder.layer.cornerCurve = .continuous
         glassBackgroundPlaceholder.clipsToBounds = true
         
         if #available(iOS 26.0, *) {
-            print("[glassdebug] iOS 26.0+ detected, initializing UIGlassView")
-            // Changed style to .regular to ensure it's visible on dark backgrounds
-            let glassView: UIGlassView = UIGlassView(style: UIGlassView.Style.regular)
-            glassView.frame = glassBackgroundPlaceholder.bounds
-            glassView.autoresizingMask = [UIView.AutoresizingMask.flexibleWidth, UIView.AutoresizingMask.flexibleHeight]
-            glassBackgroundPlaceholder.addSubview(glassView)
-            glassBackgroundPlaceholder.backgroundColor = UIColor.clear
-            print("[glassdebug] UIGlassView added to glassBackgroundPlaceholder with style .regular")
+            print("[glassdebug] iOS 26.0+ detected, applying .glass() configuration to button")
+            if let button = glassBackgroundPlaceholder as? UIButton {
+                var config = UIButton.Configuration.glass()
+                config.cornerStyle = .fixed
+                config.background.cornerRadius = 24
+                button.configuration = config
+                button.addTarget(self, action: #selector(didTapGlassButton), for: .touchUpInside)
+                print("[glassdebug] .glass() config applied and target added to button")
+            }
         } else {
             print("[glassdebug] Below iOS 26.0, using standard background")
             glassBackgroundPlaceholder.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
@@ -462,10 +463,28 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         [detailsCardView, notesCardView, locationCardView].forEach { styleCard($0) }
     }
     
+    @objc private func didTapGlassButton() {
+        print("[glassdebug] didTapGlassButton clicked")
+        // User clicked the glass background
+        // As per instructions: disable button and enable imageview with exact same constraints
+
+        glassBackgroundPlaceholder.isHidden = true
+        birdImageView.isHidden = false
+        
+        // Trigger the same logic as tapping the image directly
+        didTapImage()
+    }
+    
     private func updateGlassVisibility() {
         let isPlaceholder = isUsingPlaceholder()
         print("[glassdebug] updateGlassVisibility called. isPlaceholder: \(isPlaceholder)")
+        
+        // When using placeholder (no user image), show glass button
+        // When user has image, hide glass button and show image
         glassBackgroundPlaceholder.isHidden = !isPlaceholder
+
+        birdImageView.isHidden = false // Image stays visible (either SF Symbol or User Image)
+        
         print("[glassdebug] glassBackgroundPlaceholder.isHidden set to: \(!isPlaceholder)")
     }
     
