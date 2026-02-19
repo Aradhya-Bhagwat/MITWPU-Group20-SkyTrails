@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import SwiftData
+import MapKit
 
 @MainActor
 class HomeManager {
@@ -459,6 +460,11 @@ class HomeManager {
         let topHotspotLoc = CLLocationCoordinate2D(latitude: top.hotspot.lat, longitude: top.hotspot.lon)
         let pinRadiusKm = 0.5
         let pinRadiusMeters = pinRadiusKm * 1000.0
+        let areaOverlay = await resolveHotspotAreaOverlay(
+            hotspotName: top.hotspot.name,
+            hotspotCoordinate: topHotspotLoc,
+            fallbackRadiusKm: 2.0
+        )
 
         let migrationPrediction = MigrationPrediction(
             birdName: primaryBird.commonName,
@@ -509,6 +515,7 @@ class HomeManager {
             seasonTag: seasonTag(for: weekRange),
             centerCoordinate: topHotspotLoc,
             pinRadiusKm: pinRadiusKm,
+            areaOverlay: areaOverlay,
             hotspots: birdPins,
             birdSpecies: displayBirds
         )
@@ -577,6 +584,114 @@ class HomeManager {
         }
 
         return best
+    }
+
+    private func resolveHotspotAreaOverlay(
+        hotspotName: String,
+        hotspotCoordinate: CLLocationCoordinate2D,
+        fallbackRadiusKm: Double
+    ) async -> HotspotAreaOverlay {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = hotspotName
+        request.region = MKCoordinateRegion(
+            center: hotspotCoordinate,
+            latitudinalMeters: 10_000,
+            longitudinalMeters: 10_000
+        )
+
+        do {
+            let response = try await MKLocalSearch(request: request).start()
+            let nearestItem = nearestMapItem(to: hotspotCoordinate, from: response.mapItems)
+
+            if let polygon = polygonCoordinates(
+                from: response.boundingRegion,
+                near: hotspotCoordinate,
+                nearestResultCoordinate: nearestItem?.placemark.coordinate
+            ) {
+                return .polygon(coordinates: polygon)
+            }
+
+            if let mapItem = nearestItem,
+               let circularRegion = mapItem.placemark.region as? CLCircularRegion {
+                let radiusKm = max(0.2, circularRegion.radius / 1000.0)
+                return .circle(radiusKm: radiusKm)
+            }
+        } catch {
+            logger.log(error: error, context: "HomeManager.resolveHotspotAreaOverlay")
+        }
+
+        return .circle(radiusKm: fallbackRadiusKm)
+    }
+
+    private func nearestMapItem(
+        to coordinate: CLLocationCoordinate2D,
+        from items: [MKMapItem]
+    ) -> MKMapItem? {
+        items.min { first, second in
+            let d1 = locationService.distance(from: coordinate, to: first.placemark.coordinate)
+            let d2 = locationService.distance(from: coordinate, to: second.placemark.coordinate)
+            return d1 < d2
+        }
+    }
+
+    private func polygonCoordinates(
+        from region: MKCoordinateRegion,
+        near hotspotCoordinate: CLLocationCoordinate2D,
+        nearestResultCoordinate: CLLocationCoordinate2D?
+    ) -> [CLLocationCoordinate2D]? {
+        let span = region.span
+        guard span.latitudeDelta > 0.0001, span.longitudeDelta > 0.0001 else {
+            return nil
+        }
+
+        let regionCenterDistanceKm = locationService.distance(
+            from: hotspotCoordinate,
+            to: region.center
+        ) / 1000.0
+        // Only trust the search bbox when it is anchored to the requested hotspot.
+        guard regionCenterDistanceKm <= 1.0 else {
+            return nil
+        }
+
+        if let nearestResultCoordinate {
+            let nearestResultDistanceKm = locationService.distance(
+                from: hotspotCoordinate,
+                to: nearestResultCoordinate
+            ) / 1000.0
+            // Reject bbox if nearest search result itself is not close to hotspot.
+            guard nearestResultDistanceKm <= 1.5 else {
+                return nil
+            }
+        }
+
+        let topLeft = CLLocationCoordinate2D(
+            latitude: region.center.latitude + span.latitudeDelta / 2,
+            longitude: region.center.longitude - span.longitudeDelta / 2
+        )
+        let topRight = CLLocationCoordinate2D(
+            latitude: region.center.latitude + span.latitudeDelta / 2,
+            longitude: region.center.longitude + span.longitudeDelta / 2
+        )
+        let bottomRight = CLLocationCoordinate2D(
+            latitude: region.center.latitude - span.latitudeDelta / 2,
+            longitude: region.center.longitude + span.longitudeDelta / 2
+        )
+        let bottomLeft = CLLocationCoordinate2D(
+            latitude: region.center.latitude - span.latitudeDelta / 2,
+            longitude: region.center.longitude - span.longitudeDelta / 2
+        )
+
+        let bboxCorners = [topLeft, topRight, bottomRight, bottomLeft]
+        let maxCornerDistanceKm = bboxCorners
+            .map { locationService.distance(from: hotspotCoordinate, to: $0) / 1000.0 }
+            .max() ?? .greatestFiniteMagnitude
+
+        // Discard broad regions; we only want tight local footprints on the card map.
+        guard maxCornerDistanceKm <= 8 else {
+            return nil
+        }
+
+        return [topLeft, topRight, bottomRight, bottomLeft]
     }
     
     private func seasonTag(for weeks: [Int]) -> String {

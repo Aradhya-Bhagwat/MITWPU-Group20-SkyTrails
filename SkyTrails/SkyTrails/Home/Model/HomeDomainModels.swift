@@ -235,8 +235,14 @@ struct HotspotPrediction {
     let seasonTag: String // Added
     let centerCoordinate: CLLocationCoordinate2D
     let pinRadiusKm: Double
+    let areaOverlay: HotspotAreaOverlay
     let hotspots: [HotspotBirdSpot]
     let birdSpecies: [BirdSpeciesDisplay] // Added for nested list
+}
+
+enum HotspotAreaOverlay {
+    case polygon(coordinates: [CLLocationCoordinate2D])
+    case circle(radiusKm: Double)
 }
 
 struct BirdSpeciesDisplay: Hashable {
