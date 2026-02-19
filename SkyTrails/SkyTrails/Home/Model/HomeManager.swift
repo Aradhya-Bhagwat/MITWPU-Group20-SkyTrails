@@ -477,13 +477,13 @@ class HomeManager {
         let hotspotPrediction = HotspotPrediction(
             placeName: top.hotspot.name,
             locationDetail: top.hotspot.locality ?? "Observation Point",
-            weekNumber: formatWeekDescription(week: currentWeek),
+            weekNumber: formatWeekRangeDescription(startWeek: currentWeek, endWeek: weekRange.last ?? currentWeek),
             speciesCount: top.migratingBirds.count,
             distanceString: distanceString,
             dateRange: "Weeks \(weekRange.first!)-\(weekRange.last!)",
             placeImageName: top.hotspot.imageName ?? "placeholder_image",
             terrainTag: "Nature",
-            seasonTag: "Summer",
+            seasonTag: seasonTag(for: weekRange),
             hotspots: [HotspotBirdSpot(
                 coordinate: topHotspotLoc,
                 birdImageName: primaryBird.staticImageName
@@ -528,6 +528,49 @@ class HomeManager {
         }
         
         return "\(monthName) \(weekInMonth)"
+    }
+    
+    func formatWeekRangeDescription(startWeek: Int, endWeek: Int) -> String {
+        let startText = formatWeekDescription(week: startWeek)
+        let endText = formatWeekDescription(week: endWeek)
+        if startText == endText {
+            return startText
+        }
+        return "\(startText) - \(endText)"
+    }
+    
+    private func seasonTag(for weeks: [Int]) -> String {
+        guard !weeks.isEmpty else { return "Spring" }
+        
+        var counts: [String: Int] = [:]
+        for week in weeks {
+            let season = seasonForWeek(week)
+            counts[season, default: 0] += 1
+        }
+        
+        let startSeason = seasonForWeek(weeks[0])
+        let maxCount = counts.values.max() ?? 0
+        if counts[startSeason] == maxCount {
+            return startSeason
+        }
+        return counts.first(where: { $0.value == maxCount })?.key ?? startSeason
+    }
+    
+    private func seasonForWeek(_ week: Int) -> String {
+        let normalizedWeek = ((week - 1) % 52) + 1
+        
+        switch normalizedWeek {
+        case 10...20:
+            return "Spring"
+        case 21...26:
+            return "Summer"
+        case 27...39:
+            return "Rainy"
+        case 40...47:
+            return "Autumn"
+        default:
+            return "Winter"
+        }
     }
     
     func getRecentObservations(
