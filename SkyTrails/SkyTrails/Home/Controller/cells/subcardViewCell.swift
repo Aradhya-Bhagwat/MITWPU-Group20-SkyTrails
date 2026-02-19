@@ -27,6 +27,8 @@ class subcardViewCell: UICollectionViewCell {
     @IBOutlet weak var compactBirdImageView: UIImageView!
     @IBOutlet weak var compactBirdNameLabel: UILabel!
     @IBOutlet weak var compactStatusIconLabel: UILabel!
+
+    private var accentColor: UIColor = .systemBlue
     
     var isExpanded: Bool = true {
         didSet {
@@ -68,6 +70,8 @@ class subcardViewCell: UICollectionViewCell {
         
         compactBirdNameLabel.font = .systemFont(ofSize: fontSize, weight: .semibold)
         updateCompactStatusIcon(pointSize: fontSize)
+        let currentBadgeColor = statusBadgeContainer.backgroundColor?.withAlphaComponent(1.0) ?? accentColor
+        updateSightabilityIcon(pointSize: fontSize, color: currentBadgeColor)
     }
     private func setupAppearance() {
             contentView.backgroundColor = .systemBackground
@@ -89,22 +93,15 @@ class subcardViewCell: UICollectionViewCell {
             layer.shadowOffset = CGSize(width: 0, height: 3)
             layer.shadowRadius = 6
         
-            let config = UIImage.SymbolConfiguration(scale: .small)
-            
-            // 2. Load the image (Note: "binoculars.fill" is plural)
-            if let image = UIImage(systemName: "binoculars.fill", withConfiguration: config) {
-                // 3. Create an attachment
-                let attachment = NSTextAttachment()
-                attachment.image = image.withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
-                sightabilityIconLabel.attributedText = NSAttributedString(attachment: attachment)
-            }
+            updateSightabilityIcon(pointSize: 12, color: .systemBlue)
             updateExpandedBadgeIcon()
             updateCompactStatusIcon(pointSize: 12)
             updateViewState()
         }
         
-        func configure(with birdData: BirdSpeciesDisplay) {
+        func configure(with birdData: BirdSpeciesDisplay, accentColor: UIColor? = nil) {
             print("🐦 [PredictionDebug] subcardViewCell configure: \(birdData.birdName)")
+            self.accentColor = accentColor ?? .systemBlue
             birdNameLabel.text = birdData.birdName
             compactBirdNameLabel?.text = birdData.statusBadge.title
             
@@ -134,10 +131,15 @@ class subcardViewCell: UICollectionViewCell {
                 // Fall back to named asset, then grey
                 badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
             }
-            statusBadgeContainer.backgroundColor = badgeColor.withAlphaComponent(0.15)
+            let effectiveBadgeColor = accentColor ?? badgeColor
+            statusBadgeContainer.backgroundColor = effectiveBadgeColor.withAlphaComponent(0.2)
             print("🐦 [PredictionDebug]   Badge color: \(birdData.statusBadge.backgroundColorName)")
             
+            let compactPointSize = compactBirdNameLabel?.font.pointSize ?? 12
+            updateCompactStatusIcon(pointSize: compactPointSize)
             updateExpandedBadgeIcon()
+            let sightabilityPointSize = sightabilityTextLabel.font.pointSize
+            updateSightabilityIcon(pointSize: sightabilityPointSize, color: effectiveBadgeColor.withAlphaComponent(1.0))
             
             // Sightability
             sightabilityTextLabel.text = "Sightability - \(birdData.sightabilityPercent)%"
@@ -151,7 +153,7 @@ class subcardViewCell: UICollectionViewCell {
     private func updateCompactStatusIcon(pointSize: CGFloat) {
         let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
         guard let image = UIImage(systemName: "bird.circle.fill", withConfiguration: config)?
-            .withTintColor(.systemBlue, renderingMode: .alwaysOriginal) else { return }
+            .withTintColor(accentColor, renderingMode: .alwaysOriginal) else { return }
         
         let attachment = NSTextAttachment()
         attachment.image = image
@@ -170,6 +172,17 @@ class subcardViewCell: UICollectionViewCell {
         let side = max(12, min(badgeIconImageView.bounds.width, badgeIconImageView.bounds.height))
         let config = UIImage.SymbolConfiguration(pointSize: side * 0.8, weight: .regular)
         badgeIconImageView.image = UIImage(systemName: "bird.circle.fill", withConfiguration: config)?
-            .withTintColor(.systemBlue, renderingMode: .alwaysOriginal)
+            .withTintColor(accentColor, renderingMode: .alwaysOriginal)
+    }
+
+    private func updateSightabilityIcon(pointSize: CGFloat, color: UIColor) {
+        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+        guard let image = UIImage(systemName: "binoculars.fill", withConfiguration: config)?
+            .withTintColor(color, renderingMode: .alwaysOriginal) else { return }
+
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = CGRect(x: 0, y: -1, width: image.size.width, height: image.size.height)
+        sightabilityIconLabel.attributedText = NSAttributedString(attachment: attachment)
     }
     }

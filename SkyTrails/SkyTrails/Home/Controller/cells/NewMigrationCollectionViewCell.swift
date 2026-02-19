@@ -209,16 +209,16 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         setupMap(
             pathCoordinates: migration.pathCoordinates,
             hotspotCenter: hotspot.centerCoordinate,
-            birdPins: hotspot.hotspots,
-            radiusKm: hotspot.pinRadiusKm
+            areaOverlay: hotspot.areaOverlay,
+            birdPins: hotspot.hotspots
         )
     }
     
     private func setupMap(
         pathCoordinates: [CLLocationCoordinate2D],
         hotspotCenter: CLLocationCoordinate2D,
-        birdPins: [HotspotBirdSpot],
-        radiusKm: Double
+        areaOverlay: HotspotAreaOverlay,
+        birdPins: [HotspotBirdSpot]
     ) {
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
@@ -227,9 +227,18 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
         _ = pathCoordinates // Keep the input for future use; intentionally not rendered on this card.
 
-        let radiusCircle = MKCircle(center: hotspotCenter, radius: radiusKm * 1000)
-        mapView.addOverlay(radiusCircle)
-        mapRect = mapRect.isNull ? radiusCircle.boundingMapRect : mapRect.union(radiusCircle.boundingMapRect)
+        switch areaOverlay {
+        case .polygon(let coordinates):
+            guard coordinates.count >= 3 else { break }
+            var polygonCoordinates = coordinates
+            let polygon = MKPolygon(coordinates: &polygonCoordinates, count: polygonCoordinates.count)
+            mapView.addOverlay(polygon)
+            mapRect = mapRect.isNull ? polygon.boundingMapRect : mapRect.union(polygon.boundingMapRect)
+        case .circle(let overlayRadiusKm):
+            let radiusCircle = MKCircle(center: hotspotCenter, radius: overlayRadiusKm * 1000)
+            mapView.addOverlay(radiusCircle)
+            mapRect = mapRect.isNull ? radiusCircle.boundingMapRect : mapRect.union(radiusCircle.boundingMapRect)
+        }
 
         for annotation in deconflictedAnnotations(from: birdPins) {
             mapView.addAnnotation(annotation)
@@ -303,12 +312,15 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
 
     private func pinColor(for birdImageName: String, index: Int) -> UIColor {
-        let palette: [UIColor] = [
-            .systemBlue, .systemGreen, .systemOrange, .systemPink,
-            .systemTeal, .systemIndigo, .systemMint, .systemBrown
-        ]
-        let hash = abs((birdImageName + "\(index)").hashValue)
-        return palette[hash % palette.count]
+        // Use golden-ratio hue stepping for collision-free colors per card index.
+        let baseSeed = Double(abs(birdImageName.hashValue % 10_000)) / 10_000.0
+        let hue = (baseSeed + (Double(index) * 0.61803398875)).truncatingRemainder(dividingBy: 1.0)
+        return UIColor(
+            hue: CGFloat(hue),
+            saturation: 0.72,
+            brightness: 0.90,
+            alpha: 1.0
+        )
     }
 
     private func refreshPinSelectionState() {
@@ -359,7 +371,9 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as! subcardViewCell
-        cell.configure(with: birdSpecies[indexPath.row])
+        let bird = birdSpecies[indexPath.row]
+        let accentColor = pinColor(for: bird.birdImageName, index: indexPath.row)
+        cell.configure(with: bird, accentColor: accentColor)
         cell.setExpanded(indexPath.row == selectedBirdIndex)
         return cell
     }
@@ -484,6 +498,13 @@ extension NewMigrationCollectionViewCell: MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let polygon = overlay as? MKPolygon {
+            let renderer = MKPolygonRenderer(polygon: polygon)
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
+            renderer.lineWidth = 1.6
+            return renderer
+        }
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
             renderer.strokeColor = .systemBlue

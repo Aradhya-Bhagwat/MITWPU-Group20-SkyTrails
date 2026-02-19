@@ -76,8 +76,15 @@ The JSON serves as the primary seed for SwiftData.
 `HomeManager.getDynamicMapCards()` now computes one map pin per migrating bird for the selected top hotspot by:
 1. Taking the hotspot center coordinate.
 2. Finding each bird's nearest migration trajectory coordinate to that center.
-3. Keeping only points within a 5km radius.
-These pins are passed to `HotspotPrediction.hotspots`, while `HotspotPrediction.centerCoordinate` and `HotspotPrediction.pinRadiusKm` are used by `NewMigrationCollectionViewCell` to render the 5km radius overlay and fit map bounds.
+3. Keeping only points within the active pin radius (`HotspotPrediction.pinRadiusKm`, currently `0.5km`).
+These pins are passed to `HotspotPrediction.hotspots`, while `HotspotPrediction.centerCoordinate` and `HotspotPrediction.pinRadiusKm` are used by `NewMigrationCollectionViewCell` to render the hotspot area overlay and fit map bounds.
+
+### Hotspot Area Overlay Logic
+For the top prediction card, `HomeManager.getDynamicMapCards()` resolves a display overlay for the hotspot area and passes it via `HotspotPrediction.areaOverlay`:
+1. Try map-backed area geometry from `MKLocalSearch` bounding region and render as a polygon.
+2. If unavailable, try an area-backed circular region from placemark metadata and render as a circle.
+3. If neither is available, fall back to a fixed 2km circle around hotspot coordinates.
+`NewMigrationCollectionViewCell` renders this as either an `MKPolygon` or `MKCircle` overlay.
 
 ### Relevant Sightings Logic
 `HomeManager.getRelevantSightings()` returns trajectory points for the selected bird by week range (with year wrap handling) so `birdspredViewController` can draw the migration path.
