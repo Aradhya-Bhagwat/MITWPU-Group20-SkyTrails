@@ -429,24 +429,14 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
         suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         
-        // Setup Glass/Background View (Button)
-        glassBackgroundPlaceholder.layer.cornerRadius = 24
-        glassBackgroundPlaceholder.layer.cornerCurve = .continuous
-        glassBackgroundPlaceholder.clipsToBounds = true
+        // Setup Background View (Button)
+        // Use the same styling as other cards
+        styleCard(glassBackgroundPlaceholder)
         
-        if #available(iOS 26.0, *) {
-            print("[glassdebug] iOS 26.0+ detected, applying .glass() configuration to button")
-            if let button = glassBackgroundPlaceholder as? UIButton {
-                var config = UIButton.Configuration.glass()
-                config.cornerStyle = .fixed
-                config.background.cornerRadius = 24
-                button.configuration = config
-                button.addTarget(self, action: #selector(didTapGlassButton), for: .touchUpInside)
-                print("[glassdebug] .glass() config applied and target added to button")
-            }
-        } else {
-            print("[glassdebug] Below iOS 26.0, using standard background")
-            glassBackgroundPlaceholder.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
+        if let button = glassBackgroundPlaceholder as? UIButton {
+            button.configuration = .plain()
+            button.addTarget(self, action: #selector(didTapGlassButton), for: .touchUpInside)
+            print("[glassdebug] Button config set to .plain and target added")
         }
         
         birdImageView.layer.cornerRadius = 24
@@ -465,9 +455,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     
     @objc private func didTapGlassButton() {
         print("[glassdebug] didTapGlassButton clicked")
-        // User clicked the glass background
-        // As per instructions: disable button and enable imageview with exact same constraints
-
+        // User clicked the background
         glassBackgroundPlaceholder.isHidden = true
         birdImageView.isHidden = false
         
@@ -479,9 +467,16 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         let isPlaceholder = isUsingPlaceholder()
         print("[glassdebug] updateGlassVisibility called. isPlaceholder: \(isPlaceholder)")
         
-        // When using placeholder (no user image), show glass button
-        // When user has image, hide glass button and show image
+        // When using placeholder (no user image), show background button
         glassBackgroundPlaceholder.isHidden = !isPlaceholder
+        
+        if isPlaceholder {
+            birdImageView.tintColor = .systemBlue
+            print("[glassdebug] updateGlassVisibility: Placeholder detected, set tint to blue")
+        } else {
+            birdImageView.tintColor = nil
+            print("[glassdebug] updateGlassVisibility: Actual image detected, cleared tint")
+        }
 
         birdImageView.isHidden = false // Image stays visible (either SF Symbol or User Image)
         
@@ -516,86 +511,6 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         textField.layer.cornerRadius = 12
         textField.layer.masksToBounds = true
         textField.leftView?.tintColor = .secondaryLabel
-    }
-}
-
-// MARK: - iOS 26 Liquid Glass Shim
-// This provides a compatible API for older iOS versions while being ready for the iOS 26 rendering engine.
-@available(iOS 13.0, *)
-public class UIGlassView: UIView {
-    public enum Style: Int {
-        case regular = 0
-        case clear = 1
-        case soft = 2
-    }
-    
-    public var style: Style = .regular
-    public var allowsMorphing: Bool = false
-    public var pressIllumination: Bool = false
-    
-    private var visualEffectView: UIVisualEffectView?
-    private var nativeGlassView: UIView?
-    
-    public init(style: Style) {
-        self.style = style
-        super.init(frame: .zero)
-        setupEffect()
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupEffect()
-    }
-    
-    private func setupEffect() {
-        // Attempt to find the system-provided UIGlassView to use the real Liquid Glass engine
-        if let nativeClass = NSClassFromString("UIGlassView") as? UIView.Type, 
-           nativeClass != UIGlassView.self {
-            print("[glassdebug] Native UIGlassView class found! Attempting to use native Liquid Glass engine.")
-            // Real UIGlassView init(style:)
-            let nativeView = nativeClass.init()
-            nativeView.frame = self.bounds
-            nativeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            
-            // Set style and properties via KVC since we don't have the header at compile time
-            nativeView.setValue(self.style.rawValue, forKey: "style")
-            nativeView.setValue(self.allowsMorphing, forKey: "allowsMorphing")
-            nativeView.setValue(self.pressIllumination, forKey: "pressIllumination")
-            
-            addSubview(nativeView)
-            self.nativeGlassView = nativeView
-            print("[glassdebug] Native Liquid Glass engine successfully initialized.")
-        } else {
-            print("[glassdebug] Native UIGlassView not found in runtime. Falling back to enhanced Frosted Glass shim.")
-            let blurStyle: UIBlurEffect.Style
-            switch style {
-            case .regular: blurStyle = .systemMaterial
-            case .clear:   blurStyle = .systemUltraThinMaterial
-            case .soft:    blurStyle = .systemThinMaterial
-            }
-            
-            let blurEffect = UIBlurEffect(style: blurStyle)
-            let effectView = UIVisualEffectView(effect: blurEffect)
-            effectView.frame = self.bounds
-            effectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            addSubview(effectView)
-            self.visualEffectView = effectView
-            
-            // Add crystal-like border to simulate high-refraction glass edges
-            self.layer.borderWidth = 0.5
-            self.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
-            
-            // For .clear style, reduce opacity to make it look more like crystal/lens
-            if style == .clear {
-                effectView.alpha = 0.7
-            }
-        }
-    }
-    
-    public override func layoutSubviews() {
-        super.layoutSubviews()
-        visualEffectView?.frame = self.bounds
-        nativeGlassView?.frame = self.bounds
     }
 }
 
