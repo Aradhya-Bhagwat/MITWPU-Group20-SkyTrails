@@ -150,34 +150,38 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="aOO-vP-DA9">
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-OTP-FLD" customClass="OTPInputView" customModule="SkyTrails" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="122" width="712" height="45"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" constant="45" id="jPB-dY-pFs"/>
+                                            <constraint firstAttribute="height" constant="45" id="SUp-OTP-HGT"/>
                                         </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                        <textInputTraits key="textInputTraits" textContentType="password"/>
-                                    </textField>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Confirm Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="bYv-sD-c3H">
-                                        <rect key="frame" x="0.0" y="183" width="712" height="45"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="45" id="J1M-e7-ltz"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                        <textInputTraits key="textInputTraits"/>
-                                    </textField>
+                                    </view>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dpN-4a-2g2">
-                                        <rect key="frame" x="0.0" y="244" width="712" height="45"/>
+                                        <rect key="frame" x="0.0" y="183" width="712" height="45"/>
                                         <constraints>
                                             <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="45" id="W9G-Va-Tk1"/>
                                             <constraint firstAttribute="height" constant="45" id="fj4-za-cdo"/>
                                         </constraints>
                                         <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="filled" title="Sign Up">
+                                        <buttonConfiguration key="configuration" style="filled" title="Send OTP">
                                             <fontDescription key="titleFontDescription" type="boldSystem" pointSize="12"/>
                                         </buttonConfiguration>
                                         <connections>
-                                            <action selector="signupTapped:" destination="5zl-Tt-EQ3" eventType="primaryActionTriggered" id="qc1-SZ-yto"/>
+                                            <action selector="actionButtonTapped:" destination="5zl-Tt-EQ3" eventType="primaryActionTriggered" id="qc1-SZ-yto"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-RSN-BTN">
+                                        <rect key="frame" x="0.0" y="244" width="712" height="45"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="45" id="SUp-RSN-HGT"/>
+                                        </constraints>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Resend OTP">
+                                            <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
+                                        </buttonConfiguration>
+                                        <connections>
+                                            <action selector="resendTapped:" destination="5zl-Tt-EQ3" eventType="primaryActionTriggered" id="SUp-RSN-TAP"/>
                                         </connections>
                                     </button>
                                 </subviews>
@@ -213,10 +217,11 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="confirmPasswordTextField" destination="bYv-sD-c3H" id="M4z-uH-NPG"/>
+                        <outlet property="actionButton" destination="dpN-4a-2g2" id="SUp-ACT-BTN"/>
                         <outlet property="emailTextField" destination="3Dk-iM-4Lz" id="oiS-EY-dic"/>
                         <outlet property="nameTextField" destination="c5Z-cT-Mvj" id="hYG-PF-LeY"/>
-                        <outlet property="passwordTextField" destination="aOO-vP-DA9" id="XJb-xT-s1m"/>
+                        <outlet property="otpInputView" destination="SUp-OTP-FLD" id="SUp-OTP-OUT"/>
+                        <outlet property="resendButton" destination="SUp-RSN-BTN" id="SUp-RSN-OUT"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="C7s-Uy-X0L" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -242,14 +247,13 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4uV-yv-Icv">
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4uV-yv-Icv" customClass="OTPInputView" customModule="SkyTrails" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="62" width="712" height="45"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="45" id="Fax-Oz-BVA"/>
                                         </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                        <textInputTraits key="textInputTraits" textContentType="password"/>
-                                    </textField>
+                                    </view>
                                 </subviews>
                             </stackView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="h1u-82-eKK">
@@ -258,9 +262,12 @@
                                     <constraint firstAttribute="height" constant="20" id="qQ6-cu-qmb"/>
                                 </constraints>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Forgot Password?">
+                                <buttonConfiguration key="configuration" style="plain" title="Resend OTP">
                                     <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
                                 </buttonConfiguration>
+                                <connections>
+                                    <action selector="resendTapped:" destination="VYd-mD-4mX" eventType="primaryActionTriggered" id="RSN-L-TAP"/>
+                                </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wwW-v6-HuI">
                                 <rect key="frame" x="0.0" y="177" width="712" height="45"/>
@@ -268,11 +275,11 @@
                                     <constraint firstAttribute="height" constant="45" id="ISF-RQ-pFd"/>
                                 </constraints>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Login">
+                                <buttonConfiguration key="configuration" style="filled" title="Send OTP">
                                     <fontDescription key="titleFontDescription" type="boldSystem" pointSize="12"/>
                                 </buttonConfiguration>
                                 <connections>
-                                    <action selector="loginTapped:" destination="VYd-mD-4mX" eventType="primaryActionTriggered" id="kHg-4f-51A"/>
+                                    <action selector="actionButtonTapped:" destination="VYd-mD-4mX" eventType="primaryActionTriggered" id="kHg-4f-51A"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -290,8 +297,10 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="actionButton" destination="wwW-v6-HuI" id="aL4-ACT-BTN"/>
                         <outlet property="emailTextField" destination="xoa-s2-FEn" id="3ZX-jU-cpc"/>
-                        <outlet property="passwordTextField" destination="4uV-yv-Icv" id="Cbk-fD-Ljw"/>
+                        <outlet property="otpInputView" destination="4uV-yv-Icv" id="oL4-OTP-FLD"/>
+                        <outlet property="resendButton" destination="h1u-82-eKK" id="rL4-RSN-BTN"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xmV-U3-zP8" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
