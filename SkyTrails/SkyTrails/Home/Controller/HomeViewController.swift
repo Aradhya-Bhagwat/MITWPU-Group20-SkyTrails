@@ -795,22 +795,29 @@ extension HomeViewController {
             let cardData = migrationCards[indexPath.row]
             
             switch cardData {
-            case .combined(let migration, _):
-                guard let bird = WatchlistManager.shared.findBird(byName: migration.birdName) else { return }
-                let (start, end) = homeManager.parseDateRange(migration.dateRange)
-                let input = BirdDateInput(
-                    species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
-                    startDate: start ?? Date(),
-                    endDate: end ?? Date()
-                )
-
-                let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-                if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-                    mapVC.predictionInputs = [input]
-                    self.navigationController?.pushViewController(mapVC, animated: true)
+            case .combined(_, let hotspot):
+                let lat = hotspot.centerCoordinate.latitude
+                let lon = hotspot.centerCoordinate.longitude
+                let radius = max(2.0, hotspot.pinRadiusKm)
+                let predictions = hotspot.birdSpecies.map { bird in
+                    FinalPredictionResult(
+                        birdName: bird.birdName,
+                        imageName: bird.birdImageName,
+                        matchedInputIndex: 0,
+                        matchedLocation: (lat: lat, lon: lon),
+                        spottingProbability: bird.sightabilityPercent
+                    )
                 }
+
+                navigateToSpotDetails(
+                    name: hotspot.placeName,
+                    lat: lat,
+                    lon: lon,
+                    radius: radius,
+                    predictions: predictions
+                )
             }
-				
+					
         case 1:
             // Determine source object (Watchlist vs Recommended) based on index and watchlist count
             // However, upcomingBirds is already flattened.

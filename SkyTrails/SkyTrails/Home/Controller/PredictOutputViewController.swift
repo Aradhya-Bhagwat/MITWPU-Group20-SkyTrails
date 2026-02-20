@@ -9,23 +9,22 @@ import UIKit
 import CoreLocation
 
 class PredictOutputViewController: UIViewController {
-    
     var predictions: [FinalPredictionResult] = []
     var inputData: [PredictionInputData] = []
-    
-    private var organizedPredictions: [[FinalPredictionResult]] = []
+
+    private var displayedPredictions: [FinalPredictionResult] = []
+    private var yearlySeriesByBird: [String: [Int]] = [:]
     private var collectionView: UICollectionView!
-    private let pageControl = UIPageControl()
-    
+    private var selectedPredictionIndex: Int = 0
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTraitChangeHandling()
         applySemanticAppearance()
-        
+
         setupNavigation()
-        organizeData()
+        prepareData()
         setupCollectionView()
-        setupPageControl()
     }
 
     private func setupTraitChangeHandling() {
@@ -38,162 +37,155 @@ class PredictOutputViewController: UIViewController {
         applySemanticAppearance()
         collectionView?.reloadData()
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        let topPadding = view.safeAreaInsets.top - 40
-        collectionView.frame = CGRect(x: 0, y: topPadding, width: view.bounds.width, height: 420)
-        
-        let pcTop = collectionView.frame.maxY + 8
-        pageControl.frame = CGRect(x: 0, y: pcTop, width: view.bounds.width, height: 26)
-    }
-    
-    private func organizeData() {
 
-        organizedPredictions = Array(repeating: [], count: inputData.count)
-        
-        for prediction in predictions {
-            let index = prediction.matchedInputIndex
-
-            if index >= 0 && index < organizedPredictions.count {
-                organizedPredictions[index].append(prediction)
+    private func prepareData() {
+        displayedPredictions = predictions.sorted { lhs, rhs in
+            if lhs.spottingProbability == rhs.spottingProbability {
+                return lhs.birdName < rhs.birdName
             }
+            return lhs.spottingProbability > rhs.spottingProbability
+        }
+
+        for prediction in displayedPredictions {
+            guard yearlySeriesByBird[prediction.birdName] == nil else { continue }
+            yearlySeriesByBird[prediction.birdName] = yearlySeries(for: prediction)
         }
     }
-    
+
     private func setupNavigation() {
         navigationItem.title = "Prediction Results"
         let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedo))
         navigationItem.rightBarButtonItem = redoButton
-        
         navigationItem.leftBarButtonItem = nil
     }
-    
+
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
-        layout.minimumLineSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
-        
-        let screenWidth = view.bounds.width
-       
-        layout.itemSize = CGSize(width: screenWidth - 48, height: 320)
-        
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 12
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
-        collectionView.decelerationRate = .fast
-        collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(UINib(nibName: PredictionOutputCardCell.identifier, bundle: nil), forCellWithReuseIdentifier: PredictionOutputCardCell.identifier)
+        collectionView.decelerationRate = .normal
+        collectionView.showsVerticalScrollIndicator = true
+        collectionView.register(
+            UINib(
+                nibName: spotsToVisitOutputCollectionViewCell.identifier,
+                bundle: Bundle(for: spotsToVisitOutputCollectionViewCell.self)
+            ),
+            forCellWithReuseIdentifier: spotsToVisitOutputCollectionViewCell.identifier
+        )
         collectionView.dataSource = self
         collectionView.delegate = self
-        
+
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionView)
-    }
-    
-    private func setupPageControl() {
-        pageControl.numberOfPages = inputData.count
-        pageControl.currentPage = 0
-        pageControl.hidesForSinglePage = true
-        pageControl.pageIndicatorTintColor = .systemGray4
-        pageControl.currentPageIndicatorTintColor = .systemBlue
-        pageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
-        
-        view.addSubview(pageControl)
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
     }
 
     private func applySemanticAppearance() {
         view.backgroundColor = .systemBackground
         collectionView?.backgroundColor = .clear
-        pageControl.pageIndicatorTintColor = .systemGray4
-        pageControl.currentPageIndicatorTintColor = .systemBlue
         navigationItem.rightBarButtonItem?.tintColor = .systemBlue
     }
-    
-    @objc func pageControlChanged(_ sender: UIPageControl) {
-        let indexPath = IndexPath(item: sender.currentPage, section: 0)
-        collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-    }
-    
+
     @objc private func didTapRedo() {
         if let mapVC = self.navigationController?.parent as? PredictMapViewController {
             mapVC.revertToInputScreen(with: inputData)
         } else {
-
-            self.dismiss(animated: true, completion: nil)
+            dismiss(animated: true, completion: nil)
         }
     }
-    
-    private func updatePageControl() {
-        guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
-        let itemWidth = layout.itemSize.width
-        let spacing = layout.minimumLineSpacing
-        let stride = itemWidth + spacing
-        let offset = collectionView.contentOffset.x
-        let index = Int(round(offset / stride))
-        let safeIndex = max(0, min(index, inputData.count - 1))
-        if pageControl.currentPage != safeIndex {
-            pageControl.currentPage = safeIndex
-        }
+
+    private func yearlySeries(for prediction: FinalPredictionResult) -> [Int] {
+        let location = CLLocationCoordinate2D(
+            latitude: prediction.matchedLocation.lat,
+            longitude: prediction.matchedLocation.lon
+        )
+        return HomeManager.shared.yearlySightabilitySeries(
+            forBirdNamed: prediction.birdName,
+            near: location
+        )
     }
 }
 
-extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate {
-    
+extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return inputData.count
+        displayedPredictions.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionOutputCardCell.identifier, for: indexPath) as? PredictionOutputCardCell else {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: spotsToVisitOutputCollectionViewCell.identifier,
+            for: indexPath
+        ) as? spotsToVisitOutputCollectionViewCell else {
             return UICollectionViewCell()
         }
-        
-        let locationName = inputData[indexPath.row].locationName ?? "Location \(indexPath.row + 1)"
-        let cardPredictions = organizedPredictions[indexPath.row]
-        
-        cell.configure(location: locationName, data: cardPredictions)
-        cell.onSelectPrediction = { [weak self] selectedPrediction in
-            if let mapVC = self?.navigationController?.parent as? PredictMapViewController {
-                mapVC.filterMapForBird(selectedPrediction)
-            }
-        }
-        
+
+        let prediction = displayedPredictions[indexPath.item]
+        let yearly = yearlySeriesByBird[prediction.birdName] ?? []
+        cell.configure(prediction: prediction, yearlyProbabilities: yearly)
+        cell.setCardSelected(indexPath.item == selectedPredictionIndex)
         return cell
     }
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        updatePageControl()
+
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let oldIndex = selectedPredictionIndex
+        selectedPredictionIndex = indexPath.item
+        if oldIndex != selectedPredictionIndex {
+            collectionView.reloadItems(at: [IndexPath(item: oldIndex, section: 0), indexPath])
+        } else {
+            collectionView.reloadItems(at: [indexPath])
+        }
+
+        let prediction = displayedPredictions[indexPath.item]
+        if let mapVC = navigationController?.parent as? PredictMapViewController {
+            mapVC.filterMapForBird(prediction)
+        }
+    }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+        CGSize(width: collectionView.bounds.width - 32, height: 126)
     }
 }
 
 class BirdResultCell: UITableViewCell {
-    
     private let birdImageView = UIImageView()
     private let birdNameLabel = UILabel()
-    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
+
         birdImageView.contentMode = .scaleAspectFill
         birdImageView.clipsToBounds = true
         birdImageView.layer.cornerRadius = 8
-        
+
         birdNameLabel.font = UIFont.preferredFont(forTextStyle: .headline)
         birdNameLabel.textColor = .label
-        
+
         contentView.addSubview(birdImageView)
         contentView.addSubview(birdNameLabel)
         backgroundColor = .clear
         contentView.backgroundColor = .clear
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        
+
         let height = contentView.bounds.height
         let width = contentView.bounds.width
         let imageSize: CGFloat = 60
@@ -202,7 +194,7 @@ class BirdResultCell: UITableViewCell {
         let labelWidth = width - labelX - 16
         birdNameLabel.frame = CGRect(x: labelX, y: 0, width: labelWidth, height: height)
     }
-    
+
     func configure(with name: String, imageName: String) {
         birdNameLabel.text = name
         birdImageView.image = UIImage(named: imageName) ?? UIImage(systemName: "photo")
