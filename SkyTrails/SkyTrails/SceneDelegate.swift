@@ -4,6 +4,7 @@ import GoogleSignIn
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
+    private var authObserver: NSObjectProtocol?
 
     func scene(
         _ scene: UIScene,
@@ -14,34 +15,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
+        window?.rootViewController = makeLaunchPlaceholder()
+        window?.makeKeyAndVisible()
 
-        let storyboard: UIStoryboard
-        let rootVC: UIViewController
-
-        // ✅ Check using UserSession (NOT UserDefaults)
-        if UserSession.shared.isLoggedIn() {
-
-            storyboard = UIStoryboard(name: "Main", bundle: nil)
-
-            rootVC = storyboard.instantiateViewController(
-                withIdentifier: "RootTabBarController"
-            )
-
-            print("Auto Login: TRUE")
-
-        } else {
-
-			storyboard = UIStoryboard(name: "Main", bundle: nil)
-			
-			rootVC = storyboard.instantiateViewController(
-				withIdentifier: "RootTabBarController"
-			)
-			
-			print("Auto Login: TRUE")
+        authObserver = NotificationCenter.default.addObserver(
+            forName: UserSession.authStateDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.routeToCurrentSessionRoot()
         }
 
-        window?.rootViewController = rootVC
-        window?.makeKeyAndVisible()
+        Task { @MainActor in
+            _ = await UserSession.shared.restoreSessionIfNeeded()
+            if UserSession.shared.isAuthenticatedWithSupabase() {
+                await WatchlistManager.shared.bindCurrentUserOwnership()
+            }
+            routeToCurrentSessionRoot()
+        }
     }
 
     // Google Sign-In callback
@@ -53,5 +44,42 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let url = URLContexts.first?.url else { return }
 
         GIDSignIn.sharedInstance.handle(url)
+    }
+
+    private func routeToCurrentSessionRoot() {
+        guard let window else { return }
+
+        let storyboardName = UserSession.shared.isAuthenticatedWithSupabase() ? "Main" : "Onboard"
+        let identifier = UserSession.shared.isAuthenticatedWithSupabase()
+            ? "RootTabBarController"
+            : "StartViewController"
+
+        let storyboard = UIStoryboard(name: storyboardName, bundle: nil)
+        let rootVC = storyboard.instantiateViewController(withIdentifier: identifier)
+
+        window.rootViewController = rootVC
+    }
+
+    private func makeLaunchPlaceholder() -> UIViewController {
+        let controller = UIViewController()
+        controller.view.backgroundColor = .systemBackground
+
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.startAnimating()
+
+        controller.view.addSubview(indicator)
+        NSLayoutConstraint.activate([
+            indicator.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
+            indicator.centerYAnchor.constraint(equalTo: controller.view.centerYAnchor)
+        ])
+
+        return controller
+    }
+
+    deinit {
+        if let authObserver {
+            NotificationCenter.default.removeObserver(authObserver)
+        }
     }
 }

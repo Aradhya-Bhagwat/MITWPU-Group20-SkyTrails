@@ -8,32 +8,35 @@
 import Foundation
 import Security
 
-class KeychainManager {
+final class KeychainManager {
 
     static let shared = KeychainManager()
 
-    func save(email: String, password: String) -> Bool {
+    private init() {}
 
-        let data = password.data(using: .utf8)!
+    @discardableResult
+    func save(value: String, for key: String) -> Bool {
+
+        guard let data = value.data(using: .utf8) else { return false }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: email,
+            kSecAttrService as String: Bundle.main.bundleIdentifier ?? "SkyTrails",
+            kSecAttrAccount as String: key,
             kSecValueData as String: data
         ]
 
         SecItemDelete(query as CFDictionary)
-
         let status = SecItemAdd(query as CFDictionary, nil)
-
         return status == errSecSuccess
     }
 
-    func getPassword(email: String) -> String? {
+    func getValue(for key: String) -> String? {
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: email,
+            kSecAttrService as String: Bundle.main.bundleIdentifier ?? "SkyTrails",
+            kSecAttrAccount as String: key,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -49,12 +52,13 @@ class KeychainManager {
 
         return nil
     }
-    
-    func delete(email: String) {
+
+    func deleteValue(for key: String) {
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: email
+            kSecAttrService as String: Bundle.main.bundleIdentifier ?? "SkyTrails",
+            kSecAttrAccount as String: key
         ]
 
         SecItemDelete(query as CFDictionary)

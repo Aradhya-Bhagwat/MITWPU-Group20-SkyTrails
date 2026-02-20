@@ -26,6 +26,14 @@ class SignUpViewController: UIViewController {
         passwordTextField.isSecureTextEntry = true
         confirmPasswordTextField.isSecureTextEntry = true
 
+        passwordTextField.textContentType = .newPassword
+        confirmPasswordTextField.textContentType = .oneTimeCode
+
+        passwordTextField.autocorrectionType = .no
+        confirmPasswordTextField.autocorrectionType = .no
+        passwordTextField.autocapitalizationType = .none
+        confirmPasswordTextField.autocapitalizationType = .none
+
         addEye(to: passwordTextField)
         addEye(to: confirmPasswordTextField)
     }
@@ -69,12 +77,14 @@ class SignUpViewController: UIViewController {
     // MARK: - Signup Button
 
     @IBAction func signupTapped(_ sender: UIButton) {
-        register()
+        Task { [weak self] in
+            await self?.register(button: sender)
+        }
     }
 
     // MARK: - Register Logic
 
-    private func register() {
+    private func register(button: UIButton) async {
 
         guard let name = nameTextField.text?.trimmingCharacters(in: .whitespaces),
               let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
@@ -104,31 +114,46 @@ class SignUpViewController: UIViewController {
             return
         }
 
-        // Save password in Keychain
-        let success = KeychainManager.shared.save(
-            email: email,
-            password: pass
-        )
+        setLoading(true, button: button)
+        defer { setLoading(false, button: button) }
 
-        guard success else {
-            show("Account already exists")
-            return
+        do {
+            let authResult = try await SupabaseAuthService.shared.signUp(
+                name: name,
+                email: email,
+                password: pass
+            )
+
+            if authResult.hasSession {
+                let user = User(
+                    id: authResult.userID,
+                    name: authResult.displayName ?? name,
+                    gender: "Not Specified",
+                    email: authResult.email,
+                    profilePhoto: authResult.profilePhoto ?? "defaultProfile"
+                )
+
+                UserSession.shared.saveAuthenticatedUser(
+                    user,
+                    accessToken: authResult.accessToken,
+                    refreshToken: authResult.refreshToken
+                )
+
+                await WatchlistManager.shared.bindCurrentUserOwnership()
+                show("Account created successfully!") {
+                    self.goToMain()
+                }
+            } else {
+                show("Account created. Please verify your email before logging in.")
+            }
+        } catch {
+            show(error.localizedDescription)
         }
+    }
 
-        // Create User model
-        let user = User(
-            name: name,
-            gender: "Not Specified",
-            email: email,
-            profilePhoto: "defaultProfile"
-        )
-
-        // Save session
-        UserSession.shared.saveUser(user)
-
-        show("Account created successfully!") {
-            self.goToMain()
-        }
+    private func setLoading(_ isLoading: Bool, button: UIButton) {
+        button.isEnabled = !isLoading
+        button.alpha = isLoading ? 0.6 : 1.0
     }
 
     // MARK: - Navigation

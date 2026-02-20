@@ -21,6 +21,9 @@ class LoginViewController: UIViewController {
     private func setupPassword() {
 
         passwordTextField.isSecureTextEntry = true
+        passwordTextField.textContentType = .password
+        passwordTextField.autocorrectionType = .no
+        passwordTextField.autocapitalizationType = .none
         addEyeButton(to: passwordTextField)
     }
 
@@ -58,12 +61,14 @@ class LoginViewController: UIViewController {
     // MARK: - Login Button
 
     @IBAction func loginTapped(_ sender: UIButton) {
-        login()
+        Task { [weak self] in
+            await self?.login(button: sender)
+        }
     }
 
     // MARK: - Login Logic
 
-    private func login() {
+    private func login(button: UIButton) async {
 
         guard let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
               let password = passwordTextField.text,
@@ -79,31 +84,53 @@ class LoginViewController: UIViewController {
             return
         }
 
-        // Get password from Keychain
-        guard let savedPassword =
-                KeychainManager.shared.getPassword(email: email) else {
+        setLoading(true, button: button)
+        defer { setLoading(false, button: button) }
 
-            showAlert("Account not found")
-            return
+        do {
+            let authResult = try await SupabaseAuthService.shared.signIn(email: email, password: password)
+
+            let displayName: String
+            if let existingUser = UserSession.shared.currentUser, existingUser.email == email {
+                displayName = existingUser.name
+            } else {
+                displayName = authResult.displayName ?? fallbackName(from: authResult.email)
+            }
+
+            let profilePhoto =
+                authResult.profilePhoto
+                ?? UserSession.shared.currentUser?.profilePhoto
+                ?? "defaultProfile"
+
+            let user = User(
+                id: authResult.userID,
+                name: displayName,
+                gender: "Not Specified",
+                email: authResult.email,
+                profilePhoto: profilePhoto
+            )
+
+            UserSession.shared.saveAuthenticatedUser(
+                user,
+                accessToken: authResult.accessToken,
+                refreshToken: authResult.refreshToken
+            )
+
+            await WatchlistManager.shared.bindCurrentUserOwnership()
+            goToMain()
+        } catch {
+            showAlert(error.localizedDescription)
         }
+    }
 
-        guard savedPassword == password else {
-            showAlert("Wrong password")
-            return
-        }
+    private func setLoading(_ isLoading: Bool, button: UIButton) {
+        button.isEnabled = !isLoading
+        button.alpha = isLoading ? 0.6 : 1.0
+    }
 
-        // Load user data
-        let user = User(
-            name: "User",
-            gender: "Not Specified",
-            email: email,
-            profilePhoto: "defaultProfile"
-        )
-
-        // Save session
-        UserSession.shared.saveUser(user)
-
-        goToMain()
+    private func fallbackName(from email: String) -> String {
+        let username = email.split(separator: "@").first.map(String.init) ?? "User"
+        return username.isEmpty ? "User" : username
     }
 
     // MARK: - Navigation
