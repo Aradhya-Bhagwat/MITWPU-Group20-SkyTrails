@@ -44,7 +44,6 @@ final class IdentificationSeeder {
         let order_name: String?
         let descriptionText: String?
         let conservation_status: String?
-        let rarityLevel: String?
         let validLocations: [String]?
         let validMonths: [Int]?
         let shape_id: String?
@@ -210,10 +209,6 @@ final class IdentificationSeeder {
 
         // MARK: - Step 4: Create Birds
         for birdDTO in db.birds {
-            let rarity = BirdRarityLevel(
-                rawValue: birdDTO.rarityLevel?.lowercased() ?? "common"
-            ) ?? .common
-
             // Convert BirdFieldMarkDataDTO to BirdFieldMarkData
             var fieldMarkData: [BirdFieldMarkData] = []
             if let markDataDTOs = birdDTO.fieldMarkData {
@@ -248,10 +243,6 @@ final class IdentificationSeeder {
                     existing.fieldMarkData = fieldMarkData
                     didUpdate = true
                 }
-                if existing.rarityLevel == nil {
-                    existing.rarityLevel = rarity
-                    didUpdate = true
-                }
                 if didUpdate {
                     context.insert(existing)
                 }
@@ -267,7 +258,6 @@ final class IdentificationSeeder {
                 order_name: birdDTO.order_name,
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
-                rarityLevel: rarity,
                 migration_strategy: nil,
                 hemisphere: nil,
                 validLocations: birdDTO.validLocations,

@@ -134,21 +134,6 @@ final class WatchlistQueryService {
             }
         }
         
-        if let rarityLevels = filter.rarityLevels, !rarityLevels.isEmpty {
-            filtered = filtered.filter { entry in
-                guard let rarity = entry.bird?.rarityLevel else { return false }
-                let level: Int
-                switch rarity {
-                case .common: level = 1
-                case .uncommon: level = 2
-                case .rare: level = 3
-                case .very_rare: level = 4
-                case .endangered: level = 5
-                }
-                return rarityLevels.contains(level)
-            }
-        }
-        
         if let families = filter.families, !families.isEmpty {
             filtered = filtered.filter { entry in
                 guard let family = entry.bird?.family else { return false }
@@ -170,57 +155,8 @@ final class WatchlistQueryService {
             }
         }
         
-        // Apply sorting
-        filtered = applySorting(entries: filtered, sort: sort)
-        
         // Convert to DTOs
         return filtered.compactMap { $0.toDomain() }
-    }
-    
-    private func applySorting(entries: [WatchlistEntry], sort: WatchlistSortOption) -> [WatchlistEntry] {
-        switch sort {
-        case .addedDateNewest:
-            return entries.sorted { $0.addedDate > $1.addedDate }
-        case .addedDateOldest:
-            return entries.sorted { $0.addedDate < $1.addedDate }
-        case .birdNameAZ:
-            return entries.sorted { ($0.bird?.commonName ?? "") < ($1.bird?.commonName ?? "") }
-        case .birdNameZA:
-            return entries.sorted { ($0.bird?.commonName ?? "") > ($1.bird?.commonName ?? "") }
-        case .observationDateNewest:
-            return entries.sorted {
-                guard let date1 = $0.observationDate, let date2 = $1.observationDate else {
-                    return $0.observationDate != nil
-                }
-                return date1 > date2
-            }
-        case .observationDateOldest:
-            return entries.sorted {
-                guard let date1 = $0.observationDate, let date2 = $1.observationDate else {
-                    return $0.observationDate != nil
-                }
-                return date1 < date2
-            }
-        case .priority:
-            return entries.sorted { $0.priority > $1.priority }
-        case .rarity:
-            return entries.sorted {
-                let level1 = rarityToInt($0.bird?.rarityLevel)
-                let level2 = rarityToInt($1.bird?.rarityLevel)
-                return level1 > level2
-            }
-        }
-    }
-    
-    private func rarityToInt(_ rarity: RarityLevel?) -> Int {
-        guard let rarity = rarity else { return 0 }
-        switch rarity {
-        case .common: return 1
-        case .uncommon: return 2
-        case .rare: return 3
-        case .very_rare: return 4
-        case .endangered: return 5
-        }
     }
     
     // MARK: - Stats
@@ -246,10 +182,7 @@ final class WatchlistQueryService {
     
     private func calculateStats(from entries: [WatchlistEntry]) -> WatchlistStatsDTO {
         let observedCount = entries.filter { $0.status == .observed }.count
-        let rareCount = entries.filter {
-            $0.status == .observed &&
-            ($0.bird?.rarityLevel == .rare || $0.bird?.rarityLevel == .very_rare)
-        }.count
+        let rareCount = 0
         
         return WatchlistStatsDTO(
             observedCount: observedCount,

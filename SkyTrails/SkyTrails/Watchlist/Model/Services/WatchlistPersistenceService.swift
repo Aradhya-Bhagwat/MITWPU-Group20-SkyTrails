@@ -380,9 +380,7 @@ final class WatchlistPersistenceService {
     }
     
     func fetchAllBirds() throws -> [Bird] {
-        let descriptor = FetchDescriptor<Bird>(
-            sortBy: [SortDescriptor(\.commonName)]
-        )
+        let descriptor = FetchDescriptor<Bird>()
         return try context.fetch(descriptor)
     }
 
@@ -413,7 +411,6 @@ final class WatchlistPersistenceService {
         commonName: String,
         scientificName: String = "Unknown",
         staticImageName: String = "photo",
-        rarityLevel: RarityLevel = .common
     ) throws -> Bird {
         // Check for duplicate
         if try fetchBird(byCommonName: commonName) != nil {
@@ -425,7 +422,6 @@ final class WatchlistPersistenceService {
             commonName: commonName,
             scientificName: scientificName,
             staticImageName: staticImageName,
-            rarityLevel: rarityLevel,
             validLocations: []
         )
         

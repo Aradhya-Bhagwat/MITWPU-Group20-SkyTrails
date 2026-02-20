@@ -44,7 +44,6 @@ struct WatchlistSeeder {
 		let name: String
 		let scientificName: String
 		let images: [String]
-		let rarity: [String]
 		let location: [String]
 		let date: [TimeInterval]
 		let observedBy: [String]?
@@ -256,7 +255,6 @@ struct WatchlistSeeder {
 			commonName: dto.name,
 			scientificName: dto.scientificName,
 			staticImageName: dto.images.first ?? "placeholder",
-			rarityLevel: .common,
 			validLocations: dto.location
 		)
 		context.insert(placeholder)

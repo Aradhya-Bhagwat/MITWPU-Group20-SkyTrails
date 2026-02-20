@@ -381,7 +381,6 @@ final class WatchlistManager: WatchlistRepository {
             commonName: name,
             scientificName: "Unknown",
             staticImageName: "photo",
-            rarityLevel: .common,
             validLocations: []
         )
     }

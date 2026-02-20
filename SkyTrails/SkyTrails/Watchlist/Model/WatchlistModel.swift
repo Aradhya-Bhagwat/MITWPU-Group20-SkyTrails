@@ -32,7 +32,6 @@ enum WatchlistRuleType: String, Codable {
     case location
     case date_range
     case species_family
-    case rarity_level
     case migration_pattern
 }
 
@@ -233,7 +232,7 @@ extension Watchlist {
         let stats = WatchlistStatsDTO(
             observedCount: self.observedCount,
             totalCount: self.speciesCount,
-            rareCount: self.entries?.filter { $0.bird?.rarityLevel?.rawValue == "rare" || $0.bird?.rarityLevel?.rawValue == "very_rare" }.count ?? 0
+            rareCount: 0
         )
         
         return WatchlistDetailDTO(
@@ -268,7 +267,7 @@ extension Watchlist {
         let stats = WatchlistStatsDTO(
             observedCount: self.observedCount,
             totalCount: self.speciesCount,
-            rareCount: self.entries?.filter { $0.bird?.rarityLevel?.rawValue == "rare" || $0.bird?.rarityLevel?.rawValue == "very_rare" }.count ?? 0
+            rareCount: 0
         )
         
         return WatchlistSummaryDTO(
@@ -384,7 +383,6 @@ extension Bird {
             commonName: self.commonName,
             scientificName: self.scientificName,
             staticImageName: self.staticImageName,
-            rarityLevel: self.rarityLevel.map { Int($0.rawValue.hashValue) },
             family: self.family
         )
     }

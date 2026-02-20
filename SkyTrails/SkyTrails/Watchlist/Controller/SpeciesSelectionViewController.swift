@@ -188,16 +188,12 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         
         let bird = filteredBirds[indexPath.row]
         
-        // Configure Cell Content - configure FIRST before setting shouldShowAvatars
-        // to avoid crash when outlets aren't connected yet
         cell.configure(with: bird)
         cell.shouldShowAvatars = false
         cell.dateLabel.isHidden = true
         
-			// Rarity Logic
-		let rarityString = bird.rarityLevel?.rawValue.capitalized ?? "Unknown"
-		cell.locationLabel.text = rarityString
-		cell.locationLabel.textColor = .systemOrange
+        // Location label is unused in this screen now that rarity is removed
+        cell.locationLabel.text = nil
 		
 		// Selection State
 		cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
