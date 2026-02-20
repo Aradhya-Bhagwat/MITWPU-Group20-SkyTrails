@@ -82,6 +82,10 @@ struct WatchlistRow: Codable {
     let dateRuleEnabled: Bool
     let dateRuleStartDate: Date?
     let dateRuleEndDate: Date?
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
+    let deletedAt: Date?
     let createdAt: Date
     let updatedAt: Date?
 
@@ -107,6 +111,10 @@ struct WatchlistRow: Codable {
         case dateRuleEnabled = "date_rule_enabled"
         case dateRuleStartDate = "date_rule_start_date"
         case dateRuleEndDate = "date_rule_end_date"
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
+        case deletedAt = "deleted_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -130,6 +138,10 @@ struct WatchlistEntryRow: Codable {
     let priority: Int
     let notifyUpcoming: Bool
     let targetDateRange: String?
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
+    let deletedAt: Date?
     let createdAt: Date
     let updatedAt: Date?
 
@@ -151,6 +163,10 @@ struct WatchlistEntryRow: Codable {
         case priority
         case notifyUpcoming = "notify_upcoming"
         case targetDateRange = "target_date_range"
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
+        case deletedAt = "deleted_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -163,6 +179,10 @@ struct WatchlistRuleRow: Codable {
     let parametersJson: String
     let isActive: Bool
     let priority: Int
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
+    let deletedAt: Date?
     let createdAt: Date
     let updatedAt: Date?
 
@@ -173,6 +193,10 @@ struct WatchlistRuleRow: Codable {
         case parametersJson = "parameters_json"
         case isActive = "is_active"
         case priority
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
+        case deletedAt = "deleted_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -202,6 +226,9 @@ struct ObservedBirdPhotoRow: Codable {
     let imagePath: String
     let storageUrl: String?
     let isUploaded: Bool
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
     let capturedAt: Date?
     let uploadedAt: Date?
     let createdAt: Date
@@ -213,6 +240,9 @@ struct ObservedBirdPhotoRow: Codable {
         case imagePath = "image_path"
         case storageUrl = "storage_url"
         case isUploaded = "is_uploaded"
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
         case capturedAt = "captured_at"
         case uploadedAt = "uploaded_at"
         case createdAt = "created_at"
