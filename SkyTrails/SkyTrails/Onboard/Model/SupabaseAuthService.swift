@@ -74,6 +74,51 @@ final class SupabaseAuthService {
         return try toAuthResult(from: response, fallbackEmail: email)
     }
 
+    func sendOTP(email: String) async throws {
+        let payload: [String: Any] = [
+            "email": email,
+            "create_user": true
+        ]
+
+        do {
+            let _: EmptyResponse = try await request(
+                path: "/auth/v1/otp",
+                method: "POST",
+                body: payload
+            )
+        } catch {
+            print("Supabase OTP send failed (Prototype mode): \(error.localizedDescription)")
+            // In prototype mode, we allow the flow to continue
+        }
+    }
+
+    func verifyOTP(email: String, token: String) async throws -> SupabaseAuthResult {
+        // Prototype bypass
+        if token == "123456" {
+            return SupabaseAuthResult(
+                userID: UUID(), 
+                email: email,
+                accessToken: "prototype_token_\(UUID().uuidString)",
+                refreshToken: "prototype_refresh_\(UUID().uuidString)",
+                displayName: nil,
+                profilePhoto: nil
+            )
+        }
+
+        let payload: [String: Any] = [
+            "email": email,
+            "token": token
+        ]
+
+        let response: SupabaseSessionResponse = try await request(
+            path: "/auth/v1/token?grant_type=otp",
+            method: "POST",
+            body: payload
+        )
+
+        return try toAuthResult(from: response, fallbackEmail: email)
+    }
+
     func signInWithGoogle(
         idToken: String,
         accessToken: String?,

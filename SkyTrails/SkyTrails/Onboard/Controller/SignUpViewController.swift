@@ -2,100 +2,47 @@ import UIKit
 
 class SignUpViewController: UIViewController {
 
-    // MARK: - Outlets
-
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var emailTextField: UITextField!
+    @IBOutlet weak var otpInputView: OTPInputView!
+    @IBOutlet weak var actionButton: UIButton!
+    @IBOutlet weak var resendButton: UIButton!
 
-    @IBOutlet weak var passwordTextField: UITextField!
-    @IBOutlet weak var confirmPasswordTextField: UITextField!
-
-    // MARK: - Lifecycle
+    private var isOTPRequired = false
+    private var pendingEmail: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        setupPasswords()
+        setupFields()
         hideKeyboardWhenTapped()
     }
 
-    // MARK: - Password Setup
-
-    private func setupPasswords() {
-
-        passwordTextField.isSecureTextEntry = true
-        confirmPasswordTextField.isSecureTextEntry = true
-
-        passwordTextField.textContentType = .newPassword
-        confirmPasswordTextField.textContentType = .oneTimeCode
-
-        passwordTextField.autocorrectionType = .no
-        confirmPasswordTextField.autocorrectionType = .no
-        passwordTextField.autocapitalizationType = .none
-        confirmPasswordTextField.autocapitalizationType = .none
-
-        addEye(to: passwordTextField)
-        addEye(to: confirmPasswordTextField)
+    private func setupFields() {
+        otpInputView.isHidden = true
+        resendButton.isHidden = true
+        actionButton.setTitle("Send OTP", for: .normal)
     }
 
-    private func addEye(to textField: UITextField) {
-
-        let button = UIButton(type: .custom)
-
-        button.setImage(UIImage(systemName: "eye.slash"), for: .normal)
-        button.setImage(UIImage(systemName: "eye"), for: .selected)
-
-        button.tintColor = .gray
-        button.frame = CGRect(x: 0, y: 0, width: 25, height: 25)
-
-        button.addTarget(
-            self,
-            action: #selector(togglePassword(_:)),
-            for: .touchUpInside
-        )
-
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
-
-        button.center = container.center
-        container.addSubview(button)
-
-        textField.rightView = container
-        textField.rightViewMode = .always
-    }
-
-    @objc private func togglePassword(_ sender: UIButton) {
-
-        sender.isSelected.toggle()
-
-        if let container = sender.superview,
-           let field = container.superview as? UITextField {
-
-            field.isSecureTextEntry = !sender.isSelected
-        }
-    }
-
-    // MARK: - Signup Button
-
-    @IBAction func signupTapped(_ sender: UIButton) {
+    @IBAction func actionButtonTapped(_ sender: UIButton) {
         Task { [weak self] in
-            await self?.register(button: sender)
+            await self?.handleAction(button: sender)
         }
     }
 
-    // MARK: - Register Logic
+    private func handleAction(button: UIButton) async {
+        if isOTPRequired {
+            await verifyOTP(button: button)
+        } else {
+            await sendOTP(button: button)
+        }
+    }
 
-    private func register(button: UIButton) async {
-
+    private func sendOTP(button: UIButton) async {
         guard let name = nameTextField.text?.trimmingCharacters(in: .whitespaces),
               let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
-              let pass = passwordTextField.text,
-              let confirm = confirmPasswordTextField.text,
               !name.isEmpty,
-              !email.isEmpty,
-              !pass.isEmpty,
-              !confirm.isEmpty else {
-
-            show("Please fill all fields")
+              !email.isEmpty else {
+            show("Please enter name and email")
             return
         }
 
@@ -104,54 +51,79 @@ class SignUpViewController: UIViewController {
             return
         }
 
-        guard pass.count >= 6 else {
-            show("Password must be at least 6 characters")
-            return
-        }
-
-        guard pass == confirm else {
-            show("Passwords do not match")
-            return
-        }
-
         setLoading(true, button: button)
-        defer { setLoading(false, button: button) }
 
         do {
-            let authResult = try await SupabaseAuthService.shared.signUp(
-                name: name,
-                email: email,
-                password: pass
+            try await SupabaseAuthService.shared.sendOTP(email: email)
+            pendingEmail = email
+            isOTPRequired = true
+
+            otpInputView.isHidden = false
+            resendButton.isHidden = false
+            actionButton.setTitle("Verify OTP", for: .normal)
+            emailTextField.isEnabled = false
+            nameTextField.isEnabled = false
+
+            show("OTP sent to your email (Prototype: Use 123456)")
+        } catch {
+            show(error.localizedDescription)
+        }
+
+        setLoading(false, button: button)
+    }
+
+    private func verifyOTP(button: UIButton) async {
+        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespaces),
+              !email.isEmpty else {
+            show("Email is required")
+            return
+        }
+
+        let token = otpInputView.text.trimmingCharacters(in: .whitespaces)
+        guard token.count == 6 else {
+            show("Please enter the 6-digit OTP")
+            return
+        }
+
+        let name = nameTextField.text?.trimmingCharacters(in: .whitespaces) ?? "User"
+
+        setLoading(true, button: button)
+
+        do {
+            let authResult = try await SupabaseAuthService.shared.verifyOTP(email: email, token: token)
+
+            let user = User(
+                id: authResult.userID,
+                name: authResult.displayName ?? name,
+                gender: "Not Specified",
+                email: authResult.email,
+                profilePhoto: authResult.profilePhoto ?? "defaultProfile"
             )
 
-            if authResult.hasSession {
-                let user = User(
-                    id: authResult.userID,
-                    name: authResult.displayName ?? name,
-                    gender: "Not Specified",
-                    email: authResult.email,
-                    profilePhoto: authResult.profilePhoto ?? "defaultProfile"
-                )
+            UserSession.shared.saveAuthenticatedUser(
+                user,
+                accessToken: authResult.accessToken,
+                refreshToken: authResult.refreshToken
+            )
 
-                UserSession.shared.saveAuthenticatedUser(
-                    user,
-                    accessToken: authResult.accessToken,
-                    refreshToken: authResult.refreshToken
-                )
+            Task {
+                try? await UserSyncService.shared.upsertUser(user)
+            }
 
-                Task {
-                    try? await UserSyncService.shared.upsertUser(user)
-                }
-
-                await WatchlistManager.shared.bindCurrentUserOwnership()
-                show("Account created successfully!") {
-                    self.goToMain()
-                }
-            } else {
-                show("Account created. Please verify your email before logging in.")
+            await WatchlistManager.shared.bindCurrentUserOwnership()
+            show("Account created successfully!") {
+                self.goToMain()
             }
         } catch {
             show(error.localizedDescription)
+        }
+
+        setLoading(false, button: button)
+    }
+
+    @IBAction func resendTapped(_ sender: UIButton) {
+        Task { [weak self] in
+            await self?.sendOTP(button: sender)
         }
     }
 
@@ -160,23 +132,14 @@ class SignUpViewController: UIViewController {
         button.alpha = isLoading ? 0.6 : 1.0
     }
 
-    // MARK: - Navigation
-
     private func goToMain() {
-
-        guard let scene =
-                UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window =
-                scene.windows.first(where: { $0.isKeyWindow }) else {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) else {
             return
         }
 
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-
-        let mainVC = storyboard.instantiateViewController(
-            withIdentifier: "RootTabBarController"
-        )
-
+        let mainVC = storyboard.instantiateViewController(withIdentifier: "RootTabBarController")
         window.rootViewController = mainVC
 
         UIView.transition(
@@ -187,35 +150,16 @@ class SignUpViewController: UIViewController {
         )
     }
 
-    // MARK: - Alert
-
-    private func show(_ msg: String,
-                      completion: (() -> Void)? = nil) {
-
-        let alert = UIAlertController(
-            title: "Alert",
-            message: msg,
-            preferredStyle: .alert
-        )
-
-        alert.addAction(
-            UIAlertAction(title: "OK", style: .default) { _ in
-                completion?()
-            }
-        )
-
+    private func show(_ msg: String, completion: (() -> Void)? = nil) {
+        let alert = UIAlertController(title: "Alert", message: msg, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            completion?()
+        })
         present(alert, animated: true)
     }
 
-    // MARK: - Keyboard
-
     private func hideKeyboardWhenTapped() {
-
-        let tap = UITapGestureRecognizer(
-            target: self,
-            action: #selector(dismissKeyboard)
-        )
-
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tap)
     }
 
