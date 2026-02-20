@@ -127,6 +127,10 @@ class StartViewController: UIViewController {
                         refreshToken: authResult.refreshToken
                     )
 
+                    Task {
+                        try? await UserSyncService.shared.upsertUser(user)
+                    }
+
                 } catch {
                     self.showAlert(error.localizedDescription)
                     return
