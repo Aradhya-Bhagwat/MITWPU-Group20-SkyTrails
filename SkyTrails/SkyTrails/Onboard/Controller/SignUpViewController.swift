@@ -139,6 +139,10 @@ class SignUpViewController: UIViewController {
                     refreshToken: authResult.refreshToken
                 )
 
+                Task {
+                    try? await UserSyncService.shared.upsertUser(user)
+                }
+
                 await WatchlistManager.shared.bindCurrentUserOwnership()
                 show("Account created successfully!") {
                     self.goToMain()

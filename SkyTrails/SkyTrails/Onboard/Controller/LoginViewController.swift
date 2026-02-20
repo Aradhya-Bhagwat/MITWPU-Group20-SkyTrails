@@ -116,6 +116,10 @@ class LoginViewController: UIViewController {
                 refreshToken: authResult.refreshToken
             )
 
+            Task {
+                try? await UserSyncService.shared.upsertUser(user)
+            }
+
             await WatchlistManager.shared.bindCurrentUserOwnership()
             goToMain()
         } catch {
