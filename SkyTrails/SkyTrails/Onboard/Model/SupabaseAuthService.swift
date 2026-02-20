@@ -397,5 +397,5 @@ private struct SupabaseErrorResponse: Decodable {
     }
 }
 
-private struct EmptyResponse: Decodable {}
+struct EmptyResponse: Decodable {}
 
