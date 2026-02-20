@@ -76,40 +76,65 @@ class StartViewController: UIViewController {
 
         GIDSignIn.sharedInstance.signIn(
             withPresenting: self
-        ) { result, error in
+        ) { [weak self] result, error in
+            guard let self = self else { return }
 
             if let error = error {
                 print("Google Error:", error.localizedDescription)
-                self.showAlert("Google Login Failed")
+                self.showAlert("Google login failed")
                 return
             }
 
-            guard let user = result?.user else {
+            guard let googleUser = result?.user else {
                 self.showAlert("Login Failed")
                 return
             }
 
-            let email = user.profile?.email ?? ""
-            let name = user.profile?.name ?? ""
+            guard let idToken = googleUser.idToken?.tokenString else {
+                self.showAlert("Google token missing")
+                return
+            }
+
+            let email = googleUser.profile?.email ?? ""
+            let name = googleUser.profile?.name ?? ""
+            let accessToken = googleUser.accessToken.tokenString
 
             // Get Google profile image URL
             let imageURL =
-                user.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
+                googleUser.profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
 
-            print("Google Photo:", imageURL)
+            Task { @MainActor in
+                do {
+                    let authResult = try await SupabaseAuthService.shared.signInWithGoogle(
+                        idToken: idToken,
+                        accessToken: accessToken,
+                        fallbackEmail: email,
+                        fallbackName: name,
+                        fallbackProfilePhoto: imageURL
+                    )
 
-            // Create User model
-            let googleUser = User(
-                name: name,
-                gender: "Not Specified",
-                email: email,
-                profilePhoto: imageURL
-            )
+                    let user = User(
+                        id: authResult.userID,
+                        name: authResult.displayName ?? name,
+                        gender: "Not Specified",
+                        email: authResult.email.isEmpty ? email : authResult.email,
+                        profilePhoto: authResult.profilePhoto ?? (imageURL.isEmpty ? "defaultProfile" : imageURL)
+                    )
 
-            // Save session
-            UserSession.shared.saveUser(googleUser)
+                    UserSession.shared.saveAuthenticatedUser(
+                        user,
+                        accessToken: authResult.accessToken,
+                        refreshToken: authResult.refreshToken
+                    )
 
-            self.goToMain()
+                } catch {
+                    self.showAlert(error.localizedDescription)
+                    return
+                }
+
+                await WatchlistManager.shared.bindCurrentUserOwnership()
+                self.goToMain()
+            }
         }
     }
 

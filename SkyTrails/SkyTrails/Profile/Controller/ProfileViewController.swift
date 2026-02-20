@@ -66,6 +66,11 @@ class ProfileViewController: UIViewController {
     }
 
     private func logout() {
+        if let accessToken = UserSession.shared.getAccessToken() {
+            Task {
+                try? await SupabaseAuthService.shared.signOut(accessToken: accessToken)
+            }
+        }
 
         UserSession.shared.logout()
         goToLogin()

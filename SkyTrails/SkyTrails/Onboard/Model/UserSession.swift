@@ -10,8 +10,11 @@ import Foundation
 class UserSession {
 
     static let shared = UserSession()
+    static let authStateDidChangeNotification = Notification.Name("UserSessionAuthStateDidChange")
 
     private let userKey = "loggedInUser"
+    private let accessTokenKey = "supabase_access_token"
+    private let refreshTokenKey = "supabase_refresh_token"
 
     private init() {}
 
@@ -22,25 +25,125 @@ class UserSession {
         }
     }
 
+    func saveAuthenticatedUser(
+        _ user: User,
+        accessToken: String?,
+        refreshToken: String?
+    ) {
+        saveUser(user)
+
+        if let accessToken {
+            KeychainManager.shared.save(value: accessToken, for: accessTokenKey)
+        } else {
+            KeychainManager.shared.deleteValue(for: accessTokenKey)
+        }
+
+        if let refreshToken {
+            KeychainManager.shared.save(value: refreshToken, for: refreshTokenKey)
+        } else {
+            KeychainManager.shared.deleteValue(for: refreshTokenKey)
+        }
+
+        notifyAuthStateChanged()
+    }
+
     func getUser() -> User? {
 
         guard let data = UserDefaults.standard.data(forKey: userKey),
               let user = try? JSONDecoder().decode(User.self, from: data)
         else { return nil }
 
+        if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           object["id"] == nil {
+            saveUser(user)
+        }
+
         return user
     }
 
-    func logout() {
+    func getAccessToken() -> String? {
+        KeychainManager.shared.getValue(for: accessTokenKey)
+    }
 
-        if let user = getUser() {
-            KeychainManager.shared.delete(email: user.email)
+    func getRefreshToken() -> String? {
+        KeychainManager.shared.getValue(for: refreshTokenKey)
+    }
+
+    var currentUserID: UUID? {
+        isAuthenticatedWithSupabase() ? getUser()?.id : nil
+    }
+
+    func logout() {
+        KeychainManager.shared.deleteValue(for: accessTokenKey)
+        KeychainManager.shared.deleteValue(for: refreshTokenKey)
+        UserDefaults.standard.removeObject(forKey: userKey)
+        notifyAuthStateChanged()
+    }
+
+    func isAuthenticatedWithSupabase() -> Bool {
+        getAccessToken() != nil && getUser() != nil
+    }
+
+    var currentUser: User? {
+        isAuthenticatedWithSupabase() ? getUser() : nil
+    }
+
+    @discardableResult
+    func restoreSessionIfNeeded() async -> Bool {
+        guard let accessToken = getAccessToken(),
+              let refreshToken = getRefreshToken()
+        else {
+            if getUser() != nil {
+                logout()
+            }
+            return false
         }
 
-        UserDefaults.standard.removeObject(forKey: userKey)
+        do {
+            let authResult = try await SupabaseAuthService.shared.restoreSession(
+                accessToken: accessToken,
+                refreshToken: refreshToken
+            )
+
+            let cached = getUser()
+            let resolvedName = authResult.displayName
+                ?? cached?.name
+                ?? fallbackName(from: authResult.email)
+
+            let resolvedPhoto = authResult.profilePhoto
+                ?? cached?.profilePhoto
+                ?? "defaultProfile"
+
+            let user = User(
+                id: authResult.userID,
+                name: resolvedName,
+                gender: cached?.gender ?? "Not Specified",
+                email: authResult.email,
+                profilePhoto: resolvedPhoto
+            )
+
+            saveAuthenticatedUser(
+                user,
+                accessToken: authResult.accessToken ?? accessToken,
+                refreshToken: authResult.refreshToken ?? refreshToken
+            )
+            return true
+        } catch {
+            logout()
+            return false
+        }
     }
 
     func isLoggedIn() -> Bool {
-        return getUser() != nil
+        return isAuthenticatedWithSupabase()
+    }
+
+    private func fallbackName(from email: String) -> String {
+        let username = email.split(separator: "@").first.map(String.init) ?? "User"
+        return username.isEmpty ? "User" : username
+    }
+
+    private func notifyAuthStateChanged() {
+        NotificationCenter.default.post(name: Self.authStateDidChangeNotification, object: self)
     }
 }

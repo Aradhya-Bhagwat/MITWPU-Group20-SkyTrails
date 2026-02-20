@@ -36,6 +36,7 @@ enum RepositoryError: Error, LocalizedError {
 final class WatchlistManager: WatchlistRepository {
     
     static let shared = WatchlistManager()
+    static let didAdoptPendingWatchlistsNotification = Notification.Name("WatchlistManagerDidAdoptPendingWatchlists")
     
     // MARK: - SwiftData Container
     
@@ -177,7 +178,26 @@ final class WatchlistManager: WatchlistRepository {
         shared: [WatchlistSummaryDTO],
         globalStats: WatchlistStatsDTO
     ) {
+        _ = try persistence.bindWatchlistsToCurrentUser()
         return try await query.loadDashboardData()
+    }
+
+    func bindCurrentUserOwnership() async {
+        do {
+            let adoptedCount = try persistence.bindWatchlistsToCurrentUser()
+            if adoptedCount > 0, let userID = UserSession.shared.currentUserID {
+                NotificationCenter.default.post(
+                    name: Self.didAdoptPendingWatchlistsNotification,
+                    object: self,
+                    userInfo: [
+                        "adoptedCount": adoptedCount,
+                        "userID": userID.uuidString
+                    ]
+                )
+            }
+        } catch {
+            print("⚠️ [WatchlistManager] Failed to bind watchlist ownership: \(error)")
+        }
     }
     
     func deleteWatchlist(id: UUID) async throws {

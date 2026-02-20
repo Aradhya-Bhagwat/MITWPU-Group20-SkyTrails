@@ -13,7 +13,7 @@ import CoreLocation
 
 enum WatchlistConstants {
     static let myWatchlistID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
-    static let defaultOwnerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    static let legacyDefaultOwnerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 }
 
 // MARK: - User Preferences

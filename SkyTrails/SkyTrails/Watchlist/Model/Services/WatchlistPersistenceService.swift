@@ -17,6 +17,24 @@ final class WatchlistPersistenceService {
     init(context: ModelContext) {
         self.context = context
     }
+
+    private var activeUserID: UUID? {
+        UserSession.shared.currentUserID
+    }
+
+    private func isWatchlistAccessible(_ watchlist: Watchlist) -> Bool {
+        if watchlist.type == .shared { return true }
+
+        guard let userID = activeUserID else {
+            return watchlist.owner_id == nil
+        }
+
+        return watchlist.owner_id == userID || watchlist.owner_id == nil
+    }
+
+    private func scoped(_ watchlists: [Watchlist]) -> [Watchlist] {
+        watchlists.filter { isWatchlistAccessible($0) }
+    }
     
     // MARK: - Watchlist CRUD
     
@@ -29,6 +47,7 @@ final class WatchlistPersistenceService {
         type: WatchlistType = .custom
     ) throws -> Watchlist {
         let watchlist = Watchlist(
+            owner_id: activeUserID,
             title: title,
             location: location,
             locationDisplayName: locationDisplayName,
@@ -46,7 +65,8 @@ final class WatchlistPersistenceService {
         let descriptor = FetchDescriptor<Watchlist>(
             predicate: #Predicate { $0.id == id }
         )
-        return try context.fetch(descriptor).first
+        guard let watchlist = try context.fetch(descriptor).first else { return nil }
+        return isWatchlistAccessible(watchlist) ? watchlist : nil
     }
     
     func fetchWatchlists(type: WatchlistType? = nil) throws -> [Watchlist] {
@@ -55,7 +75,7 @@ final class WatchlistPersistenceService {
         )
         
         // Note: SwiftData enum predicates are limited, filter post-fetch if type is specified
-        let all = try context.fetch(descriptor)
+        let all = scoped(try context.fetch(descriptor))
         
         if let type = type {
             return all.filter { $0.type == type }
@@ -89,7 +109,7 @@ final class WatchlistPersistenceService {
         let descriptor = FetchDescriptor<Watchlist>(
             predicate: #Predicate { $0.id == id }
         )
-        guard let watchlist = try context.fetch(descriptor).first else {
+        guard let watchlist = try context.fetch(descriptor).first, isWatchlistAccessible(watchlist) else {
             throw WatchlistError.watchlistNotFound(.custom(id))
         }
         
@@ -168,10 +188,9 @@ final class WatchlistPersistenceService {
     }
     
     func fetchAllEntries() throws -> [WatchlistEntry] {
-        let descriptor = FetchDescriptor<WatchlistEntry>(
-            sortBy: [SortDescriptor(\.addedDate)]
-        )
-        return try context.fetch(descriptor)
+        return try fetchWatchlists()
+            .flatMap { $0.entries ?? [] }
+            .sorted { $0.addedDate < $1.addedDate }
     }
     
     func updateEntry(
@@ -365,6 +384,29 @@ final class WatchlistPersistenceService {
             sortBy: [SortDescriptor(\.commonName)]
         )
         return try context.fetch(descriptor)
+    }
+
+    func bindWatchlistsToCurrentUser() throws -> Int {
+        guard let userID = activeUserID else { return 0 }
+
+        let descriptor = FetchDescriptor<Watchlist>()
+        let allWatchlists = try context.fetch(descriptor)
+
+        var changed = false
+        var adoptedCount = 0
+        for watchlist in allWatchlists where watchlist.type != .shared {
+            if watchlist.owner_id == nil || watchlist.owner_id == WatchlistConstants.legacyDefaultOwnerID {
+                watchlist.owner_id = userID
+                changed = true
+                adoptedCount += 1
+            }
+        }
+
+        if changed {
+            try saveContext()
+        }
+
+        return adoptedCount
     }
     
     func createBird(
