@@ -27,7 +27,6 @@ final class BirdDatabaseSeeder {
         let order_name: String?
         let descriptionText: String?
         let conservation_status: String?
-        let rarityLevel: String?
         let validLocations: [String]?
         let validMonths: [Int]?
         let shape_id: String?
@@ -76,10 +75,6 @@ final class BirdDatabaseSeeder {
         var existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
 
         for birdDTO in payload.birds {
-            let rarity = BirdRarityLevel(
-                rawValue: birdDTO.rarityLevel?.lowercased() ?? "common"
-            ) ?? .common
-
             var fieldMarks: [BirdFieldMarkData] = []
             if let markDTOs = birdDTO.fieldMarkData {
                 for mark in markDTOs {
@@ -118,10 +113,6 @@ final class BirdDatabaseSeeder {
                 }
                 if existing.conservation_status == nil, let status = birdDTO.conservation_status {
                     existing.conservation_status = status
-                    didUpdate = true
-                }
-                if existing.rarityLevel == nil {
-                    existing.rarityLevel = rarity
                     didUpdate = true
                 }
                 if (existing.validLocations == nil || existing.validLocations?.isEmpty == true),
@@ -163,7 +154,6 @@ final class BirdDatabaseSeeder {
                 order_name: birdDTO.order_name,
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
-                rarityLevel: rarity,
                 migration_strategy: nil,
                 hemisphere: nil,
                 validLocations: birdDTO.validLocations,

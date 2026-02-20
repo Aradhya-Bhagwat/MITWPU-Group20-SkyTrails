@@ -79,8 +79,6 @@ final class WatchlistRuleService {
             return try applyDateRangeRule(dateParams)
         case .speciesFamily(let familyParams):
             return try applySpeciesFamilyRule(familyParams)
-        case .rarity(let rarityParams):
-            return try applyRarityRule(rarityParams)
         case .migration(let migrationParams):
             return try applyMigrationRule(migrationParams)
         }
@@ -162,31 +160,6 @@ final class WatchlistRuleService {
         return Set(matchingBirds)
     }
     
-    private func applyRarityRule(_ params: RarityRuleParams) throws -> Set<Bird> {
-        print("💎 [RuleService] Applying rarity rule")
-        
-        let allBirds = try persistence.fetchAllBirds()
-        
-        let matchingBirds = allBirds.filter { bird in
-            guard let rarityLevel = bird.rarityLevel else { return false }
-            
-            // Map rarity level to int for comparison
-            let rarityInt: Int
-            switch rarityLevel {
-            case .common: rarityInt = 1
-            case .uncommon: rarityInt = 2
-            case .rare: rarityInt = 3
-            case .very_rare: rarityInt = 4
-            case .endangered: rarityInt = 5
-            }
-            
-            return params.levels.contains(rarityInt)
-        }
-        
-        print("💎 [RuleService] Rarity rule found \(matchingBirds.count) birds")
-        return Set(matchingBirds)
-    }
-    
     private func applyMigrationRule(_ params: MigrationPatternRuleParams) throws -> Set<Bird> {
         print("🛫 [RuleService] Applying migration pattern rule")
         
@@ -228,14 +201,6 @@ final class WatchlistRuleService {
         case (.species_family, .speciesFamily(let params)):
             guard !params.families.isEmpty else {
                 throw WatchlistError.ruleValidationFailed("Must specify at least one family")
-            }
-            
-        case (.rarity_level, .rarity(let params)):
-            guard !params.levels.isEmpty else {
-                throw WatchlistError.ruleValidationFailed("Must specify at least one rarity level")
-            }
-            guard params.levels.allSatisfy({ $0 >= 1 && $0 <= 5 }) else {
-                throw WatchlistError.ruleValidationFailed("Rarity levels must be between 1 and 5")
             }
             
         case (.migration_pattern, .migration(let params)):

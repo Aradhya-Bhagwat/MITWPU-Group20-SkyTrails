@@ -188,7 +188,6 @@ struct BirdReferenceDTO: Hashable {
     let commonName: String
     let scientificName: String?
     let staticImageName: String
-    let rarityLevel: Int?
     let family: String?
     
     var displayName: String {
@@ -223,8 +222,6 @@ struct WatchlistRuleDTO: Hashable {
             return "Between \(formatter.string(from: params.startDate)) and \(formatter.string(from: params.endDate))"
         case .speciesFamily(let params):
             return "Families: \(params.families.joined(separator: ", "))"
-        case .rarity(let params):
-            return "Rarity levels: \(params.levels.map { String($0) }.joined(separator: ", "))"
         case .migration(let params):
             return "Migration: \(params.strategies.joined(separator: ", "))"
         }
@@ -237,7 +234,6 @@ enum RuleParameters: Hashable {
     case location(LocationRuleParams)
     case dateRange(DateRangeRuleParams)
     case speciesFamily(SpeciesFamilyRuleParams)
-    case rarity(RarityRuleParams)
     case migration(MigrationPatternRuleParams)
     
     var jsonString: String {
@@ -250,8 +246,6 @@ enum RuleParameters: Hashable {
         case .dateRange(let params):
             return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
         case .speciesFamily(let params):
-            return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
-        case .rarity(let params):
             return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
         case .migration(let params):
             return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
@@ -275,10 +269,6 @@ enum RuleParameters: Hashable {
         case .species_family:
             if let params = try? decoder.decode(SpeciesFamilyRuleParams.self, from: data) {
                 return .speciesFamily(params)
-            }
-        case .rarity_level:
-            if let params = try? decoder.decode(RarityRuleParams.self, from: data) {
-                return .rarity(params)
             }
         case .migration_pattern:
             if let params = try? decoder.decode(MigrationPatternRuleParams.self, from: data) {
@@ -305,10 +295,6 @@ struct SpeciesFamilyRuleParams: Codable, Hashable {
     let families: [String]
 }
 
-struct RarityRuleParams: Codable, Hashable {
-    let levels: [Int]
-}
-
 struct MigrationPatternRuleParams: Codable, Hashable {
     let strategies: [String]
     let hemisphere: String?
@@ -319,7 +305,6 @@ struct MigrationPatternRuleParams: Codable, Hashable {
 struct WatchlistQueryFilter {
     var status: WatchlistEntryStatus?
     var searchText: String?
-    var rarityLevels: [Int]?
     var families: [String]?
     var hasPhotos: Bool?
     var dateRange: (start: Date, end: Date)?
@@ -327,14 +312,12 @@ struct WatchlistQueryFilter {
     nonisolated init(
         status: WatchlistEntryStatus? = nil,
         searchText: String? = nil,
-        rarityLevels: [Int]? = nil,
         families: [String]? = nil,
         hasPhotos: Bool? = nil,
         dateRange: (start: Date, end: Date)? = nil
     ) {
         self.status = status
         self.searchText = searchText
-        self.rarityLevels = rarityLevels
         self.families = families
         self.hasPhotos = hasPhotos
         self.dateRange = dateRange
@@ -351,7 +334,6 @@ enum WatchlistSortOption {
     case observationDateNewest
     case observationDateOldest
     case priority
-    case rarity
     
     var displayName: String {
         switch self {
@@ -362,7 +344,6 @@ enum WatchlistSortOption {
         case .observationDateNewest: return "Recently Observed"
         case .observationDateOldest: return "First Observed"
         case .priority: return "Priority"
-        case .rarity: return "Rarity"
         }
     }
 }
