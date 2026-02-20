@@ -48,6 +48,10 @@ final class Watchlist {
     @Attribute(.unique) var id: UUID
     var owner_id: UUID? // nil means local guest/pending owner
     var type: WatchlistType? // Default to custom if missing
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
+    var deleted_at: Date?
     var title: String?
     var location: String?
     var startDate: Date?
@@ -126,6 +130,9 @@ final class WatchlistEntry {
     var priority: Int = 0
     var notify_upcoming: Bool = false
     var target_date_range: String? // Text description like "Oct - Nov"
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
     
     @Relationship(deleteRule: .cascade, inverse: \ObservedBirdPhoto.watchlistEntry) var photos: [ObservedBirdPhoto]?
     
@@ -158,6 +165,10 @@ final class WatchlistRule {
     var is_active: Bool = true
     var priority: Int = 0
     var created_at: Date = Date()
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
+    var deleted_at: Date?
     
     init(id: UUID = UUID(), watchlist: Watchlist? = nil, rule_type: WatchlistRuleType, parameters: String) {
         self.id = id
@@ -189,6 +200,10 @@ final class ObservedBirdPhoto {
     @Attribute(.unique) var id: UUID
     var watchlistEntry: WatchlistEntry?
     var imagePath: String
+    var storageUrl: String?
+    var isUploaded: Bool = false
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
     var captured_at: Date?
     var uploaded_at: Date = Date()
     
