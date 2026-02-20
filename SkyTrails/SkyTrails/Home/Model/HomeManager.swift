@@ -430,9 +430,14 @@ class HomeManager {
                 )
             }
 
-            let probability = top.hotspot.speciesList?
-                .first(where: { $0.bird?.id == bird.id })?
-                .probability ?? 70
+            let speciesPresence = top.hotspot.speciesList?
+                .first(where: { $0.bird?.id == bird.id })
+            let probability = sightabilityProbability(
+                from: speciesPresence,
+                preferredWeeks: weekRange,
+                currentWeek: currentWeek,
+                fallback: 70
+            )
 
             print("🃏 [PredictionDebug]     → \(bird.commonName), weeks: \(weeks), prob: \(probability)%")
             return BirdSpeciesDisplay(
@@ -445,8 +450,18 @@ class HomeManager {
 
         // 8. Pick primary bird (highest probability at this hotspot) for trajectory overlay
         let primaryBird = top.migratingBirds.max { a, b in
-            let pa = top.hotspot.speciesList?.first(where: { $0.bird?.id == a.bird.id })?.probability ?? 0
-            let pb = top.hotspot.speciesList?.first(where: { $0.bird?.id == b.bird.id })?.probability ?? 0
+            let pa = sightabilityProbability(
+                from: top.hotspot.speciesList?.first(where: { $0.bird?.id == a.bird.id }),
+                preferredWeeks: weekRange,
+                currentWeek: currentWeek,
+                fallback: 0
+            )
+            let pb = sightabilityProbability(
+                from: top.hotspot.speciesList?.first(where: { $0.bird?.id == b.bird.id }),
+                preferredWeeks: weekRange,
+                currentWeek: currentWeek,
+                fallback: 0
+            )
             return pa < pb
         }?.bird ?? top.migratingBirds[0].bird
 
@@ -776,6 +791,36 @@ class HomeManager {
         let elapsed = currentWeek - startWeek
         return Float(elapsed) / Float(totalWeeks)
     }
+
+    private func sightabilityProbability(
+        from presence: HotspotSpeciesPresence?,
+        preferredWeeks: [Int],
+        currentWeek: Int,
+        fallback: Int
+    ) -> Int {
+        guard let presence else { return fallback }
+
+        if let validWeeks = presence.validWeeks,
+           let weeklyProbabilities = presence.weeklyProbabilities,
+           validWeeks.count == weeklyProbabilities.count,
+           !validWeeks.isEmpty {
+            let weekToProbability = Dictionary(uniqueKeysWithValues: zip(validWeeks, weeklyProbabilities))
+
+            let orderedCandidates = [currentWeek] + preferredWeeks
+            for week in orderedCandidates {
+                if let probability = weekToProbability[week] {
+                    return probability
+                }
+            }
+
+            if let firstWeek = validWeeks.first,
+               let firstProbability = weekToProbability[firstWeek] {
+                return firstProbability
+            }
+        }
+
+        return presence.probability ?? fallback
+    }
     
     func getMigrationDateRange(for bird: Bird, userLocation: CLLocationCoordinate2D, radiusInKm: Double) -> String {
         let sessions = migrationManager.getSessions(for: bird)
@@ -843,6 +888,74 @@ class HomeManager {
         
         return "Week \(startWeek) - \(endWeek)"
     }
+
+    func yearlySightabilitySeries(
+        forBirdNamed birdName: String,
+        near location: CLLocationCoordinate2D,
+        searchRadiusKm: Double = 50.0
+    ) -> [Int] {
+        let birdDescriptor = FetchDescriptor<Bird>(
+            predicate: #Predicate { bird in
+                bird.commonName == birdName
+            }
+        )
+
+        let bird: Bird?
+        do {
+            bird = try watchlistManager.fetchOne(Bird.self, descriptor: birdDescriptor)
+        } catch {
+            logger.log(error: error, context: "HomeManager.yearlySightabilitySeries.fetchBird")
+            bird = nil
+        }
+
+        guard let bird else { return Array(repeating: 0, count: 52) }
+
+        let hotspotDescriptor = FetchDescriptor<Hotspot>()
+        let hotspots: [Hotspot]
+        do {
+            hotspots = try watchlistManager.fetchAll(Hotspot.self, descriptor: hotspotDescriptor)
+        } catch {
+            logger.log(error: error, context: "HomeManager.yearlySightabilitySeries.fetchHotspots")
+            return Array(repeating: 0, count: 52)
+        }
+
+        let radiusMeters = searchRadiusKm * 1000.0
+        let nearestPresence = hotspots
+            .compactMap { hotspot -> (presence: HotspotSpeciesPresence, distance: Double)? in
+                guard let presence = hotspot.speciesList?.first(where: { $0.bird?.id == bird.id }) else { return nil }
+                let coord = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
+                let distance = locationService.distance(from: location, to: coord)
+                guard distance <= radiusMeters else { return nil }
+                return (presence: presence, distance: distance)
+            }
+            .min(by: { $0.distance < $1.distance })?
+            .presence
+
+        guard let presence = nearestPresence else {
+            return Array(repeating: 0, count: 52)
+        }
+
+        var result = Array(repeating: 0, count: 52)
+
+        if let validWeeks = presence.validWeeks,
+           let weeklyProbabilities = presence.weeklyProbabilities,
+           validWeeks.count == weeklyProbabilities.count {
+            for (week, value) in zip(validWeeks, weeklyProbabilities) where (1...52).contains(week) {
+                result[week - 1] = min(100, max(0, value))
+            }
+            return result
+        }
+
+        if let validWeeks = presence.validWeeks,
+           let probability = presence.probability {
+            let clamped = min(100, max(0, probability))
+            for week in validWeeks where (1...52).contains(week) {
+                result[week - 1] = clamped
+            }
+        }
+
+        return result
+    }
     
     func parseDateRange(_ text: String) -> (Date?, Date?) {
         let parts = text.components(separatedBy: "-")
@@ -906,14 +1019,29 @@ class HomeManager {
             duringWeek: currentWeek,
             radiusInKm: radiusKm
         )
+        let nearbyHotspots = findNearbyHotspots(near: location, radiusKm: radiusKm)
         
         return birds.map { bird in
-            FinalPredictionResult(
+            let probability = nearbyHotspots
+                .compactMap { hotspot in
+                    hotspot.speciesList?.first(where: { $0.bird?.id == bird.id })
+                }
+                .map {
+                    sightabilityProbability(
+                        from: $0,
+                        preferredWeeks: [currentWeek],
+                        currentWeek: currentWeek,
+                        fallback: 70
+                    )
+                }
+                .max() ?? 70
+
+            return FinalPredictionResult(
                 birdName: bird.commonName,
                 imageName: bird.staticImageName,
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
-                spottingProbability: 75
+                spottingProbability: probability
             )
         }
     }

@@ -352,18 +352,34 @@
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="ygN-IF-vKc">
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="o99-tw-G13">
                                 <rect key="frame" x="0.0" y="178" width="402" height="628"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                            </tableView>
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="l4W-xD-6i3">
+                                    <size key="itemSize" width="128" height="128"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells>
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="01y-c8-DWj">
+                                        <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="3Yu-Vn-Gth">
+                                            <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </collectionViewCellContentView>
+                                    </collectionViewCell>
+                                </cells>
+                            </collectionView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="bUG-Ir-K8P"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="ygN-IF-vKc" firstAttribute="leading" secondItem="bUG-Ir-K8P" secondAttribute="leading" id="S52-El-twg"/>
-                            <constraint firstItem="ygN-IF-vKc" firstAttribute="top" secondItem="bUG-Ir-K8P" secondAttribute="top" id="bfF-r5-g55"/>
-                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="bottom" secondItem="ygN-IF-vKc" secondAttribute="bottom" id="d9I-Fw-Q2B"/>
-                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="trailing" secondItem="ygN-IF-vKc" secondAttribute="trailing" id="uXm-CT-hac"/>
+                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="bottom" secondItem="o99-tw-G13" secondAttribute="bottom" id="Vsl-BG-Uno"/>
+                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="trailing" secondItem="o99-tw-G13" secondAttribute="trailing" id="cXj-Yr-ayL"/>
+                            <constraint firstItem="o99-tw-G13" firstAttribute="leading" secondItem="bUG-Ir-K8P" secondAttribute="leading" id="tJ1-LH-I31"/>
+                            <constraint firstItem="o99-tw-G13" firstAttribute="top" secondItem="bUG-Ir-K8P" secondAttribute="top" id="yzD-h5-6Vh"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Output" id="CsV-tk-mcl">
@@ -618,17 +634,11 @@
     </scenes>
     <resources>
         <image name="heart.fill" catalog="system" width="128" height="107"/>
-        <systemColor name="labelColor">
-            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
         <systemColor name="secondaryLabelColor">
             <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemGray6Color">
-            <color red="0.94901960780000005" green="0.94901960780000005" blue="0.96862745100000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemRedColor">
             <color red="1" green="0.23137254900000001" blue="0.18823529410000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
