@@ -206,7 +206,7 @@ final class RealtimeSyncService: NSObject {
         }
         
         // Build the channel config
-        let channelConfig = RealtimeChannelConfig(
+        let channelConfig = RealtimeChannelPayloadConfig(
             postgresChanges: [RealtimePostgresChange(table: table)]
         )
         let channelPayload = RealtimeChannelPayload(config: channelConfig)

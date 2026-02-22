@@ -86,6 +86,7 @@ class UserSession {
         // Disconnect realtime and clear sync queue
         Task { @MainActor in
             await disconnectRealtimeAndClearSync()
+            await WatchlistManager.shared.clearUserDataOnLogout()
         }
         
         notifyAuthStateChanged()

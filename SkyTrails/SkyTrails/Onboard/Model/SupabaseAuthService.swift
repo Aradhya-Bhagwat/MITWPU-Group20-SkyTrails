@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 enum SupabaseAuthError: Error, LocalizedError {
     case notConfigured
@@ -321,7 +322,7 @@ private struct SupabaseSessionResponse: Decodable {
 private struct SupabaseUserResponse: Decodable {
     let id: String
     let email: String?
-    let userMetadata: [String: JSONValue]?
+    let userMetadata: [String: SupabaseJSONValue]?
 
     var displayName: String? {
         userMetadata?["name"]?.stringValue
@@ -341,12 +342,12 @@ private struct SupabaseUserResponse: Decodable {
     }
 }
 
-private enum JSONValue: Decodable {
+private enum SupabaseJSONValue: Decodable {
     case string(String)
     case number(Double)
     case bool(Bool)
-    case object([String: JSONValue])
-    case array([JSONValue])
+    case object([String: SupabaseJSONValue])
+    case array([SupabaseJSONValue])
     case null
 
     var stringValue: String? {
@@ -365,13 +366,13 @@ private enum JSONValue: Decodable {
             self = .number(value)
         } else if let value = try? container.decode(Bool.self) {
             self = .bool(value)
-        } else if let value = try? container.decode([String: JSONValue].self) {
+        } else if let value = try? container.decode([String: SupabaseJSONValue].self) {
             self = .object(value)
-        } else if let value = try? container.decode([JSONValue].self) {
+        } else if let value = try? container.decode([SupabaseJSONValue].self) {
             self = .array(value)
         } else {
             throw DecodingError.typeMismatch(
-                JSONValue.self,
+                SupabaseJSONValue.self,
                 DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unsupported JSON value")
             )
         }
@@ -398,4 +399,3 @@ private struct SupabaseErrorResponse: Decodable {
 }
 
 struct EmptyResponse: Decodable {}
-

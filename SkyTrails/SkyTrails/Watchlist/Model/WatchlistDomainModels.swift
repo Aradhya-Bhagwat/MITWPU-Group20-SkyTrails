@@ -66,6 +66,11 @@ final class LocationPreferences {
         
         print("🏠 [LocationPreferences] Home location set to: \(homeLocationName ?? "Unknown")")
     }
+
+    func clear() {
+        homeLocation = nil
+        homeLocationName = nil
+    }
 }
 
 // MARK: - Watchlist Identifier (Replaces Magic UUID)

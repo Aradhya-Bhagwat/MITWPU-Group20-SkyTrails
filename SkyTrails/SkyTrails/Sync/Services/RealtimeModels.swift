@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 
 // MARK: - Realtime Event Types
 
@@ -13,15 +14,6 @@ enum RealtimeEventType: String, Decodable {
     case insert = "INSERT"
     case update = "UPDATE"
     case delete = "DELETE"
-    
-    var syncStatus: SyncStatus {
-        switch self {
-        case .insert, .update:
-            return .synced
-        case .delete:
-            return .pendingDelete
-        }
-    }
 }
 
 // MARK: - Realtime Payload
@@ -147,7 +139,19 @@ struct RealtimeChannel: Encodable {
 }
 
 struct RealtimeChannelPayload: Encodable {
-    let config: RealtimeChannelConfig
+    let config: RealtimeChannelPayloadConfig
+}
+
+struct RealtimeChannelPayloadConfig: Encodable {
+    let postgresChanges: [RealtimePostgresChange]
+
+    enum CodingKeys: String, CodingKey {
+        case postgresChanges = "postgres_changes"
+    }
+
+    init(postgresChanges: [RealtimePostgresChange]) {
+        self.postgresChanges = postgresChanges
+    }
 }
 
 struct RealtimeChannelConfig: Encodable {
