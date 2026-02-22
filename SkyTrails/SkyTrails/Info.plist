@@ -41,6 +41,11 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.skytrails.sync.watchlist</string>
 	</array>
 </dict>
 </plist>

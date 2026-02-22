@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import BackgroundTasks
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -23,6 +24,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		Task { @MainActor in
             await WatchlistManager.shared.performGlobalSeeding()
 		}
+
+        Task {
+            await BackgroundSyncAgent.shared.registerBackgroundTasks()
+        }
 		
 		return true
 	}

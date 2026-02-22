@@ -58,9 +58,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     func sceneDidEnterBackground(_ scene: UIScene) {
-        // Keep connection alive briefly (iOS allows ~30s)
-        // No immediate action needed - let iOS manage WebSocket lifecycle
-        print("📱 [SceneDelegate] Entered background - connection maintained")
+        Task {
+            await BackgroundSyncAgent.shared.scheduleBackgroundSync()
+        }
+        print("📱 [SceneDelegate] Entered background - scheduled sync")
     }
 
     private func routeToCurrentSessionRoot() {

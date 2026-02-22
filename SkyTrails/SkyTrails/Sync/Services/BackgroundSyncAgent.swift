@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import SwiftData
+import BackgroundTasks
 
 // MARK: - Sync Operation
 
@@ -43,6 +45,7 @@ struct SyncOperation {
 actor BackgroundSyncAgent {
     
     static let shared = BackgroundSyncAgent()
+    static let taskIdentifier = "com.skytrails.sync.watchlist"
     
     // MARK: - Properties
     
@@ -155,6 +158,44 @@ actor BackgroundSyncAgent {
         deadLetterQueue.removeAll()
         print("📤 [SyncAgent] Cleared all pending operations")
     }
+
+    // MARK: - Background Tasks
+
+    func registerBackgroundTasks() {
+        #if os(iOS)
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.taskIdentifier, using: nil) { task in
+            guard let processingTask = task as? BGProcessingTask else { return }
+            Task {
+                await self.handleBackgroundTask(processingTask)
+            }
+        }
+        #endif
+    }
+
+    func scheduleBackgroundSync() {
+        #if os(iOS)
+        let request = BGProcessingTaskRequest(identifier: Self.taskIdentifier)
+        request.requiresNetworkConnectivity = true
+        request.requiresExternalPower = false
+
+        do {
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            print("📤 [SyncAgent] Failed to schedule background sync: \(error)")
+        }
+        #endif
+    }
+
+    #if os(iOS)
+    private func handleBackgroundTask(_ task: BGProcessingTask) async {
+        task.expirationHandler = {
+            print("📤 [SyncAgent] Background task expired")
+        }
+
+        await syncAll()
+        task.setTaskCompleted(success: true)
+    }
+    #endif
     
     // MARK: - Queue Processing
     

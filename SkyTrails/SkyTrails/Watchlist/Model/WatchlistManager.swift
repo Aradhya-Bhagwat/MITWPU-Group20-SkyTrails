@@ -9,6 +9,7 @@
 import Foundation
 import SwiftData
 import CoreLocation
+import UIKit
 
 // MARK: - Legacy Repository Error (Deprecated, use WatchlistError)
 
@@ -106,6 +107,13 @@ final class WatchlistManager: WatchlistRepository {
             rules = WatchlistRuleService(context: context, persistence: persistence)
             photos = WatchlistPhotoService(context: context, persistence: persistence)
             print("✅ [WatchlistManager] Services initialized")
+
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handlePhotoUploadNotification(_:)),
+                name: NSNotification.Name("DidUploadPhoto"),
+                object: nil
+            )
             
             print("ℹ️ [WatchlistManager] Watchlist seeding deferred to AppDelegate")
             
@@ -119,6 +127,40 @@ final class WatchlistManager: WatchlistRepository {
         // Post-Init Notification for legacy support
         DispatchQueue.main.async { [weak self] in
             self?.notifyDataLoaded(success: true)
+        }
+    }
+
+    @MainActor
+    func clearUserDataOnLogout() async {
+        do {
+            let watchlists = try context.fetch(FetchDescriptor<Watchlist>())
+            for watchlist in watchlists {
+                context.delete(watchlist)
+            }
+            try context.save()
+            try? photos.deleteAllLocalPhotos()
+            LocationPreferences.shared.clear()
+            print("🧹 [WatchlistManager] Cleared user watchlist data on logout")
+        } catch {
+            print("⚠️ [WatchlistManager] Failed to clear user data on logout: \(error)")
+        }
+    }
+
+    @objc
+    private func handlePhotoUploadNotification(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let id = info["id"] as? UUID,
+              let storageUrl = info["storageUrl"] as? String
+        else { return }
+
+        let descriptor = FetchDescriptor<ObservedBirdPhoto>(
+            predicate: #Predicate { $0.id == id }
+        )
+
+        if let photo = try? context.fetch(descriptor).first {
+            photo.storageUrl = storageUrl
+            photo.isUploaded = true
+            try? context.save()
         }
     }
     

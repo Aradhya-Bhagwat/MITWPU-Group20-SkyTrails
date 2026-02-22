@@ -112,6 +112,12 @@ final class WatchlistPhotoService {
         }
         
         let imagePath = photo.imagePath
+
+        // Queue remote delete before removing local entity
+        let photoToDelete = photo
+        Task {
+            await BackgroundSyncAgent.shared.queuePhoto(photoToDelete, operation: .delete)
+        }
         
         // Delete from database
         context.delete(photo)
@@ -135,6 +141,13 @@ final class WatchlistPhotoService {
         
         let photos = entry.photos ?? []
         let imagePaths = photos.map { $0.imagePath }
+
+        for photo in photos {
+            let photoToDelete = photo
+            Task {
+                await BackgroundSyncAgent.shared.queuePhoto(photoToDelete, operation: .delete)
+            }
+        }
         
         // Delete from database
         for photo in photos {
@@ -273,5 +286,13 @@ final class WatchlistPhotoService {
         }
         
         return totalSize
+    }
+
+    func deleteAllLocalPhotos() throws {
+        guard let directory = photoDirectoryURL() else { return }
+
+        if fileManager.fileExists(atPath: directory.path) {
+            try fileManager.removeItem(at: directory)
+        }
     }
 }
