@@ -112,11 +112,19 @@ final class WatchlistPhotoService {
         }
         
         let imagePath = photo.imagePath
-
-        // Queue remote delete before removing local entity
-        let photoToDelete = photo
+        
+        // Queue remote delete before removing local entity - extract Sendable primitives
+        let photoId = photo.id
+        let photoPayloadData = buildPhotoPayloadData(photo, for: .delete)
+        let photoUpdatedAt = photo.uploaded_at
+        
         Task {
-            await BackgroundSyncAgent.shared.queuePhoto(photoToDelete, operation: .delete)
+            await BackgroundSyncAgent.shared.queuePhoto(
+                id: photoId,
+                payloadData: photoPayloadData,
+                localUpdatedAt: photoUpdatedAt,
+                operation: .delete
+            )
         }
         
         // Delete from database
@@ -142,10 +150,19 @@ final class WatchlistPhotoService {
         let photos = entry.photos ?? []
         let imagePaths = photos.map { $0.imagePath }
 
-        for photo in photos {
-            let photoToDelete = photo
-            Task {
-                await BackgroundSyncAgent.shared.queuePhoto(photoToDelete, operation: .delete)
+        // Queue remote delete for each photo - extract Sendable primitives
+        let photoSyncItems = photos.map { photo -> (id: UUID, payloadData: Data?, localUpdatedAt: Date?) in
+            (photo.id, buildPhotoPayloadData(photo, for: .delete), photo.uploaded_at)
+        }
+        
+        Task {
+            for item in photoSyncItems {
+                await BackgroundSyncAgent.shared.queuePhoto(
+                    id: item.id,
+                    payloadData: item.payloadData,
+                    localUpdatedAt: item.localUpdatedAt,
+                    operation: .delete
+                )
             }
         }
         
@@ -294,5 +311,26 @@ final class WatchlistPhotoService {
         if fileManager.fileExists(atPath: directory.path) {
             try fileManager.removeItem(at: directory)
         }
+    }
+    
+    // MARK: - Payload Builder (for Sendable extraction)
+    
+    private func buildPhotoPayloadData(_ photo: ObservedBirdPhoto, for operation: SyncOperationType) -> Data? {
+        var payload: [String: Any] = [
+            "id": photo.id.uuidString,
+            "watchlist_entry_id": photo.watchlistEntry?.id.uuidString as Any,
+            "image_path": photo.imagePath,
+            "storage_url": photo.storageUrl as Any,
+            "is_uploaded": photo.isUploaded,
+            "sync_status": photo.syncStatusRaw,
+            "captured_at": photo.captured_at.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        if operation == .delete {
+            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
+        }
+        
+        return try? JSONSerialization.data(withJSONObject: payload)
     }
 }
