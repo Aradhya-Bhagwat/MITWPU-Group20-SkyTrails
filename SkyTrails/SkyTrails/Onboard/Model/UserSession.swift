@@ -45,6 +45,11 @@ class UserSession {
         }
 
         notifyAuthStateChanged()
+        
+        // Connect to realtime sync on successful auth
+        Task { @MainActor in
+            await connectRealtimeAndSync()
+        }
     }
 
     func getUser() -> User? {
@@ -77,6 +82,12 @@ class UserSession {
         KeychainManager.shared.deleteValue(for: accessTokenKey)
         KeychainManager.shared.deleteValue(for: refreshTokenKey)
         UserDefaults.standard.removeObject(forKey: userKey)
+        
+        // Disconnect realtime and clear sync queue
+        Task { @MainActor in
+            await disconnectRealtimeAndClearSync()
+        }
+        
         notifyAuthStateChanged()
     }
 
@@ -127,6 +138,10 @@ class UserSession {
                 accessToken: authResult.accessToken ?? accessToken,
                 refreshToken: authResult.refreshToken ?? refreshToken
             )
+            
+            // Connect realtime after session restore
+            await connectRealtimeAndSync()
+            
             return true
         } catch {
             logout()
@@ -145,5 +160,26 @@ class UserSession {
 
     private func notifyAuthStateChanged() {
         NotificationCenter.default.post(name: Self.authStateDidChangeNotification, object: self)
+    }
+    
+    // MARK: - Realtime & Sync Integration
+    
+    private func connectRealtimeAndSync() async {
+        do {
+            try await RealtimeSyncService.shared.connect()
+            try await RealtimeSyncService.shared.subscribeAll()
+            print("✅ [UserSession] Realtime connected and subscribed")
+        } catch {
+            print("⚠️ [UserSession] Failed to connect realtime: \(error.localizedDescription)")
+        }
+        
+        // Process any pending sync operations
+        await BackgroundSyncAgent.shared.syncAll()
+    }
+    
+    private func disconnectRealtimeAndClearSync() async {
+        RealtimeSyncService.shared.disconnect()
+        await BackgroundSyncAgent.shared.clearAll()
+        print("✅ [UserSession] Realtime disconnected and sync cleared")
     }
 }

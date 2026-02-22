@@ -18,6 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.rootViewController = makeLaunchPlaceholder()
         window?.makeKeyAndVisible()
 
+        // Observe auth state changes
         authObserver = NotificationCenter.default.addObserver(
             forName: UserSession.authStateDidChangeNotification,
             object: nil,
@@ -26,6 +27,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self?.routeToCurrentSessionRoot()
         }
 
+        // Restore session and connect realtime
         Task { @MainActor in
             _ = await UserSession.shared.restoreSessionIfNeeded()
             if UserSession.shared.isAuthenticatedWithSupabase() {
@@ -44,6 +46,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let url = URLContexts.first?.url else { return }
 
         GIDSignIn.sharedInstance.handle(url)
+    }
+    
+    // MARK: - Foreground/Background Handling
+    
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        // Reconnect realtime when coming back to foreground
+        Task { @MainActor in
+            await handleForegroundReconnect()
+        }
+    }
+    
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        // Keep connection alive briefly (iOS allows ~30s)
+        // No immediate action needed - let iOS manage WebSocket lifecycle
+        print("📱 [SceneDelegate] Entered background - connection maintained")
     }
 
     private func routeToCurrentSessionRoot() {
@@ -75,6 +92,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         ])
 
         return controller
+    }
+    
+    // MARK: - Realtime Reconnection
+    
+    private func handleForegroundReconnect() async {
+        guard UserSession.shared.isAuthenticatedWithSupabase() else { return }
+        
+        // Check if realtime is connected, reconnect if needed
+        if RealtimeSyncService.shared.connectionState != .connected {
+            print("📱 [SceneDelegate] Reconnecting realtime on foreground...")
+            do {
+                try await RealtimeSyncService.shared.connect()
+                try await RealtimeSyncService.shared.subscribeAll()
+            } catch {
+                print("📱 [SceneDelegate] Failed to reconnect realtime: \(error.localizedDescription)")
+            }
+        }
+        
+        // Process any pending sync operations
+        await BackgroundSyncAgent.shared.syncAll()
     }
 
     deinit {
