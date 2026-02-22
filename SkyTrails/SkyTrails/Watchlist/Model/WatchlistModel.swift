@@ -52,6 +52,11 @@ final class Watchlist {
     var serverRowVersion: Int = 0
     var deleted_at: Date?
     var title: String?
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     var location: String?
     var startDate: Date?
     var endDate: Date?
@@ -133,6 +138,11 @@ final class WatchlistEntry {
     var lastSyncedAt: Date?
     var serverRowVersion: Int = 0
     
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
+    
     @Relationship(deleteRule: .cascade, inverse: \ObservedBirdPhoto.watchlistEntry) var photos: [ObservedBirdPhoto]?
     
     init(
@@ -168,6 +178,11 @@ final class WatchlistRule {
     var lastSyncedAt: Date?
     var serverRowVersion: Int = 0
     var deleted_at: Date?
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     init(id: UUID = UUID(), watchlist: Watchlist? = nil, rule_type: WatchlistRuleType, parameters: String) {
         self.id = id
@@ -205,6 +220,11 @@ final class ObservedBirdPhoto {
     var lastSyncedAt: Date?
     var captured_at: Date?
     var uploaded_at: Date = Date()
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     init(id: UUID = UUID(), watchlistEntry: WatchlistEntry? = nil, imagePath: String) {
         self.id = id

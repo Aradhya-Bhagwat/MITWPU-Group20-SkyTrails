@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftData
+import CoreLocation
 
 @MainActor
 final class WatchlistPersistenceService {
@@ -23,17 +24,28 @@ final class WatchlistPersistenceService {
     }
 
     private func isWatchlistAccessible(_ watchlist: Watchlist) -> Bool {
-        if watchlist.type == .shared { return true }
-
+        // Guest (not logged in): only see nil owner_id (own guest-created watchlists)
+        // Logged in: only see own watchlists OR shared watchlists
         guard let userID = activeUserID else {
             return watchlist.owner_id == nil
         }
-
-        return watchlist.owner_id == userID || watchlist.owner_id == nil
+        
+        return watchlist.owner_id == userID || watchlist.type == .shared
     }
 
     private func scoped(_ watchlists: [Watchlist]) -> [Watchlist] {
         watchlists.filter { isWatchlistAccessible($0) }
+    }
+    
+    // MARK: - Sync Helper
+    
+    /// Fire-and-forget sync to Supabase (only if authenticated)
+    private func queueSync(_ operation: @escaping () async -> Void) {
+        guard activeUserID != nil else { return }
+        
+        Task.detached(priority: .utility) {
+            await operation()
+        }
     }
     
     // MARK: - Watchlist CRUD
@@ -58,6 +70,13 @@ final class WatchlistPersistenceService {
         
         context.insert(watchlist)
         try saveContext()
+        
+        // Queue sync
+        let wl = watchlist
+        queueSync {
+            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .create)
+        }
+        
         return watchlist
     }
     
@@ -102,7 +121,14 @@ final class WatchlistPersistenceService {
         if let endDate = endDate { watchlist.endDate = endDate }
         
         watchlist.updated_at = Date()
+        watchlist.syncStatus = .pendingUpdate
         try saveContext()
+        
+        // Queue sync
+        let wl = watchlist
+        queueSync {
+            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .update)
+        }
     }
     
     func deleteWatchlist(id: UUID) throws {
@@ -113,8 +139,16 @@ final class WatchlistPersistenceService {
             throw WatchlistError.watchlistNotFound(.custom(id))
         }
         
-        context.delete(watchlist)
+        // Soft delete - mark for sync deletion
+        watchlist.deleted_at = Date()
+        watchlist.syncStatus = .pendingDelete
         try saveContext()
+        
+        // Queue sync
+        let wl = watchlist
+        queueSync {
+            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .delete)
+        }
     }
     
     func updateWatchlistStats(id: UUID, observedCount: Int, speciesCount: Int) throws {
@@ -126,6 +160,12 @@ final class WatchlistPersistenceService {
         watchlist.speciesCount = speciesCount
         watchlist.updated_at = Date()
         try saveContext()
+        
+        // Queue sync
+        let wl = watchlist
+        queueSync {
+            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .update)
+        }
     }
     
     // MARK: - Entry CRUD
@@ -162,6 +202,12 @@ final class WatchlistPersistenceService {
         
         // Update watchlist stats
         try recalculateWatchlistStats(watchlistID: watchlistID)
+        
+        // Queue sync
+        let e = entry
+        queueSync {
+            await BackgroundSyncAgent.shared.queueEntry(e, operation: .create)
+        }
         
         return entry
     }
@@ -214,12 +260,19 @@ final class WatchlistPersistenceService {
         entry.locationDisplayName = locationDisplayName
         entry.toObserveStartDate = toObserveStartDate
         entry.toObserveEndDate = toObserveEndDate
+        entry.syncStatus = .pendingUpdate
         
         try saveContext()
         
         // Update parent watchlist stats
         if let watchlistID = entry.watchlist?.id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
+        }
+        
+        // Queue sync
+        let e = entry
+        queueSync {
+            await BackgroundSyncAgent.shared.queueEntry(e, operation: .update)
         }
     }
     
@@ -231,14 +284,19 @@ final class WatchlistPersistenceService {
             throw WatchlistError.entryNotFound(id)
         }
         
-        let watchlistID = entry.watchlist?.id
-        
-        context.delete(entry)
+        // Soft delete - mark for sync deletion
+        entry.syncStatus = .pendingDelete
         try saveContext()
         
         // Update parent watchlist stats
-        if let watchlistID = watchlistID {
+        if let watchlistID = entry.watchlist?.id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
+        }
+        
+        // Queue sync
+        let e = entry
+        queueSync {
+            await BackgroundSyncAgent.shared.queueEntry(e, operation: .delete)
         }
     }
     
@@ -249,12 +307,19 @@ final class WatchlistPersistenceService {
         
         entry.status = (entry.status == .observed) ? .to_observe : .observed
         entry.observationDate = (entry.status == .observed) ? Date() : nil
+        entry.syncStatus = .pendingUpdate
         
         try saveContext()
         
         // Update parent watchlist stats
         if let watchlistID = entry.watchlist?.id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
+        }
+        
+        // Queue sync
+        let e = entry
+        queueSync {
+            await BackgroundSyncAgent.shared.queueEntry(e, operation: .update)
         }
     }
     
@@ -293,6 +358,14 @@ final class WatchlistPersistenceService {
         if !createdEntries.isEmpty {
             try saveContext()
             try recalculateWatchlistStats(watchlistID: watchlistID)
+            
+            // Queue sync for all created entries
+            let entries = createdEntries
+            queueSync {
+                for entry in entries {
+                    await BackgroundSyncAgent.shared.queueEntry(entry, operation: .create)
+                }
+            }
         }
         
         return createdEntries
@@ -322,6 +395,12 @@ final class WatchlistPersistenceService {
         context.insert(rule)
         try saveContext()
         
+        // Queue sync
+        let r = rule
+        queueSync {
+            await BackgroundSyncAgent.shared.queueRule(r, operation: .create)
+        }
+        
         return rule
     }
     
@@ -348,7 +427,14 @@ final class WatchlistPersistenceService {
         }
         
         rule.is_active = !rule.is_active
+        rule.syncStatus = .pendingUpdate
         try saveContext()
+        
+        // Queue sync
+        let r = rule
+        queueSync {
+            await BackgroundSyncAgent.shared.queueRule(r, operation: .update)
+        }
     }
     
     func deleteRule(id: UUID) throws {
@@ -359,8 +445,16 @@ final class WatchlistPersistenceService {
             throw WatchlistError.ruleValidationFailed("Rule not found")
         }
         
-        context.delete(rule)
+        // Soft delete
+        rule.syncStatus = .pendingDelete
+        rule.deleted_at = Date()
         try saveContext()
+        
+        // Queue sync
+        let r = rule
+        queueSync {
+            await BackgroundSyncAgent.shared.queueRule(r, operation: .delete)
+        }
     }
     
     // MARK: - Bird CRUD
@@ -395,13 +489,45 @@ final class WatchlistPersistenceService {
         for watchlist in allWatchlists where watchlist.type != .shared {
             if watchlist.owner_id == nil || watchlist.owner_id == WatchlistConstants.legacyDefaultOwnerID {
                 watchlist.owner_id = userID
+                watchlist.syncStatus = .pendingUpdate
                 changed = true
                 adoptedCount += 1
             }
         }
 
+        // Adopt entries, rules, and photos
+        for watchlist in allWatchlists where watchlist.owner_id == userID {
+            // Adopt entries
+            for entry in watchlist.entries ?? [] {
+                if entry.syncStatus == .pendingOwner || entry.syncStatus == .pendingCreate {
+                    entry.syncStatus = .pendingUpdate
+                }
+            }
+            
+            // Adopt rules
+            for rule in watchlist.rules ?? [] {
+                if rule.syncStatus == .pendingOwner || rule.syncStatus == .pendingCreate {
+                    rule.syncStatus = .pendingUpdate
+                }
+            }
+            
+            // Adopt photos
+            for entry in watchlist.entries ?? [] {
+                for photo in entry.photos ?? [] {
+                    if photo.syncStatus == .pendingOwner || photo.syncStatus == .pendingCreate {
+                        photo.syncStatus = .pendingUpdate
+                    }
+                }
+            }
+        }
+
         if changed {
             try saveContext()
+            
+            // Sync all adopted items
+            queueSync {
+                await BackgroundSyncAgent.shared.syncAll()
+            }
         }
 
         return adoptedCount
