@@ -1,0 +1,48 @@
+name: iOS CI Build
+
+on:
+  push:
+    branches: 
+      - main
+      - dev
+      - feature/watchlistsupabase
+  pull_request:
+    branches: 
+      - main
+      - dev
+      - feature/watchlistsupabase
+
+
+jobs:
+  build:
+    name: Compile Project
+    runs-on: macos-latest
+
+    steps:
+      # 1. Checkout the code, explicitly ignoring the .xcassets folder
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Disabling cone mode allows us to use specific file exclusions (!)
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !YourAppTarget/Assets.xcassets
+            
+      # 2. Recreate a dummy asset folder so xcodebuild doesn't crash
+      - name: Create Dummy Asset Catalog
+        run: |
+          mkdir -p YourAppTarget/Assets.xcassets
+          
+      # 3. Ensure we are using a recent version of Xcode
+      - name: Set Default Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      # 4. Compile the project
+      - name: Build Project
+        run: |
+          xcodebuild clean build \
+            -project YourAppTarget.xcodeproj \
+            -scheme YourAppTarget \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            CODE_SIGNING_ALLOWED=NO
