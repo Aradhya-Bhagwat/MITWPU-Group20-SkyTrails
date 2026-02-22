@@ -12,29 +12,29 @@ import BackgroundTasks
 
 // MARK: - Sync Operation
 
-enum SyncOperationType {
+enum SyncOperationType: Sendable {
     case create
     case update
     case delete
 }
 
-struct SyncOperation {
+struct SyncOperation: Sendable {
     let id: UUID
     let type: SyncOperationType
     let table: String
     let recordId: UUID
-    let payload: [String: Any]?
+    let payloadData: Data? // JSON-encoded payload (Sendable)
     let createdAt: Date
     let localUpdatedAt: Date? // For conflict detection
     var attempts: Int = 0
     var lastError: String?
     
-    init(type: SyncOperationType, table: String, recordId: UUID, payload: [String: Any]? = nil, localUpdatedAt: Date? = nil) {
+    init(type: SyncOperationType, table: String, recordId: UUID, payloadData: Data? = nil, localUpdatedAt: Date? = nil) {
         self.id = UUID()
         self.type = type
         self.table = table
         self.recordId = recordId
-        self.payload = payload
+        self.payloadData = payloadData
         self.createdAt = Date()
         self.localUpdatedAt = localUpdatedAt
     }
@@ -64,72 +64,68 @@ actor BackgroundSyncAgent {
     
     // MARK: - Public API
     
-    /// Queue a watchlist operation for sync
-    func queueWatchlist(_ watchlist: Watchlist, operation: SyncOperationType) {
-        let payload = buildWatchlistPayload(watchlist, for: operation)
+    /// Queue a watchlist operation for sync using Sendable primitives
+    func queueWatchlist(id: UUID, payloadData: Data?, updatedAt: Date?, operation: SyncOperationType) {
         let syncOp = SyncOperation(
             type: operation,
             table: "watchlists",
-            recordId: watchlist.id,
-            payload: payload,
-            localUpdatedAt: watchlist.updated_at
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: updatedAt
         )
         queue.append(syncOp)
-        print("📤 [SyncAgent] Queued watchlist \(operation): \(watchlist.id)")
+        print("📤 [SyncAgent] Queued watchlist \(operation): \(id)")
         
         Task {
             await processQueue()
         }
     }
     
-    /// Queue an entry operation for sync
-    func queueEntry(_ entry: WatchlistEntry, operation: SyncOperationType) {
-        let payload = buildEntryPayload(entry, for: operation)
+    /// Queue an entry operation for sync using Sendable primitives
+    func queueEntry(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
         let syncOp = SyncOperation(
             type: operation,
             table: "watchlist_entries",
-            recordId: entry.id,
-            payload: payload,
-            localUpdatedAt: entry.observationDate ?? entry.addedDate
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
         )
         queue.append(syncOp)
-        print("📤 [SyncAgent] Queued entry \(operation): \(entry.id)")
+        print("📤 [SyncAgent] Queued entry \(operation): \(id)")
         
         Task {
             await processQueue()
         }
     }
     
-    /// Queue a rule operation for sync
-    func queueRule(_ rule: WatchlistRule, operation: SyncOperationType) {
-        let payload = buildRulePayload(rule, for: operation)
+    /// Queue a rule operation for sync using Sendable primitives
+    func queueRule(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
         let syncOp = SyncOperation(
             type: operation,
             table: "watchlist_rules",
-            recordId: rule.id,
-            payload: payload,
-            localUpdatedAt: rule.created_at
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
         )
         queue.append(syncOp)
-        print("📤 [SyncAgent] Queued rule \(operation): \(rule.id)")
+        print("📤 [SyncAgent] Queued rule \(operation): \(id)")
         
         Task {
             await processQueue()
         }
     }
     
-    /// Queue a photo operation for sync
-    func queuePhoto(_ photo: ObservedBirdPhoto, operation: SyncOperationType) {
-        let payload = buildPhotoPayload(photo, for: operation)
+    /// Queue a photo operation for sync using Sendable primitives
+    func queuePhoto(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
         let syncOp = SyncOperation(
             type: operation,
             table: "observed_bird_photos",
-            recordId: photo.id,
-            payload: payload,
-            localUpdatedAt: photo.uploaded_at
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
         )
         queue.append(syncOp)
-        print("📤 [SyncAgent] Queued photo \(operation): \(photo.id)")
+        print("📤 [SyncAgent] Queued photo \(operation): \(id)")
         
         Task {
             await processQueue()
@@ -362,7 +358,11 @@ actor BackgroundSyncAgent {
     private func processOperation(_ operation: SyncOperation, config: SupabaseConfig) async throws {
         let token = await MainActor.run { UserSession.shared.getAccessToken() }
         
-        var payload = operation.payload ?? [:]
+        // Decode payload from Data to [String: Any]
+        var payload: [String: Any] = [:]
+        if let payloadData = operation.payloadData {
+            payload = (try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any]) ?? [:]
+        }
         
         if operation.table == "observed_bird_photos" && (operation.type == .create || operation.type == .update) {
             try await uploadPhotoIfNeeded(payload: &payload, config: config, token: token)
@@ -508,107 +508,6 @@ actor BackgroundSyncAgent {
                 userInfo: [NSLocalizedDescriptionKey: message]
             )
         }
-    }
-    
-    // MARK: - Payload Builders
-    
-    private func buildWatchlistPayload(_ watchlist: Watchlist, for operation: SyncOperationType) -> [String: Any] {
-        var payload: [String: Any] = [
-            "id": watchlist.id.uuidString,
-            "owner_id": watchlist.owner_id?.uuidString as Any,
-            "type": watchlist.type?.rawValue ?? "custom",
-            "title": watchlist.title as Any,
-            "location": watchlist.location as Any,
-            "location_display_name": watchlist.locationDisplayName as Any,
-            "observed_count": watchlist.observedCount,
-            "species_count": watchlist.speciesCount,
-            "cover_image_path": watchlist.coverImagePath as Any,
-            "species_rule_enabled": watchlist.speciesRuleEnabled,
-            "species_rule_shape_id": watchlist.speciesRuleShapeId as Any,
-            "location_rule_enabled": watchlist.locationRuleEnabled,
-            "location_rule_lat": watchlist.locationRuleLat as Any,
-            "location_rule_lon": watchlist.locationRuleLon as Any,
-            "location_rule_radius_km": watchlist.locationRuleRadiusKm,
-            "location_rule_display_name": watchlist.locationRuleDisplayName as Any,
-            "date_rule_enabled": watchlist.dateRuleEnabled,
-            "date_rule_start_date": watchlist.dateRuleStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "date_rule_end_date": watchlist.dateRuleEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "sync_status": watchlist.syncStatusRaw,
-            "updated_at": ISO8601DateFormatter().string(from: Date())
-        ]
-        
-        if operation == .delete {
-            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
-        }
-        
-        return payload
-    }
-    
-    private func buildEntryPayload(_ entry: WatchlistEntry, for operation: SyncOperationType) -> [String: Any] {
-        var payload: [String: Any] = [
-            "id": entry.id.uuidString,
-            "watchlist_id": entry.watchlist?.id.uuidString as Any,
-            "bird_id": entry.bird?.id.uuidString as Any,
-            "nickname": entry.nickname as Any,
-            "status": entry.status.rawValue,
-            "notes": entry.notes as Any,
-            "observation_date": entry.observationDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "to_observe_start_date": entry.toObserveStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "to_observe_end_date": entry.toObserveEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "observed_by": entry.observedBy as Any,
-            "lat": entry.lat as Any,
-            "lon": entry.lon as Any,
-            "location_display_name": entry.locationDisplayName as Any,
-            "priority": entry.priority,
-            "notify_upcoming": entry.notify_upcoming,
-            "target_date_range": entry.target_date_range as Any,
-            "sync_status": entry.syncStatusRaw,
-            "updated_at": ISO8601DateFormatter().string(from: Date())
-        ]
-        
-        if operation == .delete {
-            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
-        }
-        
-        return payload
-    }
-    
-    private func buildRulePayload(_ rule: WatchlistRule, for operation: SyncOperationType) -> [String: Any] {
-        var payload: [String: Any] = [
-            "id": rule.id.uuidString,
-            "watchlist_id": rule.watchlist?.id.uuidString as Any,
-            "rule_type": rule.rule_type.rawValue,
-            "parameters_json": rule.parameters_json,
-            "is_active": rule.is_active,
-            "priority": rule.priority,
-            "sync_status": rule.syncStatusRaw,
-            "updated_at": ISO8601DateFormatter().string(from: Date())
-        ]
-        
-        if operation == .delete {
-            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
-        }
-        
-        return payload
-    }
-    
-    private func buildPhotoPayload(_ photo: ObservedBirdPhoto, for operation: SyncOperationType) -> [String: Any] {
-        var payload: [String: Any] = [
-            "id": photo.id.uuidString,
-            "watchlist_entry_id": photo.watchlistEntry?.id.uuidString as Any,
-            "image_path": photo.imagePath,
-            "storage_url": photo.storageUrl as Any,
-            "is_uploaded": photo.isUploaded,
-            "sync_status": photo.syncStatusRaw,
-            "captured_at": photo.captured_at.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "updated_at": ISO8601DateFormatter().string(from: Date())
-        ]
-        
-        if operation == .delete {
-            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
-        }
-        
-        return payload
     }
 }
 //

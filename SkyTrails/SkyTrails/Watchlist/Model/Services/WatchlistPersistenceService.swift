@@ -40,7 +40,7 @@ final class WatchlistPersistenceService {
     // MARK: - Sync Helper
     
     /// Fire-and-forget sync to Supabase (only if authenticated)
-    private func queueSync(_ operation: @escaping () async -> Void) {
+    private func queueSync(_ operation: @escaping @Sendable () async -> Void) {
         guard activeUserID != nil else { return }
         
         Task.detached(priority: .utility) {
@@ -71,10 +71,18 @@ final class WatchlistPersistenceService {
         context.insert(watchlist)
         try saveContext()
         
-        // Queue sync
-        let wl = watchlist
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let watchlistId = watchlist.id
+        let payloadData = buildWatchlistPayloadData(watchlist, for: .create)
+        let updatedAt = watchlist.updated_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .create)
+            await BackgroundSyncAgent.shared.queueWatchlist(
+                id: watchlistId,
+                payloadData: payloadData,
+                updatedAt: updatedAt,
+                operation: .create
+            )
         }
         
         return watchlist
@@ -124,10 +132,18 @@ final class WatchlistPersistenceService {
         watchlist.syncStatus = .pendingUpdate
         try saveContext()
         
-        // Queue sync
-        let wl = watchlist
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let watchlistId = watchlist.id
+        let payloadData = buildWatchlistPayloadData(watchlist, for: .update)
+        let updatedAt = watchlist.updated_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .update)
+            await BackgroundSyncAgent.shared.queueWatchlist(
+                id: watchlistId,
+                payloadData: payloadData,
+                updatedAt: updatedAt,
+                operation: .update
+            )
         }
     }
     
@@ -144,10 +160,18 @@ final class WatchlistPersistenceService {
         watchlist.syncStatus = .pendingDelete
         try saveContext()
         
-        // Queue sync
-        let wl = watchlist
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let watchlistId = watchlist.id
+        let payloadData = buildWatchlistPayloadData(watchlist, for: .delete)
+        let updatedAt = watchlist.updated_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .delete)
+            await BackgroundSyncAgent.shared.queueWatchlist(
+                id: watchlistId,
+                payloadData: payloadData,
+                updatedAt: updatedAt,
+                operation: .delete
+            )
         }
     }
     
@@ -161,10 +185,18 @@ final class WatchlistPersistenceService {
         watchlist.updated_at = Date()
         try saveContext()
         
-        // Queue sync
-        let wl = watchlist
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let watchlistId = watchlist.id
+        let payloadData = buildWatchlistPayloadData(watchlist, for: .update)
+        let updatedAt = watchlist.updated_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueWatchlist(wl, operation: .update)
+            await BackgroundSyncAgent.shared.queueWatchlist(
+                id: watchlistId,
+                payloadData: payloadData,
+                updatedAt: updatedAt,
+                operation: .update
+            )
         }
     }
     
@@ -203,10 +235,18 @@ final class WatchlistPersistenceService {
         // Update watchlist stats
         try recalculateWatchlistStats(watchlistID: watchlistID)
         
-        // Queue sync
-        let e = entry
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let entryId = entry.id
+        let payloadData = buildEntryPayloadData(entry, for: .create)
+        let localUpdatedAt = entry.observationDate ?? entry.addedDate
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueEntry(e, operation: .create)
+            await BackgroundSyncAgent.shared.queueEntry(
+                id: entryId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .create
+            )
         }
         
         return entry
@@ -269,10 +309,18 @@ final class WatchlistPersistenceService {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
         
-        // Queue sync
-        let e = entry
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let entryId = entry.id
+        let payloadData = buildEntryPayloadData(entry, for: .update)
+        let localUpdatedAt = entry.observationDate ?? entry.addedDate
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueEntry(e, operation: .update)
+            await BackgroundSyncAgent.shared.queueEntry(
+                id: entryId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .update
+            )
         }
     }
     
@@ -293,10 +341,18 @@ final class WatchlistPersistenceService {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
         
-        // Queue sync
-        let e = entry
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let entryId = entry.id
+        let payloadData = buildEntryPayloadData(entry, for: .delete)
+        let localUpdatedAt = entry.observationDate ?? entry.addedDate
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueEntry(e, operation: .delete)
+            await BackgroundSyncAgent.shared.queueEntry(
+                id: entryId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .delete
+            )
         }
     }
     
@@ -316,10 +372,18 @@ final class WatchlistPersistenceService {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
         
-        // Queue sync
-        let e = entry
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let entryId = entry.id
+        let payloadData = buildEntryPayloadData(entry, for: .update)
+        let localUpdatedAt = entry.observationDate ?? entry.addedDate
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueEntry(e, operation: .update)
+            await BackgroundSyncAgent.shared.queueEntry(
+                id: entryId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .update
+            )
         }
     }
     
@@ -359,11 +423,18 @@ final class WatchlistPersistenceService {
             try saveContext()
             try recalculateWatchlistStats(watchlistID: watchlistID)
             
-            // Queue sync for all created entries
-            let entries = createdEntries
+            // Queue sync for all created entries - extract Sendable primitives before crossing actor boundary
+            let entrySyncItems = createdEntries.map { entry -> (id: UUID, payloadData: Data?, localUpdatedAt: Date?) in
+                (entry.id, buildEntryPayloadData(entry, for: .create), entry.observationDate ?? entry.addedDate)
+            }
             queueSync {
-                for entry in entries {
-                    await BackgroundSyncAgent.shared.queueEntry(entry, operation: .create)
+                for item in entrySyncItems {
+                    await BackgroundSyncAgent.shared.queueEntry(
+                        id: item.id,
+                        payloadData: item.payloadData,
+                        localUpdatedAt: item.localUpdatedAt,
+                        operation: .create
+                    )
                 }
             }
         }
@@ -395,10 +466,18 @@ final class WatchlistPersistenceService {
         context.insert(rule)
         try saveContext()
         
-        // Queue sync
-        let r = rule
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let ruleId = rule.id
+        let payloadData = buildRulePayloadData(rule, for: .create)
+        let localUpdatedAt = rule.created_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueRule(r, operation: .create)
+            await BackgroundSyncAgent.shared.queueRule(
+                id: ruleId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .create
+            )
         }
         
         return rule
@@ -430,10 +509,18 @@ final class WatchlistPersistenceService {
         rule.syncStatus = .pendingUpdate
         try saveContext()
         
-        // Queue sync
-        let r = rule
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let ruleId = rule.id
+        let payloadData = buildRulePayloadData(rule, for: .update)
+        let localUpdatedAt = rule.created_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueRule(r, operation: .update)
+            await BackgroundSyncAgent.shared.queueRule(
+                id: ruleId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .update
+            )
         }
     }
     
@@ -450,10 +537,18 @@ final class WatchlistPersistenceService {
         rule.deleted_at = Date()
         try saveContext()
         
-        // Queue sync
-        let r = rule
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let ruleId = rule.id
+        let payloadData = buildRulePayloadData(rule, for: .delete)
+        let localUpdatedAt = rule.created_at
+        
         queueSync {
-            await BackgroundSyncAgent.shared.queueRule(r, operation: .delete)
+            await BackgroundSyncAgent.shared.queueRule(
+                id: ruleId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .delete
+            )
         }
     }
     
@@ -579,5 +674,87 @@ final class WatchlistPersistenceService {
         watchlist.updated_at = Date()
         
         try saveContext()
+    }
+    
+    // MARK: - Payload Builders (for Sendable extraction)
+    
+    private func buildWatchlistPayloadData(_ watchlist: Watchlist, for operation: SyncOperationType) -> Data? {
+        var payload: [String: Any] = [
+            "id": watchlist.id.uuidString,
+            "owner_id": watchlist.owner_id?.uuidString as Any,
+            "type": watchlist.type?.rawValue ?? "custom",
+            "title": watchlist.title as Any,
+            "location": watchlist.location as Any,
+            "location_display_name": watchlist.locationDisplayName as Any,
+            "observed_count": watchlist.observedCount,
+            "species_count": watchlist.speciesCount,
+            "cover_image_path": watchlist.coverImagePath as Any,
+            "species_rule_enabled": watchlist.speciesRuleEnabled,
+            "species_rule_shape_id": watchlist.speciesRuleShapeId as Any,
+            "location_rule_enabled": watchlist.locationRuleEnabled,
+            "location_rule_lat": watchlist.locationRuleLat as Any,
+            "location_rule_lon": watchlist.locationRuleLon as Any,
+            "location_rule_radius_km": watchlist.locationRuleRadiusKm,
+            "location_rule_display_name": watchlist.locationRuleDisplayName as Any,
+            "date_rule_enabled": watchlist.dateRuleEnabled,
+            "date_rule_start_date": watchlist.dateRuleStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "date_rule_end_date": watchlist.dateRuleEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "sync_status": watchlist.syncStatusRaw,
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        if operation == .delete {
+            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
+        }
+        
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+    
+    private func buildEntryPayloadData(_ entry: WatchlistEntry, for operation: SyncOperationType) -> Data? {
+        var payload: [String: Any] = [
+            "id": entry.id.uuidString,
+            "watchlist_id": entry.watchlist?.id.uuidString as Any,
+            "bird_id": entry.bird?.id.uuidString as Any,
+            "nickname": entry.nickname as Any,
+            "status": entry.status.rawValue,
+            "notes": entry.notes as Any,
+            "observation_date": entry.observationDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "to_observe_start_date": entry.toObserveStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "to_observe_end_date": entry.toObserveEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "observed_by": entry.observedBy as Any,
+            "lat": entry.lat as Any,
+            "lon": entry.lon as Any,
+            "location_display_name": entry.locationDisplayName as Any,
+            "priority": entry.priority,
+            "notify_upcoming": entry.notify_upcoming,
+            "target_date_range": entry.target_date_range as Any,
+            "sync_status": entry.syncStatusRaw,
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        if operation == .delete {
+            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
+        }
+        
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+    
+    private func buildRulePayloadData(_ rule: WatchlistRule, for operation: SyncOperationType) -> Data? {
+        var payload: [String: Any] = [
+            "id": rule.id.uuidString,
+            "watchlist_id": rule.watchlist?.id.uuidString as Any,
+            "rule_type": rule.rule_type.rawValue,
+            "parameters_json": rule.parameters_json,
+            "is_active": rule.is_active,
+            "priority": rule.priority,
+            "sync_status": rule.syncStatusRaw,
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        
+        if operation == .delete {
+            payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
+        }
+        
+        return try? JSONSerialization.data(withJSONObject: payload)
     }
 }
