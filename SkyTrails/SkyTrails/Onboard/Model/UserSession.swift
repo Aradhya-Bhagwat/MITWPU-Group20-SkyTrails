@@ -49,6 +49,14 @@ class UserSession {
         // Connect to realtime sync on successful auth
         Task { @MainActor in
             await connectRealtimeAndSync()
+            
+            // Perform initial sync after realtime connection
+            do {
+                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                print("📥 [UserSession] Initial sync completed: \(summary.watchlistsSynced) watchlists, \(summary.entriesSynced) entries, \(summary.rulesSynced) rules, \(summary.photosSynced) photos")
+            } catch {
+                print("⚠️ [UserSession] Initial sync failed: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -142,6 +150,14 @@ class UserSession {
             
             // Connect realtime after session restore
             await connectRealtimeAndSync()
+            
+            // Perform initial sync after session restore
+            do {
+                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                print("📥 [UserSession] Initial sync completed: \(summary.watchlistsSynced) watchlists, \(summary.entriesSynced) entries, \(summary.rulesSynced) rules, \(summary.photosSynced) photos")
+            } catch {
+                print("⚠️ [UserSession] Initial sync failed: \(error.localizedDescription)")
+            }
             
             return true
         } catch {

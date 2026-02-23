@@ -58,9 +58,48 @@ actor BackgroundSyncAgent {
     
     private var config: SupabaseConfig?
     
+    private static let queueFileURL: URL = FileManager.default
+        .urls(for: .documentDirectory, in: .userDomainMask)
+        .first!
+        .appendingPathComponent("sync_queue.json")
+    
+    private static let deadLetterFileURL: URL = FileManager.default
+        .urls(for: .documentDirectory, in: .userDomainMask)
+        .first!
+        .appendingPathComponent("dead_letter_queue.json")
+    
     // MARK: - Init
     
-    private init() {}
+    private init() {
+        self.queue = Self.loadQueueFromDisk()
+        self.deadLetterQueue = Self.loadDeadLetterFromDisk()
+    }
+    
+    // MARK: - Disk Persistence
+    
+    private static func loadQueueFromDisk() -> [SyncOperation] {
+        guard let data = try? Data(contentsOf: queueFileURL),
+              let ops = try? JSONDecoder().decode([SyncOperation].self, from: data)
+        else { return [] }
+        return ops
+    }
+    
+    private static func loadDeadLetterFromDisk() -> [SyncOperation] {
+        guard let data = try? Data(contentsOf: deadLetterFileURL),
+              let ops = try? JSONDecoder().decode([SyncOperation].self, from: data)
+        else { return [] }
+        return ops
+    }
+    
+    private static func saveQueueToDisk(_ ops: [SyncOperation]) {
+        guard let data = try? JSONEncoder().encode(ops) else { return }
+        try? data.write(to: queueFileURL)
+    }
+    
+    private static func saveDeadLetterToDisk(_ ops: [SyncOperation]) {
+        guard let data = try? JSONEncoder().encode(ops) else { return }
+        try? data.write(to: deadLetterFileURL)
+    }
     
     // MARK: - Public API
     
@@ -74,6 +113,7 @@ actor BackgroundSyncAgent {
             localUpdatedAt: updatedAt
         )
         queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
         print("📤 [SyncAgent] Queued watchlist \(operation): \(id)")
         
         Task {
@@ -91,6 +131,7 @@ actor BackgroundSyncAgent {
             localUpdatedAt: localUpdatedAt
         )
         queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
         print("📤 [SyncAgent] Queued entry \(operation): \(id)")
         
         Task {
@@ -108,6 +149,7 @@ actor BackgroundSyncAgent {
             localUpdatedAt: localUpdatedAt
         )
         queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
         print("📤 [SyncAgent] Queued rule \(operation): \(id)")
         
         Task {
@@ -125,6 +167,7 @@ actor BackgroundSyncAgent {
             localUpdatedAt: localUpdatedAt
         )
         queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
         print("📤 [SyncAgent] Queued photo \(operation): \(id)")
         
         Task {
@@ -139,10 +182,11 @@ actor BackgroundSyncAgent {
     
     /// Retry failed operations
     func retryFailed() async {
-        // Move dead letter items back to main queue
         let retryableItems = deadLetterQueue.filter { $0.attempts < maxRetries }
         deadLetterQueue.removeAll { $0.attempts < maxRetries }
+        Self.saveDeadLetterToDisk(deadLetterQueue)
         queue.append(contentsOf: retryableItems)
+        Self.saveQueueToDisk(queue)
         
         print("📤 [SyncAgent] Retrying \(retryableItems.count) failed operations")
         await processQueue()
@@ -152,7 +196,17 @@ actor BackgroundSyncAgent {
     func clearAll() {
         queue.removeAll()
         deadLetterQueue.removeAll()
+        Self.saveQueueToDisk(queue)
+        Self.saveDeadLetterToDisk(deadLetterQueue)
         print("📤 [SyncAgent] Cleared all pending operations")
+    }
+    
+    public func pendingOperationCount() -> Int {
+        return queue.count
+    }
+    
+    public func deadLetterCount() -> Int {
+        return deadLetterQueue.count
     }
 
     // MARK: - Background Tasks
@@ -242,19 +296,20 @@ actor BackgroundSyncAgent {
                 
                 if failedOp.attempts >= maxRetries {
                     deadLetterQueue.append(failedOp)
+                    Self.saveDeadLetterToDisk(deadLetterQueue)
                     print("📤 [SyncAgent] ✗ Max retries reached: \(operation.table) \(operation.recordId)")
                 } else {
-                    // Re-queue with delay (will be processed on next call)
                     queue[index] = failedOp
+                    Self.saveQueueToDisk(queue)
                     print("📤 [SyncAgent] ⚠ Retry \(failedOp.attempts)/\(maxRetries): \(operation.table)")
                 }
             }
         }
         
-        // Remove successfully processed items
         for index in processedIndices.reversed() {
             queue.remove(at: index)
         }
+        Self.saveQueueToDisk(queue)
     }
     
     // MARK: - Conflict Detection (Server Authoritative)
