@@ -272,7 +272,7 @@ final class RealtimeSyncService: NSObject {
         }
         
         // Check for event type (indicates a data message)
-        guard let eventType = json["type"] as? String,
+        guard let _ = json["type"] as? String,
               let payload = json["payload"] as? [String: Any] else {
             // Could be a system message (phx_reply, etc.)
             if let event = json["event"] as? String {
@@ -647,7 +647,7 @@ final class RealtimeSyncService: NSObject {
         heartbeatTimer?.invalidate()
         
         heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.sendHeartbeat()
             }
         }

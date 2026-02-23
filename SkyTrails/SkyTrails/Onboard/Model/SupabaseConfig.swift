@@ -1,10 +1,10 @@
 import Foundation
 
-struct SupabaseConfig {
+struct SupabaseConfig: Sendable {
     let projectURL: URL
     let anonKey: String
 
-    static func load() throws -> SupabaseConfig {
+    nonisolated static func load() throws -> SupabaseConfig {
         guard
             let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
             let url = URL(string: urlString),
