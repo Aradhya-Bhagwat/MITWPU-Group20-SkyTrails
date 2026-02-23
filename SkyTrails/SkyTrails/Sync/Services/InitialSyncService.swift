@@ -88,21 +88,19 @@ actor InitialSyncService {
             accessToken: accessToken
         )
         
-        // Now merge into SwiftData on MainActor
-        var watchlistsCount = 0
-        var entriesCount = 0
-        var rulesCount = 0
-        var photosCount = 0
         
-        try await MainActor.run {
+        // Now merge into SwiftData on MainActor
+        let (watchlistsCount, entriesCount, rulesCount, photosCount) = try await MainActor.run {
             let context = WatchlistManager.shared.context
             
-            watchlistsCount = try mergeWatchlists(watchlistRows, context: context)
-            entriesCount = try mergeEntries(entryRows, context: context)
-            rulesCount = try mergeRules(ruleRows, context: context)
-            photosCount = try mergePhotos(photoRows, context: context)
+            let wCount = try mergeWatchlists(watchlistRows, context: context)
+            let eCount = try mergeEntries(entryRows, context: context)
+            let rCount = try mergeRules(ruleRows, context: context)
+            let pCount = try mergePhotos(photoRows, context: context)
             
             try context.save()
+            
+            return (wCount, eCount, rCount, pCount)
         }
         
         let summary = InitialSyncSummary(
@@ -121,7 +119,7 @@ actor InitialSyncService {
         let existingWatchlists = try context.fetch(FetchDescriptor<Watchlist>())
         var existingById: [UUID: Watchlist] = [:]
         for watchlist in existingWatchlists {
-            if let id = watchlist.owner_id, existingById[watchlist.id] == nil {
+            if watchlist.owner_id != nil && existingById[watchlist.id] == nil {
                 existingById[watchlist.id] = watchlist
             }
         }

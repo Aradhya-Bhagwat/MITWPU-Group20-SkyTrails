@@ -60,7 +60,7 @@ struct UserRow: Codable {
     }
 }
 
-struct WatchlistRow: Codable {
+struct WatchlistRow: Codable, Sendable {
     let id: UUID
     let ownerId: UUID?
     let type: String
@@ -120,7 +120,7 @@ struct WatchlistRow: Codable {
     }
 }
 
-struct WatchlistEntryRow: Codable {
+struct WatchlistEntryRow: Codable, Sendable {
     let id: UUID
     let watchlistId: UUID
     let birdId: UUID
@@ -172,7 +172,7 @@ struct WatchlistEntryRow: Codable {
     }
 }
 
-struct WatchlistRuleRow: Codable {
+struct WatchlistRuleRow: Codable, Sendable {
     let id: UUID
     let watchlistId: UUID
     let ruleType: String
@@ -202,7 +202,7 @@ struct WatchlistRuleRow: Codable {
     }
 }
 
-struct WatchlistShareRow: Codable {
+struct WatchlistShareRow: Codable, Sendable {
     let id: UUID
     let watchlistId: UUID
     let userId: UUID
@@ -220,7 +220,7 @@ struct WatchlistShareRow: Codable {
     }
 }
 
-struct ObservedBirdPhotoRow: Codable {
+struct ObservedBirdPhotoRow: Codable, Sendable {
     let id: UUID
     let watchlistEntryId: UUID
     let imagePath: String
