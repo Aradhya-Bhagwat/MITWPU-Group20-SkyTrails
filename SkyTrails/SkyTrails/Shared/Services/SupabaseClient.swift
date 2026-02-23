@@ -31,12 +31,12 @@ enum SupabaseHTTPMethod: String {
     case DELETE
 }
 
-struct SupabaseRequestOptions {
+struct SupabaseRequestOptions: Sendable {
     let bearerTokenOverride: String?
     let queryItems: [URLQueryItem]?
     let additionalHeaders: [String: String]?
 
-    init(
+    nonisolated init(
         bearerTokenOverride: String? = nil,
         queryItems: [URLQueryItem]? = nil,
         additionalHeaders: [String: String]? = nil

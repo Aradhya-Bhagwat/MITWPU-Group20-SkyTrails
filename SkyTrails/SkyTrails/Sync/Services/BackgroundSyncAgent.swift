@@ -12,13 +12,13 @@ import BackgroundTasks
 
 // MARK: - Sync Operation
 
-enum SyncOperationType: Sendable {
+enum SyncOperationType: String, Sendable, Equatable, Codable {
     case create
     case update
     case delete
 }
 
-struct SyncOperation: Sendable {
+struct SyncOperation: Sendable, Codable {
     let id: UUID
     let type: SyncOperationType
     let table: String
@@ -29,7 +29,7 @@ struct SyncOperation: Sendable {
     var attempts: Int = 0
     var lastError: String?
     
-    init(type: SyncOperationType, table: String, recordId: UUID, payloadData: Data? = nil, localUpdatedAt: Date? = nil) {
+    nonisolated init(type: SyncOperationType, table: String, recordId: UUID, payloadData: Data? = nil, localUpdatedAt: Date? = nil) {
         self.id = UUID()
         self.type = type
         self.table = table
