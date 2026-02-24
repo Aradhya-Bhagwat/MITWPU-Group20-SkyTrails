@@ -272,7 +272,15 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	
-	private func addReminder(for bird: Bird) {
+	private func addReminder(for entry: WatchlistEntry) {
+		// Toggle reminder state
+		let newValue = !entry.notify_upcoming
+		
+		// Update via manager (this handles notification scheduling and syncing)
+		try? manager.updateEntryNotifyUpcoming(entryId: entry.id, notify: newValue)
+		
+		// Refresh to show updated UI
+		refreshData()
 	}
 	
 	private func deleteEntry(_ entry: WatchlistEntry) {
@@ -405,13 +413,19 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
 		var actions = [deleteAction, editAction]
 		
-		if currentSegmentIndex == 1, let bird = entry.bird {
+		if currentSegmentIndex == 1, entry.bird != nil {
 			let reminderAction = UIContextualAction(style: .normal, title: "Remind") { [weak self] (_, _, completion) in
-				self?.addReminder(for: bird)
+				self?.addReminder(for: entry)
 				completion(true)
 			}
-			reminderAction.image = UIImage(systemName: "bell")
-			reminderAction.backgroundColor = .systemOrange
+			
+			// Dynamic icon based on reminder state
+			let iconName = entry.notify_upcoming ? "bell.fill" : "bell"
+			reminderAction.image = UIImage(systemName: iconName)
+			
+			// Dynamic color based on reminder state
+			reminderAction.backgroundColor = entry.notify_upcoming ? .systemGreen : .systemOrange
+			
 			actions.append(reminderAction)
 		}
 		

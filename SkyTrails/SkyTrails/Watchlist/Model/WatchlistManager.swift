@@ -405,6 +405,10 @@ final class WatchlistManager: WatchlistRepository {
         }
     }
     
+    func updateEntryNotifyUpcoming(entryId: UUID, notify: Bool) throws {
+        try persistence.updateEntryNotifyUpcoming(id: entryId, notify: notify)
+    }
+    
     // Bird Operations
     func fetchAllBirds() -> [Bird] {
         return (try? persistence.fetchAllBirds()) ?? []

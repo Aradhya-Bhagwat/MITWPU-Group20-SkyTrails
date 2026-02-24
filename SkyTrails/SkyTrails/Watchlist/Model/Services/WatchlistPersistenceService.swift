@@ -381,6 +381,17 @@ final class WatchlistPersistenceService {
             throw WatchlistError.entryNotFound(id)
         }
         
+        let wasToObserve = entry.status == .to_observe
+        let hadRemindersEnabled = entry.notify_upcoming
+        
+        // If changing from to_observe to observed, cancel reminders
+        if wasToObserve && hadRemindersEnabled {
+            Task {
+                await NotificationService.shared.cancelReminders(for: entry.id)
+            }
+            entry.notify_upcoming = false
+        }
+        
         entry.status = (entry.status == .observed) ? .to_observe : .observed
         entry.observationDate = (entry.status == .observed) ? Date() : nil
         entry.syncStatus = .pendingUpdate
@@ -396,6 +407,42 @@ final class WatchlistPersistenceService {
         let entryId = entry.id
         let payloadData = buildEntryPayloadData(entry, for: .update)
         let localUpdatedAt = entry.observationDate ?? entry.addedDate
+        
+        queueSync {
+            await BackgroundSyncAgent.shared.queueEntry(
+                id: entryId,
+                payloadData: payloadData,
+                localUpdatedAt: localUpdatedAt,
+                operation: .update
+            )
+        }
+    }
+    
+    func updateEntryNotifyUpcoming(id: UUID, notify: Bool) throws {
+        guard let entry = try fetchEntry(id: id) else {
+            throw WatchlistError.entryNotFound(id)
+        }
+        
+        entry.notify_upcoming = notify
+        entry.syncStatus = .pendingUpdate
+        
+        try saveContext()
+        
+        // Schedule or cancel notifications
+        if notify {
+            Task {
+                await NotificationService.shared.scheduleReminders(for: entry)
+            }
+        } else {
+            Task {
+                await NotificationService.shared.cancelReminders(for: entry.id)
+            }
+        }
+        
+        // Queue sync - extract Sendable primitives before crossing actor boundary
+        let entryId = entry.id
+        let payloadData = buildEntryPayloadData(entry, for: .update)
+        let localUpdatedAt = entry.addedDate
         
         queueSync {
             await BackgroundSyncAgent.shared.queueEntry(

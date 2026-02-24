@@ -7,6 +7,7 @@
 
 import UIKit
 import BackgroundTasks
+import UserNotifications
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,6 +16,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
+		
+		// Setup notifications
+		setupNotifications()
 		
 		// Call to add Rose-ringed Parakeet to My Watchlist (for one-time execution)
         // Uncomment the line below, run the app once, then re-comment it.
@@ -30,6 +34,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 		
 		return true
+	}
+	
+	// MARK: - Notifications Setup
+	
+	private func setupNotifications() {
+		let center = UNUserNotificationCenter.current()
+		
+		// Set delegate
+		center.delegate = NotificationDelegate.shared
+		
+		// Request authorization
+		Task {
+			do {
+				let granted = try await NotificationService.shared.requestAuthorization()
+				print("🔔 [AppDelegate] Notification authorization: \(granted ? "granted" : "denied")")
+				
+				if granted {
+					// Register notification categories (for snooze action)
+					await NotificationService.shared.registerCategories()
+				}
+			} catch {
+				print("❌ [AppDelegate] Notification authorization error: \(error)")
+			}
+		}
 	}
 
 	// MARK: UISceneSession Lifecycle
