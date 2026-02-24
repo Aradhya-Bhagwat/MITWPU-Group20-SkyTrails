@@ -56,6 +56,15 @@ struct WatchlistSeeder {
 	static func seed(context: ModelContext) throws {
 		print("🌱 [WatchlistSeeder] Starting seed check...")
 		
+		// 0. Check if watchlist seeding is enabled in Info.plist
+		let seedWatchlistsEnabled = Bundle.main.object(forInfoDictionaryKey: "SEED_WATCHLISTS") as? Bool ?? false
+		guard seedWatchlistsEnabled else {
+			print("ℹ️ [WatchlistSeeder] SEED_WATCHLISTS is OFF in Info.plist. Skipping watchlist seeding.")
+			return
+		}
+		
+		print("🌱 [WatchlistSeeder] SEED_WATCHLISTS is ON. Proceeding with seed...")
+		
 			// 1. Check if data exists
 		let descriptor = FetchDescriptor<Watchlist>()
 		let count = try context.fetchCount(descriptor)
