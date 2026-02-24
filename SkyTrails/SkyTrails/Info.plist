@@ -6,6 +6,12 @@
 	<string>https://qlawahnttgioswfdnzuz.supabase.co</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsYXdhaG50dGdpb3N3ZmRuenV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzgzOTYsImV4cCI6MjA4Njk1NDM5Nn0.enPngCMlBvB6f3_UUK8hpIZIvZ6lARGr_TEGgBiomXw</string>
+	<key>DEV_BYPASS_EMAIL</key>
+	<string>tanmayvdani@gmail.com</string>
+	<key>DEV_BYPASS_PASSWORD</key>
+	<string>123456</string>
+	<key>SEED_WATCHLISTS</key>
+	<false/>
 	<key>GIDClientID</key>
 	<string>967202205672-fct3hdiq5jg6vt9m63pcf7gn6h5fgb2l.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>

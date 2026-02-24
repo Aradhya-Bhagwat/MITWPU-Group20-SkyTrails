@@ -94,18 +94,34 @@ final class SupabaseAuthService {
     }
 
     func verifyOTP(email: String, token: String) async throws -> SupabaseAuthResult {
-        // Prototype bypass
+        // 🔓 DEV BYPASS: Use real Supabase auth with stored credentials
         if token == "123456" {
-            return SupabaseAuthResult(
-                userID: UUID(), 
-                email: email,
-                accessToken: "prototype_token_\(UUID().uuidString)",
-                refreshToken: "prototype_refresh_\(UUID().uuidString)",
-                displayName: nil,
-                profilePhoto: nil
-            )
+            print("🔓 [AuthService] DEV BYPASS activated - using real Supabase auth")
+            
+            // Read dev bypass credentials from Info.plist
+            guard let bypassEmail = Bundle.main.object(forInfoDictionaryKey: "DEV_BYPASS_EMAIL") as? String,
+                  let bypassPassword = Bundle.main.object(forInfoDictionaryKey: "DEV_BYPASS_PASSWORD") as? String,
+                  !bypassPassword.isEmpty,
+                  bypassPassword != "REPLACE_WITH_YOUR_PASSWORD"
+            else {
+                print("❌ [AuthService] DEV_BYPASS_EMAIL or DEV_BYPASS_PASSWORD not configured in Info.plist")
+                throw SupabaseAuthError.requestFailed("Dev bypass not configured. Set DEV_BYPASS_EMAIL and DEV_BYPASS_PASSWORD in Info.plist")
+            }
+            
+            print("🔓 [AuthService] Signing in with dev credentials: \(bypassEmail)")
+            
+            // Use REAL Supabase sign-in to get valid JWT tokens
+            do {
+                let result = try await signIn(email: bypassEmail, password: bypassPassword)
+                print("🔓 [AuthService] ✅ DEV BYPASS successful - got real tokens for user: \(result.userID)")
+                return result
+            } catch {
+                print("❌ [AuthService] DEV BYPASS failed: \(error.localizedDescription)")
+                throw error
+            }
         }
 
+        // Normal OTP flow
         let payload: [String: Any] = [
             "email": email,
             "token": token
@@ -159,19 +175,30 @@ final class SupabaseAuthService {
     }
 
     func restoreSession(accessToken: String, refreshToken: String) async throws -> SupabaseAuthResult {
-        if let user = try? await getCurrentUser(accessToken: accessToken),
-           let userID = UUID(uuidString: user.id) {
-            return SupabaseAuthResult(
-                userID: userID,
-                email: user.email ?? "",
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                displayName: user.displayName,
-                profilePhoto: user.profilePhoto
-            )
+        print("🔍 [AuthService] restoreSession called")
+        
+        // First, try to get current user with existing access token
+        do {
+            let user = try await getCurrentUser(accessToken: accessToken)
+            if let userID = UUID(uuidString: user.id) {
+                print("🔍 [AuthService] ✅ getCurrentUser succeeded with existing token")
+                return SupabaseAuthResult(
+                    userID: userID,
+                    email: user.email ?? "",
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    displayName: user.displayName,
+                    profilePhoto: user.profilePhoto
+                )
+            }
+        } catch {
+            print("🔍 [AuthService] ⚠️ getCurrentUser failed: \(error.localizedDescription)")
+            print("🔍 [AuthService] Attempting token refresh...")
         }
-
+        
+        // If getCurrentUser failed (likely 401), refresh the token
         let refreshed = try await refreshSession(refreshToken: refreshToken)
+        print("🔍 [AuthService] ✅ Token refresh succeeded")
         return try toAuthResult(from: refreshed)
     }
 

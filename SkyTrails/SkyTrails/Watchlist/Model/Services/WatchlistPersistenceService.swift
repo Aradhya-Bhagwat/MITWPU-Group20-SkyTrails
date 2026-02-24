@@ -698,6 +698,7 @@ final class WatchlistPersistenceService {
     // MARK: - Payload Builders (for Sendable extraction)
     
     private func buildWatchlistPayloadData(_ watchlist: Watchlist, for operation: SyncOperationType) -> Data? {
+        // Note: sync_status, row_version, last_synced_at are LOCAL-only fields - not sent to Supabase
         var payload: [String: Any] = [
             "id": watchlist.id.uuidString,
             "owner_id": watchlist.owner_id?.uuidString as Any,
@@ -705,6 +706,8 @@ final class WatchlistPersistenceService {
             "title": watchlist.title as Any,
             "location": watchlist.location as Any,
             "location_display_name": watchlist.locationDisplayName as Any,
+            "start_date": watchlist.startDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "end_date": watchlist.endDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "observed_count": watchlist.observedCount,
             "species_count": watchlist.speciesCount,
             "cover_image_path": watchlist.coverImagePath as Any,
@@ -718,7 +721,6 @@ final class WatchlistPersistenceService {
             "date_rule_enabled": watchlist.dateRuleEnabled,
             "date_rule_start_date": watchlist.dateRuleStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "date_rule_end_date": watchlist.dateRuleEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "sync_status": watchlist.syncStatusRaw,
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
         
@@ -730,6 +732,7 @@ final class WatchlistPersistenceService {
     }
     
     private func buildEntryPayloadData(_ entry: WatchlistEntry, for operation: SyncOperationType) -> Data? {
+        // Note: sync_status, row_version, last_synced_at are LOCAL-only fields - not sent to Supabase
         var payload: [String: Any] = [
             "id": entry.id.uuidString,
             "watchlist_id": entry.watchlist?.id.uuidString as Any,
@@ -747,7 +750,7 @@ final class WatchlistPersistenceService {
             "priority": entry.priority,
             "notify_upcoming": entry.notify_upcoming,
             "target_date_range": entry.target_date_range as Any,
-            "sync_status": entry.syncStatusRaw,
+            "added_date": ISO8601DateFormatter().string(from: entry.addedDate),
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
         
@@ -759,6 +762,7 @@ final class WatchlistPersistenceService {
     }
     
     private func buildRulePayloadData(_ rule: WatchlistRule, for operation: SyncOperationType) -> Data? {
+        // Note: sync_status, row_version, last_synced_at are LOCAL-only fields - not sent to Supabase
         var payload: [String: Any] = [
             "id": rule.id.uuidString,
             "watchlist_id": rule.watchlist?.id.uuidString as Any,
@@ -766,7 +770,6 @@ final class WatchlistPersistenceService {
             "parameters_json": rule.parameters_json,
             "is_active": rule.is_active,
             "priority": rule.priority,
-            "sync_status": rule.syncStatusRaw,
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
         
