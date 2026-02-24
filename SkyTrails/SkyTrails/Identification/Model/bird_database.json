@@ -1,8 +1,8 @@
 {
     "metadata": {
-        "version": "2.1",
-        "total_species": 50,
-        "description": "BirdDatabase aligned with SwiftData models. UUID everywhere except BirdShape.id (String)."
+        "version": "3.0",
+        "total_species": 46,
+        "description": "Fixed shapes and sizes for proper bird identification. 16 shape categories."
     },
     "reference_data": {
         "shapes": [
@@ -690,43 +690,6 @@
             ]
         },
         {
-            "id": "550e8400-e29b-41d4-a716-446655440007",
-            "commonName": "Red-headed Bunting",
-            "scientificName": "Emberiza bruniceps",
-            "staticImageName": "red_headed_bunting",
-            "family": "Emberizidae",
-            "order_name": "Passeriformes",
-            "rarityLevel": "uncommon",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban",
-                "Desert"
-            ],
-            "validMonths": [
-                3,
-                4,
-                5,
-                9,
-                10,
-                11
-            ],
-            "fieldMarkData": [
-                {
-                    "area": "Crown",
-                    "variantId": "6a1f0000-0000-0000-0000-00000000000e"
-                },
-                {
-                    "area": "Underparts",
-                    "variantId": "6a1f0000-0000-0000-0000-000000000030"
-                },
-                {
-                    "area": "Back",
-                    "variantId": "6a1f0000-0000-0000-0000-000000000003"
-                }
-            ]
-        },
-        {
             "id": "550e8400-e29b-41d4-a716-446655440008",
             "commonName": "Common Rosefinch",
             "scientificName": "Carpodacus erythrinus",
@@ -846,11 +809,11 @@
             "commonName": "Eurasian Wigeon",
             "scientificName": "Mareca penelope",
             "staticImageName": "eurasian_wigeon",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Anatidae",
+            "order_name": "Anseriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Anatidae",
+            "size_category": 2,
             "validLocations": [
                 "Wetlands"
             ],
@@ -875,10 +838,10 @@
             "commonName": "Malabar Trogon",
             "scientificName": "Harpactes fasciatus",
             "staticImageName": "malabar_trogon",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Trogonidae",
+            "order_name": "Trogoniformes",
             "rarityLevel": "rare",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Muscicapidae",
             "size_category": 1,
             "validLocations": [
                 "Western Ghats"
@@ -904,11 +867,69 @@
             "commonName": "Little Bittern",
             "scientificName": "Ixobrychus minutus",
             "staticImageName": "little_bittern",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Ardeidae",
+            "order_name": "Pelecaniformes",
             "rarityLevel": "rare",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Ardeidae",
             "size_category": 1,
+            "validLocations": [
+                "Wetlands"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "30558f45-a487-485b-b424-808d94329807",
+            "commonName": "Striated Heron",
+            "scientificName": "Butorides striata",
+            "staticImageName": "striated_heron",
+            "family": "Ardeidae",
+            "order_name": "Pelecaniformes",
+            "rarityLevel": "common",
+            "shape_id": "Ardeidae",
+            "size_category": 1,
+            "validLocations": [
+                "Wetlands"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "f376c01c-515d-45a0-87d0-93129b7f6eb5",
+            "commonName": "Greater Flamingo",
+            "scientificName": "Phoenicopterus roseus",
+            "staticImageName": "flamingo",
+            "family": "Phoenicopteridae",
+            "order_name": "Phoenicopteriformes",
+            "rarityLevel": "common",
+            "shape_id": "Charadriidae",
+            "size_category": 3,
             "validLocations": [
                 "Wetlands"
             ],
@@ -933,10 +954,10 @@
             "commonName": "Black Drongo",
             "scientificName": "Dicrurus macrocercus",
             "staticImageName": "black_drongo",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Dicruridae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Corvidae",
             "size_category": 1,
             "validLocations": [
                 "Urban"
@@ -958,17 +979,17 @@
             "fieldMarkData": []
         },
         {
-            "id": "f376c01c-515d-45a0-87d0-93129b7f6eb5",
-            "commonName": "Greater Flamingo",
-            "scientificName": "Phoenicopterus roseus",
-            "staticImageName": "flamingo",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "id": "a70b9586-1d5d-4e56-bfe9-001064311e3e",
+            "commonName": "House Crow",
+            "scientificName": "Corvus splendens",
+            "staticImageName": "crow",
+            "family": "Corvidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Corvidae",
+            "size_category": 2,
             "validLocations": [
-                "Wetlands"
+                "Urban"
             ],
             "validMonths": [
                 1,
@@ -991,8 +1012,8 @@
             "commonName": "Spectacled Finch",
             "scientificName": "Callacanthis burtoni",
             "staticImageName": "spectacled_finch",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Fringillidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "rare",
             "shape_id": "Passeridae_Fringillidae",
             "size_category": 1,
@@ -1020,8 +1041,8 @@
             "commonName": "Russet Sparrow",
             "scientificName": "Passer cinnamomeus",
             "staticImageName": "russet_sparrow",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Passeridae",
+            "order_name": "Passeriformes",
             "rarityLevel": "rare",
             "shape_id": "Passeridae_Fringillidae",
             "size_category": 1,
@@ -1049,71 +1070,13 @@
             "commonName": "Indian Paradise Flycatcher",
             "scientificName": "Terpsiphone paradisi",
             "staticImageName": "paradise_flycatcher",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Muscicapidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Muscicapidae",
             "size_category": 1,
             "validLocations": [
                 "Western Ghats"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "30558f45-a487-485b-b424-808d94329807",
-            "commonName": "Striated Heron",
-            "scientificName": "Butorides striata",
-            "staticImageName": "striated_heron",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Wetlands"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "a70b9586-1d5d-4e56-bfe9-001064311e3e",
-            "commonName": "House Crow",
-            "scientificName": "Corvus splendens",
-            "staticImageName": "crow",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban"
             ],
             "validMonths": [
                 1,
@@ -1136,39 +1099,10 @@
             "commonName": "Indian Robin",
             "scientificName": "Saxicoloides fulicatus",
             "staticImageName": "indian_robin",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Muscicapidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "58b8fd41-bc3c-4e47-9d76-47c3c92c24b9",
-            "commonName": "Red-vented Bulbul",
-            "scientificName": "Pycnonotus cafer",
-            "staticImageName": "red_vented_bulbul",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Muscicapidae",
             "size_category": 1,
             "validLocations": [
                 "Urban"
@@ -1194,10 +1128,10 @@
             "commonName": "Oriental Magpie-Robin",
             "scientificName": "Copsychus saularis",
             "staticImageName": "oriental_magpie_robin",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Muscicapidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Muscicapidae",
             "size_category": 1,
             "validLocations": [
                 "Urban"
@@ -1219,17 +1153,17 @@
             "fieldMarkData": []
         },
         {
-            "id": "b66a14d3-d59c-4682-8fdb-2627ec3cdd4e",
-            "commonName": "Great Indian Bustard",
-            "scientificName": "Ardeotis nigriceps",
-            "staticImageName": "great_indian_bustard",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "rare",
-            "shape_id": "Passeridae_Fringillidae",
+            "id": "ba022a51-66cd-4150-a99f-8aa8e2dd8e56",
+            "commonName": "Pied Bushchat",
+            "scientificName": "Saxicola caprata",
+            "staticImageName": "pied_bushchat",
+            "family": "Muscicapidae",
+            "order_name": "Passeriformes",
+            "rarityLevel": "common",
+            "shape_id": "Muscicapidae",
             "size_category": 1,
             "validLocations": [
-                "Dessert"
+                "Urban"
             ],
             "validMonths": [
                 1,
@@ -1248,14 +1182,14 @@
             "fieldMarkData": []
         },
         {
-            "id": "ec28ecc4-664e-47f5-944b-f2147d4988f5",
-            "commonName": "Coppersmith Barbet",
-            "scientificName": "Psilopogon haemacephalus",
-            "staticImageName": "coppersmith_barbet",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "id": "58b8fd41-bc3c-4e47-9d76-47c3c92c24b9",
+            "commonName": "Red-vented Bulbul",
+            "scientificName": "Pycnonotus cafer",
+            "staticImageName": "red_vented_bulbul",
+            "family": "Pycnonotidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Pycnonotidae",
             "size_category": 1,
             "validLocations": [
                 "Urban"
@@ -1281,10 +1215,155 @@
             "commonName": "Red-whiskered Bulbul",
             "scientificName": "Pycnonotus jocosus",
             "staticImageName": "red_whiskered_bulbul",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Pycnonotidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Pycnonotidae",
+            "size_category": 1,
+            "validLocations": [
+                "Urban"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "b66a14d3-d59c-4682-8fdb-2627ec3cdd4e",
+            "commonName": "Great Indian Bustard",
+            "scientificName": "Ardeotis nigriceps",
+            "staticImageName": "great_indian_bustard",
+            "family": "Otididae",
+            "order_name": "Otidiformes",
+            "rarityLevel": "rare",
+            "shape_id": "Charadriidae",
+            "size_category": 4,
+            "validLocations": [
+                "Dessert"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "ec28ecc4-664e-47f5-944b-f2147d4988f5",
+            "commonName": "Coppersmith Barbet",
+            "scientificName": "Psilopogon haemacephalus",
+            "staticImageName": "coppersmith_barbet",
+            "family": "Picidae",
+            "order_name": "Piciformes",
+            "rarityLevel": "common",
+            "shape_id": "Picidae",
+            "size_category": 1,
+            "validLocations": [
+                "Urban"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "69b307ad-d75b-4435-a2d4-3504db7c6bb7",
+            "commonName": "Laughing Dove",
+            "scientificName": "Spilopelia senegalensis",
+            "staticImageName": "laughing_dove",
+            "family": "Columbidae",
+            "order_name": "Columbiformes",
+            "rarityLevel": "common",
+            "shape_id": "Columbidae",
+            "size_category": 1,
+            "validLocations": [
+                "Urban"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "aa1be099-b28f-4e6d-95a3-03615a401e77",
+            "commonName": "Spotted Dove",
+            "scientificName": "Spilopelia chinensis",
+            "staticImageName": "spotted_dove",
+            "family": "Columbidae",
+            "order_name": "Columbiformes",
+            "rarityLevel": "common",
+            "shape_id": "Columbidae",
+            "size_category": 1,
+            "validLocations": [
+                "Urban"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "ced614d3-887f-4ce8-8a78-329ba5208559",
+            "commonName": "Brown-headed Barbet",
+            "scientificName": "Psilopogon zeylanicus",
+            "staticImageName": "brown_headed_barbet",
+            "family": "Picidae",
+            "order_name": "Piciformes",
+            "rarityLevel": "common",
+            "shape_id": "Picidae",
             "size_category": 1,
             "validLocations": [
                 "Urban"
@@ -1310,11 +1389,11 @@
             "commonName": "Himalayan Monal",
             "scientificName": "Lophophorus impejanus",
             "staticImageName": "himalayan_monal",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Phasianidae",
+            "order_name": "Galliformes",
             "rarityLevel": "rare",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Phasianidae",
+            "size_category": 2,
             "validLocations": [
                 "Himalayas"
             ],
@@ -1339,42 +1418,13 @@
             "commonName": "Indian Pitta",
             "scientificName": "Pitta brachyura",
             "staticImageName": "indian_pitta",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Pittidae",
+            "order_name": "Pittiformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Muscicapidae",
             "size_category": 1,
             "validLocations": [
                 "Western Ghats"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "ba022a51-66cd-4150-a99f-8aa8e2dd8e56",
-            "commonName": "Pied Bushchat",
-            "scientificName": "Saxicola caprata",
-            "staticImageName": "pied_bushchat",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban"
             ],
             "validMonths": [
                 1,
@@ -1397,11 +1447,11 @@
             "commonName": "Rose-ringed Parakeet",
             "scientificName": "Psittacula krameri",
             "staticImageName": "rose_ringed_parakeet",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Psittaculidae",
+            "order_name": "Psittaciformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Psittaculidae",
+            "size_category": 2,
             "validLocations": [
                 "Urban"
             ],
@@ -1426,8 +1476,8 @@
             "commonName": "Pink-browed Rosefinch",
             "scientificName": "Carpodacus rodochroa",
             "staticImageName": "pink_browed_rosefinch",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Fringillidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "rare",
             "shape_id": "Passeridae_Fringillidae",
             "size_category": 1,
@@ -1455,11 +1505,11 @@
             "commonName": "Sarus Crane",
             "scientificName": "Antigone antigone",
             "staticImageName": "sarus_crane",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Gruidae",
+            "order_name": "Gruiformes",
             "rarityLevel": "rare",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Charadriidae",
+            "size_category": 4,
             "validLocations": [
                 "Wetlands"
             ],
@@ -1484,42 +1534,13 @@
             "commonName": "Painted Stork",
             "scientificName": "Mycteria leucocephala",
             "staticImageName": "painted_stork",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Ciconiidae",
+            "order_name": "Pelecaniformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Ardeidae",
+            "size_category": 3,
             "validLocations": [
                 "Wetlands"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "69b307ad-d75b-4435-a2d4-3504db7c6bb7",
-            "commonName": "Laughing Dove",
-            "scientificName": "Spilopelia senegalensis",
-            "staticImageName": "laughing_dove",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban"
             ],
             "validMonths": [
                 1,
@@ -1542,13 +1563,71 @@
             "commonName": "Asian Koel",
             "scientificName": "Eudynamys scolopaceus",
             "staticImageName": "asian_koel",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Cuculidae",
+            "order_name": "Cuculiformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Columbidae",
+            "size_category": 2,
             "validLocations": [
                 "Urban"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "41fb086c-02d8-405e-b3cf-9ce57e7fdbe2",
+            "commonName": "White Wagtail",
+            "scientificName": "Motacilla alba",
+            "staticImageName": "white_wagtail",
+            "family": "Motacillidae",
+            "order_name": "Passeriformes",
+            "rarityLevel": "common",
+            "shape_id": "Muscicapidae",
+            "size_category": 1,
+            "validLocations": [
+                "Wetlands"
+            ],
+            "validMonths": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+            ],
+            "fieldMarkData": []
+        },
+        {
+            "id": "3390cb7d-33f1-4751-9cfc-a12e5feea3be",
+            "commonName": "Wire-tailed Swallow",
+            "scientificName": "Hirundo smithii",
+            "staticImageName": "wire_tailed_swallow",
+            "family": "Hirundinidae",
+            "order_name": "Passeriformes",
+            "rarityLevel": "common",
+            "shape_id": "Apodidae",
+            "size_category": 0,
+            "validLocations": [
+                "Wetlands"
             ],
             "validMonths": [
                 1,
@@ -1571,11 +1650,11 @@
             "commonName": "Purple Sunbird",
             "scientificName": "Cinnyris asiaticus",
             "staticImageName": "purple_sunbird",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Nectariniidae",
+            "order_name": "Passeriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Nectariniidae",
+            "size_category": 0,
             "validLocations": [
                 "Urban"
             ],
@@ -1600,11 +1679,11 @@
             "commonName": "White-throated Kingfisher",
             "scientificName": "Halcyon smyrnensis",
             "staticImageName": "white_throated_kingfisher",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Alcedinidae",
+            "order_name": "Coraciiformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Alcedinidae",
+            "size_category": 2,
             "validLocations": [
                 "Urban"
             ],
@@ -1629,100 +1708,13 @@
             "commonName": "Great Hornbill",
             "scientificName": "Buceros bicornis",
             "staticImageName": "great_hornbill",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Bucerotidae",
+            "order_name": "Bucerotiformes",
             "rarityLevel": "rare",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Picidae",
+            "size_category": 3,
             "validLocations": [
                 "Western Ghats"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "41fb086c-02d8-405e-b3cf-9ce57e7fdbe2",
-            "commonName": "White Wagtail",
-            "scientificName": "Motacilla alba",
-            "staticImageName": "white_wagtail",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Wetlands"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "aa1be099-b28f-4e6d-95a3-03615a401e77",
-            "commonName": "Spotted Dove",
-            "scientificName": "Spilopelia chinensis",
-            "staticImageName": "spotted_dove",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "ced614d3-887f-4ce8-8a78-329ba5208559",
-            "commonName": "Brown-headed Barbet",
-            "scientificName": "Psilopogon zeylanicus",
-            "staticImageName": "brown_headed_barbet",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Urban"
             ],
             "validMonths": [
                 1,
@@ -1745,10 +1737,10 @@
             "commonName": "Indian Scops Owl",
             "scientificName": "Otus bakkamoena",
             "staticImageName": "indian_scops_owl",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Strigidae",
+            "order_name": "Strigiformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
+            "shape_id": "Strigidae",
             "size_category": 1,
             "validLocations": [
                 "Urban"
@@ -1774,11 +1766,11 @@
             "commonName": "Indian Grey Hornbill",
             "scientificName": "Ocyceros birostris",
             "staticImageName": "indian_grey_hornbill",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Bucerotidae",
+            "order_name": "Bucerotiformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Picidae",
+            "size_category": 2,
             "validLocations": [
                 "Urban"
             ],
@@ -1803,42 +1795,13 @@
             "commonName": "Shikra",
             "scientificName": "Accipiter badius",
             "staticImageName": "shikra",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Accipitridae",
+            "order_name": "Accipitriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Accipitridae",
+            "size_category": 2,
             "validLocations": [
                 "Urban"
-            ],
-            "validMonths": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "fieldMarkData": []
-        },
-        {
-            "id": "3390cb7d-33f1-4751-9cfc-a12e5feea3be",
-            "commonName": "Wire-tailed Swallow",
-            "scientificName": "Hirundo smithii",
-            "staticImageName": "wire_tailed_swallow",
-            "family": "Unknown",
-            "order_name": "Unknown",
-            "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
-            "validLocations": [
-                "Wetlands"
             ],
             "validMonths": [
                 1,
@@ -1861,11 +1824,11 @@
             "commonName": "Black Kite",
             "scientificName": "Milvus migrans",
             "staticImageName": "black_kite",
-            "family": "Unknown",
-            "order_name": "Unknown",
+            "family": "Accipitridae",
+            "order_name": "Accipitriformes",
             "rarityLevel": "common",
-            "shape_id": "Passeridae_Fringillidae",
-            "size_category": 1,
+            "shape_id": "Accipitridae",
+            "size_category": 2,
             "validLocations": [
                 "Urban"
             ],
