@@ -556,7 +556,11 @@ actor BackgroundSyncAgent {
             throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
         }
         
-        components.path = path
+        // Split path and query string properly
+        // path might be "/rest/v1/table?query=value" - need to separate query
+        let (pathOnly, queryString) = splitPathAndQuery(path)
+        components.path = pathOnly
+        components.percentEncodedQuery = queryString
         
         guard let url = components.url else {
             throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
@@ -572,6 +576,18 @@ actor BackgroundSyncAgent {
         }
         
         return request
+    }
+    
+    private func splitPathAndQuery(_ raw: String) -> (path: String, query: String?) {
+        let cleaned = raw.hasPrefix("/") ? raw : "/" + raw
+        guard let index = cleaned.firstIndex(of: "?") else {
+            return (cleaned, nil)
+        }
+        
+        let path = String(cleaned[..<index])
+        let queryStart = cleaned.index(after: index)
+        let query = String(cleaned[queryStart...])
+        return (path, query.isEmpty ? nil : query)
     }
     
     private func executeRequest(_ request: URLRequest) async throws {
