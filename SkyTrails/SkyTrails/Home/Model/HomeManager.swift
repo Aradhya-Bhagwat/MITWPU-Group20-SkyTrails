@@ -220,20 +220,27 @@ class HomeManager {
     
     func getWatchlistSpots() async -> [PopularSpotResult] {
         let watchlists = (try? watchlistManager.fetchWatchlists()) ?? []
-        
-        return watchlists.compactMap { watchlist -> PopularSpotResult? in
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        var results: [PopularSpotResult] = []
+
+        for watchlist in watchlists {
             guard let location = watchlist.location,
                   let coordinate = locationService.parseCoordinate(from: location) else {
-                return nil
+                continue
             }
-            
-            let birdCount = watchlist.entries?.count ?? 0
+
+            let radiusKm = 5.0
+            let birdCount = await getActiveSpeciesCount(
+                at: coordinate,
+                duringWeek: currentWeek,
+                radiusInKm: radiusKm
+            )
             let observedCount = watchlist.entries?.filter { $0.status == .observed }.count ?? 0
-            
-            // Cache species count for grid view
+
+            // Cache active species count for grid view
             spotSpeciesCountCache.setObject(NSNumber(value: birdCount), forKey: (watchlist.title ?? "Unknown") as NSString)
 
-            return PopularSpotResult(
+            let result = PopularSpotResult(
                 id: watchlist.id,
                 title: watchlist.title ?? "Unnamed Spot",
                 location: watchlist.locationDisplayName ?? location,
@@ -241,10 +248,13 @@ class HomeManager {
                 longitude: coordinate.longitude,
                 speciesCount: birdCount,
                 observedCount: observedCount,
-                radius: 5.0,
+                radius: radiusKm,
                 imageName: watchlist.coverImagePath
             )
+            results.append(result)
         }
+
+        return results
     }
     
     func getRecommendedSpots(
@@ -252,6 +262,7 @@ class HomeManager {
         radiusInKm: Double = 100.0,
         limit: Int = 10
     ) async -> [PopularSpotResult] {
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         
         let descriptor = FetchDescriptor<Hotspot>()
         let allHotspots: [Hotspot]
@@ -272,16 +283,22 @@ class HomeManager {
         let recommended = nearbyHotspots
             .filter { !watchlistSpotNames.contains($0.name) }
             .prefix(limit)
-        
-        return recommended.map { hotspot in
-            let speciesCount = hotspot.speciesList?.count ?? 0
+
+        var results: [PopularSpotResult] = []
+        for hotspot in recommended {
             let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
+            let cardRadiusKm = 5.0
+            let speciesCount = await getActiveSpeciesCount(
+                at: hotspotLoc,
+                duringWeek: currentWeek,
+                radiusInKm: cardRadiusKm
+            )
             let distance = locationService.distance(from: location, to: hotspotLoc)
-            
-            // Cache species count
+
+            // Cache active species count
             spotSpeciesCountCache.setObject(NSNumber(value: speciesCount), forKey: hotspot.name as NSString)
 
-            return PopularSpotResult(
+            let result = PopularSpotResult(
                 id: hotspot.id,
                 title: hotspot.name,
                 location: hotspot.locality ?? "Unknown",
@@ -289,11 +306,27 @@ class HomeManager {
                 longitude: hotspot.lon,
                 speciesCount: speciesCount,
                 observedCount: 0,
-                radius: 5.0,
+                radius: cardRadiusKm,
                 imageName: hotspot.imageName,
                 distanceKm: distance / 1000.0
             )
+            results.append(result)
         }
+
+        return results
+    }
+
+    private func getActiveSpeciesCount(
+        at location: CLLocationCoordinate2D,
+        duringWeek week: Int,
+        radiusInKm: Double
+    ) async -> Int {
+        let birds = await hotspotManager.getBirdsPresent(
+            at: location,
+            duringWeek: week,
+            radiusInKm: radiusInKm
+        )
+        return birds.count
     }
     
     // MARK: - Migration & Community
