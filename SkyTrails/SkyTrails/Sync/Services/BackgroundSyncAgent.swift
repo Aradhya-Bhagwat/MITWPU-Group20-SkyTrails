@@ -302,6 +302,13 @@ actor BackgroundSyncAgent {
                     try await processOperation(operation, config: config)
                     processedIndices.append(index)
                     print("📤 [SyncAgent] ✓ Synced: \(operation.table) \(operation.recordId)")
+                    
+                    // After successful delete sync, remove from local SwiftData
+                    if operation.type == .delete {
+                        await MainActor.run {
+                            self.hardDeleteLocalRecord(table: operation.table, recordId: operation.recordId)
+                        }
+                    }
                 } else {
                     // Server has newer data - skip this operation
                     processedIndices.append(index)
@@ -588,6 +595,55 @@ actor BackgroundSyncAgent {
         let queryStart = cleaned.index(after: index)
         let query = String(cleaned[queryStart...])
         return (path, query.isEmpty ? nil : query)
+    }
+    
+    /// Hard delete a record from local SwiftData after successful server delete
+    @MainActor
+    private func hardDeleteLocalRecord(table: String, recordId: UUID) {
+        let context = WatchlistManager.shared.context
+        
+        do {
+            switch table {
+            case "watchlists":
+                let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate { $0.id == recordId })
+                if let watchlist = try context.fetch(descriptor).first {
+                    context.delete(watchlist)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local watchlist: \(recordId)")
+                }
+                
+            case "watchlist_entries":
+                let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == recordId })
+                if let entry = try context.fetch(descriptor).first {
+                    context.delete(entry)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local entry: \(recordId)")
+                    // Post notification for UI refresh
+                    NotificationCenter.default.post(name: WatchlistManager.didLoadDataNotification, object: nil)
+                }
+                
+            case "watchlist_rules":
+                let descriptor = FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == recordId })
+                if let rule = try context.fetch(descriptor).first {
+                    context.delete(rule)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local rule: \(recordId)")
+                }
+                
+            case "observed_bird_photos":
+                let descriptor = FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })
+                if let photo = try context.fetch(descriptor).first {
+                    context.delete(photo)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local photo: \(recordId)")
+                }
+                
+            default:
+                print("⚠️ [SyncAgent] Unknown table for hard delete: \(table)")
+            }
+        } catch {
+            print("❌ [SyncAgent] Failed to hard delete local \(table): \(error)")
+        }
     }
     
     private func executeRequest(_ request: URLRequest) async throws {
