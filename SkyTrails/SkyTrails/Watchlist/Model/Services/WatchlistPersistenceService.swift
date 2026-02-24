@@ -732,11 +732,12 @@ final class WatchlistPersistenceService {
     }
     
     private func buildEntryPayloadData(_ entry: WatchlistEntry, for operation: SyncOperationType) -> Data? {
-        // Note: sync_status, row_version, last_synced_at are LOCAL-only fields - not sent to Supabase
+        // Note: sync_status, row_version, last_synced_at, bird_id are LOCAL-only fields
+        // bird_id references local SwiftData birds that may not exist in Supabase
         var payload: [String: Any] = [
             "id": entry.id.uuidString,
             "watchlist_id": entry.watchlist?.id.uuidString as Any,
-            "bird_id": entry.bird?.id.uuidString as Any,
+            // bird_id intentionally omitted - birds are local-only (SwiftData seeded, Supabase may be empty)
             "nickname": entry.nickname as Any,
             "status": entry.status.rawValue,
             "notes": entry.notes as Any,
