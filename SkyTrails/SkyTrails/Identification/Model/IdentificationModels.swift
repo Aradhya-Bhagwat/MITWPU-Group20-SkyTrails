@@ -91,17 +91,29 @@ final class IdentificationSession {
     @Attribute(.unique)
     var id: UUID
     
-    var userId: UUID
+    var ownerId: UUID?
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     var shape: BirdShape?
     
     var locationId: UUID?
+    var locationDisplayName: String?
     var observationDate: Date
     var createdAt: Date
     
     var status: SessionStatus
     var sizeCategory: Int?
     var selectedFilterCategories: [String]?
+    
+    var serverRowVersion: Int64?
+    var lastSyncedAt: Date?
+    var deletedAt: Date?
+    var created_at: Date
+    var updated_at: Date?
     
     @Relationship(deleteRule: .cascade, inverse: \IdentificationSessionFieldMark.session)
     var selectedMarks: [IdentificationSessionFieldMark]?
@@ -111,9 +123,10 @@ final class IdentificationSession {
 
     init(
         id: UUID = UUID(),
-        userId: UUID,
+        ownerId: UUID? = nil,
         shape: BirdShape?,
         locationId: UUID? = nil,
+        locationDisplayName: String? = nil,
         observationDate: Date,
         createdAt: Date = Date(),
         status: SessionStatus = .inProgress,
@@ -121,14 +134,18 @@ final class IdentificationSession {
         selectedFilterCategories: [String]? = nil
     ) {
         self.id = id
-        self.userId = userId
+        self.ownerId = ownerId
+        self.syncStatusRaw = ownerId == nil ? SyncStatus.pendingOwner.rawValue : SyncStatus.pendingCreate.rawValue
         self.shape = shape
         self.locationId = locationId
+        self.locationDisplayName = locationDisplayName
         self.observationDate = observationDate
         self.createdAt = createdAt
         self.status = status
         self.sizeCategory = sizeCategory
         self.selectedFilterCategories = selectedFilterCategories
+        self.created_at = createdAt
+        self.updated_at = Date()
     }
 }
 
@@ -165,11 +182,18 @@ final class IdentificationResult {
     var id: UUID
     
     var session: IdentificationSession?
-    var userId: UUID
+    var ownerId: UUID?
+    var syncStatus: SyncStatus?
     
     var bird: Bird?
     
     var createdAt: Date
+    
+    var serverRowVersion: Int64?
+    var lastSyncedAt: Date?
+    var deletedAt: Date?
+    var created_at: Date
+    var updated_at: Date?
     
     @Relationship(deleteRule: .cascade, inverse: \IdentificationCandidate.result)
     var candidates: [IdentificationCandidate]?
@@ -177,15 +201,18 @@ final class IdentificationResult {
     init(
         id: UUID = UUID(),
         session: IdentificationSession? = nil,
-        userId: UUID,
+        ownerId: UUID? = nil,
         bird: Bird? = nil,
         createdAt: Date = Date()
     ) {
         self.id = id
         self.session = session
-        self.userId = userId
+        self.ownerId = ownerId
+        self.syncStatus = ownerId == nil ? .pendingOwner : .pendingCreate
         self.bird = bird
         self.createdAt = createdAt
+        self.created_at = createdAt
+        self.updated_at = Date()
     }
 }
 
@@ -199,6 +226,13 @@ final class IdentificationCandidate {
     
     var confidence: Double
     var rank: Int?
+    
+    var syncStatus: SyncStatus?
+    var serverRowVersion: Int64?
+    var lastSyncedAt: Date?
+    var deletedAt: Date?
+    var created_at: Date
+    var updated_at: Date?
     
     // Updated to use the struct instead of String
     var matchScore: MatchScore?
@@ -217,5 +251,8 @@ final class IdentificationCandidate {
         self.confidence = confidence
         self.rank = rank
         self.matchScore = matchScore
+        self.syncStatus = .pendingCreate
+        self.created_at = Date()
+        self.updated_at = Date()
     }
 }

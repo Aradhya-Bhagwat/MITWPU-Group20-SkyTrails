@@ -33,6 +33,10 @@ class IdentificationManager {
     var selectedMenuOptionRawValues: [String] = []
     var results: [IdentificationCandidate] = []
 
+    private var currentUserId: UUID? {
+        UserSession.shared.currentUserID
+    }
+
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         fetchShapes()
@@ -219,11 +223,13 @@ class IdentificationManager {
         if let sessionToUpdate = currentSession {
             sessionToUpdate.shape = selectedShape
             sessionToUpdate.locationId = selectedLocationId
+            sessionToUpdate.locationDisplayName = selectedLocation
             registerLocationName(selectedLocation ?? "", for: selectedLocationId)
             sessionToUpdate.observationDate = selectedDate
             sessionToUpdate.sizeCategory = selectedSizeCategory
             sessionToUpdate.status = .completed
             sessionToUpdate.selectedFilterCategories = selectedMenuOptionRawValues.isEmpty ? nil : selectedMenuOptionRawValues
+            sessionToUpdate.syncStatus = .pendingUpdate
 
             if let oldMarks = sessionToUpdate.selectedMarks {
                 for oldMark in oldMarks {
@@ -252,7 +258,7 @@ class IdentificationManager {
             } else {
                 result = IdentificationResult(
                     session: sessionToUpdate,
-                    userId: sessionToUpdate.userId
+                    ownerId: sessionToUpdate.ownerId
                 )
                 sessionToUpdate.result = result
             }
@@ -280,14 +286,19 @@ class IdentificationManager {
             result.candidates = updatedCandidates
 
             try? modelContext.save()
+            
+            Task {
+                await queueIdentificationSync(session: sessionToUpdate)
+            }
             return
         }
 
         let newSession = IdentificationSession(
             id: UUID(),
-            userId: UUID(),
+            ownerId: currentUserId,
             shape: selectedShape,
             locationId: selectedLocationId,
+            locationDisplayName: selectedLocation,
             observationDate: selectedDate,
             status: .completed,
             sizeCategory: selectedSizeCategory,
@@ -312,7 +323,7 @@ class IdentificationManager {
 
         let result = IdentificationResult(
             session: newSession,
-            userId: newSession.userId,
+            ownerId: newSession.ownerId,
             bird: winningCandidate?.bird
         )
 
@@ -334,6 +345,126 @@ class IdentificationManager {
         modelContext.insert(newSession)
         currentSession = newSession
         try? modelContext.save()
+        
+        Task {
+            await queueIdentificationSync(session: newSession)
+        }
+    }
+    
+    private func queueIdentificationSync(session: IdentificationSession) async {
+        guard let userId = currentUserId else {
+            print("⚠️ [IdentificationManager] No current user, skipping sync")
+            return
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        // 1. Sync Session
+        var sessionPayload: [String: Any] = [
+            "id": session.id.uuidString,
+            "user_id": session.ownerId?.uuidString ?? userId.uuidString,
+            "status": session.status.rawValue,
+            "created_at": ISO8601DateFormatter().string(from: session.created_at),
+            "updated_at": ISO8601DateFormatter().string(from: session.updated_at ?? Date())
+        ]
+        
+        if let locationDisplayName = session.locationDisplayName {
+            sessionPayload["notes"] = locationDisplayName
+        }
+        
+        var metadata: [String: Any] = [:]
+        if let shapeId = session.shape?.id {
+            metadata["shapeId"] = shapeId
+        }
+        if let sizeCategory = session.sizeCategory {
+            metadata["sizeCategory"] = sizeCategory
+        }
+        if let filterCategories = session.selectedFilterCategories {
+            metadata["filterCategories"] = filterCategories.joined(separator: ",")
+        }
+        if !metadata.isEmpty {
+            sessionPayload["metadata"] = metadata
+        }
+        
+        let sessionData = try? JSONSerialization.data(withJSONObject: sessionPayload)
+        print("📤 [IdentificationManager] Queuing session: \(session.id)")
+        await BackgroundSyncAgent.shared.queueIdentificationSession(
+            id: session.id,
+            payloadData: sessionData,
+            localUpdatedAt: session.updated_at,
+            operation: .create
+        )
+        
+        // Give the session a tiny head start to avoid race conditions with FK constraints on Supabase
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        // 2. Sync Session Marks
+        if let marks = session.selectedMarks {
+            print("📤 [IdentificationManager] Queuing \(marks.count) marks")
+            for mark in marks {
+                let markPayload: [String: Any] = [
+                    "id": mark.id.uuidString,
+                    "session_id": session.id.uuidString,
+                    "field_mark_id": mark.fieldMark?.id.uuidString ?? "",
+                    "variant_id": mark.variant?.id.uuidString ?? "",
+                    "area": mark.area,
+                    "created_at": ISO8601DateFormatter().string(from: session.created_at)
+                ]
+                let markData = try? JSONSerialization.data(withJSONObject: markPayload)
+                await BackgroundSyncAgent.shared.queueIdentificationSessionMark(
+                    id: mark.id,
+                    payloadData: markData,
+                    localUpdatedAt: Date(),
+                    operation: .create
+                )
+            }
+        }
+        
+        // 3. Sync Result
+        if let result = session.result {
+            print("📤 [IdentificationManager] Queuing result: \(result.id)")
+            let resultPayload: [String: Any] = [
+                "id": result.id.uuidString,
+                "session_id": session.id.uuidString,
+                "owner_id": result.ownerId?.uuidString ?? userId.uuidString,
+                "bird_id": result.bird?.id.uuidString ?? NSNull(),
+                "created_at": ISO8601DateFormatter().string(from: result.created_at),
+                "updated_at": ISO8601DateFormatter().string(from: result.updated_at ?? Date())
+            ]
+            let resultData = try? JSONSerialization.data(withJSONObject: resultPayload)
+            await BackgroundSyncAgent.shared.queueIdentificationResult(
+                id: result.id,
+                payloadData: resultData,
+                localUpdatedAt: result.updated_at,
+                operation: .create
+            )
+            
+            // 4. Sync Candidates
+            if let candidates = result.candidates {
+                print("📤 [IdentificationManager] Queuing \(candidates.count) candidates")
+                for candidate in candidates {
+                    let candidatePayload: [String: Any] = [
+                        "id": candidate.id.uuidString,
+                        "result_id": result.id.uuidString,
+                        "bird_id": candidate.bird?.id.uuidString ?? NSNull(), // Changed from empty string to NSNull
+                        "confidence": candidate.confidence,
+                        "rank": candidate.rank ?? NSNull(),
+                        "matched_features": candidate.matchScore?.matchedFeatures ?? [],
+                        "mismatched_features": candidate.matchScore?.mismatchedFeatures ?? [],
+                        "created_at": ISO8601DateFormatter().string(from: candidate.created_at),
+                        "updated_at": ISO8601DateFormatter().string(from: candidate.updated_at ?? Date())
+                    ]
+                    let candidateData = try? JSONSerialization.data(withJSONObject: candidatePayload)
+                    await BackgroundSyncAgent.shared.queueIdentificationCandidate(
+                        id: candidate.id,
+                        payloadData: candidateData,
+                        localUpdatedAt: candidate.updated_at,
+                        operation: .create
+                    )
+                }
+            }
+        }
     }
 
     func loadSessionAndFilter(session: IdentificationSession) {

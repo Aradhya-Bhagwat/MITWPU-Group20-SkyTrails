@@ -46,9 +46,22 @@ class UserSession {
 
         notifyAuthStateChanged()
         
+        // Create user in Supabase users table
+        Task {
+            await createUserInSupabase(userId: user.id)
+        }
+        
         // Connect to realtime sync on successful auth
         Task { @MainActor in
             await connectRealtimeAndSync()
+            
+            // Adopt guest identification sessions after login
+            do {
+                try await IdentificationSyncService.shared.adoptGuestSessions(to: user.id)
+                print("📥 [UserSession] Adopted guest identification sessions")
+            } catch {
+                print("⚠️ [UserSession] Failed to adopt guest identification sessions: \(error.localizedDescription)")
+            }
             
             // Perform initial sync after realtime connection
             do {
@@ -95,6 +108,7 @@ class UserSession {
         Task { @MainActor in
             await disconnectRealtimeAndClearSync()
             await WatchlistManager.shared.clearUserDataOnLogout()
+            await IdentificationSyncService.shared.clearLocalData()
         }
         
         notifyAuthStateChanged()
@@ -198,5 +212,41 @@ class UserSession {
         RealtimeSyncService.shared.disconnect()
         await BackgroundSyncAgent.shared.clearAll()
         print("✅ [UserSession] Realtime disconnected and sync cleared")
+    }
+    
+    private func createUserInSupabase(userId: UUID) async {
+        guard let config = try? SupabaseConfig.load(),
+              let accessToken = getAccessToken() else {
+            print("⚠️ [UserSession] Cannot create user - no config or token")
+            return
+        }
+        
+        let payload: [String: Any] = ["id": userId.uuidString]
+        
+        guard let url = URL(string: "\(config.projectURL.absoluteString)/rest/v1/users") else {
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
+                    print("✅ [UserSession] Created user in Supabase")
+                } else if httpResponse.statusCode == 409 {
+                    print("ℹ️ [UserSession] User already exists in Supabase")
+                } else {
+                    print("⚠️ [UserSession] Failed to create user: \(httpResponse.statusCode)")
+                }
+            }
+        } catch {
+            print("⚠️ [UserSession] Error creating user: \(error)")
+        }
     }
 }

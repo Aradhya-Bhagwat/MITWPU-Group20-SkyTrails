@@ -249,3 +249,119 @@ struct ObservedBirdPhotoRow: Codable, Sendable {
         case updatedAt = "updated_at"
     }
 }
+
+struct IdentificationSessionRow: Codable, Sendable {
+    let id: UUID
+    let userId: UUID
+    let status: String
+    let locationLat: Double?
+    let locationLong: Double?
+    let deviceInfo: String?
+    let notes: String?
+    let isPublic: Bool?
+    let weatherConditions: String?
+    let metadata: [String: String]?
+    let createdAt: Date
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case status
+        case locationLat = "location_lat"
+        case locationLong = "location_long"
+        case deviceInfo = "device_info"
+        case notes
+        case isPublic = "is_public"
+        case weatherConditions = "weather_conditions"
+        case metadata
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct IdentificationResultRow: Codable, Sendable {
+    let id: UUID
+    let sessionId: UUID
+    let ownerId: UUID?
+    let birdId: UUID?
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
+    let deletedAt: Date?
+    let createdAt: Date
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sessionId = "session_id"
+        case ownerId = "owner_id"
+        case birdId = "bird_id"
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
+        case deletedAt = "deleted_at"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct IdentificationCandidateRow: Codable, Sendable {
+    let id: UUID
+    let resultId: UUID
+    let birdId: UUID
+    let confidence: Double
+    let rank: Int?
+    let matchedFeatures: [String]
+    let mismatchedFeatures: [String]
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
+    let deletedAt: Date?
+    let createdAt: Date
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case resultId = "result_id"
+        case birdId = "bird_id"
+        case confidence
+        case rank
+        case matchedFeatures = "matched_features"
+        case mismatchedFeatures = "mismatched_features"
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
+        case deletedAt = "deleted_at"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct IdentificationSessionFieldMarkRow: Codable, Sendable {
+    let id: UUID
+    let sessionId: UUID
+    let fieldMarkId: UUID
+    let variantId: UUID
+    let area: String
+    let syncStatus: String
+    let rowVersion: Int
+    let lastSyncedAt: Date?
+    let deletedAt: Date?
+    let createdAt: Date
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sessionId = "session_id"
+        case fieldMarkId = "field_mark_id"
+        case variantId = "variant_id"
+        case area
+        case syncStatus = "sync_status"
+        case rowVersion = "row_version"
+        case lastSyncedAt = "last_synced_at"
+        case deletedAt = "deleted_at"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}

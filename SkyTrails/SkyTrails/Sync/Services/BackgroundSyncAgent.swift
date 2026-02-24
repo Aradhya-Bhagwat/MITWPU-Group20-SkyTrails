@@ -186,6 +186,78 @@ actor BackgroundSyncAgent {
         }
     }
     
+    /// Queue an identification session operation for sync
+    func queueIdentificationSession(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
+        let syncOp = SyncOperation(
+            type: operation,
+            table: "identification_sessions",
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
+        )
+        queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
+        print("📤 [SyncAgent] Queued identification_session \(operation): \(id)")
+        
+        Task {
+            await processQueue()
+        }
+    }
+    
+    /// Queue an identification result operation for sync
+    func queueIdentificationResult(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
+        let syncOp = SyncOperation(
+            type: operation,
+            table: "identification_results",
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
+        )
+        queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
+        print("📤 [SyncAgent] Queued identification_result \(operation): \(id)")
+        
+        Task {
+            await processQueue()
+        }
+    }
+
+    /// Queue an identification candidate operation for sync
+    func queueIdentificationCandidate(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
+        let syncOp = SyncOperation(
+            type: operation,
+            table: "identification_candidates",
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
+        )
+        queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
+        print("📤 [SyncAgent] Queued identification_candidate \(operation): \(id)")
+        
+        Task {
+            await processQueue()
+        }
+    }
+
+    /// Queue an identification session mark operation for sync
+    func queueIdentificationSessionMark(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
+        let syncOp = SyncOperation(
+            type: operation,
+            table: "identification_session_marks",
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
+        )
+        queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
+        print("📤 [SyncAgent] Queued identification_session_mark \(operation): \(id)")
+        
+        Task {
+            await processQueue()
+        }
+    }
+    
     /// Process all pending operations
     func syncAll() async {
         await processQueue()
@@ -493,14 +565,24 @@ actor BackgroundSyncAgent {
         print("   - payload: \(payload)")
         print("   - token: \(token != nil ? "present" : "nil")")
         
+        // For identification tables, use upsert logic to avoid 409 Conflict errors
+        // and allow updates via POST if the record already exists.
+        let isIdentificationTable = table.hasPrefix("identification_")
+        let path = isIdentificationTable ? "/rest/v1/\(table)?on_conflict=id" : "/rest/v1/\(table)"
+        
         var request = try buildRequest(
-            path: "/rest/v1/\(table)",
+            path: path,
             method: "POST",
             config: config,
             token: token
         )
         
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        if isIdentificationTable {
+            request.setValue("return=minimal,resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
+        } else {
+            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        }
+        
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         
         print("🔍 [SyncAgent] Request URL: \(request.url?.absoluteString ?? "nil")")
@@ -638,6 +720,22 @@ actor BackgroundSyncAgent {
                     print("🗑️ [SyncAgent] Hard deleted local photo: \(recordId)")
                 }
                 
+            case "identification_sessions":
+                let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.id == recordId })
+                if let session = try context.fetch(descriptor).first {
+                    context.delete(session)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local identification session: \(recordId)")
+                }
+                
+            case "identification_results":
+                let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.id == recordId })
+                if let result = try context.fetch(descriptor).first {
+                    context.delete(result)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local identification result: \(recordId)")
+                }
+                
             default:
                 print("⚠️ [SyncAgent] Unknown table for hard delete: \(table)")
             }
@@ -650,32 +748,38 @@ actor BackgroundSyncAgent {
         print("🔍 [SyncAgent] executeRequest called:")
         print("   - URL: \(request.url?.absoluteString ?? "nil")")
         print("   - Method: \(request.httpMethod ?? "nil")")
-        print("   - Headers: \(request.allHTTPHeaderFields ?? [:])")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("🔍 [SyncAgent] ❌ Invalid response (not HTTPURLResponse)")
+            print("🔍 [SyncAgent] ❌ Invalid response type")
             throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
         }
         
-        print("🔍 [SyncAgent] Response status code: \(httpResponse.statusCode)")
-        print("🔍 [SyncAgent] Response headers: \(httpResponse.allHeaderFields)")
+        let responseBody = String(data: data, encoding: .utf8) ?? ""
+        print("🔍 [SyncAgent] Status: \(httpResponse.statusCode)")
         
-        let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response"
-        print("🔍 [SyncAgent] Response body: \(responseBody)")
-        
-        guard (200...299).contains(httpResponse.statusCode) else {
-            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("🔍 [SyncAgent] ❌ HTTP ERROR \(httpResponse.statusCode): \(message)")
+        if !(200...299).contains(httpResponse.statusCode) {
+            print("🔍 [SyncAgent] ❌ HTTP ERROR \(httpResponse.statusCode)")
+            print("🔍 [SyncAgent] ❌ ERROR BODY: \(responseBody)")
+            
+            // Log specific common Supabase errors for easier debugging
+            if responseBody.contains("foreign key constraint") {
+                print("🔍 [SyncAgent] 💡 TIP: This is likely a Foreign Key error. Check if the parent record (like the session or bird) exists.")
+            } else if responseBody.contains("row-level security") {
+                print("🔍 [SyncAgent] 💡 TIP: This is an RLS policy error. Check your table permissions.")
+            } else if responseBody.contains("trigger") {
+                print("🔍 [SyncAgent] 💡 TIP: A database trigger failed. Check your Supabase 'Database -> Triggers' logic.")
+            }
+            
             throw NSError(
                 domain: "SyncAgent",
                 code: httpResponse.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: message]
+                userInfo: [NSLocalizedDescriptionKey: responseBody]
             )
         }
         
-        print("🔍 [SyncAgent] ✅ Request successful")
+        print("🔍 [SyncAgent] ✅ Success")
     }
 }
 //
