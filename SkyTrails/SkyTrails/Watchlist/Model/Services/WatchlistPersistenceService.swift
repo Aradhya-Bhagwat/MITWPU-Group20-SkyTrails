@@ -41,9 +41,16 @@ final class WatchlistPersistenceService {
     
     /// Fire-and-forget sync to Supabase (only if authenticated)
     private func queueSync(_ operation: @escaping @Sendable () async -> Void) {
-        guard activeUserID != nil else { return }
+        print("🔍 [Persistence] queueSync called, activeUserID: \(activeUserID?.uuidString ?? "nil")")
         
+        guard activeUserID != nil else {
+            print("🔍 [Persistence] ❌ SKIPPING SYNC - no activeUserID (user not authenticated)")
+            return
+        }
+        
+        print("🔍 [Persistence] ✅ Proceeding with sync, launching Task.detached")
         Task.detached(priority: .utility) {
+            print("🔍 [Persistence] Inside Task.detached, executing operation")
             await operation()
         }
     }
@@ -58,6 +65,11 @@ final class WatchlistPersistenceService {
         endDate: Date?,
         type: WatchlistType = .custom
     ) throws -> Watchlist {
+        print("🔍 [Persistence] createWatchlist called:")
+        print("   - title: \(title)")
+        print("   - activeUserID: \(activeUserID?.uuidString ?? "nil")")
+        print("   - isAuthenticated: \(UserSession.shared.isAuthenticatedWithSupabase())")
+        
         let watchlist = Watchlist(
             owner_id: activeUserID,
             title: title,
@@ -68,15 +80,22 @@ final class WatchlistPersistenceService {
         )
         watchlist.type = type
         
+        print("🔍 [Persistence] Created watchlist with id: \(watchlist.id)")
+        print("   - owner_id: \(watchlist.owner_id?.uuidString ?? "nil")")
+        
         context.insert(watchlist)
         try saveContext()
+        print("🔍 [Persistence] SwiftData context saved successfully")
         
         // Queue sync - extract Sendable primitives before crossing actor boundary
         let watchlistId = watchlist.id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .create)
         let updatedAt = watchlist.updated_at
         
+        print("🔍 [Persistence] Payload data: \(payloadData != nil ? "present (\(payloadData!.count) bytes)" : "nil")")
+        
         queueSync {
+            print("🔍 [Persistence] Inside queueSync closure, calling BackgroundSyncAgent.queueWatchlist")
             await BackgroundSyncAgent.shared.queueWatchlist(
                 id: watchlistId,
                 payloadData: payloadData,

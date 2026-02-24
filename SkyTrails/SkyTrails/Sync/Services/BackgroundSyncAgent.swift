@@ -105,6 +105,15 @@ actor BackgroundSyncAgent {
     
     /// Queue a watchlist operation for sync using Sendable primitives
     func queueWatchlist(id: UUID, payloadData: Data?, updatedAt: Date?, operation: SyncOperationType) {
+        print("🔍 [SyncAgent] queueWatchlist called:")
+        print("   - id: \(id)")
+        print("   - operation: \(operation)")
+        print("   - payloadData: \(payloadData != nil ? "\(payloadData!.count) bytes" : "nil")")
+        
+        if let data = payloadData, let jsonStr = String(data: data, encoding: .utf8) {
+            print("   - payload JSON: \(jsonStr)")
+        }
+        
         let syncOp = SyncOperation(
             type: operation,
             table: "watchlists",
@@ -115,8 +124,10 @@ actor BackgroundSyncAgent {
         queue.append(syncOp)
         Self.saveQueueToDisk(queue)
         print("📤 [SyncAgent] Queued watchlist \(operation): \(id)")
+        print("🔍 [SyncAgent] Queue now has \(queue.count) items")
         
         Task {
+            print("🔍 [SyncAgent] Starting processQueue from queueWatchlist")
             await processQueue()
         }
     }
@@ -250,6 +261,9 @@ actor BackgroundSyncAgent {
     // MARK: - Queue Processing
     
     private func processQueue() async {
+        print("🔍 [SyncAgent] processQueue called")
+        print("🔍 [SyncAgent] isProcessing: \(isProcessing), queue.count: \(queue.count)")
+        
         guard !isProcessing, !queue.isEmpty else { return }
         
         isProcessing = true
@@ -258,16 +272,20 @@ actor BackgroundSyncAgent {
         // Load config if needed
         if config == nil {
             config = try? SupabaseConfig.load()
+            print("🔍 [SyncAgent] Loaded config: \(config != nil ? "success" : "failed")")
         }
         
         guard let config else {
-            print("📤 [SyncAgent] Error: Supabase config not available")
+            print("📤 [SyncAgent] ❌ ERROR: Supabase config not available")
             return
         }
         
         // Check if authenticated
-        guard await MainActor.run(body: { UserSession.shared.isAuthenticatedWithSupabase() }) else {
-            print("📤 [SyncAgent] Skipping sync - not authenticated")
+        let isAuthenticated = await MainActor.run(body: { UserSession.shared.isAuthenticatedWithSupabase() })
+        print("🔍 [SyncAgent] isAuthenticated: \(isAuthenticated)")
+        
+        guard isAuthenticated else {
+            print("📤 [SyncAgent] ❌ SKIPPING SYNC - not authenticated")
             return
         }
         
@@ -463,6 +481,11 @@ actor BackgroundSyncAgent {
         config: SupabaseConfig,
         token: String?
     ) async throws {
+        print("🔍 [SyncAgent] createRecord called:")
+        print("   - table: \(table)")
+        print("   - payload: \(payload)")
+        print("   - token: \(token != nil ? "present" : "nil")")
+        
         var request = try buildRequest(
             path: "/rest/v1/\(table)",
             method: "POST",
@@ -472,6 +495,9 @@ actor BackgroundSyncAgent {
         
         request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        
+        print("🔍 [SyncAgent] Request URL: \(request.url?.absoluteString ?? "nil")")
+        print("🔍 [SyncAgent] Request body: \(String(data: request.httpBody!, encoding: .utf8) ?? "nil")")
         
         try await executeRequest(request)
     }
@@ -549,20 +575,35 @@ actor BackgroundSyncAgent {
     }
     
     private func executeRequest(_ request: URLRequest) async throws {
+        print("🔍 [SyncAgent] executeRequest called:")
+        print("   - URL: \(request.url?.absoluteString ?? "nil")")
+        print("   - Method: \(request.httpMethod ?? "nil")")
+        print("   - Headers: \(request.allHTTPHeaderFields ?? [:])")
+        
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("🔍 [SyncAgent] ❌ Invalid response (not HTTPURLResponse)")
             throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
         }
         
+        print("🔍 [SyncAgent] Response status code: \(httpResponse.statusCode)")
+        print("🔍 [SyncAgent] Response headers: \(httpResponse.allHeaderFields)")
+        
+        let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response"
+        print("🔍 [SyncAgent] Response body: \(responseBody)")
+        
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("🔍 [SyncAgent] ❌ HTTP ERROR \(httpResponse.statusCode): \(message)")
             throw NSError(
                 domain: "SyncAgent",
                 code: httpResponse.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: message]
             )
         }
+        
+        print("🔍 [SyncAgent] ✅ Request successful")
     }
 }
 //
