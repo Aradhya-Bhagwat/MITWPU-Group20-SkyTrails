@@ -283,7 +283,8 @@ final class WatchlistPersistenceService {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
         
-        var entries = watchlist.entries ?? []
+        // Filter out entries pending deletion (soft-deleted locally)
+        var entries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
         
         if let status = status {
             entries = entries.filter { $0.status == status }
@@ -294,7 +295,7 @@ final class WatchlistPersistenceService {
     
     func fetchAllEntries() throws -> [WatchlistEntry] {
         return try fetchWatchlists()
-            .flatMap { $0.entries ?? [] }
+            .flatMap { ($0.entries ?? []).filter { $0.syncStatus != .pendingDelete } }
             .sorted { $0.addedDate < $1.addedDate }
     }
     
