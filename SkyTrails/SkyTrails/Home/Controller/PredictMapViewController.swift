@@ -510,7 +510,7 @@ extension PredictMapViewController: MKMapViewDelegate {
                 let birdName = annotation.title ?? nil
                 let probability = predictionProbabilityByBirdName[birdName ?? ""] ?? 50
                 markerView.markerTintColor = statusColor(for: probability)
-                markerView.glyphImage = UIImage(systemName: "bird.circle.fill")
+                markerView.glyphImage = UIImage(systemName: "bird.fill")
                 markerView.glyphTintColor = .white
             } else {
                 markerView.markerTintColor = .systemBlue
