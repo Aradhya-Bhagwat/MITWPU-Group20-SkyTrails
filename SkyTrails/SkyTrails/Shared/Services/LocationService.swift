@@ -125,7 +125,11 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         try await ensureLocationAuthorization()
         
         return try await withCheckedThrowingContinuation { continuation in
-            LocationRequestDelegate.requestLocation(manager: locationManager) { result in
+            // Use a fresh manager for the one-shot request to avoid interfering with the shared manager
+            let oneTimeManager = CLLocationManager()
+            oneTimeManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+            
+            LocationRequestDelegate.requestLocation(manager: oneTimeManager) { result in
                 switch result {
                 case .success(let location):
                     Task {
