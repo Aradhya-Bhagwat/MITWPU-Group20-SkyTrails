@@ -236,6 +236,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             cell.imageView?.tintColor = .systemBlue
             cell.backgroundColor = rowColor
             cell.contentView.backgroundColor = rowColor
+            cell.selectionStyle = .none // Add this line
             let selectedBackgroundView = UIView()
             selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
             cell.selectedBackgroundView = selectedBackgroundView
@@ -298,7 +299,21 @@ extension DateandLocationViewController: UISearchBarDelegate {
                 self.searchResults = await locationService.getAutocompleteSuggestions(for: searchText)
             }
             await MainActor.run {
-                self.dateandlocationTableView.reloadSections(IndexSet(integer: 1), with: .none)
+                // Perform smart updates to keep the search bar (row 0) active
+                let oldTotalRows = self.dateandlocationTableView.numberOfRows(inSection: 1)
+                let oldSuggestionCount = max(0, oldTotalRows - 1)
+                let newSuggestionCount = self.searchResults.count
+                
+                self.dateandlocationTableView.beginUpdates()
+                if oldSuggestionCount > 0 {
+                    let indexPathsToDelete = (1...oldSuggestionCount).map { IndexPath(row: $0, section: 1) }
+                    self.dateandlocationTableView.deleteRows(at: indexPathsToDelete, with: .none)
+                }
+                if newSuggestionCount > 0 {
+                    let indexPathsToInsert = (1...newSuggestionCount).map { IndexPath(row: $0, section: 1) }
+                    self.dateandlocationTableView.insertRows(at: indexPathsToInsert, with: .none)
+                }
+                self.dateandlocationTableView.endUpdates()
             }
         }
     }
