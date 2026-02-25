@@ -4,7 +4,9 @@ SkyTrails is a comprehensive iOS application designed for birdwatching enthusias
 
 <p align="center">
   <!-- TODO: Add a GIF or screenshot of the app's home screen -->
-  <img src="" alt="App Demo" width="300"/>
+  <video width="300" controls>
+  <source src="Video_2.mp4" type="video/mp4">
+</video>
 </p>
 
 ---
@@ -108,9 +110,9 @@ We would like to express our sincere gratitude to the mentors and faculty member
 
 We are especially thankful to:
 
-- **Amit Sir ** 
-- **Swaroop Sir ** 
-- **Prasad Sir ** 
+- **Amit Sir**
+- **Swaroop Sir** 
+- **Prasad Sir** 
 
 Their expert inputs and encouragement significantly contributed to enhancing the overall quality and direction of our application.
 
@@ -126,7 +128,7 @@ We are deeply grateful to our faculty members for their continuous guidance, enc
 | Dr Abhishek Chunawale Sir| `abhishek.chunawale@mitwpu.edu.in` |
 | Dr. Akshita Chanchlani Ma'am| `akshita.chanchlani@mitwpu.edu.in` |
 | Prof. Kamakshi Goyal Ma'am | `kamakshi.goyal@mitwpu.edu.in` |
-| Dr Yogesh Sumant Sir | `yogesh.sumant@mitwpu.edu.in` |
+| Prof. Yogesh Sumant Sir | `yogesh.sumant@mitwpu.edu.in` |
 
 We sincerely appreciate their unwavering support and mentorship throughout this journey.
 
