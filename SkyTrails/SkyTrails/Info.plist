@@ -11,7 +11,7 @@
 	<key>DEV_BYPASS_PASSWORD</key>
 	<string>123456</string>
 	<key>SEED_WATCHLISTS</key>
-	<false/>
+	<true/>
 	<key>GIDClientID</key>
 	<string>967202205672-fct3hdiq5jg6vt9m63pcf7gn6h5fgb2l.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>

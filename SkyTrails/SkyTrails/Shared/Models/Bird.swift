@@ -45,14 +45,6 @@ final class Bird {
     @Relationship(deleteRule: .cascade, inverse: \IdentificationCandidate.bird)
     var identificationCandidates: [IdentificationCandidate]? = []
     
-    // Migration (Historical runs)
-    @Relationship(deleteRule: .cascade, inverse: \MigrationSession.bird)
-    var migrationSessions: [MigrationSession]? = []
-    
-    // Hotspots (Using Join Model for seasonality)
-    @Relationship(deleteRule: .cascade, inverse: \HotspotSpeciesPresence.bird)
-    var hotspotPresence: [HotspotSpeciesPresence]? = []
-    
     // Watchlist Integration (NEW)
     // .nullify means: if bird is deleted, entries stay but bird reference becomes nil
     // This prevents deleting bird from deleting all watchlist entries
