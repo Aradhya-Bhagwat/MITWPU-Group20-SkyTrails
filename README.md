@@ -4,9 +4,7 @@ SkyTrails is a comprehensive iOS application designed for birdwatching enthusias
 
 <p align="center">
   <!-- TODO: Add a GIF or screenshot of the app's home screen -->
-  <video width="300" controls>
-  <source src="Video_2.mp4" type="video/mp4">
-</video>
+  https://github.com/user-attachments/assets/1ed6b157-4eb9-4732-8ffc-449bda78ecef
 </p>
 
 ---
