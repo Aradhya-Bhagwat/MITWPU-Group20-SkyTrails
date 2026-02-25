@@ -21,6 +21,7 @@ class PredictMapViewController: UIViewController {
     private var minBottomY: CGFloat = 0
     private var initialLoadY: CGFloat = 0
     private var mapRenderToken: Int = 0
+    private var predictionProbabilityByBirdName: [String: Int] = [:]
         
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,12 +33,20 @@ class PredictMapViewController: UIViewController {
     private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
         mapRenderToken += 1
         let currentToken = mapRenderToken
+        predictionProbabilityByBirdName = Dictionary(
+            predictions.map { ($0.birdName, $0.spottingProbability) },
+            uniquingKeysWith: max
+        )
 
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
 
         var annotations: [MKAnnotation] = []
         var locationCoordinates: [CLLocationCoordinate2D] = []
+        let areaAnchorCoordinates: [CLLocationCoordinate2D] = inputs.compactMap { input in
+            guard let lat = input.latitude, let lon = input.longitude else { return nil }
+            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        }
         
         for input in inputs {
             guard let lat = input.latitude,
@@ -67,6 +76,7 @@ class PredictMapViewController: UIViewController {
                         let circle = MKCircle(center: coordinate, radius: radiusKm * 1000.0)
                         self.mapView.addOverlay(circle)
                     }
+                    self.applyResultMapViewport(anchorCoordinates: areaAnchorCoordinates, animated: true)
                 }
             }
         }
@@ -82,22 +92,7 @@ class PredictMapViewController: UIViewController {
         }
         
         mapView.addAnnotations(annotations)
-        if let firstInput = inputs.first,
-           let lat = firstInput.latitude,
-           let lon = firstInput.longitude {
-                let centerCoord = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-                let radiusInMeters = Double(firstInput.areaValue * 1000)
-                let visibleMapWidthInMeters = (radiusInMeters * 2) / 0.50
-                let aspectRatio = mapView.bounds.height / mapView.bounds.width
-                let visibleMapHeightInMeters = visibleMapWidthInMeters * Double(aspectRatio)
-                let verticalOffsetInMeters = visibleMapHeightInMeters / 3.0
-                let metersPerDegreeLatitude = 111111.0
-                let latitudeOffset = verticalOffsetInMeters / metersPerDegreeLatitude
-                let newCenterLatitude = centerCoord.latitude - latitudeOffset
-                let newCenter = CLLocationCoordinate2D(latitude: newCenterLatitude, longitude: centerCoord.longitude)
-                let region = MKCoordinateRegion(center: newCenter, latitudinalMeters: visibleMapHeightInMeters, longitudinalMeters: visibleMapWidthInMeters)
-                mapView.setRegion(region, animated: true)
-        }
+        applyResultMapViewport(anchorCoordinates: areaAnchorCoordinates.isEmpty ? locationCoordinates : areaAnchorCoordinates, animated: true)
         
     }
 
@@ -395,27 +390,83 @@ class PredictMapViewController: UIViewController {
         birdPin.title = prediction.birdName
         birdPin.subtitle = "Predicted near location"
         mapView.addAnnotation(birdPin)
-        let latitudinalMeters: Double = 10000
-        let longitudinalMeters: Double = 10000
-        let verticalOffsetInMeters = latitudinalMeters / 3.0
-        let metersPerDegreeLatitude = 111111.0
-        let latitudeOffset = verticalOffsetInMeters / metersPerDegreeLatitude
-        let newCenterLatitude = coord.latitude - latitudeOffset
-        let newCenter = CLLocationCoordinate2D(latitude: newCenterLatitude, longitude: coord.longitude)
-        let region = MKCoordinateRegion(center: newCenter, latitudinalMeters: latitudinalMeters, longitudinalMeters: longitudinalMeters)
-        mapView.setRegion(region, animated: true)
+        applyResultMapViewport(anchorCoordinates: [coord], animated: true)
+    }
+
+    private func applyResultMapViewport(
+        anchorCoordinates: [CLLocationCoordinate2D],
+        animated: Bool
+    ) {
+        guard mapView.bounds.width > 0, mapView.bounds.height > 0 else { return }
+
+        let targetMapRect = predictionAreaMapRect() ?? fallbackMapRect(from: anchorCoordinates)
+        guard !targetMapRect.isNull, !targetMapRect.isEmpty else { return }
+
+        let mapWidth = mapView.bounds.width
+        let mapHeight = mapView.bounds.height
+        let topHalfHeight = mapHeight * 0.5
+
+        // Target frame: centered in top half, occupying 80% of top-half width/height.
+        let targetWidth = mapWidth * 0.8
+        let targetHeight = topHalfHeight * 0.8
+        let leftRightPadding = max(8, (mapWidth - targetWidth) / 2.0)
+        let topPadding = max(8, (topHalfHeight - targetHeight) / 2.0)
+        let bottomPadding = max(8, mapHeight - topPadding - targetHeight)
+
+        let edgeInsets = UIEdgeInsets(
+            top: topPadding,
+            left: leftRightPadding,
+            bottom: bottomPadding,
+            right: leftRightPadding
+        )
+        mapView.setVisibleMapRect(targetMapRect, edgePadding: edgeInsets, animated: animated)
+    }
+
+    private func predictionAreaMapRect() -> MKMapRect? {
+        var combinedRect = MKMapRect.null
+        for overlay in mapView.overlays {
+            combinedRect = combinedRect.isNull ? overlay.boundingMapRect : combinedRect.union(overlay.boundingMapRect)
+        }
+        return combinedRect.isNull ? nil : combinedRect
+    }
+
+    private func fallbackMapRect(from coordinates: [CLLocationCoordinate2D]) -> MKMapRect {
+        let validCoordinates = coordinates.filter { CLLocationCoordinate2DIsValid($0) }
+        guard let first = validCoordinates.first else {
+            return MKMapRect.null
+        }
+
+        var rect = MKMapRect(origin: MKMapPoint(first), size: MKMapSize(width: 0, height: 0))
+        for coordinate in validCoordinates.dropFirst() {
+            let pointRect = MKMapRect(origin: MKMapPoint(coordinate), size: MKMapSize(width: 0, height: 0))
+            rect = rect.union(pointRect)
+        }
+
+        // Keep a sensible minimum zoom footprint when only one point is present.
+        if rect.size.width < 100 || rect.size.height < 100 {
+            let centerPoint = MKMapPoint(first)
+            let metersPerMapPoint = MKMetersPerMapPointAtLatitude(first.latitude)
+            let mapPoints = 2500.0 / metersPerMapPoint
+            rect = MKMapRect(
+                x: centerPoint.x - mapPoints,
+                y: centerPoint.y - mapPoints,
+                width: mapPoints * 2,
+                height: mapPoints * 2
+            )
+        }
+
+        return rect
     }
     
-    private func colorFor(name: String) -> UIColor {
-        // Match NewMigration pin style: hash-seeded hue with vivid saturation/brightness.
-        let baseSeed = Double(abs(name.hashValue % 10_000)) / 10_000.0
-        let hue = (baseSeed + 0.61803398875).truncatingRemainder(dividingBy: 1.0)
-        return UIColor(
-            hue: CGFloat(hue),
-            saturation: 0.72,
-            brightness: 0.90,
-            alpha: 1.0
-        )
+    private func statusColor(for probability: Int) -> UIColor {
+        switch probability {
+        case 80...100:
+            return .systemGreen
+        case 50...79:
+            return .systemBlue
+        default:
+            return .systemOrange
+        }
     }
 }
 
@@ -456,9 +507,10 @@ extension PredictMapViewController: MKMapViewDelegate {
             let isPredictedBird = annotation.subtitle??.contains("Predicted near") ?? false
             
             if isPredictedBird {
-                let birdName = annotation.title ?? ""
-                markerView.markerTintColor = colorFor(name: birdName ?? "Bird")
-                markerView.glyphImage = UIImage(systemName: "bird.fill")
+                let birdName = annotation.title ?? nil
+                let probability = predictionProbabilityByBirdName[birdName ?? ""] ?? 50
+                markerView.markerTintColor = statusColor(for: probability)
+                markerView.glyphImage = UIImage(systemName: "bird.circle.fill")
                 markerView.glyphTintColor = .white
             } else {
                 markerView.markerTintColor = .systemBlue

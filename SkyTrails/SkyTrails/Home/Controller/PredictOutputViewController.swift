@@ -155,7 +155,18 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-        CGSize(width: collectionView.bounds.width - 32, height: 126)
+        let cardWidth = collectionView.bounds.width - 32
+        let compactAspectRatio: CGFloat = 6.0 / 17.0
+        let calculatedHeight = cardWidth * compactAspectRatio
+        let cardHeight: CGFloat
+
+        if cardWidth > 450 {
+            cardHeight = min(calculatedHeight, 180)
+        } else {
+            cardHeight = calculatedHeight
+        }
+
+        return CGSize(width: cardWidth, height: ceil(cardHeight))
     }
 }
 
