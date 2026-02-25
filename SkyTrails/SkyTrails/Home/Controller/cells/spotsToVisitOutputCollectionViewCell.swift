@@ -95,11 +95,16 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wideBadgeTitleLabel.text = status.title
         wideBadgeSubtitleLabel.text = status.subtitle
 
-        let icon = UIImage(systemName: "binoculars.fill")
+        let iconPointSize = max(12, compactBadgeTitleLabel.font.pointSize)
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: iconPointSize, weight: .regular)
+        let icon = UIImage(systemName: "bird.circle.fill", withConfiguration: iconConfig)?
+            .withTintColor(status.color, renderingMode: .alwaysOriginal)
         compactBadgeIconImageView.image = icon
         wideBadgeIconImageView.image = icon
         compactBadgeIconImageView.tintColor = status.color
         wideBadgeIconImageView.tintColor = status.color
+        styleBadgeIconContainer(compactBadgeIconImageView, color: status.color)
+        styleBadgeIconContainer(wideBadgeIconImageView, color: status.color)
 
         compactSightabilityLabel.text = "Sightability - \(prediction.spottingProbability)%"
         wideSightabilityLabel.text = "Sightability - \(prediction.spottingProbability)%"
@@ -131,5 +136,16 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactCardView.layer.borderWidth = borderWidth
         wideCardView.layer.borderColor = borderColor
         wideCardView.layer.borderWidth = borderWidth
+    }
+
+    private func styleBadgeIconContainer(_ imageView: UIImageView, color: UIColor) {
+        guard let container = imageView.superview else { return }
+        container.layoutIfNeeded()
+        container.backgroundColor = color.withAlphaComponent(0.2)
+        let side = min(container.bounds.width, container.bounds.height)
+        if side > 0 {
+            container.layer.cornerRadius = side / 2
+            container.clipsToBounds = true
+        }
     }
 }
