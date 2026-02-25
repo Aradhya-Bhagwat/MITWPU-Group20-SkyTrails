@@ -31,6 +31,11 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
     private var showsWideCard: Bool?
     private var isCardSelected = false
+    private let baseCardHeight: CGFloat = 126.0
+    private var currentStatusColor: UIColor = .systemBlue
+    private var currentStatusTitle: String = ""
+    private var currentStatusSubtitle: String = ""
+    private var currentSightabilityText: String = ""
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -40,7 +45,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        updateScaledLayout()
         updateCardVariant()
+        applyBadgeIconStyle()
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 12).cgPath
     }
 
@@ -90,24 +97,12 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wideBirdNameLabel.text = prediction.birdName
 
         let status = statusText(for: prediction.spottingProbability)
-        compactBadgeTitleLabel.text = status.title
-        compactBadgeSubtitleLabel.text = status.subtitle
-        wideBadgeTitleLabel.text = status.title
-        wideBadgeSubtitleLabel.text = status.subtitle
-
-        let iconPointSize = max(12, compactBadgeTitleLabel.font.pointSize)
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: iconPointSize, weight: .regular)
-        let icon = UIImage(systemName: "bird.circle.fill", withConfiguration: iconConfig)?
-            .withTintColor(status.color, renderingMode: .alwaysOriginal)
-        compactBadgeIconImageView.image = icon
-        wideBadgeIconImageView.image = icon
-        compactBadgeIconImageView.tintColor = status.color
-        wideBadgeIconImageView.tintColor = status.color
-        styleBadgeIconContainer(compactBadgeIconImageView, color: status.color)
-        styleBadgeIconContainer(wideBadgeIconImageView, color: status.color)
-
-        compactSightabilityLabel.text = "Sightability - \(prediction.spottingProbability)%"
-        wideSightabilityLabel.text = "Sightability - \(prediction.spottingProbability)%"
+        currentStatusTitle = status.title
+        currentStatusSubtitle = status.subtitle
+        currentStatusColor = status.color
+        currentSightabilityText = "Sightability - \(prediction.spottingProbability)%"
+        applyScaledTexts()
+        applyBadgeIconStyle()
 
         graphView.setProbabilities(yearlyProbabilities)
         applySelectionStyle()
@@ -147,5 +142,49 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
             container.layer.cornerRadius = side / 2
             container.clipsToBounds = true
         }
+    }
+
+    private func updateScaledLayout() {
+        let heightRatio = max(0.7, bounds.height / baseCardHeight)
+        let titleSize = max(17, 17 * heightRatio)
+        let bodySize = max(12, 12 * heightRatio)
+
+        compactBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .regular)
+        wideBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .regular)
+
+        compactBadgeTitleLabel.font = .systemFont(ofSize: bodySize)
+        compactBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
+        wideBadgeTitleLabel.font = .systemFont(ofSize: bodySize)
+        wideBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
+        compactSightabilityLabel.font = .systemFont(ofSize: bodySize)
+        wideSightabilityLabel.font = .systemFont(ofSize: bodySize)
+
+        applyScaledTexts()
+    }
+
+    private func applyScaledTexts() {
+        compactBadgeTitleLabel.text = currentStatusTitle
+        compactBadgeSubtitleLabel.text = currentStatusSubtitle
+        wideBadgeTitleLabel.text = currentStatusTitle
+        wideBadgeSubtitleLabel.text = currentStatusSubtitle
+        compactSightabilityLabel.text = currentSightabilityText
+        wideSightabilityLabel.text = currentSightabilityText
+    }
+
+    private func applyBadgeIconStyle() {
+        styleBadgeIconContainer(compactBadgeIconImageView, color: currentStatusColor)
+        styleBadgeIconContainer(wideBadgeIconImageView, color: currentStatusColor)
+
+        updateBadgeIcon(compactBadgeIconImageView, color: currentStatusColor)
+        updateBadgeIcon(wideBadgeIconImageView, color: currentStatusColor)
+    }
+
+    private func updateBadgeIcon(_ imageView: UIImageView, color: UIColor) {
+        let baseSize = max(12, min(imageView.bounds.width, imageView.bounds.height) * 0.9)
+        let symbolPointSize = max(baseSize, compactBadgeTitleLabel.font.pointSize)
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: symbolPointSize, weight: .regular)
+        imageView.image = UIImage(systemName: "bird.circle.fill", withConfiguration: iconConfig)?
+            .withTintColor(color, renderingMode: .alwaysOriginal)
+        imageView.tintColor = color
     }
 }
