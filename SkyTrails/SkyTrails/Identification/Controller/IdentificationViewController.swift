@@ -685,6 +685,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             
         }
         
+        if currentStepIndex == 0 && model.isReloadFlowActive {
+            vc.navigationItem.hidesBackButton = true
+            vc.navigationItem.leftBarButtonItem = nil
+        }
+        
         self.navigationController?.pushViewController(vc, animated: false)
     }
     
