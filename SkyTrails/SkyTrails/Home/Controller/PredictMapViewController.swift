@@ -12,6 +12,28 @@ import QuartzCore
 class PredictMapViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
+
+    private final class PredictionAnnotation: NSObject, MKAnnotation {
+        enum Kind {
+            case location
+            case bird
+        }
+
+        let kind: Kind
+        let coordinate: CLLocationCoordinate2D
+        let title: String?
+        let subtitle: String?
+        let probability: Int?
+
+        init(kind: Kind, coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, probability: Int? = nil) {
+            self.kind = kind
+            self.coordinate = coordinate
+            self.title = title
+            self.subtitle = subtitle
+            self.probability = probability
+            super.init()
+        }
+    }
     
     private var currentChildVC: UIViewController?
     private var modalContainerView: UIView!
@@ -22,6 +44,10 @@ class PredictMapViewController: UIViewController {
     private var initialLoadY: CGFloat = 0
     private var mapRenderToken: Int = 0
     private var predictionProbabilityByBirdName: [String: Int] = [:]
+    private enum OverlayMode {
+        case mapItemArea
+        case inputRadius
+    }
         
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,7 +56,11 @@ class PredictMapViewController: UIViewController {
         mapView.delegate = self
     }
         
-    private func updateMap(with inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
+    private func updateMap(
+        with inputs: [PredictionInputData],
+        predictions: [FinalPredictionResult],
+        overlayMode: OverlayMode = .mapItemArea
+    ) {
         mapRenderToken += 1
         let currentToken = mapRenderToken
         predictionProbabilityByBirdName = Dictionary(
@@ -54,10 +84,21 @@ class PredictMapViewController: UIViewController {
             
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             locationCoordinates.append(coordinate)
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = coordinate
-            annotation.title = input.locationName ?? "Search Location"
+            let annotation = PredictionAnnotation(
+                kind: .location,
+                coordinate: coordinate,
+                title: input.locationName ?? "Search Location",
+                subtitle: nil
+            )
             annotations.append(annotation)
+
+            if overlayMode == .inputRadius {
+                let radiusKm = max(0.2, Double(input.areaValue))
+                let circle = MKCircle(center: coordinate, radius: radiusKm * 1000.0)
+                mapView.addOverlay(circle)
+                continue
+            }
+
             Task { [weak self] in
                 guard let self else { return }
                 let overlay = await self.resolvePredictionAreaOverlay(
@@ -69,9 +110,11 @@ class PredictMapViewController: UIViewController {
                     switch overlay {
                     case .polygon(let coordinates):
                         guard coordinates.count >= 3 else { return }
-                        var polygonCoordinates = coordinates
-                        let polygon = MKPolygon(coordinates: &polygonCoordinates, count: polygonCoordinates.count)
-                        self.mapView.addOverlay(polygon)
+                        let radiusKm = coordinates
+                            .map { self.distanceInKm(from: coordinate, to: $0) }
+                            .max() ?? 2.0
+                        let circle = MKCircle(center: coordinate, radius: max(0.2, radiusKm) * 1000.0)
+                        self.mapView.addOverlay(circle)
                     case .circle(let radiusKm):
                         let circle = MKCircle(center: coordinate, radius: radiusKm * 1000.0)
                         self.mapView.addOverlay(circle)
@@ -83,10 +126,13 @@ class PredictMapViewController: UIViewController {
         
         for prediction in predictions {
             let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
-            let birdPin = MKPointAnnotation()
-            birdPin.coordinate = coord
-            birdPin.title = prediction.birdName
-            birdPin.subtitle = "Predicted near \(inputs[prediction.matchedInputIndex].locationName ?? "input")"
+            let birdPin = PredictionAnnotation(
+                kind: .bird,
+                coordinate: coord,
+                title: prediction.birdName,
+                subtitle: "Predicted near \(inputs[prediction.matchedInputIndex].locationName ?? "input")",
+                probability: prediction.spottingProbability
+            )
             annotations.append(birdPin)
             locationCoordinates.append(coord)
         }
@@ -293,12 +339,17 @@ class PredictMapViewController: UIViewController {
         }
     
     func updateMapWithCurrentInputs(inputs: [PredictionInputData]) {
-        updateMap(with: inputs, predictions: [])
+        updateMap(with: inputs, predictions: [], overlayMode: .inputRadius)
     }
         
-    func navigateToOutput(inputs: [PredictionInputData], predictions: [FinalPredictionResult]) {
+    func navigateToOutput(
+        inputs: [PredictionInputData],
+        predictions: [FinalPredictionResult],
+        useInputRadiusOverlay: Bool = false
+    ) {
             
-        updateMap(with: inputs, predictions: predictions)
+        let overlayMode: OverlayMode = useInputRadiusOverlay ? .inputRadius : .mapItemArea
+        updateMap(with: inputs, predictions: predictions, overlayMode: overlayMode)
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
 
@@ -347,7 +398,7 @@ class PredictMapViewController: UIViewController {
         }
         
         inputVC.inputData = inputs
-        updateMap(with: inputs, predictions: [])
+        updateMap(with: inputs, predictions: [], overlayMode: .inputRadius)
         inputNavVC.view.layer.cornerRadius = 24
         inputNavVC.view.clipsToBounds = true
         inputNavVC.view.translatesAutoresizingMaskIntoConstraints = false
@@ -378,17 +429,20 @@ class PredictMapViewController: UIViewController {
  
     func filterMapForBird(_ prediction: FinalPredictionResult) {
         let birdAnnotations = mapView.annotations.filter { annotation in
-            if let subtitle = annotation.subtitle, subtitle?.contains("Predicted near") == true {
-                return true
+            if let annotation = annotation as? PredictionAnnotation {
+                return annotation.kind == .bird
             }
-            return false
+            return annotation.subtitle??.contains("Predicted near") ?? false
         }
         mapView.removeAnnotations(birdAnnotations)
         let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
-        let birdPin = MKPointAnnotation()
-        birdPin.coordinate = coord
-        birdPin.title = prediction.birdName
-        birdPin.subtitle = "Predicted near location"
+        let birdPin = PredictionAnnotation(
+            kind: .bird,
+            coordinate: coord,
+            title: prediction.birdName,
+            subtitle: "Predicted near location",
+            probability: prediction.spottingProbability
+        )
         mapView.addAnnotation(birdPin)
         applyResultMapViewport(anchorCoordinates: [coord], animated: true)
     }
@@ -503,18 +557,23 @@ extension PredictMapViewController: MKMapViewDelegate {
         }
         
         if let markerView = annotationView as? MKMarkerAnnotationView {
-            
-            let isPredictedBird = annotation.subtitle??.contains("Predicted near") ?? false
-            
+            let predictedBirdAnnotation = annotation as? PredictionAnnotation
+            let isPredictedBird = predictedBirdAnnotation?.kind == .bird
+                || (annotation.subtitle??.contains("Predicted near") ?? false)
+
             if isPredictedBird {
                 let birdName = annotation.title ?? nil
-                let probability = predictionProbabilityByBirdName[birdName ?? ""] ?? 50
+                let probability = predictedBirdAnnotation?.probability
+                    ?? predictionProbabilityByBirdName[birdName ?? ""]
+                    ?? 50
                 markerView.markerTintColor = statusColor(for: probability)
                 markerView.glyphImage = UIImage(systemName: "bird.fill")
+                markerView.glyphText = nil
                 markerView.glyphTintColor = .white
             } else {
                 markerView.markerTintColor = .systemBlue
                 markerView.glyphImage = UIImage(systemName: "magnifyingglass")
+                markerView.glyphText = nil
             }
         }
         
