@@ -32,6 +32,7 @@ final class Bird {
    
     var validLocations: [String]?
     var validMonths: [Int]?
+    var likelySpot: String?
     var shape_id: String?
     var size_category: Int?
     // In Bird.swift
@@ -74,6 +75,7 @@ final class Bird {
             hemisphere: String? = nil,
             validLocations: [String]? = nil,
             validMonths: [Int]? = nil,
+            likelySpot: String? = nil,
             shape_id: String? = nil,
             size_category: Int? = nil
         ) {
@@ -89,6 +91,7 @@ final class Bird {
             self.hemisphere = hemisphere
             self.validLocations = validLocations
             self.validMonths = validMonths
+            self.likelySpot = likelySpot
             self.shape_id = shape_id
             self.size_category = size_category
         }

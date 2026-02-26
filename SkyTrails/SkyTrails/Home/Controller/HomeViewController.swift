@@ -803,6 +803,7 @@ extension HomeViewController {
                     FinalPredictionResult(
                         birdName: bird.birdName,
                         imageName: bird.birdImageName,
+                        likelySpot: WatchlistManager.shared.findBird(byName: bird.birdName)?.likelySpot ?? "Sky",
                         matchedInputIndex: 0,
                         matchedLocation: (lat: lat, lon: lon),
                         spottingProbability: bird.sightabilityPercent
