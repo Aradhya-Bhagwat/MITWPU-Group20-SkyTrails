@@ -174,6 +174,7 @@ struct MigrationTrajectoryResult {
 struct PredictionInputData {
     var id: UUID = UUID()
     var locationName: String?
+    var locationDetail: String?
     var latitude: Double?
     var longitude: Double?
     var startDate: Date? = Date()

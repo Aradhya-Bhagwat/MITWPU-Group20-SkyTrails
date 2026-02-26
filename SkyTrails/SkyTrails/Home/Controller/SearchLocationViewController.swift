@@ -9,7 +9,7 @@ import UIKit
 import MapKit
 
 protocol SearchLocationDelegate: AnyObject {
-    func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int)
+    func didSelectLocation(name: String, detail: String?, lat: Double, lon: Double, forIndex index: Int)
 }
 
 class SearchLocationViewController: UIViewController {
@@ -93,7 +93,8 @@ class SearchLocationViewController: UIViewController {
                 let placeName = mapItems.first?.name ?? "Geographic Location"
                 
                 await MainActor.run {
-                    self.finalizeSelection(name: placeName, lat: coordinate.lat, lon: coordinate.lon)
+                    let detail = self.cityState(from: mapItems.first?.placemark)
+                    self.finalizeSelection(name: placeName, detail: detail, lat: coordinate.lat, lon: coordinate.lon)
                 }
             } catch {
                 print("Reverse geocoding failed: \(error.localizedDescription)")
@@ -101,8 +102,18 @@ class SearchLocationViewController: UIViewController {
         }
     }
     
-    private func finalizeSelection(name: String, lat: Double, lon: Double) {
-        delegate?.didSelectLocation(name: name, lat: lat, lon: lon, forIndex: cellIndex)
+    private func cityState(from placemark: MKPlacemark?) -> String? {
+        guard let placemark else { return nil }
+        let city = placemark.locality ?? placemark.subLocality
+        let state = placemark.administrativeArea
+        if let city, let state, !city.isEmpty, !state.isEmpty {
+            return "\(city), \(state)"
+        }
+        return city ?? state
+    }
+
+    private func finalizeSelection(name: String, detail: String?, lat: Double, lon: Double) {
+        delegate?.didSelectLocation(name: name, detail: detail, lat: lat, lon: lon, forIndex: cellIndex)
         dismiss(animated: true)
     }
 
@@ -216,7 +227,8 @@ class SearchLocationViewController: UIViewController {
                 let search = MKLocalSearch(request: request)
                 search.start { [weak self] (response, error) in
                     guard let self = self, let coordinate = response?.mapItems.first?.location.coordinate else { return }
-                    self.finalizeSelection(name: result.title, lat: coordinate.latitude, lon: coordinate.longitude)
+                    let detail = result.subtitle.isEmpty ? nil : result.subtitle
+                    self.finalizeSelection(name: result.title, detail: detail, lat: coordinate.latitude, lon: coordinate.longitude)
                 }
             }
             if indexPath.section == 2 {
@@ -274,7 +286,8 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
             guard let self = self else { return }
             
             let name = response?.mapItems.first?.name ?? "Current Location"
-            self.finalizeSelection(name: name, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
+            let detail = self.cityState(from: response?.mapItems.first?.placemark)
+            self.finalizeSelection(name: name, detail: detail, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
         }
     }
     
