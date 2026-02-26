@@ -1072,6 +1072,7 @@ class HomeManager {
             return FinalPredictionResult(
                 birdName: bird.commonName,
                 imageName: bird.staticImageName,
+                likelySpot: bird.likelySpot ?? "Sky",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
                 spottingProbability: probability
@@ -1090,6 +1091,7 @@ class HomeManager {
                 FinalPredictionResult(
                     birdName: result.birdName,
                     imageName: result.imageName,
+                    likelySpot: result.likelySpot,
                     matchedInputIndex: inputIndex,
                     matchedLocation: result.matchedLocation,
                     spottingProbability: result.spottingProbability

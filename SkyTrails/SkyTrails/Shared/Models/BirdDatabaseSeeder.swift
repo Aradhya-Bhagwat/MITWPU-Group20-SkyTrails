@@ -29,6 +29,7 @@ final class BirdDatabaseSeeder {
         let conservation_status: String?
         let validLocations: [String]?
         let validMonths: [Int]?
+        let likelySpot: String?
         let shape_id: String?
         let size_category: Int?
         let fieldMarkData: [BirdFieldMarkDataDTO]?
@@ -46,7 +47,7 @@ final class BirdDatabaseSeeder {
     }
 
     func seed(modelContext: ModelContext) throws {
-        let hasSeededKey = "kBirdDatabaseSeeded_v1"
+        let hasSeededKey = "kBirdDatabaseSeeded_v2"
         if UserDefaults.standard.bool(forKey: hasSeededKey) {
             print("ℹ️ [BirdDatabaseSeeder] Bird database already seeded. Skipping.")
             return
@@ -125,6 +126,10 @@ final class BirdDatabaseSeeder {
                     existing.validMonths = validMonths
                     didUpdate = true
                 }
+                if existing.likelySpot == nil, let likelySpot = birdDTO.likelySpot {
+                    existing.likelySpot = likelySpot
+                    didUpdate = true
+                }
                 if existing.shape_id == nil, let shapeId = birdDTO.shape_id {
                     existing.shape_id = shapeId
                     didUpdate = true
@@ -158,6 +163,7 @@ final class BirdDatabaseSeeder {
                 hemisphere: nil,
                 validLocations: birdDTO.validLocations,
                 validMonths: birdDTO.validMonths,
+                likelySpot: birdDTO.likelySpot,
                 shape_id: birdDTO.shape_id,
                 size_category: birdDTO.size_category
             )

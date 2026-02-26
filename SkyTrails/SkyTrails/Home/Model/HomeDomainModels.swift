@@ -197,6 +197,7 @@ struct PredictionInputData {
 struct FinalPredictionResult: Hashable {
     let birdName: String
     let imageName: String
+    let likelySpot: String
     let matchedInputIndex: Int
     let matchedLocation: (lat: Double, lon: Double)
     let spottingProbability: Int

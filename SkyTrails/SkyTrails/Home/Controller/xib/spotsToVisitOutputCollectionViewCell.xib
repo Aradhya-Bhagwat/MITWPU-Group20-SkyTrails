@@ -200,7 +200,7 @@
                                     <constraint firstItem="S5X-9z-Lk4" firstAttribute="leading" secondItem="xLb-mb-ITI" secondAttribute="leading" constant="8" id="4er-h6-wLt"/>
                                     <constraint firstItem="Iqc-GD-8Ki" firstAttribute="top" secondItem="Nyc-nu-MZ4" secondAttribute="bottom" constant="8" id="7zQ-cf-9ry"/>
                                     <constraint firstAttribute="trailing" secondItem="Fcl-FY-kIs" secondAttribute="trailing" constant="8" id="9GC-Uj-WDH"/>
-                                    <constraint firstAttribute="width" secondItem="xLb-mb-ITI" secondAttribute="height" multiplier="169:42" priority="250" id="DmQ-uO-6pf"/>
+                                    <constraint firstAttribute="width" secondItem="xLb-mb-ITI" secondAttribute="height" multiplier="169:35" priority="250" id="DmQ-uO-6pf"/>
                                     <constraint firstItem="Nyc-nu-MZ4" firstAttribute="leading" secondItem="S5X-9z-Lk4" secondAttribute="trailing" constant="8" id="Ljv-oa-A1f"/>
                                     <constraint firstAttribute="bottom" secondItem="S5X-9z-Lk4" secondAttribute="bottom" constant="8" id="NzG-EO-w16"/>
                                     <constraint firstItem="S5X-9z-Lk4" firstAttribute="top" secondItem="xLb-mb-ITI" secondAttribute="top" constant="8" id="O7e-11-ixA"/>
@@ -236,6 +236,7 @@
                 <outlet property="compactBirdImageView" destination="lkU-Kv-ByF" id="VDF-99-BE7"/>
                 <outlet property="compactBirdNameLabel" destination="u4m-6a-nIf" id="ehW-Tx-sd2"/>
                 <outlet property="compactCardView" destination="jRO-7g-JVc" id="T2K-u9-aP9"/>
+                <outlet property="compactLikelySpotLabel" destination="zJx-jL-CS9" id="QyQ-jd-Hv6"/>
                 <outlet property="compactSightabilityLabel" destination="dcv-pa-wPI" id="D8h-l0-VSz"/>
                 <outlet property="graphView" destination="Fcl-FY-kIs" id="H7S-Aa-X7Q"/>
                 <outlet property="mainStackView" destination="bNF-7S-pdx" id="fkE-6t-Q2L"/>
@@ -245,6 +246,7 @@
                 <outlet property="wideBirdImageView" destination="S5X-9z-Lk4" id="4d8-Jn-2ZV"/>
                 <outlet property="wideBirdNameLabel" destination="5tZ-Vv-X3j" id="qc9-VW-f26"/>
                 <outlet property="wideCardView" destination="xLb-mb-ITI" id="WmD-uA-LuL"/>
+                <outlet property="wideLikelySpotLabel" destination="Nyc-nu-MZ4" id="J8U-FT-LIe"/>
                 <outlet property="wideSightabilityLabel" destination="Iqc-GD-8Ki" id="Zzb-PJ-pgY"/>
             </connections>
             <point key="canvasLocation" x="222.90076335877862" y="103.52112676056339"/>
