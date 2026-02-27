@@ -247,8 +247,8 @@ final class WatchlistManager: WatchlistRepository {
     }
     
     func ensureMyWatchlistExists() async throws -> UUID {
-        // My Watchlist is now virtual, return special ID
-        return WatchlistConstants.myWatchlistID
+        let myWatchlist = try persistence.getOrCreateMyWatchlist()
+        return myWatchlist.id
     }
     
     func getPersonalWatchlists() -> [Watchlist] {
@@ -327,35 +327,14 @@ final class WatchlistManager: WatchlistRepository {
         var targetWatchlistId = watchlistId
         let myWatchlistId = WatchlistConstants.myWatchlistID
         
-        // Resolve virtual "My Watchlist" ID to real watchlist
         if watchlistId == myWatchlistId {
-            print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected, resolving...")
-            let customLists = try fetchWatchlists(type: .custom)
-            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetWatchlistId = existing.id
-            } else if let first = customLists.first {
-                targetWatchlistId = first.id
-            } else {
-                // Create fallback watchlist
-                try addWatchlist(
-                    title: "My Watchlist",
-                    location: "General",
-                    startDate: Date(),
-                    endDate: Date().addingTimeInterval(31536000)
-                )
-                if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
-                    targetWatchlistId = newWl.id
-                } else {
-                    print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
-                    throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
-                }
-            }
+            let myWatchlist = try persistence.getOrCreateMyWatchlist()
+            targetWatchlistId = myWatchlist.id
         }
         
         let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
         _ = try persistence.addBirdsToWatchlist(watchlistID: targetWatchlistId, birds: birds, status: status)
         
-        // Refresh cover image
         if let watchlist = try? persistence.fetchWatchlist(id: targetWatchlistId) {
             refreshCoverImage(for: watchlist)
         }
@@ -450,15 +429,10 @@ final class WatchlistManager: WatchlistRepository {
     
     // Photo Operations
     func findEntry(birdId: UUID, watchlistId: UUID) throws -> WatchlistEntry? {
-        // Resolve virtual My Watchlist ID
         var targetId = watchlistId
         if watchlistId == WatchlistConstants.myWatchlistID {
-            let customLists = try fetchWatchlists(type: .custom)
-            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetId = existing.id
-            } else if let first = customLists.first {
-                targetId = first.id
-            }
+            let myWatchlist = try persistence.getOrCreateMyWatchlist()
+            targetId = myWatchlist.id
         }
         
         guard let watchlist = try persistence.fetchWatchlist(id: targetId) else { return nil }

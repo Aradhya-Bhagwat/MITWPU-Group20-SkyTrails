@@ -14,7 +14,7 @@ import CoreLocation
 enum WatchlistType: String, Codable {
     case custom        // User-created with automation rules
     case shared        // Shared among multiple users
-    case my_watchlist  // Virtual/derived - aggregation (Logic handled in Manager)
+    case my_watchlist  // User's personal watchlist for all their birds
 }
 
 enum WatchlistEntryStatus: String, Codable {

@@ -55,6 +55,49 @@ final class WatchlistPersistenceService {
         }
     }
     
+    // MARK: - My Watchlist (Real Watchlist)
+    
+    func getOrCreateMyWatchlist() throws -> Watchlist {
+        let allWatchlists = try fetchWatchlists()
+        
+        if let existing = allWatchlists.first(where: { $0.type == .my_watchlist }) {
+            return existing
+        }
+        
+        let watchlist = Watchlist(
+            owner_id: activeUserID,
+            title: "My Watchlist",
+            location: "All Birds",
+            locationDisplayName: nil,
+            startDate: nil,
+            endDate: nil
+        )
+        watchlist.type = .my_watchlist
+        
+        context.insert(watchlist)
+        try saveContext()
+        
+        let watchlistId = watchlist.id
+        let payloadData = buildWatchlistPayloadData(watchlist, for: .create)
+        let updatedAt = watchlist.updated_at
+        
+        queueSync {
+            await BackgroundSyncAgent.shared.queueWatchlist(
+                id: watchlistId,
+                payloadData: payloadData,
+                updatedAt: updatedAt,
+                operation: .create
+            )
+        }
+        
+        return watchlist
+    }
+    
+    func fetchMyWatchlist() throws -> Watchlist? {
+        let allWatchlists = try fetchWatchlists()
+        return allWatchlists.first(where: { $0.type == .my_watchlist })
+    }
+    
     // MARK: - Watchlist CRUD
     
     func createWatchlist(

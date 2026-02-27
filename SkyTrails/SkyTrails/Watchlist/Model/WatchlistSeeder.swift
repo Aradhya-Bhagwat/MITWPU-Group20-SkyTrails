@@ -91,7 +91,16 @@ struct WatchlistSeeder {
 			print("✅ [WatchlistSeeder] Shared watchlists seeded successfully")
 		} catch {
 			print("❌ [WatchlistSeeder] Failed to seed shared watchlists: \(error)")
-			throw SeederError.seedingFailed("Shared watchlists", error)
+			throw SeederError.seedingFailed("shared watchlists", error)
+		}
+
+		// 3.5 Create My Watchlist (real watchlist, not virtual)
+		do {
+			try seedMyWatchlist(context: context)
+			print("✅ [WatchlistSeeder] My Watchlist created successfully")
+		} catch {
+			print("❌ [WatchlistSeeder] Failed to create My Watchlist: \(error)")
+			throw SeederError.seedingFailed("my_watchlist", error)
 		}
 		
         // 3.5. Generate cover image summary
@@ -209,6 +218,30 @@ struct WatchlistSeeder {
             // Update cover image based on entries
             watchlist.updateCoverImage()
 		}
+	}
+
+	@MainActor
+	private static func seedMyWatchlist(context: ModelContext) throws {
+		let descriptor = FetchDescriptor<Watchlist>()
+		let allWatchlists = try context.fetch(descriptor)
+
+		let myWatchlistExists = allWatchlists.contains { $0.type == .my_watchlist }
+		guard !myWatchlistExists else {
+			print("ℹ️ [WatchlistSeeder] My Watchlist already exists, skipping")
+			return
+		}
+
+		let myWatchlist = Watchlist(
+			id: UUID(),
+			type: .my_watchlist,
+			title: "My Watchlist",
+			location: "All Birds",
+			startDate: nil,
+			endDate: nil
+		)
+
+		context.insert(myWatchlist)
+		print("✅ [WatchlistSeeder] Created My Watchlist")
 	}
 	
 	@MainActor

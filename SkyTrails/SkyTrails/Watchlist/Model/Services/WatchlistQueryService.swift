@@ -40,9 +40,9 @@ final class WatchlistQueryService {
         
         print("📊 [QueryService] Custom: \(customLists.count), Shared: \(sharedLists.count)")
         
-        // Build My Watchlist (Virtual Aggregation)
-        let myWatchlist = buildMyWatchlistDTO(from: allLists)
-        print("📊 [QueryService] My Watchlist: \(myWatchlist.stats.observedCount)/\(myWatchlist.stats.totalCount)")
+        // Build My Watchlist (Real Watchlist)
+        let myWatchlist = try buildMyWatchlistDTO()
+        print("📊 [QueryService] My Watchlist: \(myWatchlist?.stats.observedCount ?? 0)/\(myWatchlist?.stats.totalCount ?? 0)")
         
         // Calculate Global Stats
         let allEntries = allLists.flatMap { $0.entries ?? [] }
@@ -52,52 +52,12 @@ final class WatchlistQueryService {
         return (myWatchlist, customLists, sharedLists, globalStats)
     }
     
-    func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
-        // Aggregate ALL entries from ALL watchlists
-        let allEntries = allLists.flatMap { $0.entries ?? [] }
-        
-        // Remove duplicates by bird ID (keep observed status if exists)
-        var uniqueEntries: [UUID: WatchlistEntry] = [:]
-        for entry in allEntries {
-            if let birdId = entry.bird?.id {
-                if let existing = uniqueEntries[birdId] {
-                    // Prefer observed status
-                    if entry.status == .observed && existing.status != .observed {
-                        uniqueEntries[birdId] = entry
-                    }
-                } else {
-                    uniqueEntries[birdId] = entry
-                }
-            }
+    func buildMyWatchlistDTO() throws -> WatchlistSummaryDTO? {
+        guard let myWatchlist = try persistence.fetchMyWatchlist() else {
+            return nil
         }
         
-        let uniqueEntriesArray = Array(uniqueEntries.values)
-        let stats = calculateStats(from: uniqueEntriesArray)
-        
-        // Get preview images (up to 4 unique birds)
-        // Priority: user photos first, then bundled assets
-        let previewImages = uniqueEntriesArray
-            .compactMap { entry -> String? in
-                // 1. Try user photo first
-                if let photoPath = entry.photos?.first?.imagePath {
-                    return photoPath
-                }
-                // 2. Fall back to bundled asset
-                return entry.bird?.staticImageName
-            }
-            .prefix(4)
-            .map { String($0) }
-        
-        return WatchlistSummaryDTO(
-            id: .virtual,
-            title: "My Watchlist",
-            subtitle: "All Birds",
-            dateText: "",
-            image: previewImages.first,
-            previewImages: Array(previewImages),
-            stats: stats,
-            type: .my_watchlist
-        )
+        return myWatchlist.toSummary()
     }
     
     // MARK: - Filtered & Sorted Queries
@@ -110,9 +70,12 @@ final class WatchlistQueryService {
         let entries: [WatchlistEntry]
         
         if identifier.isVirtual {
-            // Virtual "My Watchlist" - aggregate all entries
-            let allLists = try persistence.fetchWatchlists()
-            entries = allLists.flatMap { $0.entries ?? [] }
+            // My Watchlist - use real watchlist
+            if let myWatchlist = try persistence.fetchMyWatchlist() {
+                entries = myWatchlist.entries ?? []
+            } else {
+                return []
+            }
         } else if let uuid = identifier.uuid {
             entries = try persistence.fetchEntries(watchlistID: uuid)
         } else {
@@ -163,10 +126,11 @@ final class WatchlistQueryService {
     
     func getStats(for identifier: WatchlistIdentifier) throws -> WatchlistStatsDTO {
         if identifier.isVirtual {
-            // Aggregate stats from all watchlists
-            let allLists = try persistence.fetchWatchlists()
-            let allEntries = allLists.flatMap { $0.entries ?? [] }
-            return calculateStats(from: allEntries)
+            // Use real My Watchlist stats
+            if let myWatchlist = try persistence.fetchMyWatchlist() {
+                return calculateStats(from: myWatchlist.entries ?? [])
+            }
+            return .empty
         } else if let uuid = identifier.uuid {
             let entries = try persistence.fetchEntries(watchlistID: uuid)
             return calculateStats(from: entries)
