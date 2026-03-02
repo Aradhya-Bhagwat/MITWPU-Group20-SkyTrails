@@ -233,7 +233,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
 
         imageLoadTasks[indexPath]?.cancel()
         imageLoadTasks[indexPath] = Task { [weak self, weak collectionView] in
-            let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName)
+            let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil)
             guard !Task.isCancelled else { return }
             guard let self, let collectionView else { return }
             guard let liveCell = collectionView.cellForItem(at: indexPath) as? ResultCollectionViewCell else { return }

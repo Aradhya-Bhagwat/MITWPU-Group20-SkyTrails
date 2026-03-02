@@ -110,7 +110,7 @@ class BirdSmartCell: UITableViewCell {
 			birdImageView.image = assetImage
 			// Update from Supabase in background
 			Task { @MainActor in
-				if let image = await IdentificationImageService.shared.image(for: bird.staticImageName) {
+				if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
 					self.birdImageView.image = image
 				}
 			}
@@ -158,7 +158,7 @@ class BirdSmartCell: UITableViewCell {
 		
 		// Load from Supabase asynchronously for updated/cached image
 		Task { @MainActor in
-			if let image = await IdentificationImageService.shared.image(for: bird.staticImageName) {
+			if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
 				self.birdImageView.image = image
 			}
 		}
@@ -193,7 +193,7 @@ class BirdSmartCell: UITableViewCell {
 		}
 		
 		// 2. Try Supabase bird bucket (handles fallback to local assets)
-		if let bird = entry.bird, let image = await IdentificationImageService.shared.image(for: bird.staticImageName) {
+		if let bird = entry.bird, let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
 			return image
 		}
 		
