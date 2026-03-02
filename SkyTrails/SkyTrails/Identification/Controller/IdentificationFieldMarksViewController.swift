@@ -19,6 +19,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
 
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
+    private var layerLoadTasks: [String: Task<Void, Never>] = [:]
 
     private let layerOrder = [
         "Tail", "Leg", "Thigh", "Head", "Neck", "Back", "Underparts",
@@ -83,6 +84,8 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     
     private func setupCanvas() {
         CanvasView.subviews.forEach { $0.removeFromSuperview() }
+        layerLoadTasks.values.forEach { $0.cancel() }
+        layerLoadTasks.removeAll()
         partLayers.removeAll()
 
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
@@ -112,26 +115,42 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         
         let isSelected = isCategorySelected(name: category)
 
-        let defaultName = "id_canvas_\(shapeID)_\(cleanCategory)_default"
-        let defaultImage = UIImage(named: defaultName)
+        let defaultProfileCategories: Set<String> = ["beak", "head", "leg", "tail"]
+        let defaultName = defaultProfileCategories.contains(cleanCategory)
+            ? "id_canvas_\(shapeID)_\(cleanCategory)_default"
+            : nil
+        let defaultImage = defaultName.flatMap { UIImage(named: $0) }
+
         if isSelected {
             let selectedAssetNames = [
                 "canvas_\(shapeID)_\(cleanCategory)_color",
-                "canvas_\(shapeID)_\(cleanCategory)_selection 1",
-                "canvas_\(shapeID)_\(cleanCategory)_selection 2",
-                "canvas_\(shapeID)_\(cleanCategory)_selection 3",
-                "canvas_\(shapeID)_\(cleanCategory)_selection"
             ]
-            let selectedImages = selectedAssetNames.compactMap { UIImage(named: $0) }
-
-            if let defaultData = defaultImage?.pngData(),
-               let distinctSelected = selectedImages.first(where: { $0.pngData() != defaultData }) {
-                layer.image = distinctSelected
-            } else {
-                layer.image = selectedImages.first ?? defaultImage
-            }
+            layer.image = selectedAssetNames.lazy.compactMap { UIImage(named: $0) }.first ?? defaultImage
+            loadBestImage(for: category, candidates: selectedAssetNames, fallback: layer.image ?? defaultImage)
         } else {
             layer.image = defaultImage
+            if let defaultName {
+                loadBestImage(for: category, candidates: [defaultName], fallback: defaultImage)
+            } else {
+                layerLoadTasks[category]?.cancel()
+            }
+        }
+    }
+
+    private func loadBestImage(for category: String, candidates: [String], fallback: UIImage?) {
+        layerLoadTasks[category]?.cancel()
+        layerLoadTasks[category] = Task { [weak self] in
+            guard let self else { return }
+            var selectedImage: UIImage?
+            for key in candidates {
+                if let img = await IdentificationImageService.shared.image(for: key) {
+                    selectedImage = img
+                    break
+                }
+            }
+            guard !Task.isCancelled else { return }
+            guard let layer = self.partLayers[category] else { return }
+            layer.image = selectedImage ?? fallback
         }
     }
     
