@@ -102,25 +102,34 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         leftBadgeLabel.addIcon(text: "\(dto.stats.totalCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
         
-        // Cover Image with three-tier loading
+        // Cover Image - show local immediately, update from Supabase in background
         if let imageName = dto.image {
-            // Try 1: User-uploaded photo from Documents
+            // Try 1: User-uploaded photo from Documents (instant)
             if let userPhoto = loadUserPhoto(named: imageName) {
                 coverImageView.image = userPhoto
                 coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
                 alignImageTop()
-            }
-            // Try 2: Static asset from bundle
+            } 
+            // Try 2: Local bundle asset (instant)
             else if let assetImage = UIImage(named: imageName) {
                 coverImageView.image = assetImage
-                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-                alignImageTop()
-            }
-            // Try 3: Fallback to placeholder
-            else {
-                coverImageView.image = nil
                 coverImageView.backgroundColor = .systemGray5
-                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+                // Update from Supabase in background
+                Task { @MainActor in
+                    if let supabaseImage = await IdentificationImageService.shared.image(for: imageName) {
+                        self.coverImageView.image = supabaseImage
+                    }
+                }
+            } else {
+                // Try 3: Supabase bird bucket async
+                coverImageView.backgroundColor = .systemGray5
+                Task { @MainActor in
+                    if let image = await IdentificationImageService.shared.image(for: imageName) {
+                        self.coverImageView.image = image
+                        self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+                        self.alignImageTop()
+                    }
+                }
             }
         } else {
             // No image name provided - show placeholder
