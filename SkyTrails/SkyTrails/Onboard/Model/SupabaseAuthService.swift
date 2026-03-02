@@ -61,6 +61,7 @@ final class SupabaseAuthService {
     }
 
     func signIn(email: String, password: String) async throws -> SupabaseAuthResult {
+        print("🔍 [AuthService] signIn called for email: \(email) with password length: \(password.count)")
         let payload: [String: Any] = [
             "email": email,
             "password": password
@@ -280,15 +281,29 @@ final class SupabaseAuthService {
 
         if let body {
             request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+            if let bodyString = String(data: request.httpBody ?? Data(), encoding: .utf8) {
+                // Redact password for security in logs, but log the rest
+                let logBody = bodyString.replacingOccurrences(of: "\"password\":\"[^\"]*\"", with: "\"password\":\"***\"", options: String.CompareOptions.regularExpression)
+                print("🚀 [AuthService] Request Body: \(logBody)")
+            }
         }
+
+        print("🚀 [AuthService] Request: \(method) \(url.absoluteString)")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ [AuthService] Invalid response type")
             throw SupabaseAuthError.invalidResponse
+        }
+
+        print("⬇️ [AuthService] Response Status: \(httpResponse.statusCode)")
+        if let responseString = String(data: data, encoding: .utf8), !responseString.isEmpty {
+            print("⬇️ [AuthService] Response Body: \(responseString)")
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = parseErrorMessage(from: data) ?? "Auth failed with status \(httpResponse.statusCode)."
+            print("❌ [AuthService] Request failed: \(message)")
             throw SupabaseAuthError.requestFailed(message)
         }
 
