@@ -126,24 +126,24 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
                 "canvas_\(shapeID)_\(cleanCategory)_color",
             ]
             layer.image = selectedAssetNames.lazy.compactMap { UIImage(named: $0) }.first ?? defaultImage
-            loadBestImage(for: category, candidates: selectedAssetNames, fallback: layer.image ?? defaultImage)
+            loadBestImage(for: category, candidates: selectedAssetNames, fallback: layer.image ?? defaultImage, shapeId: shapeID)
         } else {
             layer.image = defaultImage
             if let defaultName {
-                loadBestImage(for: category, candidates: [defaultName], fallback: defaultImage)
+                loadBestImage(for: category, candidates: [defaultName], fallback: defaultImage, shapeId: shapeID)
             } else {
                 layerLoadTasks[category]?.cancel()
             }
         }
     }
 
-    private func loadBestImage(for category: String, candidates: [String], fallback: UIImage?) {
+    private func loadBestImage(for category: String, candidates: [String], fallback: UIImage?, shapeId: String) {
         layerLoadTasks[category]?.cancel()
         layerLoadTasks[category] = Task { [weak self] in
             guard let self else { return }
             var selectedImage: UIImage?
             for key in candidates {
-                if let img = await IdentificationImageService.shared.image(for: key) {
+                if let img = await IdentificationImageService.shared.image(for: key, shapeId: shapeId) {
                     selectedImage = img
                     break
                 }

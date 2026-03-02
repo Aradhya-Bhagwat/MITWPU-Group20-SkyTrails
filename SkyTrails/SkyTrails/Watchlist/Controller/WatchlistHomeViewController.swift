@@ -131,7 +131,6 @@ class WatchlistHomeViewController: UIViewController {
 		let uniqueKeys = Array(Set(imageKeys))
 		Task {
 			await IdentificationImageService.shared.prefetch(keys: uniqueKeys)
-			print("📱 [WatchlistHome] Prefetched \(uniqueKeys.count) bird images")
 		}
 	}
 	private func setupUI() {
