@@ -88,6 +88,9 @@ class WatchlistHomeViewController: UIViewController {
 				self.sharedWatchlists = data.shared
 				self.globalStats = data.globalStats
 
+				// Prefetch bird images from Supabase for faster cell loading
+				self.prefetchBirdImages()
+
 				let isNowEmptyState = self.isMyWatchlistEmptyState
 				if wasEmptyState != isNowEmptyState {
 					self.summaryCardCollectionView.setCollectionViewLayout(self.createCompositionalLayout(), animated: false)
@@ -102,7 +105,35 @@ class WatchlistHomeViewController: UIViewController {
 		}
 	}
 	
-		// MARK: - Setup
+	// MARK: - Image Prefetching
+	
+	private func prefetchBirdImages() {
+		// Collect all unique bird image names from watchlists
+		var imageKeys: [String] = []
+		
+		if let myWatchlist = myWatchlist {
+			imageKeys.append(contentsOf: myWatchlist.previewImages)
+		}
+		
+		for custom in customWatchlists {
+			if let coverImage = custom.image {
+				imageKeys.append(coverImage)
+			}
+		}
+		
+		for shared in sharedWatchlists {
+			if let coverImage = shared.image {
+				imageKeys.append(coverImage)
+			}
+		}
+		
+		// Remove duplicates and prefetch
+		let uniqueKeys = Array(Set(imageKeys))
+		Task {
+			await IdentificationImageService.shared.prefetch(keys: uniqueKeys)
+			print("📱 [WatchlistHome] Prefetched \(uniqueKeys.count) bird images")
+		}
+	}
 	private func setupUI() {
 		self.title = "Watchlist"
 		self.navigationItem.largeTitleDisplayMode = .always

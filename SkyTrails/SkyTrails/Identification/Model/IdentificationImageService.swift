@@ -102,6 +102,14 @@ final class IdentificationImageService: IdentificationImageProviding {
         }
 
         guard let itemLookup = lookupManifestItem(for: keyCandidates) else {
+            if shouldTryBirdBucketFallback(for: normalizedKey),
+               let birdImage = await loadFromBirdBucket(
+                   keyCandidates: keyCandidates,
+                   normalizedKey: normalizedKey,
+                   diskKey: diskKey
+               ) {
+                return birdImage
+            }
             #if DEBUG
             print("🖼️ [IdentificationImage] \(normalizedKey) -> asset fallback (missing manifest key)")
             #endif
@@ -196,11 +204,13 @@ final class IdentificationImageService: IdentificationImageProviding {
         return config.projectURL.appendingPathComponent("storage/v1/object/public/\(safeBucket)/\(safeManifestPath)")
     }
 
-    private func remoteURL(for objectPath: String) -> URL? {
+    private func remoteURL(for objectPath: String, bucketOverride: String? = nil) -> URL? {
         guard let config = try? SupabaseConfig.load() else { return nil }
-        let bucket = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_IDENTIFICATION_BUCKET") as? String)?
+        let configuredBucket = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_IDENTIFICATION_BUCKET") as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let safeBucket = (bucket?.isEmpty == false) ? bucket! : "identification-assets"
+        let safeBucket = (bucketOverride?.isEmpty == false)
+            ? bucketOverride!
+            : ((configuredBucket?.isEmpty == false) ? configuredBucket! : "identification-assets")
         let cleanedPath = objectPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard !cleanedPath.isEmpty else { return nil }
 
@@ -287,5 +297,65 @@ final class IdentificationImageService: IdentificationImageProviding {
             return false
         }
         return !allowedDefaultProfileKeys.contains(key)
+    }
+
+    private func shouldTryBirdBucketFallback(for key: String) -> Bool {
+        guard !key.hasPrefix("id_"), !key.hasPrefix("canvas_"), !key.hasPrefix("shape_") else {
+            return false
+        }
+        return true
+    }
+
+    private func birdBucketName() -> String {
+        let bucket = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_BIRD_BUCKET") as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (bucket?.isEmpty == false) ? bucket! : "bird"
+    }
+
+    private func loadFromBirdBucket(
+        keyCandidates: [String],
+        normalizedKey: String,
+        diskKey: String
+    ) async -> UIImage? {
+        let birdBucket = birdBucketName()
+        let fileExtensions = ["png", "jpg", "jpeg", "webp"]
+
+        var objectPaths: [String] = []
+        for candidate in keyCandidates {
+            let lowered = candidate.lowercased()
+            for ext in fileExtensions {
+                let directPath = "\(lowered).\(ext)"
+                if !objectPaths.contains(directPath) {
+                    objectPaths.append(directPath)
+                }
+                let nestedPath = "bird/\(lowered).\(ext)"
+                if !objectPaths.contains(nestedPath) {
+                    objectPaths.append(nestedPath)
+                }
+            }
+        }
+
+        for objectPath in objectPaths {
+            guard let url = remoteURL(for: objectPath, bucketOverride: birdBucket) else {
+                continue
+            }
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                      let image = UIImage(data: data) else {
+                    continue
+                }
+                saveToDisk(data: data, cacheKey: diskKey)
+                memoryCache.setObject(image, forKey: normalizedKey as NSString)
+                #if DEBUG
+                print("🖼️ [IdentificationImage] \(normalizedKey) -> Supabase (\(birdBucket)/\(objectPath))")
+                #endif
+                return image
+            } catch {
+                continue
+            }
+        }
+
+        return nil
     }
 }
