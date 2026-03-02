@@ -129,7 +129,7 @@ class GUIViewController: UIViewController {
             if let name = imageName {
                 let fallback = UIImage(named: name)
                 imgView.image = fallback
-                loadLayerImage(category: catName, key: name, fallback: fallback)
+                loadLayerImage(category: catName, key: name, fallback: fallback, shapeId: shapeID)
             }
         }
     }
@@ -157,14 +157,14 @@ class GUIViewController: UIViewController {
         if let layer = partLayers[category] {
             let fallback = UIImage(named: imageName)
             layer.image = fallback
-            loadLayerImage(category: category, key: imageName, fallback: fallback)
+            loadLayerImage(category: category, key: imageName, fallback: fallback, shapeId: shapeID)
         }
     }
 
-    private func loadLayerImage(category: String, key: String, fallback: UIImage?) {
+    private func loadLayerImage(category: String, key: String, fallback: UIImage?, shapeId: String? = nil) {
         layerLoadTasks[category]?.cancel()
         layerLoadTasks[category] = Task { [weak self] in
-            let loaded = await IdentificationImageService.shared.image(for: key)
+            let loaded = await IdentificationImageService.shared.image(for: key, shapeId: shapeId)
             guard !Task.isCancelled else { return }
             guard let self, let layer = self.partLayers[category] else { return }
             layer.image = loaded ?? fallback

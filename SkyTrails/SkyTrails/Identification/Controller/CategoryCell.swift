@@ -36,7 +36,7 @@ class CategoryCell: UICollectionViewCell {
 
         imageTask?.cancel()
         imageTask = Task { [weak self] in
-            let loaded = await IdentificationImageService.shared.image(for: iconName)
+            let loaded = await IdentificationImageService.shared.image(for: iconName, shapeId: nil)
             guard !Task.isCancelled else { return }
             guard let self, self.representedIconKey == iconName else { return }
             self.iconImageView.image = loaded ?? fallback

@@ -116,7 +116,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
                 coverImageView.backgroundColor = .systemGray5
                 // Update from Supabase in background
                 Task { @MainActor in
-                    if let supabaseImage = await IdentificationImageService.shared.image(for: imageName) {
+                    if let supabaseImage = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
                         self.coverImageView.image = supabaseImage
                     }
                 }
@@ -124,7 +124,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
                 // Try 3: Supabase bird bucket async
                 coverImageView.backgroundColor = .systemGray5
                 Task { @MainActor in
-                    if let image = await IdentificationImageService.shared.image(for: imageName) {
+                    if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
                         self.coverImageView.image = image
                         self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
                         self.alignImageTop()

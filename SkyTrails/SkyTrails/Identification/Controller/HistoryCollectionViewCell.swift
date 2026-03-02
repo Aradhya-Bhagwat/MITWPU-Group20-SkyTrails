@@ -101,7 +101,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
 
             imageTask?.cancel()
             imageTask = Task { [weak self] in
-                let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName)
+                let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil)
                 guard !Task.isCancelled else { return }
                 guard let self, self.representedImageKey == bird.staticImageName else { return }
                 if let loaded {
