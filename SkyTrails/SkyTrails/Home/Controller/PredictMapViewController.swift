@@ -110,11 +110,9 @@ class PredictMapViewController: UIViewController {
                     switch overlay {
                     case .polygon(let coordinates):
                         guard coordinates.count >= 3 else { return }
-                        let radiusKm = coordinates
-                            .map { self.distanceInKm(from: coordinate, to: $0) }
-                            .max() ?? 2.0
-                        let circle = MKCircle(center: coordinate, radius: max(0.2, radiusKm) * 1000.0)
-                        self.mapView.addOverlay(circle)
+                        var coords = coordinates
+                        let polygon = MKPolygon(coordinates: &coords, count: coords.count)
+                        self.mapView.addOverlay(polygon)
                     case .circle(let radiusKm):
                         let circle = MKCircle(center: coordinate, radius: radiusKm * 1000.0)
                         self.mapView.addOverlay(circle)
@@ -166,7 +164,7 @@ class PredictMapViewController: UIViewController {
             if let regionPolygon = polygonCoordinates(
                 from: response.boundingRegion,
                 near: coordinate,
-                nearestResultCoordinate: nearest?.placemark.coordinate
+                nearestResultCoordinate: nearest?.location.coordinate
             ) {
                 return .polygon(regionPolygon)
             }
@@ -239,8 +237,8 @@ class PredictMapViewController: UIViewController {
     ) -> MKMapItem? {
         let target = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         return items.min { lhs, rhs in
-            let left = CLLocation(latitude: lhs.placemark.coordinate.latitude, longitude: lhs.placemark.coordinate.longitude)
-            let right = CLLocation(latitude: rhs.placemark.coordinate.latitude, longitude: rhs.placemark.coordinate.longitude)
+            let left = CLLocation(latitude: lhs.location.coordinate.latitude, longitude: lhs.location.coordinate.longitude)
+            let right = CLLocation(latitude: rhs.location.coordinate.latitude, longitude: rhs.location.coordinate.longitude)
             return target.distance(from: left) < target.distance(from: right)
         }
     }
