@@ -362,17 +362,20 @@ actor BackgroundSyncAgent {
         }
         
         print("📤 [SyncAgent] Processing \(queue.count) operations")
-        
-        var processedIndices: [Int] = []
-        
-        for (index, operation) in queue.enumerated() {
+
+        // Snapshot queued operations because this actor can be re-entered across awaits.
+        // We always reconcile back to the live queue by operation.id (never stale index).
+        let pendingOperations = queue
+        var processedOperationIDs = Set<UUID>()
+
+        for operation in pendingOperations {
             do {
                 // Check for conflicts before processing (server authoritative)
                 let shouldProceed = try await checkServerConflict(operation, config: config)
                 
                 if shouldProceed {
                     try await processOperation(operation, config: config)
-                    processedIndices.append(index)
+                    processedOperationIDs.insert(operation.id)
                     print("📤 [SyncAgent] ✓ Synced: \(operation.table) \(operation.recordId)")
                     
                     // After successful delete sync, remove from local SwiftData
@@ -383,7 +386,7 @@ actor BackgroundSyncAgent {
                     }
                 } else {
                     // Server has newer data - skip this operation
-                    processedIndices.append(index)
+                    processedOperationIDs.insert(operation.id)
                     print("📤 [SyncAgent] ⚠ Skipped (server newer): \(operation.table) \(operation.recordId)")
                 }
             } catch {
@@ -393,20 +396,31 @@ actor BackgroundSyncAgent {
                 
                 if failedOp.attempts >= maxRetries {
                     deadLetterQueue.append(failedOp)
+                    processedOperationIDs.insert(operation.id)
                     Self.saveDeadLetterToDisk(deadLetterQueue)
                     print("📤 [SyncAgent] ✗ Max retries reached: \(operation.table) \(operation.recordId)")
                 } else {
-                    queue[index] = failedOp
-                    Self.saveQueueToDisk(queue)
-                    print("📤 [SyncAgent] ⚠ Retry \(failedOp.attempts)/\(maxRetries): \(operation.table)")
+                    if replaceQueuedOperation(with: failedOp) {
+                        print("📤 [SyncAgent] ⚠ Retry \(failedOp.attempts)/\(maxRetries): \(operation.table)")
+                    } else {
+                        print("📤 [SyncAgent] ⚠ Retry skipped (op no longer in queue): \(operation.table) \(operation.recordId)")
+                    }
                 }
             }
         }
-        
-        for index in processedIndices.reversed() {
-            queue.remove(at: index)
+
+        if !processedOperationIDs.isEmpty {
+            queue.removeAll { processedOperationIDs.contains($0.id) }
         }
         Self.saveQueueToDisk(queue)
+    }
+
+    private func replaceQueuedOperation(with operation: SyncOperation) -> Bool {
+        guard let index = queue.firstIndex(where: { $0.id == operation.id }) else {
+            return false
+        }
+        queue[index] = operation
+        return true
     }
     
     // MARK: - Conflict Detection (Server Authoritative)

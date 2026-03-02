@@ -15,6 +15,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     var selectedIndexPath: IndexPath?
     
     var birdResults: [IdentificationCandidate] = []
+    private var imageLoadTasks: [IndexPath: Task<Void, Never>] = [:]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,8 +67,16 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             selectedResult = birdResults[selectedItem].bird
         }
         viewModel.results = birdResults
+        prefetchBirdImages()
         updateSaveButtonState()
         resultCollectionView.reloadData()
+    }
+
+    private func prefetchBirdImages() {
+        let keys = birdResults.compactMap { $0.bird?.staticImageName }
+        Task {
+            await IdentificationImageService.shared.prefetch(keys: keys)
+        }
     }
 
     private func updateSaveButtonState() {
@@ -221,6 +230,16 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
 
         cell.delegate = self
         cell.indexPath = indexPath
+
+        imageLoadTasks[indexPath]?.cancel()
+        imageLoadTasks[indexPath] = Task { [weak self, weak collectionView] in
+            let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName)
+            guard !Task.isCancelled else { return }
+            guard let self, let collectionView else { return }
+            guard let liveCell = collectionView.cellForItem(at: indexPath) as? ResultCollectionViewCell else { return }
+            guard liveCell.indexPath == indexPath else { return }
+            liveCell.resultImageView.image = loaded ?? UIImage(named: bird.staticImageName)
+        }
         
         return cell
     }
@@ -242,6 +261,10 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         coordinator.animate(alongsideTransition: { [weak self] _ in
             self?.resultCollectionView.collectionViewLayout.invalidateLayout()
         }, completion: nil)
+    }
+
+    deinit {
+        imageLoadTasks.values.forEach { $0.cancel() }
     }
 
     // MARK: - ResultCellDelegate

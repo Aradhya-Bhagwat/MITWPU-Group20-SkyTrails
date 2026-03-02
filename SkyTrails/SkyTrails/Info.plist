@@ -6,6 +6,10 @@
 	<string>https://qlawahnttgioswfdnzuz.supabase.co</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsYXdhaG50dGdpb3N3ZmRuenV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzgzOTYsImV4cCI6MjA4Njk1NDM5Nn0.enPngCMlBvB6f3_UUK8hpIZIvZ6lARGr_TEGgBiomXw</string>
+	<key>SUPABASE_IDENTIFICATION_BUCKET</key>
+	<string>identification-assets</string>
+	<key>SUPABASE_IDENTIFICATION_MANIFEST_PATH</key>
+	<string>identification_manifest.json</string>
 	<key>DEV_BYPASS_EMAIL</key>
 	<string>tanmayvdani@gmail.com</string>
 	<key>DEV_BYPASS_PASSWORD</key>
