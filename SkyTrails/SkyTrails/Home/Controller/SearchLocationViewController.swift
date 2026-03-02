@@ -93,7 +93,7 @@ class SearchLocationViewController: UIViewController {
                 let placeName = mapItems.first?.name ?? "Geographic Location"
                 
                 await MainActor.run {
-                    let detail = self.cityState(from: mapItems.first?.placemark)
+                    let detail = self.cityState(from: mapItems.first)
                     self.finalizeSelection(name: placeName, detail: detail, lat: coordinate.lat, lon: coordinate.lon)
                 }
             } catch {
@@ -102,14 +102,23 @@ class SearchLocationViewController: UIViewController {
         }
     }
     
-    private func cityState(from placemark: MKPlacemark?) -> String? {
-        guard let placemark else { return nil }
-        let city = placemark.locality ?? placemark.subLocality
-        let state = placemark.administrativeArea
-        if let city, let state, !city.isEmpty, !state.isEmpty {
-            return "\(city), \(state)"
+    private func cityState(from mapItem: MKMapItem?) -> String? {
+        guard let mapItem else { return nil }
+        
+        if #available(iOS 26.0, *) {
+            if let cityState = mapItem.addressRepresentations?.cityWithContext(MKAddressRepresentations.ContextStyle.full) {
+                return cityState
+            }
+            return mapItem.addressRepresentations?.cityName
+        } else {
+            let placemark = mapItem.placemark
+            let city = placemark.locality ?? placemark.subLocality
+            let state = placemark.administrativeArea
+            if let city, let state, !city.isEmpty, !state.isEmpty {
+                return "\(city), \(state)"
+            }
+            return city ?? state
         }
-        return city ?? state
     }
 
     private func finalizeSelection(name: String, detail: String?, lat: Double, lon: Double) {
@@ -286,7 +295,7 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
             guard let self = self else { return }
             
             let name = response?.mapItems.first?.name ?? "Current Location"
-            let detail = self.cityState(from: response?.mapItems.first?.placemark)
+            let detail = self.cityState(from: response?.mapItems.first)
             self.finalizeSelection(name: name, detail: detail, lat: location.coordinate.latitude, lon: location.coordinate.longitude)
         }
     }

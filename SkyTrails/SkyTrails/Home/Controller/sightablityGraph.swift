@@ -123,27 +123,29 @@ final class SightabilityGraphView: UIView {
             fontSize: 12
         )
 
-        let series: [Int] = values.isEmpty ? Array(repeating: 1, count: 12) : values
-        let normalizedSeries: [Int]
-        if series.count == 12 {
-            normalizedSeries = series
-        } else if series.count > 12 {
-            normalizedSeries = Array(series.prefix(12))
-        } else {
-            normalizedSeries = series + Array(repeating: series.last ?? 1, count: 12 - series.count)
-        }
+        let series: [Int] = values.isEmpty ? Array(repeating: 1, count: 52) : values
+        let normalizedSeries = series
 
         let stepX = rect.width / CGFloat(max(1, normalizedSeries.count - 1))
         let linePath = UIBezierPath()
+        var points: [CGPoint] = []
         for (i, v) in normalizedSeries.enumerated() {
             let x = rect.minX + CGFloat(i) * stepX
-            let normalized = CGFloat(v - 1) / 99.0
+            let normalized = CGFloat(v) / 100.0
             let y = rect.maxY - normalized * rect.height
-            let point = CGPoint(x: x, y: y)
-            if i == 0 {
-                linePath.move(to: point)
-            } else {
-                linePath.addLine(to: point)
+            points.append(CGPoint(x: x, y: y))
+        }
+
+        if !points.isEmpty {
+            linePath.move(to: points[0])
+            if points.count > 1 {
+                for i in 0..<points.count - 1 {
+                    let p1 = points[i]
+                    let p2 = points[i+1]
+                    let cp1 = CGPoint(x: p1.x + (p2.x - p1.x) / 2, y: p1.y)
+                    let cp2 = CGPoint(x: p1.x + (p2.x - p1.x) / 2, y: p2.y)
+                    linePath.addCurve(to: p2, controlPoint1: cp1, controlPoint2: cp2)
+                }
             }
         }
         lineLayer.path = linePath.cgPath
@@ -181,7 +183,11 @@ final class SightabilityGraphView: UIView {
         textLayer.fontSize = fontSize
         textLayer.alignmentMode = alignment
         textLayer.foregroundColor = UIColor.secondaryLabel.cgColor
-        textLayer.contentsScale = UIScreen.main.scale
+        if #available(iOS 26.0, *) {
+            textLayer.contentsScale = self.traitCollection.displayScale
+        } else {
+            textLayer.contentsScale = UIScreen.main.scale
+        }
         layer.addSublayer(textLayer)
         labelLayers.append(textLayer)
     }
@@ -198,7 +204,11 @@ final class SightabilityGraphView: UIView {
         textLayer.isWrapped = true
         textLayer.alignmentMode = .center
         textLayer.foregroundColor = UIColor.secondaryLabel.cgColor
-        textLayer.contentsScale = UIScreen.main.scale
+        if #available(iOS 26.0, *) {
+            textLayer.contentsScale = self.traitCollection.displayScale
+        } else {
+            textLayer.contentsScale = UIScreen.main.scale
+        }
         textLayer.setAffineTransform(CGAffineTransform(rotationAngle: -.pi / 2))
         layer.addSublayer(textLayer)
         labelLayers.append(textLayer)

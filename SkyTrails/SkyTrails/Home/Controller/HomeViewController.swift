@@ -806,7 +806,9 @@ extension HomeViewController {
                         likelySpot: WatchlistManager.shared.findBird(byName: bird.birdName)?.likelySpot ?? "Sky",
                         matchedInputIndex: 0,
                         matchedLocation: (lat: lat, lon: lon),
-                        spottingProbability: bird.sightabilityPercent
+                        spottingProbability: bird.sightabilityPercent,
+                        weekNumber: bird.weekNumber,
+                        residencyStatus: bird.residencyStatus
                     )
                 }
 

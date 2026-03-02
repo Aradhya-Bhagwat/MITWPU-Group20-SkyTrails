@@ -201,6 +201,8 @@ struct FinalPredictionResult: Hashable {
     let matchedInputIndex: Int
     let matchedLocation: (lat: Double, lon: Double)
     let spottingProbability: Int
+    let weekNumber: String?
+    let residencyStatus: String?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(birdName)
@@ -252,6 +254,8 @@ struct BirdSpeciesDisplay: Hashable {
     let birdImageName: String
     let statusBadge: StatusBadge
     let sightabilityPercent: Int
+    let weekNumber: String?
+    let residencyStatus: String?
     
     struct StatusBadge: Hashable {
         let title: String

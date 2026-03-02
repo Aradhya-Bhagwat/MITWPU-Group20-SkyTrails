@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreLocation
+import MapKit
 
 class PredictOutputViewController: UIViewController {
     var predictions: [FinalPredictionResult] = []
@@ -19,7 +20,6 @@ class PredictOutputViewController: UIViewController {
     private var displayedPredictions: [FinalPredictionResult] = []
     private var yearlySeriesByBird: [String: [Int]] = [:]
     private var selectedPredictionIndex: Int = 0
-    private let geocoder = CLGeocoder()
     private var headerLocationRequestID: UUID?
 
     override func viewDidLoad() {
@@ -141,17 +141,34 @@ class PredictOutputViewController: UIViewController {
         let requestID = UUID()
         headerLocationRequestID = requestID
         let location = CLLocation(latitude: lat, longitude: lon)
-        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
-            guard let self else { return }
-            guard self.headerLocationRequestID == requestID else { return }
-            guard let placemark = placemarks?.first else { return }
-
-            let city = placemark.locality ?? placemark.subLocality
-            let state = placemark.administrativeArea
-            if let city, let state, !city.isEmpty, !state.isEmpty {
-                self.selectedLocationDetailLabel.text = "\(city), \(state)"
-            } else {
-                self.selectedLocationDetailLabel.text = city ?? state ?? placemark.country
+        Task {
+            do {
+                guard let request = MKReverseGeocodingRequest(location: location) else { return }
+                let mapItems = try await request.mapItems
+                
+                await MainActor.run {
+                    guard self.headerLocationRequestID == requestID else { return }
+                    guard let mapItem = mapItems.first else { return }
+                    
+                    if #available(iOS 26.0, *) {
+                        if let cityState = mapItem.addressRepresentations?.cityWithContext(MKAddressRepresentations.ContextStyle.full) {
+                            self.selectedLocationDetailLabel.text = cityState
+                        } else {
+                            self.selectedLocationDetailLabel.text = mapItem.addressRepresentations?.cityName ?? mapItem.name
+                        }
+                    } else {
+                        let placemark = mapItem.placemark
+                        let city = placemark.locality ?? placemark.subLocality
+                        let state = placemark.administrativeArea
+                        if let city, let state, !city.isEmpty, !state.isEmpty {
+                            self.selectedLocationDetailLabel.text = "\(city), \(state)"
+                        } else {
+                            self.selectedLocationDetailLabel.text = city ?? state ?? placemark.country
+                        }
+                    }
+                }
+            } catch {
+                print("Reverse geocoding failed: \(error.localizedDescription)")
             }
         }
     }
