@@ -14,15 +14,15 @@ struct IdentificationManifest: Codable {
     let items: [String: ManifestItem]
 }
 
-protocol IdentificationImageProviding {
+protocol ImageProviding {
     func image(for key: String) async -> UIImage?
     func prefetch(keys: [String]) async
     func refreshManifestIfNeeded(force: Bool) async
 }
 
 @MainActor
-final class IdentificationImageService: IdentificationImageProviding {
-    static let shared = IdentificationImageService()
+final class ImageService: ImageProviding {
+    static let shared = ImageService()
 
     private let memoryCache = NSCache<NSString, UIImage>()
     private let cacheTTL: TimeInterval = 24 * 60 * 60
@@ -66,23 +66,14 @@ final class IdentificationImageService: IdentificationImageProviding {
 
         let memKey = normalizedKey as NSString
         if let cached = memoryCache.object(forKey: memKey) {
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> memory cache")
-            #endif
             return cached
         }
 
-        // Some base identification overlays are bundled locally and should never
-        // be requested from Supabase.
         if localOnlyKeys.contains(normalizedKey) {
-            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "local-only key")
+            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
-        // Enforce strict default-profile usage: only these 4 keys are valid defaults.
         if isDisallowedDefaultProfileKey(normalizedKey) {
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> skipped (default profile key not allowed)")
-            #endif
             return nil
         }
 
@@ -91,14 +82,11 @@ final class IdentificationImageService: IdentificationImageProviding {
         let diskKey = diskCacheKey(for: normalizedKey)
         if let diskImage = loadFromDisk(cacheKey: diskKey) {
             memoryCache.setObject(diskImage, forKey: memKey)
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> disk cache")
-            #endif
             return diskImage
         }
 
         if failedRemoteKeys.contains(normalizedKey) {
-            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "remote disabled after prior failure")
+            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
         guard let itemLookup = lookupManifestItem(for: keyCandidates) else {
@@ -110,51 +98,32 @@ final class IdentificationImageService: IdentificationImageProviding {
                ) {
                 return birdImage
             }
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> asset fallback (missing manifest key)")
-            #endif
-            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "missing manifest key")
+            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
         guard let remoteURL = remoteURL(for: itemLookup.item.path) else {
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> asset fallback (invalid remote URL)")
-            #endif
             failedRemoteKeys.insert(normalizedKey)
-            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "invalid remote URL")
+            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
         do {
             let (data, response) = try await URLSession.shared.data(from: remoteURL)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                #if DEBUG
-                let status = (response as? HTTPURLResponse)?.statusCode ?? -1
-                print("🖼️ [IdentificationImage] \(normalizedKey) -> asset fallback (HTTP \(status))")
-                #endif
                 if let status = (response as? HTTPURLResponse)?.statusCode, status >= 400 {
                     failedRemoteKeys.insert(normalizedKey)
                 }
-                return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "HTTP error")
+                return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
             guard let image = UIImage(data: data) else {
-                #if DEBUG
-                print("🖼️ [IdentificationImage] \(normalizedKey) -> asset fallback (decode failed)")
-                #endif
                 failedRemoteKeys.insert(normalizedKey)
-                return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "decode failed")
+                return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
             saveToDisk(data: data, cacheKey: diskKey)
             memoryCache.setObject(image, forKey: memKey)
             failedRemoteKeys.remove(normalizedKey)
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> Supabase (\(itemLookup.item.path))")
-            #endif
             return image
         } catch {
-            #if DEBUG
-            print("🖼️ [IdentificationImage] \(normalizedKey) -> asset fallback (network error: \(error.localizedDescription))")
-            #endif
-            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey, reason: "network error")
+            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
     }
 
@@ -187,7 +156,6 @@ final class IdentificationImageService: IdentificationImageProviding {
             failedRemoteKeys.removeAll()
             UserDefaults.standard.set(Date(), forKey: refreshKey)
         } catch {
-            // Keep using stale manifest/fallback flow.
         }
     }
 
@@ -277,15 +245,10 @@ final class IdentificationImageService: IdentificationImageProviding {
         return nil
     }
 
-    private func fallbackAssetImage(for candidates: [String], originalKey: String, reason: String) -> UIImage? {
+    private func fallbackAssetImage(for candidates: [String], originalKey: String) -> UIImage? {
         for candidate in candidates {
             if let image = UIImage(named: candidate) {
                 memoryCache.setObject(image, forKey: originalKey as NSString)
-                #if DEBUG
-                if candidate != originalKey {
-                    print("🖼️ [IdentificationImage] \(originalKey) -> asset fallback (\(reason), alias: \(candidate))")
-                }
-                #endif
                 return image
             }
         }
@@ -347,9 +310,6 @@ final class IdentificationImageService: IdentificationImageProviding {
                 }
                 saveToDisk(data: data, cacheKey: diskKey)
                 memoryCache.setObject(image, forKey: normalizedKey as NSString)
-                #if DEBUG
-                print("🖼️ [IdentificationImage] \(normalizedKey) -> Supabase (\(birdBucket)/\(objectPath))")
-                #endif
                 return image
             } catch {
                 continue
@@ -359,3 +319,5 @@ final class IdentificationImageService: IdentificationImageProviding {
         return nil
     }
 }
+
+typealias IdentificationImageService = ImageService
