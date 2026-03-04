@@ -73,12 +73,23 @@ final class ImageService: ImageProviding {
         
         if normalizedKey.isEmpty { return nil }
         
-        let manifestLookupKey = normalizedKey.hasPrefix("id_canvas_") 
-            ? String(normalizedKey.dropFirst(8)) // Strip "id_canvas_" prefix for manifest lookup
-            : normalizedKey
+        let manifestLookupKey: String
+        if normalizedKey.hasPrefix("id_canvas_finch_") {
+            let stripped = String(normalizedKey.dropFirst(16)) // 16 = "id_canvas_finch_" count
+            let withoutDefault = stripped.replacingOccurrences(of: "_default", with: "")
+            manifestLookupKey = withoutDefault
+        } else if normalizedKey.hasPrefix("id_canvas_") {
+            let stripped = String(normalizedKey.dropFirst(8))
+            manifestLookupKey = stripped
+        } else if normalizedKey.hasPrefix("canvas_") {
+            manifestLookupKey = String(normalizedKey.dropFirst("canvas_".count))
+        } else {
+            manifestLookupKey = normalizedKey
+        }
         
         let keyCandidates = keyLookupCandidates(for: normalizedKey)
-        let manifestKeyCandidates = keyLookupCandidates(for: manifestLookupKey)
+        var manifestKeyCandidates = keyLookupCandidates(for: manifestLookupKey)
+        manifestKeyCandidates.append(contentsOf: keyLookupCandidates(for: normalizedKey))
         
         var mappedShapeId = shapeId.map { normalizeKey($0) }
         if mappedShapeId == "Passeridae_Fringillidae" {

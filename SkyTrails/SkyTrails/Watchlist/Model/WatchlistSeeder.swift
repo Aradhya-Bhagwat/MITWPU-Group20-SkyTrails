@@ -163,6 +163,10 @@ struct WatchlistSeeder {
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
             
+            // Update stats
+            watchlist.observedCount = observedCount
+            watchlist.speciesCount = observedCount + toObserveCount
+            
             // Update cover image based on entries
             watchlist.updateCoverImage()
 		}
@@ -205,6 +209,10 @@ struct WatchlistSeeder {
 			
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
+            
+            // Update stats
+            watchlist.observedCount = observedCount
+            watchlist.speciesCount = observedCount + toObserveCount
             
             // Update cover image based on entries
             watchlist.updateCoverImage()

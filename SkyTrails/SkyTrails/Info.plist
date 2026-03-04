@@ -13,18 +13,30 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.967202205672-fct3hdiq5jg6vt9m63pcf7gn6h5fgb2l</string>
+				<string>skytrails</string>
 			</array>
 		</dict>
 	</array>
-	<key>DEV_BYPASS_EMAIL</key>
-	<string>tanmayvdani@gmail.com</string>
-	<key>DEV_BYPASS_PASSWORD</key>
-	<string>123456</string>
-	<key>GIDClientID</key>
-	<string>967202205672-fct3hdiq5jg6vt9m63pcf7gn6h5fgb2l.apps.googleusercontent.com</string>
 	<key>SEED_WATCHLISTS</key>
 	<false/>
+	<key>BIRD_NEWS_API_KEY</key>
+	<string>200143b5e8f234f9ac8a2c8893f274c2</string>
+	<key>BIRD_NEWS_ENABLE_API</key>
+	<false/>
+	<key>BIRD_NEWS_LANG</key>
+	<string>en</string>
+	<key>BIRD_NEWS_MAX_RESULTS</key>
+	<integer>5</integer>
+	<key>BIRD_NEWS_QUERY</key>
+	<string>(birds OR avian OR ornithology OR migratory birds)</string>
+	<key>BIRD_NEWS_USE_LOCAL_JSON</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SkyTrails uses the camera so you can set your profile photo.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SkyTrails may save edited profile photos to your library when requested.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SkyTrails accesses your photo library so you can choose a profile photo.</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsYXdhaG50dGdpb3N3ZmRuenV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzgzOTYsImV4cCI6MjA4Njk1NDM5Nn0.enPngCMlBvB6f3_UUK8hpIZIvZ6lARGr_TEGgBiomXw</string>
 	<key>SUPABASE_BIRD_BUCKET</key>
@@ -33,12 +45,24 @@
 	<string>identification-assets</string>
 	<key>SUPABASE_IDENTIFICATION_MANIFEST_PATH</key>
 	<string>identification_manifest.json</string>
+	<key>SUPABASE_OTP_LENGTH</key>
+	<integer>8</integer>
+	<key>SUPABASE_OTP_RESEND_SECONDS</key>
+	<integer>60</integer>
+	<key>SUPABASE_REDIRECT_HOST</key>
+	<string>auth</string>
+	<key>SUPABASE_REDIRECT_PATH</key>
+	<string>/callback</string>
+	<key>SUPABASE_REDIRECT_SCHEME</key>
+	<string>skytrails</string>
 	<key>SUPABASE_URL</key>
 	<string>https://qlawahnttgioswfdnzuz.supabase.co</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
+		<key>UIApplicationSupportsTabbedSceneCollection</key>
 		<false/>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
 		<key>UISceneConfigurations</key>
 		<dict>
 			<key>UIWindowSceneSessionRoleApplication</key>
