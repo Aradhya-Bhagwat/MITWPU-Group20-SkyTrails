@@ -239,7 +239,8 @@ final class WatchlistPersistenceService {
             bird: bird,
             status: status,
             notes: notes,
-            observationDate: observationDate
+            observationDate: observationDate,
+            observedByUserId: (status == .observed) ? activeUserID : nil
         )
         entry.toObserveStartDate = toObserveStartDate
         entry.toObserveEndDate = toObserveEndDate
@@ -320,6 +321,9 @@ final class WatchlistPersistenceService {
         entry.locationDisplayName = locationDisplayName
         entry.toObserveStartDate = toObserveStartDate
         entry.toObserveEndDate = toObserveEndDate
+        if entry.status == .observed {
+            entry.observedByUserId = activeUserID
+        }
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
@@ -394,6 +398,7 @@ final class WatchlistPersistenceService {
         
         entry.status = (entry.status == .observed) ? .to_observe : .observed
         entry.observationDate = (entry.status == .observed) ? Date() : nil
+        entry.observedByUserId = (entry.status == .observed) ? activeUserID : nil
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
@@ -475,7 +480,8 @@ final class WatchlistPersistenceService {
             let entry = WatchlistEntry(
                 watchlist: watchlist,
                 bird: bird,
-                status: status
+                status: status,
+                observedByUserId: (status == .observed) ? activeUserID : nil
             )
             
             if status == .observed {
@@ -524,9 +530,9 @@ final class WatchlistPersistenceService {
         
         let rule = WatchlistRule(
             watchlist: watchlist,
-            rule_type: type,
-            parameters: parameters.jsonString
+            rule_type: type
         )
+        parameters.apply(to: rule)
         rule.priority = priority
         rule.is_active = isActive
         
@@ -550,12 +556,53 @@ final class WatchlistPersistenceService {
         return rule
     }
     
+    func upsertRule(
+        watchlistID: UUID,
+        type: WatchlistRuleType,
+        parameters: RuleParameters,
+        priority: Int = 0
+    ) throws {
+        let existingRule = try fetchRules(watchlistID: watchlistID).first {
+            $0.rule_type == type && $0.deleted_at == nil
+        }
+        
+        if let existingRule {
+            parameters.apply(to: existingRule)
+            existingRule.priority = priority
+            existingRule.is_active = true
+            existingRule.syncStatus = .pendingUpdate
+            existingRule.deleted_at = nil
+            try saveContext()
+            
+            let ruleId = existingRule.id
+            let payloadData = buildRulePayloadData(existingRule, for: .update)
+            let localUpdatedAt = existingRule.created_at
+            queueSync {
+                await BackgroundSyncAgent.shared.queueRule(
+                    id: ruleId,
+                    payloadData: payloadData,
+                    localUpdatedAt: localUpdatedAt,
+                    operation: .update
+                )
+            }
+        } else {
+            _ = try createRule(
+                watchlistID: watchlistID,
+                type: type,
+                parameters: parameters,
+                priority: priority,
+                isActive: true
+            )
+        }
+    }
+    
     func fetchRules(watchlistID: UUID, activeOnly: Bool = false) throws -> [WatchlistRule] {
         guard let watchlist = try fetchWatchlist(id: watchlistID) else {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
         
         var rules = watchlist.rules ?? []
+        rules = rules.filter { $0.deleted_at == nil }
         
         if activeOnly {
             rules = rules.filter { $0.is_active }
@@ -617,6 +664,14 @@ final class WatchlistPersistenceService {
                 operation: .delete
             )
         }
+    }
+    
+    func deleteRule(watchlistID: UUID, type: WatchlistRuleType) throws {
+        let rules = try fetchRules(watchlistID: watchlistID)
+        guard let rule = rules.first(where: { $0.rule_type == type && $0.deleted_at == nil }) else {
+            return
+        }
+        try deleteRule(id: rule.id)
     }
     
     // MARK: - Bird CRUD
@@ -756,19 +811,7 @@ final class WatchlistPersistenceService {
             "location_display_name": watchlist.locationDisplayName as Any,
             "start_date": watchlist.startDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "end_date": watchlist.endDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "observed_count": watchlist.observedCount,
-            "species_count": watchlist.speciesCount,
             "cover_image_path": watchlist.coverImagePath as Any,
-            "species_rule_enabled": watchlist.speciesRuleEnabled,
-            "species_rule_shape_id": watchlist.speciesRuleShapeId as Any,
-            "location_rule_enabled": watchlist.locationRuleEnabled,
-            "location_rule_lat": watchlist.locationRuleLat as Any,
-            "location_rule_lon": watchlist.locationRuleLon as Any,
-            "location_rule_radius_km": watchlist.locationRuleRadiusKm,
-            "location_rule_display_name": watchlist.locationRuleDisplayName as Any,
-            "date_rule_enabled": watchlist.dateRuleEnabled,
-            "date_rule_start_date": watchlist.dateRuleStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "date_rule_end_date": watchlist.dateRuleEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
         
@@ -793,12 +836,12 @@ final class WatchlistPersistenceService {
             "to_observe_start_date": entry.toObserveStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "to_observe_end_date": entry.toObserveEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "observed_by": entry.observedBy as Any,
+            "observed_by_user_id": entry.observedByUserId?.uuidString as Any,
             "lat": entry.lat as Any,
             "lon": entry.lon as Any,
             "location_display_name": entry.locationDisplayName as Any,
             "priority": entry.priority,
             "notify_upcoming": entry.notify_upcoming,
-            "target_date_range": entry.target_date_range as Any,
             "added_date": ISO8601DateFormatter().string(from: entry.addedDate),
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
@@ -816,7 +859,13 @@ final class WatchlistPersistenceService {
             "id": rule.id.uuidString,
             "watchlist_id": rule.watchlist?.id.uuidString as Any,
             "rule_type": rule.rule_type.rawValue,
-            "parameters_json": rule.parameters_json,
+            "lat": rule.lat as Any,
+            "lon": rule.lon as Any,
+            "radius_km": rule.radius_km as Any,
+            "start_date": rule.start_date.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "end_date": rule.end_date.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "shape_id": rule.shape_id as Any,
+            "pattern_key": rule.pattern_key as Any,
             "is_active": rule.is_active,
             "priority": rule.priority,
             "updated_at": ISO8601DateFormatter().string(from: Date())
