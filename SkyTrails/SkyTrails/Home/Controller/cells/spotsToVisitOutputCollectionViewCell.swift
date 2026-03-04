@@ -40,10 +40,17 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     private var currentLikelySpotText: String = ""
     private var currentProbability: Int = 0
 
+    private var actionButtonsContainer: UIStackView?
+    private var currentPrediction: FinalPredictionResult?
+    
+    var onTapBirdPath: ((FinalPredictionResult) -> Void)?
+    var onTapWatchlist: ((FinalPredictionResult) -> Void)?
+
     override func awakeFromNib() {
         super.awakeFromNib()
         setupAppearance()
         updateCardVariant()
+        setupActionButtons()
     }
 
     override func layoutSubviews() {
@@ -51,7 +58,15 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         updateScaledLayout()
         updateCardVariant()
         applyBadgeIconStyle()
-        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 12).cgPath
+        
+        // Shadow should only cover the card, not the buttons below
+        let cardView = (bounds.width >= 450) ? wideCardView : compactCardView
+        if let card = cardView {
+            let cardFrame = card.convert(card.bounds, to: self)
+            layer.shadowPath = UIBezierPath(roundedRect: cardFrame, cornerRadius: 12).cgPath
+        } else {
+            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 12).cgPath
+        }
     }
 
     private func setupAppearance() {
@@ -79,6 +94,75 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wideBirdImageView.clipsToBounds = true
     }
 
+    private func setupActionButtons() {
+        guard actionButtonsContainer == nil else { return }
+
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.distribution = .equalSpacing
+        stack.alignment = .center
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.isHidden = true
+
+        let watchlistBtn = createActionButton(imageName: "SF_addToWatchlist")
+        watchlistBtn.addTarget(self, action: #selector(didTapWatchlist), for: .touchUpInside)
+        let pathBtn = createActionButton(imageName: "SF_birdPath")
+        pathBtn.addTarget(self, action: #selector(didTapPath), for: .touchUpInside)
+
+        stack.addArrangedSubview(watchlistBtn)
+        stack.addArrangedSubview(pathBtn)
+
+        let wrapper = UIView()
+        wrapper.translatesAutoresizingMaskIntoConstraints = false
+        wrapper.addSubview(stack)
+        wrapper.isHidden = true
+        
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: wrapper.topAnchor, constant: 8),
+            stack.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor, constant: -8),
+            stack.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: 0),
+            stack.heightAnchor.constraint(equalToConstant: 44)
+        ])
+
+        mainStackView.addArrangedSubview(wrapper)
+        mainStackView.axis = .vertical
+        
+        // Ensure the wrapper (buttons) is behind the card views in the z-order
+        mainStackView.sendSubviewToBack(wrapper)
+        
+        self.actionButtonsContainer = stack
+    }
+
+    private func createActionButton(systemName: String? = nil, imageName: String? = nil) -> UIButton {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+
+        if let systemName = systemName {
+            button.setImage(UIImage(systemName: systemName, withConfiguration: config), for: .normal)
+        } else if let imageName = imageName {
+            button.setImage(UIImage(named: imageName)?.withRenderingMode(.alwaysTemplate), for: .normal)
+        }
+
+        button.tintColor = .systemBlue
+        button.backgroundColor = .systemBackground
+        
+        button.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 44),
+            button.heightAnchor.constraint(equalToConstant: 44)
+        ])
+        button.layer.cornerRadius = 22
+        
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.12
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.layer.masksToBounds = false
+
+        return button
+    }
+
     private func updateCardVariant() {
         let shouldShowWide = bounds.width >= 450
         if let current = showsWideCard, current == shouldShowWide {
@@ -92,6 +176,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     func configure(prediction: FinalPredictionResult, yearlyProbabilities: [Int]) {
+        self.currentPrediction = prediction
         let image = UIImage(named: prediction.imageName) ?? UIImage(systemName: "bird.fill")
         compactBirdImageView.image = image
         wideBirdImageView.image = image
@@ -110,6 +195,16 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
         graphView.setProbabilities(yearlyProbabilities)
         applySelectionStyle()
+    }
+
+    @objc private func didTapPath() {
+        guard let prediction = currentPrediction else { return }
+        onTapBirdPath?(prediction)
+    }
+
+    @objc private func didTapWatchlist() {
+        guard let prediction = currentPrediction else { return }
+        onTapWatchlist?(prediction)
     }
 
     func setCardSelected(_ selected: Bool) {
@@ -135,6 +230,25 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactCardView.layer.borderWidth = borderWidth
         wideCardView.layer.borderColor = borderColor
         wideCardView.layer.borderWidth = borderWidth
+        
+        guard let container = actionButtonsContainer?.superview else { return }
+        
+        if isCardSelected {
+            container.isHidden = false
+            actionButtonsContainer?.isHidden = false
+            container.alpha = 0
+            container.transform = CGAffineTransform(translationX: 0, y: -40)
+            
+            UIView.animate(withDuration: 0.35, delay: 0.05, options: [.curveEaseOut, .allowUserInteraction]) {
+                container.alpha = 1
+                container.transform = .identity
+            }
+        } else {
+            container.alpha = 0
+            container.isHidden = true
+            actionButtonsContainer?.isHidden = true
+            container.transform = .identity
+        }
     }
 
     private func styleBadgeIconContainer(_ imageView: UIImageView, color: UIColor) {
@@ -149,7 +263,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     private func updateScaledLayout() {
-        let heightRatio = max(0.7, bounds.height / baseCardHeight)
+        let cardView = (bounds.width >= 450) ? wideCardView : compactCardView
+        let cardHeight = cardView?.bounds.height ?? bounds.height
+        let heightRatio = max(0.7, cardHeight / baseCardHeight)
         let titleSize = max(17, 17 * heightRatio)
         let bodySize = max(12, 12 * heightRatio)
 

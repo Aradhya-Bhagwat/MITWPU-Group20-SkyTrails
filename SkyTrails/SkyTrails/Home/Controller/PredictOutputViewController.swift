@@ -183,6 +183,54 @@ class PredictOutputViewController: UIViewController {
         selectedLocationNameLabel.font = .systemFont(ofSize: titleSize, weight: .bold)
         selectedLocationDetailLabel.font = .systemFont(ofSize: subtitleSize, weight: .regular)
     }
+
+    private func navigateToBirdPrediction(_ prediction: FinalPredictionResult) {
+        // Find input dates if available
+        let inputIndex = prediction.matchedInputIndex
+        let input = inputData.indices.contains(inputIndex) ? inputData[inputIndex] : nil
+        
+        let startDate = input?.startDate ?? Date()
+        let endDate = input?.endDate ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+        
+        let birdInput = BirdDateInput(
+            species: SpeciesData(id: UUID().uuidString, name: prediction.birdName, imageName: prediction.imageName),
+            startDate: startDate,
+            endDate: endDate
+        )
+
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+            mapVC.predictionInputs = [birdInput]
+            
+            // Push onto the main navigation controller (replacing the PredictMapViewController)
+            // self -> UINavigationController (child) -> PredictMapViewController (parent) -> UINavigationController (main)
+            if let mainNav = self.navigationController?.parent?.navigationController {
+                mainNav.pushViewController(mapVC, animated: true)
+            } else {
+                self.navigationController?.pushViewController(mapVC, animated: true)
+            }
+        }
+    }
+
+    private func addToWatchlist(_ prediction: FinalPredictionResult) {
+        guard let bird = WatchlistManager.shared.findBird(byName: prediction.birdName) else {
+            let alert = UIAlertController(title: "Error", message: "Could not find bird in database.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        do {
+            try WatchlistManager.shared.addBirds([bird], to: WatchlistConstants.myWatchlistID, asObserved: false)
+            let alert = UIAlertController(title: "Success", message: "\(prediction.birdName) added to your watchlist.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        } catch {
+            let alert = UIAlertController(title: "Error", message: "Failed to add bird to watchlist: \(error.localizedDescription)", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
+    }
 }
 
 extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
@@ -202,16 +250,31 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         let yearly = yearlySeriesByBird[prediction.birdName] ?? []
         cell.configure(prediction: prediction, yearlyProbabilities: yearly)
         cell.setCardSelected(indexPath.item == selectedPredictionIndex)
+        
+        cell.onTapBirdPath = { [weak self] selectedPrediction in
+            self?.navigateToBirdPrediction(selectedPrediction)
+        }
+        
+        cell.onTapWatchlist = { [weak self] selectedPrediction in
+            self?.addToWatchlist(selectedPrediction)
+        }
+        
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let oldIndex = selectedPredictionIndex
         selectedPredictionIndex = indexPath.item
-        if oldIndex != selectedPredictionIndex {
-            collectionView.reloadItems(at: [IndexPath(item: oldIndex, section: 0), indexPath])
-        } else {
-            collectionView.reloadItems(at: [indexPath])
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
+            collectionView.performBatchUpdates(nil)
+            
+            if let oldCell = collectionView.cellForItem(at: IndexPath(item: oldIndex, section: 0)) as? spotsToVisitOutputCollectionViewCell {
+                oldCell.setCardSelected(false)
+            }
+            if let newCell = collectionView.cellForItem(at: indexPath) as? spotsToVisitOutputCollectionViewCell {
+                newCell.setCardSelected(true)
+            }
         }
 
         let prediction = displayedPredictions[indexPath.item]
@@ -229,12 +292,16 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         let cardWidth = collectionView.bounds.width - 32
         let compactAspectRatio: CGFloat = 6.0 / 17.0
         let calculatedHeight = cardWidth * compactAspectRatio
-        let cardHeight: CGFloat
+        var cardHeight: CGFloat
 
         if cardWidth > 450 {
             cardHeight = min(calculatedHeight, 180)
         } else {
             cardHeight = calculatedHeight
+        }
+
+        if indexPath.item == selectedPredictionIndex {
+            cardHeight += 60
         }
 
         return CGSize(width: cardWidth, height: ceil(cardHeight))
