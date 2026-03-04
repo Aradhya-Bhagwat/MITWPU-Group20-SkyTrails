@@ -7,10 +7,22 @@
 
 import UIKit
 import MapKit
+import CoreLocation
 
 class NewMigrationCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "NewMigrationCollectionViewCell"
+    
+    private struct TerrainInfo {
+        let name: String
+        let symbolName: String
+        let color: UIColor
+        let defaultImageName: String
+    }
+    
+    private static var terrainCache: [String: TerrainInfo] = [:]
+    private static var terrainImageCache: [String: UIImage] = [:]
+    private var geocodingTask: Task<Void, Never>?
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var titleLabel: UILabel!
@@ -53,6 +65,15 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         setupAppearance()
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        geocodingTask?.cancel()
+        geocodingTask = nil
+        terrainTagLabel.text = "Loading..."
+        terrainTagImageView.image = UIImage(named: "Terrain_Remote")
+        tag1View.backgroundColor = .systemGray5.withAlphaComponent(0.4)
+    }
+    
     private func setupCollectionView() {
         birdListCollectionView.delegate = self
         birdListCollectionView.dataSource = self
@@ -76,6 +97,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         tag1View.layer.cornerRadius = tag1View.bounds.height / 2
         tag2View.layer.cornerRadius = tag2View.bounds.height / 2
         seasonTagImageView.layer.cornerRadius = seasonTagImageView.bounds.height / 2
+        
+        // Ensure circular shape for terrain image
+        terrainTagImageView.layer.cornerRadius = terrainTagImageView.bounds.height / 2
     }
     
     private func updateNestedLayout() {
@@ -180,7 +204,10 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         titleLabel.text = hotspot.placeName
         subtitleLabel.text = hotspot.locationDetail
         weekLabel.text = hotspot.weekNumber
+        
+        // Initial setup for terrain (before geocoding)
         terrainTagLabel.text = hotspot.terrainTag
+        
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
         seasonTagImageView.image = UIImage(named: seasonAssetName(for: hotspot.seasonTag))
         tag2View.backgroundColor = seasonTagBackgroundColor(for: hotspot.seasonTag)
@@ -212,8 +239,106 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             areaOverlay: hotspot.areaOverlay,
             birdPins: hotspot.hotspots
         )
+        
+        // Initiate terrain fetch
+        fetchTerrain(for: hotspot.centerCoordinate)
     }
     
+    private func fetchTerrain(for coordinate: CLLocationCoordinate2D) {
+        let cacheKey = String(format: "%.4f,%.4f", coordinate.latitude, coordinate.longitude)
+        
+        // 1. Check if we already have the terrain info and image cached
+        if let info = Self.terrainCache[cacheKey] {
+            let image = Self.terrainImageCache[cacheKey] ?? UIImage(named: info.defaultImageName)
+            applyTerrain(info, image: image)
+            return
+        }
+        
+        geocodingTask = Task {
+            let geocoder = CLGeocoder()
+            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            
+            do {
+                // 2. Fetch Terrain Info (Reverse Geocoding)
+                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                guard !Task.isCancelled else { return }
+                
+                let info = placemarks.first.map { classifyTerrain(from: $0) } 
+                           ?? TerrainInfo(name: "Remote Area", symbolName: "mappin.circle", color: .systemGray, defaultImageName: "Terrain_Remote")
+                
+                Self.terrainCache[cacheKey] = info
+                
+                // 3. Try to fetch "Look Around" (Street View) Snapshot
+                var finalImage = UIImage(named: info.defaultImageName)
+                
+                if #available(iOS 16.0, *) {
+                    let request = MKLookAroundSceneRequest(coordinate: coordinate)
+                    if let scene = try? await request.scene {
+                        let options = MKLookAroundSnapshotter.Options()
+                        options.size = CGSize(width: 120, height: 120) // Slightly larger for better quality
+                        let snapshotter = MKLookAroundSnapshotter(scene: scene, options: options)
+                        if let snapshot = try? await snapshotter.snapshot {
+                            finalImage = snapshot.image
+                            Self.terrainImageCache[cacheKey] = finalImage
+                        }
+                    }
+                }
+                
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self.applyTerrain(info, image: finalImage)
+                }
+            } catch {
+                print("Terrain fetch failed: \(error.localizedDescription)")
+                let fallback = TerrainInfo(name: "Remote Area", symbolName: "mappin.circle", color: .systemGray, defaultImageName: "Terrain_Remote")
+                await MainActor.run {
+                    self.applyTerrain(fallback, image: UIImage(named: fallback.defaultImageName))
+                }
+            }
+        }
+    }
+    
+    private func classifyTerrain(from placemark: CLPlacemark) -> TerrainInfo {
+        let skyBlue = UIColor(red: 0.53, green: 0.81, blue: 0.98, alpha: 1.0)
+        
+        if placemark.ocean != nil {
+            return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
+        }
+        
+        if placemark.inlandWater != nil {
+            return TerrainInfo(name: "Freshwater", symbolName: "drop.fill", color: .systemTeal, defaultImageName: "Terrain_Freshwater")
+        }
+        
+        if let interests = placemark.areasOfInterest, !interests.isEmpty {
+            let forestKeywords = ["park", "forest", "nature", "reserve", "wilderness", "mountain", "wildlife", "rainforest"]
+            let isRainforest = interests.contains { interest in
+                forestKeywords.contains { keyword in
+                    interest.lowercased().contains(keyword)
+                }
+            }
+            if isRainforest {
+                return TerrainInfo(name: "Rainforest", symbolName: "tree.fill", color: UIColor(red: 0.0, green: 0.6, blue: 0.45, alpha: 1.0), defaultImageName: "Terrain_Wilderness")
+            }
+        }
+        
+        if placemark.locality != nil {
+            return TerrainInfo(name: "Residential", symbolName: "building.2.fill", color: skyBlue, defaultImageName: "Terrain_Residential")
+        }
+        
+        return TerrainInfo(name: "General Land", symbolName: "map.fill", color: UIColor(red: 0.68, green: 0.84, blue: 0.19, alpha: 1.0), defaultImageName: "Terrain_Land")
+    }
+    
+    private func applyTerrain(_ info: TerrainInfo, image: UIImage?) {
+        terrainTagLabel.text = info.name
+        terrainTagImageView.isHidden = false
+        terrainTagImageView.alpha = 1.0
+        terrainTagImageView.image = image
+        terrainTagImageView.contentMode = .scaleAspectFill
+        terrainTagImageView.clipsToBounds = true
+        tag1View.backgroundColor = info.color.withAlphaComponent(0.4)
+    }
+
     private func setupMap(
         pathCoordinates: [CLLocationCoordinate2D],
         hotspotCenter: CLLocationCoordinate2D,
