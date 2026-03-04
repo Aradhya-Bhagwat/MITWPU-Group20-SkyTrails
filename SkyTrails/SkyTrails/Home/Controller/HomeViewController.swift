@@ -27,6 +27,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
+    private var authStateObserver: NSObjectProtocol?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,6 +39,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         applySemanticAppearance()
         setupCollectionView()
         loadHomeData()
+        observeUserSessionChanges()
     }
 
     private func setupTraitChangeHandling() {
@@ -108,6 +110,10 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
             loadImage(from: photo)
 
+        } else if photo.starts(with: "file://") || FileManager.default.fileExists(atPath: photo) {
+
+            loadLocalImage(from: photo)
+
         } else if !photo.isEmpty {
 
             // Local image
@@ -138,6 +144,33 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
             }
         }
     }
+
+    private func loadLocalImage(from pathOrURLString: String) {
+        let fileURL: URL?
+        if pathOrURLString.starts(with: "file://") {
+            fileURL = URL(string: pathOrURLString)
+        } else {
+            fileURL = URL(fileURLWithPath: pathOrURLString)
+        }
+
+        guard let fileURL,
+              let data = try? Data(contentsOf: fileURL),
+              let image = UIImage(data: data) else {
+            return
+        }
+
+        homeTitleProfileImageView.image = image
+    }
+
+    private func observeUserSessionChanges() {
+        authStateObserver = NotificationCenter.default.addObserver(
+            forName: UserSession.authStateDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.loadUserProfileImage()
+        }
+    }
     private func attachHomeTitleProfileImageViewIfNeeded() {
         guard let navBar = navigationController?.navigationBar else { return }
         guard homeTitleProfileImageView.superview == nil else { return }
@@ -160,6 +193,12 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         let storyboard = UIStoryboard(name: "Profile", bundle: nil)
         if let profileVC = storyboard.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController {
             navigationController?.pushViewController(profileVC, animated: true)
+        }
+    }
+
+    deinit {
+        if let authStateObserver {
+            NotificationCenter.default.removeObserver(authStateObserver)
         }
     }
     

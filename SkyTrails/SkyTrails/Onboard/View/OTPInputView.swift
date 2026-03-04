@@ -2,7 +2,16 @@ import UIKit
 
 class OTPInputView: UIView {
     private let stackView = UIStackView()
-    private let numberOfDigits = 6
+    var digitCount: Int = 8 {
+        didSet {
+            let bounded = max(4, min(10, digitCount))
+            if bounded != digitCount {
+                digitCount = bounded
+                return
+            }
+            rebuildFields()
+        }
+    }
     private var textFields: [UITextField] = []
     
     var onOTPEntered: ((String) -> Void)?
@@ -24,7 +33,7 @@ class OTPInputView: UIView {
     private func setup() {
         stackView.axis = .horizontal
         stackView.distribution = .fillEqually
-        stackView.spacing = 32 // Increased spacing for better separation
+        stackView.spacing = 18
         stackView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stackView)
         
@@ -34,13 +43,22 @@ class OTPInputView: UIView {
             stackView.centerXAnchor.constraint(equalTo: centerXAnchor),
             stackView.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor)
         ])
-        
-        for i in 0..<numberOfDigits {
+
+        rebuildFields()
+    }
+
+    private func rebuildFields() {
+        for view in stackView.arrangedSubviews {
+            stackView.removeArrangedSubview(view)
+            view.removeFromSuperview()
+        }
+        textFields.removeAll()
+
+        for i in 0..<digitCount {
             let textField = createTextField(tag: i)
             textFields.append(textField)
             stackView.addArrangedSubview(textField)
-            
-            // Upright aspect ratio (width is 80% of height)
+
             textField.widthAnchor.constraint(equalTo: textField.heightAnchor, multiplier: 1).isActive = true
         }
     }
@@ -52,6 +70,7 @@ class OTPInputView: UIView {
         field.font = .boldSystemFont(ofSize: 24)
         field.borderStyle = .roundedRect
         field.keyboardType = .numberPad
+        field.textContentType = .oneTimeCode
         field.backgroundColor = .systemGray6
         field.delegate = self
         field.addTarget(self, action: #selector(textChanged(_:)), for: .editingChanged)
@@ -61,10 +80,13 @@ class OTPInputView: UIView {
     @objc private func textChanged(_ textField: UITextField) {
         let text = textField.text ?? ""
         
-        if text.count >= 1 {
-            textField.text = String(text.prefix(1))
+        if text.count > 1 {
+            textField.text = String(text.suffix(1))
+        }
+
+        if text.count == 1 {
             let nextTag = textField.tag + 1
-            if nextTag < numberOfDigits {
+            if nextTag < digitCount {
                 textFields[nextTag].becomeFirstResponder()
             } else {
                 textField.resignFirstResponder()
@@ -82,6 +104,15 @@ class OTPInputView: UIView {
 
 extension OTPInputView: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        if !string.isEmpty && string.rangeOfCharacter(from: CharacterSet.decimalDigits.inverted) != nil {
+            return false
+        }
+
+        if string.count > 1 {
+            applyPastedCode(string, startingAt: textField.tag)
+            return false
+        }
+
         if string.isEmpty { // Backspace
             if textField.text?.isEmpty == true {
                 let prevTag = textField.tag - 1
@@ -96,5 +127,24 @@ extension OTPInputView: UITextFieldDelegate {
             return false
         }
         return true
+    }
+
+    private func applyPastedCode(_ raw: String, startingAt startIndex: Int) {
+        let digits = raw.filter(\.isNumber)
+        guard !digits.isEmpty else { return }
+
+        var index = startIndex
+        for char in digits where index < digitCount {
+            textFields[index].text = String(char)
+            index += 1
+        }
+
+        if index < digitCount {
+            textFields[index].becomeFirstResponder()
+        } else {
+            textFields[digitCount - 1].resignFirstResponder()
+        }
+
+        onOTPEntered?(self.text)
     }
 }
