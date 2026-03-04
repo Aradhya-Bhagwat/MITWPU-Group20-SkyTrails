@@ -452,53 +452,57 @@ class EditWatchlistDetailViewController: UIViewController {
             return
         }
         
-        // Species Rule
-        speciesRuleToggle.isOn = watchlist.speciesRuleEnabled
-        selectedShapeId = watchlist.speciesRuleShapeId
-        shapeCollectionView.isHidden = !watchlist.speciesRuleEnabled
-        if watchlist.speciesRuleEnabled {
+        let activeRules = (watchlist.rules ?? []).filter { $0.is_active && $0.deleted_at == nil }
+        
+        if let speciesRule = activeRules.first(where: { $0.rule_type == .species_family }),
+           let shapeId = speciesRule.shape_id {
+            speciesRuleToggle.isOn = true
+            selectedShapeId = shapeId
+            shapeCollectionView.isHidden = false
             shapeCollectionView.reloadData()
+        } else {
+            speciesRuleToggle.isOn = false
+            selectedShapeId = nil
+            shapeCollectionView.isHidden = true
         }
         
-        // Location Rule
-        locationRuleToggle.isOn = watchlist.locationRuleEnabled
-        locationRuleButton.isHidden = !watchlist.locationRuleEnabled
-        locationRuleInfoLabel.isHidden = !watchlist.locationRuleEnabled
-        if let lat = watchlist.locationRuleLat, let lon = watchlist.locationRuleLon {
+        if let locationRule = activeRules.first(where: { $0.rule_type == .location }),
+           let lat = locationRule.lat,
+           let lon = locationRule.lon {
+            locationRuleToggle.isOn = true
+            locationRuleButton.isHidden = false
+            locationRuleInfoLabel.isHidden = false
             selectedRuleLocation = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            selectedRuleRadius = watchlist.locationRuleRadiusKm
-            
-            // Use stored display name if available, otherwise will geocode
-            if let displayName = watchlist.locationRuleDisplayName {
-                selectedRuleLocationDisplayName = displayName
-                locationRuleInfoLabel.text = "Within \(Int(selectedRuleRadius))km of \(displayName)"
-            } else {
-                locationRuleInfoLabel.text = "Within \(Int(selectedRuleRadius))km of selected location"
-                // Reverse geocode to get the name
-                Task {
-                    if let name = await locationService.reverseGeocode(lat: lat, lon: lon) {
-                        await MainActor.run {
-                            self.selectedRuleLocationDisplayName = name
-                            self.locationRuleInfoLabel.text = "Within \(Int(self.selectedRuleRadius))km of \(name)"
-                            self.watchlistToEdit?.locationRuleDisplayName = name
-                        }
+            selectedRuleRadius = locationRule.radius_km ?? 50.0
+            locationRuleInfoLabel.text = "Within \(Int(selectedRuleRadius))km of selected location"
+            Task {
+                if let name = await locationService.reverseGeocode(lat: lat, lon: lon) {
+                    await MainActor.run {
+                        self.selectedRuleLocationDisplayName = name
+                        self.locationRuleInfoLabel.text = "Within \(Int(self.selectedRuleRadius))km of \(name)"
                     }
                 }
             }
+        } else {
+            locationRuleToggle.isOn = false
+            locationRuleButton.isHidden = true
+            locationRuleInfoLabel.isHidden = true
         }
         
-        // Date Rule
-        dateRuleToggle.isOn = watchlist.dateRuleEnabled
-        if let startDate = watchlist.dateRuleStartDate {
+        if let dateRule = activeRules.first(where: { $0.rule_type == .date_range }),
+           let startDate = dateRule.start_date,
+           let endDate = dateRule.end_date {
+            dateRuleToggle.isOn = true
             dateRuleStartPicker.date = startDate
-        }
-        if let endDate = watchlist.dateRuleEndDate {
             dateRuleEndPicker.date = endDate
+        } else {
+            dateRuleToggle.isOn = false
         }
+        
         // Show/hide date pickers based on toggle
         if let dateSection = dateRuleToggle.superview?.superview as? UIStackView,
            let datePickersStack = dateSection.arrangedSubviews.last(where: { $0.accessibilityIdentifier == "DatePickersStack" }) {
-            datePickersStack.isHidden = !watchlist.dateRuleEnabled
+            datePickersStack.isHidden = !dateRuleToggle.isOn
         }
     }
 
@@ -601,60 +605,76 @@ class EditWatchlistDetailViewController: UIViewController {
 		let startDate = startDatePicker.date
 		let endDate = endDatePicker.date
 		
-			// 1. Update Existing Watchlist
-		if let watchlist = watchlistToEdit {
-            // Direct update on SwiftData object
-			watchlist.title = title
-            watchlist.location = location
-			watchlist.locationDisplayName = selectedLocation?.displayName ?? location
-            watchlist.startDate = startDate
-            watchlist.endDate = endDate
+		do {
+            let locationDisplayName = selectedLocation?.displayName ?? location
+            let watchlistId: UUID
             
-            // Save rule configuration
-            watchlist.speciesRuleEnabled = speciesRuleToggle.isOn
-            watchlist.speciesRuleShapeId = speciesRuleToggle.isOn ? selectedShapeId : nil
-            
-            watchlist.locationRuleEnabled = locationRuleToggle.isOn
-            if locationRuleToggle.isOn, let ruleLocation = selectedRuleLocation {
-                watchlist.locationRuleLat = ruleLocation.latitude
-                watchlist.locationRuleLon = ruleLocation.longitude
-                watchlist.locationRuleRadiusKm = selectedRuleRadius
-                watchlist.locationRuleDisplayName = selectedRuleLocationDisplayName
+            if let watchlist = watchlistToEdit {
+                watchlistId = watchlist.id
+                try manager.updateWatchlist(
+                    id: watchlist.id,
+                    title: title,
+                    location: location,
+                    locationDisplayName: locationDisplayName,
+                    startDate: startDate,
+                    endDate: endDate
+                )
             } else {
-                watchlist.locationRuleLat = nil
-                watchlist.locationRuleLon = nil
-                watchlist.locationRuleDisplayName = nil
+                watchlistId = try manager.addWatchlist(
+                    title: title,
+                    location: location,
+                    startDate: startDate,
+                    endDate: endDate,
+                    type: watchlistType,
+                    locationDisplayName: locationDisplayName
+                )
             }
             
-            watchlist.dateRuleEnabled = dateRuleToggle.isOn
-            if dateRuleToggle.isOn {
-                watchlist.dateRuleStartDate = dateRuleStartPicker.date
-                watchlist.dateRuleEndDate = dateRuleEndPicker.date
-            } else {
-                watchlist.dateRuleStartDate = nil
-                watchlist.dateRuleEndDate = nil
-            }
-            
-			navigationController?.popViewController(animated: true)
-			return
-		}
-		
-			// 2. Create New Watchlist
-        do {
-            try manager.addWatchlist(
-                title: title,
-                location: location,
-                startDate: startDate,
-                endDate: endDate,
-                type: watchlistType,
-                locationDisplayName: selectedLocation?.displayName ?? location
-            )
+            try saveRules(for: watchlistId)
             navigationController?.popViewController(animated: true)
         } catch {
-            print("❌ [EditWatchlistDetailViewController] Failed to add watchlist: \(error)")
+            print("❌ [EditWatchlistDetailViewController] Failed to save watchlist: \(error)")
             presentAlert(title: "Save Failed", message: error.localizedDescription)
         }
 	}
+    
+    private func saveRules(for watchlistId: UUID) throws {
+        let speciesParams: RuleParameters? = speciesRuleToggle.isOn ? selectedShapeId.map {
+            .speciesFamily(SpeciesFamilyRuleParams(shapeId: $0))
+        } : nil
+        try manager.upsertRule(
+            watchlistId: watchlistId,
+            type: .species_family,
+            parameters: speciesParams
+        )
+        
+        let locationParams: RuleParameters?
+        if locationRuleToggle.isOn, let ruleLocation = selectedRuleLocation {
+            locationParams = .location(
+                LocationRuleParams(
+                    lat: ruleLocation.latitude,
+                    lon: ruleLocation.longitude,
+                    radiusKm: selectedRuleRadius
+                )
+            )
+        } else {
+            locationParams = nil
+        }
+        try manager.upsertRule(
+            watchlistId: watchlistId,
+            type: .location,
+            parameters: locationParams
+        )
+        
+        let dateParams: RuleParameters? = dateRuleToggle.isOn
+            ? .dateRange(DateRangeRuleParams(startDate: dateRuleStartPicker.date, endDate: dateRuleEndPicker.date))
+            : nil
+        try manager.upsertRule(
+            watchlistId: watchlistId,
+            type: .date_range,
+            parameters: dateParams
+        )
+    }
 	
 		// MARK: - Helpers
 	private func presentAlert(title: String, message: String) {

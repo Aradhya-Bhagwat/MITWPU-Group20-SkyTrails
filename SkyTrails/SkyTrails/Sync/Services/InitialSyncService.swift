@@ -28,11 +28,12 @@ struct InitialSyncSummary: Sendable {
     let watchlistsSynced: Int
     let entriesSynced: Int
     let rulesSynced: Int
+    let sharesSynced: Int
     let photosSynced: Int
     let timestamp: Date
     
     var totalSynced: Int {
-        watchlistsSynced + entriesSynced + rulesSynced + photosSynced
+        watchlistsSynced + entriesSynced + rulesSynced + sharesSynced + photosSynced
     }
 }
 
@@ -81,6 +82,13 @@ actor InitialSyncService {
             accessToken: accessToken
         )
         
+        let shareRows: [WatchlistShareRow] = try await fetchFromSupabase(
+            table: "watchlist_shares",
+            query: "select=*&or=(watchlist_id.in.(select id from watchlists where owner_id=eq.\(userId.uuidString)),user_id.eq.\(userId.uuidString))",
+            config: config,
+            accessToken: accessToken
+        )
+        
         let photoRows: [ObservedBirdPhotoRow] = try await fetchFromSupabase(
             table: "observed_bird_photos",
             query: "select=*&watchlist_entry_id=in.(select id from watchlist_entries where watchlist_id in (select id from watchlists where owner_id=eq.\(userId.uuidString)))",
@@ -90,23 +98,25 @@ actor InitialSyncService {
         
         
         // Now merge into SwiftData on MainActor
-        let (watchlistsCount, entriesCount, rulesCount, photosCount) = try await MainActor.run {
+        let (watchlistsCount, entriesCount, rulesCount, sharesCount, photosCount) = try await MainActor.run {
             let context = WatchlistManager.shared.context
             
             let wCount = try mergeWatchlists(watchlistRows, context: context)
             let eCount = try mergeEntries(entryRows, context: context)
             let rCount = try mergeRules(ruleRows, context: context)
+            let sCount = try mergeShares(shareRows, context: context)
             let pCount = try mergePhotos(photoRows, context: context)
             
             try context.save()
             
-            return (wCount, eCount, rCount, pCount)
+            return (wCount, eCount, rCount, sCount, pCount)
         }
         
         let summary = InitialSyncSummary(
             watchlistsSynced: watchlistsCount,
             entriesSynced: entriesCount,
             rulesSynced: rulesCount,
+            sharesSynced: sharesCount,
             photosSynced: photosCount,
             timestamp: Date()
         )
@@ -221,6 +231,40 @@ actor InitialSyncService {
         return syncedCount
     }
     
+    private nonisolated func mergeShares(_ rows: [WatchlistShareRow], context: ModelContext) throws -> Int {
+        let descriptor = FetchDescriptor<WatchlistShare>()
+        let existingShares = try context.fetch(descriptor)
+        var existingById: [UUID: WatchlistShare] = [:]
+        for share in existingShares {
+            existingById[share.id] = share
+        }
+        
+        let watchlistsDescriptor = FetchDescriptor<Watchlist>()
+        let watchlists = try context.fetch(watchlistsDescriptor)
+        var watchlistById: [UUID: Watchlist] = [:]
+        for watchlist in watchlists {
+            watchlistById[watchlist.id] = watchlist
+        }
+        
+        var syncedCount = 0
+        for row in rows {
+            let share: WatchlistShare
+            if let existing = existingById[row.id] {
+                updateShare(existing, from: row, watchlistById: watchlistById)
+                share = existing
+            } else {
+                share = createShare(from: row, watchlistById: watchlistById)
+                context.insert(share)
+            }
+            share.syncStatus = .synced
+            share.lastSyncedAt = Date()
+            syncedCount += 1
+        }
+        
+        print("🔄 [InitialSync] Synced \(syncedCount) shares")
+        return syncedCount
+    }
+    
     private nonisolated func mergePhotos(_ rows: [ObservedBirdPhotoRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<ObservedBirdPhoto>()
         let existingPhotos = try context.fetch(descriptor)
@@ -327,16 +371,6 @@ actor InitialSyncService {
         watchlist.observedCount = row.observedCount
         watchlist.speciesCount = row.speciesCount
         watchlist.coverImagePath = row.coverImagePath
-        watchlist.speciesRuleEnabled = row.speciesRuleEnabled
-        watchlist.speciesRuleShapeId = row.speciesRuleShapeId
-        watchlist.locationRuleEnabled = row.locationRuleEnabled
-        watchlist.locationRuleLat = row.locationRuleLat
-        watchlist.locationRuleLon = row.locationRuleLon
-        watchlist.locationRuleRadiusKm = row.locationRuleRadiusKm ?? 50.0
-        watchlist.locationRuleDisplayName = row.locationRuleDisplayName
-        watchlist.dateRuleEnabled = row.dateRuleEnabled
-        watchlist.dateRuleStartDate = row.dateRuleStartDate
-        watchlist.dateRuleEndDate = row.dateRuleEndDate
         watchlist.serverRowVersion = row.rowVersion
         watchlist.deleted_at = row.deletedAt
         watchlist.created_at = row.createdAt
@@ -353,7 +387,8 @@ actor InitialSyncService {
             status: WatchlistEntryStatus(rawValue: row.status) ?? .to_observe,
             notes: row.notes,
             observationDate: row.observationDate,
-            observedBy: row.observedBy
+            observedBy: row.observedBy,
+            observedByUserId: row.observedByUserId
         )
         updateEntry(entry, from: row, watchlistById: watchlistById, birdById: birdById)
         return entry
@@ -366,7 +401,11 @@ actor InitialSyncService {
         birdById: [UUID: Bird]
     ) {
         entry.watchlist = watchlistById[row.watchlistId]
-        entry.bird = birdById[row.birdId]
+        if let birdId = row.birdId {
+            entry.bird = birdById[birdId]
+        } else {
+            entry.bird = nil
+        }
         entry.nickname = row.nickname
         entry.status = WatchlistEntryStatus(rawValue: row.status) ?? .to_observe
         entry.notes = row.notes
@@ -375,14 +414,13 @@ actor InitialSyncService {
         entry.toObserveStartDate = row.toObserveStartDate
         entry.toObserveEndDate = row.toObserveEndDate
         entry.observedBy = row.observedBy
+        entry.observedByUserId = row.observedByUserId
         entry.lat = row.lat
         entry.lon = row.lon
         entry.locationDisplayName = row.locationDisplayName
         entry.priority = row.priority
         entry.notify_upcoming = row.notifyUpcoming
-        entry.target_date_range = row.targetDateRange
         entry.serverRowVersion = row.rowVersion
-        entry.addedDate = row.createdAt
     }
     
     private nonisolated func createRule(
@@ -391,8 +429,7 @@ actor InitialSyncService {
     ) -> WatchlistRule {
         let rule = WatchlistRule(
             id: row.id,
-            rule_type: WatchlistRuleType(rawValue: row.ruleType) ?? .location,
-            parameters: row.parametersJson
+            rule_type: WatchlistRuleType(rawValue: row.ruleType) ?? .location
         )
         updateRule(rule, from: row, watchlistById: watchlistById)
         return rule
@@ -405,12 +442,46 @@ actor InitialSyncService {
     ) {
         rule.watchlist = watchlistById[row.watchlistId]
         rule.rule_type = WatchlistRuleType(rawValue: row.ruleType) ?? .location
-        rule.parameters_json = row.parametersJson
+        rule.lat = row.lat
+        rule.lon = row.lon
+        rule.radius_km = row.radiusKm
+        rule.start_date = row.startDate
+        rule.end_date = row.endDate
+        rule.shape_id = row.shapeId
+        rule.pattern_key = row.patternKey
         rule.is_active = row.isActive
         rule.priority = row.priority
         rule.serverRowVersion = row.rowVersion
         rule.deleted_at = row.deletedAt
         rule.created_at = row.createdAt
+    }
+    
+    private nonisolated func createShare(
+        from row: WatchlistShareRow,
+        watchlistById: [UUID: Watchlist]
+    ) -> WatchlistShare {
+        let share = WatchlistShare(
+            id: row.id,
+            watchlist: watchlistById[row.watchlistId],
+            user_id: row.userId,
+            permission: WatchlistSharePermission(rawValue: row.permission) ?? .view
+        )
+        updateShare(share, from: row, watchlistById: watchlistById)
+        return share
+    }
+    
+    private nonisolated func updateShare(
+        _ share: WatchlistShare,
+        from row: WatchlistShareRow,
+        watchlistById: [UUID: Watchlist]
+    ) {
+        share.watchlist = watchlistById[row.watchlistId]
+        share.user_id = row.userId
+        share.permission = WatchlistSharePermission(rawValue: row.permission) ?? .view
+        share.shared_at = row.sharedAt
+        share.shared_by_user_id = row.sharedByUserId
+        share.serverRowVersion = row.serverRowVersion
+        share.deleted_at = row.deletedAt
     }
     
     private nonisolated func createPhoto(
@@ -433,7 +504,7 @@ actor InitialSyncService {
         photo.watchlistEntry = entryById[row.watchlistEntryId]
         photo.imagePath = row.imagePath
         photo.storageUrl = row.storageUrl
-        photo.isUploaded = row.isUploaded
+        photo.serverRowVersion = row.rowVersion
         photo.captured_at = row.capturedAt
         photo.uploaded_at = row.uploadedAt ?? Date()
     }
