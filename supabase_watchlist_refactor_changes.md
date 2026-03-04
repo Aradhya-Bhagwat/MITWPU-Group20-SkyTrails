@@ -6,6 +6,16 @@ This runbook applies the watchlist server changes in the same order as your refa
 - cascade + photo storage cleanup queue.
 - `observed_by` normalization to `observed_by_user_id`.
 
+## Progress TODO
+
+- [x] Step 2 SQL prepared (safe text->JSON parse + typed backfill + audit).
+- [x] Step 3 SQL prepared (inline `watchlists` rule columns -> `watchlist_rules` rows).
+- [x] Step 4 SQL prepared (typed integrity checks + transition gates).
+- [x] Step 5 SQL prepared (counter backfill + recompute triggers + optional guard).
+- [ ] Step 6 pending.
+- [ ] Step 7 pending.
+- [ ] Step 8 pending.
+
 ## How to run
 
 1. Run **Phase A** and **Phase B** in Supabase SQL editor.
@@ -876,4 +886,3 @@ alter table public.watchlists
 You still need an Edge Function / worker that drains `public.storage_gc_queue` and deletes `photos/<object_path>` from Supabase Storage idempotently, then marks:
 - `processed_at = now()` on success,
 - or increments `attempt_count` and stores `last_error` on failure.
-
