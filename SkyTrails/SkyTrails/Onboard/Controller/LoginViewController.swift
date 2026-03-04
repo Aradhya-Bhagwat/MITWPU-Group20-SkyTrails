@@ -47,7 +47,7 @@ class LoginViewController: UIViewController {
     }
 
     private func sendOTP(button: UIButton) async {
-        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
+        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
               !email.isEmpty else {
             showAlert("Please enter your email")
             return
@@ -61,6 +61,13 @@ class LoginViewController: UIViewController {
         setLoading(true, button: button)
 
         do {
+            let exists = try await SupabaseAuthService.shared.userExists(email: email)
+            guard exists else {
+                showAlert("No account found. Please sign up first.")
+                setLoading(false, button: button)
+                return
+            }
+
             try await SupabaseAuthService.shared.sendOTP(email: email, createUser: false)
             pendingEmail = email
             isOTPRequired = true
@@ -72,7 +79,7 @@ class LoginViewController: UIViewController {
             otpInputView.clear()
             startResendCooldown()
 
-            showAlert("Email sent. Enter the OTP from your email or tap the sign-in link.")
+            showAlert("OTP sent. Enter the \(otpLength)-digit OTP from your email.")
         } catch {
             showAlert(mappedLoginErrorMessage(error))
         }
@@ -81,7 +88,7 @@ class LoginViewController: UIViewController {
     }
 
     private func verifyOTP(button: UIButton) async {
-        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespaces),
+        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
               !email.isEmpty else {
             showAlert("Email is required")
             return

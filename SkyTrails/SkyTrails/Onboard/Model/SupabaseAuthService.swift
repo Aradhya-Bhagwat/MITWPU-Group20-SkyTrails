@@ -101,10 +101,6 @@ final class SupabaseAuthService {
             payload["data"] = metadata
         }
 
-        if let redirectURL = try? oauthRedirectURL() {
-            payload["email_redirect_to"] = redirectURL.absoluteString
-        }
-
         let _: EmptyResponse = try await request(
             path: "/auth/v1/otp",
             method: "POST",
@@ -119,27 +115,39 @@ final class SupabaseAuthService {
             "type": "email"
         ]
 
-        do {
-            let response: SupabaseSessionResponse = try await request(
-                path: "/auth/v1/verify",
-                method: "POST",
-                body: verifyPayload
-            )
-            return try toAuthResult(from: response, fallbackEmail: email)
-        } catch {
-            // Compatibility fallback for projects still using grant_type=otp.
-            let legacyPayload: [String: Any] = [
-                "email": email,
-                "token": token
-            ]
+        let response: SupabaseSessionResponse = try await request(
+            path: "/auth/v1/verify",
+            method: "POST",
+            body: verifyPayload
+        )
+        return try toAuthResult(from: response, fallbackEmail: email)
+    }
 
-            let response: SupabaseSessionResponse = try await request(
-                path: "/auth/v1/token?grant_type=otp",
-                method: "POST",
-                body: legacyPayload
-            )
-            return try toAuthResult(from: response, fallbackEmail: email)
+    func userExists(email: String) async throws -> Bool {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let rpcPayload: [String: Any] = ["input_email": normalizedEmail]
+
+        // Prefer RPC for production-safe checks; fallback to direct query if RPC is not deployed yet.
+        if let exists: Bool = try? await request(
+            path: "/rest/v1/rpc/check_user_email_exists",
+            method: "POST",
+            body: rpcPayload
+        ) {
+            return exists
         }
+
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "+&=?")
+        let encodedEmail = normalizedEmail.addingPercentEncoding(withAllowedCharacters: allowed)
+            ?? normalizedEmail
+
+        let rows: [SupabaseUserExistsRow] = try await request(
+            path: "/rest/v1/users?select=id&email=eq.\(encodedEmail)&limit=1",
+            method: "GET",
+            body: nil
+        )
+
+        return !rows.isEmpty
     }
 
     func oauthSignInURL(provider: SupabaseOAuthProvider) throws -> URL {
@@ -559,3 +567,7 @@ private struct SupabaseErrorResponse: Decodable {
 }
 
 struct EmptyResponse: Decodable {}
+
+private struct SupabaseUserExistsRow: Decodable {
+    let id: UUID
+}

@@ -2446,16 +2446,44 @@
     ],
     "latestNews": [
         {
-            "title": "Baya Weaver Nesting Season",
-            "summary": "The monsoon brings spectacular nesting displays across Central India.",
-            "link": "https://example.com/baya-weaver",
-            "imageName": "spot_ranganathittu"
+            "title": "Audubon News",
+            "summary": "Conservation updates, migration stories, and field reports from the Audubon network.",
+            "link": "https://www.audubon.org/news",
+            "imageName": "indian_roller",
+            "sourceName": "Audubon",
+            "publishedAt": "2026-03-04T00:00:00Z"
         },
         {
-            "title": "New Hotspot Discovered",
-            "summary": "Check out the recently identified birding trail in the Western Ghats.",
-            "link": "https://example.com/new-hotspot",
-            "imageName": "pied_cuckoo"
+            "title": "BirdLife International News",
+            "summary": "Global policy, habitat restoration, and species protection updates from BirdLife partners.",
+            "link": "https://www.birdlife.org/news/",
+            "imageName": "great_hornbill",
+            "sourceName": "BirdLife International",
+            "publishedAt": "2026-03-03T00:00:00Z"
+        },
+        {
+            "title": "eBird News",
+            "summary": "Citizen science updates, region alerts, and birding trends powered by the eBird community.",
+            "link": "https://ebird.org/news",
+            "imageName": "asian_koel",
+            "sourceName": "eBird",
+            "publishedAt": "2026-03-02T00:00:00Z"
+        },
+        {
+            "title": "All About Birds News",
+            "summary": "Research-backed stories on bird behavior, migration, and practical birding tips.",
+            "link": "https://www.allaboutbirds.org/news/",
+            "imageName": "common_kingfisher",
+            "sourceName": "All About Birds",
+            "publishedAt": "2026-03-01T00:00:00Z"
+        },
+        {
+            "title": "RSPB News",
+            "summary": "Nature reserve updates and conservation actions from the Royal Society for the Protection of Birds.",
+            "link": "https://www.rspb.org.uk/whats-happening/news/",
+            "imageName": "indian_peafowl",
+            "sourceName": "RSPB",
+            "publishedAt": "2026-02-28T00:00:00Z"
         }
     ]
 }

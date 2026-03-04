@@ -5,15 +5,6 @@
 //  Created by Aradhya Bhagwat on 11/01/26.
 //
 
-//
-//  StartViewController.swift
-//  SkyTrails
-//
-
-//
-//  StartViewController.swift
-//  SkyTrails
-//
 
 import UIKit
 
