@@ -151,7 +151,7 @@ class UserSession {
             let user = User(
                 id: authResult.userID,
                 name: resolvedName,
-                gender: cached?.gender ?? "Not Specified",
+                gender: authResult.gender ?? cached?.gender ?? "Not Specified",
                 email: authResult.email,
                 profilePhoto: resolvedPhoto
             )

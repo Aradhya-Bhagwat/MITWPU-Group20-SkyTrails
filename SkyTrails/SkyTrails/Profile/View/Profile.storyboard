@@ -16,24 +16,30 @@
                         <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Tanmay Dani" translatesAutoresizingMaskIntoConstraints="NO" id="Er7-Oc-lkE">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="defaultProfile" translatesAutoresizingMaskIntoConstraints="NO" id="Er7-Oc-lkE">
                                 <rect key="frame" x="466" y="102" width="100" height="100"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="100" id="SGn-mB-GMW"/>
                                     <constraint firstAttribute="width" constant="100" id="taO-9U-dgV"/>
                                 </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tanmay Dani" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mmi-tb-dP7">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="User Name" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mmi-tb-dP7">
                                 <rect key="frame" x="16" y="218" width="1000" height="24"/>
                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="20"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Mog-z5-ml9">
-                                <rect key="frame" x="16" y="250" width="1000" height="34.5"/>
+                                <rect key="frame" x="16" y="250" width="1000" height="24"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="tanmayvdani@gmail.com"/>
+                                <buttonConfiguration key="configuration" style="plain" title="email@example.com"/>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Gender: Not Specified" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PRF-GDR-LBL">
+                                <rect key="frame" x="16" y="282" width="1000" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yuU-dh-UBS">
                                 <rect key="frame" x="16" y="1281" width="1000" height="50"/>
                                 <constraints>
@@ -60,6 +66,9 @@
                             <constraint firstItem="Mog-z5-ml9" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="h8e-E9-kKp"/>
                             <constraint firstItem="mmi-tb-dP7" firstAttribute="top" secondItem="Er7-Oc-lkE" secondAttribute="bottom" constant="16" id="i4I-O5-RwW"/>
                             <constraint firstItem="Mog-z5-ml9" firstAttribute="top" secondItem="mmi-tb-dP7" secondAttribute="bottom" constant="8" id="kHN-FK-fNs"/>
+                            <constraint firstItem="PRF-GDR-LBL" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="PRF-GDR-LEAD"/>
+                            <constraint firstItem="PRF-GDR-LBL" firstAttribute="top" secondItem="Mog-z5-ml9" secondAttribute="bottom" constant="8" id="PRF-GDR-TOP"/>
+                            <constraint firstItem="JiI-xb-Tv7" firstAttribute="trailing" secondItem="PRF-GDR-LBL" secondAttribute="trailing" constant="16" id="PRF-GDR-TRAIL"/>
                             <constraint firstItem="Er7-Oc-lkE" firstAttribute="top" secondItem="JiI-xb-Tv7" secondAttribute="top" constant="16" id="tL0-kk-dXZ"/>
                             <constraint firstItem="mmi-tb-dP7" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="xIw-KZ-mGP"/>
                         </constraints>
@@ -67,6 +76,7 @@
                     <navigationItem key="navigationItem" id="WBR-9l-1ha"/>
                     <connections>
                         <outlet property="emailButton" destination="Mog-z5-ml9" id="6cl-O3-zUn"/>
+                        <outlet property="genderLabel" destination="PRF-GDR-LBL" id="PRF-GDR-OUT"/>
                         <outlet property="nameLabel" destination="mmi-tb-dP7" id="s8e-Fo-NoB"/>
                         <outlet property="profileImageView" destination="Er7-Oc-lkE" id="cBb-pe-Jsw"/>
                     </connections>
@@ -95,7 +105,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Tanmay Dani" width="418" height="468"/>
+        <image name="defaultProfile" width="500" height="500"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

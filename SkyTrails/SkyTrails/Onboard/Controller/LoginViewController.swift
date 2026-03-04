@@ -9,6 +9,10 @@ class LoginViewController: UIViewController {
 
     private var isOTPRequired = false
     private var pendingEmail: String?
+    private let otpLength = SupabaseAuthService.shared.otpLength
+    private let resendCooldown = SupabaseAuthService.shared.otpResendCooldownSeconds
+    private var resendSecondsRemaining = 0
+    private var resendTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,9 +21,15 @@ class LoginViewController: UIViewController {
     }
 
     private func setupOTPField() {
+        otpInputView.digitCount = otpLength
         otpInputView.isHidden = true
         resendButton.isHidden = true
+        resendButton.isEnabled = false
         actionButton.setTitle("Send OTP", for: .normal)
+        emailTextField.keyboardType = .emailAddress
+        emailTextField.textContentType = .emailAddress
+        emailTextField.autocapitalizationType = .none
+        emailTextField.autocorrectionType = .no
     }
 
     @IBAction func actionButtonTapped(_ sender: UIButton) {
@@ -51,7 +61,7 @@ class LoginViewController: UIViewController {
         setLoading(true, button: button)
 
         do {
-            try await SupabaseAuthService.shared.sendOTP(email: email)
+            try await SupabaseAuthService.shared.sendOTP(email: email, createUser: false)
             pendingEmail = email
             isOTPRequired = true
 
@@ -59,10 +69,12 @@ class LoginViewController: UIViewController {
             resendButton.isHidden = false
             actionButton.setTitle("Verify OTP", for: .normal)
             emailTextField.isEnabled = false
+            otpInputView.clear()
+            startResendCooldown()
 
-            showAlert("OTP sent to your email (Prototype: Use 123456)")
+            showAlert("Email sent. Enter the OTP from your email or tap the sign-in link.")
         } catch {
-            showAlert(error.localizedDescription)
+            showAlert(mappedLoginErrorMessage(error))
         }
 
         setLoading(false, button: button)
@@ -76,8 +88,8 @@ class LoginViewController: UIViewController {
         }
 
         let token = otpInputView.text.trimmingCharacters(in: .whitespaces)
-        guard token.count == 6 else {
-            showAlert("Please enter the 6-digit OTP")
+        guard token.count == otpLength else {
+            showAlert("Please enter the \(otpLength)-digit OTP")
             return
         }
 
@@ -85,12 +97,20 @@ class LoginViewController: UIViewController {
 
         do {
             let authResult = try await SupabaseAuthService.shared.verifyOTP(email: email, token: token)
+            let serverProfile = try? await fetchServerProfile(
+                userID: authResult.userID,
+                accessToken: authResult.accessToken
+            )
 
             let displayName: String
             if let existingUser = UserSession.shared.currentUser, existingUser.email == email {
                 displayName = existingUser.name
+            } else if let authDisplayName = authResult.displayName, !authDisplayName.trimmingCharacters(in: .whitespaces).isEmpty {
+                displayName = authDisplayName
+            } else if let serverDisplayName = serverProfile?.name, !serverDisplayName.trimmingCharacters(in: .whitespaces).isEmpty {
+                displayName = serverDisplayName
             } else {
-                displayName = authResult.displayName ?? fallbackName(from: authResult.email)
+                displayName = fallbackName(from: authResult.email)
             }
 
             let profilePhoto = authResult.profilePhoto
@@ -100,7 +120,10 @@ class LoginViewController: UIViewController {
             let user = User(
                 id: authResult.userID,
                 name: displayName,
-                gender: "Not Specified",
+                gender: authResult.gender
+                    ?? serverProfile?.gender
+                    ?? UserSession.shared.currentUser?.gender
+                    ?? "Not Specified",
                 email: authResult.email,
                 profilePhoto: profilePhoto
             )
@@ -125,8 +148,53 @@ class LoginViewController: UIViewController {
     }
 
     @IBAction func resendTapped(_ sender: UIButton) {
+        guard resendSecondsRemaining == 0 else { return }
         Task { [weak self] in
             await self?.sendOTP(button: sender)
+        }
+    }
+
+    private func startResendCooldown() {
+        resendTimer?.invalidate()
+        resendSecondsRemaining = resendCooldown
+        resendButton.isEnabled = false
+        updateResendButtonTitle()
+
+        resendTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+
+            self.resendSecondsRemaining -= 1
+            if self.resendSecondsRemaining <= 0 {
+                self.resendSecondsRemaining = 0
+                self.resendButton.isEnabled = true
+                self.updateResendButtonTitle()
+                timer.invalidate()
+                self.resendTimer = nil
+                return
+            }
+
+            self.updateResendButtonTitle()
+        }
+    }
+
+    private func updateResendButtonTitle() {
+        if resendSecondsRemaining > 0 {
+            let title = "Didn't get OTP? Check spam • Resend in \(resendSecondsRemaining)s"
+            resendButton.setTitle(title, for: .normal)
+            if var config = resendButton.configuration {
+                config.title = title
+                resendButton.configuration = config
+            }
+        } else {
+            let title = "Didn't get OTP? Check spam • Resend OTP"
+            resendButton.setTitle(title, for: .normal)
+            if var config = resendButton.configuration {
+                config.title = title
+                resendButton.configuration = config
+            }
         }
     }
 
@@ -138,6 +206,55 @@ class LoginViewController: UIViewController {
     private func fallbackName(from email: String) -> String {
         let username = email.split(separator: "@").first.map(String.init) ?? "User"
         return username.isEmpty ? "User" : username
+    }
+
+    private func fetchServerProfile(userID: UUID, accessToken: String?) async throws -> (name: String?, gender: String?)? {
+        guard let accessToken, !accessToken.isEmpty else { return nil }
+
+        let config = try SupabaseConfig.load()
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        components.path = "/rest/v1/users"
+        components.percentEncodedQuery = "id=eq.\(userID.uuidString)&select=name,gender"
+
+        guard let url = components.url else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            return nil
+        }
+
+        struct NameRow: Decodable {
+            let name: String?
+            let gender: String?
+        }
+        let rows = try JSONDecoder().decode([NameRow].self, from: data)
+        return (rows.first?.name, rows.first?.gender)
+    }
+
+    private func mappedLoginErrorMessage(_ error: Error) -> String {
+        let message = error.localizedDescription.lowercased()
+        if message.contains("not found")
+            || (message.contains("user") && message.contains("invalid"))
+            || message.contains("email not found")
+            || message.contains("no user")
+            || message.contains("user not found")
+            || message.contains("not registered")
+            || message.contains("invalid login credentials") {
+            return "No account found. Please sign up first."
+        }
+        if message.contains("signup")
+            && (message.contains("disabled") || message.contains("required")) {
+            return "No account found. Please sign up first."
+        }
+        return error.localizedDescription
     }
 
     private func goToMain() {
@@ -171,5 +288,9 @@ class LoginViewController: UIViewController {
 
     @objc private func dismissKeyboard() {
         view.endEditing(true)
+    }
+
+    deinit {
+        resendTimer?.invalidate()
     }
 }
