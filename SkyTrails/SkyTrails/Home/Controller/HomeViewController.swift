@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreLocation
+import ImageIO
 
 class HomeViewController: UIViewController, UICollectionViewDelegate {
 
@@ -28,6 +29,15 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
     private var authStateObserver: NSObjectProtocol?
+    private let avatarMaxPixelSize: CGFloat = 512
+    private let emptyNewsItem = NewsItem(
+        title: "No latest news to load",
+        summary: "Please try again later.",
+        link: "",
+        imageName: "defaultProfile",
+        sourceName: nil,
+        publishedAt: nil
+    )
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -96,9 +106,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
         guard let user = UserSession.shared.getUser() else {
 
-            // Default if no user
-            homeTitleProfileImageView.image =
-                UIImage(systemName: "person.crop.circle.fill")
+            homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
 
             return
         }
@@ -116,15 +124,10 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
         } else if !photo.isEmpty {
 
-            // Local image
-            homeTitleProfileImageView.image =
-                UIImage(named: photo)
+            homeTitleProfileImageView.image = UIImage(named: photo) ?? UIImage(named: "defaultProfile")
 
         } else {
-
-            // Fallback
-            homeTitleProfileImageView.image =
-                UIImage(systemName: "person.crop.circle.fill")
+            homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
         }
     }
     
@@ -135,11 +138,15 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         DispatchQueue.global(qos: .userInitiated).async {
 
             if let data = try? Data(contentsOf: url),
-               let image = UIImage(data: data) {
+               let image = self.downsampledImage(from: data, maxPixelSize: self.avatarMaxPixelSize) {
 
                 DispatchQueue.main.async {
 
                     self.homeTitleProfileImageView.image = image
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
                 }
             }
         }
@@ -154,8 +161,9 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         }
 
         guard let fileURL,
-              let data = try? Data(contentsOf: fileURL),
-              let image = UIImage(data: data) else {
+              let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe]),
+              let image = downsampledImage(from: data, maxPixelSize: avatarMaxPixelSize) else {
+            homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
             return
         }
 
@@ -200,6 +208,23 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         if let authStateObserver {
             NotificationCenter.default.removeObserver(authStateObserver)
         }
+    }
+
+    private func downsampledImage(from data: Data, maxPixelSize: CGFloat) -> UIImage? {
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, options) else { return nil }
+
+        let downsampleOptions = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: false,
+            kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelSize)
+        ] as CFDictionary
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage)
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -593,7 +618,7 @@ extension HomeViewController {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(120))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(180))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
         group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         
@@ -669,7 +694,7 @@ extension HomeViewController: UICollectionViewDataSource {
         case 1: return upcomingBirds.count
         case 2: return min(spots.count, 5)
         case 3: return observations.count
-        case 4: return news.count
+        case 4: return max(min(news.count, 5), 1)
         default: return 0
         }
     }
@@ -728,7 +753,7 @@ extension HomeViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! NewsCollectionViewCell
             
-            let item = news[indexPath.row]
+            let item = newsItem(at: indexPath.row)
             cell.configure(with: item)
             return cell
         }
@@ -760,7 +785,7 @@ extension HomeViewController: UICollectionViewDataSource {
                  for: indexPath
              ) as! PageControlReusableViewCollectionReusableView
              
-             let count = news.count
+             let count = news.isEmpty ? 0 : min(news.count, 5)
              footer.configure(numberOfPages: count, currentPage: 0)
              return footer
          }
@@ -822,7 +847,7 @@ extension HomeViewController {
                 forElementKind: footerKind,
                 at: IndexPath(item: 0, section: 4)
             ) as? PageControlReusableViewCollectionReusableView {
-                let totalCount = news.count
+                let totalCount = news.isEmpty ? 0 : min(news.count, 5)
                 footer.configure(numberOfPages: totalCount, currentPage: indexPath.row)
             }
         }
@@ -917,13 +942,22 @@ extension HomeViewController {
             }
             
         case 4:
-            let item = news[indexPath.row]
-            if let url = URL(string: item.link) {
+            guard !news.isEmpty else { return }
+            let item = newsItem(at: indexPath.row)
+            guard !item.link.isEmpty, let url = URL(string: item.link) else { return }
+            if UIApplication.shared.canOpenURL(url) {
                 UIApplication.shared.open(url)
             }
             
         default:
             break
         }
+    }
+
+    private func newsItem(at index: Int) -> NewsItem {
+        guard !news.isEmpty, index >= 0, index < news.count else {
+            return emptyNewsItem
+        }
+        return news[index]
     }
 }

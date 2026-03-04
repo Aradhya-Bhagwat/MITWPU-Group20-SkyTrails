@@ -34,12 +34,6 @@
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="email@example.com"/>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Gender: Not Specified" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PRF-GDR-LBL">
-                                <rect key="frame" x="16" y="282" width="1000" height="20.5"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yuU-dh-UBS">
                                 <rect key="frame" x="16" y="1281" width="1000" height="50"/>
                                 <constraints>
@@ -66,9 +60,6 @@
                             <constraint firstItem="Mog-z5-ml9" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="h8e-E9-kKp"/>
                             <constraint firstItem="mmi-tb-dP7" firstAttribute="top" secondItem="Er7-Oc-lkE" secondAttribute="bottom" constant="16" id="i4I-O5-RwW"/>
                             <constraint firstItem="Mog-z5-ml9" firstAttribute="top" secondItem="mmi-tb-dP7" secondAttribute="bottom" constant="8" id="kHN-FK-fNs"/>
-                            <constraint firstItem="PRF-GDR-LBL" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="PRF-GDR-LEAD"/>
-                            <constraint firstItem="PRF-GDR-LBL" firstAttribute="top" secondItem="Mog-z5-ml9" secondAttribute="bottom" constant="8" id="PRF-GDR-TOP"/>
-                            <constraint firstItem="JiI-xb-Tv7" firstAttribute="trailing" secondItem="PRF-GDR-LBL" secondAttribute="trailing" constant="16" id="PRF-GDR-TRAIL"/>
                             <constraint firstItem="Er7-Oc-lkE" firstAttribute="top" secondItem="JiI-xb-Tv7" secondAttribute="top" constant="16" id="tL0-kk-dXZ"/>
                             <constraint firstItem="mmi-tb-dP7" firstAttribute="leading" secondItem="JiI-xb-Tv7" secondAttribute="leading" constant="16" id="xIw-KZ-mGP"/>
                         </constraints>
@@ -76,7 +67,6 @@
                     <navigationItem key="navigationItem" id="WBR-9l-1ha"/>
                     <connections>
                         <outlet property="emailButton" destination="Mog-z5-ml9" id="6cl-O3-zUn"/>
-                        <outlet property="genderLabel" destination="PRF-GDR-LBL" id="PRF-GDR-OUT"/>
                         <outlet property="nameLabel" destination="mmi-tb-dP7" id="s8e-Fo-NoB"/>
                         <outlet property="profileImageView" destination="Er7-Oc-lkE" id="cBb-pe-Jsw"/>
                     </connections>

@@ -66,7 +66,7 @@ class SignUpViewController: UIViewController {
     private func sendOTP(button: UIButton) async {
         guard let firstName = firstNameTextField.text?.trimmingCharacters(in: .whitespaces),
               let lastName = lastNameTextField.text?.trimmingCharacters(in: .whitespaces),
-              let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
+              let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
               !firstName.isEmpty,
               !lastName.isEmpty,
               !email.isEmpty else {
@@ -83,6 +83,13 @@ class SignUpViewController: UIViewController {
         setLoading(true, button: button)
 
         do {
+            let exists = try await SupabaseAuthService.shared.userExists(email: email)
+            guard !exists else {
+                show("Account already exists. Please log in instead.")
+                setLoading(false, button: button)
+                return
+            }
+
             try await SupabaseAuthService.shared.sendOTP(
                 email: email,
                 createUser: true,
@@ -104,7 +111,7 @@ class SignUpViewController: UIViewController {
             otpInputView.clear()
             startResendCooldown()
 
-            show("Email sent. Enter the OTP from your email or tap the sign-in link.")
+            show("OTP sent. Enter the \(otpLength)-digit OTP from your email.")
         } catch {
             show(mappedSignupErrorMessage(error))
         }
@@ -113,7 +120,7 @@ class SignUpViewController: UIViewController {
     }
 
     private func verifyOTP(button: UIButton) async {
-        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespaces),
+        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
               !email.isEmpty else {
             show("Email is required")
             return

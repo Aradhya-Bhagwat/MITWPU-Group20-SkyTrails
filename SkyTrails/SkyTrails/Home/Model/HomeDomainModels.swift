@@ -21,6 +21,8 @@ struct NewsItem: Codable, Hashable {
     let summary: String
     let link: String
     let imageName: String
+    let sourceName: String?
+    let publishedAt: String?
 }
 
 struct UpcomingBird: Codable, Hashable {

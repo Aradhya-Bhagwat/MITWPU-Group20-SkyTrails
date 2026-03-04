@@ -8,6 +8,7 @@
 import UIKit
 import Photos
 import AVFoundation
+import ImageIO
 
 class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
@@ -16,7 +17,8 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
     @IBOutlet weak var profileImageView: UIImageView!
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var emailButton: UIButton!
-    @IBOutlet weak var genderLabel: UILabel!
+    private let avatarMaxPixelSize: CGFloat = 512
+    private let uploadMaxDimension: CGFloat = 1280
 
     // MARK: - Lifecycle
 
@@ -39,7 +41,7 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.isUserInteractionEnabled = true
-        navigationItem.title = "Profile"
+        navigationItem.title = ""
         addProfileImageTap()
     }
 
@@ -54,7 +56,6 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         }
 
         nameLabel.text = user.name
-        genderLabel.text = "Gender: \(user.gender)"
         emailButton.setTitle(user.email, for: .normal)
         emailButton.configuration?.title = user.email
 
@@ -66,9 +67,7 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
             loadLocalImage(from: user.profilePhoto)
 
         } else {
-
-            profileImageView.image =
-                UIImage(named: user.profilePhoto)
+            profileImageView.image = UIImage(named: user.profilePhoto) ?? UIImage(named: "defaultProfile")
         }
     }
 
@@ -123,10 +122,14 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         DispatchQueue.global().async {
 
             if let data = try? Data(contentsOf: url),
-               let image = UIImage(data: data) {
+               let image = self.downsampledImage(from: data, maxPixelSize: self.avatarMaxPixelSize) {
 
                 DispatchQueue.main.async {
                     self.profileImageView.image = image
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.profileImageView.image = UIImage(named: "defaultProfile")
                 }
             }
         }
@@ -140,7 +143,10 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
             fileURL = URL(fileURLWithPath: pathOrURLString)
         }
 
-        guard let fileURL, let data = try? Data(contentsOf: fileURL), let image = UIImage(data: data) else {
+        guard let fileURL,
+              let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe]),
+              let image = downsampledImage(from: data, maxPixelSize: avatarMaxPixelSize) else {
+            profileImageView.image = UIImage(named: "defaultProfile")
             return
         }
         profileImageView.image = image
@@ -239,13 +245,15 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         let pickedImage = (info[.editedImage] ?? info[.originalImage]) as? UIImage
         picker.dismiss(animated: true) { [weak self] in
             guard let self, let image = pickedImage else { return }
-            self.profileImageView.image = image
+            let displayImage = self.resizedImage(from: image, maxDimension: self.avatarMaxPixelSize) ?? image
+            self.profileImageView.image = displayImage
             self.persistSelectedProfileImage(image)
         }
     }
 
     private func persistSelectedProfileImage(_ image: UIImage) {
-        guard let jpeg = image.jpegData(compressionQuality: 0.85) else { return }
+        let optimized = resizedImage(from: image, maxDimension: uploadMaxDimension) ?? image
+        guard let jpeg = optimized.jpegData(compressionQuality: 0.8) else { return }
         guard let currentUser = UserSession.shared.getUser() else { return }
 
         let fileName = "profile_\(currentUser.id.uuidString).jpg"
@@ -323,5 +331,35 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         let alert = UIAlertController(title: "Profile", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
+    }
+
+    private func resizedImage(from image: UIImage, maxDimension: CGFloat) -> UIImage? {
+        let size = image.size
+        let longestSide = max(size.width, size.height)
+        guard longestSide > maxDimension, longestSide > 0 else { return image }
+
+        let scale = maxDimension / longestSide
+        let targetSize = CGSize(width: floor(size.width * scale), height: floor(size.height * scale))
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
+
+    private func downsampledImage(from data: Data, maxPixelSize: CGFloat) -> UIImage? {
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, options) else { return nil }
+
+        let downsampleOptions = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: false,
+            kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelSize)
+        ] as CFDictionary
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage)
     }
 }
