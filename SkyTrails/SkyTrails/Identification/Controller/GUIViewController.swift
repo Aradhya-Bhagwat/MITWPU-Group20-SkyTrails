@@ -107,7 +107,10 @@ class GUIViewController: UIViewController {
 
         baseShapeLayer = UIImageView(frame: canvasContainerView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
-        baseShapeLayer.image = UIImage(named: "id_shape_\(shapeID)_base_core")
+        let baseCoreKey = "id_shape_\(shapeID)_base_core"
+        let baseCoreFallback = UIImage(named: baseCoreKey)
+        baseShapeLayer.image = baseCoreFallback
+        loadBaseCoreImage(key: baseCoreKey, fallback: baseCoreFallback, shapeId: shapeID)
         canvasContainerView.addSubview(baseShapeLayer)
 
         for catName in layerOrder {
@@ -168,6 +171,15 @@ class GUIViewController: UIViewController {
             guard !Task.isCancelled else { return }
             guard let self, let layer = self.partLayers[category] else { return }
             layer.image = loaded ?? fallback
+        }
+    }
+
+    private func loadBaseCoreImage(key: String, fallback: UIImage?, shapeId: String) {
+        Task { [weak self] in
+            let loaded = await IdentificationImageService.shared.image(for: key, shapeId: shapeId)
+            guard !Task.isCancelled else { return }
+            guard let self, let baseLayer = self.baseShapeLayer else { return }
+            baseLayer.image = loaded ?? fallback
         }
     }
 
