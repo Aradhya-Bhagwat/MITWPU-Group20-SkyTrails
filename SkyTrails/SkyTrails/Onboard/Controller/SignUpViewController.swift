@@ -2,7 +2,8 @@ import UIKit
 
 class SignUpViewController: UIViewController {
 
-    @IBOutlet weak var nameTextField: UITextField!
+    @IBOutlet weak var firstNameTextField: UITextField!
+    @IBOutlet weak var lastNameTextField: UITextField!
     @IBOutlet weak var emailTextField: UITextField!
     @IBOutlet weak var otpInputView: OTPInputView!
     @IBOutlet weak var actionButton: UIButton!
@@ -10,6 +11,10 @@ class SignUpViewController: UIViewController {
 
     private var isOTPRequired = false
     private var pendingEmail: String?
+    private let otpLength = SupabaseAuthService.shared.otpLength
+    private let resendCooldown = SupabaseAuthService.shared.otpResendCooldownSeconds
+    private var resendSecondsRemaining = 0
+    private var resendTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,15 +23,36 @@ class SignUpViewController: UIViewController {
     }
 
     private func setupFields() {
+        otpInputView.digitCount = otpLength
         otpInputView.isHidden = true
         resendButton.isHidden = true
+        resendButton.isEnabled = false
         actionButton.setTitle("Send OTP", for: .normal)
+        actionButton.isEnabled = true
+        actionButton.alpha = 1.0
+        firstNameTextField.textContentType = .givenName
+        firstNameTextField.autocapitalizationType = .words
+        firstNameTextField.autocorrectionType = .no
+        lastNameTextField.textContentType = .familyName
+        lastNameTextField.autocapitalizationType = .words
+        lastNameTextField.autocorrectionType = .no
+        emailTextField.keyboardType = .emailAddress
+        emailTextField.textContentType = .emailAddress
+        emailTextField.autocapitalizationType = .none
+        emailTextField.autocorrectionType = .no
     }
 
     @IBAction func actionButtonTapped(_ sender: UIButton) {
         Task { [weak self] in
             await self?.handleAction(button: sender)
         }
+    }
+
+    @IBAction func termsAndConditionsTapped(_ sender: UIButton) {
+        let termsVC = TermsAndConditionsViewController()
+        let nav = UINavigationController(rootViewController: termsVC)
+        nav.modalPresentationStyle = .pageSheet
+        present(nav, animated: true)
     }
 
     private func handleAction(button: UIButton) async {
@@ -38,11 +64,13 @@ class SignUpViewController: UIViewController {
     }
 
     private func sendOTP(button: UIButton) async {
-        guard let name = nameTextField.text?.trimmingCharacters(in: .whitespaces),
-              let email = emailTextField.text?.trimmingCharacters(in: .whitespaces),
-              !name.isEmpty,
+        guard let firstName = firstNameTextField.text?.trimmingCharacters(in: .whitespaces),
+              let lastName = lastNameTextField.text?.trimmingCharacters(in: .whitespaces),
+              let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              !firstName.isEmpty,
+              !lastName.isEmpty,
               !email.isEmpty else {
-            show("Please enter name and email")
+            show("Please enter first name, last name and email")
             return
         }
 
@@ -51,10 +79,26 @@ class SignUpViewController: UIViewController {
             return
         }
 
+        let fullName = "\(firstName) \(lastName)"
         setLoading(true, button: button)
 
         do {
-            try await SupabaseAuthService.shared.sendOTP(email: email)
+            let exists = try await SupabaseAuthService.shared.userExists(email: email)
+            guard !exists else {
+                show("Account already exists. Please log in instead.")
+                setLoading(false, button: button)
+                return
+            }
+
+            try await SupabaseAuthService.shared.sendOTP(
+                email: email,
+                createUser: true,
+                metadata: [
+                    "name": fullName,
+                    "first_name": firstName,
+                    "last_name": lastName
+                ]
+            )
             pendingEmail = email
             isOTPRequired = true
 
@@ -62,30 +106,37 @@ class SignUpViewController: UIViewController {
             resendButton.isHidden = false
             actionButton.setTitle("Verify OTP", for: .normal)
             emailTextField.isEnabled = false
-            nameTextField.isEnabled = false
+            firstNameTextField.isEnabled = false
+            lastNameTextField.isEnabled = false
+            otpInputView.clear()
+            startResendCooldown()
 
-            show("OTP sent to your email (Prototype: Use 123456)")
+            show("OTP sent. Enter the \(otpLength)-digit OTP from your email.")
         } catch {
-            show(error.localizedDescription)
+            show(mappedSignupErrorMessage(error))
         }
 
         setLoading(false, button: button)
     }
 
     private func verifyOTP(button: UIButton) async {
-        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespaces),
+        guard let email = pendingEmail ?? emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
               !email.isEmpty else {
             show("Email is required")
             return
         }
 
         let token = otpInputView.text.trimmingCharacters(in: .whitespaces)
-        guard token.count == 6 else {
-            show("Please enter the 6-digit OTP")
+        guard token.count == otpLength else {
+            show("Please enter the \(otpLength)-digit OTP")
             return
         }
 
-        let name = nameTextField.text?.trimmingCharacters(in: .whitespaces) ?? "User"
+        let firstName = firstNameTextField.text?.trimmingCharacters(in: .whitespaces) ?? ""
+        let lastName = lastNameTextField.text?.trimmingCharacters(in: .whitespaces) ?? ""
+        let fullName = [firstName, lastName]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
 
         setLoading(true, button: button)
 
@@ -94,8 +145,8 @@ class SignUpViewController: UIViewController {
 
             let user = User(
                 id: authResult.userID,
-                name: authResult.displayName ?? name,
-                gender: "Not Specified",
+                name: authResult.displayName ?? (fullName.isEmpty ? "User" : fullName),
+                gender: authResult.gender ?? "Not Specified",
                 email: authResult.email,
                 profilePhoto: authResult.profilePhoto ?? "defaultProfile"
             )
@@ -122,9 +173,67 @@ class SignUpViewController: UIViewController {
     }
 
     @IBAction func resendTapped(_ sender: UIButton) {
+        guard resendSecondsRemaining == 0 else { return }
         Task { [weak self] in
             await self?.sendOTP(button: sender)
         }
+    }
+
+    private func startResendCooldown() {
+        resendTimer?.invalidate()
+        resendSecondsRemaining = resendCooldown
+        resendButton.isEnabled = false
+        updateResendButtonTitle()
+
+        resendTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+
+            self.resendSecondsRemaining -= 1
+            if self.resendSecondsRemaining <= 0 {
+                self.resendSecondsRemaining = 0
+                self.resendButton.isEnabled = true
+                self.updateResendButtonTitle()
+                timer.invalidate()
+                self.resendTimer = nil
+                return
+            }
+
+            self.updateResendButtonTitle()
+        }
+    }
+
+    private func updateResendButtonTitle() {
+        if resendSecondsRemaining > 0 {
+            let title = "Didn't get OTP? Check spam • Resend in \(resendSecondsRemaining)s"
+            resendButton.setTitle(title, for: .normal)
+            if var config = resendButton.configuration {
+                config.title = title
+                resendButton.configuration = config
+            }
+        } else {
+            let title = "Didn't get OTP? Check spam • Resend OTP"
+            resendButton.setTitle(title, for: .normal)
+            if var config = resendButton.configuration {
+                config.title = title
+                resendButton.configuration = config
+            }
+        }
+    }
+
+    private func mappedSignupErrorMessage(_ error: Error) -> String {
+        let message = error.localizedDescription.lowercased()
+        if message.contains("already") && (message.contains("registered") || message.contains("exists") || message.contains("signup")) {
+            return "Account already exists. Please log in instead."
+        }
+        if (message.contains("email") && message.contains("already"))
+            || message.contains("already registered")
+            || message.contains("user already exists") {
+            return "Account already exists. Please log in instead."
+        }
+        return error.localizedDescription
     }
 
     private func setLoading(_ isLoading: Bool, button: UIButton) {
@@ -165,5 +274,9 @@ class SignUpViewController: UIViewController {
 
     @objc private func dismissKeyboard() {
         view.endEditing(true)
+    }
+
+    deinit {
+        resendTimer?.invalidate()
     }
 }

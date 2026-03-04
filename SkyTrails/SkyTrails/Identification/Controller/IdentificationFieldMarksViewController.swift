@@ -92,9 +92,12 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         
         baseShapeLayer = UIImageView(frame: CanvasView.bounds)
         baseShapeLayer.contentMode = .scaleAspectFit
-        baseShapeLayer.image = UIImage(named: "id_shape_\(shapeID)_base_core")
+        let baseCoreKey = "id_shape_\(shapeID)_base_core"
+        let baseCoreFallback = UIImage(named: baseCoreKey)
+        baseShapeLayer.image = baseCoreFallback
         baseShapeLayer.layer.zPosition = -1
         CanvasView.addSubview(baseShapeLayer)
+        loadBaseCoreImage(key: baseCoreKey, fallback: baseCoreFallback, shapeId: shapeID)
 
         for (index, catName) in layerOrder.enumerated() {
             let imgView = UIImageView(frame: CanvasView.bounds)
@@ -151,6 +154,15 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
             guard !Task.isCancelled else { return }
             guard let layer = self.partLayers[category] else { return }
             layer.image = selectedImage ?? fallback
+        }
+    }
+
+    private func loadBaseCoreImage(key: String, fallback: UIImage?, shapeId: String) {
+        Task { [weak self] in
+            let loaded = await IdentificationImageService.shared.image(for: key, shapeId: shapeId)
+            guard !Task.isCancelled else { return }
+            guard let self, let baseLayer = self.baseShapeLayer else { return }
+            baseLayer.image = loaded ?? fallback
         }
     }
     
