@@ -194,31 +194,6 @@ final class WatchlistPersistenceService {
         }
     }
     
-    func updateWatchlistStats(id: UUID, observedCount: Int, speciesCount: Int) throws {
-        guard let watchlist = try fetchWatchlist(id: id) else {
-            throw WatchlistError.watchlistNotFound(.custom(id))
-        }
-        
-        watchlist.observedCount = observedCount
-        watchlist.speciesCount = speciesCount
-        watchlist.updated_at = Date()
-        try saveContext()
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
-        let watchlistId = watchlist.id
-        let payloadData = buildWatchlistPayloadData(watchlist, for: .update)
-        let updatedAt = watchlist.updated_at
-        
-        queueSync {
-            await BackgroundSyncAgent.shared.queueWatchlist(
-                id: watchlistId,
-                payloadData: payloadData,
-                updatedAt: updatedAt,
-                operation: .update
-            )
-        }
-    }
-    
     // MARK: - Entry CRUD
     
     func createEntry(
@@ -787,12 +762,12 @@ final class WatchlistPersistenceService {
     private func recalculateWatchlistStats(watchlistID: UUID) throws {
         guard let watchlist = try fetchWatchlist(id: watchlistID) else { return }
         
-        let entries = watchlist.entries ?? []
-        let observedCount = entries.filter { $0.status == .observed }.count
-        let totalCount = entries.count
+        let activeEntries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
+        let observedCount = activeEntries.filter { $0.status == .observed }.count
+        let speciesCount = Set(activeEntries.map { $0.bird?.id ?? $0.id }).count
         
         watchlist.observedCount = observedCount
-        watchlist.speciesCount = totalCount
+        watchlist.speciesCount = speciesCount
         watchlist.updated_at = Date()
         
         try saveContext()
