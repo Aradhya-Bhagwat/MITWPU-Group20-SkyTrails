@@ -1705,7 +1705,6 @@
             "birdId": "550e8400-e29b-41d4-a716-446655440001",
             "startWeek": 1,
             "endWeek": 12,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "EFDAE25B-9BB3-4854-A176-D0E6D66B13E2",
@@ -1798,7 +1797,6 @@
             "birdId": "550e8400-e29b-41d4-a716-446655440002",
             "startWeek": 2,
             "endWeek": 14,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "9FFAB2D4-B876-481F-AB92-73CCC137B690",
@@ -1898,7 +1896,6 @@
             "birdId": "550e8400-e29b-41d4-a716-446655440003",
             "startWeek": 3,
             "endWeek": 16,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "C04E0C6E-D601-44B3-B7A3-081A3E283A59",
@@ -2005,7 +2002,6 @@
             "birdId": "550e8400-e29b-41d4-a716-446655440004",
             "startWeek": 4,
             "endWeek": 15,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "78F6C5CB-AA75-4236-8377-112AED559E49",
@@ -2098,7 +2094,6 @@
             "birdId": "550e8400-e29b-41d4-a716-446655440005",
             "startWeek": 5,
             "endWeek": 17,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "D92A48E3-E11B-4EB3-BB77-454C103693ED",
@@ -2198,7 +2193,6 @@
             "birdId": "550e8400-e29b-41d4-a716-446655440006",
             "startWeek": 1,
             "endWeek": 14,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "894E36DA-EF4D-4DA4-8EBC-EC3E963359DC",
@@ -2301,69 +2295,10 @@
             ]
         },
         {
-            "id": "B6C7D8E9-F0A1-4B2C-8D3E-5F6A7B8C9D0E",
-            "birdId": "550e8400-e29b-41d4-a716-446655440003",
-            "startWeek": 4,
-            "endWeek": 12,
-            "hemisphere": "Northern",
-            "trajectoryPaths": [
-                {
-                    "id": "C1D2E3F4-A5B6-4C7D-8E9F-0A1B2C3D4E5F",
-                    "week": 4,
-                    "lat": 28.57,
-                    "lon": 77.3,
-                    "probability": 90
-                },
-                {
-                    "id": "D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A",
-                    "week": 5,
-                    "lat": 27.17,
-                    "lon": 77.5,
-                    "probability": 85
-                },
-                {
-                    "id": "E3F4A5B6-C7D8-4E9F-0A1B-2C3D4E5F6A7B",
-                    "week": 6,
-                    "lat": 24,
-                    "lon": 76.5,
-                    "probability": 70
-                },
-                {
-                    "id": "F4A5B6C7-D8E9-4F0A-1B2C-3D4E5F6A7B8C",
-                    "week": 7,
-                    "lat": 21,
-                    "lon": 75.5,
-                    "probability": 60
-                },
-                {
-                    "id": "A5B6C7D8-E9F0-4A1B-2C3D-4E5F6A7B8C9D",
-                    "week": 8,
-                    "lat": 18.28,
-                    "lon": 74.77,
-                    "probability": 95
-                },
-                {
-                    "id": "B6C7D8E9-F0A1-4B2C-8D3E-5F6A7B8C9D0E",
-                    "week": 9,
-                    "lat": 18.43,
-                    "lon": 73.75,
-                    "probability": 90
-                },
-                {
-                    "id": "C7D8E9F0-A1B2-4C3D-4E5F-6A7B8C9D0E1F",
-                    "week": 10,
-                    "lat": 15,
-                    "lon": 74,
-                    "probability": 50
-                }
-            ]
-        },
-        {
             "id": "ef920bee-14da-4dfb-a805-3d063e242dd3",
             "birdId": "550e8400-e29b-41d4-a716-446655440007",
             "startWeek": 40,
             "endWeek": 52,
-            "hemisphere": "Northern",
             "trajectoryPaths": [
                 {
                     "id": "c192e88e-43a0-4f86-a3c7-e7873e5b3939",
