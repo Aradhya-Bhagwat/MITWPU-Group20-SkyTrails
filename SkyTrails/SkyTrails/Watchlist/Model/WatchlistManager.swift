@@ -80,6 +80,7 @@ final class WatchlistManager: WatchlistRepository {
                 WatchlistShare.self,
                 ObservedBirdPhoto.self,
                 Bird.self,
+                BirdFieldMarkVariantLink.self,
                 // Identification models
                 BirdShape.self,
                 BirdFieldMark.self,
@@ -549,7 +550,8 @@ final class WatchlistManager: WatchlistRepository {
             
             // Check Species Rule
             if watchlist.speciesRuleEnabled, let shapeId = watchlist.speciesRuleShapeId {
-                if bird.shape_id == shapeId || bird.shape_id == nil {
+                let birdShapeId = bird.shape?.id ?? bird.shape_id
+                if birdShapeId == shapeId || birdShapeId == nil {
                     print("✅ Species rule MATCH for watchlist: \(watchlist.title ?? "Unnamed")")
                     isMatch = true
                 }
