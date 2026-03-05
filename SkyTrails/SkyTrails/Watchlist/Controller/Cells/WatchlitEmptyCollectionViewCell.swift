@@ -28,16 +28,20 @@ final class WatchlitEmptyCollectionViewCell: UICollectionViewCell {
 		containerView.backgroundColor = .secondarySystemGroupedBackground
 		containerView.layer.masksToBounds = true
 
-		emptyImageView.contentMode = .scaleAspectFill
+		emptyImageView.contentMode = .scaleAspectFit
 		emptyImageView.clipsToBounds = true
 
 		titleLabel.font = .systemFont(ofSize: 26, weight: .bold)
 		titleLabel.textColor = .label
 		titleLabel.numberOfLines = 2
+		titleLabel.adjustsFontSizeToFitWidth = false
+		titleLabel.minimumScaleFactor = 1.0
 
 		subtitleLabel.font = .systemFont(ofSize: 16, weight: .regular)
 		subtitleLabel.textColor = .secondaryLabel
 		subtitleLabel.numberOfLines = 2
+		subtitleLabel.adjustsFontSizeToFitWidth = false
+		subtitleLabel.minimumScaleFactor = 1.0
 	}
 
 	func configure(imageName: String, title: String, subtitle: String) {
