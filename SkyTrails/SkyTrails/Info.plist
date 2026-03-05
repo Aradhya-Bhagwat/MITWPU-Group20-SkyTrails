@@ -46,7 +46,7 @@
 	<key>SUPABASE_IDENTIFICATION_MANIFEST_PATH</key>
 	<string>identification_manifest.json</string>
 	<key>SUPABASE_OTP_LENGTH</key>
-	<integer>8</integer>
+	<integer>6</integer>
 	<key>SUPABASE_OTP_RESEND_SECONDS</key>
 	<integer>60</integer>
 	<key>SUPABASE_REDIRECT_HOST</key>
