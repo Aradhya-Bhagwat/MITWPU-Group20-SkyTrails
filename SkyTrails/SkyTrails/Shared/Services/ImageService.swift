@@ -97,21 +97,16 @@ final class ImageService: ImageProviding {
         }
         let normalizedShapeId = mappedShapeId
 
-        print("[ImageService] 🔍 Requesting image for key: \(key) (normalized: \(normalizedKey)), manifestKey: \(manifestLookupKey), shapeId: \(mappedShapeId ?? "none")")
-
         let memKey = normalizedKey as NSString
         if let cached = memoryCache.object(forKey: memKey) {
-            print("[ImageService] ✅ MEMORY CACHE HIT for: \(normalizedKey)")
             return cached
         }
 
         if localOnlyKeys.contains(normalizedKey) {
-            print("[ImageService] 📦 LOCAL-ONLY KEY - loading from assets: \(normalizedKey)")
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
         if isDisallowedDefaultProfileKey(normalizedKey) {
-            print("[ImageService] 🚫 DISALLOWED DEFAULT PROFILE KEY: \(normalizedKey)")
             return nil
         }
 
@@ -119,18 +114,15 @@ final class ImageService: ImageProviding {
 
         let diskKey = diskCacheKey(for: normalizedKey)
         if let diskImage = loadFromDisk(cacheKey: diskKey) {
-            print("[ImageService] 💾 DISK CACHE HIT for: \(normalizedKey)")
             memoryCache.setObject(diskImage, forKey: memKey)
             return diskImage
         }
 
         if failedRemoteKeys.contains(normalizedKey) {
-            print("[ImageService] ⚠️ FAILED REMOTE KEY - falling back to assets: \(normalizedKey)")
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
         guard let itemLookup = lookupManifestItem(for: manifestKeyCandidates) else {
-            print("[ImageService] ❌ MANIFEST MISS for: \(normalizedKey) (lookup: \(manifestLookupKey)) - will try bird bucket fallback")
             if shouldTryBirdBucketFallback(for: normalizedKey),
                let birdImage = await loadFromBirdBucket(
                    keyCandidates: keyCandidates,
@@ -139,40 +131,31 @@ final class ImageService: ImageProviding {
                ) {
                 return birdImage
             }
-            print("[ImageService] 📦 FALLBACK TO BUNDLED ASSETS for: \(normalizedKey)")
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
-
-        print("[ImageService] 📋 Manifest found! key: \(itemLookup.key), path: \(itemLookup.item.path), shapeId: \(normalizedShapeId ?? "none")")
         
         guard let remoteURL = remoteURL(for: itemLookup.item.path, shapeId: normalizedShapeId) else {
-            print("[ImageService] ❌ REMOTE URL CONSTRUCTION FAILED for: \(normalizedKey)")
             failedRemoteKeys.insert(normalizedKey)
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
-        print("[ImageService] 🌐 FETCHING FROM SUPABASE for: \(normalizedKey) | ShapeId: \(normalizedShapeId ?? "none") | Manifest path: \(itemLookup.item.path) | URL: \(remoteURL.absoluteString)")
         do {
             let (data, response) = try await URLSession.shared.data(from: remoteURL)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 if let status = (response as? HTTPURLResponse)?.statusCode, status >= 400 {
-                    print("[ImageService] ❌ SUPABASE HTTP ERROR \(status) for: \(normalizedKey)")
                     failedRemoteKeys.insert(normalizedKey)
                 }
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
             guard let image = UIImage(data: data) else {
-                print("[ImageService] ❌ IMAGE DATA PARSE FAILED for: \(normalizedKey)")
                 failedRemoteKeys.insert(normalizedKey)
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
-            print("[ImageService] ✅ SUCCESS - Downloaded from Supabase and cached: \(normalizedKey)")
             saveToDisk(data: data, cacheKey: diskKey)
             memoryCache.setObject(image, forKey: memKey)
             failedRemoteKeys.remove(normalizedKey)
             return image
         } catch {
-            print("[ImageService] ❌ SUPABASE NETWORK ERROR for: \(normalizedKey) - \(error.localizedDescription)")
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
     }
@@ -237,7 +220,6 @@ final class ImageService: ImageProviding {
             let shapePrefix = "canvas/\(shapeId)/"
             if !cleanedPath.hasPrefix(shapePrefix) {
                 cleanedPath = shapePrefix + cleanedPath
-                print("[ImageService] 🔧 Prepending shape directory: \(shapePrefix) to path: \(objectPath)")
             }
         }
 
@@ -305,15 +287,12 @@ final class ImageService: ImageProviding {
     }
 
     private func fallbackAssetImage(for candidates: [String], originalKey: String) -> UIImage? {
-        print("[ImageService] 📦 Attempting to load from BUNDLED ASSETS for: \(originalKey)")
         for candidate in candidates {
             if let image = UIImage(named: candidate) {
-                print("[ImageService] ✅ Loaded from bundled asset: \(candidate) for key: \(originalKey)")
                 memoryCache.setObject(image, forKey: originalKey as NSString)
                 return image
             }
         }
-        print("[ImageService] ❌ NO BUNDLED ASSET FOUND for: \(originalKey)")
         return nil
     }
 
@@ -342,7 +321,6 @@ final class ImageService: ImageProviding {
         normalizedKey: String,
         diskKey: String
     ) async -> UIImage? {
-        print("[ImageService] 🔄 TRYING BIRD BUCKET FALLBACK for: \(normalizedKey)")
         let birdBucket = birdBucketName()
         let fileExtensions = ["png", "jpg", "jpeg", "webp"]
 
@@ -365,14 +343,12 @@ final class ImageService: ImageProviding {
             guard let url = remoteURL(for: objectPath, bucketOverride: birdBucket) else {
                 continue
             }
-            print("[ImageService] 🌐 Trying bird bucket URL: \(url.absoluteString)")
             do {
                 let (data, response) = try await URLSession.shared.data(from: url)
                 guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
                       let image = UIImage(data: data) else {
                     continue
                 }
-                print("[ImageService] ✅ SUCCESS - Downloaded from BIRD BUCKET for: \(normalizedKey)")
                 saveToDisk(data: data, cacheKey: diskKey)
                 memoryCache.setObject(image, forKey: normalizedKey as NSString)
                 return image
@@ -381,7 +357,6 @@ final class ImageService: ImageProviding {
             }
         }
 
-        print("[ImageService] ❌ BIRD BUCKET FALLBACK FAILED for: \(normalizedKey)")
         return nil
     }
 }
