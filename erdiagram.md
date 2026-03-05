@@ -410,7 +410,6 @@ Table public.observed_bird_photos {
   watchlist_entry_id uuid [not null]
   image_path text [not null]
   storage_url text
-  is_uploaded boolean
   row_version integer
   last_synced_at timestamp
   captured_at timestamp
@@ -461,7 +460,6 @@ Table public.watchlist_entries {
   location_display_name text
   priority integer
   notify_upcoming boolean
-  target_date_range text
   row_version integer
   last_synced_at timestamp
   deleted_at timestamp
@@ -483,7 +481,6 @@ Table public.watchlist_rules {
   id uuid [primary key]
   watchlist_id uuid [not null]
   rule_type text [not null]
-  parameters_json text [not null]
   is_active boolean
   priority integer
   row_version integer
@@ -525,16 +522,6 @@ Table public.watchlists {
   observed_count integer
   species_count integer
   cover_image_path text
-  species_rule_enabled boolean
-  species_rule_shape_id text
-  location_rule_enabled boolean
-  location_rule_lat double_precision
-  location_rule_lon double_precision
-  location_rule_radius_km double_precision
-  location_rule_display_name text
-  date_rule_enabled boolean
-  date_rule_start_date timestamp
-  date_rule_end_date timestamp
   row_version integer
   last_synced_at timestamp
   deleted_at timestamp
