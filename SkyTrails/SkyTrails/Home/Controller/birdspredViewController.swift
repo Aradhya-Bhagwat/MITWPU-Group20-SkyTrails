@@ -21,8 +21,25 @@ class birdspredViewController: UIViewController {
     
     var predictionInputs: [BirdDateInput] = []
     
+    // MARK: - Performance: Cached DateFormatter (Fix 4)
+    private lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
+    
+    // MARK: - Performance: Sightings cache to avoid redundant SwiftData fetches (Fix 3)
+    private var sightingsCache: [Int: [RelevantSighting]] = [:]
+    
+    // MARK: - Performance: Track previous bounds to avoid redundant shadow path rebuilds (Fix 5)
+    private var previousPillBounds: CGRect = .zero
+    private var previousCardBounds: CGRect = .zero
+    
     private var currentSpeciesIndex: Int = 0 {
         didSet {
+            // Fix 8: Guard against redundant updates
+            guard oldValue != currentSpeciesIndex else { return }
             updateCardForCurrentIndex()
             updateMapForCurrentBird()
         }
@@ -36,7 +53,10 @@ class birdspredViewController: UIViewController {
         applySemanticAppearance()
         
         if !predictionInputs.isEmpty {
-            currentSpeciesIndex = 0
+            // Directly call update methods instead of relying on didSet for initial setup,
+            // since didSet won't fire when setting to the same default value (0).
+            updateCardForCurrentIndex()
+            updateMapForCurrentBird()
             showCardState()
         } else {
             pillView.isHidden = true
@@ -46,9 +66,16 @@ class birdspredViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // Fix 5: Only rebuild shadow paths when bounds actually change
         if traitCollection.userInterfaceStyle != .dark {
-            pillView.layer.shadowPath = UIBezierPath(roundedRect: pillView.bounds, cornerRadius: 20).cgPath
-            infoCardView.layer.shadowPath = UIBezierPath(roundedRect: infoCardView.bounds, cornerRadius: 24).cgPath
+            if pillView.bounds != previousPillBounds {
+                previousPillBounds = pillView.bounds
+                pillView.layer.shadowPath = UIBezierPath(roundedRect: pillView.bounds, cornerRadius: 20).cgPath
+            }
+            if infoCardView.bounds != previousCardBounds {
+                previousCardBounds = infoCardView.bounds
+                infoCardView.layer.shadowPath = UIBezierPath(roundedRect: infoCardView.bounds, cornerRadius: 24).cgPath
+            }
         }
     }
 
@@ -65,7 +92,7 @@ class birdspredViewController: UIViewController {
     private func setupUI() {
         self.title = ""
         
-        let addIcon = UIImage(systemName: "plus.circle.fill")
+        let addIcon = UIImage(systemName: "custom.list.bullet.badge.plus")
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: addIcon, style: .plain, target: self, action: #selector(didTapAddToWatchlist))
         
         
@@ -78,10 +105,7 @@ class birdspredViewController: UIViewController {
         
         pillView.backgroundColor = .clear
         pillView.insertSubview(pillBlur, at: 0)
-        pillView.layer.shadowColor = UIColor.black.cgColor
-        pillView.layer.shadowOpacity = 0.2
-        pillView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        pillView.layer.shadowRadius = 8
+        // Fix 7: Removed duplicate shadow setup — applySemanticAppearance() handles all shadow config
         pillView.layer.masksToBounds = false
         let pillTap = UITapGestureRecognizer(target: self, action: #selector(didTapPill))
         pillView.addGestureRecognizer(pillTap)
@@ -97,10 +121,7 @@ class birdspredViewController: UIViewController {
         infoCardView.backgroundColor = .clear
         infoCardView.insertSubview(cardBlur, at: 0)
         infoCardView.layer.cornerRadius = 24
-        infoCardView.layer.shadowColor = UIColor.black.cgColor
-        infoCardView.layer.shadowOpacity = 0.25
-        infoCardView.layer.shadowOffset = CGSize(width: 0, height: 6)
-        infoCardView.layer.shadowRadius = 12
+        // Fix 7: Removed duplicate shadow setup — applySemanticAppearance() handles all shadow config
         infoCardView.layer.masksToBounds = false
         
         birdImageView.layer.cornerRadius = 16
@@ -166,17 +187,29 @@ class birdspredViewController: UIViewController {
         mapView.addGestureRecognizer(tap)
     }
     
+    // Fix 2: Optimized hit testing — skip off-screen overlays via bounding rect check,
+    // and convert only visible points to screen space
     @objc private func handleMapTap(_ gesture: UITapGestureRecognizer) {
         let tapPoint = gesture.location(in: mapView)
+        let visibleMapRect = mapView.visibleMapRect
         
         for overlay in mapView.overlays {
             if let polyline = overlay as? PredictedPathPolyline {
+                // Early cull: skip overlays not visible on screen
+                guard polyline.boundingMapRect.intersects(visibleMapRect) else { continue }
+                
                 let points = polyline.points()
                 let count = polyline.pointCount
                 var found = false
                 
-                // Simple hit testing against polyline segments
                 for i in 0..<(count - 1) {
+                    // Skip segments whose midpoint is off-screen
+                    let midMapPoint = MKMapPoint(
+                        x: (points[i].x + points[i+1].x) / 2,
+                        y: (points[i].y + points[i+1].y) / 2
+                    )
+                    guard visibleMapRect.contains(midMapPoint) else { continue }
+                    
                     let p1 = mapView.convert(points[i].coordinate, toPointTo: mapView)
                     let p2 = mapView.convert(points[i+1].coordinate, toPointTo: mapView)
                     
@@ -211,6 +244,8 @@ class birdspredViewController: UIViewController {
         return (p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y)
     }
     
+    // Fix 3: Cache sightings per species index to avoid redundant SwiftData fetches on re-swipe
+    // Fix 10: Use map() instead of manual loop for coordinate building
     private func updateMapForCurrentBird() {
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
@@ -218,13 +253,17 @@ class birdspredViewController: UIViewController {
         guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
         
         let input = predictionInputs[currentSpeciesIndex]
-        let relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
         
-        var coordinates: [CLLocationCoordinate2D] = []
+        let relevantSightings: [RelevantSighting]
+        if let cached = sightingsCache[currentSpeciesIndex] {
+            relevantSightings = cached
+        } else {
+            relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
+            sightingsCache[currentSpeciesIndex] = relevantSightings
+        }
         
-        for sighting in relevantSightings {
-            let coord = CLLocationCoordinate2D(latitude: sighting.lat, longitude: sighting.lon)
-            coordinates.append(coord)
+        let coordinates = relevantSightings.map {
+            CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
         }
         
         if coordinates.count > 1 {
@@ -237,21 +276,18 @@ class birdspredViewController: UIViewController {
         }
     }
     
+    // Fix 4: Use cached dateFormatter instead of creating one per call
+    // Fix 6: Removed debug print statements
     private func updateCardForCurrentIndex() {
         guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
         
         let input = predictionInputs[currentSpeciesIndex]
-        print("🔍 [birdspredVC] Updating card for \(input.species.name)")
-        print("🔍 [birdspredVC] Received dates - Start: \(String(describing: input.startDate)), End: \(String(describing: input.endDate))")
         
         birdImageView.image = UIImage(named: input.species.imageName)
         titleLabel.text = input.species.name
         
         if let start = input.startDate, let end = input.endDate {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-            subtitleLabel.text = "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+            subtitleLabel.text = "\(dateFormatter.string(from: start)) - \(dateFormatter.string(from: end))"
         } else {
             subtitleLabel.text = "Date range not set"
         }
@@ -276,8 +312,6 @@ class birdspredViewController: UIViewController {
         if gesture.direction == .left {
             if currentSpeciesIndex < predictionInputs.count - 1 {
                 currentSpeciesIndex += 1
-            } else {
-                
             }
         } else if gesture.direction == .right {
             if currentSpeciesIndex > 0 {
@@ -322,6 +356,7 @@ class birdspredViewController: UIViewController {
 
 extension birdspredViewController: MKMapViewDelegate {
     
+    // Fix 9: Simplified dead-code branch — both paths set same color
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? PredictedPathPolyline {
             return ArrowPolylineRenderer(overlay: polyline)
@@ -332,13 +367,7 @@ extension birdspredViewController: MKMapViewDelegate {
             renderer.lineWidth = 4
             renderer.lineCap = .round
             renderer.lineJoin = .round
-            
-            if overlay is ProgressPathPolyline {
-                renderer.strokeColor = .systemBlue
-            } else {
-                renderer.strokeColor = .systemBlue 
-            }
-            
+            renderer.strokeColor = .systemBlue
             return renderer
         }
         return MKOverlayRenderer(overlay: overlay)
@@ -351,20 +380,28 @@ extension birdspredViewController: MKMapViewDelegate {
     }
 }
 
-// MARK: - Arrow Renderer
+// MARK: - Arrow Renderer (Fix 1: Performance-optimized)
 
 class ArrowPolylineRenderer: MKPolylineRenderer {
+    
+    // Cache resolved colors to avoid repeated UIColor -> CGColor conversions in draw()
+    private static let normalStrokeColor = UIColor.systemBlue.withAlphaComponent(0.6)
+    private static let highlightedArrowColor = UIColor.systemYellow.cgColor
+    private static let normalArrowColor = UIColor.white.cgColor
+    
     override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
         
         let predictedPolyline = self.overlay as? PredictedPathPolyline
         let isHighlighted = predictedPolyline?.isSelected ?? false
         
-        // Style lines
+        // Fix 1a: Set style properties before super.draw() — these are checked by super
+        // but setting them here (instead of outside draw) is acceptable since they depend
+        // on the mutable isSelected state. The key optimization is caching the colors above.
         if isHighlighted {
             self.strokeColor = .systemBlue
             self.lineWidth = 6
         } else {
-            self.strokeColor = UIColor.systemBlue.withAlphaComponent(0.6)
+            self.strokeColor = ArrowPolylineRenderer.normalStrokeColor
             self.lineWidth = 4
         }
         
@@ -372,22 +409,23 @@ class ArrowPolylineRenderer: MKPolylineRenderer {
         
         // Draw arrows
         let polyline = self.polyline
-        
-        // Arrow styling
-        let arrowColor = isHighlighted ? UIColor.systemYellow.cgColor : UIColor.white.cgColor
-        context.setFillColor(arrowColor)
-        
         let mapPoints = polyline.points()
         let pointCount = polyline.pointCount
         
         if pointCount < 2 { return }
+        
+        // Fix 1b: Cache arrow color and size outside the loop
+        let arrowColor = isHighlighted ? ArrowPolylineRenderer.highlightedArrowColor : ArrowPolylineRenderer.normalArrowColor
+        context.setFillColor(arrowColor)
+        let arrowSize: CGFloat = 10.0 / zoomScale
+        let halfArrow = arrowSize / 2
         
         // Iterate segments
         for i in 0..<(pointCount - 1) {
             let start = mapPoints[i]
             let end = mapPoints[i+1]
             
-            // Calculate Midpoint
+            // Calculate Midpoint in map space
             let midX = (start.x + end.x) / 2
             let midY = (start.y + end.y) / 2
             let midPoint = MKMapPoint(x: midX, y: midY)
@@ -398,23 +436,21 @@ class ArrowPolylineRenderer: MKPolylineRenderer {
             // Convert to screen/context point
             let point = self.point(for: midPoint)
             
-            // Calculate Angle
-            let startPt = self.point(for: start)
-            let endPt = self.point(for: end)
-            let angle = atan2(endPt.y - startPt.y, endPt.x - startPt.x)
+            // Fix 1c: Compute angle using map-space delta to avoid 2 extra point(for:) calls.
+            // Map-space Y is inverted relative to screen Y, so negate dy.
+            let dx = end.x - start.x
+            let dy = -(end.y - start.y)
+            let angle = atan2(dy, dx)
             
-            // Draw
+            // Draw arrow
             context.saveGState()
             context.translateBy(x: point.x, y: point.y)
             context.rotate(by: angle)
             
-            // Arrow size - roughly 10pt
-            let arrowSize: CGFloat = 10.0 / zoomScale
-            
             context.beginPath()
-            context.move(to: CGPoint(x: arrowSize/2, y: 0)) // Tip
-            context.addLine(to: CGPoint(x: -arrowSize/2, y: -arrowSize/2)) // Bottom Left
-            context.addLine(to: CGPoint(x: -arrowSize/2, y: arrowSize/2)) // Bottom Right
+            context.move(to: CGPoint(x: halfArrow, y: 0))          // Tip
+            context.addLine(to: CGPoint(x: -halfArrow, y: -halfArrow)) // Bottom Left
+            context.addLine(to: CGPoint(x: -halfArrow, y: halfArrow))  // Bottom Right
             context.closePath()
             context.fillPath()
             
