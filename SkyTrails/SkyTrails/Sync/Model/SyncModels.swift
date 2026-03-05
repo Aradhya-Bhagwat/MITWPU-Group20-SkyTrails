@@ -96,6 +96,26 @@ struct WatchlistRow: Codable, Sendable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        ownerId = try container.decodeIfPresent(UUID.self, forKey: .ownerId)
+        type = try container.decode(String.self, forKey: .type)
+        title = try container.decodeIfPresent(String.self, forKey: .title)
+        location = try container.decodeIfPresent(String.self, forKey: .location)
+        locationDisplayName = try container.decodeIfPresent(String.self, forKey: .locationDisplayName)
+        startDate = try container.decodeIfPresent(Date.self, forKey: .startDate)
+        endDate = try container.decodeIfPresent(Date.self, forKey: .endDate)
+        observedCount = try container.decode(Int.self, forKey: .observedCount)
+        speciesCount = try container.decode(Int.self, forKey: .speciesCount)
+        coverImagePath = try container.decodeIfPresent(String.self, forKey: .coverImagePath)
+        rowVersion = try container.decode(Int.self, forKey: .rowVersion)
+        lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
+        deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+    }
 }
 
 struct WatchlistEntryRow: Codable, Sendable {
@@ -146,6 +166,32 @@ struct WatchlistEntryRow: Codable, Sendable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        watchlistId = try container.decode(UUID.self, forKey: .watchlistId)
+        birdId = try container.decodeIfPresent(UUID.self, forKey: .birdId)
+        nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
+        status = try container.decode(String.self, forKey: .status)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        addedDate = try container.decode(Date.self, forKey: .addedDate)
+        observationDate = try container.decodeIfPresent(Date.self, forKey: .observationDate)
+        toObserveStartDate = try container.decodeIfPresent(Date.self, forKey: .toObserveStartDate)
+        toObserveEndDate = try container.decodeIfPresent(Date.self, forKey: .toObserveEndDate)
+        observedBy = try container.decodeIfPresent(String.self, forKey: .observedBy)
+        observedByUserId = try container.decodeIfPresent(UUID.self, forKey: .observedByUserId)
+        lat = try container.decodeIfPresent(Double.self, forKey: .lat)
+        lon = try container.decodeIfPresent(Double.self, forKey: .lon)
+        locationDisplayName = try container.decodeIfPresent(String.self, forKey: .locationDisplayName)
+        priority = try container.decode(Int.self, forKey: .priority)
+        notifyUpcoming = try container.decode(Bool.self, forKey: .notifyUpcoming)
+        rowVersion = try container.decode(Int.self, forKey: .rowVersion)
+        lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
+        deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+    }
 }
 
 struct WatchlistRuleRow: Codable, Sendable {
@@ -186,6 +232,27 @@ struct WatchlistRuleRow: Codable, Sendable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        watchlistId = try container.decode(UUID.self, forKey: .watchlistId)
+        ruleType = try container.decode(String.self, forKey: .ruleType)
+        lat = try container.decodeIfPresent(Double.self, forKey: .lat)
+        lon = try container.decodeIfPresent(Double.self, forKey: .lon)
+        radiusKm = try container.decodeIfPresent(Double.self, forKey: .radiusKm)
+        startDate = try container.decodeIfPresent(Date.self, forKey: .startDate)
+        endDate = try container.decodeIfPresent(Date.self, forKey: .endDate)
+        shapeId = try container.decodeIfPresent(String.self, forKey: .shapeId)
+        patternKey = try container.decodeIfPresent(String.self, forKey: .patternKey)
+        isActive = try container.decode(Bool.self, forKey: .isActive)
+        priority = try container.decode(Int.self, forKey: .priority)
+        rowVersion = try container.decode(Int.self, forKey: .rowVersion)
+        lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
+        deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+    }
 }
 
 struct WatchlistShareRow: Codable, Sendable {
@@ -212,6 +279,20 @@ struct WatchlistShareRow: Codable, Sendable {
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        watchlistId = try container.decode(UUID.self, forKey: .watchlistId)
+        userId = try container.decode(UUID.self, forKey: .userId)
+        permission = try container.decode(String.self, forKey: .permission)
+        sharedAt = try container.decode(Date.self, forKey: .sharedAt)
+        sharedByUserId = try container.decodeIfPresent(UUID.self, forKey: .sharedByUserId)
+        syncStatus = try container.decode(String.self, forKey: .syncStatus)
+        serverRowVersion = try container.decode(Int.self, forKey: .serverRowVersion)
+        lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
+        deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
+    }
 }
 
 struct ObservedBirdPhotoRow: Codable, Sendable {
@@ -237,6 +318,20 @@ struct ObservedBirdPhotoRow: Codable, Sendable {
         case uploadedAt = "uploaded_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        watchlistEntryId = try container.decode(UUID.self, forKey: .watchlistEntryId)
+        imagePath = try container.decode(String.self, forKey: .imagePath)
+        storageUrl = try container.decodeIfPresent(String.self, forKey: .storageUrl)
+        rowVersion = try container.decode(Int.self, forKey: .rowVersion)
+        lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
+        capturedAt = try container.decodeIfPresent(Date.self, forKey: .capturedAt)
+        uploadedAt = try container.decodeIfPresent(Date.self, forKey: .uploadedAt)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
     }
 }
 

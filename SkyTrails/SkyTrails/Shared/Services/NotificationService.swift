@@ -10,7 +10,7 @@ import UserNotifications
 import SwiftData
 import UIKit
 
-enum ReminderTrigger: String, CaseIterable, Codable {
+enum ReminderTrigger: String, CaseIterable, Codable, Sendable {
     case twoWeeksBeforeStart = "2w_start"
     case oneWeekBeforeStart = "1w_start"
     case oneDayBeforeStart = "1d_start"

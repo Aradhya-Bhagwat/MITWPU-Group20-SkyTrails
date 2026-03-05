@@ -32,7 +32,7 @@ struct InitialSyncSummary: Sendable {
     let photosSynced: Int
     let timestamp: Date
     
-    var totalSynced: Int {
+    nonisolated var totalSynced: Int {
         watchlistsSynced + entriesSynced + rulesSynced + sharesSynced + photosSynced
     }
 }
