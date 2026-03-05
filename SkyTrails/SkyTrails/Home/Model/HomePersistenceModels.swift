@@ -45,13 +45,22 @@ final class HotspotSpeciesPresence {
     
     // Seasonality data
     var validWeeks: [Int]? // Week numbers when species is present
+    var weeklyProbabilities: [Int]? // Optional; index aligned with validWeeks
     var probability: Int? // Likelihood of sighting (0-100)
     
-    init(id: UUID = UUID(), hotspot: Hotspot? = nil, bird: Bird? = nil, validWeeks: [Int]? = nil, probability: Int? = nil) {
+    init(
+        id: UUID = UUID(),
+        hotspot: Hotspot? = nil,
+        bird: Bird? = nil,
+        validWeeks: [Int]? = nil,
+        weeklyProbabilities: [Int]? = nil,
+        probability: Int? = nil
+    ) {
         self.id = id
         self.hotspot = hotspot
         self.bird = bird
         self.validWeeks = validWeeks
+        self.weeklyProbabilities = weeklyProbabilities
         self.probability = probability
     }
 }

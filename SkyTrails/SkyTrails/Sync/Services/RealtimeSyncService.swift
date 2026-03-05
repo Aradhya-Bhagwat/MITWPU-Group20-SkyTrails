@@ -62,7 +62,7 @@ final class RealtimeSyncService: NSObject {
     private var maxReconnectAttempts: Int = 5
     private var reconnectDelay: TimeInterval = 1.0
     
-    private let tables: [String] = ["watchlists", "watchlist_entries", "watchlist_rules", "observed_bird_photos"]
+    private let tables: [String] = ["watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos"]
     private var subscribedTables: Set<String> = []
     
     // Callbacks
@@ -308,6 +308,8 @@ final class RealtimeSyncService: NSObject {
                     try await handleEntryEvent(payload)
                 case "watchlist_rules":
                     try await handleRuleEvent(payload)
+                case "watchlist_shares":
+                    try await handleShareEvent(payload)
                 case "observed_bird_photos":
                     try await handlePhotoEvent(payload)
                 default:
@@ -377,36 +379,46 @@ final class RealtimeSyncService: NSObject {
         }
     }
     
+    private func handleShareEvent(_ payload: RealtimePayload) async throws {
+        guard let record = payload.record,
+              let id = record.uuid(for: "id") else { return }
+        
+        switch payload.type {
+        case .insert, .update:
+            try await upsertShare(from: record, id: id)
+        case .delete:
+            guard let oldRecord = payload.oldRecord,
+                  let deleteId = oldRecord.uuid(for: "id") else { return }
+            try await deleteShare(id: deleteId)
+        }
+    }
+    
     // MARK: - Data Operations (Server Authoritative)
     
     private func upsertWatchlist(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
         // Check if exists
         let existing = try WatchlistManager.shared.getWatchlist(by: id)
         
         if let watchlist = existing {
             // UPDATE - Server wins, overwrite all fields
             watchlist.owner_id = record.uuid(for: "owner_id")
+            watchlist.type = record.string(for: "type").flatMap { WatchlistType(rawValue: $0) } ?? .custom
             watchlist.title = record.string(for: "title")
             watchlist.location = record.string(for: "location")
             watchlist.locationDisplayName = record.string(for: "location_display_name")
             watchlist.observedCount = record.int(for: "observed_count") ?? 0
             watchlist.speciesCount = record.int(for: "species_count") ?? 0
             watchlist.coverImagePath = record.string(for: "cover_image_path")
-            watchlist.speciesRuleEnabled = record.bool(for: "species_rule_enabled") ?? false
-            watchlist.speciesRuleShapeId = record.string(for: "species_rule_shape_id")
-            watchlist.locationRuleEnabled = record.bool(for: "location_rule_enabled") ?? false
-            watchlist.locationRuleLat = record.double(for: "location_rule_lat")
-            watchlist.locationRuleLon = record.double(for: "location_rule_lon")
-            watchlist.locationRuleRadiusKm = record.double(for: "location_rule_radius_km") ?? 50.0
-            watchlist.locationRuleDisplayName = record.string(for: "location_rule_display_name")
-            watchlist.dateRuleEnabled = record.bool(for: "date_rule_enabled") ?? false
-            watchlist.dateRuleStartDate = record.date(for: "date_rule_start_date")
-            watchlist.dateRuleEndDate = record.date(for: "date_rule_end_date")
+            watchlist.startDate = record.date(for: "start_date")
+            watchlist.endDate = record.date(for: "end_date")
             watchlist.deleted_at = record.date(for: "deleted_at")
             watchlist.syncStatus = .synced
             watchlist.lastSyncedAt = Date()
+            watchlist.serverRowVersion = record.int(for: "row_version") ?? watchlist.serverRowVersion
             watchlist.updated_at = record.date(for: "updated_at")
             
+            try? context.save()
             print("📡 [Realtime] Updated watchlist from server: \(watchlist.title ?? "unnamed")")
         } else {
             // INSERT - Create new
@@ -423,22 +435,14 @@ final class RealtimeSyncService: NSObject {
             watchlist.observedCount = record.int(for: "observed_count") ?? 0
             watchlist.speciesCount = record.int(for: "species_count") ?? 0
             watchlist.coverImagePath = record.string(for: "cover_image_path")
-            watchlist.speciesRuleEnabled = record.bool(for: "species_rule_enabled") ?? false
-            watchlist.speciesRuleShapeId = record.string(for: "species_rule_shape_id")
-            watchlist.locationRuleEnabled = record.bool(for: "location_rule_enabled") ?? false
-            watchlist.locationRuleLat = record.double(for: "location_rule_lat")
-            watchlist.locationRuleLon = record.double(for: "location_rule_lon")
-            watchlist.locationRuleRadiusKm = record.double(for: "location_rule_radius_km") ?? 50.0
-            watchlist.locationRuleDisplayName = record.string(for: "location_rule_display_name")
-            watchlist.dateRuleEnabled = record.bool(for: "date_rule_enabled") ?? false
-            watchlist.dateRuleStartDate = record.date(for: "date_rule_start_date")
-            watchlist.dateRuleEndDate = record.date(for: "date_rule_end_date")
+            watchlist.serverRowVersion = record.int(for: "row_version") ?? 0
             watchlist.deleted_at = record.date(for: "deleted_at")
             watchlist.syncStatus = .synced
             watchlist.lastSyncedAt = Date()
             watchlist.updated_at = record.date(for: "updated_at")
             
-            // Note: Would need to insert into context
+            context.insert(watchlist)
+            try? context.save()
             print("📡 [Realtime] Created watchlist from server: \(watchlist.title ?? "unnamed")")
         }
     }
@@ -449,6 +453,7 @@ final class RealtimeSyncService: NSObject {
         // Server says delete - apply immediately
         watchlist.syncStatus = .synced
         watchlist.deleted_at = Date()
+        try? WatchlistManager.shared.context.save()
         
         print("📡 [Realtime] Deleted watchlist (server authoritative): \(id)")
     }
@@ -465,35 +470,44 @@ final class RealtimeSyncService: NSObject {
         
         if let entry = existingEntry {
             // UPDATE - Server wins
+            if let birdId = record.uuid(for: "bird_id") {
+                entry.bird = try? WatchlistManager.shared.fetchBird(id: birdId)
+            }
             entry.status = record.string(for: "status") == "observed" ? .observed : .to_observe
             entry.nickname = record.string(for: "nickname")
             entry.notes = record.string(for: "notes")
+            entry.addedDate = record.date(for: "added_date") ?? entry.addedDate
             entry.observationDate = record.date(for: "observation_date")
             entry.toObserveStartDate = record.date(for: "to_observe_start_date")
             entry.toObserveEndDate = record.date(for: "to_observe_end_date")
             entry.observedBy = record.string(for: "observed_by")
+            entry.observedByUserId = record.uuid(for: "observed_by_user_id")
             entry.lat = record.double(for: "lat")
             entry.lon = record.double(for: "lon")
             entry.locationDisplayName = record.string(for: "location_display_name")
             entry.priority = record.int(for: "priority") ?? 0
             entry.notify_upcoming = record.bool(for: "notify_upcoming") ?? false
-            entry.target_date_range = record.string(for: "target_date_range")
+            entry.serverRowVersion = record.int(for: "row_version") ?? entry.serverRowVersion
             entry.syncStatus = .synced
             entry.lastSyncedAt = Date()
             
+            try? WatchlistManager.shared.context.save()
             print("📡 [Realtime] Updated entry from server: \(id)")
         } else {
             // INSERT - Create new entry
+            let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(id: $0) }
             let entry = WatchlistEntry(
                 id: id,
                 watchlist: watchlist,
-                bird: nil, // Bird reference would need to be resolved
+                bird: bird,
                 status: record.string(for: "status") == "observed" ? .observed : .to_observe,
                 notes: record.string(for: "notes"),
                 observationDate: record.date(for: "observation_date"),
-                observedBy: record.string(for: "observed_by")
+                observedBy: record.string(for: "observed_by"),
+                observedByUserId: record.uuid(for: "observed_by_user_id")
             )
             entry.nickname = record.string(for: "nickname")
+            entry.addedDate = record.date(for: "added_date") ?? entry.addedDate
             entry.toObserveStartDate = record.date(for: "to_observe_start_date")
             entry.toObserveEndDate = record.date(for: "to_observe_end_date")
             entry.lat = record.double(for: "lat")
@@ -501,10 +515,12 @@ final class RealtimeSyncService: NSObject {
             entry.locationDisplayName = record.string(for: "location_display_name")
             entry.priority = record.int(for: "priority") ?? 0
             entry.notify_upcoming = record.bool(for: "notify_upcoming") ?? false
-            entry.target_date_range = record.string(for: "target_date_range")
+            entry.serverRowVersion = record.int(for: "row_version") ?? 0
             entry.syncStatus = .synced
             entry.lastSyncedAt = Date()
             
+            WatchlistManager.shared.context.insert(entry)
+            try? WatchlistManager.shared.context.save()
             print("📡 [Realtime] Created entry from server: \(id)")
         }
     }
@@ -515,8 +531,8 @@ final class RealtimeSyncService: NSObject {
         for watchlist in watchlists {
             if let entries = watchlist.entries {
                 for entry in entries where entry.id == id {
-                    entry.syncStatus = .synced
-                    // Mark deleted - actual removal happens on save
+                    WatchlistManager.shared.context.delete(entry)
+                    try? WatchlistManager.shared.context.save()
                     print("📡 [Realtime] Deleted entry (server authoritative): \(id)")
                     return
                 }
@@ -536,13 +552,21 @@ final class RealtimeSyncService: NSObject {
         
         if let rule = existingRule {
             // UPDATE - Server wins
-            rule.parameters_json = record.string(for: "parameters_json") ?? "{}"
+            rule.lat = record.double(for: "lat")
+            rule.lon = record.double(for: "lon")
+            rule.radius_km = record.double(for: "radius_km")
+            rule.start_date = record.date(for: "start_date")
+            rule.end_date = record.date(for: "end_date")
+            rule.shape_id = record.string(for: "shape_id")
+            rule.pattern_key = record.string(for: "pattern_key")
             rule.is_active = record.bool(for: "is_active") ?? true
             rule.priority = record.int(for: "priority") ?? 0
             rule.deleted_at = record.date(for: "deleted_at")
+            rule.serverRowVersion = record.int(for: "row_version") ?? rule.serverRowVersion
             rule.syncStatus = .synced
             rule.lastSyncedAt = Date()
             
+            try? WatchlistManager.shared.context.save()
             print("📡 [Realtime] Updated rule from server: \(id)")
         } else {
             // INSERT - Create new
@@ -552,14 +576,24 @@ final class RealtimeSyncService: NSObject {
             let rule = WatchlistRule(
                 id: id,
                 watchlist: watchlist,
-                rule_type: ruleType,
-                parameters: record.string(for: "parameters_json") ?? "{}"
+                rule_type: ruleType
             )
+            rule.lat = record.double(for: "lat")
+            rule.lon = record.double(for: "lon")
+            rule.radius_km = record.double(for: "radius_km")
+            rule.start_date = record.date(for: "start_date")
+            rule.end_date = record.date(for: "end_date")
+            rule.shape_id = record.string(for: "shape_id")
+            rule.pattern_key = record.string(for: "pattern_key")
             rule.is_active = record.bool(for: "is_active") ?? true
             rule.priority = record.int(for: "priority") ?? 0
+            rule.serverRowVersion = record.int(for: "row_version") ?? 0
+            rule.deleted_at = record.date(for: "deleted_at")
             rule.syncStatus = .synced
             rule.lastSyncedAt = Date()
             
+            WatchlistManager.shared.context.insert(rule)
+            try? WatchlistManager.shared.context.save()
             print("📡 [Realtime] Created rule from server: \(id)")
         }
     }
@@ -569,9 +603,60 @@ final class RealtimeSyncService: NSObject {
         for watchlist in watchlists {
             if let rules = watchlist.rules {
                 for rule in rules where rule.id == id {
-                    rule.syncStatus = .synced
-                    rule.deleted_at = Date()
+                    WatchlistManager.shared.context.delete(rule)
+                    try? WatchlistManager.shared.context.save()
                     print("📡 [Realtime] Deleted rule (server authoritative): \(id)")
+                    return
+                }
+            }
+        }
+    }
+    
+    private func upsertShare(from record: [String: JSONValue], id: UUID) async throws {
+        guard let watchlistId = record.uuid(for: "watchlist_id"),
+              let watchlist = try WatchlistManager.shared.getWatchlist(by: watchlistId),
+              let userId = record.uuid(for: "user_id")
+        else { return }
+        
+        let existingShare = watchlist.shares?.first(where: { $0.id == id })
+        if let share = existingShare {
+            share.user_id = userId
+            share.permission = record.string(for: "permission").flatMap { WatchlistSharePermission(rawValue: $0) } ?? .view
+            share.shared_at = record.date(for: "shared_at") ?? share.shared_at
+            share.shared_by_user_id = record.uuid(for: "shared_by_user_id")
+            share.serverRowVersion = record.int(for: "server_row_version") ?? share.serverRowVersion
+            share.deleted_at = record.date(for: "deleted_at")
+            share.syncStatus = .synced
+            share.lastSyncedAt = Date()
+            try? WatchlistManager.shared.context.save()
+            print("📡 [Realtime] Updated share from server: \(id)")
+        } else {
+            let share = WatchlistShare(
+                id: id,
+                watchlist: watchlist,
+                user_id: userId,
+                permission: record.string(for: "permission").flatMap { WatchlistSharePermission(rawValue: $0) } ?? .view
+            )
+            share.shared_at = record.date(for: "shared_at") ?? share.shared_at
+            share.shared_by_user_id = record.uuid(for: "shared_by_user_id")
+            share.serverRowVersion = record.int(for: "server_row_version") ?? 0
+            share.deleted_at = record.date(for: "deleted_at")
+            share.syncStatus = .synced
+            share.lastSyncedAt = Date()
+            WatchlistManager.shared.context.insert(share)
+            try? WatchlistManager.shared.context.save()
+            print("📡 [Realtime] Created share from server: \(id)")
+        }
+    }
+    
+    private func deleteShare(id: UUID) async throws {
+        let watchlists = try WatchlistManager.shared.fetchWatchlists()
+        for watchlist in watchlists {
+            if let shares = watchlist.shares {
+                for share in shares where share.id == id {
+                    WatchlistManager.shared.context.delete(share)
+                    try? WatchlistManager.shared.context.save()
+                    print("📡 [Realtime] Deleted share (server authoritative): \(id)")
                     return
                 }
             }
@@ -596,11 +681,12 @@ final class RealtimeSyncService: NSObject {
                         // UPDATE - Server wins
                         photo.imagePath = record.string(for: "image_path") ?? ""
                         photo.storageUrl = record.string(for: "storage_url")
-                        photo.isUploaded = record.bool(for: "is_uploaded") ?? false
                         photo.captured_at = record.date(for: "captured_at")
+                        photo.serverRowVersion = record.int(for: "row_version") ?? photo.serverRowVersion
                         photo.syncStatus = .synced
                         photo.lastSyncedAt = Date()
                         
+                        try? WatchlistManager.shared.context.save()
                         print("📡 [Realtime] Updated photo from server: \(id)")
                     } else {
                         // INSERT - Create new
@@ -610,11 +696,13 @@ final class RealtimeSyncService: NSObject {
                             imagePath: record.string(for: "image_path") ?? ""
                         )
                         photo.storageUrl = record.string(for: "storage_url")
-                        photo.isUploaded = record.bool(for: "is_uploaded") ?? false
                         photo.captured_at = record.date(for: "captured_at")
+                        photo.serverRowVersion = record.int(for: "row_version") ?? 0
                         photo.syncStatus = .synced
                         photo.lastSyncedAt = Date()
                         
+                        WatchlistManager.shared.context.insert(photo)
+                        try? WatchlistManager.shared.context.save()
                         print("📡 [Realtime] Created photo from server: \(id)")
                     }
                     return
@@ -630,8 +718,8 @@ final class RealtimeSyncService: NSObject {
                 for entry in entries {
                     if let photos = entry.photos {
                         for photo in photos where photo.id == id {
-                            photo.syncStatus = .synced
-                            // Mark for removal
+                            WatchlistManager.shared.context.delete(photo)
+                            try? WatchlistManager.shared.context.save()
                             print("📡 [Realtime] Deleted photo (server authoritative): \(id)")
                             return
                         }

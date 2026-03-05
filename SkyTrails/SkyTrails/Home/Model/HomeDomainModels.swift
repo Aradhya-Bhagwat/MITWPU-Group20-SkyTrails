@@ -21,6 +21,8 @@ struct NewsItem: Codable, Hashable {
     let summary: String
     let link: String
     let imageName: String
+    let sourceName: String?
+    let publishedAt: String?
 }
 
 struct UpcomingBird: Codable, Hashable {
@@ -174,6 +176,7 @@ struct MigrationTrajectoryResult {
 struct PredictionInputData {
     var id: UUID = UUID()
     var locationName: String?
+    var locationDetail: String?
     var latitude: Double?
     var longitude: Double?
     var startDate: Date? = Date()
@@ -196,9 +199,12 @@ struct PredictionInputData {
 struct FinalPredictionResult: Hashable {
     let birdName: String
     let imageName: String
+    let likelySpot: String
     let matchedInputIndex: Int
     let matchedLocation: (lat: Double, lon: Double)
     let spottingProbability: Int
+    let weekNumber: String?
+    let residencyStatus: String?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(birdName)
@@ -250,6 +256,8 @@ struct BirdSpeciesDisplay: Hashable {
     let birdImageName: String
     let statusBadge: StatusBadge
     let sightabilityPercent: Int
+    let weekNumber: String?
+    let residencyStatus: String?
     
     struct StatusBadge: Hashable {
         let title: String

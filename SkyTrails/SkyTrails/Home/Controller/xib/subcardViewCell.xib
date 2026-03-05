@@ -51,22 +51,22 @@
                                         <rect key="frame" x="90" y="22.333333333333332" width="156" height="45.333333333333343"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TdZ-76-PCZ">
-                                                <rect key="frame" x="47.333333333333343" y="4.0000000000000009" width="31" height="14.333333333333336"/>
+                                                <rect key="frame" x="45.333333333333343" y="4.0000000000000009" width="31" height="14.333333333333336"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UL4-L4-Tmw">
-                                                <rect key="frame" x="47.333333333333343" y="22.333333333333332" width="31" height="14.333333333333332"/>
+                                                <rect key="frame" x="45.333333333333343" y="22.333333333333332" width="31" height="14.333333333333332"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MPa-LV-NFH">
-                                                <rect key="frame" x="2" y="2" width="41.333333333333336" height="41.333333333333336"/>
+                                                <rect key="frame" x="4" y="4" width="37.333333333333336" height="37.333333333333336"/>
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vhB-yh-X9O">
-                                                        <rect key="frame" x="1" y="1" width="39.333333333333336" height="39.333333333333336"/>
+                                                        <rect key="frame" x="1" y="1" width="35.333333333333336" height="35.333333333333336"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" secondItem="vhB-yh-X9O" secondAttribute="height" multiplier="1:1" id="DJN-LW-p9g"/>
                                                         </constraints>
@@ -85,12 +85,12 @@
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
                                             <constraint firstItem="UL4-L4-Tmw" firstAttribute="top" secondItem="TdZ-76-PCZ" secondAttribute="bottom" constant="4" id="9wt-6K-tMV"/>
-                                            <constraint firstAttribute="bottom" secondItem="MPa-LV-NFH" secondAttribute="bottom" constant="2" id="Hqi-K1-V51"/>
-                                            <constraint firstItem="MPa-LV-NFH" firstAttribute="leading" secondItem="pfn-PH-IdR" secondAttribute="leading" constant="2" id="L9g-8a-Iq0"/>
+                                            <constraint firstAttribute="bottom" secondItem="MPa-LV-NFH" secondAttribute="bottom" constant="4" id="Hqi-K1-V51"/>
+                                            <constraint firstItem="MPa-LV-NFH" firstAttribute="leading" secondItem="pfn-PH-IdR" secondAttribute="leading" constant="4" id="L9g-8a-Iq0"/>
                                             <constraint firstItem="TdZ-76-PCZ" firstAttribute="leading" secondItem="MPa-LV-NFH" secondAttribute="trailing" constant="4" id="OQ8-Y4-2qU"/>
                                             <constraint firstItem="UL4-L4-Tmw" firstAttribute="leading" secondItem="MPa-LV-NFH" secondAttribute="trailing" constant="4" id="dg0-AD-Odc"/>
                                             <constraint firstItem="TdZ-76-PCZ" firstAttribute="top" secondItem="pfn-PH-IdR" secondAttribute="top" constant="4" id="l4G-Wr-ebf"/>
-                                            <constraint firstItem="MPa-LV-NFH" firstAttribute="top" secondItem="pfn-PH-IdR" secondAttribute="top" constant="2" id="lYE-jQ-OIs"/>
+                                            <constraint firstItem="MPa-LV-NFH" firstAttribute="top" secondItem="pfn-PH-IdR" secondAttribute="top" constant="4" id="lYE-jQ-OIs"/>
                                         </constraints>
                                     </view>
                                 </subviews>

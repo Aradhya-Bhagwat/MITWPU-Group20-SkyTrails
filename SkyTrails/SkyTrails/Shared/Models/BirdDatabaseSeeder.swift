@@ -29,6 +29,7 @@ final class BirdDatabaseSeeder {
         let conservation_status: String?
         let validLocations: [String]?
         let validMonths: [Int]?
+        let likelySpot: String?
         let shape_id: String?
         let size_category: Int?
         let fieldMarkData: [BirdFieldMarkDataDTO]?
@@ -46,7 +47,7 @@ final class BirdDatabaseSeeder {
     }
 
     func seed(modelContext: ModelContext) throws {
-        let hasSeededKey = "kBirdDatabaseSeeded_v1"
+        let hasSeededKey = "kBirdDatabaseSeeded_v2"
         if UserDefaults.standard.bool(forKey: hasSeededKey) {
             print("ℹ️ [BirdDatabaseSeeder] Bird database already seeded. Skipping.")
             return
@@ -73,8 +74,14 @@ final class BirdDatabaseSeeder {
         let birdDescriptor = FetchDescriptor<Bird>()
         let existingBirds = try modelContext.fetch(birdDescriptor)
         var existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
+        let shapes = try modelContext.fetch(FetchDescriptor<BirdShape>())
+        let shapeById = Dictionary(uniqueKeysWithValues: shapes.map { ($0.id, $0) })
+        let variants = try modelContext.fetch(FetchDescriptor<FieldMarkVariant>())
+        let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.id, $0) })
 
         for birdDTO in payload.birds {
+            let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
+            let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
             var fieldMarks: [BirdFieldMarkData] = []
             if let markDTOs = birdDTO.fieldMarkData {
                 for mark in markDTOs {
@@ -116,7 +123,7 @@ final class BirdDatabaseSeeder {
                     didUpdate = true
                 }
                 if (existing.validLocations == nil || existing.validLocations?.isEmpty == true),
-                   let validLocations = birdDTO.validLocations {
+                   let validLocations = normalizedValidLocations {
                     existing.validLocations = validLocations
                     didUpdate = true
                 }
@@ -125,8 +132,18 @@ final class BirdDatabaseSeeder {
                     existing.validMonths = validMonths
                     didUpdate = true
                 }
+                if existing.likelySpot == nil, let likelySpot = normalizedLikelySpot {
+                    existing.likelySpot = likelySpot
+                    didUpdate = true
+                }
                 if existing.shape_id == nil, let shapeId = birdDTO.shape_id {
                     existing.shape_id = shapeId
+                    didUpdate = true
+                }
+                if existing.shape == nil,
+                   let shapeId = birdDTO.shape_id,
+                   let shape = shapeById[shapeId] {
+                    existing.shape = shape
                     didUpdate = true
                 }
                 if existing.size_category == nil, let sizeCategory = birdDTO.size_category {
@@ -136,6 +153,14 @@ final class BirdDatabaseSeeder {
                 if (existing.fieldMarkData == nil || existing.fieldMarkData?.isEmpty == true),
                    !fieldMarks.isEmpty {
                     existing.fieldMarkData = fieldMarks
+                    didUpdate = true
+                }
+                if upsertBirdMarkLinks(
+                    bird: existing,
+                    markDTOs: birdDTO.fieldMarkData,
+                    variantById: variantById,
+                    modelContext: modelContext
+                ) {
                     didUpdate = true
                 }
 
@@ -156,12 +181,20 @@ final class BirdDatabaseSeeder {
                 conservation_status: birdDTO.conservation_status,
                 migration_strategy: nil,
                 hemisphere: nil,
-                validLocations: birdDTO.validLocations,
+                validLocations: normalizedValidLocations,
                 validMonths: birdDTO.validMonths,
+                likelySpot: normalizedLikelySpot,
                 shape_id: birdDTO.shape_id,
-                size_category: birdDTO.size_category
+                size_category: birdDTO.size_category,
+                shape: birdDTO.shape_id.flatMap { shapeById[$0] }
             )
             bird.fieldMarkData = fieldMarks.isEmpty ? nil : fieldMarks
+            _ = upsertBirdMarkLinks(
+                bird: bird,
+                markDTOs: birdDTO.fieldMarkData,
+                variantById: variantById,
+                modelContext: modelContext
+            )
             modelContext.insert(bird)
             existingBirdMap[bird.id] = bird
         }
@@ -169,5 +202,87 @@ final class BirdDatabaseSeeder {
         try modelContext.save()
         UserDefaults.standard.set(true, forKey: hasSeededKey)
         print("✅ [BirdDatabaseSeeder] Seeded \(payload.birds.count) birds from bird_database.json")
+    }
+
+    @discardableResult
+    private func upsertBirdMarkLinks(
+        bird: Bird,
+        markDTOs: [BirdFieldMarkDataDTO]?,
+        variantById: [UUID: FieldMarkVariant],
+        modelContext: ModelContext
+    ) -> Bool {
+        guard let markDTOs, !markDTOs.isEmpty else { return false }
+
+        var didChange = false
+        var existingKeys = Set<String>()
+        if let links = bird.fieldMarkLinks {
+            for link in links {
+                if let variantId = link.variant?.id {
+                    existingKeys.insert("\(link.area.lowercased())|\(variantId.uuidString.lowercased())")
+                }
+            }
+        }
+
+        for mark in markDTOs {
+            guard let variantUUID = UUID(uuidString: mark.variantId),
+                  let variant = variantById[variantUUID] else {
+                continue
+            }
+            let area = mark.area
+            let key = "\(area.lowercased())|\(variantUUID.uuidString.lowercased())"
+            if existingKeys.contains(key) {
+                continue
+            }
+
+            let link = BirdFieldMarkVariantLink(
+                bird: bird,
+                fieldMark: variant.fieldMark,
+                variant: variant,
+                area: area
+            )
+            modelContext.insert(link)
+            existingKeys.insert(key)
+            didChange = true
+        }
+
+        return didChange
+    }
+
+    private func normalizeLikelySpot(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch trimmed.lowercased() {
+        case "wetland":
+            return "Wetlands"
+        default:
+            return trimmed
+        }
+    }
+
+    private func normalizeValidLocations(_ raw: [String]?) -> [String]? {
+        guard let raw else { return nil }
+        var seen = Set<String>()
+        let normalized = raw.compactMap { value -> String? in
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            let mapped: String
+            switch trimmed.lowercased() {
+            case "dessert", "desert":
+                mapped = "Thar Desert, Rajasthan"
+            case "urban", "pune, india":
+                mapped = "Pune, Maharashtra"
+            case "wetlands":
+                mapped = "Bharatpur, Rajasthan"
+            case "himalayas":
+                mapped = "Himalayan Region, Uttarakhand"
+            case "western ghats":
+                mapped = "Western Ghats, Kerala"
+            default:
+                mapped = trimmed
+            }
+            if mapped.isEmpty || seen.contains(mapped) { return nil }
+            seen.insert(mapped)
+            return mapped
+        }
+        return normalized.isEmpty ? nil : normalized
     }
 }
