@@ -74,6 +74,10 @@ final class BirdDatabaseSeeder {
         let birdDescriptor = FetchDescriptor<Bird>()
         let existingBirds = try modelContext.fetch(birdDescriptor)
         var existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
+        let shapes = try modelContext.fetch(FetchDescriptor<BirdShape>())
+        let shapeById = Dictionary(uniqueKeysWithValues: shapes.map { ($0.id, $0) })
+        let variants = try modelContext.fetch(FetchDescriptor<FieldMarkVariant>())
+        let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.id, $0) })
 
         for birdDTO in payload.birds {
             var fieldMarks: [BirdFieldMarkData] = []
@@ -134,6 +138,12 @@ final class BirdDatabaseSeeder {
                     existing.shape_id = shapeId
                     didUpdate = true
                 }
+                if existing.shape == nil,
+                   let shapeId = birdDTO.shape_id,
+                   let shape = shapeById[shapeId] {
+                    existing.shape = shape
+                    didUpdate = true
+                }
                 if existing.size_category == nil, let sizeCategory = birdDTO.size_category {
                     existing.size_category = sizeCategory
                     didUpdate = true
@@ -141,6 +151,14 @@ final class BirdDatabaseSeeder {
                 if (existing.fieldMarkData == nil || existing.fieldMarkData?.isEmpty == true),
                    !fieldMarks.isEmpty {
                     existing.fieldMarkData = fieldMarks
+                    didUpdate = true
+                }
+                if upsertBirdMarkLinks(
+                    bird: existing,
+                    markDTOs: birdDTO.fieldMarkData,
+                    variantById: variantById,
+                    modelContext: modelContext
+                ) {
                     didUpdate = true
                 }
 
@@ -165,9 +183,16 @@ final class BirdDatabaseSeeder {
                 validMonths: birdDTO.validMonths,
                 likelySpot: birdDTO.likelySpot,
                 shape_id: birdDTO.shape_id,
-                size_category: birdDTO.size_category
+                size_category: birdDTO.size_category,
+                shape: birdDTO.shape_id.flatMap { shapeById[$0] }
             )
             bird.fieldMarkData = fieldMarks.isEmpty ? nil : fieldMarks
+            _ = upsertBirdMarkLinks(
+                bird: bird,
+                markDTOs: birdDTO.fieldMarkData,
+                variantById: variantById,
+                modelContext: modelContext
+            )
             modelContext.insert(bird)
             existingBirdMap[bird.id] = bird
         }
@@ -175,5 +200,49 @@ final class BirdDatabaseSeeder {
         try modelContext.save()
         UserDefaults.standard.set(true, forKey: hasSeededKey)
         print("✅ [BirdDatabaseSeeder] Seeded \(payload.birds.count) birds from bird_database.json")
+    }
+
+    @discardableResult
+    private func upsertBirdMarkLinks(
+        bird: Bird,
+        markDTOs: [BirdFieldMarkDataDTO]?,
+        variantById: [UUID: FieldMarkVariant],
+        modelContext: ModelContext
+    ) -> Bool {
+        guard let markDTOs, !markDTOs.isEmpty else { return false }
+
+        var didChange = false
+        var existingKeys = Set<String>()
+        if let links = bird.fieldMarkLinks {
+            for link in links {
+                if let variantId = link.variant?.id {
+                    existingKeys.insert("\(link.area.lowercased())|\(variantId.uuidString.lowercased())")
+                }
+            }
+        }
+
+        for mark in markDTOs {
+            guard let variantUUID = UUID(uuidString: mark.variantId),
+                  let variant = variantById[variantUUID] else {
+                continue
+            }
+            let area = mark.area
+            let key = "\(area.lowercased())|\(variantUUID.uuidString.lowercased())"
+            if existingKeys.contains(key) {
+                continue
+            }
+
+            let link = BirdFieldMarkVariantLink(
+                bird: bird,
+                fieldMark: variant.fieldMark,
+                variant: variant,
+                area: area
+            )
+            modelContext.insert(link)
+            existingKeys.insert(key)
+            didChange = true
+        }
+
+        return didChange
     }
 }

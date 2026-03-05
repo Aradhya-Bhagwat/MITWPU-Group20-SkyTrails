@@ -13,6 +13,31 @@ struct BirdFieldMarkData: Codable, Hashable {
 }
 
 @Model
+final class BirdFieldMarkVariantLink {
+    @Attribute(.unique)
+    var id: UUID
+
+    var bird: Bird?
+    var fieldMark: BirdFieldMark?
+    var variant: FieldMarkVariant?
+    var area: String
+
+    init(
+        id: UUID = UUID(),
+        bird: Bird? = nil,
+        fieldMark: BirdFieldMark? = nil,
+        variant: FieldMarkVariant? = nil,
+        area: String
+    ) {
+        self.id = id
+        self.bird = bird
+        self.fieldMark = fieldMark
+        self.variant = variant
+        self.area = area
+    }
+}
+
+@Model
 final class Bird {
     @Attribute(.unique)
     var id: UUID
@@ -33,10 +58,16 @@ final class Bird {
     var validLocations: [String]?
     var validMonths: [Int]?
     var likelySpot: String?
+    // Legacy denormalized column; kept for migration compatibility.
     var shape_id: String?
     var size_category: Int?
-    // In Bird.swift
+    // Legacy denormalized column; kept for migration compatibility.
     var fieldMarkData: [BirdFieldMarkData]? = []
+
+    var shape: BirdShape?
+
+    @Relationship(deleteRule: .cascade)
+    var fieldMarkLinks: [BirdFieldMarkVariantLink]? = []
     
     // MARK: - Relationships
     
@@ -77,7 +108,8 @@ final class Bird {
             validMonths: [Int]? = nil,
             likelySpot: String? = nil,
             shape_id: String? = nil,
-            size_category: Int? = nil
+            size_category: Int? = nil,
+            shape: BirdShape? = nil
         ) {
             self.id = id
             self.commonName = commonName
@@ -94,5 +126,6 @@ final class Bird {
             self.likelySpot = likelySpot
             self.shape_id = shape_id
             self.size_category = size_category
+            self.shape = shape
         }
 }

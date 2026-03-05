@@ -75,7 +75,7 @@ final class IdentificationSeeder {
         )
         let identificationBirdCount = try context.fetchCount(
             FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
-                bird.shape_id != nil && bird.size_category != nil
+                bird.shape != nil && bird.size_category != nil
             })
         )
         let needsSeeding =
@@ -229,6 +229,12 @@ final class IdentificationSeeder {
                     existing.shape_id = shapeId
                     didUpdate = true
                 }
+                if existing.shape == nil,
+                   let shapeId = birdDTO.shape_id,
+                   let shape = shapeMap[shapeId] {
+                    existing.shape = shape
+                    didUpdate = true
+                }
                 if existing.size_category == nil, let sizeCategory = birdDTO.size_category {
                     existing.size_category = sizeCategory
                     didUpdate = true
@@ -241,6 +247,14 @@ final class IdentificationSeeder {
                 if (existing.fieldMarkData == nil || existing.fieldMarkData?.isEmpty == true),
                    !fieldMarkData.isEmpty {
                     existing.fieldMarkData = fieldMarkData
+                    didUpdate = true
+                }
+                if upsertBirdMarkLinks(
+                    bird: existing,
+                    markDataDTOs: birdDTO.fieldMarkData,
+                    variantMap: variantMap,
+                    context: context
+                ) {
                     didUpdate = true
                 }
                 if didUpdate {
@@ -263,11 +277,18 @@ final class IdentificationSeeder {
                 validLocations: birdDTO.validLocations,
                 validMonths: birdDTO.validMonths,
                 shape_id: birdDTO.shape_id,
-                size_category: birdDTO.size_category
+                size_category: birdDTO.size_category,
+                shape: birdDTO.shape_id.flatMap { shapeMap[$0] }
             )
             
             // Assign field mark data
             bird.fieldMarkData = fieldMarkData.isEmpty ? nil : fieldMarkData
+            _ = upsertBirdMarkLinks(
+                bird: bird,
+                markDataDTOs: birdDTO.fieldMarkData,
+                variantMap: variantMap,
+                context: context
+            )
 
             context.insert(bird)
         }
@@ -277,6 +298,47 @@ final class IdentificationSeeder {
 
     enum SeederError: Error {
         case fileNotFound
+    }
+
+    @discardableResult
+    private func upsertBirdMarkLinks(
+        bird: Bird,
+        markDataDTOs: [BirdFieldMarkDataDTO]?,
+        variantMap: [String: FieldMarkVariant],
+        context: ModelContext
+    ) -> Bool {
+        guard let markDataDTOs, !markDataDTOs.isEmpty else { return false }
+
+        var didChange = false
+        var existingKeys = Set<String>()
+        if let links = bird.fieldMarkLinks {
+            for link in links {
+                if let variantId = link.variant?.id {
+                    existingKeys.insert("\(link.area.lowercased())|\(variantId.uuidString.lowercased())")
+                }
+            }
+        }
+
+        for dto in markDataDTOs {
+            let variantKey = dto.variantId.lowercased()
+            guard let variant = variantMap[variantKey] else { continue }
+            let key = "\(dto.area.lowercased())|\(variant.id.uuidString.lowercased())"
+            if existingKeys.contains(key) {
+                continue
+            }
+
+            let link = BirdFieldMarkVariantLink(
+                bird: bird,
+                fieldMark: variant.fieldMark,
+                variant: variant,
+                area: dto.area
+            )
+            context.insert(link)
+            existingKeys.insert(key)
+            didChange = true
+        }
+
+        return didChange
     }
 }
 

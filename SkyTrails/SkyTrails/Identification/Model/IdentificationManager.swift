@@ -80,7 +80,7 @@ class IdentificationManager {
                 birdsInScope = try modelContext.fetch(FetchDescriptor<Bird>(predicate: predicate))
             }
 
-            let birdShapeIds = Set(birdsInScope.compactMap { $0.shape_id })
+            let birdShapeIds = Set(birdsInScope.compactMap { $0.shape?.id ?? $0.shape_id })
             var visibleShapeIds = birdShapeIds
 
             let needsFieldMarks = selectedMenuOptionRawValues.contains(FilterCategory.fieldMarks.rawValue)
@@ -127,7 +127,7 @@ class IdentificationManager {
             
             // 1. Shape Logic (Strict matching)
             if let userShapeId = selectedShape?.id {
-                if bird.shape_id == userShapeId {
+                if (bird.shape?.id ?? bird.shape_id) == userShapeId {
                     score += 30
                     matchedFeats.append("Shape")
                 } else {
@@ -165,16 +165,15 @@ class IdentificationManager {
             }
             
             
-            if !selectedFieldMarks.isEmpty,
-               let birdMarkData = bird.fieldMarkData {
-
+            if !selectedFieldMarks.isEmpty {
+                let birdLinks = bird.fieldMarkLinks ?? []
                 for (_, userVariant) in selectedFieldMarks {
                     guard let userFieldMark = userVariant.fieldMark else { continue }
                     let areaName = userFieldMark.area
 
-                    // Check if bird has this AREA with this VARIANT
-                    let matched = birdMarkData.contains {
-                        $0.area == areaName && $0.variantId == userVariant.id
+                    // Check if bird has this AREA with this VARIANT via normalized link table
+                    let matched = birdLinks.contains {
+                        $0.area == areaName && $0.variant?.id == userVariant.id
                     }
 
                     if matched {

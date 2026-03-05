@@ -158,7 +158,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             )
             let identificationBirdCount = try context.fetchCount(
                 FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
-                    bird.shape_id != nil && bird.size_category != nil
+                    bird.shape != nil && bird.size_category != nil
                 })
             )
             print("DEBUG: Seed check counts -> birds: \(birdCount), shapes: \(shapeCount), fieldMarks: \(fieldMarkCount), variants: \(variantCount), linkedFieldMarks: \(linkedFieldMarkCount), linkedVariants: \(linkedVariantCount)")

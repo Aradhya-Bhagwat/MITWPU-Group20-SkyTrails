@@ -176,7 +176,7 @@ class EditWatchlistDetailViewController: UIViewController {
         // Fetch shapes that have birds associated with them
         let allShapes = (try? manager.fetchAll(BirdShape.self)) ?? []
         let allBirds = manager.fetchAllBirds()
-        let usedShapeIds = Set(allBirds.compactMap { $0.shape_id })
+        let usedShapeIds = Set(allBirds.compactMap { $0.shape?.id ?? $0.shape_id })
         availableShapes = allShapes.filter { usedShapeIds.contains($0.id) }
     }
     
