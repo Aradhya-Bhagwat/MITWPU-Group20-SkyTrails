@@ -32,6 +32,11 @@ class IdentificationManager {
     var selectedDate: Date = Date()
     var selectedMenuOptionRawValues: [String] = []
     var results: [IdentificationCandidate] = []
+    
+    private let supportedHabitats: Set<String> = [
+        "urban", "wetlands", "forest", "grassland", "desert",
+        "coastal", "mountain", "bush", "ground", "sky", "treetop", "open sea",
+    ]
 
     private var currentUserId: UUID? {
         UserSession.shared.currentUserID
@@ -119,6 +124,8 @@ class IdentificationManager {
         
         var candidates: [IdentificationCandidate] = []
         let searchMonth = Calendar.current.component(.month, from: selectedDate)
+        let userHabitat = canonicalHabitat(from: selectedLocation)
+        let userLocationTokens = tokenSet(from: selectedLocation)
         
         for bird in allBirds {
             var score = 0.0
@@ -149,11 +156,32 @@ class IdentificationManager {
                 }
             }
 
-            // 3. Location & Season
-            if let loc = selectedLocation, let birdLocs = bird.validLocations {
-                if !birdLocs.contains(loc) {
-                    score -= 30
-                    mismatchedFeats.append("Location")
+            // 3. Habitat/Location & Season
+            // Prefer likelySpot (habitat) over exact text equality checks.
+            if let birdHabitat = canonicalHabitat(from: bird.likelySpot), let userHabitat {
+                if birdHabitat == userHabitat {
+                    score += 20
+                    matchedFeats.append("Habitat")
+                } else {
+                    score -= 8
+                    mismatchedFeats.append("Habitat")
+                }
+            }
+            
+            // Treat validLocations as hints (regional/habitat tokens), not exact strings.
+            if !userLocationTokens.isEmpty,
+               let birdLocs = bird.validLocations,
+               !birdLocs.isEmpty {
+                let birdTokens = tokenSet(from: birdLocs.joined(separator: " "))
+                if !birdTokens.isEmpty {
+                    let overlap = birdTokens.intersection(userLocationTokens)
+                    if !overlap.isEmpty {
+                        score += 10
+                        matchedFeats.append("Location")
+                    } else {
+                        score -= 6
+                        mismatchedFeats.append("Location")
+                    }
                 }
             }
             
@@ -207,6 +235,28 @@ class IdentificationManager {
         }
         
         self.results = candidates.sorted { $0.confidence > $1.confidence }
+    }
+    
+    private func canonicalHabitat(from raw: String?) -> String? {
+        guard let raw else { return nil }
+        let lower = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if supportedHabitats.contains(lower) {
+            return lower
+        }
+        for token in tokenSet(from: raw) {
+            if supportedHabitats.contains(token) {
+                return token
+            }
+        }
+        return nil
+    }
+    
+    private func tokenSet(from raw: String?) -> Set<String> {
+        guard let raw, !raw.isEmpty else { return [] }
+        let lower = raw.lowercased()
+        let separators = CharacterSet.alphanumerics.inverted
+        let parts = lower.components(separatedBy: separators)
+        return Set(parts.filter { !$0.isEmpty })
     }
 
     func toggleVariant(_ variant: FieldMarkVariant, for mark: BirdFieldMark) {

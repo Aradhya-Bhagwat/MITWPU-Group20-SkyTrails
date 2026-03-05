@@ -80,6 +80,8 @@ final class BirdDatabaseSeeder {
         let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.id, $0) })
 
         for birdDTO in payload.birds {
+            let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
+            let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
             var fieldMarks: [BirdFieldMarkData] = []
             if let markDTOs = birdDTO.fieldMarkData {
                 for mark in markDTOs {
@@ -121,7 +123,7 @@ final class BirdDatabaseSeeder {
                     didUpdate = true
                 }
                 if (existing.validLocations == nil || existing.validLocations?.isEmpty == true),
-                   let validLocations = birdDTO.validLocations {
+                   let validLocations = normalizedValidLocations {
                     existing.validLocations = validLocations
                     didUpdate = true
                 }
@@ -130,7 +132,7 @@ final class BirdDatabaseSeeder {
                     existing.validMonths = validMonths
                     didUpdate = true
                 }
-                if existing.likelySpot == nil, let likelySpot = birdDTO.likelySpot {
+                if existing.likelySpot == nil, let likelySpot = normalizedLikelySpot {
                     existing.likelySpot = likelySpot
                     didUpdate = true
                 }
@@ -179,9 +181,9 @@ final class BirdDatabaseSeeder {
                 conservation_status: birdDTO.conservation_status,
                 migration_strategy: nil,
                 hemisphere: nil,
-                validLocations: birdDTO.validLocations,
+                validLocations: normalizedValidLocations,
                 validMonths: birdDTO.validMonths,
-                likelySpot: birdDTO.likelySpot,
+                likelySpot: normalizedLikelySpot,
                 shape_id: birdDTO.shape_id,
                 size_category: birdDTO.size_category,
                 shape: birdDTO.shape_id.flatMap { shapeById[$0] }
@@ -244,5 +246,43 @@ final class BirdDatabaseSeeder {
         }
 
         return didChange
+    }
+
+    private func normalizeLikelySpot(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch trimmed.lowercased() {
+        case "wetland":
+            return "Wetlands"
+        default:
+            return trimmed
+        }
+    }
+
+    private func normalizeValidLocations(_ raw: [String]?) -> [String]? {
+        guard let raw else { return nil }
+        var seen = Set<String>()
+        let normalized = raw.compactMap { value -> String? in
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            let mapped: String
+            switch trimmed.lowercased() {
+            case "dessert", "desert":
+                mapped = "Thar Desert, Rajasthan"
+            case "urban", "pune, india":
+                mapped = "Pune, Maharashtra"
+            case "wetlands":
+                mapped = "Bharatpur, Rajasthan"
+            case "himalayas":
+                mapped = "Himalayan Region, Uttarakhand"
+            case "western ghats":
+                mapped = "Western Ghats, Kerala"
+            default:
+                mapped = trimmed
+            }
+            if mapped.isEmpty || seen.contains(mapped) { return nil }
+            seen.insert(mapped)
+            return mapped
+        }
+        return normalized.isEmpty ? nil : normalized
     }
 }
