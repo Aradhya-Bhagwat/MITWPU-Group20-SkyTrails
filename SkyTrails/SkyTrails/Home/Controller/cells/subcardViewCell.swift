@@ -11,7 +11,6 @@ class subcardViewCell: UICollectionViewCell {
     
     static let identifier = "subcardViewCell"
     
-    // Expanded View Outlets
     @IBOutlet weak var expandedView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var birdNameLabel: UILabel!
@@ -21,8 +20,6 @@ class subcardViewCell: UICollectionViewCell {
     @IBOutlet weak var badgeSubtitleLabel: UILabel!
     @IBOutlet weak var sightabilityIconLabel: UILabel!
     @IBOutlet weak var sightabilityTextLabel: UILabel!
-    
-    // Compact View Outlets
     @IBOutlet weak var compactView: UIView!
     @IBOutlet weak var compactBirdImageView: UIImageView!
     @IBOutlet weak var compactBirdNameLabel: UILabel!
@@ -100,7 +97,7 @@ class subcardViewCell: UICollectionViewCell {
         }
         
         func configure(with birdData: BirdSpeciesDisplay, accentColor: UIColor? = nil) {
-            print("🐦 [PredictionDebug] subcardViewCell configure: \(birdData.birdName)")
+            print(" [PredictionDebug] subcardViewCell configure: \(birdData.birdName)")
             self.accentColor = accentColor ?? .systemBlue
             birdNameLabel.text = birdData.birdName
             compactBirdNameLabel?.text = birdData.statusBadge.title
@@ -108,13 +105,13 @@ class subcardViewCell: UICollectionViewCell {
             if let image = UIImage(named: birdData.birdImageName) {
                 birdImageView.image = image
                 compactBirdImageView?.image = image
-                print("🐦 [PredictionDebug]   ✅ Image loaded: \(birdData.birdImageName)")
+                print("[PredictionDebug]  Image loaded: \(birdData.birdImageName)")
             } else {
                 birdImageView.image = UIImage(systemName: "bird.fill")
                 birdImageView.tintColor = .systemGray4
                 compactBirdImageView?.image = UIImage(systemName: "bird.fill")
                 compactBirdImageView?.tintColor = .systemGray4
-                print("⚠️ [PredictionDebug]   ❌ Image NOT FOUND: \(birdData.birdImageName)")
+                print("[PredictionDebug]  Image NOT FOUND: \(birdData.birdImageName)")
             }
             
             // Badge
