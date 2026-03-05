@@ -19,13 +19,8 @@ class CustomWatchlistViewController: UIViewController {
     @IBOutlet weak var searchBar: UISearchBar!
 
     // MARK: - Properties
-	private var filteredWatchlists: [WatchlistSummaryDTO] = []
-	private var currentSortOption: SortOption = .nameAZ
-	private var allWatchlistsDTOs: [WatchlistSummaryDTO] = []
-    
-    enum SortOption {
-        case nameAZ, nameZA, startDate, endDate, rarity
-    }
+    private var filteredWatchlists: [WatchlistSummaryDTO] = []
+    private var allWatchlistsDTOs: [WatchlistSummaryDTO] = []
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -99,32 +94,12 @@ class CustomWatchlistViewController: UIViewController {
     }
 
     private func updateData() {
-        // 1. Filter
+        // Filter only (no explicit sorting)
         if let text = searchBar.text, !text.isEmpty {
             filteredWatchlists = allWatchlistsDTOs.filter { $0.title.localizedCaseInsensitiveContains(text) }
         } else {
             filteredWatchlists = allWatchlistsDTOs
         }
-        
-        // 2. Sort & Reload (Now handled by sortWatchlists)
-        sortWatchlists(by: currentSortOption)
-    }
-
-    private func sortWatchlists(by option: SortOption) {
-        currentSortOption = option
-        
-        switch option {
-        case .nameAZ:
-            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-        case .nameZA:
-            filteredWatchlists.sort { $0.title.localizedStandardCompare($1.title) == .orderedDescending }
-        case .startDate, .endDate, .rarity:
-            // These sorts require more data than available in DTOs
-            // For now, fallback to name sort or maintain current order
-            break
-        }
-        
-        // Ensure UI is updated when this is called
         collectionView.reloadData()
     }
 
@@ -134,31 +109,7 @@ class CustomWatchlistViewController: UIViewController {
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
-        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-        
-        let options: [(String, SortOption)] = [
-            ("Name (A-Z)", .nameAZ),
-            ("Name (Z-A)", .nameZA),
-            ("Start Date", .startDate),
-            ("End Date", .endDate),
-            ("Rarity", .rarity)
-        ]
-        
-        for (title, option) in options {
-            alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
-                // Directly calling sortWatchlists now handles the reload automatically
-                self?.sortWatchlists(by: option)
-            }))
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        if let popoverController = alert.popoverPresentationController {
-            popoverController.sourceView = sender
-            popoverController.sourceRect = sender.bounds
-        }
-        
-        present(alert, animated: true)
+        // Sorting removed from watchlist feature – no-op
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

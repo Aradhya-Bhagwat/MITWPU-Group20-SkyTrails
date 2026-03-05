@@ -20,6 +20,7 @@ class GUIViewController: UIViewController {
     
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
+    private var layerLoadTasks: [String: Task<Void, Never>] = [:]
     
     private let layerOrder = [
         "Tail", "Leg", "Thigh", "Head", "Neck", "Back", "Underparts",
@@ -97,6 +98,8 @@ class GUIViewController: UIViewController {
 
     private func setupCanvas() {
         canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
+        layerLoadTasks.values.forEach { $0.cancel() }
+        layerLoadTasks.removeAll()
         partLayers.removeAll()
 
         let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
@@ -124,7 +127,9 @@ class GUIViewController: UIViewController {
             }
             
             if let name = imageName {
-                imgView.image = UIImage(named: name)
+                let fallback = UIImage(named: name)
+                imgView.image = fallback
+                loadLayerImage(category: catName, key: name, fallback: fallback, shapeId: shapeID)
             }
         }
     }
@@ -150,7 +155,19 @@ class GUIViewController: UIViewController {
         let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(category))_\(cleanForFilename(variant))"
         
         if let layer = partLayers[category] {
-            layer.image = UIImage(named: imageName)
+            let fallback = UIImage(named: imageName)
+            layer.image = fallback
+            loadLayerImage(category: category, key: imageName, fallback: fallback, shapeId: shapeID)
+        }
+    }
+
+    private func loadLayerImage(category: String, key: String, fallback: UIImage?, shapeId: String? = nil) {
+        layerLoadTasks[category]?.cancel()
+        layerLoadTasks[category] = Task { [weak self] in
+            let loaded = await IdentificationImageService.shared.image(for: key, shapeId: shapeId)
+            guard !Task.isCancelled else { return }
+            guard let self, let layer = self.partLayers[category] else { return }
+            layer.image = loaded ?? fallback
         }
     }
 

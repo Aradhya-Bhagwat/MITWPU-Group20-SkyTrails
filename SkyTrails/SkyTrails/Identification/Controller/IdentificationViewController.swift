@@ -24,6 +24,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private var isSeeding = false
     private var options: [IdentificationOption] = []
     private var histories: [IdentificationSession] = []
+    private var hasRefreshedManifestThisSession = false
     
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
@@ -47,6 +48,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        triggerManifestRefreshIfNeeded()
         // Refresh history when view appears (in case new sessions were saved)
         fetchHistory()
         updateHistoryInteraction()
@@ -87,6 +89,29 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         historyCollectionView.reloadData()
         scheduleHistoryCollectionHeightUpdate()
         updateSelectionState()
+        triggerManifestRefreshIfNeeded()
+        prefetchLikelyIdentificationImages()
+    }
+
+    private func triggerManifestRefreshIfNeeded() {
+        guard !hasRefreshedManifestThisSession else { return }
+        hasRefreshedManifestThisSession = true
+        Task {
+            await IdentificationImageService.shared.refreshManifestIfNeeded(force: false)
+        }
+    }
+
+    private func prefetchLikelyIdentificationImages() {
+        let defaultIconKeys = [
+            "id_bird_back", "id_bird_beak", "id_bird_chest", "id_bird_crown",
+            "id_bird_eye", "id_bird_facemask", "id_bird_leg", "id_bird_nape",
+            "id_bird_neck", "id_bird_tail", "id_bird_thigh", "id_bird_throat",
+            "id_bird_underparts", "id_bird_wings",
+        ]
+        let historyBirdKeys = histories.compactMap { $0.result?.bird?.staticImageName }
+        Task {
+            await IdentificationImageService.shared.prefetch(keys: defaultIconKeys + historyBirdKeys)
+        }
     }
 
     private func handleUserInterfaceStyleChange() {
@@ -683,6 +708,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let completed = idx + 1
             progressVC.updateProgress(current: completed, total: progressSteps.count)
             
+        }
+        
+        if currentStepIndex == 0 && model.isReloadFlowActive {
+            vc.navigationItem.hidesBackButton = true
+            vc.navigationItem.leftBarButtonItem = nil
         }
         
         self.navigationController?.pushViewController(vc, animated: false)

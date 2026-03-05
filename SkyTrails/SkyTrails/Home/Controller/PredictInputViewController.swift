@@ -105,10 +105,11 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
         doneButton?.tintColor = .systemBlue
     }
     
-    func didSelectLocation(name: String, lat: Double, lon: Double, forIndex index: Int) {
+    func didSelectLocation(name: String, detail: String?, lat: Double, lon: Double, forIndex index: Int) {
         guard index < inputData.count else { return }
             
         inputData[index].locationName = name
+        inputData[index].locationDetail = detail
         inputData[index].latitude = lat
         inputData[index].longitude = lon
         
@@ -145,7 +146,8 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
                 if let parentVC = self.navigationController?.parent as? PredictMapViewController {
                     parentVC.navigateToOutput(
                         inputs: inputData,
-                        predictions: uniqueResults
+                        predictions: uniqueResults,
+                        useInputRadiusOverlay: true
                     )
                 }
             }
@@ -210,7 +212,11 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             }
             
             cell.onAreaChange = { [weak self] newVal in
-                self?.inputData[indexPath.row].areaValue = newVal
+                guard let self else { return }
+                self.inputData[indexPath.row].areaValue = newVal
+                if let mapVC = self.navigationController?.parent as? PredictMapViewController {
+                    mapVC.updateMapWithCurrentInputs(inputs: self.inputData)
+                }
             }
              
             cell.onDelete = { [weak self] in

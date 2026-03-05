@@ -7,17 +7,6 @@ import Foundation
 import CoreLocation
 import SwiftData
 
-enum BirdRarityLevel: String, Codable {
-    case common
-    case uncommon
-    case rare
-    case very_rare
-    case endangered
-}
-
-// Type alias for backward compatibility
-typealias RarityLevel = BirdRarityLevel
-
 struct BirdFieldMarkData: Codable, Hashable {
     var area: String
     var variantId: UUID
@@ -36,8 +25,6 @@ final class Bird {
     var order_name: String?
     var descriptionText: String? // 'description' in schema
     var conservation_status: String?
-
-    var rarityLevel: BirdRarityLevel?
     
    
     var migration_strategy: String?
@@ -45,6 +32,7 @@ final class Bird {
    
     var validLocations: [String]?
     var validMonths: [Int]?
+    var likelySpot: String?
     var shape_id: String?
     var size_category: Int?
     // In Bird.swift
@@ -83,11 +71,11 @@ final class Bird {
             order_name: String? = nil,
             descriptionText: String? = nil,
             conservation_status: String? = nil,
-            rarityLevel: BirdRarityLevel? = nil,
             migration_strategy: String? = nil,
             hemisphere: String? = nil,
             validLocations: [String]? = nil,
             validMonths: [Int]? = nil,
+            likelySpot: String? = nil,
             shape_id: String? = nil,
             size_category: Int? = nil
         ) {
@@ -99,11 +87,11 @@ final class Bird {
             self.order_name = order_name
             self.descriptionText = descriptionText
             self.conservation_status = conservation_status
-            self.rarityLevel = rarityLevel
             self.migration_strategy = migration_strategy
             self.hemisphere = hemisphere
             self.validLocations = validLocations
             self.validMonths = validMonths
+            self.likelySpot = likelySpot
             self.shape_id = shape_id
             self.size_category = size_category
         }

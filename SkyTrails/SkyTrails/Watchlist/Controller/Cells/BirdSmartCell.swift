@@ -85,13 +85,38 @@ class BirdSmartCell: UITableViewCell {
 		guard let bird = entry.bird else { return }
 		titleLabel.text = bird.name
 		
-			// ---------------------------------------------------------------------------
-			// Image — three-tier resolution:
-			//   1. User-captured photo persisted to applicationSupportDirectory
-			//   2. Seeded / bundled asset (asset catalogue)
-			//   3. System placeholder
-			// ---------------------------------------------------------------------------
-		birdImageView.image = BirdSmartCell.loadImage(for: entry)
+		// ---------------------------------------------------------------------------
+		// Image — show local immediately, update from Supabase in background:
+		//   1. User-captured photo persisted to applicationSupportDirectory (instant)
+		//   2. Seeded / bundled asset (instant)
+		//   3. Then async update from Supabase bird bucket
+		//   4. System placeholder (final fallback)
+		// ---------------------------------------------------------------------------
+		
+		// Show local photo immediately if available
+		if let photoPath = entry.photos?.first?.imagePath {
+			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
+			let fileURL = photoDir.appendingPathComponent(photoPath)
+			if let diskImage = UIImage(contentsOfFile: fileURL.path) {
+				birdImageView.image = diskImage
+			} else if let assetImage = UIImage(named: bird.staticImageName) {
+				birdImageView.image = assetImage
+			} else {
+				birdImageView.image = UIImage(systemName: "photo")
+			}
+		} else if let assetImage = UIImage(named: bird.staticImageName) {
+			// Show local asset immediately
+			birdImageView.image = assetImage
+			// Update from Supabase in background
+			Task { @MainActor in
+				if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
+					self.birdImageView.image = image
+				}
+			}
+		} else {
+			birdImageView.image = UIImage(systemName: "photo")
+		}
 		
 			// Date
 		if let observationDate = entry.observationDate {
@@ -128,8 +153,15 @@ class BirdSmartCell: UITableViewCell {
 	func configure(with bird: Bird) {
 		titleLabel.text = bird.name
 		
-			// No entry available here — asset catalogue is the only source
+		// Show local asset immediately, then update from Supabase in background
 		birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
+		
+		// Load from Supabase asynchronously for updated/cached image
+		Task { @MainActor in
+			if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
+				self.birdImageView.image = image
+			}
+		}
 		
 		dateLabel.isHidden = true
 		
@@ -145,12 +177,12 @@ class BirdSmartCell: UITableViewCell {
 		overflowBadgeView.isHidden = true
 	}
 	
-		// MARK: - Image Resolution Helper
+	// MARK: - Image Resolution Helper
 	
-		/// Resolves the best available image for an entry.
-		/// Priority: user-captured photo on disk → bundled asset → system placeholder.
-	private static func loadImage(for entry: WatchlistEntry) -> UIImage {
-			// 1. Check for a user-captured photo saved to the app's support directory
+	/// Resolves the best available image for an entry.
+	/// Priority: user-captured photo on disk → Supabase bird bucket → bundled asset → system placeholder.
+	private func loadImage(for entry: WatchlistEntry) async -> UIImage {
+		// 1. Check for a user-captured photo saved to the app's support directory
 		if let photoPath = entry.photos?.first?.imagePath {
 			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
@@ -160,12 +192,17 @@ class BirdSmartCell: UITableViewCell {
 			}
 		}
 		
-			// 2. Fall back to the bundled / seeded asset catalogue image
+		// 2. Try Supabase bird bucket (handles fallback to local assets)
+		if let bird = entry.bird, let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
+			return image
+		}
+		
+		// 3. Fall back to bundled asset catalogue image
 		if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
 			return asset
 		}
 		
-			// 3. Generic placeholder
+		// 4. Generic placeholder
 		return UIImage(systemName: "photo")!
 	}
 	

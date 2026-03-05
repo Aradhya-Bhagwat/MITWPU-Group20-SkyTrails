@@ -39,9 +39,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	public var toObserveEntries: [WatchlistEntry] = []
 	private var currentList: [WatchlistEntry] = []
 	
-		// State
-	private var currentSegmentIndex: Int = 0
-	private var currentSortOption: SortOption = .nameAZ
+    // State
+    private var currentSegmentIndex: Int = 0
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -202,57 +201,10 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			}
 		}
 		
-		sortBirds(by: currentSortOption)
+        tableView.reloadData()
 	}
 	
-	func sortBirds(by option: SortOption) {
-		currentSortOption = option
-		
-		if watchlistType == .myWatchlist {
-			let sortClosure: (WatchlistEntry, WatchlistEntry) -> Bool = { e1, e2 in
-				guard let b1 = e1.bird, let b2 = e2.bird else { return false }
-				
-				switch option {
-					case .nameAZ: return b1.name < b2.name
-					case .nameZA: return b1.name > b2.name
-					case .date:
-						let d1 = e1.observationDate ?? Date.distantPast
-						let d2 = e2.observationDate ?? Date.distantPast
-						return d1 > d2
-					case .rarity:
-						let r1 = (b1.rarityLevel == .rare || b1.rarityLevel == .very_rare) ? 1 : 0
-						let r2 = (b2.rarityLevel == .rare || b2.rarityLevel == .very_rare) ? 1 : 0
-						return r1 > r2
-				}
-			}
-			
-			for i in 0..<filteredSections.count {
-				filteredSections[i].sort(by: sortClosure)
-			}
-		} else {
-			let sortClosure: (WatchlistEntry, WatchlistEntry) -> Bool = { e1, e2 in
-				guard let b1 = e1.bird, let b2 = e2.bird else { return false }
-				
-				switch option {
-					case .nameAZ: return b1.name < b2.name
-					case .nameZA: return b1.name > b2.name
-					case .date:
-						let d1 = e1.observationDate ?? Date.distantPast
-						let d2 = e2.observationDate ?? Date.distantPast
-						return d1 > d2
-					case .rarity:
-						let r1 = (b1.rarityLevel == .rare || b1.rarityLevel == .very_rare) ? 1 : 0
-						let r2 = (b2.rarityLevel == .rare || b2.rarityLevel == .very_rare) ? 1 : 0
-						return r1 > r2
-				}
-			}
-			currentList.sort(by: sortClosure)
-		}
-		
-		tableView.reloadData()
-	}
-	
-	enum SortOption { case nameAZ, nameZA, date, rarity }
+    // Sorting has been removed from the watchlist feature
 	
 		// MARK: - UISearchBarDelegate
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -300,29 +252,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
-		showSortOptions(sender: sender)
-	}
-	
-	private func showSortOptions(sender: UIButton) {
-		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-		
-		let options: [(String, SortOption)] = [
-			("Name (A-Z)", .nameAZ),
-			("Name (Z-A)", .nameZA),
-			("Date", .date),
-			("Rarity", .rarity)
-		]
-		
-		for (title, option) in options {
-			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-				self?.sortBirds(by: option)
-			})
-		}
-		
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-		
-		configurePopover(for: alert, sender: sender)
-		present(alert, animated: true)
+        // Sorting has been removed – no-op
 	}
 	
 	private func configurePopover(for alert: UIAlertController, sender: Any) {
@@ -342,7 +272,15 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	
-	private func addReminder(for bird: Bird) {
+	private func addReminder(for entry: WatchlistEntry) {
+		// Toggle reminder state
+		let newValue = !entry.notify_upcoming
+		
+		// Update via manager (this handles notification scheduling and syncing)
+		try? manager.updateEntryNotifyUpcoming(entryId: entry.id, notify: newValue)
+		
+		// Refresh to show updated UI
+		refreshData()
 	}
 	
 	private func deleteEntry(_ entry: WatchlistEntry) {
@@ -475,13 +413,19 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
 		var actions = [deleteAction, editAction]
 		
-		if currentSegmentIndex == 1, let bird = entry.bird {
+		if currentSegmentIndex == 1, entry.bird != nil {
 			let reminderAction = UIContextualAction(style: .normal, title: "Remind") { [weak self] (_, _, completion) in
-				self?.addReminder(for: bird)
+				self?.addReminder(for: entry)
 				completion(true)
 			}
-			reminderAction.image = UIImage(systemName: "bell")
-			reminderAction.backgroundColor = .systemOrange
+			
+			// Dynamic icon based on reminder state
+			let iconName = entry.notify_upcoming ? "bell.fill" : "bell"
+			reminderAction.image = UIImage(systemName: iconName)
+			
+			// Dynamic color based on reminder state
+			reminderAction.backgroundColor = entry.notify_upcoming ? .systemGreen : .systemOrange
+			
 			actions.append(reminderAction)
 		}
 		

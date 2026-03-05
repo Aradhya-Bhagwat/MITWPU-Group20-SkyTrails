@@ -8,6 +8,8 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var dateLabel: UILabel!
     
     @IBOutlet weak var containeView: UIView!
+    private var imageTask: Task<Void, Never>?
+    private var representedImageKey: String?
 
     private func applySelectionAppearance() {
         updateCellUI(isSelected: isSelected)
@@ -66,6 +68,9 @@ class HistoryCollectionViewCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        imageTask?.cancel()
+        imageTask = nil
+        representedImageKey = nil
         historyImageView.image = nil
         specieNameLabel.text = nil
         dateLabel.text = nil
@@ -87,15 +92,23 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         
         if let bird = historyItem.result?.bird {
             specieNameLabel.text = bird.commonName
-            
-            if let image = UIImage(named: bird.staticImageName) {
-                historyImageView.image = image
-                historyImageView.contentMode = .scaleAspectFill
-            } else {
-             
-                historyImageView.image = UIImage(systemName: "bird.fill")
-                historyImageView.tintColor = .secondaryLabel
-                historyImageView.contentMode = .scaleAspectFit
+            representedImageKey = bird.staticImageName
+
+            let fallbackImage = UIImage(named: bird.staticImageName)
+            historyImageView.image = fallbackImage ?? UIImage(systemName: "bird.fill")
+            historyImageView.tintColor = fallbackImage == nil ? .secondaryLabel : nil
+            historyImageView.contentMode = fallbackImage == nil ? .scaleAspectFit : .scaleAspectFill
+
+            imageTask?.cancel()
+            imageTask = Task { [weak self] in
+                let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil)
+                guard !Task.isCancelled else { return }
+                guard let self, self.representedImageKey == bird.staticImageName else { return }
+                if let loaded {
+                    self.historyImageView.image = loaded
+                    self.historyImageView.contentMode = .scaleAspectFill
+                    self.historyImageView.tintColor = nil
+                }
             }
         } else {
           

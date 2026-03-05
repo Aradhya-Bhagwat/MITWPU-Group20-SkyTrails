@@ -32,7 +32,6 @@ enum WatchlistRuleType: String, Codable {
     case location
     case date_range
     case species_family
-    case rarity_level
     case migration_pattern
 }
 
@@ -48,7 +47,16 @@ final class Watchlist {
     @Attribute(.unique) var id: UUID
     var owner_id: UUID? // nil means local guest/pending owner
     var type: WatchlistType? // Default to custom if missing
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
+    var deleted_at: Date?
     var title: String?
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     var location: String?
     var startDate: Date?
     var endDate: Date?
@@ -58,23 +66,6 @@ final class Watchlist {
     var updated_at: Date?
     var locationDisplayName: String?
     var coverImagePath: String? // Cached path to most recent bird image
-    
-    // MARK: - Rule Configuration
-    // Species Rule
-    var speciesRuleEnabled: Bool = false
-    var speciesRuleShapeId: String?
-    
-    // Location Rule
-    var locationRuleEnabled: Bool = false
-    var locationRuleLat: Double?
-    var locationRuleLon: Double?
-    var locationRuleRadiusKm: Double = 50.0
-    var locationRuleDisplayName: String?
-    
-    // Date Rule
-    var dateRuleEnabled: Bool = false
-    var dateRuleStartDate: Date?
-    var dateRuleEndDate: Date?
     
     // Relationships
     @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.watchlist) var entries: [WatchlistEntry]?
@@ -117,6 +108,7 @@ final class WatchlistEntry {
     var toObserveStartDate: Date?
     var toObserveEndDate: Date?
     var observedBy: String? // Name of user who observed it (useful in shared lists)
+    var observedByUserId: UUID?
     
     // Denormalized Location Data for Quick Access
     var lat: Double?
@@ -125,7 +117,14 @@ final class WatchlistEntry {
     
     var priority: Int = 0
     var notify_upcoming: Bool = false
-    var target_date_range: String? // Text description like "Oct - Nov"
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     @Relationship(deleteRule: .cascade, inverse: \ObservedBirdPhoto.watchlistEntry) var photos: [ObservedBirdPhoto]?
     
@@ -136,7 +135,8 @@ final class WatchlistEntry {
         status: WatchlistEntryStatus = .to_observe,
         notes: String? = nil,
         observationDate: Date? = nil,
-        observedBy: String? = nil
+        observedBy: String? = nil,
+        observedByUserId: UUID? = nil
     ) {
         self.id = id
         self.watchlist = watchlist
@@ -145,6 +145,7 @@ final class WatchlistEntry {
         self.notes = notes
         self.observationDate = observationDate
         self.observedBy = observedBy
+        self.observedByUserId = observedByUserId
         self.addedDate = Date()
     }
 }
@@ -154,16 +155,48 @@ final class WatchlistRule {
     @Attribute(.unique) var id: UUID
     var watchlist: Watchlist?
     var rule_type: WatchlistRuleType
-    var parameters_json: String // SwiftData doesn't support raw JSON types well, store as String
+    var lat: Double?
+    var lon: Double?
+    var radius_km: Double?
+    var start_date: Date?
+    var end_date: Date?
+    var shape_id: String?
+    var pattern_key: String?
     var is_active: Bool = true
     var priority: Int = 0
     var created_at: Date = Date()
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
+    var deleted_at: Date?
     
-    init(id: UUID = UUID(), watchlist: Watchlist? = nil, rule_type: WatchlistRuleType, parameters: String) {
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
+    
+    init(
+        id: UUID = UUID(),
+        watchlist: Watchlist? = nil,
+        rule_type: WatchlistRuleType,
+        lat: Double? = nil,
+        lon: Double? = nil,
+        radius_km: Double? = nil,
+        start_date: Date? = nil,
+        end_date: Date? = nil,
+        shape_id: String? = nil,
+        pattern_key: String? = nil
+    ) {
         self.id = id
         self.watchlist = watchlist
         self.rule_type = rule_type
-        self.parameters_json = parameters
+        self.lat = lat
+        self.lon = lon
+        self.radius_km = radius_km
+        self.start_date = start_date
+        self.end_date = end_date
+        self.shape_id = shape_id
+        self.pattern_key = pattern_key
     }
 }
 
@@ -175,6 +208,15 @@ final class WatchlistShare {
     var permission: WatchlistSharePermission
     var shared_at: Date = Date()
     var shared_by_user_id: UUID?
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var serverRowVersion: Int = 0
+    var lastSyncedAt: Date?
+    var deleted_at: Date?
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     init(id: UUID = UUID(), watchlist: Watchlist? = nil, user_id: UUID, permission: WatchlistSharePermission = .view) {
         self.id = id
@@ -189,8 +231,17 @@ final class ObservedBirdPhoto {
     @Attribute(.unique) var id: UUID
     var watchlistEntry: WatchlistEntry?
     var imagePath: String
+    var storageUrl: String?
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var lastSyncedAt: Date?
+    var serverRowVersion: Int = 0
     var captured_at: Date?
     var uploaded_at: Date = Date()
+    
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     init(id: UUID = UUID(), watchlistEntry: WatchlistEntry? = nil, imagePath: String) {
         self.id = id
@@ -218,7 +269,7 @@ extension Watchlist {
         let stats = WatchlistStatsDTO(
             observedCount: self.observedCount,
             totalCount: self.speciesCount,
-            rareCount: self.entries?.filter { $0.bird?.rarityLevel?.rawValue == "rare" || $0.bird?.rarityLevel?.rawValue == "very_rare" }.count ?? 0
+            rareCount: 0
         )
         
         return WatchlistDetailDTO(
@@ -253,7 +304,7 @@ extension Watchlist {
         let stats = WatchlistStatsDTO(
             observedCount: self.observedCount,
             totalCount: self.speciesCount,
-            rareCount: self.entries?.filter { $0.bird?.rarityLevel?.rawValue == "rare" || $0.bird?.rarityLevel?.rawValue == "very_rare" }.count ?? 0
+            rareCount: 0
         )
         
         return WatchlistSummaryDTO(
@@ -336,11 +387,11 @@ extension WatchlistEntry {
             toObserveStartDate: self.toObserveStartDate,
             toObserveEndDate: self.toObserveEndDate,
             observedBy: self.observedBy,
+            observedByUserId: self.observedByUserId,
             location: location,
             photos: self.photos?.compactMap { $0.imagePath } ?? [],
             priority: self.priority,
-            notifyUpcoming: self.notify_upcoming,
-            targetDateRange: self.target_date_range
+            notifyUpcoming: self.notify_upcoming
         )
     }
 }
@@ -348,8 +399,8 @@ extension WatchlistEntry {
 extension WatchlistRule {
     /// Convert persistence entity to domain DTO
     func toDomain() -> WatchlistRuleDTO {
-        let params = RuleParameters.from(type: self.rule_type, json: self.parameters_json) 
-            ?? .location(LocationRuleParams(lat: 0, lon: 0, radiusKm: 0, validWeeks: nil))
+        let params = RuleParameters.from(rule: self)
+            ?? .location(LocationRuleParams(lat: 0, lon: 0, radiusKm: 0))
         
         return WatchlistRuleDTO(
             id: self.id,
@@ -369,7 +420,6 @@ extension Bird {
             commonName: self.commonName,
             scientificName: self.scientificName,
             staticImageName: self.staticImageName,
-            rarityLevel: self.rarityLevel.map { Int($0.rawValue.hashValue) },
             family: self.family
         )
     }

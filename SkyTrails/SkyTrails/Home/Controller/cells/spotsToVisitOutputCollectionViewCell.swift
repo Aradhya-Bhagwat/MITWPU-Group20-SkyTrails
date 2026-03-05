@@ -19,6 +19,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var compactBadgeIconImageView: UIImageView!
     @IBOutlet weak var compactBadgeTitleLabel: UILabel!
     @IBOutlet weak var compactBadgeSubtitleLabel: UILabel!
+    @IBOutlet weak var compactLikelySpotLabel: UILabel!
     @IBOutlet weak var compactSightabilityLabel: UILabel!
 
     @IBOutlet weak var wideBirdImageView: UIImageView!
@@ -26,6 +27,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var wideBadgeIconImageView: UIImageView!
     @IBOutlet weak var wideBadgeTitleLabel: UILabel!
     @IBOutlet weak var wideBadgeSubtitleLabel: UILabel!
+    @IBOutlet weak var wideLikelySpotLabel: UILabel!
     @IBOutlet weak var wideSightabilityLabel: UILabel!
     @IBOutlet weak var graphView: SightabilityGraphView!
 
@@ -35,7 +37,8 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     private var currentStatusColor: UIColor = .systemBlue
     private var currentStatusTitle: String = ""
     private var currentStatusSubtitle: String = ""
-    private var currentSightabilityText: String = ""
+    private var currentLikelySpotText: String = ""
+    private var currentProbability: Int = 0
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -97,10 +100,11 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wideBirdNameLabel.text = prediction.birdName
 
         let status = statusText(for: prediction.spottingProbability)
-        currentStatusTitle = status.title
-        currentStatusSubtitle = status.subtitle
+        currentStatusTitle = prediction.weekNumber ?? "N/A"
+        currentStatusSubtitle = prediction.residencyStatus ?? "N/A"
+        currentLikelySpotText = "Likely Spot: \(prediction.likelySpot)"
         currentStatusColor = status.color
-        currentSightabilityText = "Sightability - \(prediction.spottingProbability)%"
+        currentProbability = prediction.spottingProbability
         applyScaledTexts()
         applyBadgeIconStyle()
 
@@ -156,6 +160,8 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
         wideBadgeTitleLabel.font = .systemFont(ofSize: bodySize)
         wideBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
+        compactLikelySpotLabel.font = .systemFont(ofSize: bodySize)
+        wideLikelySpotLabel.font = .systemFont(ofSize: bodySize)
         compactSightabilityLabel.font = .systemFont(ofSize: bodySize)
         wideSightabilityLabel.font = .systemFont(ofSize: bodySize)
 
@@ -167,8 +173,53 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactBadgeSubtitleLabel.text = currentStatusSubtitle
         wideBadgeTitleLabel.text = currentStatusTitle
         wideBadgeSubtitleLabel.text = currentStatusSubtitle
-        compactSightabilityLabel.text = currentSightabilityText
-        wideSightabilityLabel.text = currentSightabilityText
+        compactLikelySpotLabel.text = currentLikelySpotText
+        wideLikelySpotLabel.text = currentLikelySpotText
+        
+        let sightabilityAttr = attributedSightabilityText(
+            probability: currentProbability,
+            font: compactSightabilityLabel.font
+        )
+        compactSightabilityLabel.attributedText = sightabilityAttr
+        wideSightabilityLabel.attributedText = sightabilityAttr
+    }
+
+    private func colorForSightability(_ probability: Int) -> UIColor {
+        switch probability {
+        case 0..<25:
+            return UIColor(red: 1.0, green: 0.27, blue: 0.0, alpha: 1.0) // Orangish Red
+        case 25..<50:
+            return UIColor(red: 0.55, green: 0.35, blue: 0.2, alpha: 1.0) // Brown
+        case 50..<75:
+            return UIColor(red: 0.65, green: 0.8, blue: 0.0, alpha: 1.0) // Yellowish Lime
+        default:
+            return UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0) // Teal
+        }
+    }
+
+    private func attributedSightabilityText(probability: Int, font: UIFont) -> NSAttributedString {
+        let color = colorForSightability(probability)
+        let fontSize = font.pointSize
+        let config = UIImage.SymbolConfiguration(pointSize: fontSize, weight: .bold)
+        let boldFont = UIFont.systemFont(ofSize: fontSize, weight: .bold)
+        
+        let attributedString = NSMutableAttributedString()
+        
+        // Icon
+        if let icon = UIImage(systemName: "binoculars.fill", withConfiguration: config)?.withTintColor(color, renderingMode: .alwaysOriginal) {
+            let attachment = NSTextAttachment()
+            attachment.image = icon
+            attachment.bounds = CGRect(x: 0, y: (font.capHeight - icon.size.height) / 2, width: icon.size.width, height: icon.size.height)
+            attributedString.append(NSAttributedString(attachment: attachment))
+        }
+        
+        // Label Text
+        attributedString.append(NSAttributedString(string: " Sightability - ", attributes: [.font: font, .foregroundColor: UIColor.label]))
+        
+        // Percentage Text
+        attributedString.append(NSAttributedString(string: "\(probability)%", attributes: [.font: boldFont, .foregroundColor: color]))
+        
+        return attributedString
     }
 
     private func applyBadgeIconStyle() {

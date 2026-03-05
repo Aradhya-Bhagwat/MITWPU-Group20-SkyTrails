@@ -438,11 +438,25 @@ class HomeManager {
             let bird = birdData.bird
             let weeks = birdData.weeks
 
+            let hotspotPresence = top.hotspot.speciesList?.first(where: { $0.bird?.id == bird.id })
+            let isResident = (hotspotPresence?.validWeeks?.count ?? 0) >= 52
+            let status: String
+            if isResident {
+                status = "Resident/Local"
+            } else if hotspotPresence?.validWeeks?.contains(currentWeek) ?? false {
+                status = "Present"
+            } else {
+                status = "Migrating"
+            }
+            
+            let weekNum = weeks.first ?? currentWeek
+            let weekText = formatWeekDescription(week: weekNum)
+
             let badge: BirdSpeciesDisplay.StatusBadge
-            if weeks.contains(currentWeek) {
+            if hotspotPresence?.validWeeks?.contains(currentWeek) ?? false {
                 badge = BirdSpeciesDisplay.StatusBadge(
                     title: "Present",
-                    subtitle: "Migrating",
+                    subtitle: status,
                     iconName: "arrow.triangle.turn.up.right.circle.fill",
                     backgroundColorName: "systemGreen"
                 )
@@ -477,7 +491,9 @@ class HomeManager {
                 birdName: bird.commonName,
                 birdImageName: bird.staticImageName,
                 statusBadge: badge,
-                sightabilityPercent: probability
+                sightabilityPercent: probability,
+                weekNumber: weekText,
+                residencyStatus: status
             )
         }
 
@@ -654,7 +670,7 @@ class HomeManager {
             if let polygon = polygonCoordinates(
                 from: response.boundingRegion,
                 near: hotspotCoordinate,
-                nearestResultCoordinate: nearestItem?.placemark.coordinate
+                nearestResultCoordinate: nearestItem?.location.coordinate
             ) {
                 return .polygon(coordinates: polygon)
             }
@@ -676,8 +692,8 @@ class HomeManager {
         from items: [MKMapItem]
     ) -> MKMapItem? {
         items.min { first, second in
-            let d1 = locationService.distance(from: coordinate, to: first.placemark.coordinate)
-            let d2 = locationService.distance(from: coordinate, to: second.placemark.coordinate)
+            let d1 = locationService.distance(from: coordinate, to: first.location.coordinate)
+            let d2 = locationService.distance(from: coordinate, to: second.location.coordinate)
             return d1 < d2
         }
     }
@@ -1046,19 +1062,26 @@ class HomeManager {
     func getLivePredictions(for lat: Double, lon: Double, radiusKm: Double) async -> [FinalPredictionResult] {
         let location = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        let weekRange = (currentWeek...(currentWeek + 4)).map { ($0 - 1) % 52 + 1 }
         
-        let birds = await hotspotManager.getBirdsPresent(
+        let birdsWithWeeks = await hotspotManager.getBirdsPresent(
             at: location,
-            duringWeek: currentWeek,
+            duringWeeks: weekRange,
             radiusInKm: radiusKm
         )
         let nearbyHotspots = findNearbyHotspots(near: location, radiusKm: radiusKm)
         
-        return birds.map { bird in
-            let probability = nearbyHotspots
+        return birdsWithWeeks.map { birdData in
+            let bird = birdData.bird
+            let matchingWeeks = birdData.weeks
+            
+            // Calculate probability (max over nearby hotspots for this bird)
+            let matchingPresence = nearbyHotspots
                 .compactMap { hotspot in
                     hotspot.speciesList?.first(where: { $0.bird?.id == bird.id })
                 }
+            
+            let probability = matchingPresence
                 .map {
                     sightabilityProbability(
                         from: $0,
@@ -1069,12 +1092,30 @@ class HomeManager {
                 }
                 .max() ?? 70
 
+            // Determine weekNumber (first matching week among the look-ahead range)
+            let weekNum = matchingWeeks.first ?? currentWeek
+            let weekText = formatWeekDescription(week: weekNum)
+            
+            // Determine residencyStatus (Subtitle)
+            let isResident = matchingPresence.contains(where: { ($0.validWeeks?.count ?? 0) >= 52 })
+            let status: String
+            if isResident {
+                status = "Local"
+            } else if matchingWeeks.contains(currentWeek) {
+                status = "Present"
+            } else {
+                status = "Migrating"
+            }
+
             return FinalPredictionResult(
                 birdName: bird.commonName,
                 imageName: bird.staticImageName,
+                likelySpot: bird.likelySpot ?? "Sky",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
-                spottingProbability: probability
+                spottingProbability: probability,
+                weekNumber: weekText,
+                residencyStatus: status
             )
         }
     }
@@ -1090,9 +1131,12 @@ class HomeManager {
                 FinalPredictionResult(
                     birdName: result.birdName,
                     imageName: result.imageName,
+                    likelySpot: result.likelySpot,
                     matchedInputIndex: inputIndex,
                     matchedLocation: result.matchedLocation,
-                    spottingProbability: result.spottingProbability
+                    spottingProbability: result.spottingProbability,
+                    weekNumber: result.weekNumber,
+                    residencyStatus: result.residencyStatus
                 )
             }
     }

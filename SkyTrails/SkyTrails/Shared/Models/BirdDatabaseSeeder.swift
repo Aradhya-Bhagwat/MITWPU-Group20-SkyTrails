@@ -27,9 +27,9 @@ final class BirdDatabaseSeeder {
         let order_name: String?
         let descriptionText: String?
         let conservation_status: String?
-        let rarityLevel: String?
         let validLocations: [String]?
         let validMonths: [Int]?
+        let likelySpot: String?
         let shape_id: String?
         let size_category: Int?
         let fieldMarkData: [BirdFieldMarkDataDTO]?
@@ -47,7 +47,7 @@ final class BirdDatabaseSeeder {
     }
 
     func seed(modelContext: ModelContext) throws {
-        let hasSeededKey = "kBirdDatabaseSeeded_v1"
+        let hasSeededKey = "kBirdDatabaseSeeded_v2"
         if UserDefaults.standard.bool(forKey: hasSeededKey) {
             print("ℹ️ [BirdDatabaseSeeder] Bird database already seeded. Skipping.")
             return
@@ -76,10 +76,6 @@ final class BirdDatabaseSeeder {
         var existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
 
         for birdDTO in payload.birds {
-            let rarity = BirdRarityLevel(
-                rawValue: birdDTO.rarityLevel?.lowercased() ?? "common"
-            ) ?? .common
-
             var fieldMarks: [BirdFieldMarkData] = []
             if let markDTOs = birdDTO.fieldMarkData {
                 for mark in markDTOs {
@@ -120,10 +116,6 @@ final class BirdDatabaseSeeder {
                     existing.conservation_status = status
                     didUpdate = true
                 }
-                if existing.rarityLevel == nil {
-                    existing.rarityLevel = rarity
-                    didUpdate = true
-                }
                 if (existing.validLocations == nil || existing.validLocations?.isEmpty == true),
                    let validLocations = birdDTO.validLocations {
                     existing.validLocations = validLocations
@@ -132,6 +124,10 @@ final class BirdDatabaseSeeder {
                 if (existing.validMonths == nil || existing.validMonths?.isEmpty == true),
                    let validMonths = birdDTO.validMonths {
                     existing.validMonths = validMonths
+                    didUpdate = true
+                }
+                if existing.likelySpot == nil, let likelySpot = birdDTO.likelySpot {
+                    existing.likelySpot = likelySpot
                     didUpdate = true
                 }
                 if existing.shape_id == nil, let shapeId = birdDTO.shape_id {
@@ -163,11 +159,11 @@ final class BirdDatabaseSeeder {
                 order_name: birdDTO.order_name,
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
-                rarityLevel: rarity,
                 migration_strategy: nil,
                 hemisphere: nil,
                 validLocations: birdDTO.validLocations,
                 validMonths: birdDTO.validMonths,
+                likelySpot: birdDTO.likelySpot,
                 shape_id: birdDTO.shape_id,
                 size_category: birdDTO.size_category
             )

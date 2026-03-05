@@ -9,6 +9,7 @@
 import Foundation
 import SwiftData
 import CoreLocation
+import UIKit
 
 // MARK: - Legacy Repository Error (Deprecated, use WatchlistError)
 
@@ -106,6 +107,13 @@ final class WatchlistManager: WatchlistRepository {
             rules = WatchlistRuleService(context: context, persistence: persistence)
             photos = WatchlistPhotoService(context: context, persistence: persistence)
             print("✅ [WatchlistManager] Services initialized")
+
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handlePhotoUploadNotification(_:)),
+                name: NSNotification.Name("DidUploadPhoto"),
+                object: nil
+            )
             
             print("ℹ️ [WatchlistManager] Watchlist seeding deferred to AppDelegate")
             
@@ -119,6 +127,39 @@ final class WatchlistManager: WatchlistRepository {
         // Post-Init Notification for legacy support
         DispatchQueue.main.async { [weak self] in
             self?.notifyDataLoaded(success: true)
+        }
+    }
+
+    @MainActor
+    func clearUserDataOnLogout() async {
+        do {
+            let watchlists = try context.fetch(FetchDescriptor<Watchlist>())
+            for watchlist in watchlists {
+                context.delete(watchlist)
+            }
+            try context.save()
+            try? photos.deleteAllLocalPhotos()
+            LocationPreferences.shared.clear()
+            print("🧹 [WatchlistManager] Cleared user watchlist data on logout")
+        } catch {
+            print("⚠️ [WatchlistManager] Failed to clear user data on logout: \(error)")
+        }
+    }
+
+    @objc
+    private func handlePhotoUploadNotification(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let id = info["id"] as? UUID,
+              let storageUrl = info["storageUrl"] as? String
+        else { return }
+
+        let descriptor = FetchDescriptor<ObservedBirdPhoto>(
+            predicate: #Predicate { $0.id == id }
+        )
+
+        if let photo = try? context.fetch(descriptor).first {
+            photo.storageUrl = storageUrl
+            try? context.save()
         }
     }
     
@@ -252,14 +293,33 @@ final class WatchlistManager: WatchlistRepository {
         endDate: Date,
         type: WatchlistType = .custom,
         locationDisplayName: String? = nil
-    ) throws {
-        _ = try persistence.createWatchlist(
+    ) throws -> UUID {
+        let watchlist = try persistence.createWatchlist(
             title: title,
             location: location,
             locationDisplayName: locationDisplayName,
             startDate: startDate,
             endDate: endDate,
             type: type
+        )
+        return watchlist.id
+    }
+    
+    func updateWatchlist(
+        id: UUID,
+        title: String,
+        location: String?,
+        locationDisplayName: String?,
+        startDate: Date?,
+        endDate: Date?
+    ) throws {
+        try persistence.updateWatchlist(
+            id: id,
+            title: title,
+            location: location,
+            locationDisplayName: locationDisplayName,
+            startDate: startDate,
+            endDate: endDate
         )
     }
     
@@ -295,7 +355,7 @@ final class WatchlistManager: WatchlistRepository {
                 targetWatchlistId = first.id
             } else {
                 // Create fallback watchlist
-                try addWatchlist(
+                _ = try addWatchlist(
                     title: "My Watchlist",
                     location: "General",
                     startDate: Date(),
@@ -363,6 +423,10 @@ final class WatchlistManager: WatchlistRepository {
         }
     }
     
+    func updateEntryNotifyUpcoming(entryId: UUID, notify: Bool) throws {
+        try persistence.updateEntryNotifyUpcoming(id: entryId, notify: notify)
+    }
+    
     // Bird Operations
     func fetchAllBirds() -> [Bird] {
         return (try? persistence.fetchAllBirds()) ?? []
@@ -381,7 +445,6 @@ final class WatchlistManager: WatchlistRepository {
             commonName: name,
             scientificName: "Unknown",
             staticImageName: "photo",
-            rarityLevel: .common,
             validLocations: []
         )
     }
@@ -446,25 +509,35 @@ final class WatchlistManager: WatchlistRepository {
     func addRule(
         to watchlistId: UUID,
         type: WatchlistRuleType,
-        parameters: Encodable,
+        parameters: RuleParameters,
         priority: Int = 0
     ) throws {
-        // Convert Encodable to RuleParameters
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(parameters)
-        let jsonString = String(data: data, encoding: .utf8) ?? "{}"
-        
-        guard let ruleParams = RuleParameters.from(type: type, json: jsonString) else {
-            throw WatchlistError.ruleValidationFailed("Invalid parameters")
-        }
-        
-        try rules.validateRule(type: type, parameters: ruleParams)
+        try rules.validateRule(type: type, parameters: parameters)
         _ = try persistence.createRule(
             watchlistID: watchlistId,
             type: type,
-            parameters: ruleParams,
+            parameters: parameters,
             priority: priority
         )
+    }
+    
+    func upsertRule(
+        watchlistId: UUID,
+        type: WatchlistRuleType,
+        parameters: RuleParameters?,
+        priority: Int = 0
+    ) throws {
+        if let parameters {
+            try rules.validateRule(type: type, parameters: parameters)
+            try persistence.upsertRule(
+                watchlistID: watchlistId,
+                type: type,
+                parameters: parameters,
+                priority: priority
+            )
+        } else {
+            try persistence.deleteRule(watchlistID: watchlistId, type: type)
+        }
     }
     
     func toggleRule(ruleId: UUID) throws {
@@ -500,39 +573,41 @@ final class WatchlistManager: WatchlistRepository {
         var matchedWatchlistIds: [UUID] = []
         
         for watchlist in allWatchlists {
+            let activeRules = (watchlist.rules ?? []).filter { $0.is_active && $0.deleted_at == nil }
             var isMatch = false
-            
-            // Check Species Rule
-            if watchlist.speciesRuleEnabled, let shapeId = watchlist.speciesRuleShapeId {
-                if bird.shape_id == shapeId || bird.shape_id == nil {
-                    print("✅ Species rule MATCH for watchlist: \(watchlist.title ?? "Unnamed")")
-                    isMatch = true
-                }
-            }
-            
-            // Check Location Rule
-            if !isMatch && watchlist.locationRuleEnabled,
-               let watchlistLat = watchlist.locationRuleLat,
-               let watchlistLon = watchlist.locationRuleLon,
-               let birdLocation = location {
-                let watchlistLocation = CLLocation(latitude: watchlistLat, longitude: watchlistLon)
-                let birdCLLocation = CLLocation(latitude: birdLocation.latitude, longitude: birdLocation.longitude)
-                let distance = watchlistLocation.distance(from: birdCLLocation) / 1000.0 // Convert to km
+
+            for rule in activeRules {
+                guard let ruleParams = RuleParameters.from(rule: rule) else { continue }
                 
-                if distance <= watchlist.locationRuleRadiusKm {
-                    print("✅ Location rule MATCH for watchlist: \(watchlist.title ?? "Unnamed") (distance: \(Int(distance))km)")
-                    isMatch = true
+                switch ruleParams {
+                case .speciesFamily(let params):
+                    if bird.shape_id == params.shapeId {
+                        isMatch = true
+                    }
+                    
+                case .location(let params):
+                    guard let birdLocation = location else { continue }
+                    let watchlistLocation = CLLocation(latitude: params.lat, longitude: params.lon)
+                    let birdCLLocation = CLLocation(latitude: birdLocation.latitude, longitude: birdLocation.longitude)
+                    let distance = watchlistLocation.distance(from: birdCLLocation) / 1000.0
+                    if distance <= params.radiusKm {
+                        isMatch = true
+                    }
+                    
+                case .dateRange(let params):
+                    guard let birdDate = observationDate else { continue }
+                    if birdDate >= params.startDate && birdDate <= params.endDate {
+                        isMatch = true
+                    }
+                    
+                case .migration(let params):
+                    if bird.migration_strategy == params.patternKey {
+                        isMatch = true
+                    }
                 }
-            }
-            
-            // Check Date Rule
-            if !isMatch && watchlist.dateRuleEnabled,
-               let startDate = watchlist.dateRuleStartDate,
-               let endDate = watchlist.dateRuleEndDate,
-               let birdDate = observationDate {
-                if birdDate >= startDate && birdDate <= endDate {
-                    print("✅ Date rule MATCH for watchlist: \(watchlist.title ?? "Unnamed")")
-                    isMatch = true
+                
+                if isMatch {
+                    break
                 }
             }
             

@@ -4,6 +4,8 @@ class CategoryCell: UICollectionViewCell {
     @IBOutlet weak var iconImageView: UIImageView!
 
     private var isSelectedCell = false
+    private var imageTask: Task<Void, Never>?
+    private var representedIconKey: String?
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -24,15 +26,28 @@ class CategoryCell: UICollectionViewCell {
     }
 
     func configure(name: String, iconName: String, isSelected: Bool) {
-        iconImageView.image = UIImage(named: iconName) ?? UIImage(named: "id_icn_field_marks")
+        representedIconKey = iconName
+        let fallback = UIImage(named: iconName) ?? UIImage(named: "id_icn_field_marks")
+        iconImageView.image = fallback
         iconImageView.tintColor = .label
         iconImageView.accessibilityLabel = name
         self.isSelected = isSelected
         updateAppearance()
+
+        imageTask?.cancel()
+        imageTask = Task { [weak self] in
+            let loaded = await IdentificationImageService.shared.image(for: iconName, shapeId: nil)
+            guard !Task.isCancelled else { return }
+            guard let self, self.representedIconKey == iconName else { return }
+            self.iconImageView.image = loaded ?? fallback
+        }
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        imageTask?.cancel()
+        imageTask = nil
+        representedIconKey = nil
         isSelectedCell = false
         isSelected = false
         updateAppearance()

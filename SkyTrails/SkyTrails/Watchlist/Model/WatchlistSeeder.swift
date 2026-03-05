@@ -44,7 +44,6 @@ struct WatchlistSeeder {
 		let name: String
 		let scientificName: String
 		let images: [String]
-		let rarity: [String]
 		let location: [String]
 		let date: [TimeInterval]
 		let observedBy: [String]?
@@ -56,6 +55,15 @@ struct WatchlistSeeder {
 	@MainActor
 	static func seed(context: ModelContext) throws {
 		print("🌱 [WatchlistSeeder] Starting seed check...")
+		
+		// 0. Check if watchlist seeding is enabled in Info.plist
+		let seedWatchlistsEnabled = Bundle.main.object(forInfoDictionaryKey: "SEED_WATCHLISTS") as? Bool ?? false
+		guard seedWatchlistsEnabled else {
+			print("ℹ️ [WatchlistSeeder] SEED_WATCHLISTS is OFF in Info.plist. Skipping watchlist seeding.")
+			return
+		}
+		
+		print("🌱 [WatchlistSeeder] SEED_WATCHLISTS is ON. Proceeding with seed...")
 		
 			// 1. Check if data exists
 		let descriptor = FetchDescriptor<Watchlist>()
@@ -155,6 +163,10 @@ struct WatchlistSeeder {
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
             
+            // Update stats
+            watchlist.observedCount = observedCount
+            watchlist.speciesCount = observedCount + toObserveCount
+            
             // Update cover image based on entries
             watchlist.updateCoverImage()
 		}
@@ -197,6 +209,10 @@ struct WatchlistSeeder {
 			
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
+            
+            // Update stats
+            watchlist.observedCount = observedCount
+            watchlist.speciesCount = observedCount + toObserveCount
             
             // Update cover image based on entries
             watchlist.updateCoverImage()
@@ -256,7 +272,6 @@ struct WatchlistSeeder {
 			commonName: dto.name,
 			scientificName: dto.scientificName,
 			staticImageName: dto.images.first ?? "placeholder",
-			rarityLevel: .common,
 			validLocations: dto.location
 		)
 		context.insert(placeholder)

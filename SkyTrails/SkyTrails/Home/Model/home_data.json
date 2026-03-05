@@ -1095,33 +1095,7 @@
                         23,
                         24,
                         25,
-                        26,
-                        27,
-                        28,
-                        29,
-                        30,
-                        31,
-                        32,
-                        33,
-                        34,
-                        35,
-                        36,
-                        37,
-                        38,
-                        39,
-                        40,
-                        41,
-                        42,
-                        43,
-                        44,
-                        45,
-                        46,
-                        47,
-                        48,
-                        49,
-                        50,
-                        51,
-                        52
+                        26
                     ],
                     "probability": 82,
                     "weeklyProbabilities": [
@@ -1150,33 +1124,7 @@
                         90,
                         92,
                         85,
-                        86,
-                        88,
-                        89,
-                        82,
-                        83,
-                        85,
-                        86,
-                        87,
-                        80,
-                        82,
-                        83,
-                        85,
-                        78,
-                        79,
-                        81,
-                        83,
-                        85,
-                        78,
-                        80,
-                        82,
-                        84,
-                        77,
-                        79,
-                        81,
-                        84,
-                        86,
-                        79
+                        86
                     ]
                 },
                 {
@@ -2409,6 +2357,124 @@
                     "probability": 50
                 }
             ]
+        },
+        {
+            "id": "ef920bee-14da-4dfb-a805-3d063e242dd3",
+            "birdId": "550e8400-e29b-41d4-a716-446655440007",
+            "startWeek": 40,
+            "endWeek": 52,
+            "hemisphere": "Northern",
+            "trajectoryPaths": [
+                {
+                    "id": "c192e88e-43a0-4f86-a3c7-e7873e5b3939",
+                    "week": 40,
+                    "lat": 26.1369,
+                    "lon": 94.3816,
+                    "probability": 35
+                },
+                {
+                    "id": "e4f5af48-46ec-43e3-adec-1ab058a2e711",
+                    "week": 41,
+                    "lat": 25.1427,
+                    "lon": 94.1442,
+                    "probability": 1
+                },
+                {
+                    "id": "7bf88026-ca84-4434-ba75-e15e95a3504a",
+                    "week": 42,
+                    "lat": 25.1727,
+                    "lon": 94.3607,
+                    "probability": 1
+                },
+                {
+                    "id": "f1c7991f-927a-48b6-b876-9ce67afae4cc",
+                    "week": 43,
+                    "lat": 25.2454,
+                    "lon": 94.5881,
+                    "probability": 1
+                },
+                {
+                    "id": "1f95b25f-358a-41ca-88dd-9ffa6f86a42f",
+                    "week": 44,
+                    "lat": 25.1739,
+                    "lon": 94.6196,
+                    "probability": 0
+                },
+                {
+                    "id": "a20baf5c-06ab-4eff-a13e-7a5b564eaed5",
+                    "week": 45,
+                    "lat": 25.0412,
+                    "lon": 94.4799,
+                    "probability": 0
+                },
+                {
+                    "id": "f2abf3cd-608c-4477-8e0b-b08b0bb4ecb6",
+                    "week": 46,
+                    "lat": 24.8652,
+                    "lon": 94.1239,
+                    "probability": 0
+                },
+                {
+                    "id": "5bb2354b-eb28-42c3-a0a1-46ae2905a459",
+                    "week": 47,
+                    "lat": 25.0443,
+                    "lon": 93.427,
+                    "probability": 1
+                },
+                {
+                    "id": "a296a34b-88d2-4048-9108-293d3931a4aa",
+                    "week": 48,
+                    "lat": 25.7527,
+                    "lon": 93.1357,
+                    "probability": 16
+                },
+                {
+                    "id": "46a767c6-f8c2-4788-b001-4160a7e462bd",
+                    "week": 49,
+                    "lat": 17.3507,
+                    "lon": 73.8059,
+                    "probability": 11
+                },
+                {
+                    "id": "a8644f47-fec1-4d13-8d51-98a901b4d572",
+                    "week": 50,
+                    "lat": 12.6767,
+                    "lon": 76.1828,
+                    "probability": 5
+                },
+                {
+                    "id": "d3ac06a3-cb6e-4567-ac24-9988fb18aa05",
+                    "week": 51,
+                    "lat": 15.7874,
+                    "lon": 74.4109,
+                    "probability": 7
+                },
+                {
+                    "id": "b7625049-e6ee-4805-b909-a5aec9a199c1",
+                    "week": 52,
+                    "lat": 15.8147,
+                    "lon": 74.4672,
+                    "probability": 7
+                }
+            ],
+            "hotspotScores": [
+                {
+                    "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678",
+                    "probability": 23
+                },
+                {
+                    "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890",
+                    "probability": 23
+                },
+                {
+                    "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012",
+                    "probability": 1
+                },
+                {
+                    "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234",
+                    "probability": 7
+                }
+            ]
         }
     ],
     "community_observations": [
@@ -2498,16 +2564,44 @@
     ],
     "latestNews": [
         {
-            "title": "Baya Weaver Nesting Season",
-            "summary": "The monsoon brings spectacular nesting displays across Central India.",
-            "link": "https://example.com/baya-weaver",
-            "imageName": "spot_ranganathittu"
+            "title": "Audubon News",
+            "summary": "Conservation updates, migration stories, and field reports from the Audubon network.",
+            "link": "https://www.audubon.org/news",
+            "imageName": "indian_roller",
+            "sourceName": "Audubon",
+            "publishedAt": "2026-03-04T00:00:00Z"
         },
         {
-            "title": "New Hotspot Discovered",
-            "summary": "Check out the recently identified birding trail in the Western Ghats.",
-            "link": "https://example.com/new-hotspot",
-            "imageName": "pied_cuckoo"
+            "title": "BirdLife International News",
+            "summary": "Global policy, habitat restoration, and species protection updates from BirdLife partners.",
+            "link": "https://www.birdlife.org/news/",
+            "imageName": "great_hornbill",
+            "sourceName": "BirdLife International",
+            "publishedAt": "2026-03-03T00:00:00Z"
+        },
+        {
+            "title": "eBird News",
+            "summary": "Citizen science updates, region alerts, and birding trends powered by the eBird community.",
+            "link": "https://ebird.org/news",
+            "imageName": "asian_koel",
+            "sourceName": "eBird",
+            "publishedAt": "2026-03-02T00:00:00Z"
+        },
+        {
+            "title": "All About Birds News",
+            "summary": "Research-backed stories on bird behavior, migration, and practical birding tips.",
+            "link": "https://www.allaboutbirds.org/news/",
+            "imageName": "common_kingfisher",
+            "sourceName": "All About Birds",
+            "publishedAt": "2026-03-01T00:00:00Z"
+        },
+        {
+            "title": "RSPB News",
+            "summary": "Nature reserve updates and conservation actions from the Royal Society for the Protection of Birds.",
+            "link": "https://www.rspb.org.uk/whats-happening/news/",
+            "imageName": "indian_peafowl",
+            "sourceName": "RSPB",
+            "publishedAt": "2026-02-28T00:00:00Z"
         }
     ]
 }

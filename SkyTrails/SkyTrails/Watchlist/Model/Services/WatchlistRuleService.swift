@@ -68,7 +68,7 @@ final class WatchlistRuleService {
     // MARK: - Individual Rule Processors
     
     private func applyRule(_ rule: WatchlistRule) async throws -> Set<Bird> {
-        guard let params = RuleParameters.from(type: rule.rule_type, json: rule.parameters_json) else {
+        guard let params = RuleParameters.from(rule: rule) else {
             throw WatchlistError.ruleValidationFailed("Failed to parse rule parameters")
         }
         
@@ -79,8 +79,6 @@ final class WatchlistRuleService {
             return try applyDateRangeRule(dateParams)
         case .speciesFamily(let familyParams):
             return try applySpeciesFamilyRule(familyParams)
-        case .rarity(let rarityParams):
-            return try applyRarityRule(rarityParams)
         case .migration(let migrationParams):
             return try applyMigrationRule(migrationParams)
         }
@@ -93,27 +91,15 @@ final class WatchlistRuleService {
         let hotspotManager = HotspotManager(modelContext: context)
         
         var allBirds = Set<Bird>()
-        
-        if let weeks = params.validWeeks {
-            // Specific weeks
-            for week in weeks {
-                let birds = await hotspotManager.getBirdsPresent(
-                    at: location,
-                    duringWeek: week,
-                    radiusInKm: params.radiusKm
-                )
-                allBirds.formUnion(birds)
-            }
-        } else {
-            // All weeks (1-52)
-            for week in 1...52 {
-                let birds = await hotspotManager.getBirdsPresent(
-                    at: location,
-                    duringWeek: week,
-                    radiusInKm: params.radiusKm
-                )
-                allBirds.formUnion(birds)
-            }
+
+        // All weeks (1-52)
+        for week in 1...52 {
+            let birds = await hotspotManager.getBirdsPresent(
+                at: location,
+                duringWeek: week,
+                radiusInKm: params.radiusKm
+            )
+            allBirds.formUnion(birds)
         }
         
         print("📍 [RuleService] Location rule found \(allBirds.count) birds")
@@ -154,36 +140,10 @@ final class WatchlistRuleService {
         let allBirds = try persistence.fetchAllBirds()
         
         let matchingBirds = allBirds.filter { bird in
-            guard let family = bird.family else { return false }
-            return params.families.contains(family)
+            bird.shape_id == params.shapeId
         }
         
         print("🦆 [RuleService] Species family rule found \(matchingBirds.count) birds")
-        return Set(matchingBirds)
-    }
-    
-    private func applyRarityRule(_ params: RarityRuleParams) throws -> Set<Bird> {
-        print("💎 [RuleService] Applying rarity rule")
-        
-        let allBirds = try persistence.fetchAllBirds()
-        
-        let matchingBirds = allBirds.filter { bird in
-            guard let rarityLevel = bird.rarityLevel else { return false }
-            
-            // Map rarity level to int for comparison
-            let rarityInt: Int
-            switch rarityLevel {
-            case .common: rarityInt = 1
-            case .uncommon: rarityInt = 2
-            case .rare: rarityInt = 3
-            case .very_rare: rarityInt = 4
-            case .endangered: rarityInt = 5
-            }
-            
-            return params.levels.contains(rarityInt)
-        }
-        
-        print("💎 [RuleService] Rarity rule found \(matchingBirds.count) birds")
         return Set(matchingBirds)
     }
     
@@ -193,15 +153,7 @@ final class WatchlistRuleService {
         let allBirds = try persistence.fetchAllBirds()
         
         let matchingBirds = allBirds.filter { bird in
-            guard let strategy = bird.migration_strategy else { return false }
-            
-            let strategyMatches = params.strategies.contains(strategy)
-            
-            if let hemisphere = params.hemisphere {
-                return strategyMatches && bird.hemisphere == hemisphere
-            }
-            
-            return strategyMatches
+            bird.migration_strategy == params.patternKey
         }
         
         print("🛫 [RuleService] Migration pattern rule found \(matchingBirds.count) birds")
@@ -226,21 +178,13 @@ final class WatchlistRuleService {
             }
             
         case (.species_family, .speciesFamily(let params)):
-            guard !params.families.isEmpty else {
-                throw WatchlistError.ruleValidationFailed("Must specify at least one family")
-            }
-            
-        case (.rarity_level, .rarity(let params)):
-            guard !params.levels.isEmpty else {
-                throw WatchlistError.ruleValidationFailed("Must specify at least one rarity level")
-            }
-            guard params.levels.allSatisfy({ $0 >= 1 && $0 <= 5 }) else {
-                throw WatchlistError.ruleValidationFailed("Rarity levels must be between 1 and 5")
+            guard !params.shapeId.isEmpty else {
+                throw WatchlistError.ruleValidationFailed("Must specify shape id")
             }
             
         case (.migration_pattern, .migration(let params)):
-            guard !params.strategies.isEmpty else {
-                throw WatchlistError.ruleValidationFailed("Must specify at least one migration strategy")
+            guard !params.patternKey.isEmpty else {
+                throw WatchlistError.ruleValidationFailed("Must specify migration pattern key")
             }
             
         default:

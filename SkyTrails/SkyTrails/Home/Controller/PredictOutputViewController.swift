@@ -7,15 +7,20 @@
 
 import UIKit
 import CoreLocation
+import MapKit
 
 class PredictOutputViewController: UIViewController {
     var predictions: [FinalPredictionResult] = []
     var inputData: [PredictionInputData] = []
 
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var selectedLocationNameLabel: UILabel!
+    @IBOutlet weak var selectedLocationDetailLabel: UILabel!
+
     private var displayedPredictions: [FinalPredictionResult] = []
     private var yearlySeriesByBird: [String: [Int]] = [:]
-    private var collectionView: UICollectionView!
     private var selectedPredictionIndex: Int = 0
+    private var headerLocationRequestID: UUID?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,6 +30,12 @@ class PredictOutputViewController: UIViewController {
         setupNavigation()
         prepareData()
         setupCollectionView()
+        updateLocationHeader(forDisplayedPredictionAt: selectedPredictionIndex)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateHeaderLabelTypography()
     }
 
     private func setupTraitChangeHandling() {
@@ -35,6 +46,7 @@ class PredictOutputViewController: UIViewController {
 
     private func handleUserInterfaceStyleChange() {
         applySemanticAppearance()
+        updateHeaderLabelTypography()
         collectionView?.reloadData()
     }
 
@@ -64,8 +76,7 @@ class PredictOutputViewController: UIViewController {
         layout.scrollDirection = .vertical
         layout.minimumLineSpacing = 12
         layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.collectionViewLayout = layout
         collectionView.backgroundColor = .clear
         collectionView.decelerationRate = .normal
         collectionView.showsVerticalScrollIndicator = true
@@ -78,15 +89,6 @@ class PredictOutputViewController: UIViewController {
         )
         collectionView.dataSource = self
         collectionView.delegate = self
-
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(collectionView)
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
     }
 
     private func applySemanticAppearance() {
@@ -112,6 +114,74 @@ class PredictOutputViewController: UIViewController {
             forBirdNamed: prediction.birdName,
             near: location
         )
+    }
+
+    private func updateLocationHeader(forDisplayedPredictionAt index: Int) {
+        guard displayedPredictions.indices.contains(index) else {
+            selectedLocationNameLabel.text = "Search Location"
+            selectedLocationDetailLabel.text = nil
+            return
+        }
+
+        let prediction = displayedPredictions[index]
+        let inputIndex = prediction.matchedInputIndex
+        let input = inputData.indices.contains(inputIndex) ? inputData[inputIndex] : nil
+        selectedLocationNameLabel.text = input?.locationName ?? "Search Location"
+        if let detail = input?.locationDetail, !detail.isEmpty {
+            selectedLocationDetailLabel.text = detail
+            return
+        }
+
+        guard let lat = input?.latitude, let lon = input?.longitude else {
+            selectedLocationDetailLabel.text = nil
+            return
+        }
+
+        selectedLocationDetailLabel.text = nil
+        let requestID = UUID()
+        headerLocationRequestID = requestID
+        let location = CLLocation(latitude: lat, longitude: lon)
+        Task {
+            do {
+                guard let request = MKReverseGeocodingRequest(location: location) else { return }
+                let mapItems = try await request.mapItems
+                
+                await MainActor.run {
+                    guard self.headerLocationRequestID == requestID else { return }
+                    guard let mapItem = mapItems.first else { return }
+                    
+                    if #available(iOS 26.0, *) {
+                        if let cityState = mapItem.addressRepresentations?.cityWithContext(MKAddressRepresentations.ContextStyle.full) {
+                            self.selectedLocationDetailLabel.text = cityState
+                        } else {
+                            self.selectedLocationDetailLabel.text = mapItem.addressRepresentations?.cityName ?? mapItem.name
+                        }
+                    } else {
+                        let placemark = mapItem.placemark
+                        let city = placemark.locality ?? placemark.subLocality
+                        let state = placemark.administrativeArea
+                        if let city, let state, !city.isEmpty, !state.isEmpty {
+                            self.selectedLocationDetailLabel.text = "\(city), \(state)"
+                        } else {
+                            self.selectedLocationDetailLabel.text = city ?? state ?? placemark.country
+                        }
+                    }
+                }
+            } catch {
+                print("Reverse geocoding failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func updateHeaderLabelTypography() {
+        let containerHeight = max(1, view.bounds.height)
+        let heightRatio = containerHeight / 874.0
+
+        let titleSize = max(17, 17 * heightRatio)
+        let subtitleSize = max(12, 12 * heightRatio)
+
+        selectedLocationNameLabel.font = .systemFont(ofSize: titleSize, weight: .bold)
+        selectedLocationDetailLabel.font = .systemFont(ofSize: subtitleSize, weight: .regular)
     }
 }
 
@@ -148,6 +218,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         if let mapVC = navigationController?.parent as? PredictMapViewController {
             mapVC.filterMapForBird(prediction)
         }
+        updateLocationHeader(forDisplayedPredictionAt: selectedPredictionIndex)
     }
 
     func collectionView(
