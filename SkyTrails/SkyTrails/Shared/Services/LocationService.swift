@@ -89,7 +89,7 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
             }
             
             let name = item.name ?? query
-            let coord = item.placemark.coordinate
+            let coord = item.location.coordinate
             
             return LocationData(
                 displayName: name,
@@ -104,17 +104,33 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
     /// Reverse geocoding: Convert coordinates to place name
     func reverseGeocode(lat: Double, lon: Double) async -> String? {
         let location = CLLocation(latitude: lat, longitude: lon)
-        let geocoder = CLGeocoder()
         
-        do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
-            guard let placemark = placemarks.first else { return nil }
-            
-            // Prefer locality (city) or name (specific place)
-            return placemark.locality ?? placemark.name ?? placemark.country
-        } catch {
-            logger.log(error: error, context: "LocationService.reverseGeocode")
-            return nil
+        if #available(iOS 26.0, *) {
+            do {
+                guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+                let mapItems = try await request.mapItems
+                guard let mapItem = mapItems.first else { return nil }
+                
+                if let cityState = mapItem.addressRepresentations?.cityWithContext(MKAddressRepresentations.ContextStyle.full) {
+                    return cityState
+                }
+                return mapItem.addressRepresentations?.cityName ?? mapItem.name
+            } catch {
+                logger.log(error: error, context: "LocationService.reverseGeocode")
+                return nil
+            }
+        } else {
+            let geocoder = CLGeocoder()
+            do {
+                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                guard let placemark = placemarks.first else { return nil }
+                
+                // Prefer locality (city) or name (specific place)
+                return placemark.locality ?? placemark.name ?? placemark.country
+            } catch {
+                logger.log(error: error, context: "LocationService.reverseGeocode")
+                return nil
+            }
         }
     }
     

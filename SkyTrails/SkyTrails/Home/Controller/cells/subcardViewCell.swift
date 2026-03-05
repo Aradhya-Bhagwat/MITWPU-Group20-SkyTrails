@@ -118,8 +118,8 @@ class subcardViewCell: UICollectionViewCell {
             }
             
             // Badge
-            badgeTitleLabel.text = birdData.statusBadge.title
-            badgeSubtitleLabel.text = birdData.statusBadge.subtitle
+            badgeTitleLabel.text = birdData.weekNumber ?? birdData.statusBadge.title
+            badgeSubtitleLabel.text = birdData.residencyStatus ?? birdData.statusBadge.subtitle
             
             let badgeColor: UIColor
             switch birdData.statusBadge.backgroundColorName {

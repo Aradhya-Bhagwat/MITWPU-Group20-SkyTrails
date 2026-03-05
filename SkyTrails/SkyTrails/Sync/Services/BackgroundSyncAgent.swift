@@ -168,6 +168,24 @@ actor BackgroundSyncAgent {
         }
     }
     
+    /// Queue a share operation for sync using Sendable primitives
+    func queueShare(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
+        let syncOp = SyncOperation(
+            type: operation,
+            table: "watchlist_shares",
+            recordId: id,
+            payloadData: payloadData,
+            localUpdatedAt: localUpdatedAt
+        )
+        queue.append(syncOp)
+        Self.saveQueueToDisk(queue)
+        print("📤 [SyncAgent] Queued share \(operation): \(id)")
+        
+        Task {
+            await processQueue()
+        }
+    }
+    
     /// Queue a photo operation for sync using Sendable primitives
     func queuePhoto(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
         let syncOp = SyncOperation(
@@ -362,17 +380,20 @@ actor BackgroundSyncAgent {
         }
         
         print("📤 [SyncAgent] Processing \(queue.count) operations")
-        
-        var processedIndices: [Int] = []
-        
-        for (index, operation) in queue.enumerated() {
+
+        // Snapshot queued operations because this actor can be re-entered across awaits.
+        // We always reconcile back to the live queue by operation.id (never stale index).
+        let pendingOperations = queue
+        var processedOperationIDs = Set<UUID>()
+
+        for operation in pendingOperations {
             do {
                 // Check for conflicts before processing (server authoritative)
                 let shouldProceed = try await checkServerConflict(operation, config: config)
                 
                 if shouldProceed {
                     try await processOperation(operation, config: config)
-                    processedIndices.append(index)
+                    processedOperationIDs.insert(operation.id)
                     print("📤 [SyncAgent] ✓ Synced: \(operation.table) \(operation.recordId)")
                     
                     // After successful delete sync, remove from local SwiftData
@@ -383,7 +404,7 @@ actor BackgroundSyncAgent {
                     }
                 } else {
                     // Server has newer data - skip this operation
-                    processedIndices.append(index)
+                    processedOperationIDs.insert(operation.id)
                     print("📤 [SyncAgent] ⚠ Skipped (server newer): \(operation.table) \(operation.recordId)")
                 }
             } catch {
@@ -393,20 +414,31 @@ actor BackgroundSyncAgent {
                 
                 if failedOp.attempts >= maxRetries {
                     deadLetterQueue.append(failedOp)
+                    processedOperationIDs.insert(operation.id)
                     Self.saveDeadLetterToDisk(deadLetterQueue)
                     print("📤 [SyncAgent] ✗ Max retries reached: \(operation.table) \(operation.recordId)")
                 } else {
-                    queue[index] = failedOp
-                    Self.saveQueueToDisk(queue)
-                    print("📤 [SyncAgent] ⚠ Retry \(failedOp.attempts)/\(maxRetries): \(operation.table)")
+                    if replaceQueuedOperation(with: failedOp) {
+                        print("📤 [SyncAgent] ⚠ Retry \(failedOp.attempts)/\(maxRetries): \(operation.table)")
+                    } else {
+                        print("📤 [SyncAgent] ⚠ Retry skipped (op no longer in queue): \(operation.table) \(operation.recordId)")
+                    }
                 }
             }
         }
-        
-        for index in processedIndices.reversed() {
-            queue.remove(at: index)
+
+        if !processedOperationIDs.isEmpty {
+            queue.removeAll { processedOperationIDs.contains($0.id) }
         }
         Self.saveQueueToDisk(queue)
+    }
+
+    private func replaceQueuedOperation(with operation: SyncOperation) -> Bool {
+        guard let index = queue.firstIndex(where: { $0.id == operation.id }) else {
+            return false
+        }
+        queue[index] = operation
+        return true
     }
     
     // MARK: - Conflict Detection (Server Authoritative)
@@ -617,6 +649,18 @@ actor BackgroundSyncAgent {
         config: SupabaseConfig,
         token: String?
     ) async throws {
+        if table == "observed_bird_photos" {
+            var request = try buildRequest(
+                path: "/rest/v1/\(table)?id=eq.\(recordId.uuidString)",
+                method: "DELETE",
+                config: config,
+                token: token
+            )
+            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+            try await executeRequest(request)
+            return
+        }
+        
         // Use soft delete - send PATCH with deleted_at instead of actual DELETE
         let payload: [String: Any] = [
             "deleted_at": ISO8601DateFormatter().string(from: Date())
@@ -712,6 +756,14 @@ actor BackgroundSyncAgent {
                     print("🗑️ [SyncAgent] Hard deleted local rule: \(recordId)")
                 }
                 
+            case "watchlist_shares":
+                let descriptor = FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == recordId })
+                if let share = try context.fetch(descriptor).first {
+                    context.delete(share)
+                    try context.save()
+                    print("🗑️ [SyncAgent] Hard deleted local share: \(recordId)")
+                }
+                
             case "observed_bird_photos":
                 let descriptor = FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })
                 if let photo = try context.fetch(descriptor).first {
@@ -795,7 +847,7 @@ import SwiftData
 extension BackgroundSyncAgent {
     
     func uploadPhotoIfNeeded(payload: inout [String: Any], config: SupabaseConfig, token: String?) async throws {
-        guard let isUploaded = payload["is_uploaded"] as? Bool, !isUploaded else {
+        if let storageUrl = payload["storage_url"] as? String, !storageUrl.isEmpty {
             return // Already uploaded
         }
         
@@ -825,7 +877,6 @@ extension BackgroundSyncAgent {
         
         // Update payload
         payload["storage_url"] = storageURLStr
-        payload["is_uploaded"] = true
         
         // Also update local DB entity on main thread
         if let idStr = payload["id"] as? String, let id = UUID(uuidString: idStr) {
@@ -845,7 +896,6 @@ extension BackgroundSyncAgent {
     
     func deletePhotoFromStorage(payload: [String: Any]?, config: SupabaseConfig, token: String?) async throws {
         guard let payload = payload,
-              let isUploaded = payload["is_uploaded"] as? Bool, isUploaded,
               let storageUrlStr = payload["storage_url"] as? String else {
             return
         }

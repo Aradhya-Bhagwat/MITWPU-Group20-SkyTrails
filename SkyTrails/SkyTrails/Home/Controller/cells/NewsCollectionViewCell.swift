@@ -13,11 +13,16 @@ class NewsCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var newsImageView: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var summaryLabel: UILabel!
+    private let sourceLabel = UILabel()
     
     private var gradientLayer: CAGradientLayer?
+    private var imageTask: URLSessionDataTask?
+    private var representedImageKey: String?
+    private static let remoteImageCache = NSCache<NSString, UIImage>()
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        setupSourceLabel()
         setupTraitChangeHandling()
         setupAppearance()
     }
@@ -40,6 +45,16 @@ class NewsCollectionViewCell: UICollectionViewCell {
             layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
         }
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageTask?.cancel()
+        imageTask = nil
+        representedImageKey = nil
+        sourceLabel.text = nil
+        newsImageView.image = UIImage(systemName: "photo")
+        newsImageView.tintColor = .systemGray
+    }
     
     func configure(with news: NewsItem) {
         titleLabel.text = news.title
@@ -50,10 +65,14 @@ class NewsCollectionViewCell: UICollectionViewCell {
         summaryLabel.text = news.summary
         summaryLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         summaryLabel.textColor = .white.withAlphaComponent(0.9)
-        summaryLabel.numberOfLines = 3
+        summaryLabel.numberOfLines = 2
+        sourceLabel.text = makeSourceText(news: news)
         
-        if let image = UIImage(named: news.imageName) {
+        if news.imageName.starts(with: "http"), let url = URL(string: news.imageName) {
+            loadRemoteImage(from: url, cacheKey: news.imageName)
+        } else if let image = UIImage(named: news.imageName) {
             newsImageView.image = image
+            newsImageView.tintColor = nil
         } else {
             newsImageView.image = UIImage(systemName: "photo")
             newsImageView.tintColor = .systemGray
@@ -61,6 +80,74 @@ class NewsCollectionViewCell: UICollectionViewCell {
         
         containerView.bringSubviewToFront(titleLabel)
         containerView.bringSubviewToFront(summaryLabel)
+        containerView.bringSubviewToFront(sourceLabel)
+    }
+
+    private func setupSourceLabel() {
+        sourceLabel.translatesAutoresizingMaskIntoConstraints = false
+        sourceLabel.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        sourceLabel.textColor = UIColor.white.withAlphaComponent(0.88)
+        sourceLabel.numberOfLines = 1
+        sourceLabel.textAlignment = .left
+        containerView.addSubview(sourceLabel)
+
+        NSLayoutConstraint.activate([
+            sourceLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 14),
+            sourceLabel.trailingAnchor.constraint(lessThanOrEqualTo: containerView.trailingAnchor, constant: -14),
+            sourceLabel.bottomAnchor.constraint(equalTo: summaryLabel.topAnchor, constant: -6)
+        ])
+    }
+
+    private func makeSourceText(news: NewsItem) -> String {
+        let source = (news.sourceName?.isEmpty == false) ? news.sourceName! : "SkyTrails"
+
+        guard let publishedAt = news.publishedAt,
+              let date = isoDate(from: publishedAt) else {
+            return "Source: \(source)"
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.dateFormat = "d MMM yyyy"
+        return "Source: \(source) • \(formatter.string(from: date))"
+    }
+
+    private func isoDate(from raw: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: raw) {
+            return date
+        }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: raw)
+    }
+
+    private func loadRemoteImage(from url: URL, cacheKey: String) {
+        representedImageKey = cacheKey
+
+        if let cached = Self.remoteImageCache.object(forKey: cacheKey as NSString) {
+            newsImageView.image = cached
+            newsImageView.tintColor = nil
+            return
+        }
+
+        newsImageView.image = UIImage(systemName: "photo")
+        newsImageView.tintColor = .systemGray
+
+        imageTask?.cancel()
+        imageTask = URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self,
+                  let data,
+                  let image = UIImage(data: data) else { return }
+
+            Self.remoteImageCache.setObject(image, forKey: cacheKey as NSString)
+            DispatchQueue.main.async {
+                guard self.representedImageKey == cacheKey else { return }
+                self.newsImageView.image = image
+                self.newsImageView.tintColor = nil
+            }
+        }
+        imageTask?.resume()
     }
     
     private func applyGradientLayer() {

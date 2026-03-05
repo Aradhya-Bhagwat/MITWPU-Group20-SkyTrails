@@ -365,7 +365,7 @@ extension WatchlistLocationRuleMapViewController: UITableViewDelegate, UITableVi
             guard let self = self,
                   let mapItem = response?.mapItems.first else { return }
             
-            let coordinate = mapItem.placemark.coordinate
+            let coordinate = mapItem.location.coordinate
             self.searchBar.text = mapItem.name
             self.selectLocation(coordinate: coordinate)
         }

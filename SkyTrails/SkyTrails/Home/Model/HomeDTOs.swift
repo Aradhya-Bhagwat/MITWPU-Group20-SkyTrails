@@ -31,6 +31,7 @@ struct SpeciesPresenceData: Decodable {
     let id: UUID
     let birdId: UUID
     let validWeeks: [Int]?
+    let weeklyProbabilities: [Int]?
     let probability: Int?
 }
 

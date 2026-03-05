@@ -42,9 +42,13 @@ class WatchlistHomeViewController: UIViewController {
 		static let headerHeight: CGFloat = 40
 	}
 
+	private var hasAnyWatchlist: Bool {
+		!customWatchlists.isEmpty || !sharedWatchlists.isEmpty
+	}
+
 	private var isMyWatchlistEmptyState: Bool {
 		guard let watchlist = myWatchlist else { return true }
-		return watchlist.stats.totalCount == 0
+		return watchlist.stats.totalCount == 0 && !hasAnyWatchlist
 	}
 	
 	
@@ -70,6 +74,7 @@ class WatchlistHomeViewController: UIViewController {
 		print("📱 [ViewController] Starting loadData()...")
 		Task {
 			do {
+				let wasEmptyState = self.isMyWatchlistEmptyState
 				print("📱 [ViewController] Calling repository.loadDashboardData()...")
 				let data = try await repository.loadDashboardData()
 				
@@ -82,6 +87,14 @@ class WatchlistHomeViewController: UIViewController {
 				self.customWatchlists = data.custom
 				self.sharedWatchlists = data.shared
 				self.globalStats = data.globalStats
+
+				// Prefetch bird images from Supabase for faster cell loading
+				self.prefetchBirdImages()
+
+				let isNowEmptyState = self.isMyWatchlistEmptyState
+				if wasEmptyState != isNowEmptyState {
+					self.summaryCardCollectionView.setCollectionViewLayout(self.createCompositionalLayout(), animated: false)
+				}
 				
 				print("📱 [ViewController] Reloading collection view...")
 				self.summaryCardCollectionView.reloadData()
@@ -92,7 +105,34 @@ class WatchlistHomeViewController: UIViewController {
 		}
 	}
 	
-		// MARK: - Setup
+	// MARK: - Image Prefetching
+	
+	private func prefetchBirdImages() {
+		// Collect all unique bird image names from watchlists
+		var imageKeys: [String] = []
+		
+		if let myWatchlist = myWatchlist {
+			imageKeys.append(contentsOf: myWatchlist.previewImages)
+		}
+		
+		for custom in customWatchlists {
+			if let coverImage = custom.image {
+				imageKeys.append(coverImage)
+			}
+		}
+		
+		for shared in sharedWatchlists {
+			if let coverImage = shared.image {
+				imageKeys.append(coverImage)
+			}
+		}
+		
+		// Remove duplicates and prefetch
+		let uniqueKeys = Array(Set(imageKeys))
+		Task {
+			await IdentificationImageService.shared.prefetch(keys: uniqueKeys)
+		}
+	}
 	private func setupUI() {
 		self.title = "Watchlist"
 		self.navigationItem.largeTitleDisplayMode = .always
@@ -420,6 +460,7 @@ extension WatchlistHomeViewController {
 		let action = actions[indexPath.item]
 		cell.configure(icon: action.icon, title: action.title, color: action.color)
 		cell.isUserInteractionEnabled = action.isEnabled
+		cell.contentView.alpha = action.isEnabled ? 1.0 : 0.75
 		return cell
 	}
 
@@ -446,6 +487,7 @@ extension WatchlistHomeViewController {
 			color: color
 		)
 		cell.isUserInteractionEnabled = true
+		cell.contentView.alpha = 1.0
 		return cell
 	}
 

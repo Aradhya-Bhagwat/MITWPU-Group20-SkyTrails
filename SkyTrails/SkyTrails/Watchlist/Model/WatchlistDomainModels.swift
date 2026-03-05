@@ -171,11 +171,11 @@ struct WatchlistEntryDTO: Hashable {
     let toObserveStartDate: Date?
     let toObserveEndDate: Date?
     let observedBy: String?
+    let observedByUserId: UUID?
     let location: LocationDTO?
     let photos: [String]
     let priority: Int
     let notifyUpcoming: Bool
-    let targetDateRange: String?
     
     var isObserved: Bool { status == .observed }
     var displayDateRange: String {
@@ -184,7 +184,7 @@ struct WatchlistEntryDTO: Hashable {
             formatter.dateFormat = "MMM d"
             return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
         }
-        return targetDateRange ?? "Season pending"
+        return "Season pending"
     }
 }
 
@@ -220,15 +220,15 @@ struct WatchlistRuleDTO: Hashable {
     var displayDescription: String {
         switch parameters {
         case .location(let params):
-            return "Within \(params.radiusKm)km of location during weeks \(params.validWeeks?.map { String($0) }.joined(separator: ", ") ?? "all")"
+            return "Within \(params.radiusKm)km of selected location"
         case .dateRange(let params):
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             return "Between \(formatter.string(from: params.startDate)) and \(formatter.string(from: params.endDate))"
         case .speciesFamily(let params):
-            return "Families: \(params.families.joined(separator: ", "))"
+            return "Shape: \(params.shapeId)"
         case .migration(let params):
-            return "Migration: \(params.strategies.joined(separator: ", "))"
+            return "Migration pattern: \(params.patternKey)"
         }
     }
 }
@@ -241,46 +241,53 @@ enum RuleParameters: Hashable {
     case speciesFamily(SpeciesFamilyRuleParams)
     case migration(MigrationPatternRuleParams)
     
-    var jsonString: String {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        
-        switch self {
-        case .location(let params):
-            return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
-        case .dateRange(let params):
-            return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
-        case .speciesFamily(let params):
-            return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
-        case .migration(let params):
-            return (try? String(data: encoder.encode(params), encoding: .utf8)) ?? "{}"
+    static func from(rule: WatchlistRule) -> RuleParameters? {
+        switch rule.rule_type {
+        case .location:
+            guard let lat = rule.lat,
+                  let lon = rule.lon,
+                  let radiusKm = rule.radius_km
+            else { return nil }
+            return .location(LocationRuleParams(lat: lat, lon: lon, radiusKm: radiusKm))
+            
+        case .date_range:
+            guard let startDate = rule.start_date,
+                  let endDate = rule.end_date
+            else { return nil }
+            return .dateRange(DateRangeRuleParams(startDate: startDate, endDate: endDate))
+            
+        case .species_family:
+            guard let shapeId = rule.shape_id else { return nil }
+            return .speciesFamily(SpeciesFamilyRuleParams(shapeId: shapeId))
+            
+        case .migration_pattern:
+            guard let patternKey = rule.pattern_key else { return nil }
+            return .migration(MigrationPatternRuleParams(patternKey: patternKey))
         }
     }
     
-    static func from(type: WatchlistRuleType, json: String) -> RuleParameters? {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        guard let data = json.data(using: .utf8) else { return nil }
+    func apply(to rule: WatchlistRule) {
+        rule.lat = nil
+        rule.lon = nil
+        rule.radius_km = nil
+        rule.start_date = nil
+        rule.end_date = nil
+        rule.shape_id = nil
+        rule.pattern_key = nil
         
-        switch type {
-        case .location:
-            if let params = try? decoder.decode(LocationRuleParams.self, from: data) {
-                return .location(params)
-            }
-        case .date_range:
-            if let params = try? decoder.decode(DateRangeRuleParams.self, from: data) {
-                return .dateRange(params)
-            }
-        case .species_family:
-            if let params = try? decoder.decode(SpeciesFamilyRuleParams.self, from: data) {
-                return .speciesFamily(params)
-            }
-        case .migration_pattern:
-            if let params = try? decoder.decode(MigrationPatternRuleParams.self, from: data) {
-                return .migration(params)
-            }
+        switch self {
+        case .location(let params):
+            rule.lat = params.lat
+            rule.lon = params.lon
+            rule.radius_km = params.radiusKm
+        case .dateRange(let params):
+            rule.start_date = params.startDate
+            rule.end_date = params.endDate
+        case .speciesFamily(let params):
+            rule.shape_id = params.shapeId
+        case .migration(let params):
+            rule.pattern_key = params.patternKey
         }
-        return nil
     }
 }
 
@@ -288,7 +295,6 @@ struct LocationRuleParams: Codable, Hashable {
     let lat: Double
     let lon: Double
     let radiusKm: Double
-    let validWeeks: [Int]?
 }
 
 struct DateRangeRuleParams: Codable, Hashable {
@@ -297,12 +303,11 @@ struct DateRangeRuleParams: Codable, Hashable {
 }
 
 struct SpeciesFamilyRuleParams: Codable, Hashable {
-    let families: [String]
+    let shapeId: String
 }
 
 struct MigrationPatternRuleParams: Codable, Hashable {
-    let strategies: [String]
-    let hemisphere: String?
+    let patternKey: String
 }
 
 // MARK: - Query Filters & Sort Options

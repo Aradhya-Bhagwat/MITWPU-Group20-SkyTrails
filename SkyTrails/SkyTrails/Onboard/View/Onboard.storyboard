@@ -40,50 +40,20 @@
                                 </connections>
                             </segmentedControl>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZED-bd-BNm">
-                                <rect key="frame" x="16" y="243.5" width="712" height="350"/>
+                                <rect key="frame" x="16" y="243.5" width="712" height="390"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="350" id="sgG-36-kcw"/>
+                                    <constraint firstAttribute="height" constant="390" id="sgG-36-kcw"/>
                                 </constraints>
                                 <connections>
                                     <segue destination="5zl-Tt-EQ3" kind="embed" id="ebx-n9-eFf"/>
                                 </connections>
                             </containerView>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VAL-rG-YkM">
-                                <rect key="frame" x="16" y="243.5" width="712" height="350"/>
+                                <rect key="frame" x="16" y="243.5" width="712" height="390"/>
                                 <connections>
                                     <segue destination="VYd-mD-4mX" kind="embed" id="tOt-qf-0Sg"/>
                                 </connections>
                             </containerView>
-                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="OD9-cb-hnz">
-                                <rect key="frame" x="16" y="1063.5" width="712" height="49.5"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Other sign in options" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MCF-7C-eMu">
-                                        <rect key="frame" x="294.5" y="0.0" width="123" height="14.5"/>
-                                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="12"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="4st-FJ-3Bq">
-                                        <rect key="frame" x="316" y="24.5" width="80" height="25"/>
-                                        <subviews>
-                                            <imageView clipsSubviews="YES" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="auth_apple_icon" translatesAutoresizingMaskIntoConstraints="NO" id="Vyt-B7-DmZ">
-                                                <rect key="frame" x="0.0" y="0.0" width="25" height="25"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="25" id="IbR-FC-Rr4"/>
-                                                    <constraint firstAttribute="width" constant="25" id="qx3-Sf-i4Q"/>
-                                                </constraints>
-                                            </imageView>
-                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="auth_google_icon" translatesAutoresizingMaskIntoConstraints="NO" id="baG-fR-MME">
-                                                <rect key="frame" x="55" y="0.0" width="25" height="25"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="width" constant="25" id="Zmt-HQ-KTE"/>
-                                                    <constraint firstAttribute="height" constant="25" id="aFH-gj-zEh"/>
-                                                </constraints>
-                                            </imageView>
-                                        </subviews>
-                                    </stackView>
-                                </subviews>
-                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="2pM-3O-Wy1"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -96,12 +66,9 @@
                             <constraint firstItem="ZED-bd-BNm" firstAttribute="top" secondItem="GR9-zo-HNw" secondAttribute="bottom" constant="10" id="Gov-MD-uCr"/>
                             <constraint firstItem="VAL-rG-YkM" firstAttribute="centerX" secondItem="ZED-bd-BNm" secondAttribute="centerX" id="PaF-zM-NuP"/>
                             <constraint firstItem="2pM-3O-Wy1" firstAttribute="trailing" secondItem="ZED-bd-BNm" secondAttribute="trailing" constant="16" id="V8z-zb-sNU"/>
-                            <constraint firstAttribute="bottom" secondItem="OD9-cb-hnz" secondAttribute="bottom" constant="20" id="VOK-Z2-Pqz"/>
                             <constraint firstItem="GR9-zo-HNw" firstAttribute="top" secondItem="Ogj-l8-lFR" secondAttribute="bottom" constant="10" id="b8o-Ll-tGd"/>
                             <constraint firstItem="ZED-bd-BNm" firstAttribute="leading" secondItem="2pM-3O-Wy1" secondAttribute="leading" constant="16" id="bWA-dM-osr"/>
-                            <constraint firstItem="OD9-cb-hnz" firstAttribute="leading" secondItem="KHA-UU-RDG" secondAttribute="leading" constant="16" id="boN-Nb-inb"/>
                             <constraint firstItem="rga-4C-m8M" firstAttribute="centerX" secondItem="KHA-UU-RDG" secondAttribute="centerX" id="fW5-RV-L36"/>
-                            <constraint firstAttribute="trailing" secondItem="OD9-cb-hnz" secondAttribute="trailing" constant="16" id="gFL-Ic-tMG"/>
                             <constraint firstItem="VAL-rG-YkM" firstAttribute="width" secondItem="ZED-bd-BNm" secondAttribute="width" id="hN9-UG-0qK"/>
                             <constraint firstItem="GR9-zo-HNw" firstAttribute="leading" secondItem="2pM-3O-Wy1" secondAttribute="leading" constant="16" id="hYJ-63-kZQ"/>
                             <constraint firstItem="Ogj-l8-lFR" firstAttribute="top" secondItem="rga-4C-m8M" secondAttribute="bottom" constant="20" id="jWs-bz-dVB"/>
@@ -113,7 +80,6 @@
                     </view>
                     <navigationItem key="navigationItem" id="LWJ-Ah-7Fb"/>
                     <connections>
-                        <outlet property="googleImageView" destination="baG-fR-MME" id="N1D-Rd-wic"/>
                         <outlet property="loginSegmentView" destination="ZED-bd-BNm" id="URK-DM-wRm"/>
                         <outlet property="segmentOutlet" destination="GR9-zo-HNw" id="Yy9-aA-axZ"/>
                         <outlet property="signupSegmentView" destination="VAL-rG-YkM" id="aXf-8T-ZST"/>
@@ -128,13 +94,13 @@
             <objects>
                 <viewController id="5zl-Tt-EQ3" customClass="SignUpViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ecp-v8-xjE">
-                        <rect key="frame" x="0.0" y="0.0" width="712" height="350"/>
+                        <rect key="frame" x="0.0" y="0.0" width="712" height="390"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="eDV-Os-YXx">
-                                <rect key="frame" x="0.0" y="10" width="712" height="289"/>
+                                <rect key="frame" x="0.0" y="10" width="712" height="350"/>
                                 <subviews>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="c5Z-cT-Mvj">
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="First Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="c5Z-cT-Mvj">
                                         <rect key="frame" x="0.0" y="0.0" width="712" height="45"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="45" id="FY3-if-0GD"/>
@@ -142,8 +108,16 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Email" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3Dk-iM-4Lz">
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Last Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-LN-TXT">
                                         <rect key="frame" x="0.0" y="61" width="712" height="45"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="45" id="SUp-LN-HGT"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Email" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3Dk-iM-4Lz">
+                                        <rect key="frame" x="0.0" y="122" width="712" height="45"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="45" id="XCX-mu-bin"/>
                                         </constraints>
@@ -151,14 +125,14 @@
                                         <textInputTraits key="textInputTraits"/>
                                     </textField>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-OTP-FLD" customClass="OTPInputView" customModule="SkyTrails" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="122" width="712" height="45"/>
+                                        <rect key="frame" x="0.0" y="183" width="712" height="45"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="45" id="SUp-OTP-HGT"/>
                                         </constraints>
                                     </view>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dpN-4a-2g2">
-                                        <rect key="frame" x="0.0" y="183" width="712" height="45"/>
+                                        <rect key="frame" x="0.0" y="244" width="712" height="45"/>
                                         <constraints>
                                             <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="45" id="W9G-Va-Tk1"/>
                                             <constraint firstAttribute="height" constant="45" id="fj4-za-cdo"/>
@@ -172,7 +146,7 @@
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-RSN-BTN">
-                                        <rect key="frame" x="0.0" y="244" width="712" height="45"/>
+                                        <rect key="frame" x="0.0" y="305" width="712" height="45"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="45" id="SUp-RSN-HGT"/>
                                         </constraints>
@@ -187,20 +161,17 @@
                                 </subviews>
                             </stackView>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="fyo-q4-cKc">
-                                <rect key="frame" x="0.0" y="314" width="712" height="43"/>
+                                <rect key="frame" x="0.0" y="365" width="712" height="28.5"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="By creating an account you agree to our " textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R9J-u5-O1b">
-                                        <rect key="frame" x="241.5" y="0.0" width="229.5" height="14.5"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="f9B-WG-GSq">
-                                        <rect key="frame" x="280" y="14.5" width="152.5" height="28.5"/>
+                                        <rect key="frame" x="280" y="0.0" width="152.5" height="28.5"/>
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="plain" title="Terms and Conditions">
                                             <fontDescription key="titleFontDescription" type="system" weight="semibold" pointSize="12"/>
                                         </buttonConfiguration>
+                                        <connections>
+                                            <action selector="termsAndConditionsTapped:" destination="5zl-Tt-EQ3" eventType="primaryActionTriggered" id="SUp-TRM-TAP"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                             </stackView>
@@ -211,7 +182,7 @@
                             <constraint firstItem="fyo-q4-cKc" firstAttribute="leading" secondItem="n1y-Pj-K1O" secondAttribute="leading" id="3Oo-oG-BJd"/>
                             <constraint firstItem="eDV-Os-YXx" firstAttribute="leading" secondItem="n1y-Pj-K1O" secondAttribute="leading" id="64k-Vm-hUO"/>
                             <constraint firstItem="n1y-Pj-K1O" firstAttribute="trailing" secondItem="fyo-q4-cKc" secondAttribute="trailing" id="Jzp-fC-lLA"/>
-                            <constraint firstItem="fyo-q4-cKc" firstAttribute="top" secondItem="eDV-Os-YXx" secondAttribute="bottom" constant="15" id="UXM-mv-6QM"/>
+                            <constraint firstItem="fyo-q4-cKc" firstAttribute="top" secondItem="eDV-Os-YXx" secondAttribute="bottom" constant="5" id="UXM-mv-6QM"/>
                             <constraint firstItem="eDV-Os-YXx" firstAttribute="top" secondItem="ecp-v8-xjE" secondAttribute="top" constant="10" id="Y36-dl-BtJ"/>
                             <constraint firstItem="n1y-Pj-K1O" firstAttribute="trailing" secondItem="eDV-Os-YXx" secondAttribute="trailing" id="y46-3Q-acm"/>
                         </constraints>
@@ -219,7 +190,8 @@
                     <connections>
                         <outlet property="actionButton" destination="dpN-4a-2g2" id="SUp-ACT-BTN"/>
                         <outlet property="emailTextField" destination="3Dk-iM-4Lz" id="oiS-EY-dic"/>
-                        <outlet property="nameTextField" destination="c5Z-cT-Mvj" id="hYG-PF-LeY"/>
+                        <outlet property="firstNameTextField" destination="c5Z-cT-Mvj" id="SUp-FN-OUT"/>
+                        <outlet property="lastNameTextField" destination="SUp-LN-TXT" id="SUp-LN-OUT"/>
                         <outlet property="otpInputView" destination="SUp-OTP-FLD" id="SUp-OTP-OUT"/>
                         <outlet property="resendButton" destination="SUp-RSN-BTN" id="SUp-RSN-OUT"/>
                     </connections>
@@ -233,7 +205,7 @@
             <objects>
                 <viewController id="VYd-mD-4mX" customClass="LoginViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="EjA-9E-57G">
-                        <rect key="frame" x="0.0" y="0.0" width="712" height="350"/>
+                        <rect key="frame" x="0.0" y="0.0" width="712" height="390"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="17" translatesAutoresizingMaskIntoConstraints="NO" id="Hv8-5J-Lhg">
@@ -257,7 +229,7 @@
                                 </subviews>
                             </stackView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="h1u-82-eKK">
-                                <rect key="frame" x="587" y="127" width="125" height="20"/>
+                                <rect key="frame" x="618" y="127" width="94" height="20"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="20" id="qQ6-cu-qmb"/>
                                 </constraints>
@@ -310,8 +282,6 @@
     </scenes>
     <resources>
         <image name="Brand_Logo" width="500" height="500"/>
-        <image name="auth_apple_icon" width="512" height="512"/>
-        <image name="auth_google_icon" width="512" height="512"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

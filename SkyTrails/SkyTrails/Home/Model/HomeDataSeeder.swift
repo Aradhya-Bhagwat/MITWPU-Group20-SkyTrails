@@ -103,6 +103,7 @@ class HomeDataSeeder {
         if let existing = try? context.fetch(descriptor).first {
             existing.hotspot = hotspot
             existing.validWeeks = data.validWeeks
+            existing.weeklyProbabilities = data.weeklyProbabilities
             existing.probability = data.probability
             if existing.bird == nil {
                 existing.bird = fetchBird(id: data.birdId, context: context)
@@ -121,6 +122,7 @@ class HomeDataSeeder {
                 hotspot: hotspot,
                 bird: bird,
                 validWeeks: data.validWeeks,
+                weeklyProbabilities: data.weeklyProbabilities,
                 probability: data.probability
             )
             context.insert(presence)
