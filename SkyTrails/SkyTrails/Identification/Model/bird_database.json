@@ -430,7 +430,7 @@
       "size_category": 2,
       "descriptionText": "A small raptor that breeds in Siberia and migrates across India to Southern Africa.",
       "conservation_status": "Least Concern",
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440001",
@@ -443,8 +443,7 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Urban",
-        "Pune, India"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -474,7 +473,7 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000006"
         }
       ],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440002",
@@ -487,8 +486,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Wetlands",
-        "Urban"
+        "Bharatpur, Rajasthan",
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -531,8 +530,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Wetlands",
-        "Urban"
+        "Bharatpur, Rajasthan",
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -575,8 +574,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Urban",
-        "Wetlands"
+        "Pune, Maharashtra",
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -619,8 +618,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Urban",
-        "Wetlands"
+        "Pune, Maharashtra",
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -663,8 +662,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Urban",
-        "Desert"
+        "Pune, Maharashtra",
+        "Thar Desert, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -707,8 +706,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Himalayas",
-        "Western Ghats"
+        "Himalayan Region, Uttarakhand",
+        "Western Ghats, Kerala"
       ],
       "validMonths": [
         10,
@@ -746,8 +745,8 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Himalayas",
-        "Urban"
+        "Himalayan Region, Uttarakhand",
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         10,
@@ -785,7 +784,7 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Himalayas"
+        "Himalayan Region, Uttarakhand"
       ],
       "validMonths": [
         1,
@@ -812,7 +811,7 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000030"
         }
       ],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "0be09e60-fde6-40ff-9655-a1672af90bad",
@@ -825,7 +824,7 @@
       "shape_id": "Anatidae",
       "size_category": 2,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -855,7 +854,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Western Ghats"
+        "Western Ghats, Kerala"
       ],
       "validMonths": [
         1,
@@ -872,7 +871,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "362c8b72-d531-438e-ae56-595ec7e3c1f2",
@@ -885,7 +884,7 @@
       "shape_id": "Ardeidae",
       "size_category": 1,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -915,7 +914,7 @@
       "shape_id": "Ardeidae",
       "size_category": 1,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -945,7 +944,7 @@
       "shape_id": "Charadriidae",
       "size_category": 3,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -962,7 +961,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "3f2a9c79-557b-4c63-a7b5-9b82783aa7f0",
@@ -975,7 +974,7 @@
       "shape_id": "Corvidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1005,7 +1004,7 @@
       "shape_id": "Corvidae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1035,7 +1034,7 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Himalayas"
+        "Himalayan Region, Uttarakhand"
       ],
       "validMonths": [
         1,
@@ -1052,7 +1051,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "b28ae7f6-6c53-4fc8-83de-f77eea8bfa8d",
@@ -1065,7 +1064,7 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Himalayas"
+        "Himalayan Region, Uttarakhand"
       ],
       "validMonths": [
         1,
@@ -1095,7 +1094,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Western Ghats"
+        "Western Ghats, Kerala"
       ],
       "validMonths": [
         1,
@@ -1112,7 +1111,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "dc79a955-8900-49bb-82a1-80a4bc9475f9",
@@ -1125,7 +1124,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1155,7 +1154,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1185,7 +1184,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1215,7 +1214,7 @@
       "shape_id": "Pycnonotidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1245,7 +1244,7 @@
       "shape_id": "Pycnonotidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1262,7 +1261,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "b66a14d3-d59c-4682-8fdb-2627ec3cdd4e",
@@ -1275,7 +1274,7 @@
       "shape_id": "Charadriidae",
       "size_category": 4,
       "validLocations": [
-        "Dessert"
+        "Thar Desert, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -1292,7 +1291,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "ec28ecc4-664e-47f5-944b-f2147d4988f5",
@@ -1305,7 +1304,7 @@
       "shape_id": "Picidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1335,7 +1334,7 @@
       "shape_id": "Columbidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1365,7 +1364,7 @@
       "shape_id": "Columbidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1395,7 +1394,7 @@
       "shape_id": "Picidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1412,7 +1411,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "107faec9-819c-41da-a92b-832b1e6d48f0",
@@ -1425,7 +1424,7 @@
       "shape_id": "Phasianidae",
       "size_category": 2,
       "validLocations": [
-        "Himalayas"
+        "Himalayan Region, Uttarakhand"
       ],
       "validMonths": [
         1,
@@ -1455,7 +1454,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Western Ghats"
+        "Western Ghats, Kerala"
       ],
       "validMonths": [
         1,
@@ -1485,7 +1484,7 @@
       "shape_id": "Psittaculidae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1515,7 +1514,7 @@
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
       "validLocations": [
-        "Himalayas"
+        "Himalayan Region, Uttarakhand"
       ],
       "validMonths": [
         1,
@@ -1545,7 +1544,7 @@
       "shape_id": "Charadriidae",
       "size_category": 4,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -1575,7 +1574,7 @@
       "shape_id": "Ardeidae",
       "size_category": 3,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -1592,7 +1591,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "9aaf3820-ffbf-4954-a557-020038280c69",
@@ -1605,7 +1604,7 @@
       "shape_id": "Columbidae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1635,7 +1634,7 @@
       "shape_id": "Muscicapidae",
       "size_category": 1,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -1665,7 +1664,7 @@
       "shape_id": "Apodidae",
       "size_category": 0,
       "validLocations": [
-        "Wetlands"
+        "Bharatpur, Rajasthan"
       ],
       "validMonths": [
         1,
@@ -1695,7 +1694,7 @@
       "shape_id": "Nectariniidae",
       "size_category": 0,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1725,7 +1724,7 @@
       "shape_id": "Alcedinidae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1742,7 +1741,7 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetland"
+      "likelySpot": "Wetlands"
     },
     {
       "id": "a4c26ca3-6beb-49fc-83b0-de1036a48c5a",
@@ -1755,7 +1754,7 @@
       "shape_id": "Picidae",
       "size_category": 3,
       "validLocations": [
-        "Western Ghats"
+        "Western Ghats, Kerala"
       ],
       "validMonths": [
         1,
@@ -1785,7 +1784,7 @@
       "shape_id": "Strigidae",
       "size_category": 1,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1815,7 +1814,7 @@
       "shape_id": "Picidae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1845,7 +1844,7 @@
       "shape_id": "Accipitridae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
@@ -1875,7 +1874,7 @@
       "shape_id": "Accipitridae",
       "size_category": 2,
       "validLocations": [
-        "Urban"
+        "Pune, Maharashtra"
       ],
       "validMonths": [
         1,
