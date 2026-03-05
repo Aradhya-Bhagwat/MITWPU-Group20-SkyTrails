@@ -21,22 +21,19 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="200"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="g8q-vn-XUa">
-                                <rect key="frame" x="8" y="8" width="280" height="184"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="280" id="4To-f3-Js8"/>
-                                </constraints>
+                                <rect key="frame" x="8" y="8" width="176.5" height="184"/>
                             </imageView>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Fgd-P9-gDf">
-                                <rect key="frame" x="296" y="45.5" width="85" height="109"/>
+                                <rect key="frame" x="192.5" y="45.5" width="188.5" height="109"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="No custom watchlists yet" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="U4H-gx-sWB">
-                                        <rect key="frame" x="0.0" y="0.0" width="85" height="62.5"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="188.5" height="62.5"/>
                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="26"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalCompressionResistancePriority="751" text="Create a watchlist to organize birds you want to track" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Pkv-Cv-8pQ">
-                                        <rect key="frame" x="0.0" y="70.5" width="85" height="38.5"/>
+                                        <rect key="frame" x="0.0" y="70.5" width="188.5" height="38.5"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                         <color key="textColor" systemColor="secondaryLabelColor"/>
                                         <nil key="highlightedColor"/>
@@ -52,6 +49,7 @@
                             <constraint firstItem="g8q-vn-XUa" firstAttribute="leading" secondItem="nsp-eC-eFq" secondAttribute="leading" constant="8" id="KAw-Q7-HsW"/>
                             <constraint firstItem="Fgd-P9-gDf" firstAttribute="centerY" secondItem="nsp-eC-eFq" secondAttribute="centerY" id="Qcz-Eh-vB8"/>
                             <constraint firstAttribute="trailing" secondItem="Fgd-P9-gDf" secondAttribute="trailing" constant="12" id="Whv-QL-fIM"/>
+                            <constraint firstItem="g8q-vn-XUa" firstAttribute="width" secondItem="nsp-eC-eFq" secondAttribute="width" multiplier="0.45" id="cnW-zU-fqb"/>
                             <constraint firstItem="Fgd-P9-gDf" firstAttribute="top" relation="greaterThanOrEqual" secondItem="nsp-eC-eFq" secondAttribute="top" constant="12" id="mR9-yq-PD0"/>
                             <constraint firstItem="Fgd-P9-gDf" firstAttribute="bottom" relation="lessThanOrEqual" secondItem="nsp-eC-eFq" secondAttribute="bottom" constant="-12" id="x3T-Ul-oLq"/>
                         </constraints>
