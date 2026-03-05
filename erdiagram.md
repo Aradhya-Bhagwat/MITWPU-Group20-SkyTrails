@@ -317,3 +317,247 @@ Table CommunityObservation {
   imageName String
   birdName String
 }
+
+// -----------------------------------------------------------------------------
+// Supabase Backend DBML for dbdiagram.io
+// -----------------------------------------------------------------------------
+
+Table public.bird_field_mark_variant_links {
+  id uuid [primary key]
+  bird_id uuid [not null]
+  field_mark_id uuid
+  variant_id uuid
+  area text [not null]
+}
+
+Table public.birds {
+  id uuid [primary key]
+  common_name text [not null]
+  scientific_name text
+  static_image_name text
+  family text
+  order_name text
+  description_text text
+  conservation_status text
+  migration_strategy text
+  hemisphere text
+  valid_locations jsonb
+  valid_months jsonb
+  shape_id text
+  size_category integer
+  field_mark_data jsonb
+}
+
+Table public.identification_candidates {
+  id uuid [primary key]
+  result_id uuid
+  bird_id uuid
+  confidence double_precision
+  rank integer
+  matched_features ARRAY
+  mismatched_features ARRAY
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table public.identification_results {
+  id uuid [primary key]
+  session_id uuid
+  owner_id uuid
+  bird_id uuid
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table public.identification_session_marks {
+  id uuid [primary key]
+  session_id uuid
+  field_mark_id uuid
+  variant_id uuid
+  area text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table public.identification_sessions {
+  id uuid [primary key]
+  user_id uuid
+  status text
+  location_lat double_precision
+  location_long double_precision
+  device_info text
+  notes text
+  is_public boolean
+  weather_conditions text
+  metadata jsonb
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table public.news_articles {
+  id uuid [primary key]
+  title text
+  description text
+  image_url text
+  article_url text [unique]
+  source text
+  published_at timestamp
+  created_at timestamp
+}
+
+Table public.observed_bird_photos {
+  id uuid [primary key]
+  watchlist_entry_id uuid [not null]
+  image_path text [not null]
+  storage_url text
+  is_uploaded boolean
+  row_version integer
+  last_synced_at timestamp
+  captured_at timestamp
+  uploaded_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table public.photo_delete_gc_queue {
+  id uuid [primary key]
+  photo_id uuid
+  storage_path text [not null]
+  status text [not null]
+  retry_count integer [not null]
+  last_error text
+  created_at timestamp [not null]
+  updated_at timestamp
+}
+
+Table public.users {
+  id uuid [primary key]
+  name text [not null]
+  gender text
+  email text [not null]
+  profile_photo text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table auth.users {
+  id uuid [primary key]
+}
+
+Table public.watchlist_entries {
+  id uuid [primary key]
+  watchlist_id uuid [not null]
+  bird_id uuid
+  nickname text
+  status text [not null]
+  notes text
+  added_date timestamp
+  observation_date timestamp
+  to_observe_start_date timestamp
+  to_observe_end_date timestamp
+  observed_by text
+  lat double_precision
+  lon double_precision
+  location_display_name text
+  priority integer
+  notify_upcoming boolean
+  target_date_range text
+  row_version integer
+  last_synced_at timestamp
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  observed_by_user_id uuid
+}
+
+Table public.watchlist_rule_migration_audit {
+  id bigint [primary key]
+  rule_id uuid [not null]
+  watchlist_id uuid [not null]
+  parameters_json text
+  error_reason text [not null]
+  captured_at timestamp [not null]
+}
+
+Table public.watchlist_rules {
+  id uuid [primary key]
+  watchlist_id uuid [not null]
+  rule_type text [not null]
+  parameters_json text [not null]
+  is_active boolean
+  priority integer
+  row_version integer
+  last_synced_at timestamp
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  lat double_precision
+  lon double_precision
+  radius_km double_precision
+  start_date timestamp
+  end_date timestamp
+  shape_id text
+  pattern_key text
+}
+
+Table public.watchlist_shares {
+  id uuid [primary key]
+  watchlist_id uuid [not null]
+  user_id uuid [not null]
+  permission text
+  shared_at timestamp
+  shared_by_user_id uuid
+  sync_status text [not null]
+  server_row_version integer [not null]
+  last_synced_at timestamp
+  deleted_at timestamp
+}
+
+Table public.watchlists {
+  id uuid [primary key]
+  owner_id uuid
+  type text
+  title text
+  location text
+  location_display_name text
+  start_date timestamp
+  end_date timestamp
+  observed_count integer
+  species_count integer
+  cover_image_path text
+  species_rule_enabled boolean
+  species_rule_shape_id text
+  location_rule_enabled boolean
+  location_rule_lat double_precision
+  location_rule_lon double_precision
+  location_rule_radius_km double_precision
+  location_rule_display_name text
+  date_rule_enabled boolean
+  date_rule_start_date timestamp
+  date_rule_end_date timestamp
+  row_version integer
+  last_synced_at timestamp
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Relationships
+Ref: public.bird_field_mark_variant_links.bird_id > public.birds.id
+Ref: public.identification_candidates.result_id > public.identification_results.id
+Ref: public.identification_candidates.bird_id > public.birds.id
+Ref: public.identification_results.session_id > public.identification_sessions.id
+Ref: public.identification_results.owner_id > auth.users.id
+Ref: public.identification_results.bird_id > public.birds.id
+Ref: public.identification_session_marks.session_id > public.identification_sessions.id
+Ref: public.identification_sessions.user_id > auth.users.id
+Ref: public.observed_bird_photos.watchlist_entry_id > public.watchlist_entries.id
+Ref: public.users.id - auth.users.id
+Ref: public.watchlist_entries.bird_id > public.birds.id
+Ref: public.watchlist_entries.observed_by_user_id > auth.users.id
+Ref: public.watchlist_entries.watchlist_id > public.watchlists.id
+Ref: public.watchlist_rules.watchlist_id > public.watchlists.id
+Ref: public.watchlist_shares.watchlist_id > public.watchlists.id
+Ref: public.watchlist_shares.user_id > auth.users.id
+Ref: public.watchlist_shares.shared_by_user_id > auth.users.id
+Ref: public.watchlists.owner_id > auth.users.id
