@@ -1,12 +1,6 @@
 # 🐦 SkyTrails: Your Personal Birding Companion
 
 SkyTrails is a comprehensive iOS application designed for birdwatching enthusiasts. It provides a powerful suite of tools to help users create and manage watchlists, log sightings, identify birds through a step-by-step process, and visualize migration patterns. This project was developed by a team of four passionate students, blending software engineering with a love for conservation.
-
-<p align="center">
-  <!-- TODO: Add a GIF or screenshot of the app's home screen -->
-  https://github.com/user-attachments/assets/1ed6b157-4eb9-4732-8ffc-449bda78ecef
-</p>
-
 ---
 
 ## ✨ Core Features
