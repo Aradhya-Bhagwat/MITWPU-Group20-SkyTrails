@@ -192,8 +192,11 @@ class PredictOutputViewController: UIViewController {
         let startDate = input?.startDate ?? Date()
         let endDate = input?.endDate ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
         
+        // Find actual bird ID from database to ensure path data can be found
+        let birdID = WatchlistManager.shared.findBird(byName: prediction.birdName)?.id.uuidString ?? UUID().uuidString
+        
         let birdInput = BirdDateInput(
-            species: SpeciesData(id: UUID().uuidString, name: prediction.birdName, imageName: prediction.imageName),
+            species: SpeciesData(id: birdID, name: prediction.birdName, imageName: prediction.imageName),
             startDate: startDate,
             endDate: endDate
         )
