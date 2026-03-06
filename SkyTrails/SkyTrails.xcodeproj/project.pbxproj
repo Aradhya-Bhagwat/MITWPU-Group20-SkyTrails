@@ -169,7 +169,7 @@
 				DEVELOPMENT_TEAM = K567RFG9JP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SkyTrails/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = GreenAura;
+				INFOPLIST_KEY_CFBundleDisplayName = SkyTrails;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "SkyTrails uses the camera so you can set your profile photo.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = always;
@@ -209,7 +209,7 @@
 				DEVELOPMENT_TEAM = K567RFG9JP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SkyTrails/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = GreenAura;
+				INFOPLIST_KEY_CFBundleDisplayName = SkyTrails;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "SkyTrails uses the camera so you can set your profile photo.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = always;
