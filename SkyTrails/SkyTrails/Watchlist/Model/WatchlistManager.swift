@@ -1,17 +1,8 @@
-//
-//  WatchlistManager.swift
-//  SkyTrails
-//
-//  Refactored: Service Coordinator Pattern
-//  Delegates all business logic to focused services
-//
 
 import Foundation
 import SwiftData
 import CoreLocation
 import UIKit
-
-// MARK: - Legacy Repository Error (Deprecated, use WatchlistError)
 
 @available(*, deprecated, message: "Use WatchlistError instead")
 enum RepositoryError: Error, LocalizedError {
@@ -31,48 +22,32 @@ enum RepositoryError: Error, LocalizedError {
     }
 }
 
-// MARK: - Watchlist Manager (Service Coordinator)
-
 @MainActor
 final class WatchlistManager: WatchlistRepository {
     
     static let shared = WatchlistManager()
     static let didAdoptPendingWatchlistsNotification = Notification.Name("WatchlistManagerDidAdoptPendingWatchlists")
     
-    // MARK: - SwiftData Container
-    
     private let container: ModelContainer
-    internal let context: ModelContext  // Shared internally within the model layer
-    
-    // MARK: - Services (Dependency Injection)
+    internal let context: ModelContext
     
     private let persistence: WatchlistPersistenceService
     private let query: WatchlistQueryService
     private let rules: WatchlistRuleService
     private let photos: WatchlistPhotoService
     
-    // MARK: - Legacy State Management
-    
     private var isDataLoaded = false
     private var loadCompletionHandlers: [(Bool) -> Void] = []
     static let didLoadDataNotification = Notification.Name("WatchlistManagerDidLoadData")
     
-    // MARK: - Initialization
-    
     private init() {
         do {
-            print("🚀 [WatchlistManager] Initializing...")
-            
-            // Ensure Application Support Directory Exists
             let fileManager = FileManager.default
             if let supportDir = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
                 if !fileManager.fileExists(atPath: supportDir.path) {
                     try fileManager.createDirectory(at: supportDir, withIntermediateDirectories: true, attributes: nil)
-                    print("✅ [WatchlistManager] Created Application Support directory")
                 }
             }
-            
-            // Init SwiftData Container
             let schema = Schema([
                 Watchlist.self,
                 WatchlistEntry.self,
@@ -81,7 +56,6 @@ final class WatchlistManager: WatchlistRepository {
                 ObservedBirdPhoto.self,
                 Bird.self,
                 BirdFieldMarkVariantLink.self,
-                // Identification models
                 BirdShape.self,
                 BirdFieldMark.self,
                 FieldMarkVariant.self,
@@ -89,7 +63,6 @@ final class WatchlistManager: WatchlistRepository {
                 IdentificationSessionFieldMark.self,
                 IdentificationResult.self,
                 IdentificationCandidate.self,
-                // Integration models
                 Hotspot.self,
                 HotspotSpeciesPresence.self,
                 MigrationSession.self,
@@ -100,32 +73,21 @@ final class WatchlistManager: WatchlistRepository {
             let config = ModelConfiguration(isStoredInMemoryOnly: false)
             container = try ModelContainer(for: schema, configurations: [config])
             context = container.mainContext
-            print("✅ [WatchlistManager] SwiftData container initialized")
-            
-            // Initialize Services
             persistence = WatchlistPersistenceService(context: context)
             query = WatchlistQueryService(context: context, persistence: persistence)
             rules = WatchlistRuleService(context: context, persistence: persistence)
             photos = WatchlistPhotoService(context: context, persistence: persistence)
-            print("✅ [WatchlistManager] Services initialized")
-
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(handlePhotoUploadNotification(_:)),
                 name: NSNotification.Name("DidUploadPhoto"),
                 object: nil
             )
-            
-            print("ℹ️ [WatchlistManager] Watchlist seeding deferred to AppDelegate")
-            
             isDataLoaded = true
             
         } catch {
-            print("💥 [WatchlistManager] FATAL: Failed to init SwiftData: \(error)")
             fatalError("Failed to init SwiftData: \(error)")
         }
-        
-        // Post-Init Notification for legacy support
         DispatchQueue.main.async { [weak self] in
             self?.notifyDataLoaded(success: true)
         }
@@ -141,9 +103,7 @@ final class WatchlistManager: WatchlistRepository {
             try context.save()
             try? photos.deleteAllLocalPhotos()
             LocationPreferences.shared.clear()
-            print("🧹 [WatchlistManager] Cleared user watchlist data on logout")
         } catch {
-            print("⚠️ [WatchlistManager] Failed to clear user data on logout: \(error)")
         }
     }
 
@@ -168,51 +128,28 @@ final class WatchlistManager: WatchlistRepository {
     func seedIfNeeded() {
         let hasSeededKey = "kAppHasSeededData_v1"
         guard !UserDefaults.standard.bool(forKey: hasSeededKey) else {
-            print("ℹ️ [WatchlistManager] Database already seeded. Skipping watchlist seed.")
             return
         }
-        
-        print("🗑️ [WatchlistManager] First launch or reset: clearing watchlists...")
         let descriptor = FetchDescriptor<Watchlist>()
         if let existing = try? context.fetch(descriptor) {
             existing.forEach { context.delete($0) }
         }
         try? context.save()
-        print("✅ [WatchlistManager] Cleared watchlists")
-        
         do {
             try WatchlistSeeder.seed(context: context)
             UserDefaults.standard.set(true, forKey: hasSeededKey)
-            print("✅ [WatchlistManager] Watchlist seeding completed successfully")
         } catch {
-            print("❌ [WatchlistManager] Watchlist seeding failed: \(error)")
         }
     }
-
-    /// Global seeding orchestrator called from AppDelegate
     @MainActor
     func performGlobalSeeding() async {
-        print("🌱 [WatchlistManager] Starting sequential database seeding...")
-        
         do {
-            print("📚 [WatchlistManager] Step 1/3: Seeding Bird Database...")
             try BirdDatabaseSeeder.shared.seed(modelContext: context)
-            print("✅ [WatchlistManager] Bird Database seeded successfully")
-            
-            print("🦆 [WatchlistManager] Step 2/3: Seeding WatchlistsIfNeeded...")
             seedIfNeeded()
-            
-            print("🏠 [WatchlistManager] Step 3/3: Seeding Home Data...")
             try await HomeDataSeeder.shared.seed(modelContext: context)
-            print("✅ [WatchlistManager] Home Data seeded successfully")
-            
-            print("✅ [WatchlistManager] All seeding complete")
         } catch {
-            print("❌ [WatchlistManager] CRITICAL: Global seeding failed: \(error)")
         }
     }
-    
-    // MARK: - Repository Protocol Implementation
     
     func loadDashboardData() async throws -> (
         myWatchlist: WatchlistSummaryDTO?,
@@ -238,7 +175,6 @@ final class WatchlistManager: WatchlistRepository {
                 )
             }
         } catch {
-            print("⚠️ [WatchlistManager] Failed to bind watchlist ownership: \(error)")
         }
     }
     
@@ -247,15 +183,12 @@ final class WatchlistManager: WatchlistRepository {
     }
     
     func ensureMyWatchlistExists() async throws -> UUID {
-        // My Watchlist is now virtual, return special ID
         return WatchlistConstants.myWatchlistID
     }
     
     func getPersonalWatchlists() -> [Watchlist] {
         return (try? persistence.fetchWatchlists(type: .custom)) ?? []
     }
-    
-    // MARK: - Legacy Data Loading Support
     
     func onDataLoaded(_ handler: @escaping (Bool) -> Void) {
         if isDataLoaded {
@@ -275,10 +208,6 @@ final class WatchlistManager: WatchlistRepository {
         loadCompletionHandlers.forEach { $0(success) }
         loadCompletionHandlers.removeAll()
     }
-    
-    // MARK: - Public API (Delegates to Services)
-    
-    // CRUD Operations
     func fetchWatchlists(type: WatchlistType? = nil) throws -> [Watchlist] {
         return try persistence.fetchWatchlists(type: type)
     }
@@ -323,15 +252,11 @@ final class WatchlistManager: WatchlistRepository {
             endDate: endDate
         )
     }
-    
-    // Entry Operations
     func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus? = nil) throws -> [WatchlistEntry] {
-        // Handle virtual "My Watchlist" ID
         if watchlistID == WatchlistConstants.myWatchlistID {
             let identifier = WatchlistIdentifier.virtual
             let filter = WatchlistQueryFilter(status: status)
             let dtos = try query.fetchEntries(identifier: identifier, filter: filter)
-            // Convert back to entities for legacy support (not ideal, but preserves compatibility)
             return dtos.compactMap { dto in
                 try? persistence.fetchEntry(id: dto.id)
             }
@@ -341,21 +266,15 @@ final class WatchlistManager: WatchlistRepository {
     }
     
     func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) throws {
-        print("🐦 [WatchlistManager] addBirds() delegating to service...")
-        
         var targetWatchlistId = watchlistId
         let myWatchlistId = WatchlistConstants.myWatchlistID
-        
-        // Resolve virtual "My Watchlist" ID to real watchlist
         if watchlistId == myWatchlistId {
-            print("⚠️ [WatchlistManager] Virtual 'My Watchlist' ID detected, resolving...")
             let customLists = try fetchWatchlists(type: .custom)
             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
                 targetWatchlistId = existing.id
             } else if let first = customLists.first {
                 targetWatchlistId = first.id
             } else {
-                // Create fallback watchlist
                 _ = try addWatchlist(
                     title: "My Watchlist",
                     location: "General",
@@ -365,7 +284,6 @@ final class WatchlistManager: WatchlistRepository {
                 if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
                     targetWatchlistId = newWl.id
                 } else {
-                    print("❌ [WatchlistManager] CRITICAL: Failed to create fallback watchlist")
                     throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
                 }
             }
@@ -373,8 +291,6 @@ final class WatchlistManager: WatchlistRepository {
         
         let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
         _ = try persistence.addBirdsToWatchlist(watchlistID: targetWatchlistId, birds: birds, status: status)
-        
-        // Refresh cover image
         if let watchlist = try? persistence.fetchWatchlist(id: targetWatchlistId) {
             refreshCoverImage(for: watchlist)
         }
@@ -398,8 +314,6 @@ final class WatchlistManager: WatchlistRepository {
             toObserveStartDate: nil,
             toObserveEndDate: nil
         )
-        
-        // Refresh cover image if observation date changed
         if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
             refreshCoverImage(for: watchlist)
         }
@@ -408,8 +322,6 @@ final class WatchlistManager: WatchlistRepository {
     func deleteEntry(entryId: UUID) throws {
         let watchlist = (try? persistence.fetchEntry(id: entryId))?.watchlist
         try persistence.deleteEntry(id: entryId)
-        
-        // Refresh cover image
         if let watchlist = watchlist {
             refreshCoverImage(for: watchlist)
         }
@@ -417,8 +329,6 @@ final class WatchlistManager: WatchlistRepository {
     
     func toggleObservationStatus(entryId: UUID) throws {
         try persistence.toggleEntryStatus(id: entryId)
-        
-        // Refresh cover image
         if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
             refreshCoverImage(for: watchlist)
         }
@@ -427,8 +337,6 @@ final class WatchlistManager: WatchlistRepository {
     func updateEntryNotifyUpcoming(entryId: UUID, notify: Bool) throws {
         try persistence.updateEntryNotifyUpcoming(id: entryId, notify: notify)
     }
-    
-    // Bird Operations
     func fetchAllBirds() -> [Bird] {
         return (try? persistence.fetchAllBirds()) ?? []
     }
@@ -449,8 +357,6 @@ final class WatchlistManager: WatchlistRepository {
             validLocations: []
         )
     }
-    
-    // Stats
     func getStats(for watchlistID: UUID) throws -> (observed: Int, total: Int) {
         let identifier: WatchlistIdentifier
         if watchlistID == WatchlistConstants.myWatchlistID {
@@ -466,10 +372,7 @@ final class WatchlistManager: WatchlistRepository {
     func fetchGlobalObservedCount() throws -> Int {
         return try query.getGlobalObservedCount()
     }
-    
-    // Photo Operations
     func findEntry(birdId: UUID, watchlistId: UUID) throws -> WatchlistEntry? {
-        // Resolve virtual My Watchlist ID
         var targetId = watchlistId
         if watchlistId == WatchlistConstants.myWatchlistID {
             let customLists = try fetchWatchlists(type: .custom)
@@ -486,14 +389,10 @@ final class WatchlistManager: WatchlistRepository {
     
     func attachPhoto(entryId: UUID, imageName: String) throws {
         _ = try photos.attachExistingPhoto(to: entryId, imagePath: imageName)
-        
-        // Refresh cover image
         if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
             refreshCoverImage(for: watchlist)
         }
     }
-    
-    // MARK: - Internal Helpers
     
     private func refreshCoverImage(for watchlist: Watchlist) {
         Task {
@@ -501,8 +400,6 @@ final class WatchlistManager: WatchlistRepository {
             try? context.save()
         }
     }
-    
-    // Rule Operations
     func applyRules(to watchlistId: UUID) async throws {
         try await rules.applyRules(to: watchlistId)
     }
@@ -548,18 +445,6 @@ final class WatchlistManager: WatchlistRepository {
     func deleteRule(ruleId: UUID) throws {
         try persistence.deleteRule(id: ruleId)
     }
-    
-    // MARK: - Rule-Based Bird Matching
-    
-    /// Adds a bird to all watchlists that match the active rules
-    /// - Parameters:
-    ///   - bird: The bird to add
-    ///   - location: Observation location (required for location rule matching)
-    ///   - observationDate: Observation date (required for date rule matching)
-    ///   - notes: Optional notes for the entry
-    ///   - asObserved: Whether to mark as observed or to_observe
-    /// - Returns: Array of watchlist IDs where the bird was added
-    /// - Throws: WatchlistError.noMatchingWatchlists if no watchlists match
     func addBirdWithRuleMatching(
         bird: Bird,
         location: CLLocationCoordinate2D?,
@@ -567,9 +452,6 @@ final class WatchlistManager: WatchlistRepository {
         notes: String?,
         asObserved: Bool
     ) throws -> [UUID] {
-        print("🎯 [WatchlistManager] addBirdWithRuleMatching() called for: \(bird.commonName)")
-        
-        // Fetch all custom watchlists
         let allWatchlists = try persistence.fetchWatchlists(type: .custom)
         var matchedWatchlistIds: [UUID] = []
         
@@ -611,16 +493,10 @@ final class WatchlistManager: WatchlistRepository {
                     break
                 }
             }
-            
-            // If any rule matched, add bird to this watchlist
             if isMatch {
                 let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
                 _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.id, birds: [bird], status: status)
-                
-                // Refresh cover image
                 refreshCoverImage(for: watchlist)
-                
-                // Update the entry with notes and location if provided
                 if let newEntry = try? findEntry(birdId: bird.id, watchlistId: watchlist.id) {
                     try persistence.updateEntry(
                         id: newEntry.id,
@@ -639,15 +515,10 @@ final class WatchlistManager: WatchlistRepository {
         }
         
         if matchedWatchlistIds.isEmpty {
-            print("❌ [WatchlistManager] No watchlists matched the rules")
             throw WatchlistError.noMatchingWatchlists
         }
-        
-        print("✅ [WatchlistManager] Bird added to \(matchedWatchlistIds.count) watchlist(s)")
         return matchedWatchlistIds
     }
-    
-    // Query Operations
     func getUpcomingBirds(
         userLocation: CLLocationCoordinate2D,
         currentWeek: Int,
@@ -712,9 +583,6 @@ final class WatchlistManager: WatchlistRepository {
         return dtos.compactMap { try? persistence.fetchEntry(id: $0.id) }
     }
     
-    // MARK: - Global Data Access (for HomeManager components)
-    // Providing managed access to core entities without leaking context directly
-    
     func fetchBird(id: UUID) throws -> Bird? {
         return try persistence.fetchBird(id: id)
     }
@@ -728,8 +596,6 @@ final class WatchlistManager: WatchlistRepository {
         return try context.fetch(descriptor).first
     }
     
-    // MARK: - Deprecated Methods
-    
     @available(*, deprecated, message: "Use LocationService.shared.reverseGeocode() instead")
     func lat_lon_to_Name(lat: Double, lon: Double) async -> String? {
         return await LocationService.shared.reverseGeocode(lat: lat, lon: lon)
@@ -739,8 +605,6 @@ final class WatchlistManager: WatchlistRepository {
     func saveContext() {
         try? context.save()
     }
-    
-    // MARK: - DTO Mapping (Legacy Support)
     
     func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
         return query.buildMyWatchlistDTO(from: allLists)

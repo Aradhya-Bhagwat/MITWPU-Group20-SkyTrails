@@ -1,14 +1,6 @@
-//
-//  HomePersistenceModels.swift
-//  SkyTrails
-//
-//  Created by Gemini CLI on 16/02/2026.
-//
 
 import Foundation
 import SwiftData
-
-// MARK: - Hotspot Models
 
 @Model
 final class Hotspot {
@@ -20,8 +12,6 @@ final class Hotspot {
     var lat: Double
     var lon: Double
     var imageName: String?
-    
-    // Relationships
     @Relationship(deleteRule: .cascade, inverse: \HotspotSpeciesPresence.hotspot)
     var speciesList: [HotspotSpeciesPresence]?
     
@@ -42,11 +32,9 @@ final class HotspotSpeciesPresence {
     
     var hotspot: Hotspot?
     var bird: Bird?
-    
-    // Seasonality data
-    var validWeeks: [Int]? // Week numbers when species is present
-    var weeklyProbabilities: [Int]? // Optional; index aligned with validWeeks
-    var probability: Int? // Likelihood of sighting (0-100)
+    var validWeeks: [Int]?
+    var weeklyProbabilities: [Int]?
+    var probability: Int?
     
     init(
         id: UUID = UUID(),
@@ -65,8 +53,6 @@ final class HotspotSpeciesPresence {
     }
 }
 
-// MARK: - Migration Models
-
 @Model
 final class MigrationSession {
     @Attribute(.unique)
@@ -75,9 +61,7 @@ final class MigrationSession {
     var bird: Bird?
     var startWeek: Int
     var endWeek: Int
-    var hemisphere: String? // "northern" or "southern"
-    
-    // Relationships
+    var hemisphere: String?
     @Relationship(deleteRule: .cascade, inverse: \TrajectoryPath.session)
     var trajectoryPaths: [TrajectoryPath]?
     
@@ -108,7 +92,7 @@ final class TrajectoryPath {
     var week: Int
     var lat: Double
     var lon: Double
-    var probability: Int? // 0-100
+    var probability: Int?
     
     init(
         id: UUID = UUID(),
@@ -133,7 +117,7 @@ final class MigrationDataPayload {
     var id: UUID
     
     var session: MigrationSession?
-    var weeklyData: Data? // JSON or binary data
+    var weeklyData: Data?
     
     init(id: UUID = UUID(), session: MigrationSession? = nil, weeklyData: Data? = nil) {
         self.id = id
@@ -142,14 +126,12 @@ final class MigrationDataPayload {
     }
 }
 
-// MARK: - Community Models
-
 @Model
 final class CommunityObservation {
     @Attribute(.unique)
     var id: UUID
     
-    var observationId: String? // Remote server ID
+    var observationId: String?
     var username: String
     var userAvatar: String?
     var observationTitle: String

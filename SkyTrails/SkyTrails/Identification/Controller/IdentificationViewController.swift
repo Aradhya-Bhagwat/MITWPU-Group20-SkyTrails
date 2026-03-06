@@ -1,13 +1,6 @@
-//
-//  IdentificationViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 25/11/25.
-//
 
 import UIKit
 import SwiftData
-
 
 struct IdentificationOption {
     let category: FilterCategory
@@ -19,8 +12,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private var flowSteps: [IdentificationStep] = []
     private var currentStepIndex: Int = 0
     private var progressSteps: [IdentificationStep] = []
-    
-    // Local state for UI
     private var isSeeding = false
     private var options: [IdentificationOption] = []
     private var histories: [IdentificationSession] = []
@@ -33,8 +24,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
-    
-    // Updated to Implicitly Unwrapped Optional because it requires context to init
     var model: IdentificationManager!
     
     override func viewDidLayoutSubviews() {
@@ -49,7 +38,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         triggerManifestRefreshIfNeeded()
-        // Refresh history when view appears (in case new sessions were saved)
         fetchHistory()
         updateHistoryInteraction()
         tableView.reloadData()
@@ -60,14 +48,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTraitChangeHandling()
-        
-        // Initialize SwiftData and Manager
         setupModel()
-        
-        // Initialize Options based on FilterCategory enum
         setupOptions()
-        
-        // Fetch initial history
         fetchHistory()
         
         let nib = UINib(nibName: "HistoryCollectionViewCell", bundle: nil)
@@ -136,12 +118,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     private func setupModel() {
-        // Use the shared context from WatchlistManager to avoid store conflicts
         let context = WatchlistManager.shared.context
         self.model = IdentificationManager(modelContext: context)
 
         do {
-            // Seed data if the database is empty
             let birdCount = try context.fetchCount(FetchDescriptor<Bird>())
             let shapeCount = try context.fetchCount(FetchDescriptor<BirdShape>())
             let fieldMarkCount = try context.fetchCount(FetchDescriptor<BirdFieldMark>())
@@ -161,9 +141,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                     bird.shape != nil && bird.size_category != nil
                 })
             )
-            print("DEBUG: Seed check counts -> birds: \(birdCount), shapes: \(shapeCount), fieldMarks: \(fieldMarkCount), variants: \(variantCount), linkedFieldMarks: \(linkedFieldMarkCount), linkedVariants: \(linkedVariantCount)")
             if birdCount > 0 && shapeCount == 0 {
-                print("WARNING: Birds exist but shapes are missing. IdentificationSeeder may be skipped.")
             }
             let needsSeeding =
                 shapeCount == 0 ||
@@ -174,29 +152,25 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 linkedVariantCount < variantCount
             if needsSeeding {
                 isSeeding = true
-                updateSelectionState() // Disable button while seeding
+                updateSelectionState()
                 Task { @MainActor in
                     do {
                         try IdentificationSeeder.shared.seed(context: context)
-                        // Must re-fetch shapes after seeding
                         self.model.fetchShapes()
                         self.isSeeding = false
-                        self.updateSelectionState() // Re-enable button
+                        self.updateSelectionState()
                         self.tableView.reloadData()
                     } catch {
-                        print("Error seeding database: \(error)")
                         self.isSeeding = false
                         self.updateSelectionState()
                     }
                 }
             }
         } catch {
-            print("Failed to access SwiftData context: \(error)")
         }
     }
     
     private func setupOptions() {
-        // Map FilterCategory cases to local options
         self.options = FilterCategory.allCases.map { category in
             IdentificationOption(category: category, isSelected: false)
         }
@@ -232,8 +206,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         if let shapeIndex = options.firstIndex(where: { $0.category == .shape }) {
             options[shapeIndex].isSelected = false
         }
-
-        // Keep model.selectedShape as-is; only remove Shape from menu flow options.
         model.selectedMenuOptionRawValues = options
             .filter { $0.isSelected }
             .map { $0.category.rawValue }
@@ -250,7 +222,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let sessions = try context.fetch(descriptor)
             self.histories = sessions.filter { $0.status == .completed }
         } catch {
-            print("Error fetching history: \(error)")
             self.histories = []
         }
     }
@@ -420,7 +391,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             : UIColor.systemBackground
         
         let item = options[indexPath.row]
-        cell.textLabel?.text = item.category.rawValue // Using rawValue from FilterCategory
+        cell.textLabel?.text = item.category.rawValue
         cell.textLabel?.textColor = .label
         cell.backgroundColor = rowColor
         cell.contentView.backgroundColor = rowColor
@@ -429,8 +400,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         let selectedBackgroundView = UIView()
         selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
         cell.selectedBackgroundView = selectedBackgroundView
-        
-        // Using icon property from FilterCategory
         if let img = UIImage(named: item.category.icon) {
             
             let targetSize = CGSize(width: 28, height: 28)
@@ -456,15 +425,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
 
         let tappedCategory = options[indexPath.row].category
         let isNowSelected = options[indexPath.row].isSelected
-
-        // If Field Marks selected → auto-select Shape (dependency)
         if tappedCategory == .fieldMarks && isNowSelected {
             if let shapeIndex = options.firstIndex(where: { $0.category == .shape }) {
                 options[shapeIndex].isSelected = true
             }
         }
-
-        // If Shape deselected → also deselect Field Marks (cascade)
         if tappedCategory == .shape && !isNowSelected {
             if let fieldMarksIndex = options.firstIndex(where: { $0.category == .fieldMarks }) {
                 options[fieldMarksIndex].isSelected = false
@@ -540,8 +505,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         let imageHorizontalMargins: CGFloat = 16
         let imageWidth = itemWidth - imageHorizontalMargins
         let imageHeight = imageWidth * (3.0 / 4.0)
-
-        // Match vertical spacing to HistoryCollectionViewCell.xib.
         let topMargin: CGFloat = 8
         let imageToLabelSpacing: CGFloat = 6
         let labelSpacing: CGFloat = 2
@@ -622,7 +585,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
         let selected = options.filter { $0.isSelected }
         for option in selected {
-            // Map FilterCategory to IdentificationStep
             switch option.category {
             case .locationDate: flowSteps.append(.dateLocation)
             case .size:         flowSteps.append(.size)
@@ -677,7 +639,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             nextVC.viewModel = self.model
             nextVC.delegate = self
             nextVC.selectedSizeIndex = model.selectedSizeCategory
-            // Updated: Manager uses `allShapes`, not `birdShapes`
             nextVC.filteredShapes = model.allShapes
             vc = nextVC
             
@@ -788,9 +749,6 @@ extension IdentificationViewController: IdentificationFlowStepDelegate {
             startIdentificationFlow(from: self.options)
             return
         }
-
-        // Reload in an active new flow should preserve the user's current selections
-        // (shape/size/location/fieldmarks) instead of returning to an empty root screen.
         let hasActiveFlowState =
             model.selectedShape != nil ||
             model.selectedSizeCategory != nil ||

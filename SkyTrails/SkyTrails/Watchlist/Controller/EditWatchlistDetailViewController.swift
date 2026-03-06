@@ -1,16 +1,8 @@
-	//
-	//  EditWatchlistDetailViewController.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 10/12/25.
-	//
 
 import UIKit
 import CoreLocation
 import MapKit
 import SwiftData
-
-	// MARK: - Helper Models
 struct Participant {
 	let name: String
 	let imageName: String
@@ -22,8 +14,6 @@ class EditWatchlistDetailViewController: UIViewController {
 	private let manager = WatchlistManager.shared
 	private let repository: WatchlistRepository = WatchlistManager.shared
 	private let locationService = LocationService.shared
-	
-		// MARK: - Outlets
 	@IBOutlet weak var titleTextField: UITextField!
 	@IBOutlet weak var dateCardView: UIView!
 	@IBOutlet weak var locationSearchBar: UISearchBar!
@@ -33,32 +23,18 @@ class EditWatchlistDetailViewController: UIViewController {
 	@IBOutlet weak var inviteContactsView: UIView!
 	@IBOutlet weak var suggestionsTableView: UITableView!
 	@IBOutlet weak var participantsTableView: UITableView!
-	
-		// MARK: - Properties
 	var watchlistType: WatchlistType = .custom
-	
-    // Edit Mode Data
     var watchlistIdToEdit: UUID?
     private var watchlistToEdit: Watchlist?
-    
-    // Location & Search
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
 	private var selectedLocation: LocationService.LocationData?
-	
-		// Internal State
 	private var participants: [Participant] = []
-	
-	// MARK: - Rule Configuration UI
 	private var rulesContainerView: UIView!
-	
-	// Species Rule
 	private var speciesRuleToggle: UISwitch!
 	private var speciesRuleLabel: UILabel!
 	private var shapeCollectionView: UICollectionView!
 	private var availableShapes: [BirdShape] = []
 	private var selectedShapeId: String?
-	
-	// Location Rule
 	private var locationRuleToggle: UISwitch!
 	private var locationRuleLabel: UILabel!
 	private var locationRuleButton: UIButton!
@@ -66,30 +42,21 @@ class EditWatchlistDetailViewController: UIViewController {
 	private var selectedRuleLocation: CLLocationCoordinate2D?
 	private var selectedRuleRadius: Double = 50.0
 	private var selectedRuleLocationDisplayName: String?
-	
-	// Date Rule
 	private var dateRuleToggle: UISwitch!
 	private var dateRuleLabel: UILabel!
 	private var dateRuleStartPicker: UIDatePicker!
 	private var dateRuleEndPicker: UIDatePicker!
-	
-		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
 		setupLocationServices()
 		configureInitialData()
 	}
-	
-		// MARK: - Setup & Configuration
 	private func setupUI() {
-			// Navigation
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
 		self.title = (watchlistToEdit == nil) ? "New Watchlist" : "Edit Watchlist"
 		let isDarkMode = traitCollection.userInterfaceStyle == .dark
-		
-			// Background & Styling
 		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
 		titleTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 		titleTextField.textColor = .label
@@ -104,12 +71,8 @@ class EditWatchlistDetailViewController: UIViewController {
 		if let inviteView = inviteContactsView {
 			styleCard(inviteView, isDarkMode: isDarkMode, cornerRadius: 12, shadowRadius: 8, shadowOpacity: 0.05, shadowOffset: CGSize(width: 0, height: 2))
 		}
-		
-			// Visibility Logic
 		inviteContactsView.isHidden = (watchlistType != .shared)
 		suggestionsTableView.isHidden = true
-		
-			// Delegates
 		participantsTableView.delegate = self
 		participantsTableView.dataSource = self
 		suggestionsTableView.delegate = self
@@ -164,16 +127,12 @@ class EditWatchlistDetailViewController: UIViewController {
         initializeParticipants()
         populateDataForEdit()
         loadAvailableShapes()
-        // Delay rules UI setup to ensure view hierarchy is ready
         DispatchQueue.main.async {
             self.setupRulesUI()
             self.populateRuleDataForEdit()
         }
     }
-    
-    // MARK: - Rules Setup
     private func loadAvailableShapes() {
-        // Fetch shapes that have birds associated with them
         let allShapes = (try? manager.fetchAll(BirdShape.self)) ?? []
         let allBirds = manager.fetchAllBirds()
         let usedShapeIds = Set(allBirds.compactMap { $0.shape?.id ?? $0.shape_id })
@@ -182,26 +141,17 @@ class EditWatchlistDetailViewController: UIViewController {
     
     private func setupRulesUI() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
-        
-        // Find the scroll view
         guard let scrollView = view.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView else {
-            print("⚠️ Could not find scroll view")
             return
         }
-        
-        // Find the main stack view - it's the first arranged subview that's a stack view
-        // The scroll view contains the content layout guide, frame layout guide, and content view
         let mainStackView: UIStackView
         if let stackView = scrollView.subviews.compactMap({ $0 as? UIStackView }).first {
             mainStackView = stackView
         } else if let stackView = scrollView.subviews.flatMap({ $0.subviews }).compactMap({ $0 as? UIStackView }).first {
             mainStackView = stackView
         } else {
-            print("⚠️ Could not find stack view in scroll view")
             return
         }
-        
-        // Create rules container
         rulesContainerView = UIView()
         rulesContainerView.translatesAutoresizingMaskIntoConstraints = false
         rulesContainerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
@@ -211,30 +161,22 @@ class EditWatchlistDetailViewController: UIViewController {
         rulesContainerView.layer.shadowOffset = CGSize(width: 0, height: 4)
         rulesContainerView.layer.shadowRadius = 12
         rulesContainerView.layer.masksToBounds = false
-        
-        // Title
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = "Auto-Assignment Rules"
         titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
         titleLabel.textColor = .label
         rulesContainerView.addSubview(titleLabel)
-        
-        // Stack view for rules
         let rulesStack = UIStackView()
         rulesStack.translatesAutoresizingMaskIntoConstraints = false
         rulesStack.axis = .vertical
         rulesStack.spacing = 20
         rulesStack.alignment = .fill
         rulesContainerView.addSubview(rulesStack)
-        
-        // Species Rule Section
         let speciesSection = createRuleSection(title: "Species Filter")
         speciesRuleToggle = UISwitch()
         speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
         addToggleToSection(section: speciesSection, toggle: speciesRuleToggle)
-        
-        // Shape collection view (hidden by default)
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumInteritemSpacing = 12
@@ -253,8 +195,6 @@ class EditWatchlistDetailViewController: UIViewController {
         speciesSection.addArrangedSubview(shapeCollectionView)
         
         rulesStack.addArrangedSubview(speciesSection)
-        
-        // Location Rule Section
         let locationSection = createRuleSection(title: "Location Filter")
         locationRuleToggle = UISwitch()
         locationRuleToggle.addTarget(self, action: #selector(locationRuleToggled), for: .valueChanged)
@@ -276,8 +216,6 @@ class EditWatchlistDetailViewController: UIViewController {
         locationSection.addArrangedSubview(locationRuleInfoLabel)
         
         rulesStack.addArrangedSubview(locationSection)
-        
-        // Date Rule Section
         let dateSection = createRuleSection(title: "Date Filter")
         dateRuleToggle = UISwitch()
         dateRuleToggle.addTarget(self, action: #selector(dateRuleToggled), for: .valueChanged)
@@ -311,8 +249,6 @@ class EditWatchlistDetailViewController: UIViewController {
         datePickersStack.accessibilityIdentifier = "DatePickersStack"
         
         rulesStack.addArrangedSubview(dateSection)
-        
-        // Delete Button (only show when editing existing watchlist)
         if watchlistIdToEdit != nil {
             let deleteButton = UIButton(type: .system)
             deleteButton.translatesAutoresizingMaskIntoConstraints = false
@@ -325,8 +261,6 @@ class EditWatchlistDetailViewController: UIViewController {
             deleteButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
             rulesStack.addArrangedSubview(deleteButton)
         }
-        
-        // Constraints for container subviews
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
             titleLabel.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
@@ -337,20 +271,15 @@ class EditWatchlistDetailViewController: UIViewController {
             rulesStack.trailingAnchor.constraint(equalTo: rulesContainerView.trailingAnchor, constant: -16),
             rulesStack.bottomAnchor.constraint(equalTo: rulesContainerView.bottomAnchor, constant: -16)
         ])
-        
-        // Insert into the scroll view's stack view at the appropriate position (after date section)
         if let dateSectionIndex = mainStackView.arrangedSubviews.firstIndex(where: { view -> Bool in
-            // Find the date section view (it has a label with "Date" text)
             if let label = view.subviews.first(where: { $0 is UILabel }) as? UILabel {
                 return label.text == "Date"
             }
             return false
         }) {
-            // Insert after the date section and its corresponding view
             let insertIndex = min(dateSectionIndex + 2, mainStackView.arrangedSubviews.count)
             mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex)
         } else {
-            // Fallback: add at the end
             mainStackView.addArrangedSubview(rulesContainerView)
         }
     }
@@ -445,10 +374,7 @@ class EditWatchlistDetailViewController: UIViewController {
     
     private func populateRuleDataForEdit() {
         guard let watchlist = watchlistToEdit else { return }
-        
-        // Ensure UI is set up before trying to populate it
         guard speciesRuleToggle != nil else {
-            print("⚠️ Rules UI not set up yet, skipping populateRuleDataForEdit")
             return
         }
         
@@ -498,8 +424,6 @@ class EditWatchlistDetailViewController: UIViewController {
         } else {
             dateRuleToggle.isOn = false
         }
-        
-        // Show/hide date pickers based on toggle
         if let dateSection = dateRuleToggle.superview?.superview as? UIStackView,
            let datePickersStack = dateSection.arrangedSubviews.last(where: { $0.accessibilityIdentifier == "DatePickersStack" }) {
             datePickersStack.isHidden = !dateRuleToggle.isOn
@@ -508,23 +432,16 @@ class EditWatchlistDetailViewController: UIViewController {
 
 	
 	private func initializeParticipants() {
-        // Placeholder logic as Participant mapping to new Schema (WatchlistShare) is not fully implemented in UI
         if watchlistType == .shared {
             self.participants = [Participant(name: "You", imageName: "person.circle.fill")]
-            // Ideally fetch from watchlist.shares
         } else {
             self.participants = [Participant(name: "You", imageName: "person.circle.fill")]
         }
 		participantsTableView.reloadData()
 	}
-
-	
-		// MARK: - Gesture Setup
 	private func setupLocationOptionsInteractions() {
 		guard let container = locationOptionsContainer,
 			  let mainStack = container.subviews.first as? UIStackView else { return }
-		
-			// Safety check to ensure the stackview has the expected children
 		guard mainStack.arrangedSubviews.count >= 3 else {
 			return
 		}
@@ -540,8 +457,6 @@ class EditWatchlistDetailViewController: UIViewController {
 		mapView.isUserInteractionEnabled = true
 		mapView.addGestureRecognizer(mapTap)
 	}
-	
-		// MARK: - Actions
 	@objc private func didTapCurrentLocation() {
 		Task {
 			do {
@@ -576,8 +491,6 @@ class EditWatchlistDetailViewController: UIViewController {
 		
 		present(activityVC, animated: true)
 	}
-	
-		// MARK: - Logic Implementation
 	private func updateLocationSelection(_ location: LocationService.LocationData) {
 		locationSearchBar.text = location.displayName
 		selectedLocation = location
@@ -591,10 +504,6 @@ class EditWatchlistDetailViewController: UIViewController {
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
 	}
-	
-
-	
-		// MARK: - Save Logic
 	@objc private func didTapSave() {
 		guard let title = titleTextField.text, !title.isEmpty else {
 			presentAlert(title: "Missing Info", message: "Please enter a title.")
@@ -633,7 +542,6 @@ class EditWatchlistDetailViewController: UIViewController {
             try saveRules(for: watchlistId)
             navigationController?.popViewController(animated: true)
         } catch {
-            print("❌ [EditWatchlistDetailViewController] Failed to save watchlist: \(error)")
             presentAlert(title: "Save Failed", message: error.localizedDescription)
         }
 	}
@@ -675,23 +583,17 @@ class EditWatchlistDetailViewController: UIViewController {
             parameters: dateParams
         )
     }
-	
-		// MARK: - Helpers
 	private func presentAlert(title: String, message: String) {
 		let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
 		alert.addAction(UIAlertAction(title: "OK", style: .default))
 		present(alert, animated: true)
 	}
 }
-
-// MARK: - CoreLocation Delegate
 extension EditWatchlistDetailViewController: CLLocationManagerDelegate {
 	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}
 	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 	func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
 }
-
-// MARK: - TableView Delegate & DataSource
 extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDataSource {
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return tableView == participantsTableView ? participants.count : locationSuggestions.count
@@ -734,7 +636,6 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
 			Task {
 				do {
 					let location = try await locationService.geocode(query: query)
-					// Use the user's selected text (query) for display name, but geocoded coordinates
 					let finalLocation = LocationService.LocationData(
 						displayName: query,
 						lat: location.lat,
@@ -748,8 +649,6 @@ extension EditWatchlistDetailViewController: UITableViewDelegate, UITableViewDat
 		}
 	}
 }
-
-// MARK: - Search Delegates
 extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate {
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
 		selectedLocation = nil
@@ -780,15 +679,11 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchC
 	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {}
 	func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {}
 }
-
-// MARK: - MapSelectionDelegate
 extension EditWatchlistDetailViewController: MapSelectionDelegate {
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
         updateLocationSelection(LocationService.LocationData(displayName: name, lat: lat, lon: lon))
     }
 }
-
-// MARK: - WatchlistLocationRuleDelegate
 extension EditWatchlistDetailViewController: WatchlistLocationRuleDelegate {
     func didSelectLocationRule(location: CLLocationCoordinate2D, radiusKm: Double, displayName: String) {
         selectedRuleLocation = location
@@ -797,8 +692,6 @@ extension EditWatchlistDetailViewController: WatchlistLocationRuleDelegate {
         locationRuleInfoLabel.text = "Within \(Int(radiusKm))km of \(displayName)"
     }
 }
-
-// MARK: - UICollectionView Delegate & DataSource
 extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return availableShapes.count
@@ -807,8 +700,6 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ShapeCell", for: indexPath)
         let shape = availableShapes[indexPath.item]
-        
-        // Configure cell
         cell.contentView.subviews.forEach { $0.removeFromSuperview() }
         cell.contentView.layer.cornerRadius = 12
         cell.contentView.layer.masksToBounds = true
@@ -825,15 +716,11 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
             cell.contentView.layer.borderColor = (isDarkMode ? UIColor.systemGray3 : UIColor.systemGray4).cgColor
             cell.contentView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         }
-        
-        // Image
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFit
         imageView.image = UIImage(named: shape.icon)
         cell.contentView.addSubview(imageView)
-        
-        // Label
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = shape.name
@@ -863,5 +750,3 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
         collectionView.reloadData()
     }
 }
-
-// MARK: - UI Utilities

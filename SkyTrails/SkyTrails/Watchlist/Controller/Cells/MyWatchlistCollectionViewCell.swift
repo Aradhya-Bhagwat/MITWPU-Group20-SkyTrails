@@ -20,25 +20,13 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	
 	static let identifier = "MyWatchlistCollectionViewCell"
 	
-		// MARK: - Outlets
-	
 	@IBOutlet weak var mainContainerView: UIView!
 	@IBOutlet weak var titleLabel: UILabel!
-	
-		// --- Image Row ---
-	
-		// First two slots
 	@IBOutlet weak var image1: UIImageView!
 	@IBOutlet weak var image2: UIImageView!
-	
-		// Slot 3: The Stack Container
 	@IBOutlet weak var stackContainerView: UIView!
-	
-		// Inside Slot 3
-	@IBOutlet weak var stackFrontImage: UIImageView! // The clear one in front
-	@IBOutlet weak var stackBackImage: UIImageView!  // The blurred one behind
-	
-		// --- Stats Row ---
+	@IBOutlet weak var stackFrontImage: UIImageView!
+	@IBOutlet weak var stackBackImage: UIImageView!
 	@IBOutlet weak var speciesContainer: UIView!
 	@IBOutlet weak var speciesCountLabel: UILabel!
 	@IBOutlet weak var speciesIcon: UIImageView!
@@ -49,8 +37,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	@IBOutlet weak var observedIcon: UIImageView!
 	@IBOutlet weak var observedTitleLabel: UILabel!
 	
-		// MARK: - Lifecycle
-	
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		setupStyling()
@@ -58,26 +44,17 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	
 	override func prepareForReuse() {
 		super.prepareForReuse()
-			// Clear data to prevent reuse glitches
 		image1.image = nil
 		image2.image = nil
 		stackFrontImage.image = nil
 		stackBackImage.image = nil
-		
-			// Hide stack by default
 		stackContainerView.isHidden = true
 		stackBackImage.isHidden = true
-		
-			// Remove old blur effects
 		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
 	}
 	
-		// MARK: - Configuration
-	
 	func configure(with data: WatchlistData) {
 		titleLabel.text = "All my birds"
-		
-        // Updated to show Unobserved instead of Total
         let unobservedCount = data.totalCount - data.observedCount
 		speciesCountLabel.text = "\(unobservedCount)"
         speciesTitleLabel.text = "Unobserved"
@@ -85,8 +62,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		observedCountLabel.text = "\(data.observedCount)"
 		
 		let images = data.images
-		
-			// 1. Configure First Image
 		if images.indices.contains(0) {
 			image1.isHidden = false
 			image1.image = images[0]
@@ -95,8 +70,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		} else {
 			image1.isHidden = true
 		}
-		
-			// 2. Configure Second Image
 		if images.indices.contains(1) {
 			image2.isHidden = false
 			image2.image = images[1]
@@ -105,23 +78,15 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		} else {
 			image2.isHidden = true
 		}
-		
-			// 3. Configure Third Slot (The Stack)
 		if images.indices.contains(2) {
 			stackContainerView.isHidden = false
 			stackFrontImage.image = images[2]
 			stackFrontImage.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
 			alignImageTop(stackFrontImage)
-			
-				// Determine if we need the "depth" effect (back image)
-				// We show it if there are more than 3 images in total
 			let hasMoreContent = data.totalImageCount > 3
 			
 			if hasMoreContent {
 				stackBackImage.isHidden = false
-				
-					// If we have a 4th image, use it for the background.
-					// If not, just reuse the 3rd image to create the visual bulk.
 				let backImg = images.indices.contains(3) ? images[3] : images[2]
 				stackBackImage.image = backImg
 				stackBackImage.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
@@ -135,63 +100,40 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 			stackContainerView.isHidden = true
 		}
 	}
-	
-		// MARK: - Image Alignment Helper
 
 	private func alignImageTop(_ imageView: UIImageView) {
 		guard let image = imageView.image else { return }
 
 		let viewWidth = imageView.bounds.width
 		let viewHeight = imageView.bounds.height
-
-		// Guard to prevent division by zero if layout hasn't happened yet
 		guard viewWidth > 0, viewHeight > 0, image.size.width > 0, image.size.height > 0 else { return }
 
 		let viewRatio = viewWidth / viewHeight
 		let imageRatio = image.size.width / image.size.height
 
 		if imageRatio < viewRatio {
-			// CASE: Image is "Taller" than the view (e.g., Portrait bird photo in a landscape card)
-			// Behavior: Scale width to fit, align top, cut off bottom.
-
-			// 1. Calculate how much we scaled the image down to fit the width
 			let scale = viewWidth / image.size.width
-
-			// 2. Calculate the "height" of the view in the coordinates of the original image
 			let visibleHeightInImage = viewHeight / scale
-
-			// 3. Normalize this (0.0 to 1.0) for the layer
 			let normalizedHeight = visibleHeightInImage / image.size.height
-
-			// 4. Set the rect: (x:0, y:0) is Top-Left. Width is full (1.0). Height is the calculated portion.
 			imageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: normalizedHeight)
 
 		} else {
-			// CASE: Image is "Wider" or equal (e.g., Panorama)
-			// Behavior: Reset to default (full rect).
 			imageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
 		}
 	}
-
-	// MARK: - Styling
 	
 	private func setupStyling() {
-			// Main Card Styling
 		self.contentView.layer.cornerRadius = 22
 		self.contentView.layer.masksToBounds = true
 		
 		mainContainerView.backgroundColor = .secondarySystemGroupedBackground
 		mainContainerView.layer.cornerRadius = 22
 		mainContainerView.layer.masksToBounds = true
-		
-			// Card Shadow (Applied to self, not contentView)
 		self.layer.shadowColor = UIColor.black.cgColor
 		self.layer.shadowOpacity = 0.08
 		self.layer.shadowOffset = CGSize(width: 0, height: 4)
 		self.layer.shadowRadius = 8
 		self.layer.masksToBounds = false
-		
-			// Image Corner Radius (Squircles)
 		let imageRadius: CGFloat = 12
 		let images = [image1, image2, stackFrontImage, stackBackImage]
 		
@@ -201,10 +143,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 			imageView?.clipsToBounds = true
 			imageView?.contentMode = .scaleAspectFill
 		}
-		
-			// --- Stats Pills Styling ---
-		
-			// 1. Species Container (Green background, opacity 0.15)
 		speciesContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
 		speciesContainer.layer.cornerRadius = 8
 		speciesContainer.layer.masksToBounds = true
@@ -212,8 +150,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		speciesCountLabel.textColor = .systemGreen
 		speciesIcon.tintColor = .systemGreen
 		speciesTitleLabel.textColor = .systemGreen
-		
-			// 2. Observed Container (Blue background, opacity 0.15)
 		observedContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.15)
 		observedContainer.layer.cornerRadius = 8
 		observedContainer.layer.masksToBounds = true
@@ -224,7 +160,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	}
 	
 	private func addBlurToBackImage() {
-		// Ensure we don't double add blurs
 		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
 		
 		let blurEffect = UIBlurEffect(style: .regular)
@@ -232,14 +167,13 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		
 		blurView.frame = stackBackImage.bounds
 		blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-		blurView.alpha = 0.5 // Adjust opacity to control how "faded" it looks
+		blurView.alpha = 0.5
 		
 		stackBackImage.addSubview(blurView)
 	}
 
 	override func layoutSubviews() {
 		super.layoutSubviews()
-		// Re-align images when cell size changes (e.g. rotation)
 		alignImageTop(image1)
 		alignImageTop(image2)
 		alignImageTop(stackFrontImage)

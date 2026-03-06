@@ -1,9 +1,3 @@
-//
-//  FamilyShapeSelectionViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 13/02/26.
-//
 
 import UIKit
 
@@ -39,8 +33,6 @@ class FamilyShapeSelectionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Select Families & Shapes"
-        
-        // Add Done button
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .done,
             target: self,
@@ -53,7 +45,6 @@ class FamilyShapeSelectionViewController: UIViewController {
     }
     
     private func loadFamilies() {
-        // Extract unique families from Bird database
         let manager = WatchlistManager.shared
         let allBirds = manager.fetchAllBirds()
         allFamilies = Array(Set(allBirds.compactMap { $0.family })).sorted()
@@ -64,7 +55,6 @@ class FamilyShapeSelectionViewController: UIViewController {
     private func setupTableView() {
         tableView.delegate = self
         tableView.dataSource = self
-        // Use basic cell for simplicity
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
     }
     

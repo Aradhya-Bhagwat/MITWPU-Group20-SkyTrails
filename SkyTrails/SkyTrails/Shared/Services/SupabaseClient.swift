@@ -46,17 +46,11 @@ struct SupabaseRequestOptions: Sendable {
         self.additionalHeaders = additionalHeaders
     }
 }
-
-/// Centralized HTTP client for talking to Supabase REST, RPC and Storage endpoints.
-/// Auth flows continue to use `SupabaseAuthService` directly; all other network
-/// calls should go through this client.
 final class SupabaseClient {
 
     static let shared = SupabaseClient()
 
     private init() {}
-
-    // MARK: - Public API
 
     func get<T: Decodable>(
         path: String,
@@ -118,8 +112,6 @@ final class SupabaseClient {
         )
     }
 
-    // MARK: - Core Request
-
     private func request<T: Decodable>(
         path: String,
         method: SupabaseHTTPMethod,
@@ -164,7 +156,6 @@ final class SupabaseClient {
         }
 
         #if DEBUG
-        print("🔗 [SupabaseClient] \(method.rawValue) \(url.absoluteString)")
         #endif
 
         do {
@@ -172,8 +163,6 @@ final class SupabaseClient {
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw SupabaseClientError.invalidResponse
             }
-
-            // 401 handling – attempt session restore once then surface error
             if httpResponse.statusCode == 401 {
                 let restored = await UserSession.shared.restoreSessionIfNeeded()
                 guard restored, let token = UserSession.shared.getAccessToken() else {
@@ -215,7 +204,6 @@ final class SupabaseClient {
         }
 
         if T.self == EmptyResponse.self, data.isEmpty {
-            // Reuse auth service EmptyResponse to avoid duplication
             return EmptyResponse() as! T
         }
 

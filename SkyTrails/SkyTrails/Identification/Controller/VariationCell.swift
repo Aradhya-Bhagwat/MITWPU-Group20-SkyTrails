@@ -1,6 +1,5 @@
 import UIKit
 
-
 class VariationCell: UICollectionViewCell {
 	@IBOutlet weak var variationImageView: UIImageView!
 
@@ -19,7 +18,6 @@ class VariationCell: UICollectionViewCell {
 
     func configure(image: UIImage?, isSelected: Bool) {
         guard let imageView = variationImageView else {
-            print("Critical: variationImageView is not connected in Storyboard!")
             return
         }
 

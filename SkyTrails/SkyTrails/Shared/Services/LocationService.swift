@@ -7,8 +7,6 @@ protocol LocationServiceProtocol: Sendable {
     func parseCoordinate(from locationString: String) -> CLLocationCoordinate2D?
     func distance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> CLLocationDistance
 }
-
-/// A centralized service for geocoding and location-related operations in the Watchlist module.
 @MainActor
 final class LocationService: NSObject, LocationServiceProtocol, CLLocationManagerDelegate {
     static let shared = LocationService()
@@ -17,8 +15,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
     private var searchCompleter = MKLocalSearchCompleter()
     private var autocompleteContinuation: CheckedContinuation<[LocationSuggestion], Never>?
     private let logger: LoggingServiceProtocol
-    
-    /// Current device location (updated when location services are used)
     var currentLocation: CLLocationCoordinate2D?
     
     init(logger: LoggingServiceProtocol? = nil) {
@@ -27,14 +23,11 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         searchCompleter.delegate = self
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        // Start updates if already authorized (e.g. re-launch after first grant)
         let status = locationManager.authorizationStatus
         if status == .authorizedAlways || status == .authorizedWhenInUse {
             locationManager.startUpdatingLocation()
         }
     }
-    
-    // MARK: - Protocol Methods
     
     func parseCoordinate(from locationString: String) -> CLLocationCoordinate2D? {
         let components = locationString.components(separatedBy: ",")
@@ -51,8 +44,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         let toLoc = CLLocation(latitude: to.latitude, longitude: to.longitude)
         return fromLoc.distance(from: toLoc)
     }
-    
-    // MARK: - Core Types
     
     struct LocationData: Equatable {
         let displayName: String
@@ -73,10 +64,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         case locationNotFound
         case serviceUnavailable
     }
-    
-    // MARK: - Geocoding Methods
-    
-    /// Forward geocoding: Convert search query to coordinates
     func geocode(query: String) async throws -> LocationData {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
@@ -100,8 +87,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
             throw LocationError.geocodingFailed
         }
     }
-    
-    /// Reverse geocoding: Convert coordinates to place name
     func reverseGeocode(lat: Double, lon: Double) async -> String? {
         let location = CLLocation(latitude: lat, longitude: lon)
         
@@ -124,8 +109,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
             do {
                 let placemarks = try await geocoder.reverseGeocodeLocation(location)
                 guard let placemark = placemarks.first else { return nil }
-                
-                // Prefer locality (city) or name (specific place)
                 return placemark.locality ?? placemark.name ?? placemark.country
             } catch {
                 logger.log(error: error, context: "LocationService.reverseGeocode")
@@ -133,15 +116,10 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
             }
         }
     }
-    
-    // MARK: - Current Location
-    
-    /// Get current device location with reverse-geocoded name
     func getCurrentLocation() async throws -> LocationData {
         try await ensureLocationAuthorization()
         
         return try await withCheckedThrowingContinuation { continuation in
-            // Use a fresh manager for the one-shot request to avoid interfering with the shared manager
             let oneTimeManager = CLLocationManager()
             oneTimeManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
             
@@ -149,7 +127,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
                 switch result {
                 case .success(let location):
                     Task {
-                        // Persist immediately so currentLocation is available without waiting for reverse-geocode
                         await MainActor.run { self.currentLocation = location.coordinate }
 
                         let name = await self.reverseGeocode(
@@ -213,13 +190,9 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
             throw LocationError.serviceUnavailable
         }
     }
-    
-    // MARK: - CLLocationManagerDelegate (continuous updates)
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        // Only update if this is from the manager owned by LocationService itself
-        // (helper delegates use their own manager instances passed in)
         guard manager === locationManager else { return }
         currentLocation = location.coordinate
     }
@@ -238,12 +211,7 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
             locationManager.startUpdatingLocation()
         }
     }
-
-    // MARK: - Autocomplete
-    
-    /// Get location suggestions for autocomplete
     func getAutocompleteSuggestions(for query: String) async -> [LocationSuggestion] {
-        // Cancel any pending request to avoid leaks or out-of-order returns
         if let existing = autocompleteContinuation {
             existing.resume(returning: [])
             autocompleteContinuation = nil
@@ -257,8 +225,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         }
     }
 }
-
-// MARK: - MKLocalSearchCompleterDelegate
 extension LocationService: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         let suggestions = completer.results.map { result in
@@ -274,14 +240,11 @@ extension LocationService: MKLocalSearchCompleterDelegate {
     }
     
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        // Only report error if it's not a cancellation (though MKLocalSearchCompleter doesn't typically error on cancel)
         logger.log(error: error, context: "LocationService.autocomplete")
         autocompleteContinuation?.resume(returning: [])
         autocompleteContinuation = nil
     }
 }
-
-// MARK: - Location Request Helper
 private class LocationRequestDelegate: NSObject, CLLocationManagerDelegate {
     private var completion: (Result<CLLocation, Error>) -> Void
     private let manager: CLLocationManager
@@ -291,8 +254,6 @@ private class LocationRequestDelegate: NSObject, CLLocationManagerDelegate {
         let delegate = LocationRequestDelegate(manager: manager, completion: completion)
         manager.delegate = delegate
         manager.requestLocation()
-        
-        // Keep delegate alive until completion
         objc_setAssociatedObject(manager, "request_delegate", delegate, .OBJC_ASSOCIATION_RETAIN)
     }
     
@@ -333,8 +294,6 @@ private class AuthorizationRequestDelegate: NSObject, CLLocationManagerDelegate 
         let delegate = AuthorizationRequestDelegate(manager: manager, completion: completion)
         manager.delegate = delegate
         manager.requestWhenInUseAuthorization()
-
-        // Keep delegate alive until authorization callback resolves.
         objc_setAssociatedObject(manager, "auth_request_delegate", delegate, .OBJC_ASSOCIATION_RETAIN)
     }
 

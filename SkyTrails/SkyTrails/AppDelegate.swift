@@ -1,9 +1,3 @@
-//
-//  AppDelegate.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 24/11/25.
-//
 
 import UIKit
 import BackgroundTasks
@@ -12,19 +6,8 @@ import UserNotifications
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-		// Override point for customization after application launch.
-		
-		// Setup notifications
 		setupNotifications()
-		
-		// Call to add Rose-ringed Parakeet to My Watchlist (for one-time execution)
-        // Uncomment the line below, run the app once, then re-comment it.
-        // WatchlistManager.shared.addRoseRingedParakeetToMyWatchlist()
-        
-		// Seed data in order: Birds -> Watchlists -> Home
 		Task { @MainActor in
             await WatchlistManager.shared.performGlobalSeeding()
 		}
@@ -36,43 +19,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		return true
 	}
 	
-	// MARK: - Notifications Setup
-	
 	private func setupNotifications() {
 		let center = UNUserNotificationCenter.current()
-		
-		// Set delegate
 		center.delegate = NotificationDelegate.shared
-		
-		// Request authorization
 		Task {
 			do {
 				let granted = try await NotificationService.shared.requestAuthorization()
-				print("🔔 [AppDelegate] Notification authorization: \(granted ? "granted" : "denied")")
-				
 				if granted {
-					// Register notification categories (for snooze action)
 					await NotificationService.shared.registerCategories()
 				}
 			} catch {
-				print("❌ [AppDelegate] Notification authorization error: \(error)")
 			}
 		}
 	}
 
-	// MARK: UISceneSession Lifecycle
-
 	func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-		// Called when a new scene session is being created.
-		// Use this method to select a configuration to create the new scene with.
 		return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
 	}
 
 	func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
-		// Called when the user discards a scene session.
-		// If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
-		// Use this method to release any resources that were specific to the discarded scenes, as they will not return.
 	}
-
 
 }

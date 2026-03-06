@@ -1,9 +1,3 @@
-//
-//  SpotsToVisitCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 10/12/25.
-//
     import UIKit
 
     class GridSpotsToVisitCollectionViewCell: UICollectionViewCell {
@@ -92,12 +86,8 @@
 
                 titleLabel.font = UIFont.systemFont(ofSize: calculatedTitleSize, weight: .semibold)
                 locationLabel.font = UIFont.systemFont(ofSize: calculatedLocSize, weight: .regular)
-                
-                // 💡 Update the attributed text during the layout pass to ensure icon scales with font
                 updateSpeciesLabel(count: currentSpeciesCount, fontSize: locationLabel.font.pointSize)
             }
-         
-            // 💡 New configuration method to match your live-data logic
             func configure(image: UIImage?, title: String, speciesCount: Int) {
                 locationImage.image = image
                 titleLabel.text = title
@@ -124,7 +114,6 @@
                 }
                 
                 let attachment = NSTextAttachment(image: icon)
-                // Vertically center the icon relative to the text line
                 let yOffset = (fontSize - icon.size.height) / 2.0 - 1
                 attachment.bounds = CGRect(x: 0, y: yOffset, width: icon.size.width, height: icon.size.height)
                 

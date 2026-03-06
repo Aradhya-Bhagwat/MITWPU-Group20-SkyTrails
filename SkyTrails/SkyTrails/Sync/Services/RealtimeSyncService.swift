@@ -1,14 +1,6 @@
-//
-//  RealtimeSyncService.swift
-//  SkyTrails
-//
-//  WebSocket-based real-time sync with Supabase
-//
 
 import Foundation
 import SwiftData
-
-// MARK: - Realtime Sync Error
 
 enum RealtimeSyncError: Error, LocalizedError {
     case notConnected
@@ -33,8 +25,6 @@ enum RealtimeSyncError: Error, LocalizedError {
     }
 }
 
-// MARK: - Connection State
-
 enum RealtimeConnectionState {
     case disconnected
     case connecting
@@ -42,14 +32,10 @@ enum RealtimeConnectionState {
     case reconnecting
 }
 
-// MARK: - Realtime Sync Service
-
 @MainActor
 final class RealtimeSyncService: NSObject {
     
     static let shared = RealtimeSyncService()
-    
-    // MARK: - Properties
     
     private var webSocket: URLSessionWebSocketTask?
     private var config: SupabaseConfig?
@@ -64,20 +50,12 @@ final class RealtimeSyncService: NSObject {
     
     private let tables: [String] = ["watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos"]
     private var subscribedTables: Set<String> = []
-    
-    // Callbacks
     var onConnectionStateChanged: ((RealtimeConnectionState) -> Void)?
     var onSyncEvent: ((RealtimePayload) -> Void)?
-    
-    // MARK: - Init
     
     private override init() {
         super.init()
     }
-    
-    // MARK: - Public API
-    
-    /// Connect to Supabase Realtime with current user's token
     func connect() async throws {
         guard UserSession.shared.isAuthenticatedWithSupabase() else {
             throw RealtimeSyncError.authRequired
@@ -91,8 +69,6 @@ final class RealtimeSyncService: NSObject {
         
         try await establishConnection()
     }
-    
-    /// Disconnect from Realtime
     func disconnect() {
         heartbeatTimer?.invalidate()
         heartbeatTimer = nil
@@ -102,11 +78,7 @@ final class RealtimeSyncService: NSObject {
         
         subscribedTables.removeAll()
         updateConnectionState(.disconnected)
-        
-        print("📡 [Realtime] Disconnected")
     }
-    
-    /// Subscribe to all watchlist-related tables
     func subscribeAll() async throws {
         guard isConnected else {
             throw RealtimeSyncError.notConnected
@@ -115,11 +87,7 @@ final class RealtimeSyncService: NSObject {
         for table in tables {
             try await subscribe(to: table)
         }
-        
-        print("📡 [Realtime] Subscribed to all tables: \(tables.joined(separator: ", "))")
     }
-    
-    // MARK: - Connection Management
     
     private func establishConnection() async throws {
         guard let config = config else {
@@ -127,9 +95,6 @@ final class RealtimeSyncService: NSObject {
         }
         
         updateConnectionState(.connecting)
-        
-        // Build WebSocket URL
-        // Supabase Realtime format: wss://<project-ref>.supabase.co/realtime/v1/websocket
         guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
             throw RealtimeSyncError.connectionFailed("Invalid URL")
         }
@@ -144,68 +109,46 @@ final class RealtimeSyncService: NSObject {
         guard let wsURL = components.url else {
             throw RealtimeSyncError.connectionFailed("Invalid WebSocket URL")
         }
-        
-        // Create WebSocket task
         let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
         var request = URLRequest(url: wsURL)
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        
-        // Add authorization if available
         if let token = UserSession.shared.getAccessToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
         webSocket = session.webSocketTask(with: request)
         webSocket?.resume()
-        
-        // Start listening
         receiveMessage()
-        
-        // Start heartbeat
         startHeartbeat()
-        
-        // Reset reconnect attempts on successful connection
         reconnectAttempts = 0
         reconnectDelay = 1.0
         
         updateConnectionState(.connected)
-        print("📡 [Realtime] Connected to \(wsURL.host ?? "unknown")")
     }
     
     private func reconnect() async {
         guard reconnectAttempts < maxReconnectAttempts else {
-            print("📡 [Realtime] Max reconnect attempts reached")
             return
         }
         
         updateConnectionState(.reconnecting)
         reconnectAttempts += 1
-        
-        // Exponential backoff
         let delay = reconnectDelay * pow(2.0, Double(reconnectAttempts - 1))
         let jitter = Double.random(in: 0...0.5)
         let totalDelay = delay + jitter
-        
-        print("📡 [Realtime] Reconnecting in \(String(format: "%.1f", totalDelay))s (attempt \(reconnectAttempts))")
-        
         try? await Task.sleep(nanoseconds: UInt64(totalDelay * 1_000_000_000))
         
         do {
             try await connect()
             try await subscribeAll()
         } catch {
-            print("📡 [Realtime] Reconnect failed: \(error.localizedDescription)")
         }
     }
-    
-    // MARK: - Subscription
     
     private func subscribe(to table: String) async throws {
         guard isConnected, let webSocket else {
             throw RealtimeSyncError.notConnected
         }
-        
-        // Build the channel config
         let channelConfig = RealtimeChannelPayloadConfig(
             postgresChanges: [RealtimePostgresChange(table: table)]
         )
@@ -221,16 +164,12 @@ final class RealtimeSyncService: NSObject {
         
         webSocket.send(.data(data)) { error in
             if let error {
-                print("📡 [Realtime] Subscribe error for \(table): \(error.localizedDescription)")
             } else {
-                print("📡 [Realtime] Subscribed to: \(table)")
             }
         }
         
         subscribedTables.insert(table)
     }
-    
-    // MARK: - Message Handling
     
     private func receiveMessage() {
         webSocket?.receive { [weak self] result in
@@ -240,11 +179,9 @@ final class RealtimeSyncService: NSObject {
                 switch result {
                 case .success(let message):
                     self.handleMessage(message)
-                    self.receiveMessage() // Continue listening
+                    self.receiveMessage()
                     
                 case .failure(let error):
-                    print("📡 [Realtime] Receive error: \(error.localizedDescription)")
-                    
                     if self.connectionState == .connected {
                         await self.reconnect()
                     }
@@ -266,39 +203,24 @@ final class RealtimeSyncService: NSObject {
     }
     
     private func parseMessage(_ data: Data) {
-        // Try to decode as realtime message
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return
         }
-        
-        // Check for event type (indicates a data message)
         guard let _ = json["type"] as? String,
               let payload = json["payload"] as? [String: Any] else {
-            // Could be a system message (phx_reply, etc.)
             if let event = json["event"] as? String {
-                print("📡 [Realtime] System event: \(event)")
             }
             return
         }
-        
-        // Decode payload
         guard let payloadData = try? JSONSerialization.data(withJSONObject: payload),
               let realtimePayload = try? JSONDecoder().decode(RealtimePayload.self, from: payloadData) else {
-            print("📡 [Realtime] Failed to decode payload")
             return
         }
-        
-        // Process the event
         handleRealtimeEvent(realtimePayload)
     }
     
     private func handleRealtimeEvent(_ payload: RealtimePayload) {
-        print("📡 [Realtime] Event: \(payload.type.rawValue) on \(payload.table)")
-        
-        // Notify callback
         onSyncEvent?(payload)
-        
-        // Apply to local data - SERVER IS AUTHORITATIVE
         Task { @MainActor in
             do {
                 switch payload.table {
@@ -313,15 +235,11 @@ final class RealtimeSyncService: NSObject {
                 case "observed_bird_photos":
                     try await handlePhotoEvent(payload)
                 default:
-                    print("📡 [Realtime] Unknown table: \(payload.table)")
                 }
             } catch {
-                print("📡 [Realtime] Error handling event: \(error.localizedDescription)")
             }
         }
     }
-    
-    // MARK: - Event Handlers (Server is Authoritative)
     
     private func handleWatchlistEvent(_ payload: RealtimePayload) async throws {
         guard let record = payload.record,
@@ -393,15 +311,11 @@ final class RealtimeSyncService: NSObject {
         }
     }
     
-    // MARK: - Data Operations (Server Authoritative)
-    
     private func upsertWatchlist(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
-        // Check if exists
         let existing = try WatchlistManager.shared.getWatchlist(by: id)
         
         if let watchlist = existing {
-            // UPDATE - Server wins, overwrite all fields
             watchlist.owner_id = record.uuid(for: "owner_id")
             watchlist.type = record.string(for: "type").flatMap { WatchlistType(rawValue: $0) } ?? .custom
             watchlist.title = record.string(for: "title")
@@ -419,9 +333,7 @@ final class RealtimeSyncService: NSObject {
             watchlist.updated_at = record.date(for: "updated_at")
             
             try? context.save()
-            print("📡 [Realtime] Updated watchlist from server: \(watchlist.title ?? "unnamed")")
         } else {
-            // INSERT - Create new
             let watchlist = Watchlist(
                 id: id,
                 owner_id: record.uuid(for: "owner_id"),
@@ -443,33 +355,25 @@ final class RealtimeSyncService: NSObject {
             
             context.insert(watchlist)
             try? context.save()
-            print("📡 [Realtime] Created watchlist from server: \(watchlist.title ?? "unnamed")")
         }
     }
     
     private func deleteWatchlist(id: UUID) async throws {
         guard let watchlist = try WatchlistManager.shared.getWatchlist(by: id) else { return }
-        
-        // Server says delete - apply immediately
         watchlist.syncStatus = .synced
         watchlist.deleted_at = Date()
         try? WatchlistManager.shared.context.save()
-        
-        print("📡 [Realtime] Deleted watchlist (server authoritative): \(id)")
     }
     
     private func upsertEntry(from record: [String: JSONValue], id: UUID) async throws {
         guard let watchlistId = record.uuid(for: "watchlist_id"),
               let watchlist = try WatchlistManager.shared.getWatchlist(by: watchlistId) else { return }
-        
-        // Find existing entry
         var existingEntry: WatchlistEntry?
         if let entries = watchlist.entries {
             existingEntry = entries.first { $0.id == id }
         }
         
         if let entry = existingEntry {
-            // UPDATE - Server wins
             if let birdId = record.uuid(for: "bird_id") {
                 entry.bird = try? WatchlistManager.shared.fetchBird(id: birdId)
             }
@@ -492,9 +396,7 @@ final class RealtimeSyncService: NSObject {
             entry.lastSyncedAt = Date()
             
             try? WatchlistManager.shared.context.save()
-            print("📡 [Realtime] Updated entry from server: \(id)")
         } else {
-            // INSERT - Create new entry
             let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(id: $0) }
             let entry = WatchlistEntry(
                 id: id,
@@ -521,19 +423,16 @@ final class RealtimeSyncService: NSObject {
             
             WatchlistManager.shared.context.insert(entry)
             try? WatchlistManager.shared.context.save()
-            print("📡 [Realtime] Created entry from server: \(id)")
         }
     }
     
     private func deleteEntry(id: UUID) async throws {
-        // Find and delete entry
         let watchlists = try WatchlistManager.shared.fetchWatchlists()
         for watchlist in watchlists {
             if let entries = watchlist.entries {
                 for entry in entries where entry.id == id {
                     WatchlistManager.shared.context.delete(entry)
                     try? WatchlistManager.shared.context.save()
-                    print("📡 [Realtime] Deleted entry (server authoritative): \(id)")
                     return
                 }
             }
@@ -543,15 +442,12 @@ final class RealtimeSyncService: NSObject {
     private func upsertRule(from record: [String: JSONValue], id: UUID) async throws {
         guard let watchlistId = record.uuid(for: "watchlist_id"),
               let watchlist = try WatchlistManager.shared.getWatchlist(by: watchlistId) else { return }
-        
-        // Find existing rule
         var existingRule: WatchlistRule?
         if let rules = watchlist.rules {
             existingRule = rules.first { $0.id == id }
         }
         
         if let rule = existingRule {
-            // UPDATE - Server wins
             rule.lat = record.double(for: "lat")
             rule.lon = record.double(for: "lon")
             rule.radius_km = record.double(for: "radius_km")
@@ -567,9 +463,7 @@ final class RealtimeSyncService: NSObject {
             rule.lastSyncedAt = Date()
             
             try? WatchlistManager.shared.context.save()
-            print("📡 [Realtime] Updated rule from server: \(id)")
         } else {
-            // INSERT - Create new
             let ruleTypeString = record.string(for: "rule_type") ?? "location"
             let ruleType = WatchlistRuleType(rawValue: ruleTypeString) ?? .location
             
@@ -594,7 +488,6 @@ final class RealtimeSyncService: NSObject {
             
             WatchlistManager.shared.context.insert(rule)
             try? WatchlistManager.shared.context.save()
-            print("📡 [Realtime] Created rule from server: \(id)")
         }
     }
     
@@ -605,7 +498,6 @@ final class RealtimeSyncService: NSObject {
                 for rule in rules where rule.id == id {
                     WatchlistManager.shared.context.delete(rule)
                     try? WatchlistManager.shared.context.save()
-                    print("📡 [Realtime] Deleted rule (server authoritative): \(id)")
                     return
                 }
             }
@@ -629,7 +521,6 @@ final class RealtimeSyncService: NSObject {
             share.syncStatus = .synced
             share.lastSyncedAt = Date()
             try? WatchlistManager.shared.context.save()
-            print("📡 [Realtime] Updated share from server: \(id)")
         } else {
             let share = WatchlistShare(
                 id: id,
@@ -645,7 +536,6 @@ final class RealtimeSyncService: NSObject {
             share.lastSyncedAt = Date()
             WatchlistManager.shared.context.insert(share)
             try? WatchlistManager.shared.context.save()
-            print("📡 [Realtime] Created share from server: \(id)")
         }
     }
     
@@ -656,7 +546,6 @@ final class RealtimeSyncService: NSObject {
                 for share in shares where share.id == id {
                     WatchlistManager.shared.context.delete(share)
                     try? WatchlistManager.shared.context.save()
-                    print("📡 [Realtime] Deleted share (server authoritative): \(id)")
                     return
                 }
             }
@@ -665,20 +554,16 @@ final class RealtimeSyncService: NSObject {
     
     private func upsertPhoto(from record: [String: JSONValue], id: UUID) async throws {
         guard let entryId = record.uuid(for: "watchlist_entry_id") else { return }
-        
-        // Find entry
         let watchlists = try WatchlistManager.shared.fetchWatchlists()
         for watchlist in watchlists {
             if let entries = watchlist.entries {
                 for entry in entries where entry.id == entryId {
-                    // Find or create photo
                     var existingPhoto: ObservedBirdPhoto?
                     if let photos = entry.photos {
                         existingPhoto = photos.first { $0.id == id }
                     }
                     
                     if let photo = existingPhoto {
-                        // UPDATE - Server wins
                         photo.imagePath = record.string(for: "image_path") ?? ""
                         photo.storageUrl = record.string(for: "storage_url")
                         photo.captured_at = record.date(for: "captured_at")
@@ -687,9 +572,7 @@ final class RealtimeSyncService: NSObject {
                         photo.lastSyncedAt = Date()
                         
                         try? WatchlistManager.shared.context.save()
-                        print("📡 [Realtime] Updated photo from server: \(id)")
                     } else {
-                        // INSERT - Create new
                         let photo = ObservedBirdPhoto(
                             id: id,
                             watchlistEntry: entry,
@@ -703,7 +586,6 @@ final class RealtimeSyncService: NSObject {
                         
                         WatchlistManager.shared.context.insert(photo)
                         try? WatchlistManager.shared.context.save()
-                        print("📡 [Realtime] Created photo from server: \(id)")
                     }
                     return
                 }
@@ -720,7 +602,6 @@ final class RealtimeSyncService: NSObject {
                         for photo in photos where photo.id == id {
                             WatchlistManager.shared.context.delete(photo)
                             try? WatchlistManager.shared.context.save()
-                            print("📡 [Realtime] Deleted photo (server authoritative): \(id)")
                             return
                         }
                     }
@@ -728,8 +609,6 @@ final class RealtimeSyncService: NSObject {
             }
         }
     }
-    
-    // MARK: - Heartbeat
     
     private func startHeartbeat() {
         heartbeatTimer?.invalidate()
@@ -749,20 +628,15 @@ final class RealtimeSyncService: NSObject {
         
         webSocket.send(.data(data)) { error in
             if let error {
-                print("📡 [Realtime] Heartbeat error: \(error.localizedDescription)")
             }
         }
     }
-    
-    // MARK: - State Management
     
     private func updateConnectionState(_ state: RealtimeConnectionState) {
         connectionState = state
         onConnectionStateChanged?(state)
     }
 }
-
-// MARK: - URLSessionWebSocketDelegate
 
 extension RealtimeSyncService: URLSessionWebSocketDelegate {
     
@@ -772,7 +646,6 @@ extension RealtimeSyncService: URLSessionWebSocketDelegate {
         didOpenWithProtocol protocol: String?
     ) {
         Task { @MainActor in
-            print("📡 [Realtime] WebSocket opened")
             updateConnectionState(.connected)
         }
     }
@@ -784,8 +657,6 @@ extension RealtimeSyncService: URLSessionWebSocketDelegate {
         reason: Data?
     ) {
         Task { @MainActor in
-            print("📡 [Realtime] WebSocket closed: \(closeCode.rawValue)")
-            
             if connectionState == .connected {
                 Task {
                     await reconnect()

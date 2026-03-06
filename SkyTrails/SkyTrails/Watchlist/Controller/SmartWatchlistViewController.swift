@@ -1,9 +1,3 @@
-	//
-	//  SmartWatchlistViewController.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 28/11/25.
-	//
 
 import UIKit
 import SwiftData
@@ -19,27 +13,19 @@ enum WatchlistPresentationMode {
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	
 	private let manager = WatchlistManager.shared
-	
-		// MARK: - Outlets
 	@IBOutlet weak var tableView: UITableView!
 	@IBOutlet weak var searchBar: UISearchBar!
 	@IBOutlet weak var segmentedControl: UISegmentedControl!
-	@IBOutlet weak var headerView: UIView! // Optional: To add shadow or styling
-	
-		// MARK: - Properties
+	@IBOutlet weak var headerView: UIView!
 	var watchlistType: WatchlistPresentationMode = .custom
 	var watchlistTitle: String = "Watchlist"
 	var currentWatchlistId: UUID?
-	
-		// Data Source
 	private var sourceWatchlists: [Watchlist] = []
 	public var allWatchlists: [Watchlist] = []
 	private var filteredSections: [[WatchlistEntry]] = []
 	public var observedEntries: [WatchlistEntry] = []
 	public var toObserveEntries: [WatchlistEntry] = []
 	private var currentList: [WatchlistEntry] = []
-	
-    // State
     private var currentSegmentIndex: Int = 0
 	
 	override func viewDidLoad() {
@@ -67,8 +53,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
 		
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
-		
-			// Fetch fresh object to determine type, then pass ID
 		if let watchlist = try? manager.getWatchlist(by: id) {
 			vc.watchlistType = (watchlist.type == .shared) ? .shared : .custom
 			vc.watchlistIdToEdit = id
@@ -97,13 +81,10 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                     guard let id = currentWatchlistId else { return }
                     let observed = try manager.fetchEntries(watchlistID: id, status: .observed)
                     let toObserve = try manager.fetchEntries(watchlistID: id, status: .to_observe)
-                    
-                        // Get title safely
                     let title = (try? manager.getWatchlist(by: id))??.title ?? "Watchlist"
                     updateSingleWatchlistData(observed: observed, toObserve: toObserve, title: title)
                     
                 case .allSpecies:
-                        // This mode aggregates EVERYTHING
                     let allWls = try manager.fetchWatchlists()
                     var uniqueObserved: [WatchlistEntry] = []
                     var uniqueToObserve: [WatchlistEntry] = []
@@ -131,7 +112,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                     updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "All Species")
             }
         } catch {
-            print("❌ [SmartWatchlistViewController] Error refreshing data: \(error)")
         }
 		
 		applyFilters()
@@ -144,7 +124,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	private func setupUI() {
-			// Navigation
 		self.title = watchlistTitle
 		self.view.backgroundColor = .systemGroupedBackground
 		self.navigationItem.largeTitleDisplayMode = .never
@@ -152,26 +131,18 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		if watchlistType == .myWatchlist || watchlistType == .allSpecies {
 			navigationItem.rightBarButtonItems = nil
 		}
-		
-			// TableView
 		tableView.delegate = self
 		tableView.dataSource = self
 		tableView.backgroundColor = .clear
 		tableView.separatorStyle = .none
-		
-			// Search Bar
 		searchBar.searchBarStyle = .minimal
 		let searchIsDarkMode = traitCollection.userInterfaceStyle == .dark
 		searchBar.searchTextField.backgroundColor = searchIsDarkMode ? .secondarySystemBackground : .systemBackground
 		searchBar.delegate = self
-		
-			// Segmented Control
 		segmentedControl.selectedSegmentIndex = 0
 		segmentedControl.setTitle("Observed", forSegmentAt: 0)
 		segmentedControl.setTitle("To Observe", forSegmentAt: 1)
 	}
-	
-		// MARK: - Filter Logic
 	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
 		currentSegmentIndex = sender.selectedSegmentIndex
 		applyFilters()
@@ -203,10 +174,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		
         tableView.reloadData()
 	}
-	
-    // Sorting has been removed from the watchlist feature
-	
-		// MARK: - UISearchBarDelegate
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
 		applyFilters()
 	}
@@ -216,19 +183,13 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	@IBAction func didTapAdd(_ sender: Any) {
-		print("➕ [SmartWatchlistVC] didTapAdd() called")
-		print("📋 [SmartWatchlistVC] Current watchlist ID: \(currentWatchlistId?.description ?? "nil")")
-		
 		guard currentWatchlistId != nil else {
-			print("❌ [SmartWatchlistVC] No current watchlist ID, aborting")
 			return
 		}
 		
 		if currentSegmentIndex == 0 {
-			print("👆 [SmartWatchlistVC] Segment is Observed — navigating to Add Observed")
 			showObservedDetail(bird: nil)
 		} else {
-			print("👆 [SmartWatchlistVC] Segment is To Observe — navigating to Species Selection")
 			showSpeciesSelection(mode: .unobserved)
 		}
 	}
@@ -252,7 +213,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
-        // Sorting has been removed – no-op
 	}
 	
 	private func configurePopover(for alert: UIAlertController, sender: Any) {
@@ -273,13 +233,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	
 	
 	private func addReminder(for entry: WatchlistEntry) {
-		// Toggle reminder state
 		let newValue = !entry.notify_upcoming
-		
-		// Update via manager (this handles notification scheduling and syncing)
 		try? manager.updateEntryNotifyUpcoming(entryId: entry.id, notify: newValue)
-		
-		// Refresh to show updated UI
 		refreshData()
 	}
 	
@@ -324,8 +279,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		}
 	}
 }
-
-// MARK: - UITableViewDelegate, UITableViewDataSource
 extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSource {
 	
 	func numberOfSections(in tableView: UITableView) -> Int {
@@ -352,8 +305,6 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		}
 		
 		let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
-		
-			// Map Entry to Cell Configuration
 		cell.shouldShowAvatars = (watchlistType == .shared)
 		cell.configure(with: entry)
 		if traitCollection.userInterfaceStyle == .dark {
@@ -390,7 +341,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 			entry = currentList[indexPath.row]
 		}
 		
-		if watchlistType == .allSpecies { return nil } // Read only view usually
+		if watchlistType == .allSpecies { return nil }
 		
 		let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] (_, _, completion) in
 			self?.deleteEntry(entry)
@@ -418,12 +369,8 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 				self?.addReminder(for: entry)
 				completion(true)
 			}
-			
-			// Dynamic icon based on reminder state
 			let iconName = entry.notify_upcoming ? "bell.fill" : "bell"
 			reminderAction.image = UIImage(systemName: iconName)
-			
-			// Dynamic color based on reminder state
 			reminderAction.backgroundColor = entry.notify_upcoming ? .systemGreen : .systemOrange
 			
 			actions.append(reminderAction)

@@ -1,9 +1,3 @@
-//
-//  HomeManager.swift
-//  SkyTrails
-//
-//  Refactored to Strict MVC, Dependency Injection & Robust Error Handling
-//
 
 import Foundation
 import CoreLocation
@@ -22,16 +16,12 @@ class HomeManager {
     private let newsService: NewsServiceProtocol
     private let locationService: LocationServiceProtocol
     private let logger: LoggingServiceProtocol
-    
-    // Cache for performance (NSCache for memory safety)
     let spotSpeciesCountCache: NSCache<NSString, NSNumber> = {
         let cache = NSCache<NSString, NSNumber>()
         cache.countLimit = 100
-        cache.totalCostLimit = 50_000_000 // 50MB
+        cache.totalCostLimit = 50_000_000
         return cache
     }()
-    
-    // Internal init for testing
     init(
         watchlistManager: WatchlistManager? = nil,
         hotspotManager: HotspotManager? = nil,
@@ -55,18 +45,12 @@ class HomeManager {
         self.newsService = newsService ?? NewsService()
         self.locationService = locationService ?? LocationService.shared
     }
-    
-    // MARK: - Core Data Fetching
-
-    /// Get all data for home screen in one call, ready for UI display
     func getHomeScreenData(
         userLocation: CLLocationCoordinate2D? = nil
     ) async -> HomeScreenData {
         
         let location = userLocation ?? LocationPreferences.shared.homeLocation
         var errorOccurred: String? = nil
-        
-        // Parallel fetching
         async let upcoming = getUpcomingBirds(userLocation: location)
         async let myWatchlist: [UpcomingBirdResult] = {
             if let loc = location { return await getMyWatchlistBirds(userLocation: loc) }
@@ -121,8 +105,6 @@ class HomeManager {
         } catch {
             logger.log(error: error, context: "HomeManager.getHomeScreenData")
             errorOccurred = "Failed to load some dashboard items. Please check your connection."
-            
-            // Return empty data with error message
             return HomeScreenData(
                 upcomingBirds: [],
                 myWatchlistBirds: [],
@@ -137,8 +119,6 @@ class HomeManager {
             )
         }
     }
-    
-    // MARK: - Upcoming Birds
     
     func getUpcomingBirds(
         userLocation: CLLocationCoordinate2D? = nil,
@@ -216,8 +196,6 @@ class HomeManager {
         return results
     }
     
-    // MARK: - Spots
-    
     func getWatchlistSpots() async -> [PopularSpotResult] {
         let watchlists = (try? watchlistManager.fetchWatchlists()) ?? []
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
@@ -236,8 +214,6 @@ class HomeManager {
                 radiusInKm: radiusKm
             )
             let observedCount = watchlist.entries?.filter { $0.status == .observed }.count ?? 0
-
-            // Cache active species count for grid view
             spotSpeciesCountCache.setObject(NSNumber(value: birdCount), forKey: (watchlist.title ?? "Unknown") as NSString)
 
             let result = PopularSpotResult(
@@ -294,8 +270,6 @@ class HomeManager {
                 radiusInKm: cardRadiusKm
             )
             let distance = locationService.distance(from: location, to: hotspotLoc)
-
-            // Cache active species count
             spotSpeciesCountCache.setObject(NSNumber(value: speciesCount), forKey: hotspot.name as NSString)
 
             let result = PopularSpotResult(
@@ -329,8 +303,6 @@ class HomeManager {
         return birds.count
     }
     
-    // MARK: - Migration & Community
-    
     func getActiveMigrations(limit: Int = 5) async -> [MigrationCardResult] {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         let activeSessions = await migrationManager.getActiveMigrations(forWeek: currentWeek)
@@ -360,80 +332,49 @@ class HomeManager {
     }
     
     func getDynamicMapCards(userLocation: CLLocationCoordinate2D? = nil) async -> [DynamicMapCard] {
-        print("🃏 [PredictionDebug] getDynamicMapCards: Starting card assembly")
-
-        // 1. Require user location — prefer passed-in value, fall back to live service
         guard let userLocation = userLocation ?? locationService.currentLocation else {
-            print("⚠️ [PredictionDebug] getDynamicMapCards: No user location available")
             return []
         }
-        print("🃏 [PredictionDebug]   User location: \(userLocation.latitude), \(userLocation.longitude)")
-
-        // 2. Find all hotspots within 100 km of user, sorted closest-first
         let nearbyHotspots = findNearbyHotspots(near: userLocation, radiusKm: 100.0)
-        print("🃏 [PredictionDebug]   Hotspots within 100km: \(nearbyHotspots.count)")
         guard !nearbyHotspots.isEmpty else {
-            print("⚠️ [PredictionDebug]   No hotspots found near user — returning empty")
             return []
         }
-
-        // 3. Build week range: current week + next 4 (wrap at 52)
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         let weekRange = (currentWeek...(currentWeek + 4)).map { ($0 - 1) % 52 + 1 }
-        print("🃏 [PredictionDebug]   Week range: \(weekRange)")
-
-        // 4. Gather active migrations for context (bird IDs + path data)
         let migrations = await getActiveMigrations()
         let migratingBirdIds = Set(migrations.compactMap { $0.bird.id })
         let migrationsByBirdId: [UUID: MigrationCardResult] = Dictionary(
             migrations.map { ($0.bird.id, $0) },
             uniquingKeysWith: { first, _ in first }
         )
-        print("🃏 [PredictionDebug]   Active migrating species: \(migratingBirdIds.count)")
-
-        // 5. Score every nearby hotspot
         struct HotspotScore {
             let hotspot: Hotspot
             let migratingBirds: [(bird: Bird, weeks: [Int])]
-            let distance: Double   // metres
-            let score: Double      // higher = better
+            let distance: Double
+            let score: Double
         }
 
         var scoredHotspots: [HotspotScore] = []
 
         for hotspot in nearbyHotspots {
             let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
-
-            // Query birds present at this hotspot (small radius — it's the hotspot itself)
             let birdsWithWeeks = await hotspotManager.getBirdsPresent(
                 at: hotspotLoc,
                 duringWeeks: weekRange,
                 radiusInKm: 10.0
             )
-
-            // Keep only actively migrating birds
             let migratingBirds = birdsWithWeeks.filter { migratingBirdIds.contains($0.bird.id) }
             guard !migratingBirds.isEmpty else {
-                print("🃏 [PredictionDebug]   Hotspot '\(hotspot.name)': 0 migrating birds — skip")
                 continue
             }
 
             let distance = locationService.distance(from: userLocation, to: hotspotLoc)
-            // Score: prioritise species count, break ties by proximity
             let score = Double(migratingBirds.count) * 1_000.0 - distance
-
-            print("🃏 [PredictionDebug]   Hotspot '\(hotspot.name)': \(migratingBirds.count) birds, \(Int(distance/1000))km, score \(Int(score))")
             scoredHotspots.append(HotspotScore(hotspot: hotspot, migratingBirds: migratingBirds, distance: distance, score: score))
         }
-
-        // 6. Pick single best hotspot
         guard let top = scoredHotspots.max(by: { $0.score < $1.score }) else {
-            print("⚠️ [PredictionDebug]   No hotspots with migrating birds found — returning empty")
             return []
         }
-        print("🃏 [PredictionDebug]   Selected top hotspot: '\(top.hotspot.name)'")
-
-        // 7. Build bird sub-cards
         let displayBirds: [BirdSpeciesDisplay] = top.migratingBirds.map { birdData in
             let bird = birdData.bird
             let weeks = birdData.weeks
@@ -485,8 +426,6 @@ class HomeManager {
                 currentWeek: currentWeek,
                 fallback: 70
             )
-
-            print("🃏 [PredictionDebug]     → \(bird.commonName), weeks: \(weeks), prob: \(probability)%")
             return BirdSpeciesDisplay(
                 birdName: bird.commonName,
                 birdImageName: bird.staticImageName,
@@ -496,8 +435,6 @@ class HomeManager {
                 residencyStatus: status
             )
         }
-
-        // 8. Pick primary bird (highest probability at this hotspot) for trajectory overlay
         let primaryBird = top.migratingBirds.max { a, b in
             let pa = sightabilityProbability(
                 from: top.hotspot.speciesList?.first(where: { $0.bird?.id == a.bird.id }),
@@ -515,12 +452,8 @@ class HomeManager {
         }?.bird ?? top.migratingBirds[0].bird
 
         let primaryMigration = migrationsByBirdId[primaryBird.id]
-
-        // 9. Distance string
         let distanceKm = Int(top.distance / 1000)
         let distanceString = distanceKm == 0 ? "Nearby" : "\(distanceKm) km"
-
-        // 10. Assemble card models
         let topHotspotLoc = CLLocationCoordinate2D(latitude: top.hotspot.lat, longitude: top.hotspot.lon)
         let pinRadiusKm = 0.5
         let pinRadiusMeters = pinRadiusKm * 1000.0
@@ -557,7 +490,6 @@ class HomeManager {
                nearest.distanceMeters <= pinRadiusMeters {
                 coordinate = nearest.coordinate
             } else {
-                // Ensure every displayed bird has a pin on this card.
                 coordinate = topHotspotLoc
             }
 
@@ -583,9 +515,6 @@ class HomeManager {
             hotspots: birdPins,
             birdSpecies: displayBirds
         )
-
-        print("🃏 [PredictionDebug]   Final displayBirds count: \(displayBirds.count)")
-        print("🃏 [PredictionDebug] Total DynamicMapCards created: 1")
         return [DynamicMapCard.combined(migration: migrationPrediction, hotspot: hotspotPrediction)]
     }
 
@@ -596,7 +525,7 @@ class HomeManager {
         var components = DateComponents()
         components.weekOfYear = week
         components.yearForWeekOfYear = currentYear
-        components.weekday = 2 // Monday
+        components.weekday = 2
         
         guard let date = calendar.date(from: components) else {
             return "Week \(week)"
@@ -712,7 +641,6 @@ class HomeManager {
             from: hotspotCoordinate,
             to: region.center
         ) / 1000.0
-        // Only trust the search bbox when it is anchored to the requested hotspot.
         guard regionCenterDistanceKm <= 1.0 else {
             return nil
         }
@@ -722,7 +650,6 @@ class HomeManager {
                 from: hotspotCoordinate,
                 to: nearestResultCoordinate
             ) / 1000.0
-            // Reject bbox if nearest search result itself is not close to hotspot.
             guard nearestResultDistanceKm <= 1.5 else {
                 return nil
             }
@@ -749,8 +676,6 @@ class HomeManager {
         let maxCornerDistanceKm = bboxCorners
             .map { locationService.distance(from: hotspotCoordinate, to: $0) / 1000.0 }
             .max() ?? .greatestFiniteMagnitude
-
-        // Discard broad regions; we only want tight local footprints on the card map.
         guard maxCornerDistanceKm <= 8 else {
             return nil
         }
@@ -831,8 +756,6 @@ class HomeManager {
             BirdCategory(icon: "🕊️", title: "Doves")
         ]
     }
-    
-    // MARK: - Helpers
     
     private func calculateProgress(currentWeek: Int, startWeek: Int, endWeek: Int) -> Float {
         let totalWeeks = endWeek - startWeek
@@ -1048,16 +971,12 @@ class HomeManager {
             let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
             return locationService.distance(from: location, to: hotspotLoc) <= radiusMeters
         }
-
-        // Sort closest first
         return nearby.sorted { h1, h2 in
             let d1 = locationService.distance(from: location, to: CLLocationCoordinate2D(latitude: h1.lat, longitude: h1.lon))
             let d2 = locationService.distance(from: location, to: CLLocationCoordinate2D(latitude: h2.lat, longitude: h2.lon))
             return d1 < d2
         }
     }
-    
-    // MARK: - Legacy Compatibility
 
     func getLivePredictions(for lat: Double, lon: Double, radiusKm: Double) async -> [FinalPredictionResult] {
         let location = CLLocationCoordinate2D(latitude: lat, longitude: lon)
@@ -1074,8 +993,6 @@ class HomeManager {
         return birdsWithWeeks.map { birdData in
             let bird = birdData.bird
             let matchingWeeks = birdData.weeks
-            
-            // Calculate probability (max over nearby hotspots for this bird)
             let matchingPresence = nearbyHotspots
                 .compactMap { hotspot in
                     hotspot.speciesList?.first(where: { $0.bird?.id == bird.id })
@@ -1091,12 +1008,8 @@ class HomeManager {
                     )
                 }
                 .max() ?? 70
-
-            // Determine weekNumber (first matching week among the look-ahead range)
             let weekNum = matchingWeeks.first ?? currentWeek
             let weekText = formatWeekDescription(week: weekNum)
-            
-            // Determine residencyStatus (Subtitle)
             let isResident = matchingPresence.contains(where: { ($0.validWeeks?.count ?? 0) >= 52 })
             let status: String
             if isResident {
@@ -1192,18 +1105,14 @@ class HomeManager {
     }
 }
 
-// MARK: - Sub-Managers
-
 @MainActor
 final class HotspotManager {
     private let modelContext: ModelContext
     private let logger: LoggingServiceProtocol
-    
-    // Cache: key = "lat_lon_week_radius", value = [Bird]
     private let birdsCache: NSCache<NSString, NSArray> = {
         let cache = NSCache<NSString, NSArray>()
         cache.countLimit = 100
-        cache.totalCostLimit = 50_000_000 // 50MB
+        cache.totalCostLimit = 50_000_000
         return cache
     }()
     
@@ -1251,9 +1160,6 @@ final class HotspotManager {
         birdsCache.setObject(result as NSArray, forKey: cacheKey)
         return result
     }
-
-    /// Returns birds present at the given location during ANY of the specified weeks,
-    /// along with the sorted list of matching weeks for each bird.
     func getBirdsPresent(
         at location: CLLocationCoordinate2D,
         duringWeeks weeks: [Int],
@@ -1305,7 +1211,6 @@ final class MigrationManager {
     }
     
     func getActiveMigrations(forWeek week: Int) async -> [MigrationSession] {
-        print("🔍 [PredictionDebug] MigrationManager: Querying active migrations for week \(week)")
         let descriptor = FetchDescriptor<MigrationSession>(
             predicate: #Predicate { session in
                 session.startWeek <= week && session.endWeek >= week
@@ -1313,33 +1218,25 @@ final class MigrationManager {
         )
         do {
             let sessions = try modelContext.fetch(descriptor)
-            print("🔍 [PredictionDebug]   Found \(sessions.count) active migration(s)")
             for session in sessions {
-                print("🔍 [PredictionDebug]   Migration: \(session.bird?.commonName ?? "NO BIRD") (weeks \(session.startWeek)-\(session.endWeek))")
             }
             return sessions
         } catch {
             logger.log(error: error, context: "MigrationManager.getActiveMigrations")
-            print("❌ [PredictionDebug] ERROR fetching migrations: \(error)")
             return []
         }
     }
     
     func getTrajectory(for session: MigrationSession, duringWeek week: Int) -> MigrationTrajectoryResult? {
-        print("🗺️ [PredictionDebug] getTrajectory for: \(session.bird?.commonName ?? "Unknown") at week \(week)")
         guard let allPaths = session.trajectoryPaths else {
-            print("❌ [PredictionDebug]   NO TRAJECTORY PATHS for session!")
             return nil
         }
         
         let currentPaths = allPaths.filter { $0.week == week }
-        print("🗺️ [PredictionDebug]   Paths for week \(week): \(currentPaths.count)")
         let bestPath = currentPaths.max(by: { ($0.probability ?? 0) < ($1.probability ?? 0) })
         
         if let best = bestPath {
-            print("🗺️ [PredictionDebug]   Best position: (\(best.lat), \(best.lon)) @ \(best.probability ?? 0)% probability")
         } else {
-            print("⚠️ [PredictionDebug]   NO BEST PATH found for week \(week)")
         }
         
         let position: CLLocationCoordinate2D?
@@ -1399,8 +1296,6 @@ final class CommunityObservationManager {
         
         let cutoffDate = maxAge.map { Date().addingTimeInterval(-$0) }
         let past = cutoffDate ?? Date.distantPast
-        
-        // SwiftData Predicate for spatial and temporal filtering
         let descriptor = FetchDescriptor<CommunityObservation>(
             predicate: #Predicate<CommunityObservation> { obs in
                 if let lat = obs.lat, let lon = obs.lon {

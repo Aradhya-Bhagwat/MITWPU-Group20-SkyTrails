@@ -1,13 +1,7 @@
-//
-//  MapViewController.swift
-//  SkyTrails
-//
 
 import UIKit
 import MapKit
 import CoreLocation
-
-
 
 protocol MapSelectionDelegate: AnyObject {
     func didSelectMapLocation(name: String, lat: Double, lon: Double)
@@ -42,27 +36,18 @@ class MapViewController: UIViewController {
 
     
     private func setupUI() {
-      
-        
-        // Style the container
         searchPillView.layer.cornerRadius = 28
         searchPillView.layer.shadowColor = UIColor.black.cgColor
         searchPillView.layer.shadowOpacity = 0.15
         searchPillView.layer.shadowOffset = CGSize(width: 0, height: 4)
         searchPillView.layer.shadowRadius = 6
-        
-        // Style the bar
         searchBar.setBackgroundImage(UIImage(), for: .any, barMetrics: .default)
         searchBar.searchBarStyle = .minimal
         searchBar.placeholder = "Search for a location"
-        
-        // Style the results table
         resultsTableView.layer.cornerRadius = 20
         resultsTableView.layer.masksToBounds = true
-        resultsTableView.isHidden = true // Hidden by default
+        resultsTableView.isHidden = true
         resultsTableView.alpha = 0
-        
-        // Register basic cell
         resultsTableView.register(UITableViewCell.self, forCellReuseIdentifier: "ResultCell")
     }
     
@@ -70,8 +55,6 @@ class MapViewController: UIViewController {
         mapView.delegate = self
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
-        
-        // Tap to add pin manually
         let tap = UITapGestureRecognizer(target: self, action: #selector(mapTapped(_:)))
         mapView.addGestureRecognizer(tap)
     }
@@ -82,12 +65,7 @@ class MapViewController: UIViewController {
         resultsTableView.delegate = self
         resultsTableView.dataSource = self
     }
-
-
-
-    // MARK: - Map Interactions
     @objc func mapTapped(_ sender: UITapGestureRecognizer) {
-        // If results are open, close them instead of dropping a pin
         if !resultsTableView.isHidden {
             toggleResults(show: false)
             searchBar.resignFirstResponder()
@@ -101,18 +79,13 @@ class MapViewController: UIViewController {
     }
     
     func updateLocationOnMap(coord: CLLocationCoordinate2D, name: String? = nil) {
-        // 1. Add Pin
         self.selectedCoordinate = coord
         mapView.removeAnnotations(mapView.annotations)
         let annotation = MKPointAnnotation()
         annotation.coordinate = coord
         mapView.addAnnotation(annotation)
-        
-        // 2. Move Camera
         let region = MKCoordinateRegion(center: coord, latitudinalMeters: 5000, longitudinalMeters: 5000)
         mapView.setRegion(region, animated: true)
-        
-        // 3. Resolve Name
         if let providedName = name {
             self.selectedLocationName = providedName
             self.searchBar.text = providedName
@@ -125,7 +98,6 @@ class MapViewController: UIViewController {
     func reverseGeocode(_ coord: CLLocationCoordinate2D) {
         let location = CLLocation(latitude: coord.latitude,
                                   longitude: coord.longitude)
-        //concurent view it does not block ui
         Task { [weak self] in
             guard let self else { return }
 
@@ -138,7 +110,6 @@ class MapViewController: UIViewController {
                     }
                     return
                 }
-                //sends request to map and return mkmapItem
                 let response = try await request.mapItems
                 let item = response.first
 
@@ -146,8 +117,6 @@ class MapViewController: UIViewController {
 
                 self.selectedLocationName = name
                 self.searchBar.text = name
-
-
 
             } catch {
                
@@ -172,7 +141,6 @@ class MapViewController: UIViewController {
         }
     }
 
-
     @IBAction func nextTapped(_ sender: Any) {
         guard let name = selectedLocationName, let coord = selectedCoordinate else { return }
         delegate?.didSelectMapLocation(name: name, lat: coord.latitude, lon: coord.longitude)
@@ -180,7 +148,6 @@ class MapViewController: UIViewController {
     }
     
 }
-
 
 extension MapViewController: MKMapViewDelegate, CLLocationManagerDelegate {
 
@@ -190,7 +157,6 @@ extension MapViewController: MKMapViewDelegate, CLLocationManagerDelegate {
         }
     }
 }
-
 
 extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate {
     
@@ -210,17 +176,13 @@ extension MapViewController: UISearchBarDelegate, MKLocalSearchCompleterDelegate
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         self.searchResults = completer.results
         self.resultsTableView.reloadData()
-        
-        // Only show table if we have text and results
         let shouldShow = !searchResults.isEmpty && !(searchBar.text?.isEmpty ?? true)
         toggleResults(show: shouldShow)
     }
     
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        print("Search error: \(error.localizedDescription)")
     }
 }
-
 
 extension MapViewController: UITableViewDelegate, UITableViewDataSource {
     
@@ -229,7 +191,6 @@ extension MapViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        // Simple subtitle cell
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "ResultCell")
         let result = searchResults[indexPath.row]
         cell.textLabel?.text = result.title
@@ -255,13 +216,10 @@ extension MapViewController: UITableViewDelegate, UITableViewDataSource {
 
             
             self.updateLocationOnMap(coord: coord, name: name)
-
-            // 2. Hide Results
             self.toggleResults(show: false)
             self.searchBar.resignFirstResponder()
         }
     }
-
 
 }
 

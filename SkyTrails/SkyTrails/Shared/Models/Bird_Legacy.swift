@@ -1,9 +1,3 @@
-//
-//  Bird.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 24/11/25.
-//
 
 import Foundation
 
@@ -25,7 +19,7 @@ struct BirdLegacy: Codable {
     var location: [String]
     var date : [Date]
     
-    var observedBy: [String]? // List of user image names/SF symbols who observed this bird
+    var observedBy: [String]?
     
     var notes: String?
 }

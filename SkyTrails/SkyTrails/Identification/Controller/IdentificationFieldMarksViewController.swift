@@ -8,11 +8,9 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     @IBOutlet weak var progressView: UIProgressView!
     
     weak var delegate: IdentificationFlowStepDelegate?
-    var selectedFieldMarks: [Int] = [] // Preserving your original selection tracking logic
+    var selectedFieldMarks: [Int] = []
     
     var viewModel: IdentificationManager!
-    
-    // Model Accessor: Provides the list of marks available for the specific shape selected
     private var availableMarks: [BirdFieldMark] {
         return viewModel.selectedShape?.fieldMarks ?? []
     }
@@ -29,19 +27,13 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        
-        // Initialize selectedFieldMarks from viewModel's state
-        // availableMarks depends on viewModel.selectedShape, which should be set by previous VC.
         for (index, mark) in availableMarks.enumerated() {
-            // Check if this mark's area name is in the manager's temporary selected areas
             if viewModel.tempSelectedAreas.contains(mark.area) {
                 selectedFieldMarks.append(index)
             }
         }
         
         setupCanvas()
-        
-        // Reload collection view to reflect selections
         Categories.reloadData()
         updateNextButtonState()
     }
@@ -167,13 +159,10 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func isCategorySelected(name: String) -> Bool {
-        // Matches the category name against the currently selected indices in availableMarks
         return selectedFieldMarks.contains { index in
             availableMarks.indices.contains(index) && availableMarks[index].area == name
         }
     }
-    
-    // MARK: - CollectionView DataSource
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return availableMarks.count
@@ -193,8 +182,6 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         
         return cell
     }
-    
-    // MARK: - CollectionView Delegate
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         if selectedFieldMarks.count >= 5 {
@@ -243,20 +230,16 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     
     @IBAction func nextTapped(_ sender: Any) {
         guard !selectedFieldMarks.isEmpty else { return }
-
-        // Map the selected indices to the actual model objects for the manager
         let selectedMarkObjects = selectedFieldMarks.compactMap { index -> BirdFieldMark? in
             availableMarks.indices.contains(index) ? availableMarks[index] : nil
         }
-        
-        // Sync selected areas to the manager's tempSelectedAreas array
         viewModel.tempSelectedAreas = selectedMarkObjects.map { $0.area }
         
         viewModel.filterBirds(
             shape: viewModel.selectedShapeId,
             size: viewModel.selectedSizeCategory,
             location: viewModel.selectedLocation,
-            fieldMarks: selectedMarkObjects // Pass the aligned model objects
+            fieldMarks: selectedMarkObjects
         )
         
         delegate?.didFinishStep()

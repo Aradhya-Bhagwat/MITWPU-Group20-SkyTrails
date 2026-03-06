@@ -1,9 +1,3 @@
-//
-//  PageControlReusableViewCollectionReusableView.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 27/11/25.
-//
 
 import UIKit
 

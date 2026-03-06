@@ -1,22 +1,11 @@
-//
-//  WatchlistDomainModels.swift
-//  SkyTrails
-//
-//  Domain Models & DTOs for Watchlist Module
-//  Strict MVC Refactoring - Clean separation from persistence layer
-//
 
 import Foundation
 import CoreLocation
-
-// MARK: - Constants
 
 enum WatchlistConstants {
     static let myWatchlistID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
     static let legacyDefaultOwnerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 }
-
-// MARK: - User Preferences
 
 final class LocationPreferences {
     static let shared = LocationPreferences()
@@ -57,14 +46,11 @@ final class LocationPreferences {
         if let name = name {
             homeLocationName = name
         } else {
-            // Reverse geocode to get name
             homeLocationName = await LocationService.shared.reverseGeocode(
                 lat: coordinate.latitude,
                 lon: coordinate.longitude
             )
         }
-        
-        print("🏠 [LocationPreferences] Home location set to: \(homeLocationName ?? "Unknown")")
     }
 
     func clear() {
@@ -73,12 +59,10 @@ final class LocationPreferences {
     }
 }
 
-// MARK: - Watchlist Identifier (Replaces Magic UUID)
-
 enum WatchlistIdentifier: Hashable {
     case custom(UUID)
     case shared(UUID)
-    case virtual  // Replaces "My Watchlist" magic ID 00000000-0000-0000-0000-000000000000
+    case virtual
     
     var uuid: UUID? {
         switch self {
@@ -95,7 +79,6 @@ enum WatchlistIdentifier: Hashable {
     }
     
     static func from(uuid: UUID, type: WatchlistType?) -> WatchlistIdentifier {
-        // Handle legacy magic UUID
         if uuid == WatchlistConstants.myWatchlistID {
             return .virtual
         }
@@ -111,8 +94,6 @@ enum WatchlistIdentifier: Hashable {
     }
 }
 
-// MARK: - DTOs (Data Transfer Objects for UI)
-
 struct WatchlistSummaryDTO: Hashable {
     let id: WatchlistIdentifier
     let title: String
@@ -122,8 +103,6 @@ struct WatchlistSummaryDTO: Hashable {
     let previewImages: [String]
     let stats: WatchlistStatsDTO
     let type: WatchlistType
-    
-    // Legacy UUID support for transition period
     var legacyUUID: UUID {
         switch id {
         case .custom(let uuid), .shared(let uuid):
@@ -233,8 +212,6 @@ struct WatchlistRuleDTO: Hashable {
     }
 }
 
-// MARK: - Rule Parameters (Typed replacements for JSON strings)
-
 enum RuleParameters: Hashable {
     case location(LocationRuleParams)
     case dateRange(DateRangeRuleParams)
@@ -310,8 +287,6 @@ struct MigrationPatternRuleParams: Codable, Hashable {
     let patternKey: String
 }
 
-// MARK: - Query Filters & Sort Options
-
 struct WatchlistQueryFilter {
     var status: WatchlistEntryStatus?
     var searchText: String?
@@ -358,8 +333,6 @@ enum WatchlistSortOption {
     }
 }
 
-// MARK: - Result Types
-
 struct WatchlistOperationResult {
     let success: Bool
     let watchlistID: WatchlistIdentifier?
@@ -388,8 +361,6 @@ struct EntryOperationResult {
     }
 }
 
-// MARK: - Repository Protocol
-
 protocol WatchlistRepository {
     func loadDashboardData() async throws -> (
         myWatchlist: WatchlistSummaryDTO?,
@@ -401,8 +372,6 @@ protocol WatchlistRepository {
     func ensureMyWatchlistExists() async throws -> UUID
     func getPersonalWatchlists() -> [Watchlist]
 }
-
-// MARK: - Error Types
 
 enum WatchlistError: Error, LocalizedError {
     case watchlistNotFound(WatchlistIdentifier)

@@ -23,13 +23,11 @@ enum SessionStatus: String, Codable {
     case abandoned = "abandoned"
 }
 
-
 struct MatchScore: Codable {
     var matchedFeatures: [String]
     var mismatchedFeatures: [String]
     var score: Double
 }
-
 
 @Model
 final class BirdShape {
@@ -77,14 +75,11 @@ final class FieldMarkVariant {
     var fieldMark: BirdFieldMark?
     var name: String
 
-
     init(name: String) {
         self.id = UUID()
         self.name = name
     }
 }
-
-
 
 @Model
 final class IdentificationSession {
@@ -175,7 +170,6 @@ final class IdentificationSessionFieldMark {
     }
 }
 
-
 @Model
 final class IdentificationResult {
     @Attribute(.unique)
@@ -233,8 +227,6 @@ final class IdentificationCandidate {
     var deletedAt: Date?
     var created_at: Date
     var updated_at: Date?
-    
-    // Updated to use the struct instead of String
     var matchScore: MatchScore?
 
     init(

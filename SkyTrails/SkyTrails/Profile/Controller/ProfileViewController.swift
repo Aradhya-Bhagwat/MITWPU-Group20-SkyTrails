@@ -1,9 +1,3 @@
-//
-//  ProfileViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 11/02/26.
-//
 
 import UIKit
 import Photos
@@ -12,15 +6,11 @@ import ImageIO
 
 class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
-    // MARK: - Outlets
-
     @IBOutlet weak var profileImageView: UIImageView!
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var emailButton: UIButton!
     private let avatarMaxPixelSize: CGFloat = 512
     private let uploadMaxDimension: CGFloat = 1280
-
-    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,8 +24,6 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
     }
 
-    // MARK: - UI Setup
-
     private func setupUI() {
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         profileImageView.clipsToBounds = true
@@ -44,8 +32,6 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         navigationItem.title = ""
         addProfileImageTap()
     }
-
-    // MARK: - Load User Data
 
     private func loadUser() {
 
@@ -71,8 +57,6 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         }
     }
 
-    // MARK: - Logout
-
     @IBAction func logoutTapped(_ sender: UIButton) {
         logout()
     }
@@ -87,8 +71,6 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         UserSession.shared.logout()
         goToLogin()
     }
-
-    // MARK: - Navigation
 
     private func goToLogin() {
 

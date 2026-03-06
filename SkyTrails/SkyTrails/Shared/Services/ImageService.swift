@@ -61,11 +61,8 @@ final class ImageService: ImageProviding {
 
     func image(for key: String, shapeId: String? = nil) async -> UIImage? {
         var normalizedKey = normalizeKey(key)
-        
-        // Map shape ID string in the key itself if present
         let targetShape = "Passeridae_Fringillidae"
         if normalizedKey.lowercased().contains(targetShape.lowercased()) {
-            // Find range case-insensitively and replace
             if let range = normalizedKey.range(of: targetShape, options: .caseInsensitive) {
                 normalizedKey.replaceSubrange(range, with: "finch")
             }
@@ -75,7 +72,7 @@ final class ImageService: ImageProviding {
         
         let manifestLookupKey: String
         if normalizedKey.hasPrefix("id_canvas_finch_") {
-            let stripped = String(normalizedKey.dropFirst(16)) // 16 = "id_canvas_finch_" count
+            let stripped = String(normalizedKey.dropFirst(16))
             let withoutDefault = stripped.replacingOccurrences(of: "_default", with: "")
             manifestLookupKey = withoutDefault
         } else if normalizedKey.hasPrefix("id_canvas_") {

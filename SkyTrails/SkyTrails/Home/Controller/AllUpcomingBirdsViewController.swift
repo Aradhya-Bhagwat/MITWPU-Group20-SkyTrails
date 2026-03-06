@@ -1,10 +1,3 @@
-//
-//  AllUpcomingBirdsViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 10/12/25.
-//  Refactored to Strict MVC
-//
 
 import UIKit
 

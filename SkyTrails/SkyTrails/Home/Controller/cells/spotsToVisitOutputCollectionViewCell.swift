@@ -1,9 +1,3 @@
-//
-//  spotsToVisitOutputCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 20/02/26.
-//
 
 import UIKit
 
@@ -58,8 +52,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         updateScaledLayout()
         updateCardVariant()
         applyBadgeIconStyle()
-        
-        // Shadow should only cover the card, not the buttons below
         let cardView = (bounds.width >= 450) ? wideCardView : compactCardView
         if let card = cardView {
             let cardFrame = card.convert(card.bounds, to: self)
@@ -127,8 +119,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
         mainStackView.addArrangedSubview(wrapper)
         mainStackView.axis = .vertical
-        
-        // Ensure the wrapper (buttons) is behind the card views in the z-order
         mainStackView.sendSubviewToBack(wrapper)
         
         self.actionButtonsContainer = stack
@@ -303,13 +293,13 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     private func colorForSightability(_ probability: Int) -> UIColor {
         switch probability {
         case 0..<25:
-            return UIColor(red: 1.0, green: 0.27, blue: 0.0, alpha: 1.0) // Orangish Red
+            return UIColor(red: 1.0, green: 0.27, blue: 0.0, alpha: 1.0)
         case 25..<50:
-            return UIColor(red: 0.55, green: 0.35, blue: 0.2, alpha: 1.0) // Brown
+            return UIColor(red: 0.55, green: 0.35, blue: 0.2, alpha: 1.0)
         case 50..<75:
-            return UIColor(red: 0.65, green: 0.8, blue: 0.0, alpha: 1.0) // Yellowish Lime
+            return UIColor(red: 0.65, green: 0.8, blue: 0.0, alpha: 1.0)
         default:
-            return UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0) // Teal
+            return UIColor(red: 0.0, green: 0.5, blue: 0.5, alpha: 1.0)
         }
     }
 
@@ -320,19 +310,13 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         let boldFont = UIFont.systemFont(ofSize: fontSize, weight: .bold)
         
         let attributedString = NSMutableAttributedString()
-        
-        // Icon
         if let icon = UIImage(systemName: "binoculars.fill", withConfiguration: config)?.withTintColor(color, renderingMode: .alwaysOriginal) {
             let attachment = NSTextAttachment()
             attachment.image = icon
             attachment.bounds = CGRect(x: 0, y: (font.capHeight - icon.size.height) / 2, width: icon.size.width, height: icon.size.height)
             attributedString.append(NSAttributedString(attachment: attachment))
         }
-        
-        // Label Text
         attributedString.append(NSAttributedString(string: " Sightability - ", attributes: [.font: font, .foregroundColor: UIColor.label]))
-        
-        // Percentage Text
         attributedString.append(NSAttributedString(string: "\(probability)%", attributes: [.font: boldFont, .foregroundColor: color]))
         
         return attributedString

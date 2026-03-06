@@ -21,8 +21,6 @@ class IdentificationSizeViewController: UIViewController {
         birdSlider.maximumValue = 4
         birdSlider.isContinuous = false
         applySemanticAppearance()
-        
-        // Load existing selected size from viewModel if available
         let initialSize = viewModel.selectedSizeCategory ?? 0
         birdSlider.value = Float(initialSize)
         updateBirdDisplay(for: initialSize)

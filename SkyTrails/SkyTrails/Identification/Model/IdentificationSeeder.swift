@@ -4,8 +4,6 @@ import SwiftData
 @MainActor
 final class IdentificationSeeder {
 
-    // MARK: - DTOs (JSON → Swift)
-
     private struct BirdDB: Codable {
         let reference_data: ReferenceData
         let birds: [BirdDTO]
@@ -56,8 +54,6 @@ final class IdentificationSeeder {
         let area: String
         let variantId: String
     }
-
-    // MARK: - Seeder Entry
 
     func seed(context: ModelContext) throws {
 
@@ -117,8 +113,6 @@ final class IdentificationSeeder {
 
         let existingBirds = try context.fetch(FetchDescriptor<Bird>())
         let existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
-
-        // MARK: - Step 1: Create Shapes
         for shapeDTO in db.reference_data.shapes {
             if let existing = shapeMap[shapeDTO.id] {
                 var didUpdate = false
@@ -143,8 +137,6 @@ final class IdentificationSeeder {
             context.insert(shape)
             shapeMap[shapeDTO.id] = shape
         }
-
-        // MARK: - Step 2: Create Field Marks
         for fieldMarkDTO in db.reference_data.fieldMarks {
             let fieldMarkKey = fieldMarkDTO.id.lowercased()
             let fieldMarkId = UUID(uuidString: fieldMarkDTO.id) ?? UUID()
@@ -166,8 +158,6 @@ final class IdentificationSeeder {
             }
             let fieldMark = BirdFieldMark(area: fieldMarkDTO.area)
             fieldMark.id = fieldMarkId
-            
-            // Link to shape
             if let shape = shapeMap[fieldMarkDTO.shapeId] {
                 fieldMark.shape = shape
             }
@@ -175,8 +165,6 @@ final class IdentificationSeeder {
             context.insert(fieldMark)
             fieldMarkMap[fieldMarkKey] = fieldMark
         }
-
-        // MARK: - Step 3: Create Variants
         for variantDTO in db.reference_data.variants {
             let variantKey = variantDTO.id.lowercased()
             let variantId = UUID(uuidString: variantDTO.id) ?? UUID()
@@ -198,8 +186,6 @@ final class IdentificationSeeder {
             }
             let variant = FieldMarkVariant(name: variantDTO.name)
             variant.id = variantId
-            
-            // Link to field mark
             if let fieldMark = fieldMarkMap[variantDTO.fieldMarkId.lowercased()] {
                 variant.fieldMark = fieldMark
             }
@@ -207,12 +193,9 @@ final class IdentificationSeeder {
             context.insert(variant)
             variantMap[variantKey] = variant
         }
-
-        // MARK: - Step 4: Create Birds
         for birdDTO in db.birds {
             let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
             let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
-            // Convert BirdFieldMarkDataDTO to BirdFieldMarkData
             var fieldMarkData: [BirdFieldMarkData] = []
             if let markDataDTOs = birdDTO.fieldMarkData {
                 for dto in markDataDTOs {
@@ -293,8 +276,6 @@ final class IdentificationSeeder {
                 size_category: birdDTO.size_category,
                 shape: birdDTO.shape_id.flatMap { shapeMap[$0] }
             )
-            
-            // Assign field mark data
             bird.fieldMarkData = fieldMarkData.isEmpty ? nil : fieldMarkData
             _ = upsertBirdMarkLinks(
                 bird: bird,

@@ -1,17 +1,6 @@
-//
-//  GridLayoutFactory.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 19/02/26.
-//
 import UIKit
 
 enum GridLayoutFactory {
-
-    // MARK: - Item Size
-
-    /// Calculates and returns the absolute card size based on the device's
-    /// portrait screen width. Call once and cache the result.
     static func makeItemSize(for view: UIView) -> NSCollectionLayoutSize {
         let screenBounds  = view.window?.windowScene?.screen.bounds ?? view.bounds
         let portraitWidth = min(screenBounds.width, screenBounds.height)
@@ -31,11 +20,6 @@ enum GridLayoutFactory {
         return NSCollectionLayoutSize(widthDimension: .absolute(width),
                                       heightDimension: .absolute(height))
     }
-
-    // MARK: - Section
-
-    /// Builds a compositional-layout section that fills `containerWidth`
-    /// with as many columns as fit the pre-calculated `cachedSize`.
     static func makeSection(cachedSize: NSCollectionLayoutSize,
                              containerWidth: CGFloat,
                              includeHeader: Bool) -> NSCollectionLayoutSection {

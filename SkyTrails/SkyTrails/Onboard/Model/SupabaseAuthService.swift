@@ -76,7 +76,6 @@ final class SupabaseAuthService {
     }
 
     func signIn(email: String, password: String) async throws -> SupabaseAuthResult {
-        print("🔍 [AuthService] signIn called for email: \(email) with password length: \(password.count)")
         let payload: [String: Any] = [
             "email": email,
             "password": password
@@ -126,8 +125,6 @@ final class SupabaseAuthService {
     func userExists(email: String) async throws -> Bool {
         let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let rpcPayload: [String: Any] = ["input_email": normalizedEmail]
-
-        // Prefer RPC for production-safe checks; fallback to direct query if RPC is not deployed yet.
         if let exists: Bool = try? await request(
             path: "/rest/v1/rpc/check_user_email_exists",
             method: "POST",
@@ -234,12 +231,9 @@ final class SupabaseAuthService {
     }
 
     func restoreSession(accessToken: String, refreshToken: String) async throws -> SupabaseAuthResult {
-        print("🔍 [AuthService] restoreSession called")
-
         do {
             let user = try await getCurrentUser(accessToken: accessToken)
             if let userID = UUID(uuidString: user.id) {
-                print("🔍 [AuthService] ✅ getCurrentUser succeeded with existing token")
                 return SupabaseAuthResult(
                     userID: userID,
                     email: user.email ?? "",
@@ -251,12 +245,9 @@ final class SupabaseAuthService {
                 )
             }
         } catch {
-            print("🔍 [AuthService] ⚠️ getCurrentUser failed: \(error.localizedDescription)")
-            print("🔍 [AuthService] Attempting token refresh...")
         }
 
         let refreshed = try await refreshSession(refreshToken: refreshToken)
-        print("🔍 [AuthService] ✅ Token refresh succeeded")
         return try toAuthResult(from: refreshed)
     }
 
@@ -340,28 +331,18 @@ final class SupabaseAuthService {
         if let body {
             request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
             if let bodyString = String(data: request.httpBody ?? Data(), encoding: .utf8) {
-                // Redact password for security in logs, but log the rest
                 let logBody = bodyString.replacingOccurrences(of: "\"password\":\"[^\"]*\"", with: "\"password\":\"***\"", options: String.CompareOptions.regularExpression)
-                print("🚀 [AuthService] Request Body: \(logBody)")
             }
         }
-
-        print("🚀 [AuthService] Request: \(method) \(url.absoluteString)")
-
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("❌ [AuthService] Invalid response type")
             throw SupabaseAuthError.invalidResponse
         }
-
-        print("⬇️ [AuthService] Response Status: \(httpResponse.statusCode)")
         if let responseString = String(data: data, encoding: .utf8), !responseString.isEmpty {
-            print("⬇️ [AuthService] Response Body: \(responseString)")
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = parseErrorMessage(from: data) ?? "Auth failed with status \(httpResponse.statusCode)."
-            print("❌ [AuthService] Request failed: \(message)")
             throw SupabaseAuthError.requestFailed(message)
         }
 

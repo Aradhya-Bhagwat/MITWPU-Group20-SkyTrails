@@ -46,8 +46,6 @@ actor InitialSyncService {
     private init() {}
     
     func performInitialSync(userId: UUID) async throws -> InitialSyncSummary {
-        print("🔄 [InitialSync] Starting initial sync for user: \(userId)")
-        
         if config == nil {
             config = try SupabaseConfig.load()
         }
@@ -59,8 +57,6 @@ actor InitialSyncService {
         guard let accessToken = await MainActor.run(body: { UserSession.shared.getAccessToken() }) else {
             throw InitialSyncError.notAuthenticated
         }
-        
-        // Fetch all data from server FIRST (outside MainActor)
         let watchlistRows: [WatchlistRow] = try await fetchFromSupabase(
             table: "watchlists",
             query: "select=*&owner_id=eq.\(userId.uuidString)&deleted_at=is.null",
@@ -95,9 +91,6 @@ actor InitialSyncService {
             config: config,
             accessToken: accessToken
         )
-        
-        
-        // Now merge into SwiftData on MainActor
         let (watchlistsCount, entriesCount, rulesCount, sharesCount, photosCount) = try await MainActor.run {
             let context = WatchlistManager.shared.context
             
@@ -120,8 +113,6 @@ actor InitialSyncService {
             photosSynced: photosCount,
             timestamp: Date()
         )
-        
-        print("🔄 [InitialSync] Completed: \(summary.totalSynced) items synced")
         return summary
     }
     
@@ -149,8 +140,6 @@ actor InitialSyncService {
             watchlist.lastSyncedAt = Date()
             syncedCount += 1
         }
-        
-        print("🔄 [InitialSync] Synced \(syncedCount) watchlists")
         return syncedCount
     }
     
@@ -191,8 +180,6 @@ actor InitialSyncService {
             entry.lastSyncedAt = Date()
             syncedCount += 1
         }
-        
-        print("🔄 [InitialSync] Synced \(syncedCount) entries")
         return syncedCount
     }
     
@@ -226,8 +213,6 @@ actor InitialSyncService {
             rule.lastSyncedAt = Date()
             syncedCount += 1
         }
-        
-        print("🔄 [InitialSync] Synced \(syncedCount) rules")
         return syncedCount
     }
     
@@ -260,8 +245,6 @@ actor InitialSyncService {
             share.lastSyncedAt = Date()
             syncedCount += 1
         }
-        
-        print("🔄 [InitialSync] Synced \(syncedCount) shares")
         return syncedCount
     }
     
@@ -295,8 +278,6 @@ actor InitialSyncService {
             photo.lastSyncedAt = Date()
             syncedCount += 1
         }
-        
-        print("🔄 [InitialSync] Synced \(syncedCount) photos")
         return syncedCount
     }
     

@@ -1,9 +1,3 @@
-//
-//  SharedWatchlistCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 27/11/25.
-//
 
 import UIKit
 
@@ -11,8 +5,6 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "SharedWatchlistCollectionViewCell"
     private var defaultContainerBackgroundColor: UIColor = .white
-    
-    // MARK: - IBOutlets
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var mainImageView: UIImageView!
     
@@ -34,25 +26,18 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        // Container Styling
         self.clipsToBounds = false
         self.contentView.clipsToBounds = false
 
         updateCardAppearance()
         containerView.layer.cornerRadius = 16
         containerView.layer.masksToBounds = false
-        
-        // Main Image Styling
         mainImageView.layer.cornerRadius = 16
         mainImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
         mainImageView.clipsToBounds = true
         mainImageView.contentMode = .scaleAspectFill
-        
-        // Badge Styling
         setupBadge(greenBadgeView, label: greenBadgeLabel, color: .systemGreen)
         setupBadge(blueBadgeView, label: blueBadgeLabel, color: .systemBlue)
-        
-        // Label Styling
         dateLabel.textColor = .secondaryLabel
         locationLabel.textColor = .secondaryLabel
     }
@@ -74,8 +59,6 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         label.textColor = color
         label.font = .systemFont(ofSize: 12, weight: .bold)
     }
-    
-    // MARK: - Configuration
     func configure(title: String,
                    location: String,
                    dateRange: String,

@@ -1,9 +1,3 @@
-//
-//  q_2UpcomingBirdsCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 25/11/25.
-//
 
 import UIKit
 
@@ -75,8 +69,6 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        
-        // Guard against uninitialized outlets during layout passes
         guard cardContainerView != nil, dateLabel != nil, titleLabel != nil else { return }
         if traitCollection.userInterfaceStyle != .dark {
             contentView.layer.shadowPath = UIBezierPath(roundedRect: contentView.bounds, cornerRadius: 16).cgPath

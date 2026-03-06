@@ -113,7 +113,7 @@ extension OTPInputView: UITextFieldDelegate {
             return false
         }
 
-        if string.isEmpty { // Backspace
+        if string.isEmpty {
             if textField.text?.isEmpty == true {
                 let prevTag = textField.tag - 1
                 if prevTag >= 0 {

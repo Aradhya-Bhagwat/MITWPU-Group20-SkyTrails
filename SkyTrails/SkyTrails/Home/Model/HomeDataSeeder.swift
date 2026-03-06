@@ -1,9 +1,3 @@
-//
-//  HomeDataSeeder.swift
-//  SkyTrails
-//
-//  Created for SkyTrails Home Module Seeding
-//
 
 import Foundation
 import SwiftData
@@ -23,20 +17,15 @@ class HomeDataSeeder {
     }
     
     func seed(modelContext: ModelContext) async throws {
-        // 1. Locate JSON file
         guard let url = Bundle.main.url(forResource: "home_data", withExtension: "json") else {
             return
         }
-        
-        // 2. Load Data
         let data: Data
         do {
             data = try Data(contentsOf: url)
         } catch {
             throw SeederError.dataCorrupted
         }
-        
-        // 3. Decode
         let decoder = JSONDecoder()
         
         let jsonPayload: HomeJSONData
@@ -45,24 +34,13 @@ class HomeDataSeeder {
         } catch {
             throw SeederError.decodingFailed(error)
         }
-        
-        // 4. Seed Hotspots
         try await seedHotspots(jsonPayload.hotspots, context: modelContext)
-        
-        // 5. Seed Migrations
         try await seedMigrations(jsonPayload.migration_sessions, context: modelContext)
-        
-        // 6. Seed Observations
         try await seedObservations(jsonPayload.community_observations, context: modelContext)
-        
-        // 7. Save
         try modelContext.save()
     }
     
-    // MARK: - Hotspots
-    
     private func seedHotspots(_ data: [HotspotData], context: ModelContext) async throws {
-        print("[upcomingbirdsdebug] Seeder: Processing \(data.count) hotspots for Recommended Birds data")
         for item in data {
             let id = item.id
             let descriptor = FetchDescriptor<Hotspot>(predicate: #Predicate { $0.id == id })
@@ -109,12 +87,10 @@ class HomeDataSeeder {
                 existing.bird = fetchBird(id: data.birdId, context: context)
             }
             if existing.bird == nil {
-                print("[upcomingbirdsdebug] ⚠️ Seeder: Bird \(data.birdId) missing. This affects Recommended Birds at \(hotspot.name).")
             }
         } else {
             let bird = fetchBird(id: data.birdId, context: context)
             if bird == nil {
-                print("[upcomingbirdsdebug] ⚠️ Seeder: Bird \(data.birdId) missing. This affects Recommended Birds at \(hotspot.name).")
                 return
             }
             let presence = HotspotSpeciesPresence(
@@ -129,10 +105,7 @@ class HomeDataSeeder {
         }
     }
     
-    // MARK: - Migrations
-    
     private func seedMigrations(_ data: [MigrationSessionData], context: ModelContext) async throws {
-        print("🌱 [PredictionDebug] HomeDataSeeder: Processing \(data.count) migrations for Upcoming/Prediction data")
         for item in data {
             let id = item.id
             let descriptor = FetchDescriptor<MigrationSession>(predicate: #Predicate { $0.id == id })
@@ -146,7 +119,6 @@ class HomeDataSeeder {
                 if session.bird == nil {
                      session.bird = fetchBird(id: item.birdId, context: context)
                 }
-                print("🌱 [PredictionDebug]   Updating existing migration - ID: \(id), Bird: \(session.bird?.commonName ?? "Missing")")
             } else {
                 let bird = fetchBird(id: item.birdId, context: context)
                 session = MigrationSession(
@@ -157,16 +129,13 @@ class HomeDataSeeder {
                     hemisphere: item.hemisphere
                 )
                 context.insert(session)
-                print("🌱 [PredictionDebug]   Inserted new migration - ID: \(id), Bird: \(bird?.commonName ?? "Missing")")
             }
             
             if let paths = item.trajectoryPaths {
-                print("🌱 [PredictionDebug]   Seeding \(paths.count) trajectory paths for \(session.bird?.commonName ?? "Unknown")")
                 for pathData in paths {
                     try seedTrajectory(pathData, for: session, context: context)
                 }
             } else {
-                print("⚠️ [PredictionDebug]   No trajectory paths for \(session.bird?.commonName ?? "Unknown")")
             }
         }
     }
@@ -193,8 +162,6 @@ class HomeDataSeeder {
             context.insert(path)
         }
     }
-    
-    // MARK: - Observations
     
     private func seedObservations(_ data: [CommunityObservationData], context: ModelContext) async throws {
         let formatter = ISO8601DateFormatter()
@@ -234,8 +201,6 @@ class HomeDataSeeder {
             }
         }
     }
-    
-    // MARK: - Helpers
     
     private func fetchBird(id: UUID, context: ModelContext) -> Bird? {
         let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.id == id })

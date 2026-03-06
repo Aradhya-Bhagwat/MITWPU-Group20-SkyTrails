@@ -1,16 +1,8 @@
-	//
-	//  WatchlistSeeder.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 02/02/26.
-	//
 
 import Foundation
 import SwiftData
 
 struct WatchlistSeeder {
-	
-		// Define DTOs privately here to keep global namespace clean
 	private struct JSONWatchlistDTO: Codable {
 		let id: UUID
 		let title: String
@@ -48,101 +40,51 @@ struct WatchlistSeeder {
 		let date: [TimeInterval]
 		let observedBy: [String]?
 	}
-	
-		// MARK: - Public API
-	
-		/// Checks if seeding is required and performs it.
 	@MainActor
 	static func seed(context: ModelContext) throws {
-		print("🌱 [WatchlistSeeder] Starting seed check...")
-		
-		// 0. Check if watchlist seeding is enabled in Info.plist
 		let seedWatchlistsEnabled = Bundle.main.object(forInfoDictionaryKey: "SEED_WATCHLISTS") as? Bool ?? false
 		guard seedWatchlistsEnabled else {
-			print("ℹ️ [WatchlistSeeder] SEED_WATCHLISTS is OFF in Info.plist. Skipping watchlist seeding.")
 			return
 		}
-		
-		print("🌱 [WatchlistSeeder] SEED_WATCHLISTS is ON. Proceeding with seed...")
-		
-			// 1. Check if data exists
 		let descriptor = FetchDescriptor<Watchlist>()
 		let count = try context.fetchCount(descriptor)
 		
 		guard count == 0 else {
-			print("✅ [WatchlistSeeder] Database already populated with \(count) watchlists. Skipping seed.")
 			return
 		}
-		
-		print("📦 [WatchlistSeeder] Database empty. Starting seed...")
-		
-			// 2. Load and Insert Custom Watchlists
 		do {
 			try seedCustomWatchlists(context: context)
-			print("✅ [WatchlistSeeder] Custom watchlists seeded successfully")
 		} catch {
-			print("❌ [WatchlistSeeder] Failed to seed custom watchlists: \(error)")
 			throw SeederError.seedingFailed("Custom watchlists", error)
 		}
-		
-			// 3. Load and Insert Shared Watchlists
 		do {
 			try seedSharedWatchlists(context: context)
-			print("✅ [WatchlistSeeder] Shared watchlists seeded successfully")
 		} catch {
-			print("❌ [WatchlistSeeder] Failed to seed shared watchlists: \(error)")
 			throw SeederError.seedingFailed("Shared watchlists", error)
 		}
-		
-        // 3.5. Generate cover image summary
         do {
             let descriptor = FetchDescriptor<Watchlist>()
             let allWatchlists = try context.fetch(descriptor)
             let withCover = allWatchlists.filter { $0.coverImagePath != nil }.count
             let withoutCover = allWatchlists.count - withCover
-            print("📸 [WatchlistSeeder] Cover images: \(withCover) with images, \(withoutCover) without")
         } catch {
-            print("⚠️ [WatchlistSeeder] Could not generate cover image summary: \(error)")
         }
-        
-			// 4. Save
 		do {
 			try context.save()
-			print("💾 [WatchlistSeeder] Context saved successfully")
 		} catch {
-			print("❌ [WatchlistSeeder] Failed to save context: \(error)")
 			throw SeederError.saveFailed(error)
 		}
-		
-			// 5. Verify seeding
 		let finalCount = try context.fetchCount(descriptor)
-		print("✅ [WatchlistSeeder] Seeding complete. Total watchlists: \(finalCount)")
 	}
-	
-		// MARK: - Private Helpers
 	
 	@MainActor
 	private static func seedCustomWatchlists(context: ModelContext) throws {
-		print("📖 [WatchlistSeeder] Loading watchlists.json...")
-		
 		guard let url = Bundle.main.url(forResource: "watchlists", withExtension: "json") else {
-			print("❌ [WatchlistSeeder] watchlists.json not found in bundle")
 			throw SeederError.fileNotFound("watchlists.json")
 		}
-		
-		print("📄 [WatchlistSeeder] Found watchlists.json at: \(url.path)")
-		
 		let data = try Data(contentsOf: url)
-		print("📦 [WatchlistSeeder] Loaded \(data.count) bytes from watchlists.json")
-		
 		let dtos = try JSONDecoder().decode([JSONWatchlistDTO].self, from: data)
-		print("✅ [WatchlistSeeder] Decoded \(dtos.count) watchlists from JSON")
-		
 		for (index, dto) in dtos.enumerated() {
-			print("  ➤ Processing watchlist \(index + 1)/\(dtos.count): '\(dto.title)'")
-			
-				// ALL watchlists from watchlists.json are .custom type
-				// My Watchlist is now virtual, not a physical watchlist
 			let type: WatchlistType = .custom
 			
 			let watchlist = Watchlist(
@@ -158,40 +100,22 @@ struct WatchlistSeeder {
 			
 			let observedCount = dto.observedBirds.count
 			let toObserveCount = dto.toObserveBirds.count
-			print("    🦆 Processing \(observedCount) observed + \(toObserveCount) to-observe birds")
-			
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
-            
-            // Update stats
             watchlist.observedCount = observedCount
             watchlist.speciesCount = observedCount + toObserveCount
-            
-            // Update cover image based on entries
             watchlist.updateCoverImage()
 		}
 	}
 	
 	@MainActor
 	private static func seedSharedWatchlists(context: ModelContext) throws {
-		print("📖 [WatchlistSeeder] Loading sharedWatchlists.json...")
-		
 		guard let url = Bundle.main.url(forResource: "sharedWatchlists", withExtension: "json") else {
-			print("❌ [WatchlistSeeder] sharedWatchlists.json not found in bundle")
 			throw SeederError.fileNotFound("sharedWatchlists.json")
 		}
-		
-		print("📄 [WatchlistSeeder] Found sharedWatchlists.json at: \(url.path)")
-		
 		let data = try Data(contentsOf: url)
-		print("📦 [WatchlistSeeder] Loaded \(data.count) bytes from sharedWatchlists.json")
-		
 		let dtos = try JSONDecoder().decode([JSONSharedWatchlistDTO].self, from: data)
-		print("✅ [WatchlistSeeder] Decoded \(dtos.count) shared watchlists from JSON")
-		
 		for (index, dto) in dtos.enumerated() {
-			print("  ➤ Processing shared watchlist \(index + 1)/\(dtos.count): '\(dto.title)'")
-			
 			let watchlist = Watchlist(
 				id: dto.id,
 				type: .shared,
@@ -205,16 +129,10 @@ struct WatchlistSeeder {
 			
 			let observedCount = dto.observedBirds.count
 			let toObserveCount = dto.toObserveBirds.count
-			print("    🦆 Processing \(observedCount) observed + \(toObserveCount) to-observe birds")
-			
 			processBirds(dto.observedBirds, for: watchlist, status: .observed, context: context)
 			processBirds(dto.toObserveBirds, for: watchlist, status: .to_observe, context: context)
-            
-            // Update stats
             watchlist.observedCount = observedCount
             watchlist.speciesCount = observedCount + toObserveCount
-            
-            // Update cover image based on entries
             watchlist.updateCoverImage()
 		}
 	}
@@ -222,17 +140,14 @@ struct WatchlistSeeder {
 	@MainActor
 	private static func processBirds(_ birdDTOs: [JSONBirdDTO], for watchlist: Watchlist, status: WatchlistEntryStatus, context: ModelContext) {
 		for dto in birdDTOs {
-				// Find or Create Bird (Avoid duplicates)
 			let bird = findOrCreateBird(from: dto, in: context)
 			
 			let entry = WatchlistEntry(
 				watchlist: watchlist,
 				bird: bird,
 				status: status,
-				observedBy: dto.observedBy?.first // Simplification for now
+				observedBy: dto.observedBy?.first
 			)
-            
-            // Enable notifications for birds to observe
             if status == .to_observe {
                 entry.notify_upcoming = true
             }
@@ -247,7 +162,6 @@ struct WatchlistSeeder {
 	
 	@MainActor
 	private static func findOrCreateBird(from dto: JSONBirdDTO, in context: ModelContext) -> Bird {
-		// Efficient fetch by ID
 		let id = dto.id
 		let descriptor = FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
 			bird.id == id
@@ -255,18 +169,13 @@ struct WatchlistSeeder {
 		if let existing = try? context.fetch(descriptor).first {
 			return existing
 		}
-		
-			// Fallback: Check by Name
 		let name = dto.name
 		let nameDescriptor = FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
 			bird.commonName == name
 		})
 		if let existingByName = try? context.fetch(nameDescriptor).first {
-			print("⚠️ [WatchlistSeeder] Found existing bird by name '\(name)' but ID mismatch. Reusing existing.")
 			return existingByName
 		}
-		
-		print("❌ [WatchlistSeeder] Missing bird \(dto.id) (\(dto.name)). Bird database should be seeded first.")
 		let placeholder = Bird(
 			id: dto.id,
 			commonName: dto.name,

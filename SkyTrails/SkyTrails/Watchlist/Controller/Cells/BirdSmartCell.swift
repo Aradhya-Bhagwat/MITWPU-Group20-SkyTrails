@@ -1,9 +1,3 @@
-	//
-	//  BirdSmartCell.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 28/11/25.
-	//
 
 import UIKit
 
@@ -11,8 +5,6 @@ class BirdSmartCell: UITableViewCell {
 	
 	static let identifier = "BirdSmartCell"
     private var defaultContainerBackgroundColor: UIColor?
-	
-		// MARK: - IBOutlets
 	@IBOutlet weak var containerView: UIView!
 	@IBOutlet weak var birdImageView: UIImageView!
 	@IBOutlet weak var titleLabel: UILabel!
@@ -42,17 +34,12 @@ class BirdSmartCell: UITableViewCell {
 	
 	private func setupUI() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
-			// Container Styling
 		containerView.layer.cornerRadius = 12
         containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultContainerBackgroundColor
-		
-			// Image Styling
 		birdImageView.layer.cornerRadius = 12
 		birdImageView.clipsToBounds = true
 		birdImageView.contentMode = .scaleAspectFill
 		birdImageView.backgroundColor = .systemGray5
-		
-			// Text Styling
 		titleLabel.font = .systemFont(ofSize: 18, weight: .medium)
 		titleLabel.textColor = .label
 		
@@ -61,16 +48,12 @@ class BirdSmartCell: UITableViewCell {
 		
 		locationLabel.font = .systemFont(ofSize: 13, weight: .medium)
 		locationLabel.textColor = .secondaryLabel
-		
-			// Configur avatar image views
 		avatarImageViews.forEach {
 			$0.layer.cornerRadius = 15
 			$0.clipsToBounds = true
 			$0.layer.borderWidth = 2
 			$0.layer.borderColor = UIColor.white.cgColor
 		}
-		
-			// Configure overflow badge
 		overflowBadgeView.layer.cornerRadius = 15
 		overflowBadgeView.clipsToBounds = true
 		overflowBadgeView.layer.borderWidth = 2
@@ -84,16 +67,6 @@ class BirdSmartCell: UITableViewCell {
 	func configure(with entry: WatchlistEntry) {
 		guard let bird = entry.bird else { return }
 		titleLabel.text = bird.name
-		
-		// ---------------------------------------------------------------------------
-		// Image — show local immediately, update from Supabase in background:
-		//   1. User-captured photo persisted to applicationSupportDirectory (instant)
-		//   2. Seeded / bundled asset (instant)
-		//   3. Then async update from Supabase bird bucket
-		//   4. System placeholder (final fallback)
-		// ---------------------------------------------------------------------------
-		
-		// Show local photo immediately if available
 		if let photoPath = entry.photos?.first?.imagePath {
 			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
@@ -106,9 +79,7 @@ class BirdSmartCell: UITableViewCell {
 				birdImageView.image = UIImage(systemName: "photo")
 			}
 		} else if let assetImage = UIImage(named: bird.staticImageName) {
-			// Show local asset immediately
 			birdImageView.image = assetImage
-			// Update from Supabase in background
 			Task { @MainActor in
 				if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
 					self.birdImageView.image = image
@@ -117,8 +88,6 @@ class BirdSmartCell: UITableViewCell {
 		} else {
 			birdImageView.image = UIImage(systemName: "photo")
 		}
-		
-			// Date
 		if let observationDate = entry.observationDate {
 			let formatter = DateFormatter()
 			formatter.dateStyle = .medium
@@ -127,8 +96,6 @@ class BirdSmartCell: UITableViewCell {
 		} else {
 			dateLabel.isHidden = true
 		}
-		
-			// Location
 		if let userLocation = entry.locationDisplayName, !userLocation.isEmpty {
 			locationLabel.text = userLocation
 			locationLabel.isHidden = false
@@ -138,8 +105,6 @@ class BirdSmartCell: UITableViewCell {
 		} else {
 			locationLabel.isHidden = true
 		}
-		
-			// Avatars
 		if shouldShowAvatars {
 			let avatarImages: [String] = entry.observedBy != nil ? [entry.observedBy!] : []
 			setupAvatars(images: avatarImages)
@@ -152,11 +117,7 @@ class BirdSmartCell: UITableViewCell {
 	
 	func configure(with bird: Bird) {
 		titleLabel.text = bird.name
-		
-		// Show local asset immediately, then update from Supabase in background
 		birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
-		
-		// Load from Supabase asynchronously for updated/cached image
 		Task { @MainActor in
 			if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
 				self.birdImageView.image = image
@@ -176,13 +137,7 @@ class BirdSmartCell: UITableViewCell {
 		avatarImageViews.forEach { $0.isHidden = true }
 		overflowBadgeView.isHidden = true
 	}
-	
-	// MARK: - Image Resolution Helper
-	
-	/// Resolves the best available image for an entry.
-	/// Priority: user-captured photo on disk → Supabase bird bucket → bundled asset → system placeholder.
 	private func loadImage(for entry: WatchlistEntry) async -> UIImage {
-		// 1. Check for a user-captured photo saved to the app's support directory
 		if let photoPath = entry.photos?.first?.imagePath {
 			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
@@ -191,18 +146,12 @@ class BirdSmartCell: UITableViewCell {
 				return image
 			}
 		}
-		
-		// 2. Try Supabase bird bucket (handles fallback to local assets)
 		if let bird = entry.bird, let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
 			return image
 		}
-		
-		// 3. Fall back to bundled asset catalogue image
 		if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
 			return asset
 		}
-		
-		// 4. Generic placeholder
 		return UIImage(systemName: "photo")!
 	}
 	

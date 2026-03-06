@@ -82,8 +82,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     private func updateSaveButtonState() {
         navigationItem.rightBarButtonItem?.isEnabled = (selectedIndexPath != nil)
     }
-    
-    // MARK: - CollectionView Layout
 
     private func setupCollectionViewLayout() {
         let layout = UICollectionViewFlowLayout()
@@ -119,11 +117,11 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         
         let imageMargins: CGFloat = 16
         let imageWidth = itemWidth - imageMargins
-        let imageHeight = imageWidth  // 1:1 square
+        let imageHeight = imageWidth
 
         let topMargin: CGFloat = 8
         let imageToLabelSpacing: CGFloat = 8
-        let nameButtonHeight: CGFloat = 48  // button height governs the row
+        let nameButtonHeight: CGFloat = 48
         let labelSpacing: CGFloat = 4
         let percentageHeight: CGFloat = 17
         let bottomMargin: CGFloat = 8
@@ -138,8 +136,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         
         return CGSize(width: itemWidth, height: totalHeight)
     }
-
-    // MARK: - Actions
     
     @IBAction func nextTapped(_ sender: Any) {
         if viewModel.isReloadFlowActive, viewModel.currentSession != nil {
@@ -200,8 +196,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     @IBAction func restartTapped(_ sender: Any) {
         delegate?.didTapLeftButton()
     }
-
-    // MARK: - DataSource
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return birdResults.count
@@ -222,10 +216,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             name: bird.commonName,
             percentage: confidencePercent
         )
-
-        // FIX: Selection appearance is owned by the cell via isSelectedCell.
-        // Setting it here (after prepareForReuse has already reset borders)
-        // ensures correct state on every dequeue — no stale borders on recycled cells.
         cell.isSelectedCell = (selectedIndexPath == indexPath)
 
         cell.delegate = self
@@ -249,8 +239,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         selectedIndexPath = indexPath
         selectedResult = birdResults[indexPath.item].bird
         updateSaveButtonState()
-
-        // Reload only the affected cells for efficiency
         var toReload = [indexPath]
         if let prev = previous, prev != indexPath { toReload.append(prev) }
         collectionView.reloadItems(at: toReload)
@@ -266,8 +254,6 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     deinit {
         imageLoadTasks.values.forEach { $0.cancel() }
     }
-
-    // MARK: - ResultCellDelegate
     
     func didTapPredict(for cell: ResultCollectionViewCell) {
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }

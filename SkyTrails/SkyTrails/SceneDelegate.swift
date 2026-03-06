@@ -64,7 +64,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         Task {
             await BackgroundSyncAgent.shared.scheduleBackgroundSync()
         }
-        print("📱 [SceneDelegate] Entered background - scheduled sync")
     }
 
     private func routeToCurrentSessionRoot() {
@@ -161,12 +160,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard UserSession.shared.isAuthenticatedWithSupabase() else { return }
 
         if RealtimeSyncService.shared.connectionState != .connected {
-            print("📱 [SceneDelegate] Reconnecting realtime on foreground...")
             do {
                 try await RealtimeSyncService.shared.connect()
                 try await RealtimeSyncService.shared.subscribeAll()
             } catch {
-                print("📱 [SceneDelegate] Failed to reconnect realtime: \(error.localizedDescription)")
             }
         }
 

@@ -33,11 +33,8 @@ actor IdentificationSyncService {
     private init() {}
     
     func performSync(userId: UUID) async throws {
-        print("🔄 [IdentificationSync] Starting sync for user: \(userId)")
-        
         if config == nil {
             config = try SupabaseConfig.load()
-            print("🔄 [IdentificationSync] Config loaded: \(config != nil)")
         }
         
         guard let config else {
@@ -47,29 +44,18 @@ actor IdentificationSyncService {
         guard let accessToken = await MainActor.run(body: { UserSession.shared.getAccessToken() }) else {
             throw IdentificationSyncError.notAuthenticated
         }
-        
-        print("🔄 [IdentificationSync] User authenticated, accessToken present: \(accessToken.count > 0)")
-        
-        // Push local pending sessions
         try await pushPendingSessions(userId: userId, config: config, accessToken: accessToken)
-        
-        // Pull remote sessions
         let sessionRows: [IdentificationSessionRow] = try await fetchFromSupabase(
             table: "identification_sessions",
             query: "select=*&user_id=eq.\(userId.uuidString)",
             config: config,
             accessToken: accessToken
         )
-        
-        // Merge into SwiftData
         try await MainActor.run {
             let context = WatchlistManager.shared.context
             let count = try mergeSessions(sessionRows, context: context)
             try context.save()
-            print("🔄 [IdentificationSync] Merged \(count) sessions")
         }
-        
-        print("🔄 [IdentificationSync] Sync completed")
     }
     
     private nonisolated func mergeSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
@@ -153,28 +139,20 @@ actor IdentificationSyncService {
     }
     
     func pushPendingSessions(userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
-        // For testing: fetch ALL sessions regardless of sync status
         let pendingSessions = await MainActor.run { () -> [IdentificationSession] in
             do {
                 let descriptor = FetchDescriptor<IdentificationSession>(
                     sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
                 )
                 let sessions = try WatchlistManager.shared.context.fetch(descriptor)
-                print("🔍 [IdentificationSync] Total sessions in DB: \(sessions.count)")
                 for s in sessions {
-                    print("🔍 [IdentificationSync] Session \(s.id): syncStatus=\(s.syncStatusRaw), ownerId=\(String(describing: s.ownerId))")
                 }
                 return sessions
             } catch {
-                print("🔍 [IdentificationSync] Error fetching sessions: \(error)")
                 return []
             }
         }
-        
-        print("🔍 [IdentificationSync] Will push \(pendingSessions.count) sessions")
-        
         for session in pendingSessions where session.ownerId == nil || session.ownerId == userId {
-            print("🔍 [IdentificationSync] Pushing session: \(session.id), ownerId: \(String(describing: session.ownerId))")
             try await pushSession(session, userId: userId, config: config, accessToken: accessToken)
         }
     }
@@ -224,15 +202,7 @@ actor IdentificationSyncService {
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = data
-        
-        print("🔍 [IdentificationSync] Sending POST to: \(urlString)")
-        print("🔍 [IdentificationSync] Request body: \(String(data: data, encoding: .utf8) ?? "nil")")
-        
         let (responseData, response) = try await URLSession.shared.data(for: request)
-        
-        print("🔍 [IdentificationSync] Response status: \((response as? HTTPURLResponse)?.statusCode ?? 0)")
-        print("🔍 [IdentificationSync] Response body: \(String(data: responseData, encoding: .utf8) ?? "nil")")
-        
         guard let httpResponse = response as? HTTPURLResponse else {
             throw IdentificationSyncError.networkError("Invalid response")
         }
@@ -246,8 +216,6 @@ actor IdentificationSyncService {
             session.syncStatus = .synced
             session.lastSyncedAt = Date()
         }
-        
-        print("🔄 [IdentificationSync] Pushed session: \(session.id)")
     }
     
     private nonisolated func fetchFromSupabase<T: Decodable>(
@@ -296,8 +264,6 @@ actor IdentificationSyncService {
     }
     
     func adoptGuestSessions(to userId: UUID) async throws {
-        print("🔄 [IdentificationSync] Adopting guest sessions to user: \(userId)")
-        
         await MainActor.run {
             do {
                 let descriptor = FetchDescriptor<IdentificationSession>(
@@ -311,13 +277,9 @@ actor IdentificationSyncService {
                 }
                 
                 try WatchlistManager.shared.context.save()
-                print("🔄 [IdentificationSync] Adopted \(pendingSessions.count) sessions")
             } catch {
-                print("⚠️ [IdentificationSync] Failed to adopt sessions: \(error)")
             }
         }
-        
-        // Trigger sync
         try await performSync(userId: userId)
     }
     
@@ -346,9 +308,7 @@ actor IdentificationSyncService {
                 }
                 
                 try WatchlistManager.shared.context.save()
-                print("🔄 [IdentificationSync] Cleared local identification data")
             } catch {
-                print("⚠️ [IdentificationSync] Failed to clear local data: \(error)")
             }
         }
     }

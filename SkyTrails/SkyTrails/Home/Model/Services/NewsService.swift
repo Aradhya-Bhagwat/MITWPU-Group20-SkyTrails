@@ -1,9 +1,3 @@
-//
-//  NewsService.swift
-//  SkyTrails
-//
-//  Created by Gemini CLI on 16/02/2026.
-//
 
 import Foundation
 

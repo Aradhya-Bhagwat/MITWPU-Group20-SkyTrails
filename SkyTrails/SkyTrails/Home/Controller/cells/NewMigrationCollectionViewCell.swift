@@ -1,9 +1,3 @@
-//
-//  NewMigrationCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 17/02/26.
-//
 
 import UIKit
 import MapKit
@@ -92,37 +86,23 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         updateNestedLayout()
-        
-        // Ensure capsule shape for tags
         tag1View.layer.cornerRadius = tag1View.bounds.height / 2
         tag2View.layer.cornerRadius = tag2View.bounds.height / 2
         seasonTagImageView.layer.cornerRadius = seasonTagImageView.bounds.height / 2
-        
-        // Ensure circular shape for terrain image
         terrainTagImageView.layer.cornerRadius = terrainTagImageView.bounds.height / 2
     }
     
     private func updateNestedLayout() {
         let cardHeight = self.bounds.height
-        
-        // 1. Scale Fonts
         let heightRatio = cardHeight / 440.0
-        
-        // Title: Min 17, max scales with height
         let titleSize = max(17, 17 * heightRatio)
         titleLabel.font = .systemFont(ofSize: titleSize, weight: .bold)
-        
-        // Others: Min 12, max scales with height
         let otherSize = max(12, 12 * heightRatio)
         subtitleLabel.font = .systemFont(ofSize: otherSize)
         weekLabel.font = .systemFont(ofSize: otherSize)
         terrainTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
         seasonTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
-        
-        // Distance label needs special handling for attributed string size
         updateDistanceLabelFont(size: otherSize)
-        
-        // 2. Scale Nested CollectionView Items
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let itemHeight = nestedItemHeight(cardHeight: cardHeight)
             let compactItemWidth = compactItemWidth(itemHeight: itemHeight)
@@ -152,8 +132,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     
     private func updateDistanceLabelFont(size: CGFloat) {
         guard let existingText = distanceLabel.attributedText?.string else { return }
-        // The string starts with symbol attachment + " - " + distance
-        // We need to re-create it to scale the symbol too
         
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: size, weight: .semibold)
         let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
@@ -164,8 +142,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
         
         let attributedString = NSMutableAttributedString(attachment: attachment)
-        
-        // Extract just the distance part (everything after " - ") or use the whole string if logic fails
         let cleanText: String
         if existingText.contains(" - ") {
             cleanText = existingText.components(separatedBy: " - ").last ?? existingText
@@ -200,26 +176,20 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
     
     func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
-        print("🎨 [PredictionDebug] Cell configure: \(hotspot.placeName), birds: \(hotspot.birdSpecies.count)")
         titleLabel.text = hotspot.placeName
         subtitleLabel.text = hotspot.locationDetail
         weekLabel.text = hotspot.weekNumber
-        
-        // Initial setup for terrain (before geocoding)
         terrainTagLabel.text = hotspot.terrainTag
         
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
         seasonTagImageView.image = UIImage(named: seasonAssetName(for: hotspot.seasonTag))
         tag2View.backgroundColor = seasonTagBackgroundColor(for: hotspot.seasonTag)
-        
-        // Attributed string for distance with SF Symbol
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
         let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
             .withTintColor(.systemGray, renderingMode: .alwaysOriginal)
         
         let attachment = NSTextAttachment()
         attachment.image = symbolImage
-        // Adjust y offset to align with text
         attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
         
         let attributedString = NSMutableAttributedString(attachment: attachment)
@@ -228,7 +198,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         
         self.birdSpecies = hotspot.birdSpecies
         selectedBirdIndex = 0
-        print("🎨 [PredictionDebug]   birdListCollectionView.reloadData() with \(self.birdSpecies.count) items")
         birdListCollectionView.reloadData()
         birdListCollectionView.layoutIfNeeded()
         alignToSelectedCard(animated: false)
@@ -239,15 +208,11 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             areaOverlay: hotspot.areaOverlay,
             birdPins: hotspot.hotspots
         )
-        
-        // Initiate terrain fetch
         fetchTerrain(for: hotspot.centerCoordinate)
     }
     
     private func fetchTerrain(for coordinate: CLLocationCoordinate2D) {
         let cacheKey = String(format: "%.4f,%.4f", coordinate.latitude, coordinate.longitude)
-        
-        // 1. Check if we already have the terrain info and image cached
         if let info = Self.terrainCache[cacheKey] {
             let image = Self.terrainImageCache[cacheKey] ?? UIImage(named: info.defaultImageName)
             applyTerrain(info, image: image)
@@ -259,7 +224,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
             
             do {
-                // 2. Fetch Terrain Info (Reverse Geocoding)
                 let placemarks = try await geocoder.reverseGeocodeLocation(location)
                 guard !Task.isCancelled else { return }
                 
@@ -267,15 +231,13 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
                            ?? TerrainInfo(name: "Remote Area", symbolName: "mappin.circle", color: .systemGray, defaultImageName: "Terrain_Remote")
                 
                 Self.terrainCache[cacheKey] = info
-                
-                // 3. Try to fetch "Look Around" (Street View) Snapshot
                 var finalImage = UIImage(named: info.defaultImageName)
                 
                 if #available(iOS 16.0, *) {
                     let request = MKLookAroundSceneRequest(coordinate: coordinate)
                     if let scene = try? await request.scene {
                         let options = MKLookAroundSnapshotter.Options()
-                        options.size = CGSize(width: 120, height: 120) // Slightly larger for better quality
+                        options.size = CGSize(width: 120, height: 120)
                         let snapshotter = MKLookAroundSnapshotter(scene: scene, options: options)
                         if let snapshot = try? await snapshotter.snapshot {
                             finalImage = snapshot.image
@@ -290,7 +252,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
                     self.applyTerrain(info, image: finalImage)
                 }
             } catch {
-                print("Terrain fetch failed: \(error.localizedDescription)")
                 let fallback = TerrainInfo(name: "Remote Area", symbolName: "mappin.circle", color: .systemGray, defaultImageName: "Terrain_Remote")
                 await MainActor.run {
                     self.applyTerrain(fallback, image: UIImage(named: fallback.defaultImageName))
@@ -350,7 +311,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
         var mapRect = MKMapRect.null
 
-        _ = pathCoordinates // Keep the input for future use; intentionally not rendered on this card.
+        _ = pathCoordinates
 
         switch areaOverlay {
         case .polygon(let coordinates):
@@ -437,7 +398,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
 
     private func pinColor(for birdImageName: String, index: Int) -> UIColor {
-        // Use golden-ratio hue stepping for collision-free colors per card index.
         let baseSeed = Double(abs(birdImageName.hashValue % 10_000)) / 10_000.0
         let hue = (baseSeed + (Double(index) * 0.61803398875)).truncatingRemainder(dividingBy: 1.0)
         return UIColor(
@@ -474,7 +434,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             targetAlpha = 1.0
             view.zPriority = .max
         } else {
-            // Keep all pins visible, but make non-selected ones lighter/smaller.
             targetTransform = CGAffineTransform(scaleX: 0.82, y: 0.82)
             targetAlpha = 0.72
             view.zPriority = .defaultUnselected
@@ -587,15 +546,15 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     private func seasonTagBackgroundColor(for season: String) -> UIColor {
         switch season {
         case "Summer":
-            return UIColor(red: 0.85, green: 0.95, blue: 0.45, alpha: 0.4) // light lime yellow
+            return UIColor(red: 0.85, green: 0.95, blue: 0.45, alpha: 0.4)
         case "Spring":
-            return UIColor(red: 0.95, green: 0.60, blue: 0.80, alpha: 0.4) // light pink-magenta
+            return UIColor(red: 0.95, green: 0.60, blue: 0.80, alpha: 0.4)
         case "Autumn":
-            return UIColor(red: 1.00, green: 0.70, blue: 0.45, alpha: 0.4) // light orange
+            return UIColor(red: 1.00, green: 0.70, blue: 0.45, alpha: 0.4)
         case "Winter":
-            return UIColor.systemBlue.withAlphaComponent(0.4) // light system blue
+            return UIColor.systemBlue.withAlphaComponent(0.4)
         case "Rainy":
-            return UIColor.systemGray.withAlphaComponent(0.4) // light gray
+            return UIColor.systemGray.withAlphaComponent(0.4)
         default:
             return UIColor.systemGray5.withAlphaComponent(0.4)
         }
