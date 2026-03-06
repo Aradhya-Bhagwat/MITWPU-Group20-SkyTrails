@@ -108,9 +108,10 @@ class LoginViewController: UIViewController {
                 userID: authResult.userID,
                 accessToken: authResult.accessToken
             )
+            let cachedUser = UserSession.shared.getUser()
 
             let displayName: String
-            if let existingUser = UserSession.shared.currentUser, existingUser.email == email {
+            if let existingUser = cachedUser, existingUser.email == email {
                 displayName = existingUser.name
             } else if let authDisplayName = authResult.displayName, !authDisplayName.trimmingCharacters(in: .whitespaces).isEmpty {
                 displayName = authDisplayName
@@ -121,7 +122,8 @@ class LoginViewController: UIViewController {
             }
 
             let profilePhoto = authResult.profilePhoto
-                ?? UserSession.shared.currentUser?.profilePhoto
+                ?? serverProfile?.profilePhoto
+                ?? cachedUser?.profilePhoto
                 ?? "defaultProfile"
 
             let user = User(
@@ -129,7 +131,7 @@ class LoginViewController: UIViewController {
                 name: displayName,
                 gender: authResult.gender
                     ?? serverProfile?.gender
-                    ?? UserSession.shared.currentUser?.gender
+                    ?? cachedUser?.gender
                     ?? "Not Specified",
                 email: authResult.email,
                 profilePhoto: profilePhoto
@@ -140,6 +142,14 @@ class LoginViewController: UIViewController {
                 accessToken: authResult.accessToken,
                 refreshToken: authResult.refreshToken
             )
+            do {
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+            } catch {
+            }
+            do {
+                try await IdentificationSyncService.shared.performSync(userId: user.id)
+            } catch {
+            }
 
             Task {
                 try? await UserSyncService.shared.upsertUser(user)
@@ -215,7 +225,7 @@ class LoginViewController: UIViewController {
         return username.isEmpty ? "User" : username
     }
 
-    private func fetchServerProfile(userID: UUID, accessToken: String?) async throws -> (name: String?, gender: String?)? {
+    private func fetchServerProfile(userID: UUID, accessToken: String?) async throws -> (name: String?, gender: String?, profilePhoto: String?)? {
         guard let accessToken, !accessToken.isEmpty else { return nil }
 
         let config = try SupabaseConfig.load()
@@ -223,7 +233,7 @@ class LoginViewController: UIViewController {
             return nil
         }
         components.path = "/rest/v1/users"
-        components.percentEncodedQuery = "id=eq.\(userID.uuidString)&select=name,gender"
+        components.percentEncodedQuery = "id=eq.\(userID.uuidString)&select=name,gender,profile_photo"
 
         guard let url = components.url else { return nil }
 
@@ -241,9 +251,16 @@ class LoginViewController: UIViewController {
         struct NameRow: Decodable {
             let name: String?
             let gender: String?
+            let profilePhoto: String?
+
+            enum CodingKeys: String, CodingKey {
+                case name
+                case gender
+                case profilePhoto = "profile_photo"
+            }
         }
         let rows = try JSONDecoder().decode([NameRow].self, from: data)
-        return (rows.first?.name, rows.first?.gender)
+        return (rows.first?.name, rows.first?.gender, rows.first?.profilePhoto)
     }
 
     private func mappedLoginErrorMessage(_ error: Error) -> String {

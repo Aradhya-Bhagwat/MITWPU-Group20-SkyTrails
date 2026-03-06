@@ -1,71 +1,153 @@
-
 import UIKit
 import Photos
 import AVFoundation
 import ImageIO
 
-class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class ProfileViewController: UIViewController,
+                             UIImagePickerControllerDelegate,
+                             UINavigationControllerDelegate {
+
+    // MARK: - Outlets
 
     @IBOutlet weak var profileImageView: UIImageView!
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var emailButton: UIButton!
+    @IBOutlet weak var logoutButton: UIButton!
+
+    // MARK: - Properties
+
     private let avatarMaxPixelSize: CGFloat = 512
-    private let uploadMaxDimension: CGFloat = 1280
+
+    private let actionsStack = UIStackView()
+    private let aboutLabel = UILabel()
+    private let versionLabel = UILabel()
+
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        setupUI()
+        configureUI()
+        configureActions()
         loadUser()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
+        logoutButton.layer.cornerRadius = 20
     }
 
-    private func setupUI() {
-        profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
+    // MARK: - UI Setup
+
+    private func configureUI() {
+
+        view.backgroundColor = .systemBackground
+
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.isUserInteractionEnabled = true
-        navigationItem.title = ""
+
+        nameLabel.font = .systemFont(ofSize: 26, weight: .bold)
+
+        // Email button style
+        emailButton.configuration = .filled()
+        emailButton.configuration?.baseBackgroundColor = .secondarySystemBackground
+        emailButton.configuration?.baseForegroundColor = .systemBlue
+        emailButton.configuration?.cornerStyle = .capsule
+
+        emailButton.setContentHuggingPriority(.required, for: .horizontal)
+
+        styleLogoutButton()
+
+        setupTopProfileConstraints()
+        setupActionRows()
+        setupLogoutButton()
+        setupFooter()
+        setupFooterConstraints()
+
         addProfileImageTap()
     }
+
+    private func configureActions() {
+        emailButton.addTarget(self, action: #selector(emailTapped), for: .touchUpInside)
+    }
+
+    // MARK: - Top Profile Layout
+
+    private func setupTopProfileConstraints() {
+
+        profileImageView.translatesAutoresizingMaskIntoConstraints = false
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
+        emailButton.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+
+            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            profileImageView.widthAnchor.constraint(equalToConstant: 120),
+            profileImageView.heightAnchor.constraint(equalToConstant: 120),
+
+            nameLabel.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 16),
+            nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
+            emailButton.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
+            emailButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emailButton.heightAnchor.constraint(equalToConstant: 34),
+            emailButton.widthAnchor.constraint(lessThanOrEqualToConstant: 240)
+        ])
+    }
+
+    // MARK: - Load User
 
     private func loadUser() {
 
         guard let user = UserSession.shared.getUser() else {
-
             logout()
             return
         }
 
         nameLabel.text = user.name
         emailButton.setTitle(user.email, for: .normal)
-        emailButton.configuration?.title = user.email
 
         if user.profilePhoto.starts(with: "http") {
+            loadRemoteImage(user.profilePhoto)
 
-            loadImage(from: user.profilePhoto)
-
-        } else if user.profilePhoto.starts(with: "file://") || FileManager.default.fileExists(atPath: user.profilePhoto) {
-            loadLocalImage(from: user.profilePhoto)
+        } else if FileManager.default.fileExists(atPath: user.profilePhoto) {
+            loadLocalImage(user.profilePhoto)
 
         } else {
-            profileImageView.image = UIImage(named: user.profilePhoto) ?? UIImage(named: "defaultProfile")
+            profileImageView.image = UIImage(named: "defaultProfile")
         }
     }
+
+    // MARK: - Email Share
+
+    @objc private func emailTapped() {
+
+        guard let email = emailButton.title(for: .normal) else { return }
+
+        let activityVC = UIActivityViewController(activityItems: [email], applicationActivities: nil)
+
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = emailButton
+            popover.sourceRect = emailButton.bounds
+        }
+
+        present(activityVC, animated: true)
+    }
+
+    // MARK: - Logout
 
     @IBAction func logoutTapped(_ sender: UIButton) {
         logout()
     }
 
     private func logout() {
-        if let accessToken = UserSession.shared.getAccessToken() {
-            Task {
-                try? await SupabaseAuthService.shared.signOut(accessToken: accessToken)
-            }
+
+        if let token = UserSession.shared.getAccessToken() {
+            Task { try? await SupabaseAuthService.shared.signOut(accessToken: token) }
         }
 
         UserSession.shared.logout()
@@ -74,145 +156,98 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
 
     private func goToLogin() {
 
-        guard let scene =
-                UIApplication.shared.connectedScenes.first
-                    as? UIWindowScene,
-              let window =
-                scene.windows.first(where: { $0.isKeyWindow })
-        else { return }
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) else { return }
 
         let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
+        let startVC = storyboard.instantiateViewController(withIdentifier: "StartViewController")
 
-        let startVC = storyboard.instantiateViewController(
-            withIdentifier: "StartViewController"
-        )
-
-        window.rootViewController = startVC
-
-        UIView.transition(
-            with: window,
-            duration: 0.3,
-            options: .transitionFlipFromLeft,
-            animations: nil
-        )
+        UIView.transition(with: window,
+                          duration: 0.3,
+                          options: .transitionFlipFromLeft,
+                          animations: {
+                              window.rootViewController = startVC
+                          })
     }
 
-    private func loadImage(from urlString: String) {
+    // MARK: - Image Loading
+
+    private func loadRemoteImage(_ urlString: String) {
 
         guard let url = URL(string: urlString) else { return }
 
         DispatchQueue.global().async {
 
             if let data = try? Data(contentsOf: url),
-               let image = self.downsampledImage(from: data, maxPixelSize: self.avatarMaxPixelSize) {
+               let image = self.downsampleImage(data) {
 
                 DispatchQueue.main.async {
                     self.profileImageView.image = image
-                }
-            } else {
-                DispatchQueue.main.async {
-                    self.profileImageView.image = UIImage(named: "defaultProfile")
                 }
             }
         }
     }
 
-    private func loadLocalImage(from pathOrURLString: String) {
-        let fileURL: URL?
-        if pathOrURLString.starts(with: "file://") {
-            fileURL = URL(string: pathOrURLString)
-        } else {
-            fileURL = URL(fileURLWithPath: pathOrURLString)
-        }
+    private func loadLocalImage(_ path: String) {
 
-        guard let fileURL,
-              let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe]),
-              let image = downsampledImage(from: data, maxPixelSize: avatarMaxPixelSize) else {
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+              let image = downsampleImage(data) else {
+
             profileImageView.image = UIImage(named: "defaultProfile")
             return
         }
+
         profileImageView.image = image
     }
 
+    // MARK: - Image Picker
+
     private func addProfileImageTap() {
+
         let tap = UITapGestureRecognizer(target: self, action: #selector(profileImageTapped))
         profileImageView.addGestureRecognizer(tap)
     }
 
     @objc private func profileImageTapped() {
-        let sheet = UIAlertController(title: "Profile Photo", message: "Choose a source", preferredStyle: .actionSheet)
 
-        sheet.addAction(UIAlertAction(title: "Camera", style: .default) { [weak self] _ in
-            self?.openCameraFlow()
+        let sheet = UIAlertController(title: "Profile Photo",
+                                      message: "Choose source",
+                                      preferredStyle: .actionSheet)
+
+        sheet.addAction(UIAlertAction(title: "Camera", style: .default) { _ in
+            self.openCamera()
         })
-        sheet.addAction(UIAlertAction(title: "Photo Library", style: .default) { [weak self] _ in
-            self?.openPhotoLibraryFlow()
+
+        sheet.addAction(UIAlertAction(title: "Photo Library", style: .default) { _ in
+            self.openLibrary()
         })
+
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        if let popover = sheet.popoverPresentationController {
-            popover.sourceView = profileImageView
-            popover.sourceRect = profileImageView.bounds
-        }
 
         present(sheet, animated: true)
     }
 
-    private func openCameraFlow() {
+    private func openCamera() {
+
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            showMessage("Camera is not available on this device.")
+            showMessage("Camera not available")
             return
         }
 
-        let status = AVCaptureDevice.authorizationStatus(for: .video)
-        switch status {
-        case .authorized:
-            presentImagePicker(source: .camera)
-        case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                DispatchQueue.main.async {
-                    if granted {
-                        self?.presentImagePicker(source: .camera)
-                    } else {
-                        self?.openSystemSettings()
-                    }
-                }
-            }
-        case .denied, .restricted:
-            openSystemSettings()
-        @unknown default:
-            openSystemSettings()
-        }
+        presentPicker(.camera)
     }
 
-    private func openPhotoLibraryFlow() {
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        switch status {
-        case .authorized, .limited:
-            presentImagePicker(source: .photoLibrary)
-        case .notDetermined:
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] newStatus in
-                DispatchQueue.main.async {
-                    switch newStatus {
-                    case .authorized, .limited:
-                        self?.presentImagePicker(source: .photoLibrary)
-                    default:
-                        self?.openSystemSettings()
-                    }
-                }
-            }
-        case .denied, .restricted:
-            openSystemSettings()
-        @unknown default:
-            openSystemSettings()
-        }
+    private func openLibrary() {
+        presentPicker(.photoLibrary)
     }
 
-    private func presentImagePicker(source: UIImagePickerController.SourceType) {
+    private func presentPicker(_ source: UIImagePickerController.SourceType) {
+
         let picker = UIImagePickerController()
         picker.sourceType = source
         picker.delegate = self
         picker.allowsEditing = true
+
         present(picker, animated: true)
     }
 
@@ -220,128 +255,207 @@ class ProfileViewController: UIViewController, UIImagePickerControllerDelegate, 
         picker.dismiss(animated: true)
     }
 
-    func imagePickerController(
-        _ picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-    ) {
-        let pickedImage = (info[.editedImage] ?? info[.originalImage]) as? UIImage
-        picker.dismiss(animated: true) { [weak self] in
-            guard let self, let image = pickedImage else { return }
-            let displayImage = self.resizedImage(from: image, maxDimension: self.avatarMaxPixelSize) ?? image
-            self.profileImageView.image = displayImage
-            self.persistSelectedProfileImage(image)
-        }
+    func imagePickerController(_ picker: UIImagePickerController,
+                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+
+        picker.dismiss(animated: true)
+
+        guard let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage else { return }
+
+        profileImageView.image = image
+        saveProfileImage(image)
     }
 
-    private func persistSelectedProfileImage(_ image: UIImage) {
-        let optimized = resizedImage(from: image, maxDimension: uploadMaxDimension) ?? image
-        guard let jpeg = optimized.jpegData(compressionQuality: 0.8) else { return }
-        guard let currentUser = UserSession.shared.getUser() else { return }
+    // MARK: - Save Image
 
-        let fileName = "profile_\(currentUser.id.uuidString).jpg"
-        let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(fileName)
+    private func saveProfileImage(_ image: UIImage) {
 
-        do {
-            try jpeg.write(to: fileURL, options: .atomic)
+        guard let jpeg = image.jpegData(compressionQuality: 0.8),
+              let user = UserSession.shared.getUser() else { return }
 
-            var updatedUser = currentUser
-            updatedUser.profilePhoto = fileURL.absoluteString
-            UserSession.shared.saveUser(updatedUser)
-            NotificationCenter.default.post(name: UserSession.authStateDidChangeNotification, object: nil)
+        let fileName = "profile_\(user.id.uuidString).jpg"
 
-            Task {
-                try? await UserSyncService.shared.upsertUser(updatedUser)
-                if let remoteURL = try? await uploadProfileImageToStorage(data: jpeg, userID: currentUser.id) {
-                    var remoteUpdatedUser = updatedUser
-                    remoteUpdatedUser.profilePhoto = remoteURL
-                    UserSession.shared.saveUser(remoteUpdatedUser)
-                    NotificationCenter.default.post(name: UserSession.authStateDidChangeNotification, object: nil)
-                    try? await UserSyncService.shared.upsertUser(remoteUpdatedUser)
-                }
-            }
-        } catch {
-            showMessage("Failed to save profile photo.")
-        }
+        let url = FileManager.default.urls(for: .documentDirectory,
+                                           in: .userDomainMask)[0]
+            .appendingPathComponent(fileName)
+
+        try? jpeg.write(to: url)
+
+        var updated = user
+        updated.profilePhoto = url.path
+
+        UserSession.shared.saveUser(updated)
     }
 
-    private func uploadProfileImageToStorage(data: Data, userID: UUID) async throws -> String {
-        let config = try SupabaseConfig.load()
-        guard let token = UserSession.shared.getAccessToken() else {
-            throw NSError(domain: "ProfileUpload", code: 401, userInfo: [NSLocalizedDescriptionKey: "Missing auth token"])
-        }
+    // MARK: - Action Rows
 
-        let fileName = "avatar_\(Int(Date().timeIntervalSince1970)).jpg"
-        let path = "\(userID.uuidString)/\(fileName)"
+    private func setupActionRows() {
 
-        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
-            throw NSError(domain: "ProfileUpload", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid project URL"])
-        }
-        components.path = "/storage/v1/object/photos/\(path)"
+        actionsStack.axis = .vertical
+        actionsStack.spacing = 12
+        actionsStack.translatesAutoresizingMaskIntoConstraints = false
 
-        guard let url = components.url else {
-            throw NSError(domain: "ProfileUpload", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid upload URL"])
-        }
+        view.addSubview(actionsStack)
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-        request.setValue("true", forHTTPHeaderField: "x-upsert")
+        actionsStack.addArrangedSubview(makeRow("Edit Profile", "pencil", #selector(editProfile)))
+        actionsStack.addArrangedSubview(makeRow("Settings", "gear", #selector(openSettings)))
+        actionsStack.addArrangedSubview(makeRow("Share Profile", "square.and.arrow.up", #selector(shareProfileTapped)))
 
-        let (_, response) = try await URLSession.shared.upload(for: request, from: data)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) || httpResponse.statusCode == 409 else {
-            throw NSError(domain: "ProfileUpload", code: 0, userInfo: [NSLocalizedDescriptionKey: "Profile upload failed"])
-        }
-
-        return config.projectURL
-            .appendingPathComponent("storage/v1/object/public/photos/\(path)")
-            .absoluteString
+        NSLayoutConstraint.activate([
+            actionsStack.topAnchor.constraint(equalTo: emailButton.bottomAnchor, constant: 20),
+            actionsStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            actionsStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
+        ])
     }
 
-    private func openSystemSettings() {
-        guard let url = URL(string: UIApplication.openSettingsURLString),
-              UIApplication.shared.canOpenURL(url) else {
-            showMessage("Unable to open settings.")
-            return
-        }
-        UIApplication.shared.open(url)
+    private func makeRow(_ title: String, _ icon: String, _ action: Selector) -> UIView {
+
+        let container = UIView()
+        container.backgroundColor = .secondarySystemBackground
+        container.layer.cornerRadius = 20
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.heightAnchor.constraint(equalToConstant: 60).isActive = true
+
+        let iconImage = UIImageView(image: UIImage(systemName: icon))
+        iconImage.tintColor = .systemBlue
+
+        let label = UILabel()
+        label.text = title
+        label.font = .systemFont(ofSize: 17, weight: .medium)
+
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+        chevron.tintColor = .systemBlue
+
+        let leftStack = UIStackView(arrangedSubviews: [iconImage, label])
+        leftStack.axis = .horizontal
+        leftStack.spacing = 12
+        leftStack.alignment = .center
+
+        leftStack.translatesAutoresizingMaskIntoConstraints = false
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(leftStack)
+        container.addSubview(chevron)
+
+        NSLayoutConstraint.activate([
+            leftStack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            leftStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+
+            chevron.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            chevron.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16)
+        ])
+
+        container.addGestureRecognizer(UITapGestureRecognizer(target: self, action: action))
+
+        return container
+    }
+
+    // MARK: - Row Actions
+
+    @objc private func editProfile() {
+        navigationController?.pushViewController(EditProfileViewController(), animated: true)
+    }
+
+    @objc private func openSettings() {
+        navigationController?.pushViewController(ProfileSettingsViewController(), animated: true)
+    }
+
+    @objc private func shareProfileTapped() {
+
+        let message = """
+Hey! I'm using SkyTrails 🐦
+
+SkyTrails predicts bird migration and helps discover amazing bird sightings.
+
+Join me on SkyTrails and explore birdwatching like never before!
+"""
+
+        let shareVC = UIActivityViewController(activityItems: [message], applicationActivities: nil)
+
+        present(shareVC, animated: true)
+    }
+
+    // MARK: - Logout Button
+
+    private func setupLogoutButton() {
+
+        logoutButton.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            logoutButton.topAnchor.constraint(equalTo: actionsStack.bottomAnchor, constant: 20),
+            logoutButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logoutButton.widthAnchor.constraint(equalToConstant: 160),
+            logoutButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+    }
+
+    private func styleLogoutButton() {
+
+        logoutButton.configuration = .filled()
+        logoutButton.configuration?.title = "Logout"
+        logoutButton.configuration?.baseBackgroundColor = .systemRed
+        logoutButton.configuration?.cornerStyle = .capsule
+        logoutButton.configuration?.image = UIImage(systemName: "rectangle.portrait.and.arrow.right")
+        logoutButton.configuration?.imagePadding = 8
+    }
+
+    // MARK: - Footer
+
+    private func setupFooter() {
+
+        aboutLabel.text = "SkyTrails"
+        aboutLabel.textAlignment = .center
+        aboutLabel.font = .systemFont(ofSize: 13)
+
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+
+        versionLabel.text = "Version \(version)"
+        versionLabel.textAlignment = .center
+        versionLabel.font = .systemFont(ofSize: 12)
+
+        view.addSubview(aboutLabel)
+        view.addSubview(versionLabel)
+    }
+
+    private func setupFooterConstraints() {
+
+        aboutLabel.translatesAutoresizingMaskIntoConstraints = false
+        versionLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+
+            versionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+            versionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
+            aboutLabel.bottomAnchor.constraint(equalTo: versionLabel.topAnchor, constant: -2),
+            aboutLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+    }
+
+    // MARK: - Helpers
+
+    private func downsampleImage(_ data: Data) -> UIImage? {
+
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+
+        let options: [NSString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: avatarMaxPixelSize
+        ]
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+
+        return UIImage(cgImage: cgImage)
     }
 
     private func showMessage(_ message: String) {
-        let alert = UIAlertController(title: "Profile", message: message, preferredStyle: .alert)
+
+        let alert = UIAlertController(title: "Profile",
+                                      message: message,
+                                      preferredStyle: .alert)
+
         alert.addAction(UIAlertAction(title: "OK", style: .default))
+
         present(alert, animated: true)
-    }
-
-    private func resizedImage(from image: UIImage, maxDimension: CGFloat) -> UIImage? {
-        let size = image.size
-        let longestSide = max(size.width, size.height)
-        guard longestSide > maxDimension, longestSide > 0 else { return image }
-
-        let scale = maxDimension / longestSide
-        let targetSize = CGSize(width: floor(size.width * scale), height: floor(size.height * scale))
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: targetSize))
-        }
-    }
-
-    private func downsampledImage(from data: Data, maxPixelSize: CGFloat) -> UIImage? {
-        let options = [kCGImageSourceShouldCache: false] as CFDictionary
-        guard let source = CGImageSourceCreateWithData(data as CFData, options) else { return nil }
-
-        let downsampleOptions = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: false,
-            kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelSize)
-        ] as CFDictionary
-
-        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions) else {
-            return nil
-        }
-        return UIImage(cgImage: cgImage)
     }
 }

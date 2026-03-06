@@ -7,6 +7,7 @@ import UserNotifications
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+		ThemeService.applySavedTheme()
 		setupNotifications()
 		Task { @MainActor in
             await WatchlistManager.shared.performGlobalSeeding()

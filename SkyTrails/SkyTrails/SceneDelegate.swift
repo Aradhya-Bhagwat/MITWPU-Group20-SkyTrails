@@ -4,6 +4,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
     private var authObserver: NSObjectProtocol?
+    private var sessionValidationTimer: Timer?
 
     func scene(
         _ scene: UIScene,
@@ -14,6 +15,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
+        ThemeService.applySavedTheme()
         window?.rootViewController = makeLaunchPlaceholder()
         window?.makeKeyAndVisible()
 
@@ -57,10 +59,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         Task { @MainActor in
             await handleForegroundReconnect()
+            startSessionValidationTimer()
         }
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+        sessionValidationTimer?.invalidate()
+        sessionValidationTimer = nil
         Task {
             await BackgroundSyncAgent.shared.scheduleBackgroundSync()
         }
@@ -123,6 +128,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 accessToken: authResult.accessToken,
                 refreshToken: authResult.refreshToken
             )
+            do {
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+            } catch {
+            }
+            do {
+                try await IdentificationSyncService.shared.performSync(userId: user.id)
+            } catch {
+            }
 
             Task {
                 try? await UserSyncService.shared.upsertUser(user)
@@ -158,6 +171,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func handleForegroundReconnect() async {
         guard UserSession.shared.isAuthenticatedWithSupabase() else { return }
+        let sessionValid = await UserSession.shared.validateCurrentDeviceSession()
+        if !sessionValid {
+            UserSession.shared.logout()
+            routeToCurrentSessionRoot()
+            return
+        }
 
         if RealtimeSyncService.shared.connectionState != .connected {
             do {
@@ -168,6 +187,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         await BackgroundSyncAgent.shared.syncAll()
+    }
+
+    private func startSessionValidationTimer() {
+        sessionValidationTimer?.invalidate()
+        sessionValidationTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                await self.handleForegroundReconnect()
+            }
+        }
     }
 
     deinit {
