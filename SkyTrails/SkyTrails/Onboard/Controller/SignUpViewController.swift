@@ -156,6 +156,14 @@ class SignUpViewController: UIViewController {
                 accessToken: authResult.accessToken,
                 refreshToken: authResult.refreshToken
             )
+            do {
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+            } catch {
+            }
+            do {
+                try await IdentificationSyncService.shared.performSync(userId: user.id)
+            } catch {
+            }
 
             Task {
                 try? await UserSyncService.shared.upsertUser(user)

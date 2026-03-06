@@ -213,6 +213,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     private func fetchHistory() {
         let context = WatchlistManager.shared.context
+        let currentUserId = UserSession.shared.currentUserID
             
            
         do {
@@ -220,7 +221,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 sortBy: [SortDescriptor(\.observationDate, order: .reverse)]
             )
             let sessions = try context.fetch(descriptor)
-            self.histories = sessions.filter { $0.status == .completed }
+            self.histories = sessions.filter {
+                $0.status == .completed && (currentUserId == nil ? $0.ownerId == nil : $0.ownerId == currentUserId)
+            }
         } catch {
             self.histories = []
         }

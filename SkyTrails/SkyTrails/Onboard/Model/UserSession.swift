@@ -43,6 +43,13 @@ class UserSession {
             await createUserInSupabase(userId: user.id)
         }
         Task { @MainActor in
+            if let token = getAccessToken() {
+                let allowed = await DeviceSessionService.shared.registerSession(userId: user.id, accessToken: token)
+                if !allowed {
+                    logout()
+                    return
+                }
+            }
             await connectRealtimeAndSync()
             do {
                 try await IdentificationSyncService.shared.adoptGuestSessions(to: user.id)
@@ -82,13 +89,17 @@ class UserSession {
     }
 
     func logout() {
+        let tokenBeforeLogout = getAccessToken()
+        let userIdBeforeLogout = getUser()?.id
         KeychainManager.shared.deleteValue(for: accessTokenKey)
         KeychainManager.shared.deleteValue(for: refreshTokenKey)
-        UserDefaults.standard.removeObject(forKey: userKey)
         Task { @MainActor in
-            await disconnectRealtimeAndClearSync()
-            await WatchlistManager.shared.clearUserDataOnLogout()
-            await IdentificationSyncService.shared.clearLocalData()
+            if let userIdBeforeLogout, let tokenBeforeLogout {
+                await DeviceSessionService.shared.revokeCurrentSession(userId: userIdBeforeLogout, accessToken: tokenBeforeLogout)
+            } else {
+                DeviceSessionService.shared.clearLocalSessionReference()
+            }
+            await disconnectRealtimeAndKeepSyncQueue()
         }
         
         notifyAuthStateChanged()
@@ -108,7 +119,7 @@ class UserSession {
               let refreshToken = getRefreshToken()
         else {
             if getUser() != nil {
-                logout()
+                notifyAuthStateChanged()
             }
             return false
         }
@@ -176,9 +187,15 @@ class UserSession {
         await BackgroundSyncAgent.shared.syncAll()
     }
     
-    private func disconnectRealtimeAndClearSync() async {
+    private func disconnectRealtimeAndKeepSyncQueue() async {
         RealtimeSyncService.shared.disconnect()
-        await BackgroundSyncAgent.shared.clearAll()
+    }
+
+    func validateCurrentDeviceSession() async -> Bool {
+        guard let userId = currentUserID, let token = getAccessToken() else {
+            return false
+        }
+        return await DeviceSessionService.shared.validateCurrentSession(userId: userId, accessToken: token)
     }
     
     private func createUserInSupabase(userId: UUID) async {
