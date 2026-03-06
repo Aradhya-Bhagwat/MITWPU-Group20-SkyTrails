@@ -3,11 +3,6 @@ import Foundation
 import CoreLocation
 import SwiftData
 
-struct BirdFieldMarkData: Codable, Hashable {
-    var area: String
-    var variantId: UUID
-}
-
 @Model
 final class BirdFieldMarkVariantLink {
     @Attribute(.unique)
@@ -54,7 +49,6 @@ final class Bird {
     var likelySpot: String?
     var shape_id: String?
     var size_category: Int?
-    var fieldMarkData: [BirdFieldMarkData]? = []
 
     var shape: BirdShape?
 

@@ -75,14 +75,6 @@ final class BirdDatabaseSeeder {
         for birdDTO in payload.birds {
             let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
             let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
-            var fieldMarks: [BirdFieldMarkData] = []
-            if let markDTOs = birdDTO.fieldMarkData {
-                for mark in markDTOs {
-                    if let variantUUID = UUID(uuidString: mark.variantId) {
-                        fieldMarks.append(BirdFieldMarkData(area: mark.area, variantId: variantUUID))
-                    }
-                }
-            }
 
             if let existing = existingBirdMap[birdDTO.id] {
                 var didUpdate = false
@@ -143,11 +135,6 @@ final class BirdDatabaseSeeder {
                     existing.size_category = sizeCategory
                     didUpdate = true
                 }
-                if (existing.fieldMarkData == nil || existing.fieldMarkData?.isEmpty == true),
-                   !fieldMarks.isEmpty {
-                    existing.fieldMarkData = fieldMarks
-                    didUpdate = true
-                }
                 if upsertBirdMarkLinks(
                     bird: existing,
                     markDTOs: birdDTO.fieldMarkData,
@@ -181,7 +168,6 @@ final class BirdDatabaseSeeder {
                 size_category: birdDTO.size_category,
                 shape: birdDTO.shape_id.flatMap { shapeById[$0] }
             )
-            bird.fieldMarkData = fieldMarks.isEmpty ? nil : fieldMarks
             _ = upsertBirdMarkLinks(
                 bird: bird,
                 markDTOs: birdDTO.fieldMarkData,
