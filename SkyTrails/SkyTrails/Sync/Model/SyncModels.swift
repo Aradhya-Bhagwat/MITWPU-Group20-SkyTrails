@@ -11,7 +11,7 @@ enum SyncStatus: String, Codable {
 }
 
 struct UserRow: Codable {
-    let id: UUID
+    let user_id: UUID
     let name: String
     let gender: String
     let email: String
@@ -20,7 +20,7 @@ struct UserRow: Codable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case user_id
         case name
         case gender
         case email
@@ -30,7 +30,7 @@ struct UserRow: Codable {
     }
 
     init(from user: User) {
-        self.id = user.id
+        self.user_id = user.user_id
         self.name = user.name
         self.gender = user.gender
         self.email = user.email
@@ -39,8 +39,8 @@ struct UserRow: Codable {
         self.updatedAt = nil
     }
 
-    init(id: UUID, name: String, gender: String, email: String, profilePhoto: String?, createdAt: Date?, updatedAt: Date?) {
-        self.id = id
+    init(user_id: UUID, name: String, gender: String, email: String, profilePhoto: String?, createdAt: Date?, updatedAt: Date?) {
+        self.user_id = user_id
         self.name = name
         self.gender = gender
         self.email = email
@@ -51,7 +51,7 @@ struct UserRow: Codable {
 
     func toUser() -> User {
         User(
-            id: id,
+            user_id: user_id,
             name: name,
             gender: gender,
             email: email,
@@ -61,8 +61,8 @@ struct UserRow: Codable {
 }
 
 struct WatchlistRow: Codable, Sendable {
-    let id: UUID
-    let ownerId: UUID?
+    let watchlist_id: UUID
+    let user_id: UUID?
     let type: String
     let title: String?
     let location: String?
@@ -79,8 +79,8 @@ struct WatchlistRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case ownerId = "owner_id"
+        case watchlist_id
+        case user_id
         case type
         case title
         case location
@@ -99,8 +99,8 @@ struct WatchlistRow: Codable, Sendable {
 
     nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        ownerId = try container.decodeIfPresent(UUID.self, forKey: .ownerId)
+        watchlist_id = try container.decode(UUID.self, forKey: .watchlist_id)
+        user_id = try container.decodeIfPresent(UUID.self, forKey: .user_id)
         type = try container.decode(String.self, forKey: .type)
         title = try container.decodeIfPresent(String.self, forKey: .title)
         location = try container.decodeIfPresent(String.self, forKey: .location)
@@ -143,7 +143,7 @@ struct WatchlistEntryRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "watchlist_entry_id"
         case watchlistId = "watchlist_id"
         case birdId = "bird_id"
         case nickname
@@ -214,7 +214,7 @@ struct WatchlistRuleRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "watchlist_rule_id"
         case watchlistId = "watchlist_id"
         case ruleType = "rule_type"
         case lat
@@ -268,7 +268,7 @@ struct WatchlistShareRow: Codable, Sendable {
     let deletedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "watchlist_share_id"
         case watchlistId = "watchlist_id"
         case userId = "user_id"
         case permission
@@ -308,7 +308,7 @@ struct ObservedBirdPhotoRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "observed_bird_photo_id"
         case watchlistEntryId = "watchlist_entry_id"
         case imagePath = "image_path"
         case storageUrl = "storage_url"
@@ -350,7 +350,7 @@ struct IdentificationSessionRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "identification_session_id"
         case userId = "user_id"
         case status
         case locationLat = "location_lat"
@@ -368,7 +368,7 @@ struct IdentificationSessionRow: Codable, Sendable {
 struct IdentificationResultRow: Codable, Sendable {
     let id: UUID
     let sessionId: UUID
-    let ownerId: UUID?
+    let uuser_id: UUID?
     let birdId: UUID?
     let syncStatus: String
     let rowVersion: Int
@@ -378,9 +378,9 @@ struct IdentificationResultRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case sessionId = "session_id"
-        case ownerId = "owner_id"
+        case id = "identification_result_id"
+        case sessionId = "identification_session_id"
+        case uuser_id = "user_id"
         case birdId = "bird_id"
         case syncStatus = "sync_status"
         case rowVersion = "row_version"
@@ -407,8 +407,8 @@ struct IdentificationCandidateRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case resultId = "result_id"
+        case id = "identification_candidate_id"
+        case resultId = "identification_result_id"
         case birdId = "bird_id"
         case confidence
         case rank
@@ -437,8 +437,8 @@ struct IdentificationSessionFieldMarkRow: Codable, Sendable {
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case sessionId = "session_id"
+        case id = "identification_session_mark_id"
+        case sessionId = "identification_session_id"
         case fieldMarkId = "field_mark_id"
         case variantId = "variant_id"
         case area

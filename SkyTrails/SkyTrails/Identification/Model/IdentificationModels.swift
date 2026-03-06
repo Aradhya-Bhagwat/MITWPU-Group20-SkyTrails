@@ -32,15 +32,15 @@ struct MatchScore: Codable {
 @Model
 final class BirdShape {
     @Attribute(.unique)
-    var id: String  
+    var bird_shape_id: String
     var name: String
     var icon: String
 
     @Relationship(deleteRule: .cascade, inverse: \BirdFieldMark.shape)
     var fieldMarks: [BirdFieldMark]?
 
-    init(id: String, name: String, icon: String) {
-        self.id = id
+    init(bird_shape_id: String, name: String, icon: String) {
+        self.bird_shape_id = bird_shape_id
         self.name = name
         self.icon = icon
     }
@@ -49,7 +49,7 @@ final class BirdShape {
 @Model
 final class BirdFieldMark {
     @Attribute(.unique)
-    var id: UUID
+    var bird_field_mark_id: UUID
     
     var shape: BirdShape?
     var area: String
@@ -62,7 +62,7 @@ final class BirdFieldMark {
     }
 
     init(area: String) {
-        self.id = UUID()
+        self.bird_field_mark_id = UUID()
         self.area = area
     }
 }
@@ -70,13 +70,13 @@ final class BirdFieldMark {
 @Model
 final class FieldMarkVariant {
     @Attribute(.unique)
-    var id: UUID
+    var field_mark_variant_id: UUID
     
     var fieldMark: BirdFieldMark?
     var name: String
 
     init(name: String) {
-        self.id = UUID()
+        self.field_mark_variant_id = UUID()
         self.name = name
     }
 }
@@ -84,9 +84,9 @@ final class FieldMarkVariant {
 @Model
 final class IdentificationSession {
     @Attribute(.unique)
-    var id: UUID
+    var identification_session_id: UUID
     
-    var ownerId: UUID?
+    var uuser_id: UUID?
     var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
     var syncStatus: SyncStatus {
         get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
@@ -117,8 +117,8 @@ final class IdentificationSession {
     var result: IdentificationResult?
 
     init(
-        id: UUID = UUID(),
-        ownerId: UUID? = nil,
+        identification_session_id: UUID = UUID(),
+        uuser_id: UUID? = nil,
         shape: BirdShape?,
         locationId: UUID? = nil,
         locationDisplayName: String? = nil,
@@ -128,9 +128,9 @@ final class IdentificationSession {
         sizeCategory: Int? = nil,
         selectedFilterCategories: [String]? = nil
     ) {
-        self.id = id
-        self.ownerId = ownerId
-        self.syncStatusRaw = ownerId == nil ? SyncStatus.pendingOwner.rawValue : SyncStatus.pendingCreate.rawValue
+        self.identification_session_id = identification_session_id
+        self.uuser_id = uuser_id
+        self.syncStatusRaw = uuser_id == nil ? SyncStatus.pendingOwner.rawValue : SyncStatus.pendingCreate.rawValue
         self.shape = shape
         self.locationId = locationId
         self.locationDisplayName = locationDisplayName
@@ -147,7 +147,7 @@ final class IdentificationSession {
 @Model
 final class IdentificationSessionFieldMark {
     @Attribute(.unique)
-    var id: UUID
+    var identification_session_mark_id: UUID
     
     var session: IdentificationSession?
     var fieldMark: BirdFieldMark?
@@ -156,13 +156,13 @@ final class IdentificationSessionFieldMark {
     var area: String
 
     init(
-        id: UUID = UUID(),
+        identification_session_mark_id: UUID = UUID(),
         session: IdentificationSession? = nil,
         fieldMark: BirdFieldMark?,
         variant: FieldMarkVariant? = nil,
         area: String
     ) {
-        self.id = id
+        self.identification_session_mark_id = identification_session_mark_id
         self.session = session
         self.fieldMark = fieldMark
         self.variant = variant
@@ -173,10 +173,10 @@ final class IdentificationSessionFieldMark {
 @Model
 final class IdentificationResult {
     @Attribute(.unique)
-    var id: UUID
+    var identification_result_id: UUID
     
     var session: IdentificationSession?
-    var ownerId: UUID?
+    var uuser_id: UUID?
     var syncStatus: SyncStatus?
     
     var bird: Bird?
@@ -193,16 +193,16 @@ final class IdentificationResult {
     var candidates: [IdentificationCandidate]?
 
     init(
-        id: UUID = UUID(),
+        identification_result_id: UUID = UUID(),
         session: IdentificationSession? = nil,
-        ownerId: UUID? = nil,
+        uuser_id: UUID? = nil,
         bird: Bird? = nil,
         createdAt: Date = Date()
     ) {
-        self.id = id
+        self.identification_result_id = identification_result_id
         self.session = session
-        self.ownerId = ownerId
-        self.syncStatus = ownerId == nil ? .pendingOwner : .pendingCreate
+        self.uuser_id = uuser_id
+        self.syncStatus = uuser_id == nil ? .pendingOwner : .pendingCreate
         self.bird = bird
         self.createdAt = createdAt
         self.created_at = createdAt
@@ -213,7 +213,7 @@ final class IdentificationResult {
 @Model
 final class IdentificationCandidate {
     @Attribute(.unique)
-    var id: UUID
+    var identification_candidate_id: UUID
     
     var result: IdentificationResult?
     var bird: Bird?
@@ -230,14 +230,14 @@ final class IdentificationCandidate {
     var matchScore: MatchScore?
 
     init(
-        id: UUID = UUID(),
+        identification_candidate_id: UUID = UUID(),
         result: IdentificationResult? = nil,
         bird: Bird?,
         confidence: Double,
         rank: Int? = nil,
         matchScore: MatchScore? = nil
     ) {
-        self.id = id
+        self.identification_candidate_id = identification_candidate_id
         self.result = result
         self.bird = bird
         self.confidence = confidence

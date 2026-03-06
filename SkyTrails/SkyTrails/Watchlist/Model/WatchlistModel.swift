@@ -34,8 +34,8 @@ enum WatchlistMode {
 
 @Model
 final class Watchlist {
-    @Attribute(.unique) var id: UUID
-    var owner_id: UUID?
+    @Attribute(.unique) var watchlist_id: UUID
+    var user_id: UUID?
     var type: WatchlistType?
     var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
     var lastSyncedAt: Date?
@@ -61,8 +61,8 @@ final class Watchlist {
     @Relationship(deleteRule: .cascade, inverse: \WatchlistShare.watchlist) var shares: [WatchlistShare]?
     
     init(
-        id: UUID = UUID(),
-        owner_id: UUID? = nil,
+        watchlist_id: UUID = UUID(),
+        user_id: UUID? = nil,
         type: WatchlistType = .custom,
         title: String? = nil,
         location: String? = nil,
@@ -70,8 +70,8 @@ final class Watchlist {
         startDate: Date? = nil,
         endDate: Date? = nil
     ) {
-        self.id = id
-        self.owner_id = owner_id
+        self.watchlist_id = watchlist_id
+        self.user_id = user_id
         self.type = type
         self.title = title
         self.location = location
@@ -238,7 +238,7 @@ final class ObservedBirdPhoto {
 
 extension Watchlist {
     func toDomain() -> WatchlistDetailDTO {
-        let identifier = WatchlistIdentifier.from(uuid: self.id, type: self.type)
+        let identifier = WatchlistIdentifier.from(uuid: self.watchlist_id, type: self.type)
         
         let dateRange: String?
         if let start = self.startDate, let end = self.endDate {
@@ -269,7 +269,7 @@ extension Watchlist {
         )
     }
     func toSummary(previewImages: [String] = []) -> WatchlistSummaryDTO {
-        let identifier = WatchlistIdentifier.from(uuid: self.id, type: self.type)
+        let identifier = WatchlistIdentifier.from(uuid: self.watchlist_id, type: self.type)
         
         let subtitle = self.locationDisplayName ?? self.location ?? "No location"
         
@@ -333,7 +333,7 @@ extension WatchlistEntry {
         guard let bird = self.bird else { return nil }
         guard let watchlist = self.watchlist else { return nil }
         
-        let watchlistID = WatchlistIdentifier.from(uuid: watchlist.id, type: watchlist.type)
+        let watchlistID = WatchlistIdentifier.from(uuid: watchlist.watchlist_id, type: watchlist.type)
         
         let location: LocationDTO?
         if let lat = self.lat, let lon = self.lon {
@@ -384,7 +384,7 @@ extension WatchlistRule {
 extension Bird {
     func toReference() -> BirdReferenceDTO {
         BirdReferenceDTO(
-            id: self.id,
+            id: self.bird_id,
             commonName: self.commonName,
             scientificName: self.scientificName,
             staticImageName: self.staticImageName,

@@ -232,7 +232,7 @@ final class WatchlistManager: WatchlistRepository {
             endDate: endDate,
             type: type
         )
-        return watchlist.id
+        return watchlist.watchlist_id
     }
     
     func updateWatchlist(
@@ -271,9 +271,9 @@ final class WatchlistManager: WatchlistRepository {
         if watchlistId == myWatchlistId {
             let customLists = try fetchWatchlists(type: .custom)
             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetWatchlistId = existing.id
+                targetWatchlistId = existing.watchlist_id
             } else if let first = customLists.first {
-                targetWatchlistId = first.id
+                targetWatchlistId = first.watchlist_id
             } else {
                 _ = try addWatchlist(
                     title: "My Watchlist",
@@ -282,7 +282,7 @@ final class WatchlistManager: WatchlistRepository {
                     endDate: Date().addingTimeInterval(31536000)
                 )
                 if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
-                    targetWatchlistId = newWl.id
+                    targetWatchlistId = newWl.watchlist_id
                 } else {
                     throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
                 }
@@ -349,8 +349,7 @@ final class WatchlistManager: WatchlistRepository {
         if let existing = try? persistence.fetchBird(byCommonName: name) {
             return existing
         }
-        return (try? persistence.createBird(commonName: name)) ?? Bird(
-            id: UUID(),
+        return (try? persistence.createBird(commonName: name)) ?? Bird(bird_id: UUID(),
             commonName: name,
             scientificName: "Unknown",
             staticImageName: "photo",
@@ -377,14 +376,14 @@ final class WatchlistManager: WatchlistRepository {
         if watchlistId == WatchlistConstants.myWatchlistID {
             let customLists = try fetchWatchlists(type: .custom)
             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetId = existing.id
+                targetId = existing.watchlist_id
             } else if let first = customLists.first {
-                targetId = first.id
+                targetId = first.watchlist_id
             }
         }
         
         guard let watchlist = try persistence.fetchWatchlist(id: targetId) else { return nil }
-        return watchlist.entries?.first(where: { $0.bird?.id == birdId })
+        return watchlist.entries?.first(where: { $0.bird?.bird_id == birdId })
     }
     
     func attachPhoto(entryId: UUID, imageName: String) throws {
@@ -495,9 +494,9 @@ final class WatchlistManager: WatchlistRepository {
             }
             if isMatch {
                 let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
-                _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.id, birds: [bird], status: status)
+                _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.watchlist_id, birds: [bird], status: status)
                 refreshCoverImage(for: watchlist)
-                if let newEntry = try? findEntry(birdId: bird.id, watchlistId: watchlist.id) {
+                if let newEntry = try? findEntry(birdId: bird.bird_id, watchlistId: watchlist.watchlist_id) {
                     try persistence.updateEntry(
                         id: newEntry.id,
                         notes: notes,
@@ -510,7 +509,7 @@ final class WatchlistManager: WatchlistRepository {
                     )
                 }
                 
-                matchedWatchlistIds.append(watchlist.id)
+                matchedWatchlistIds.append(watchlist.watchlist_id)
             }
         }
         
@@ -583,8 +582,8 @@ final class WatchlistManager: WatchlistRepository {
         return dtos.compactMap { try? persistence.fetchEntry(id: $0.id) }
     }
     
-    func fetchBird(id: UUID) throws -> Bird? {
-        return try persistence.fetchBird(id: id)
+    func fetchBird(bird_id: UUID) throws -> Bird? {
+        return try persistence.fetchBird(bird_id: bird_id)
     }
     
     func fetchAll<T: PersistentModel>(_ type: T.Type, descriptor: FetchDescriptor<T>? = nil) throws -> [T] {

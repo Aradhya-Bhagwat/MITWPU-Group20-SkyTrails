@@ -60,7 +60,7 @@ extension SpeciesSelectionViewController {
             return
         }
         
-        let birdsToProcess = allBirds.filter { selectedBirds.contains($0.id) }
+        let birdsToProcess = allBirds.filter { selectedBirds.contains($0.bird_id) }
         startDetailLoop(birds: birdsToProcess)
     }
     
@@ -143,7 +143,7 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         cell.shouldShowAvatars = false
         cell.dateLabel.isHidden = true
         cell.locationLabel.text = nil
-		cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
+		cell.accessoryType = selectedBirds.contains(bird.bird_id) ? .checkmark : .none
 		if traitCollection.userInterfaceStyle == .dark {
 			cell.backgroundColor = .secondarySystemBackground
 			cell.contentView.backgroundColor = .secondarySystemBackground
@@ -156,10 +156,10 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         tableView.deselectRow(at: indexPath, animated: true)
         
         let bird = filteredBirds[indexPath.row]
-        if selectedBirds.contains(bird.id) {
-            selectedBirds.remove(bird.id)
+        if selectedBirds.contains(bird.bird_id) {
+            selectedBirds.remove(bird.bird_id)
         } else {
-            selectedBirds.insert(bird.id)
+            selectedBirds.insert(bird.bird_id)
         }
         tableView.reloadRows(at: [indexPath], with: .automatic)
         updateNextButton()

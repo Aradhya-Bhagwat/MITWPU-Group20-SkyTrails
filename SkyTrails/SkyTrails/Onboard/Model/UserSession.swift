@@ -40,11 +40,11 @@ class UserSession {
 
         notifyAuthStateChanged()
         Task {
-            await createUserInSupabase(userId: user.id)
+            await createUserInSupabase(userId: user.user_id)
         }
         Task { @MainActor in
             if let token = getAccessToken() {
-                let allowed = await DeviceSessionService.shared.registerSession(userId: user.id, accessToken: token)
+                let allowed = await DeviceSessionService.shared.registerSession(userId: user.user_id, accessToken: token)
                 if !allowed {
                     logout()
                     return
@@ -52,11 +52,11 @@ class UserSession {
             }
             await connectRealtimeAndSync()
             do {
-                try await IdentificationSyncService.shared.adoptGuestSessions(to: user.id)
+                try await IdentificationSyncService.shared.adoptGuestSessions(to: user.user_id)
             } catch {
             }
             do {
-                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
             }
         }
@@ -69,7 +69,7 @@ class UserSession {
         else { return nil }
 
         if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           object["id"] == nil {
+           object["user_id"] == nil {
             saveUser(user)
         }
 
@@ -85,12 +85,12 @@ class UserSession {
     }
 
     var currentUserID: UUID? {
-        isAuthenticatedWithSupabase() ? getUser()?.id : nil
+        isAuthenticatedWithSupabase() ? getUser()?.user_id : nil
     }
 
     func logout() {
         let tokenBeforeLogout = getAccessToken()
-        let userIdBeforeLogout = getUser()?.id
+        let userIdBeforeLogout = getUser()?.user_id
         KeychainManager.shared.deleteValue(for: accessTokenKey)
         KeychainManager.shared.deleteValue(for: refreshTokenKey)
         Task { @MainActor in
@@ -140,7 +140,7 @@ class UserSession {
                 ?? "defaultProfile"
 
             let user = User(
-                id: authResult.userID,
+                user_id: authResult.userID,
                 name: resolvedName,
                 gender: authResult.gender ?? cached?.gender ?? "Not Specified",
                 email: authResult.email,
@@ -154,7 +154,7 @@ class UserSession {
             )
             await connectRealtimeAndSync()
             do {
-                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
             }
             
@@ -204,7 +204,7 @@ class UserSession {
             return
         }
         
-        let payload: [String: Any] = ["id": userId.uuidString]
+        let payload: [String: Any] = ["user_id": userId.uuidString]
         
         guard let url = URL(string: "\(config.projectURL.absoluteString)/rest/v1/users") else {
             return
