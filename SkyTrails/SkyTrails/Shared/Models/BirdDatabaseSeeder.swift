@@ -159,7 +159,6 @@ final class BirdDatabaseSeeder {
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
                 migration_strategy: nil,
-                hemisphere: nil,
                 validLocations: normalizedValidLocations,
                 validMonths: birdDTO.validMonths,
                 likelySpot: normalizedLikelySpot,

@@ -115,7 +115,6 @@ class HomeDataSeeder {
                 session = existing
                 session.startWeek = item.startWeek
                 session.endWeek = item.endWeek
-                session.hemisphere = item.hemisphere
                 if session.bird == nil {
                      session.bird = fetchBird(bird_id: item.birdId, context: context)
                 }
@@ -125,8 +124,7 @@ class HomeDataSeeder {
                     id: item.id,
                     bird: bird,
                     startWeek: item.startWeek,
-                    endWeek: item.endWeek,
-                    hemisphere: item.hemisphere
+                    endWeek: item.endWeek
                 )
                 context.insert(session)
             }
