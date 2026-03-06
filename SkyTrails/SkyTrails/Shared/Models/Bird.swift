@@ -42,7 +42,6 @@ final class Bird {
     
    
     var migration_strategy: String?
-    var hemisphere: String?
    
     var validLocations: [String]?
     var validMonths: [Int]?
@@ -73,7 +72,6 @@ final class Bird {
             descriptionText: String? = nil,
             conservation_status: String? = nil,
             migration_strategy: String? = nil,
-            hemisphere: String? = nil,
             validLocations: [String]? = nil,
             validMonths: [Int]? = nil,
             likelySpot: String? = nil,
@@ -90,7 +88,6 @@ final class Bird {
             self.descriptionText = descriptionText
             self.conservation_status = conservation_status
             self.migration_strategy = migration_strategy
-            self.hemisphere = hemisphere
             self.validLocations = validLocations
             self.validMonths = validMonths
             self.likelySpot = likelySpot
