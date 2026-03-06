@@ -1,15 +1,7 @@
-//
-//  HomeDomainModels.swift
-//  SkyTrails
-//
-//  Created by Gemini CLI on 16/02/2026.
-//
 
 import Foundation
 import CoreLocation
 import SwiftData
-
-// MARK: - UI Models
 
 struct BirdCategory: Codable, Hashable {
     let icon: String
@@ -42,8 +34,6 @@ struct PopularSpot: Codable, Hashable {
     let radius: Double?
 }
 
-// MARK: - Result Types
-
 struct HomeScreenData {
     let upcomingBirds: [UpcomingBirdResult]
     let myWatchlistBirds: [UpcomingBirdResult]
@@ -54,12 +44,9 @@ struct HomeScreenData {
     let recentObservations: [CommunityObservation]
     let birdCategories: [BirdCategory]
     let news: [NewsItem]
-    let errorMessage: String? // Added for error propagation
-    
-    // MARK: - UI Computation
+    let errorMessage: String?
     
     var displayableUpcomingBirds: [UpcomingBirdUI] {
-        // 1. Convert Watchlist Birds
         let watchlistUI = myWatchlistBirds.map { result in
             UpcomingBirdUI(
                 imageName: result.bird.staticImageName,
@@ -67,8 +54,6 @@ struct HomeScreenData {
                 date: result.statusText
             )
         }
-        
-        // 2. Convert Recommended Birds
         let recommendedUI = recommendedBirds.map { result in
             UpcomingBirdUI(
                 imageName: result.bird.staticImageName,
@@ -76,8 +61,6 @@ struct HomeScreenData {
                 date: result.dateRange
             )
         }
-        
-        // 3. Merge: Fill with watchlist birds first, then add recommended to reach 6 total
         var combinedBirds: [UpcomingBirdUI] = []
         combinedBirds.append(contentsOf: watchlistUI.prefix(6))
         
@@ -136,7 +119,7 @@ struct MigrationCardResult: Identifiable {
     let bird: Bird
     let session: MigrationSession
     let currentPosition: CLLocationCoordinate2D?
-    let progress: Float // 0.0 to 1.0
+    let progress: Float
     let paths: [TrajectoryPath]
     
     var dateRange: String {
@@ -149,12 +132,12 @@ struct MigrationCardResult: Identifiable {
         var startComponents = DateComponents()
         startComponents.weekOfYear = session.startWeek
         startComponents.yearForWeekOfYear = currentYear
-        startComponents.weekday = 2 // Monday
+        startComponents.weekday = 2
         
         var endComponents = DateComponents()
         endComponents.weekOfYear = session.endWeek
         endComponents.yearForWeekOfYear = currentYear
-        endComponents.weekday = 2 // Monday
+        endComponents.weekday = 2
         
         if let startDate = calendar.date(from: startComponents),
            let endDate = calendar.date(from: endComponents) {
@@ -170,8 +153,6 @@ struct MigrationTrajectoryResult {
     let requestedWeek: Int
     var mostLikelyPosition: CLLocationCoordinate2D?
 }
-
-// MARK: - Legacy / Prediction Support
 
 struct PredictionInputData {
     var id: UUID = UUID()
@@ -231,19 +212,19 @@ struct MigrationPrediction {
 
 struct HotspotPrediction {
     let placeName: String
-    let locationDetail: String // Added: City, State
-    let weekNumber: String // Added: e.g. "Week 8"
+    let locationDetail: String
+    let weekNumber: String
     let speciesCount: Int
     let distanceString: String
     let dateRange: String
     let placeImageName: String
-    let terrainTag: String // Added
-    let seasonTag: String // Added
+    let terrainTag: String
+    let seasonTag: String
     let centerCoordinate: CLLocationCoordinate2D
     let pinRadiusKm: Double
     let areaOverlay: HotspotAreaOverlay
     let hotspots: [HotspotBirdSpot]
-    let birdSpecies: [BirdSpeciesDisplay] // Added for nested list
+    let birdSpecies: [BirdSpeciesDisplay]
 }
 
 enum HotspotAreaOverlay {
@@ -263,7 +244,7 @@ struct BirdSpeciesDisplay: Hashable {
         let title: String
         let subtitle: String
         let iconName: String
-        let backgroundColorName: String // e.g., "BadgePink", "BadgeBlue"
+        let backgroundColorName: String
     }
 }
 
@@ -278,16 +259,12 @@ struct RelevantSighting {
     let week: Int
 }
 
-// MARK: - Extensions
-
 extension Date {
     var weekOfYear: Int {
         let calendar = Calendar.current
         return calendar.component(.weekOfYear, from: self)
     }
 }
-
-// UI Models for Collections (Simplified View Models)
 struct UpcomingBirdUI {
     let imageName: String
     let title: String

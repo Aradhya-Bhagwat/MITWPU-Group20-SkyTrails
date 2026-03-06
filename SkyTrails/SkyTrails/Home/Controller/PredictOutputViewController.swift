@@ -1,9 +1,3 @@
-//
-//  PredictOutputViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 12/12/25.
-//
 
 import UIKit
 import CoreLocation
@@ -168,7 +162,6 @@ class PredictOutputViewController: UIViewController {
                     }
                 }
             } catch {
-                print("Reverse geocoding failed: \(error.localizedDescription)")
             }
         }
     }
@@ -185,14 +178,11 @@ class PredictOutputViewController: UIViewController {
     }
 
     private func navigateToBirdPrediction(_ prediction: FinalPredictionResult) {
-        // Find input dates if available
         let inputIndex = prediction.matchedInputIndex
         let input = inputData.indices.contains(inputIndex) ? inputData[inputIndex] : nil
         
         let startDate = input?.startDate ?? Date()
         let endDate = input?.endDate ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
-        
-        // Find actual bird ID from database to ensure path data can be found
         let birdID = WatchlistManager.shared.findBird(byName: prediction.birdName)?.id.uuidString ?? UUID().uuidString
         
         let birdInput = BirdDateInput(
@@ -204,9 +194,6 @@ class PredictOutputViewController: UIViewController {
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
             mapVC.predictionInputs = [birdInput]
-            
-            // Push onto the main navigation controller (replacing the PredictMapViewController)
-            // self -> UINavigationController (child) -> PredictMapViewController (parent) -> UINavigationController (main)
             if let mainNav = self.navigationController?.parent?.navigationController {
                 mainNav.pushViewController(mapVC, animated: true)
             } else {

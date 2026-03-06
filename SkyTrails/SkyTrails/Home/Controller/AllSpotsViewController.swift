@@ -1,10 +1,3 @@
-//
-//  AllSpotsViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 10/12/25.
-//  Refactored to Strict MVC
-//
 
 import UIKit
 
@@ -158,8 +151,6 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         }
 
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
-        
-        // Use NSCache safely
         let activeCount = HomeManager.shared.spotSpeciesCountCache.object(forKey: item.title as NSString)?.intValue ?? item.speciesCount
         
         cell.configure(

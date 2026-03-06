@@ -1,20 +1,12 @@
-//
-//  WatchlistModel.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 13/02/26.
-//
 
 import Foundation
 import SwiftData
 import CoreLocation
 
-// MARK: - Enums
-
 enum WatchlistType: String, Codable {
-    case custom        // User-created with automation rules
-    case shared        // Shared among multiple users
-    case my_watchlist  // Virtual/derived - aggregation (Logic handled in Manager)
+    case custom
+    case shared
+    case my_watchlist
 }
 
 enum WatchlistEntryStatus: String, Codable {
@@ -40,13 +32,11 @@ enum WatchlistMode {
     case unobserved
 }
 
-// MARK: - Core Watchlist Models
-
 @Model
 final class Watchlist {
     @Attribute(.unique) var id: UUID
-    var owner_id: UUID? // nil means local guest/pending owner
-    var type: WatchlistType? // Default to custom if missing
+    var owner_id: UUID?
+    var type: WatchlistType?
     var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
     var lastSyncedAt: Date?
     var serverRowVersion: Int = 0
@@ -65,9 +55,7 @@ final class Watchlist {
     var created_at: Date = Date()
     var updated_at: Date?
     var locationDisplayName: String?
-    var coverImagePath: String? // Cached path to most recent bird image
-    
-    // Relationships
+    var coverImagePath: String?
     @Relationship(deleteRule: .cascade, inverse: \WatchlistEntry.watchlist) var entries: [WatchlistEntry]?
     @Relationship(deleteRule: .cascade, inverse: \WatchlistRule.watchlist) var rules: [WatchlistRule]?
     @Relationship(deleteRule: .cascade, inverse: \WatchlistShare.watchlist) var shares: [WatchlistShare]?
@@ -98,7 +86,7 @@ final class Watchlist {
 final class WatchlistEntry {
     @Attribute(.unique) var id: UUID
     var watchlist: Watchlist?
-    var bird: Bird? // Reference to the Bird Reference Data
+    var bird: Bird?
     
     var nickname: String?
     var status: WatchlistEntryStatus
@@ -107,10 +95,8 @@ final class WatchlistEntry {
     var observationDate: Date?
     var toObserveStartDate: Date?
     var toObserveEndDate: Date?
-    var observedBy: String? // Name of user who observed it (useful in shared lists)
+    var observedBy: String?
     var observedByUserId: UUID?
-    
-    // Denormalized Location Data for Quick Access
     var lat: Double?
     var lon: Double?
     var locationDisplayName: String?
@@ -204,7 +190,7 @@ final class WatchlistRule {
 final class WatchlistShare {
     @Attribute(.unique) var id: UUID
     var watchlist: Watchlist?
-    var user_id: UUID // The user it is shared WITH
+    var user_id: UUID
     var permission: WatchlistSharePermission
     var shared_at: Date = Date()
     var shared_by_user_id: UUID?
@@ -250,10 +236,7 @@ final class ObservedBirdPhoto {
     }
 }
 
-// MARK: - Entity to Domain Model Transformations
-
 extension Watchlist {
-    /// Convert persistence entity to domain DTO
     func toDomain() -> WatchlistDetailDTO {
         let identifier = WatchlistIdentifier.from(uuid: self.id, type: self.type)
         
@@ -285,8 +268,6 @@ extension Watchlist {
             isVirtual: identifier.isVirtual
         )
     }
-    
-    /// Convert persistence entity to summary DTO
     func toSummary(previewImages: [String] = []) -> WatchlistSummaryDTO {
         let identifier = WatchlistIdentifier.from(uuid: self.id, type: self.type)
         
@@ -318,31 +299,21 @@ extension Watchlist {
             type: self.type ?? .custom
         )
     }
-    
-    /// Updates the cached cover image based on the most recent bird entry
     func updateCoverImage() {
         guard let entries = self.entries, !entries.isEmpty else {
             self.coverImagePath = nil
             return
         }
-        
-        // Get most recent observed entry (by observationDate)
         let observedEntries = entries.filter { $0.status == .observed && $0.observationDate != nil }
         let mostRecentObserved = observedEntries.max(by: { 
             ($0.observationDate ?? Date.distantPast) < ($1.observationDate ?? Date.distantPast) 
         })
-        
-        // Get most recent to-observe entry (by addedDate)
         let toObserveEntries = entries.filter { $0.status == .to_observe }
         let mostRecentToObserve = toObserveEntries.max(by: { $0.addedDate < $1.addedDate })
-        
-        // Compare which is newer
         let observedDate = mostRecentObserved?.observationDate ?? Date.distantPast
         let toObserveDate = mostRecentToObserve?.addedDate ?? Date.distantPast
         
         let mostRecentEntry = observedDate > toObserveDate ? mostRecentObserved : mostRecentToObserve
-        
-        // Extract image path
         if let entry = mostRecentEntry {
             if let photoPath = entry.photos?.first?.imagePath {
                 self.coverImagePath = photoPath
@@ -358,7 +329,6 @@ extension Watchlist {
 }
 
 extension WatchlistEntry {
-    /// Convert persistence entity to domain DTO
     func toDomain() -> WatchlistEntryDTO? {
         guard let bird = self.bird else { return nil }
         guard let watchlist = self.watchlist else { return nil }
@@ -397,7 +367,6 @@ extension WatchlistEntry {
 }
 
 extension WatchlistRule {
-    /// Convert persistence entity to domain DTO
     func toDomain() -> WatchlistRuleDTO {
         let params = RuleParameters.from(rule: self)
             ?? .location(LocationRuleParams(lat: 0, lon: 0, radiusKm: 0))
@@ -413,7 +382,6 @@ extension WatchlistRule {
 }
 
 extension Bird {
-    /// Convert Bird entity to reference DTO for use in watchlist entries
     func toReference() -> BirdReferenceDTO {
         BirdReferenceDTO(
             id: self.id,

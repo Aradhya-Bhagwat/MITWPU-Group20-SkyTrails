@@ -1,9 +1,3 @@
-//
-//  CustomWatchlistViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 27/11/25.
-//
 
 import UIKit
 import SwiftData
@@ -12,17 +6,11 @@ import SwiftData
 class CustomWatchlistViewController: UIViewController {
 
     private let repository: WatchlistRepository = WatchlistManager.shared
-    private let manager = WatchlistManager.shared // For legacy operations
-
-    // MARK: - Outlets
+    private let manager = WatchlistManager.shared
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var searchBar: UISearchBar!
-
-    // MARK: - Properties
     private var filteredWatchlists: [WatchlistSummaryDTO] = []
     private var allWatchlistsDTOs: [WatchlistSummaryDTO] = []
-
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -48,17 +36,11 @@ class CustomWatchlistViewController: UIViewController {
         super.viewWillAppear(animated)
         loadData()
     }
-
-    // MARK: - Setup
     private func setupUI() {
         title = "Custom Watchlists"
         view.backgroundColor = .systemGroupedBackground
-        
-        // Search Bar
         searchBar.searchBarStyle = .minimal
         searchBar.delegate = self
-        
-        // Collection View Layout
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .vertical
         flowLayout.minimumInteritemSpacing = 12
@@ -69,8 +51,6 @@ class CustomWatchlistViewController: UIViewController {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .clear
-        
-        // Register Cell
         let nib = UINib(nibName: "CustomWatchlistCollectionViewCell", bundle: nil)
         collectionView.register(nib, forCellWithReuseIdentifier: CustomWatchlistCollectionViewCell.identifier)
     }
@@ -79,8 +59,6 @@ class CustomWatchlistViewController: UIViewController {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         collectionView.addGestureRecognizer(longPress)
     }
-
-    // MARK: - Data Handling
     private func loadData() {
         Task {
             do {
@@ -88,13 +66,11 @@ class CustomWatchlistViewController: UIViewController {
                 self.allWatchlistsDTOs = data.custom
                 self.updateData()
             } catch {
-                print("Error loading custom watchlists: \(error)")
             }
         }
     }
 
     private func updateData() {
-        // Filter only (no explicit sorting)
         if let text = searchBar.text, !text.isEmpty {
             filteredWatchlists = allWatchlistsDTOs.filter { $0.title.localizedCaseInsensitiveContains(text) }
         } else {
@@ -102,27 +78,20 @@ class CustomWatchlistViewController: UIViewController {
         }
         collectionView.reloadData()
     }
-
-    // MARK: - Actions & Navigation
     @IBAction func addTapped(_ sender: Any) {
         performSegue(withIdentifier: "ShowEditCustomWatchlist", sender: nil)
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
-        // Sorting removed from watchlist feature – no-op
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowEditCustomWatchlist",
            let destVC = segue.destination as? EditWatchlistDetailViewController {
-            // Updated to use the correct model enum if EditWatchlistDetailViewController uses it,
-            // or we might need to fix that VC too. Assuming it uses WatchlistType from Models.
             destVC.watchlistType = .custom
         }
     }
 }
-
-// MARK: - CollectionView DataSource & Delegate
 extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -165,8 +134,6 @@ extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionV
         }
     }
 }
-
-// MARK: - SearchBar Delegate
 extension CustomWatchlistViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -177,8 +144,6 @@ extension CustomWatchlistViewController: UISearchBarDelegate {
         searchBar.resignFirstResponder()
     }
 }
-
-// MARK: - Context Menu (Long Press)
 extension CustomWatchlistViewController {
     
     @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
@@ -193,8 +158,6 @@ extension CustomWatchlistViewController {
     
     func showOptions(for dto: WatchlistSummaryDTO, at indexPath: IndexPath) {
         let alert = UIAlertController(title: dto.title, message: nil, preferredStyle: .actionSheet)
-        
-        // Edit Action
         alert.addAction(UIAlertAction(title: "Edit", style: .default, handler: { [weak self] _ in
             guard let self = self else { return }
             let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
@@ -204,8 +167,6 @@ extension CustomWatchlistViewController {
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         }))
-        
-        // Delete Action
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             self?.confirmDelete(dto: dto)
         }))
@@ -235,7 +196,6 @@ extension CustomWatchlistViewController {
 					try await self?.repository.deleteWatchlist(id: dto.legacyUUID)
                     self?.loadData()
                 } catch {
-                    print("❌ [CustomWatchlistVC] Error deleting watchlist: \(error)")
                 }
             }
         }))
@@ -243,5 +203,3 @@ extension CustomWatchlistViewController {
         present(alert, animated: true)
     }
 }
-
-// MARK: - UIView Extensions

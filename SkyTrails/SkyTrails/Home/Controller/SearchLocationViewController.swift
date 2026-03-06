@@ -1,9 +1,3 @@
-//
-//  SearchLocationViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 12/12/25.
-//
 
 import UIKit
 import MapKit
@@ -97,7 +91,6 @@ class SearchLocationViewController: UIViewController {
                     self.finalizeSelection(name: placeName, detail: detail, lat: coordinate.lat, lon: coordinate.lon)
                 }
             } catch {
-                print("Reverse geocoding failed: \(error.localizedDescription)")
             }
         }
     }
@@ -154,7 +147,6 @@ class SearchLocationViewController: UIViewController {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
-             print("Location Access Denied")
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
@@ -246,7 +238,7 @@ class SearchLocationViewController: UIViewController {
         }
         
         func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-            if indexPath.section == 0 { return 60 } // Search bar height
+            if indexPath.section == 0 { return 60 }
             return UITableView.automaticDimension
         }
     }
@@ -307,6 +299,5 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location Error: \(error.localizedDescription)")
     }
 }

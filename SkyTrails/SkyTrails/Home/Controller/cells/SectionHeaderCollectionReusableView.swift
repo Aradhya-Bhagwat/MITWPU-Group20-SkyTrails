@@ -1,9 +1,3 @@
-//
-//  SectionHeaderCollectionReusableView.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 26/11/25.
-//
 
 import UIKit
 

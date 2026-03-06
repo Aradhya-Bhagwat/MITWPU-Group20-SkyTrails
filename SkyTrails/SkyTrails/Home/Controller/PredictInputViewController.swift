@@ -1,9 +1,3 @@
-//
-//  PredictInputViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 11/12/25.
-//
 
 import UIKit
 import CoreLocation

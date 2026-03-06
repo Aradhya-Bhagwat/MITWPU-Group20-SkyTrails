@@ -1,8 +1,3 @@
-//
-//  SpeciesSelectionViewController.swift
-//  SkyTrails
-//
-//
 
 import UIKit
 
@@ -10,8 +5,6 @@ import UIKit
 class SpeciesSelectionViewController: UIViewController {
 
     private let manager = WatchlistManager.shared
-
-    // MARK: - Constants
     private struct Constants {
         static let birdCellId = "BirdSmartCell"
         static let storyboardName = "Watchlist"
@@ -20,33 +13,21 @@ class SpeciesSelectionViewController: UIViewController {
         static let checkmarkIcon = "checkmark"
         static let plusIcon = "plus"
     }
-
-    // MARK: - Outlets
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
-    
-    // MARK: - Properties
     var mode: WatchlistMode = .observed
     var targetWatchlistId: UUID?
     var shouldUseRuleMatching: Bool = false
-    
-    // Data Source
     private var allBirds: [Bird] = []
     private var filteredBirds: [Bird] = []
     private var selectedBirds: Set<UUID> = []
-    
-    // Wizard/Loop State
     private var birdQueue: [Bird] = []
     private var processedBirds: [Bird] = []
-    
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         loadData()
     }
-    
-    // MARK: - Setup
     private func setupUI() {
         title = "Select Species"
         
@@ -72,28 +53,14 @@ class SpeciesSelectionViewController: UIViewController {
         navigationItem.rightBarButtonItem?.isEnabled = !selectedBirds.isEmpty
     }
 }
-
-// MARK: - Navigation Loop Logic
 extension SpeciesSelectionViewController {
     
     @objc private func didTapNext() {
-        print("➡️  [SpeciesSelectionVC] didTapNext() called")
-        print("📊 [SpeciesSelectionVC] Selected birds count: \(selectedBirds.count)")
-        
         guard !selectedBirds.isEmpty else {
-            print("⚠️  [SpeciesSelectionVC] No birds selected, returning")
             return
         }
         
-        // Filter the selected bird objects
         let birdsToProcess = allBirds.filter { selectedBirds.contains($0.id) }
-        
-        print("🐦 [SpeciesSelectionVC] Birds to process:")
-        birdsToProcess.forEach { print("  - \($0.commonName)") }
-        print("📋 [SpeciesSelectionVC] Target watchlist ID: \(targetWatchlistId?.description ?? "nil")")
-        print("🎯 [SpeciesSelectionVC] Mode: \(mode == .observed ? "observed" : "unobserved")")
-        
-        // Start the wizard loop
         startDetailLoop(birds: birdsToProcess)
     }
     
@@ -104,13 +71,10 @@ extension SpeciesSelectionViewController {
     }
     
     private func showNextInLoop() {
-        // 1. Check if Queue is empty (Base Case)
         guard !birdQueue.isEmpty else {
             finalizeLoop()
             return
         }
-        
-        // 2. Process next bird
         let bird = birdQueue.removeFirst()
         showBirdDetail(bird: bird)
     }
@@ -122,8 +86,6 @@ extension SpeciesSelectionViewController {
     private func showBirdDetail(bird: Bird) {
         let storyboard = UIStoryboard(name: Constants.storyboardName, bundle: nil)
         var nextVC: UIViewController?
-        
-        // Configure VC based on mode
         if mode == .unobserved {
             let vc = storyboard.instantiateViewController(withIdentifier: Constants.unobservedVCId) as! UnobservedDetailViewController
             vc.bird = bird
@@ -149,22 +111,13 @@ extension SpeciesSelectionViewController {
     }
     
     private func handleSave(bird: Bird) {
-        print("✅ [SpeciesSelectionVC] handleSave() called for: \(bird.commonName)")
-        print("📊 [SpeciesSelectionVC] Processed so far: \(processedBirds.count)")
-        print("📊 [SpeciesSelectionVC] Remaining in queue: \(birdQueue.count)")
-        
         processedBirds.append(bird)
         showNextInLoop()
     }
-    
-    /// Manipulates the stack to replace the current detail view with the next one,
-    /// preventing a deep navigation stack (Wizard Pattern).
     private func updateNavigationStack(pushing newVC: UIViewController) {
         guard let navigationController = navigationController else { return }
         
         var vcs = navigationController.viewControllers
-        
-        // If the top VC is already a detail view, remove it so we replace it instead of stacking
         if let last = vcs.last, (last is ObservedDetailViewController || last is UnobservedDetailViewController) {
             vcs.removeLast()
         }
@@ -173,8 +126,6 @@ extension SpeciesSelectionViewController {
         navigationController.setViewControllers(vcs, animated: true)
     }
 }
-
-// MARK: - UITableView DataSource & Delegate
 extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -191,11 +142,7 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         cell.configure(with: bird)
         cell.shouldShowAvatars = false
         cell.dateLabel.isHidden = true
-        
-        // Location label is unused in this screen now that rarity is removed
         cell.locationLabel.text = nil
-		
-		// Selection State
 		cell.accessoryType = selectedBirds.contains(bird.id) ? .checkmark : .none
 		if traitCollection.userInterfaceStyle == .dark {
 			cell.backgroundColor = .secondarySystemBackground
@@ -214,8 +161,6 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         } else {
             selectedBirds.insert(bird.id)
         }
-        
-        // Efficiently reload only the tapped row to update the checkmark
         tableView.reloadRows(at: [indexPath], with: .automatic)
         updateNextButton()
     }
@@ -224,8 +169,6 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         return 90
     }
 }
-
-// MARK: - UISearchBar Delegate
 extension SpeciesSelectionViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {

@@ -2,12 +2,12 @@ import Foundation
 import SwiftData
 
 enum SyncStatus: String, Codable {
-    case pendingOwner    // Guest-created, waiting for login adoption
-    case pendingCreate  // Created locally, needs to sync to server
-    case pendingUpdate  // Modified locally, needs to sync to server
-    case pendingDelete  // Deleted locally, needs to sync to server
-    case synced         // Successfully synced with server
-    case failed         // Sync failed, needs retry
+    case pendingOwner
+    case pendingCreate
+    case pendingUpdate
+    case pendingDelete
+    case synced
+    case failed
 }
 
 struct UserRow: Codable {

@@ -120,8 +120,6 @@ class HistoryCollectionViewCell: UICollectionViewCell {
 
         historyImageView.layer.cornerRadius = 10
         historyImageView.clipsToBounds = true
-        
-        // 2. Format the Date
         dateLabel.text = formatDate(historyItem.observationDate)
     }
     

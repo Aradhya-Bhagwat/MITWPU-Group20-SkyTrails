@@ -1,9 +1,3 @@
-//
-//  PredictMapViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 11/12/25.
-//
 
 import UIKit
 import MapKit
@@ -174,7 +168,6 @@ class PredictMapViewController: UIViewController {
                 return .circle(radiusKm: radiusKm)
             }
         } catch {
-            // Fallback handled below
         }
 
         return .circle(radiusKm: 2.0)
@@ -191,14 +184,12 @@ class PredictMapViewController: UIViewController {
         }
 
         let regionCenterDistanceKm = distanceInKm(from: anchorCoordinate, to: region.center)
-        // Only trust bbox if search region is anchored close to requested location.
         guard regionCenterDistanceKm <= 1.0 else {
             return nil
         }
 
         if let nearestResultCoordinate {
             let nearestResultDistanceKm = distanceInKm(from: anchorCoordinate, to: nearestResultCoordinate)
-            // Reject bbox if nearest result is still not close to requested location.
             guard nearestResultDistanceKm <= 1.5 else {
                 return nil
             }
@@ -223,7 +214,6 @@ class PredictMapViewController: UIViewController {
         let maxCornerDistanceKm = polygon
             .map { distanceInKm(from: anchorCoordinate, to: $0) }
             .max() ?? .greatestFiniteMagnitude
-        // Avoid broad off-target regions.
         guard maxCornerDistanceKm <= 8.0 else {
             return nil
         }
@@ -457,8 +447,6 @@ class PredictMapViewController: UIViewController {
         let mapWidth = mapView.bounds.width
         let mapHeight = mapView.bounds.height
         let topHalfHeight = mapHeight * 0.5
-
-        // Target frame: centered in top half, occupying 80% of top-half width/height.
         let targetWidth = mapWidth * 0.8
         let targetHeight = topHalfHeight * 0.8
         let leftRightPadding = max(8, (mapWidth - targetWidth) / 2.0)
@@ -493,8 +481,6 @@ class PredictMapViewController: UIViewController {
             let pointRect = MKMapRect(origin: MKMapPoint(coordinate), size: MKMapSize(width: 0, height: 0))
             rect = rect.union(pointRect)
         }
-
-        // Keep a sensible minimum zoom footprint when only one point is present.
         if rect.size.width < 100 || rect.size.height < 100 {
             let centerPoint = MKMapPoint(first)
             let metersPerMapPoint = MKMetersPerMapPointAtLatitude(first.latitude)

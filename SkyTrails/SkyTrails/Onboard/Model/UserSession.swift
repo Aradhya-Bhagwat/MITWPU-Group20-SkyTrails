@@ -1,9 +1,3 @@
-//
-//  UserSession.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 17/02/26.
-//
 
 import Foundation
 
@@ -45,30 +39,18 @@ class UserSession {
         }
 
         notifyAuthStateChanged()
-        
-        // Create user in Supabase users table
         Task {
             await createUserInSupabase(userId: user.id)
         }
-        
-        // Connect to realtime sync on successful auth
         Task { @MainActor in
             await connectRealtimeAndSync()
-            
-            // Adopt guest identification sessions after login
             do {
                 try await IdentificationSyncService.shared.adoptGuestSessions(to: user.id)
-                print("📥 [UserSession] Adopted guest identification sessions")
             } catch {
-                print("⚠️ [UserSession] Failed to adopt guest identification sessions: \(error.localizedDescription)")
             }
-            
-            // Perform initial sync after realtime connection
             do {
                 let summary = try await InitialSyncService.shared.performInitialSync(userId: user.id)
-                print("📥 [UserSession] Initial sync completed: \(summary.watchlistsSynced) watchlists, \(summary.entriesSynced) entries, \(summary.rulesSynced) rules, \(summary.photosSynced) photos")
             } catch {
-                print("⚠️ [UserSession] Initial sync failed: \(error.localizedDescription)")
             }
         }
     }
@@ -103,8 +85,6 @@ class UserSession {
         KeychainManager.shared.deleteValue(for: accessTokenKey)
         KeychainManager.shared.deleteValue(for: refreshTokenKey)
         UserDefaults.standard.removeObject(forKey: userKey)
-        
-        // Disconnect realtime and clear sync queue
         Task { @MainActor in
             await disconnectRealtimeAndClearSync()
             await WatchlistManager.shared.clearUserDataOnLogout()
@@ -161,16 +141,10 @@ class UserSession {
                 accessToken: authResult.accessToken ?? accessToken,
                 refreshToken: authResult.refreshToken ?? refreshToken
             )
-            
-            // Connect realtime after session restore
             await connectRealtimeAndSync()
-            
-            // Perform initial sync after session restore
             do {
                 let summary = try await InitialSyncService.shared.performInitialSync(userId: user.id)
-                print("📥 [UserSession] Initial sync completed: \(summary.watchlistsSynced) watchlists, \(summary.entriesSynced) entries, \(summary.rulesSynced) rules, \(summary.photosSynced) photos")
             } catch {
-                print("⚠️ [UserSession] Initial sync failed: \(error.localizedDescription)")
             }
             
             return true
@@ -193,31 +167,23 @@ class UserSession {
         NotificationCenter.default.post(name: Self.authStateDidChangeNotification, object: self)
     }
     
-    // MARK: - Realtime & Sync Integration
-    
     private func connectRealtimeAndSync() async {
         do {
             try await RealtimeSyncService.shared.connect()
             try await RealtimeSyncService.shared.subscribeAll()
-            print("✅ [UserSession] Realtime connected and subscribed")
         } catch {
-            print("⚠️ [UserSession] Failed to connect realtime: \(error.localizedDescription)")
         }
-        
-        // Process any pending sync operations
         await BackgroundSyncAgent.shared.syncAll()
     }
     
     private func disconnectRealtimeAndClearSync() async {
         RealtimeSyncService.shared.disconnect()
         await BackgroundSyncAgent.shared.clearAll()
-        print("✅ [UserSession] Realtime disconnected and sync cleared")
     }
     
     private func createUserInSupabase(userId: UUID) async {
         guard let config = try? SupabaseConfig.load(),
               let accessToken = getAccessToken() else {
-            print("⚠️ [UserSession] Cannot create user - no config or token")
             return
         }
         
@@ -238,15 +204,11 @@ class UserSession {
             let (_, response) = try await URLSession.shared.data(for: request)
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
-                    print("✅ [UserSession] Created user in Supabase")
                 } else if httpResponse.statusCode == 409 {
-                    print("ℹ️ [UserSession] User already exists in Supabase")
                 } else {
-                    print("⚠️ [UserSession] Failed to create user: \(httpResponse.statusCode)")
                 }
             }
         } catch {
-            print("⚠️ [UserSession] Error creating user: \(error)")
         }
     }
 }

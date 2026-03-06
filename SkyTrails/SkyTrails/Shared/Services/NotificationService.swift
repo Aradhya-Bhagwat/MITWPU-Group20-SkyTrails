@@ -1,9 +1,3 @@
-//
-//  NotificationService.swift
-//  SkyTrails
-//
-//  Handles scheduling and management of bird observation reminders
-//
 
 import Foundation
 import UserNotifications
@@ -66,15 +60,12 @@ actor NotificationService {
     
     private init() {}
     
-    // MARK: - Configuration
-    
     var reminderTime: DateComponents {
         get {
             let hour = UserDefaults.standard.integer(forKey: reminderTimeKey)
             let minute = UserDefaults.standard.integer(forKey: reminderMinuteKey)
             
             if hour == 0 && minute == 0 {
-                // Default: 8:00 AM
                 var components = DateComponents()
                 components.hour = 8
                 components.minute = 0
@@ -97,19 +88,12 @@ actor NotificationService {
         components.hour = hour
         components.minute = minute
         reminderTime = components
-        
-        print("🔔 [NotificationService] Reminder time set to \(hour):\(String(format: "%02d", minute))")
-        
-        // Reschedule all active reminders with new time
         await rescheduleAllActiveReminders()
     }
-    
-    // MARK: - Authorization
     
     func requestAuthorization() async throws -> Bool {
         let options: UNAuthorizationOptions = [.alert, .sound, .badge]
         let granted = try await center.requestAuthorization(options: options)
-        print("🔔 [NotificationService] Authorization \(granted ? "granted" : "denied")")
         return granted
     }
     
@@ -128,19 +112,14 @@ actor NotificationService {
         )
         
         center.setNotificationCategories([category])
-        print("🔔 [NotificationService] Registered notification categories")
     }
-    
-    // MARK: - Scheduling
     
     func scheduleReminders(for entry: WatchlistEntry) async {
         guard entry.notify_upcoming else {
-            print("🔔 [NotificationService] Skipping schedule - reminders disabled for entry")
             return
         }
         
         guard entry.status == .to_observe else {
-            print("🔔 [NotificationService] Skipping schedule - entry already observed")
             return
         }
         
@@ -150,8 +129,6 @@ actor NotificationService {
         let endDate = entry.toObserveEndDate
         
         var scheduled = 0
-        
-        // Schedule start date reminders
         if let startDate = startDate {
             for trigger in [ReminderTrigger.twoWeeksBeforeStart, .oneWeekBeforeStart, .oneDayBeforeStart] {
                 if await scheduleReminder(
@@ -164,8 +141,6 @@ actor NotificationService {
                 }
             }
         }
-        
-        // Schedule end date reminders
         if let endDate = endDate {
             for trigger in [ReminderTrigger.oneWeekBeforeEnd, .oneDayBeforeEnd] {
                 if await scheduleReminder(
@@ -178,8 +153,6 @@ actor NotificationService {
                 }
             }
         }
-        
-        print("🔔 [NotificationService] Scheduled \(scheduled) reminders for \(birdName)")
     }
     
     private func scheduleReminder(
@@ -189,29 +162,19 @@ actor NotificationService {
         referenceDate: Date
     ) async -> Bool {
         let calendar = Calendar.current
-        
-        // Calculate the trigger date
         let triggerDate: Date?
-        if trigger.isStartTrigger {
-            // For start triggers, subtract days from start date
-            triggerDate = calendar.date(byAdding: .day, value: trigger.daysOffset, to: referenceDate)
+        if await trigger.isStartTrigger {
+            triggerDate = await calendar.date(byAdding: .day, value: trigger.daysOffset, to: referenceDate)
         } else {
-            // For end triggers, subtract days from end date
-            triggerDate = calendar.date(byAdding: .day, value: trigger.daysOffset, to: referenceDate)
+            triggerDate = await calendar.date(byAdding: .day, value: trigger.daysOffset, to: referenceDate)
         }
         
         guard let fireDate = triggerDate else {
-            print("🔔 [NotificationService] Could not calculate fire date for \(trigger.rawValue)")
             return false
         }
-        
-        // Don't schedule if the date is in the past
         guard fireDate > Date() else {
-            print("🔔 [NotificationService] Skipping \(trigger.rawValue) - date is in the past")
             return false
         }
-        
-        // Combine with reminder time (e.g., 8:00 AM)
         let time = reminderTime
         var fireComponents = calendar.dateComponents([.year, .month, .day], from: fireDate)
         fireComponents.hour = time.hour ?? 8
@@ -221,11 +184,9 @@ actor NotificationService {
         guard let finalFireDate = calendar.date(from: fireComponents) else {
             return false
         }
-        
-        // Create notification content
         let content = UNMutableNotificationContent()
         content.title = "Bird Watching Reminder"
-        content.body = trigger.message(for: birdName)
+        content.body = await trigger.message(for: birdName)
         content.sound = .default
         content.categoryIdentifier = notificationCategoryIdentifier
         content.userInfo = [
@@ -233,46 +194,34 @@ actor NotificationService {
             "trigger": trigger.rawValue,
             "birdName": birdName
         ]
-        
-        // Create trigger
         let triggerComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: finalFireDate)
         let notificationTrigger = UNCalendarNotificationTrigger(dateMatching: triggerComponents, repeats: false)
-        
-        // Create request with unique identifier
         let identifier = notificationIdentifier(entryId: entryId, trigger: trigger)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: notificationTrigger)
         
         do {
             try await center.add(request)
-            print("🔔 [NotificationService] Scheduled \(trigger.rawValue) for \(finalFireDate)")
             return true
         } catch {
-            print("❌ [NotificationService] Failed to schedule \(trigger.rawValue): \(error)")
             return false
         }
     }
-    
-    // MARK: - Cancellation
     
     func cancelReminders(for entryId: UUID) async {
         for trigger in ReminderTrigger.allCases {
             let identifier = notificationIdentifier(entryId: entryId, trigger: trigger)
             center.removePendingNotificationRequests(withIdentifiers: [identifier])
         }
-        print("🔔 [NotificationService] Cancelled all reminders for entry \(entryId)")
     }
     
     func cancelAllReminders() async {
         center.removeAllPendingNotificationRequests()
-        print("🔔 [NotificationService] Cancelled all pending notifications")
     }
-    
-    // MARK: - Snooze
     
     func snoozeReminder(entryId: UUID, trigger: ReminderTrigger, birdName: String) async {
         let content = UNMutableNotificationContent()
         content.title = "Bird Watching Reminder"
-        content.body = ReminderTrigger.oneDayBeforeStart.message(for: birdName) // Use appropriate message
+        content.body = await ReminderTrigger.oneDayBeforeStart.message(for: birdName)
         content.sound = .default
         content.categoryIdentifier = notificationCategoryIdentifier
         content.userInfo = [
@@ -280,8 +229,6 @@ actor NotificationService {
             "trigger": trigger.rawValue,
             "birdName": birdName
         ]
-        
-        // Snooze for 1 hour
         let triggerDate = Date().addingTimeInterval(3600)
         let calendar = Calendar.current
         let triggerComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: triggerDate)
@@ -292,13 +239,9 @@ actor NotificationService {
         
         do {
             try await center.add(request)
-            print("🔔 [NotificationService] Snoozed reminder for 1 hour")
         } catch {
-            print("❌ [NotificationService] Failed to snooze: \(error)")
         }
     }
-    
-    // MARK: - Reschedule All
     
     func rescheduleAllActiveReminders() async {
         await MainActor.run {
@@ -310,12 +253,7 @@ actor NotificationService {
                     }
                 )
                 let allEntries = try context.fetch(descriptor)
-                
-                // Filter to only to_observe entries
                 let entries = allEntries.filter { $0.status == .to_observe }
-                
-                print("🔔 [NotificationService] Rescheduling reminders for \(entries.count) to_observe entries")
-                
                 for entry in entries {
                     Task {
                         await self.cancelReminders(for: entry.id)
@@ -323,12 +261,9 @@ actor NotificationService {
                     }
                 }
             } catch {
-                print("❌ [NotificationService] Failed to fetch entries for reschedule: \(error)")
             }
         }
     }
-    
-    // MARK: - Helpers
     
     private func notificationIdentifier(entryId: UUID, trigger: ReminderTrigger) -> String {
         return "skytrails.entry.\(entryId.uuidString).\(trigger.rawValue)"

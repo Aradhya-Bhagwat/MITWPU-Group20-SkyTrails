@@ -62,14 +62,11 @@ class IdentificationManager {
             let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
             self.allShapes = try modelContext.fetch(descriptor)
         } catch {
-            print("Error loading shapes: \(error)")
         }
     }
 
     
     func availableShapesForSelectedSize() -> [BirdShape] {
-        print("DEBUG: availableShapesForSelectedSize called. Size range: \(selectedSizeRange)")
-
         do {
             let birdsInScope: [Bird]
             if selectedSizeRange.isEmpty {
@@ -104,7 +101,6 @@ class IdentificationManager {
             return filtered.isEmpty ? allShapes : filtered
 
         } catch {
-            print("Error fetching shapes for current filters: \(error)")
             return allShapes
         }
     }
@@ -131,33 +127,26 @@ class IdentificationManager {
             var score = 0.0
             var matchedFeats: [String] = []
             var mismatchedFeats: [String] = []
-            
-            // 1. Shape Logic (Strict matching)
             if let userShapeId = selectedShape?.id {
                 if (bird.shape?.id ?? bird.shape_id) == userShapeId {
                     score += 30
                     matchedFeats.append("Shape")
                 } else {
-                    continue // Ignore birds that don't match the selected shape
+                    continue
                 }
             }
-            
-            // 2. Size Scoring (Fuzzy +/- 1 logic)
             if let birdSize = bird.size_category, !selectedSizeRange.isEmpty {
                 if birdSize == selectedSizeCategory {
                     score += 20
                     matchedFeats.append("Size")
                 } else if selectedSizeRange.contains(birdSize) {
-                    score += 10 // Partial match for the range
+                    score += 10
                     matchedFeats.append("Approx. Size")
                 } else {
                     score -= 20
                     mismatchedFeats.append("Size")
                 }
             }
-
-            // 3. Habitat/Location & Season
-            // Prefer likelySpot (habitat) over exact text equality checks.
             if let birdHabitat = canonicalHabitat(from: bird.likelySpot), let userHabitat {
                 if birdHabitat == userHabitat {
                     score += 20
@@ -167,8 +156,6 @@ class IdentificationManager {
                     mismatchedFeats.append("Habitat")
                 }
             }
-            
-            // Treat validLocations as hints (regional/habitat tokens), not exact strings.
             if !userLocationTokens.isEmpty,
                let birdLocs = bird.validLocations,
                !birdLocs.isEmpty {
@@ -198,8 +185,6 @@ class IdentificationManager {
                 for (_, userVariant) in selectedFieldMarks {
                     guard let userFieldMark = userVariant.fieldMark else { continue }
                     let areaName = userFieldMark.area
-
-                    // Check if bird has this AREA with this VARIANT via normalized link table
                     let matched = birdLinks.contains {
                         $0.area == areaName && $0.variant?.id == userVariant.id
                     }
@@ -213,9 +198,6 @@ class IdentificationManager {
                     }
                 }
             }
-
-            
-            // Normalize score and create candidate if threshold met
             let finalScore = max(0.0, min(score / 100.0, 1.0))
             
             if finalScore > 0.1 {
@@ -402,14 +384,11 @@ class IdentificationManager {
     
     private func queueIdentificationSync(session: IdentificationSession) async {
         guard let userId = currentUserId else {
-            print("⚠️ [IdentificationManager] No current user, skipping sync")
             return
         }
         
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        
-        // 1. Sync Session
         var sessionPayload: [String: Any] = [
             "id": session.id.uuidString,
             "user_id": session.ownerId?.uuidString ?? userId.uuidString,
@@ -437,20 +416,14 @@ class IdentificationManager {
         }
         
         let sessionData = try? JSONSerialization.data(withJSONObject: sessionPayload)
-        print("📤 [IdentificationManager] Queuing session: \(session.id)")
         await BackgroundSyncAgent.shared.queueIdentificationSession(
             id: session.id,
             payloadData: sessionData,
             localUpdatedAt: session.updated_at,
             operation: .create
         )
-        
-        // Give the session a tiny head start to avoid race conditions with FK constraints on Supabase
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-        
-        // 2. Sync Session Marks
+        try? await Task.sleep(nanoseconds: 500_000_000)
         if let marks = session.selectedMarks {
-            print("📤 [IdentificationManager] Queuing \(marks.count) marks")
             for mark in marks {
                 let markPayload: [String: Any] = [
                     "id": mark.id.uuidString,
@@ -469,10 +442,7 @@ class IdentificationManager {
                 )
             }
         }
-        
-        // 3. Sync Result
         if let result = session.result {
-            print("📤 [IdentificationManager] Queuing result: \(result.id)")
             let resultPayload: [String: Any] = [
                 "id": result.id.uuidString,
                 "session_id": session.id.uuidString,
@@ -488,15 +458,12 @@ class IdentificationManager {
                 localUpdatedAt: result.updated_at,
                 operation: .create
             )
-            
-            // 4. Sync Candidates
             if let candidates = result.candidates {
-                print("📤 [IdentificationManager] Queuing \(candidates.count) candidates")
                 for candidate in candidates {
                     let candidatePayload: [String: Any] = [
                         "id": candidate.id.uuidString,
                         "result_id": result.id.uuidString,
-                        "bird_id": candidate.bird?.id.uuidString ?? NSNull(), // Changed from empty string to NSNull
+                        "bird_id": candidate.bird?.id.uuidString ?? NSNull(),
                         "confidence": candidate.confidence,
                         "rank": candidate.rank ?? NSNull(),
                         "matched_features": candidate.matchScore?.matchedFeatures ?? [],
@@ -518,7 +485,6 @@ class IdentificationManager {
 
     func loadSessionAndFilter(session: IdentificationSession) {
         self.currentSession = session
-        // Reset state manually to avoid `reset()`'s filter run.
         self.tempSelectedAreas = []
         self.selectedLocationId = nil
         self.selectedSizeCategory = nil
@@ -527,11 +493,7 @@ class IdentificationManager {
         self.selectedLocationData = nil
         self.selectedDate = Date()
         self.results = []
-        
-        // This will trigger a filter run and clear field marks.
         self.selectedShape = session.shape
-
-        // Now, load the rest of the session data.
         self.selectedSizeCategory = session.sizeCategory
         if let size = self.selectedSizeCategory {
             let minSize = max(1, size - 1)
@@ -554,8 +516,6 @@ class IdentificationManager {
             self.tempSelectedAreas = sessionMarks.map { $0.area }
         }
         self.selectedFieldMarks = newFieldMarks
-        
-        // Finally, run the filter with the complete state.
         runFilter()
     }
 
@@ -571,9 +531,6 @@ class IdentificationManager {
         selectedDate = Date()
         selectedMenuOptionRawValues = []
         results.removeAll()
-        
-        // Setting selectedShape to nil triggers its `didSet` observer,
-        // which clears `selectedFieldMarks` and runs the filter.
         selectedShape = nil
     }
     

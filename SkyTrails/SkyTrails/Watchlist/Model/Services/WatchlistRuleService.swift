@@ -1,10 +1,3 @@
-//
-//  WatchlistRuleService.swift
-//  SkyTrails
-//
-//  Rule Engine & Automation Logic
-//  Strict MVC Refactoring
-//
 
 import Foundation
 import SwiftData
@@ -20,13 +13,7 @@ final class WatchlistRuleService {
         self.context = context
         self.persistence = persistence
     }
-    
-    // MARK: - Rule Engine
-    
-    /// Apply all active rules to a watchlist and auto-add matching birds
     func applyRules(to watchlistID: UUID) async throws {
-        print("🤖 [RuleService] Applying rules to watchlist \(watchlistID)")
-        
         guard let watchlist = try persistence.fetchWatchlist(id: watchlistID) else {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
@@ -34,38 +21,24 @@ final class WatchlistRuleService {
         let rules = try persistence.fetchRules(watchlistID: watchlistID, activeOnly: true)
         
         guard !rules.isEmpty else {
-            print("⚠️ [RuleService] No active rules found")
             return
         }
-        
-        print("🤖 [RuleService] Found \(rules.count) active rules")
-        
         var candidateBirds: Set<Bird> = []
         
         for rule in rules {
-            print("🔧 [RuleService] Processing rule: \(rule.rule_type.rawValue) (priority: \(rule.priority))")
-            
             let birds = try await applyRule(rule)
             candidateBirds.formUnion(birds)
         }
-        
-        print("🤖 [RuleService] Total candidate birds: \(candidateBirds.count)")
-        
-        // Add birds to watchlist (avoiding duplicates)
         if !candidateBirds.isEmpty {
             let _ = try persistence.addBirdsToWatchlist(
                 watchlistID: watchlistID,
                 birds: Array(candidateBirds),
                 status: .to_observe
             )
-            
-            // Refresh cover image
             watchlist.updateCoverImage()
             try? context.save()
         }
     }
-    
-    // MARK: - Individual Rule Processors
     
     private func applyRule(_ rule: WatchlistRule) async throws -> Set<Bird> {
         guard let params = RuleParameters.from(rule: rule) else {
@@ -85,14 +58,10 @@ final class WatchlistRuleService {
     }
     
     private func applyLocationRule(_ params: LocationRuleParams) async -> Set<Bird> {
-        print("📍 [RuleService] Applying location rule")
-        
         let location = CLLocationCoordinate2D(latitude: params.lat, longitude: params.lon)
         let hotspotManager = HotspotManager(modelContext: context)
         
         var allBirds = Set<Bird>()
-
-        // All weeks (1-52)
         for week in 1...52 {
             let birds = await hotspotManager.getBirdsPresent(
                 at: location,
@@ -101,66 +70,42 @@ final class WatchlistRuleService {
             )
             allBirds.formUnion(birds)
         }
-        
-        print("📍 [RuleService] Location rule found \(allBirds.count) birds")
         return allBirds
     }
     
     private func applyDateRangeRule(_ params: DateRangeRuleParams) throws -> Set<Bird> {
-        print("📅 [RuleService] Applying date range rule")
-        
-        // Get calendar months from date range
         let calendar = Calendar.current
         let startMonth = calendar.component(.month, from: params.startDate)
         let endMonth = calendar.component(.month, from: params.endDate)
-        
-        // Fetch all birds
         let allBirds = try persistence.fetchAllBirds()
-        
-        // Filter birds that are valid during this date range
         let validBirds = allBirds.filter { bird in
             guard let validMonths = bird.validMonths else { return false }
-            
-            // Check if any valid month falls in the range
             if startMonth <= endMonth {
                 return validMonths.contains(where: { $0 >= startMonth && $0 <= endMonth })
             } else {
-                // Range crosses year boundary
                 return validMonths.contains(where: { $0 >= startMonth || $0 <= endMonth })
             }
         }
-        
-        print("📅 [RuleService] Date range rule found \(validBirds.count) birds")
         return Set(validBirds)
     }
     
     private func applySpeciesFamilyRule(_ params: SpeciesFamilyRuleParams) throws -> Set<Bird> {
-        print("🦆 [RuleService] Applying species family rule")
-        
         let allBirds = try persistence.fetchAllBirds()
         
         let matchingBirds = allBirds.filter { bird in
             bird.shape_id == params.shapeId
         }
-        
-        print("🦆 [RuleService] Species family rule found \(matchingBirds.count) birds")
         return Set(matchingBirds)
     }
     
     private func applyMigrationRule(_ params: MigrationPatternRuleParams) throws -> Set<Bird> {
-        print("🛫 [RuleService] Applying migration pattern rule")
-        
         let allBirds = try persistence.fetchAllBirds()
         
         let matchingBirds = allBirds.filter { bird in
             bird.migration_strategy == params.patternKey
         }
-        
-        print("🛫 [RuleService] Migration pattern rule found \(matchingBirds.count) birds")
         return Set(matchingBirds)
     }
-    
-    // MARK: - Rule Validation
     
     func validateRule(type: WatchlistRuleType, parameters: RuleParameters) throws {
         switch (type, parameters) {

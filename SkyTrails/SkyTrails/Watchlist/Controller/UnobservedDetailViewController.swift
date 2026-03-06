@@ -7,19 +7,13 @@ class UnobservedDetailViewController: UIViewController {
 
 	private let manager = WatchlistManager.shared
 	private let locationService = LocationService.shared
-	
-		// MARK: - Dependencies
 	var bird: Bird?
-    var entry: WatchlistEntry? // Added
+    var entry: WatchlistEntry?
 	var watchlistId: UUID?
 	var shouldUseRuleMatching: Bool = false
 	var onSave: ((Bird) -> Void)?
-	
-		// MARK: - Private Properties
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
 	private var selectedLocation: LocationService.LocationData?
-	
-		// MARK: - IBOutlets
 	@IBOutlet weak var suggestionsTableView: UITableView!
 	@IBOutlet weak var birdImageView: UIImageView!
 	@IBOutlet weak var startLabel: UILabel!
@@ -31,8 +25,6 @@ class UnobservedDetailViewController: UIViewController {
 	@IBOutlet weak var locationSearchBar: UISearchBar!
 	@IBOutlet weak var detailsCardView: UIView!
 	@IBOutlet weak var locationCardView: UIView!
-	
-		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
@@ -41,8 +33,6 @@ class UnobservedDetailViewController: UIViewController {
 		setupKeyboardHandling()
 		configureView()
 	}
-	
-		// MARK: - Setup
 	private func setupUI() {
 		title = bird?.name ?? "Add Species"
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
@@ -174,8 +164,6 @@ class UnobservedDetailViewController: UIViewController {
 			}
 		}
 	}
-	
-		// MARK: - Actions
 	@objc private func dismissKeyboard() {
 		view.endEditing(true)
 		suggestionsTableView.isHidden = true
@@ -217,24 +205,10 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapSave() {
-        print("💾 [UnobservedDetailVC] didTapSave() called")
-        
-        // Logic handling
         let notes = notesTextView.text
         let startDate = startDatePicker.date
         let endDate = endDatePicker.date
-        
-        print("📝 [UnobservedDetailVC] Notes: \(notes ?? "nil")")
-        print("📅 [UnobservedDetailVC] Start date: \(startDate)")
-        print("📅 [UnobservedDetailVC] End date: \(endDate)")
-        
         		if let existingEntry = entry {
-        
-        			print("✏️  [UnobservedDetailVC] Editing existing entry: \(existingEntry.id)")
-        
-        			
-        
-        			// Update dates FIRST so they are included when updateEntry triggers a save
         
         			existingEntry.toObserveStartDate = startDate
         
@@ -243,11 +217,8 @@ class UnobservedDetailViewController: UIViewController {
         			
                     do {
                         try manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
-                        
-                        print("✅ [UnobservedDetailVC] Updated existing entry, popping view controller")
                         navigationController?.popViewController(animated: true)
                     } catch {
-                        print("❌ [UnobservedDetailVC] Error updating entry: \(error)")
                     }
         
         			
@@ -255,12 +226,6 @@ class UnobservedDetailViewController: UIViewController {
         			
         
 			} else if let bird = bird {
-        
-        			print("➕ [UnobservedDetailVC] Creating new entry")
-        
-        			print("🐦 [UnobservedDetailVC] Bird: \(bird.commonName)")
-        
-        			
                     do {
                         let location = selectedLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
                         
@@ -272,10 +237,8 @@ class UnobservedDetailViewController: UIViewController {
                                 notes: notes,
                                 asObserved: false
                             )
-                            print("✅ [UnobservedDetailVC] Bird added to \(matchedWatchlistIds.count) watchlist(s) via rule matching")
                         } else {
                             guard let targetWatchlistId = watchlistId else {
-                                print("❌ [UnobservedDetailVC] No target watchlist ID")
                                 return
                             }
                             try manager.addBirds([bird], to: targetWatchlistId, asObserved: false)
@@ -293,10 +256,8 @@ class UnobservedDetailViewController: UIViewController {
                                     locationDisplayName: selectedLocation?.displayName
                                 )
                             }
-                            print("✅ [UnobservedDetailVC] Bird added directly to watchlist: \(targetWatchlistId)")
                         }
                     } catch WatchlistError.noMatchingWatchlists {
-                        print("❌ [UnobservedDetailVC] No matching watchlists found")
                         let alert = UIAlertController(
                             title: "No Matching Watchlists",
                             message: "Bird could not find any matching watchlists",
@@ -306,23 +267,11 @@ class UnobservedDetailViewController: UIViewController {
                         present(alert, animated: true)
                         return
                     } catch {
-                        print("❌ [UnobservedDetailVC] ERROR creating entry: \(error)")
                     }
-        
-        			
-        
-        			print("📞 [UnobservedDetailVC] Calling onSave callback")
-        
         			onSave?(bird)
-        
-        			
-        
-        			print("✅ [UnobservedDetailVC] Complete, popping view controller")
-        
         			navigationController?.popViewController(animated: true)
         
         		} else {
-            print("⚠️  [UnobservedDetailVC] No entry or bird - just popping")
             navigationController?.popViewController(animated: true)
         }
 	}
@@ -345,14 +294,10 @@ class UnobservedDetailViewController: UIViewController {
 		locationSearchBar.resignFirstResponder()
 	}
 }
-
-	// MARK: - CLLocationManagerDelegate
 extension UnobservedDetailViewController: CLLocationManagerDelegate {
 	func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}
 	func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 }
-
-	// MARK: - UITableViewDelegate & DataSource
 extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSource {
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return locationSuggestions.count
@@ -375,7 +320,6 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
 		Task {
 			do {
 				let location = try await locationService.geocode(query: query)
-				// Use the user's selected text (query) for display name, but geocoded coordinates
 				let finalLocation = LocationService.LocationData(
 					displayName: query,
 					lat: location.lat,
@@ -388,8 +332,6 @@ extension UnobservedDetailViewController: UITableViewDelegate, UITableViewDataSo
 		}
 	}
 }
-
-	// MARK: - UISearchBarDelegate
 extension UnobservedDetailViewController: UISearchBarDelegate {
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
 		selectedLocation = nil
@@ -419,8 +361,6 @@ extension UnobservedDetailViewController: UISearchBarDelegate {
 		suggestionsTableView.isHidden = true
 	}
 }
-
-	// MARK: - MKLocalSearchCompleterDelegate
 extension UnobservedDetailViewController: MKLocalSearchCompleterDelegate {
 	func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {}
 }

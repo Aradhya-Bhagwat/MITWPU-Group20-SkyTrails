@@ -109,8 +109,6 @@ class DateandLocationViewController: UIViewController {
    
     @IBAction func nextTapped(_ sender: Any) {
         guard navigationItem.rightBarButtonItem?.isEnabled == true else { return }
-
-        // 1. Sync state to manager
         viewModel.selectedDate = selectedDate
         viewModel.selectedLocation = searchQuery.isEmpty ? nil : searchQuery
         if searchQuery.isEmpty {
@@ -118,17 +116,11 @@ class DateandLocationViewController: UIViewController {
         } else {
             viewModel.registerLocationName(searchQuery, for: viewModel.selectedLocationId)
         }
-        
-        // 2. Trigger the prediction filter
         viewModel.runFilter()
-        
-        // 3. Navigate to next step
         delegate?.didFinishStep()
     }
     
     private func updateLocationSelection(_ name: String) {
-        print("DateandLocationViewController: updateLocationSelection() called with name: '\(name)'.")
-        
         viewModel.selectedLocation = name
         viewModel.registerLocationName(name, for: viewModel.selectedLocationId)
         searchQuery = name
@@ -161,8 +153,6 @@ class DateandLocationViewController: UIViewController {
         }
     }
 }
-
-// MARK: - TableView DataSource & Delegate
 extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -183,7 +173,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
             cell.delegate = self
-            cell.datePicker.date = selectedDate // Set the date picker's date
+            cell.datePicker.date = selectedDate
             let dateRowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
             cell.selectionStyle = .none
             cell.backgroundColor = dateRowColor
@@ -236,7 +226,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             cell.imageView?.tintColor = .systemBlue
             cell.backgroundColor = rowColor
             cell.contentView.backgroundColor = rowColor
-            cell.selectionStyle = .none // Add this line
+            cell.selectionStyle = .none
             let selectedBackgroundView = UIView()
             selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
             cell.selectedBackgroundView = selectedBackgroundView
@@ -259,13 +249,10 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
                         self.updateLocationSelection(locationData.displayName)
                     }
                 } catch {
-                    // Fallback to the suggestion title if geocoding fails for any reason
                     await MainActor.run {
                         self.viewModel.selectedLocationId = suggestion.id
                         self.updateLocationSelection(suggestion.title)
                     }
-                                    
-                    print("Could not geocode suggestion '\(suggestion.fullText)': \(error)")
                 }
             }
         }
@@ -283,8 +270,6 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         }
     }
 }
-
-// MARK: - Search Logic
 extension DateandLocationViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchQuery = searchText
@@ -299,7 +284,6 @@ extension DateandLocationViewController: UISearchBarDelegate {
                 self.searchResults = await locationService.getAutocompleteSuggestions(for: searchText)
             }
             await MainActor.run {
-                // Perform smart updates to keep the search bar (row 0) active
                 let oldTotalRows = self.dateandlocationTableView.numberOfRows(inSection: 1)
                 let oldSuggestionCount = max(0, oldTotalRows - 1)
                 let newSuggestionCount = self.searchResults.count

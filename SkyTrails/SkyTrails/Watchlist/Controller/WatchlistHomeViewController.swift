@@ -1,9 +1,3 @@
-	//
-	//  WatchlistHomeViewController.swift
-	//  SkyTrails
-	//
-	//  Created by SDC-USER on 24/11/25.
-	//
 
 import UIKit
 
@@ -11,14 +5,10 @@ import UIKit
 class WatchlistHomeViewController: UIViewController {
 	
 	private let repository: WatchlistRepository = WatchlistManager.shared
-	
-		// UI State
 	private var myWatchlist: WatchlistSummaryDTO?
 	private var customWatchlists: [WatchlistSummaryDTO] = []
 	private var sharedWatchlists: [WatchlistSummaryDTO] = []
 	private var globalStats: WatchlistStatsDTO?
-	
-		// MARK: - Types
 	enum WatchlistSection: Int, CaseIterable {
 		case myWatchlist
 		case customWatchlist
@@ -53,9 +43,6 @@ class WatchlistHomeViewController: UIViewController {
 	
 	
 	@IBOutlet weak var summaryCardCollectionView: UICollectionView!
-
-	
-		// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
@@ -71,44 +58,27 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func loadData() {
-		print("📱 [ViewController] Starting loadData()...")
 		Task {
 			do {
 				let wasEmptyState = self.isMyWatchlistEmptyState
-				print("📱 [ViewController] Calling repository.loadDashboardData()...")
 				let data = try await repository.loadDashboardData()
-				
-				print("📱 [ViewController] Data received:")
-				print("   - My Watchlist: \(data.myWatchlist?.title ?? "nil")")
-				print("   - Custom: \(data.custom.count) watchlists")
-				print("   - Shared: \(data.shared.count) watchlists")
-				print("   - Global Stats: \(data.globalStats.observedCount)/\(data.globalStats.totalCount)")
 				self.myWatchlist = data.myWatchlist
 				self.customWatchlists = data.custom
 				self.sharedWatchlists = data.shared
 				self.globalStats = data.globalStats
-
-				// Prefetch bird images from Supabase for faster cell loading
 				self.prefetchBirdImages()
 
 				let isNowEmptyState = self.isMyWatchlistEmptyState
 				if wasEmptyState != isNowEmptyState {
 					self.summaryCardCollectionView.setCollectionViewLayout(self.createCompositionalLayout(), animated: false)
 				}
-				
-				print("📱 [ViewController] Reloading collection view...")
 				self.summaryCardCollectionView.reloadData()
-				print("📱 [ViewController] Collection view reloaded")
 			} catch {
-				print("❌ [ViewController] Error loading data: \(error)")
 			}
 		}
 	}
 	
-	// MARK: - Image Prefetching
-	
 	private func prefetchBirdImages() {
-		// Collect all unique bird image names from watchlists
 		var imageKeys: [String] = []
 		
 		if let myWatchlist = myWatchlist {
@@ -126,8 +96,6 @@ class WatchlistHomeViewController: UIViewController {
 				imageKeys.append(coverImage)
 			}
 		}
-		
-		// Remove duplicates and prefetch
 		let uniqueKeys = Array(Set(imageKeys))
 		Task {
 			await IdentificationImageService.shared.prefetch(keys: uniqueKeys)
@@ -139,7 +107,6 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func setupCollectionView() {
-			// Layout must be set before data source assignments
 		summaryCardCollectionView.collectionViewLayout = createCompositionalLayout()
 		summaryCardCollectionView.dataSource = self
 		summaryCardCollectionView.delegate = self
@@ -148,14 +115,11 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func registerCells() {
-			// Headers - Use new header with plus button
 		summaryCardCollectionView.register(
 			UINib(nibName: "WatchlistSectionWithPlusCollectionReusableView", bundle: nil),
 			forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
 			withReuseIdentifier: WatchlistSectionWithPlusCollectionReusableView.identifier
 		)
-		
-			// Cells
 		let cells = [
 			CustomWatchlistCollectionViewCell.identifier,
 			SharedWatchlistCollectionViewCell.identifier,
@@ -178,8 +142,6 @@ class WatchlistHomeViewController: UIViewController {
 		summaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
 	}
 }
-
-// MARK: - User Actions
 extension WatchlistHomeViewController {
 	
 	@IBAction func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
@@ -258,7 +220,6 @@ extension WatchlistHomeViewController {
 				let id = try await repository.ensureMyWatchlistExists()
 				navigateToObserved(watchlistId: id)
 			} catch {
-				print("Failed to ensure My Watchlist exists: \(error)")
 			}
 		}
 	}
@@ -287,8 +248,6 @@ extension WatchlistHomeViewController {
 	
 	
 }
-
-// MARK: - Navigation
 extension WatchlistHomeViewController {
 	
 	private func navigateToEdit(watchlistId: UUID, type: WatchlistType) {
@@ -306,19 +265,16 @@ extension WatchlistHomeViewController {
 		guard let vc = sb.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
 		
 		vc.watchlistType = .custom
-		vc.watchlistIdToEdit = nil  // nil means creating a new watchlist
+		vc.watchlistIdToEdit = nil
 		
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
 	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-			// Handle Grid Segues
 		if segue.identifier == "ShowCustomWatchlistGrid" || segue.identifier == "ShowSharedWatchlistGrid" {
 			return
 		}
-		
-			// Handle Detail Segue
 		if segue.identifier == "ShowSmartWatchlist",
 		   let destVC = segue.destination as? SmartWatchlistViewController {
 			
@@ -342,8 +298,6 @@ extension WatchlistHomeViewController {
 		}
 	}
 }
-
-// MARK: - UICollectionViewDataSource & Delegate
 extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 	
 	func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -352,7 +306,6 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	
 	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
 		guard let sectionType = WatchlistSection(rawValue: section) else {
-			print("❌ [DataSource] Invalid section: \(section)")
 			return 0
 		}
 		
@@ -365,8 +318,6 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 			case .sharedWatchlist:
 				count = sharedWatchlists.count
 		}
-		
-		print("📊 [DataSource] Section \(sectionType.title): \(count) items")
 		return count
 	}
 	
@@ -441,8 +392,6 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 		}
 	}
 }
-
-// MARK: - Cell Configuration Helpers
 extension WatchlistHomeViewController {
 
 	private func myWatchlistEmptyStateActions() -> [(title: String, color: UIColor, icon: String, isEnabled: Bool)] {
@@ -514,16 +463,13 @@ extension WatchlistHomeViewController {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = myWatchlist {
-			// Load images: user photos from disk first, then bundled assets
 			let images = watchlist.previewImages.compactMap { imagePath -> UIImage? in
-				// 1. Try loading from Documents/ObservedBirdPhotos/ first
 				let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 				let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 				let fileURL = photoDir.appendingPathComponent(imagePath)
 				if let diskImage = UIImage(contentsOfFile: fileURL.path) {
 					return diskImage
 				}
-				// 2. Fall back to bundled asset
 				return UIImage(named: imagePath)
 			}
 			
@@ -568,14 +514,12 @@ extension WatchlistHomeViewController {
 				mainImage: image,
 				speciesCount: dto.stats.totalCount,
 				observedCount: dto.stats.observedCount,
-				userImages: [] // Placeholder
+				userImages: []
 			)
 		}
 		return cell
 	}
 }
-
-// MARK: - Compositional Layout
 extension WatchlistHomeViewController {
 	
 	private func createCompositionalLayout() -> UICollectionViewLayout {
@@ -592,13 +536,10 @@ extension WatchlistHomeViewController {
 	
 	private func layoutMyWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
 		let containerWidth = env.container.effectiveContentSize.width
-		let isWide = containerWidth > 700 // iPad / large-class width
+		let isWide = containerWidth > 700
 
 		if !isMyWatchlistEmptyState {
 			if isWide {
-				// iPad layout: 80% MyWatchlist card + 20% vertical action cells (side by side)
-
-				// Main card item (80% width)
 				let mainCardItem = NSCollectionLayoutItem(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(0.8),
@@ -606,8 +547,6 @@ extension WatchlistHomeViewController {
 					)
 				)
 				mainCardItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 4)
-
-				// Action cell items (each takes 50% of vertical group)
 				let actionItem = NSCollectionLayoutItem(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
@@ -615,8 +554,6 @@ extension WatchlistHomeViewController {
 					)
 				)
 				actionItem.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 0)
-
-				// Vertical group for the 2 action cells (20% width)
 				let actionGroup = NSCollectionLayoutGroup.vertical(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(0.2),
@@ -624,8 +561,6 @@ extension WatchlistHomeViewController {
 					),
 					subitems: [actionItem, actionItem]
 				)
-
-				// Horizontal container: main card + action group
 				let containerGroup = NSCollectionLayoutGroup.horizontal(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
@@ -640,10 +575,6 @@ extension WatchlistHomeViewController {
 				return section
 
 			} else {
-				// iPhone layout: MyWatchlist full width on row 1,
-				// two action cells side by side on row 2
-
-				// Row 1: Main card full width
 				let mainCardItem = NSCollectionLayoutItem(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
@@ -659,8 +590,6 @@ extension WatchlistHomeViewController {
 					),
 					subitems: [mainCardItem]
 				)
-
-				// Row 2: Two action cells side by side
 				let actionItem = NSCollectionLayoutItem(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(0.5),
@@ -677,8 +606,6 @@ extension WatchlistHomeViewController {
 					subitems: [actionItem, actionItem]
 				)
 				actionGroup.interItemSpacing = .fixed(8)
-
-				// Vertical outer group: row 1 (main card) + row 2 (actions)
 				let outerGroup = NSCollectionLayoutGroup.vertical(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
@@ -695,7 +622,6 @@ extension WatchlistHomeViewController {
 			}
 
 		} else {
-			// Empty state: exact 8 + card + 8 + card + 8 + card + 8
 			let actionCount = max(myWatchlistEmptyStateActions().count, 1)
 			let actionGroup = NSCollectionLayoutGroup.custom(
 				layoutSize: NSCollectionLayoutSize(
@@ -764,7 +690,7 @@ extension WatchlistHomeViewController {
 	
 	private func layoutSharedWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
 		let containerWidth = env.container.effectiveContentSize.width
-		let isWide = containerWidth > 700          // iPad / large-class width
+		let isWide = containerWidth > 700
 		
 		let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(
 			widthDimension: .fractionalWidth(1.0),
@@ -779,11 +705,9 @@ extension WatchlistHomeViewController {
 		
 		let group: NSCollectionLayoutGroup
 		if isWide {
-			// 2-column grid on iPad
 			group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 2)
 			group.interItemSpacing = .fixed(12)
 		} else {
-			// Single column on iPhone
 			group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, repeatingSubitem: item, count: 1)
 		}
 		
@@ -809,8 +733,6 @@ extension WatchlistHomeViewController {
 		return NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
 	}
 }
-
-// MARK: - Header Delegate
 extension WatchlistHomeViewController: SectionHeaderDelegate {
 	
 	func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -823,21 +745,17 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		) as! WatchlistSectionWithPlusCollectionReusableView
 		
 		if let sectionType = WatchlistSection(rawValue: indexPath.section) {
-			// Determine button visibility based on section
 			var showChevron = false
 			var showPlus = false
 			
 			switch sectionType {
 			case .myWatchlist:
-				// Show only title, no buttons
 				showChevron = false
 				showPlus = false
 			case .customWatchlist:
-				// Show both chevron and plus
 				showChevron = shouldShowHeader(for: .customWatchlist)
 				showPlus = shouldShowHeader(for: .customWatchlist)
 			case .sharedWatchlist:
-				// Show both chevron and plus
 				showChevron = shouldShowHeader(for: .sharedWatchlist)
 				showPlus = shouldShowHeader(for: .sharedWatchlist)
 			}
@@ -870,10 +788,6 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		}
 	}
 }
-
-// MARK: - Extensions
-
-// Helper to avoid hardcoding reuse identifiers
 extension UICollectionReusableView {
 	static var reuseIdentifier: String {
 		return String(describing: self)

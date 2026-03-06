@@ -1,9 +1,3 @@
-//
-//  q_3SpotsToVisitCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 25/11/25.
-//
 
 import UIKit
 
@@ -105,8 +99,8 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
             let text = "\(count) Species active now"
             dateLabel2.attributedText = createIconString(
                 text: text,
-                iconName: "bird.fill", // 💡 Changed to bird icon
-                color: .systemGreen,   // 💡 Changed to green to indicate "live" data
+                iconName: "bird.fill",
+                color: .systemGreen,
                 fontSize: fontSize
             )
         }
@@ -135,7 +129,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     func configure(image: UIImage?, title: String, speciesCount: Int) {
             self.birdImageView2.image = image
             self.titleLabel2.text = title
-            self.currentSpeciesCount = speciesCount // Save the state
+            self.currentSpeciesCount = speciesCount
             
             updateSpeciesLabel(count: speciesCount, fontSize: dateLabel2.font.pointSize)
         }

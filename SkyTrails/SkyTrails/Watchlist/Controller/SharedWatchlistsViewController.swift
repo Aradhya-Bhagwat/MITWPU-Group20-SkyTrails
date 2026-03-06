@@ -1,9 +1,3 @@
-//
-//  SharedWatchlistsViewController.swift
-//  SkyTrails
-//
-//  Merged / cleaned version
-//
 
 import UIKit
 import SwiftData
@@ -12,26 +6,16 @@ import SwiftData
 class SharedWatchlistsViewController: UIViewController {
 
     private let manager = WatchlistManager.shared
-
-    // MARK: - Outlets
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var searchBar: UISearchBar!
-
-    // MARK: - Types
     enum SortOption {
         case nameAZ, nameZA, date
     }
-
-    // MARK: - Properties
     var filteredWatchlists: [Watchlist] = []
     var currentSortOption: SortOption = .nameAZ
-
-    // Computed property to access shared watchlists from Singleton
     var allSharedWatchlists: [Watchlist] {
         return (try? manager.fetchWatchlists(type: .shared)) ?? []
     }
-
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -60,18 +44,12 @@ class SharedWatchlistsViewController: UIViewController {
             }
         }
     }
-
-    // MARK: - Setup
     private func setupUI() {
         title = "Shared Watchlists"
         view.backgroundColor = .systemGroupedBackground
         navigationItem.largeTitleDisplayMode = .never
-
-        // Search Bar
         searchBar.searchBarStyle = .minimal
         searchBar.delegate = self
-
-        // Collection View Layout
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .vertical
         flowLayout.minimumLineSpacing = 16
@@ -81,8 +59,6 @@ class SharedWatchlistsViewController: UIViewController {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .clear
-
-        // Register Cell (if using nib)
         let nib = UINib(nibName: SharedWatchlistCollectionViewCell.identifier, bundle: nil)
         collectionView.register(nib, forCellWithReuseIdentifier: SharedWatchlistCollectionViewCell.identifier)
     }
@@ -91,8 +67,6 @@ class SharedWatchlistsViewController: UIViewController {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         collectionView.addGestureRecognizer(longPress)
     }
-
-    // MARK: - Data Management
     func refreshData() {
         var list = allSharedWatchlists
 
@@ -106,15 +80,12 @@ class SharedWatchlistsViewController: UIViewController {
         case .nameZA:
             list.sort { ($0.title ?? "").localizedCaseInsensitiveCompare($1.title ?? "") == .orderedDescending }
         case .date:
-            // Sorting by created_at or startDate as 'dateRange' is not direct property
             list.sort { ($0.startDate ?? Date.distantPast) < ($1.startDate ?? Date.distantPast) }
         }
 
         filteredWatchlists = list
         collectionView.reloadData()
     }
-
-    // MARK: - Actions
     @IBAction func addTapped(_ sender: Any) {
         navigateToEdit(watchlist: nil)
     }
@@ -137,8 +108,6 @@ class SharedWatchlistsViewController: UIViewController {
         }
 
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        // Popover for iPad
         if let popover = alert.popoverPresentationController {
             popover.sourceView = sender
             popover.sourceRect = sender.bounds
@@ -157,8 +126,6 @@ class SharedWatchlistsViewController: UIViewController {
             showOptions(for: shared, at: indexPath)
         }
     }
-
-    // MARK: - Navigation Helpers
     private func navigateToEdit(watchlist: Watchlist?) {
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         guard let vc = storyboard.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else {
@@ -211,8 +178,6 @@ class SharedWatchlistsViewController: UIViewController {
         present(alert, animated: true)
     }
 }
-
-// MARK: - UICollectionView DataSource & Delegate
 extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -225,20 +190,11 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         }
 
         let item = filteredWatchlists[indexPath.row]
-
-        // Map Shares to Avatars (Assuming 'shares' relationship exists or using placeholders)
-        // Since we don't have User/Avatar data fully set up, we'll pass generic icons if empty
-        let userImages: [UIImage] = [] // Placeholder
-
-        // Map Stats (observed vs total entries)
+        let userImages: [UIImage] = []
         let stats = (try? manager.getStats(for: item.id)) ?? (observed: 0, total: 0)
-
-        // Get Image
         var image: UIImage? = nil
         if let path = item.coverImagePath {
-            image = UIImage(named: path) // Fallback to bundle asset
-            
-            // Try loading from documents if not in bundle
+            image = UIImage(named: path)
             if image == nil {
                 let fileManager = FileManager.default
                 let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -251,7 +207,7 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         cell.configure(
             title: item.title ?? "Shared Watchlist",
             location: item.location ?? "Unknown",
-            dateRange: "Oct - Nov", // Placeholder or derived from startDate/endDate
+            dateRange: "Oct - Nov",
             mainImage: image,
             speciesCount: stats.total,
             observedCount: stats.observed,
@@ -281,8 +237,6 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         navigationController?.pushViewController(smartVC, animated: true)
     }
 }
-
-// MARK: - UISearchBarDelegate
 extension SharedWatchlistsViewController: UISearchBarDelegate {
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {

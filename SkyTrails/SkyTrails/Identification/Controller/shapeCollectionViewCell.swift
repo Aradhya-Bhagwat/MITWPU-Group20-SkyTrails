@@ -1,9 +1,3 @@
-//
-//  shapeCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by Disha Jain on 18/01/26.
-//
 
 import UIKit
 
@@ -18,7 +12,6 @@ class shapeCollectionViewCell: UICollectionViewCell {
     }
 	func configure(with shapeName: String, imageName: String) {
 		shapeNameLabel.text = shapeName
-		print("imageName: \(imageName)")
 		shapeImageView.image = UIImage(named: imageName)
 	}
 

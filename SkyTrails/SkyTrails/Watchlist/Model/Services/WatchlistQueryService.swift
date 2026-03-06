@@ -1,10 +1,3 @@
-//
-//  WatchlistQueryService.swift
-//  SkyTrails
-//
-//  Complex queries, filtering, sorting, and aggregation logic
-//  Strict MVC Refactoring
-//
 
 import Foundation
 import SwiftData
@@ -21,47 +14,27 @@ final class WatchlistQueryService {
         self.persistence = persistence
     }
     
-    // MARK: - Dashboard Data
-    
     func loadDashboardData() async throws -> (
         myWatchlist: WatchlistSummaryDTO?,
         custom: [WatchlistSummaryDTO],
         shared: [WatchlistSummaryDTO],
         globalStats: WatchlistStatsDTO
     ) {
-        print("📊 [QueryService] Loading dashboard data...")
-        
         let allLists = try persistence.fetchWatchlists()
-        print("📊 [QueryService] Fetched \(allLists.count) total watchlists")
-        
-        // Filter & Map using entity extensions
         let customLists = allLists.filter { $0.type == .custom }.map { $0.toSummary() }
         let sharedLists = allLists.filter { $0.type == .shared }.map { $0.toSummary() }
-        
-        print("📊 [QueryService] Custom: \(customLists.count), Shared: \(sharedLists.count)")
-        
-        // Build My Watchlist (Virtual Aggregation)
         let myWatchlist = buildMyWatchlistDTO(from: allLists)
-        print("📊 [QueryService] My Watchlist: \(myWatchlist.stats.observedCount)/\(myWatchlist.stats.totalCount)")
-        
-        // Calculate Global Stats
         let allEntries = allLists.flatMap { $0.entries ?? [] }
         let globalStats = calculateStats(from: allEntries)
-        print("📊 [QueryService] Global Stats: \(globalStats.observedCount)/\(globalStats.totalCount)")
-        
         return (myWatchlist, customLists, sharedLists, globalStats)
     }
     
     func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
-        // Aggregate ALL entries from ALL watchlists
         let allEntries = allLists.flatMap { $0.entries ?? [] }
-        
-        // Remove duplicates by bird ID (keep observed status if exists)
         var uniqueEntries: [UUID: WatchlistEntry] = [:]
         for entry in allEntries {
             if let birdId = entry.bird?.id {
                 if let existing = uniqueEntries[birdId] {
-                    // Prefer observed status
                     if entry.status == .observed && existing.status != .observed {
                         uniqueEntries[birdId] = entry
                     }
@@ -73,16 +46,11 @@ final class WatchlistQueryService {
         
         let uniqueEntriesArray = Array(uniqueEntries.values)
         let stats = calculateStats(from: uniqueEntriesArray)
-        
-        // Get preview images (up to 4 unique birds)
-        // Priority: user photos first, then bundled assets
         let previewImages = uniqueEntriesArray
             .compactMap { entry -> String? in
-                // 1. Try user photo first
                 if let photoPath = entry.photos?.first?.imagePath {
                     return photoPath
                 }
-                // 2. Fall back to bundled asset
                 return entry.bird?.staticImageName
             }
             .prefix(4)
@@ -100,8 +68,6 @@ final class WatchlistQueryService {
         )
     }
     
-    // MARK: - Filtered & Sorted Queries
-    
     func fetchEntries(
         identifier: WatchlistIdentifier,
         filter: WatchlistQueryFilter = WatchlistQueryFilter(),
@@ -110,7 +76,6 @@ final class WatchlistQueryService {
         let entries: [WatchlistEntry]
         
         if identifier.isVirtual {
-            // Virtual "My Watchlist" - aggregate all entries
             let allLists = try persistence.fetchWatchlists()
             entries = allLists.flatMap { $0.entries ?? [] }
         } else if let uuid = identifier.uuid {
@@ -118,8 +83,6 @@ final class WatchlistQueryService {
         } else {
             return []
         }
-        
-        // Apply filters
         var filtered = entries
         
         if let status = filter.status {
@@ -154,16 +117,11 @@ final class WatchlistQueryService {
                 return observationDate >= dateRange.start && observationDate <= dateRange.end
             }
         }
-        
-        // Convert to DTOs
         return filtered.compactMap { $0.toDomain() }
     }
     
-    // MARK: - Stats
-    
     func getStats(for identifier: WatchlistIdentifier) throws -> WatchlistStatsDTO {
         if identifier.isVirtual {
-            // Aggregate stats from all watchlists
             let allLists = try persistence.fetchWatchlists()
             let allEntries = allLists.flatMap { $0.entries ?? [] }
             return calculateStats(from: allEntries)
@@ -191,8 +149,6 @@ final class WatchlistQueryService {
         )
     }
     
-    // MARK: - Location-Based Queries
-    
     func getEntriesObservedNear(
         location: CLLocationCoordinate2D,
         radiusInKm: Double = 10.0,
@@ -206,11 +162,7 @@ final class WatchlistQueryService {
         } else {
             allEntries = try persistence.fetchAllEntries().filter { $0.status == .observed }
         }
-        
-        // Filter entries with location data
         let withLocation = allEntries.filter { $0.lat != nil && $0.lon != nil }
-        
-        // Geospatial filter
         let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
         let nearby = withLocation.filter { entry in
             guard let lat = entry.lat, let lon = entry.lon else { return false }
@@ -220,8 +172,6 @@ final class WatchlistQueryService {
         
         return nearby.compactMap { $0.toDomain() }
     }
-    
-    // MARK: - Date Range Queries
     
     func getEntriesInDateRange(
         start: Date,
@@ -236,15 +186,11 @@ final class WatchlistQueryService {
         } else {
             entries = try persistence.fetchAllEntries().filter { $0.status == .to_observe }
         }
-        
-        // Filter by date range overlap
         let filtered = entries.filter { entry in
             guard let rangeStart = entry.toObserveStartDate,
                   let rangeEnd = entry.toObserveEndDate else {
                 return false
             }
-            
-            // Check if ranges overlap
             return rangeStart <= end && rangeEnd >= start
         }
         
@@ -261,31 +207,23 @@ final class WatchlistQueryService {
         return try getEntriesInDateRange(start: weekStart, end: weekEnd, watchlistID: watchlistID)
     }
     
-    // MARK: - Integration Queries (Home Module)
-    
     func getUpcomingBirds(
         userLocation: CLLocationCoordinate2D,
         currentWeek: Int,
         lookAheadWeeks: Int = 4,
         radiusInKm: Double = 50.0
     ) async throws -> [UpcomingBirdResult] {
-        
-        // Get all watchlist entries with notifications enabled
         let allEntries = try persistence.fetchAllEntries()
         let notifyEntries = allEntries.filter {
             $0.notify_upcoming && $0.status == .to_observe
         }
-        
-        // For each bird, check if it's present at user's location
         var results: [UpcomingBirdResult] = []
         let hotspotManager = HotspotManager(modelContext: context)
         
         for entry in notifyEntries {
             guard let bird = entry.bird else { continue }
-            
-            // Check weeks in the upcoming window
             for weekOffset in 0...lookAheadWeeks {
-                let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1 // Wrap around year
+                let checkWeek = ((currentWeek + weekOffset - 1) % 52) + 1
                 
                 let presentBirds = await hotspotManager.getBirdsPresent(
                     at: userLocation,
@@ -301,7 +239,7 @@ final class WatchlistQueryService {
                         daysUntil: weekOffset * 7,
                         migrationDateRange: nil
                     ))
-                    break // Only add each bird once
+                    break
                 }
             }
         }
@@ -309,8 +247,6 @@ final class WatchlistQueryService {
         return results.sorted { $0.daysUntil < $1.daysUntil }
     }
 }
-
-// MARK: - Supporting Types
 
 struct UpcomingBirdResult: Identifiable {
     let id = UUID()

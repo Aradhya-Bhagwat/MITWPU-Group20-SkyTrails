@@ -9,16 +9,12 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     var viewModel: IdentificationManager!
     var selectedSizeIndex: Int?
     var filteredShapes: [BirdShape] = []
-    
-    // Local state to track selection
     var selectedShapeId: String?
 
     weak var delegate: IdentificationFlowStepDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // filteredShapes will reflect the current selected size from the viewModel
         filteredShapes = viewModel.availableShapesForSelectedSize()
         selectedShapeId = viewModel.selectedShapeId
         
@@ -34,8 +30,6 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     private func setupCollectionView() {
         shapeCollectionView.delegate = self
         shapeCollectionView.dataSource = self
-        
-        // Match the class name 'shapeCollectionViewCell' from your original code
         let nib = UINib(nibName: "shapeCollectionViewCell", bundle: nil)
         shapeCollectionView.register(nib, forCellWithReuseIdentifier: "shapeCell")
     }
@@ -47,8 +41,6 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         layout.sectionInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         shapeCollectionView.collectionViewLayout = layout
     }
-
-    // MARK: - CollectionView Logic (Original Logic Preserved)
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else { return .zero }
@@ -82,11 +74,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as! shapeCollectionViewCell
         
         let shape = filteredShapes[indexPath.item]
-        
-        // Using 'icon' as per your model/seeder
         cell.configure(with: shape.name, imageName: shape.icon)
-        
-        // Compare against local selectedShapeId
         let isSelected = (shape.id == selectedShapeId)
         updateCellUI(cell, isSelected: isSelected)
         
@@ -133,17 +121,11 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.item]
-        
-        // 1. Sync the actual object to the ViewModel
         viewModel.selectedShape = selectedShape
-        
-        // 2. Update local UI state
         self.selectedShapeId = selectedShape.id
         updateNextButtonState()
         
         collectionView.reloadData()
-        
-        // 3. Proceed to next step
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.delegate?.didTapShapes()
         }

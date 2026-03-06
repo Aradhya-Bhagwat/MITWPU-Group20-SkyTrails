@@ -1,9 +1,3 @@
-//
-//  KeychainManager.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 02/02/26.
-//
 
 import Foundation
 import Security

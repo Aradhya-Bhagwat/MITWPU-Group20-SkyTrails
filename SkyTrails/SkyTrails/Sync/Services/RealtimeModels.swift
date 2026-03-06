@@ -1,22 +1,12 @@
-//
-//  RealtimeModels.swift
-//  SkyTrails
-//
-//  Decodable structs for Supabase Realtime payloads
-//
 
 import Foundation
 import SwiftData
-
-// MARK: - Realtime Event Types
 
 enum RealtimeEventType: String, Decodable {
     case insert = "INSERT"
     case update = "UPDATE"
     case delete = "DELETE"
 }
-
-// MARK: - Realtime Payload
 
 struct RealtimePayload: Decodable {
     let type: RealtimeEventType
@@ -33,8 +23,6 @@ struct RealtimePayload: Decodable {
         case oldRecord = "old_record"
     }
 }
-
-// MARK: - JSON Value (Flexible Decoding)
 
 enum JSONValue: Decodable {
     case string(String)
@@ -92,8 +80,6 @@ enum JSONValue: Decodable {
     }
 }
 
-// MARK: - Record Extraction Helpers
-
 extension [String: JSONValue] {
     func string(for key: String) -> String? {
         self[key]?.stringValue
@@ -120,16 +106,12 @@ extension [String: JSONValue] {
     }
 }
 
-// MARK: - Supabase Realtime Message
-
 struct RealtimeMessage: Decodable {
     let topic: String
     let event: String
     let payload: RealtimePayload
     let ref: String?
 }
-
-// MARK: - Channel Subscription
 
 struct RealtimeChannel: Encodable {
     let topic: String
@@ -181,7 +163,7 @@ struct RealtimePresenceConfig: Encodable {
 }
 
 struct RealtimePostgresChange: Encodable {
-    let event: String  // "*", "INSERT", "UPDATE", "DELETE"
+    let event: String
     let schema: String = "public"
     let table: String
     
@@ -190,8 +172,6 @@ struct RealtimePostgresChange: Encodable {
         self.table = table
     }
 }
-
-// MARK: - Heartbeat
 
 struct RealtimeHeartbeat: Encodable {
     let topic: String = "phoenix"

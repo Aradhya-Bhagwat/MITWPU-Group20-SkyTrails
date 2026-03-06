@@ -1,7 +1,3 @@
-//
-//  Bird.swift
-//  SkyTrails
-//
 
 import Foundation
 import CoreLocation
@@ -44,11 +40,9 @@ final class Bird {
     var commonName: String
     var scientificName: String
     var staticImageName: String
-    
-    // Taxonomy & Details
     var family: String?
     var order_name: String?
-    var descriptionText: String? // 'description' in schema
+    var descriptionText: String?
     var conservation_status: String?
     
    
@@ -58,28 +52,18 @@ final class Bird {
     var validLocations: [String]?
     var validMonths: [Int]?
     var likelySpot: String?
-    // Legacy denormalized column; kept for migration compatibility.
     var shape_id: String?
     var size_category: Int?
-    // Legacy denormalized column; kept for migration compatibility.
     var fieldMarkData: [BirdFieldMarkData]? = []
 
     var shape: BirdShape?
 
     @Relationship(deleteRule: .cascade)
     var fieldMarkLinks: [BirdFieldMarkVariantLink]? = []
-    
-    // MARK: - Relationships
-    
-    // Identification
     @Relationship(deleteRule: .nullify, inverse: \IdentificationResult.bird)
     var identificationResults: [IdentificationResult]? = []
     @Relationship(deleteRule: .cascade, inverse: \IdentificationCandidate.bird)
     var identificationCandidates: [IdentificationCandidate]? = []
-    
-    // Watchlist Integration (NEW)
-    // .nullify means: if bird is deleted, entries stay but bird reference becomes nil
-    // This prevents deleting bird from deleting all watchlist entries
     @Relationship(deleteRule: .nullify, inverse: \WatchlistEntry.bird)
     var watchlistEntries: [WatchlistEntry]? = []
   

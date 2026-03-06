@@ -1,9 +1,3 @@
-//
-//  CommunityObservationViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 08/01/26.
-//
 
 import UIKit
 
@@ -66,7 +60,6 @@ class CommunityObservationViewController: UIViewController {
     }
     
     func loadData(for id: String) {
-        print("Observation with ID \(id) not found.")
     }
     
     private func configureView(with observation: CommunityObservation) {

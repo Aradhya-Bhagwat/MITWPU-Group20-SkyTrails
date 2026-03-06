@@ -1,9 +1,3 @@
-//
-//  sightablityGraph.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 20/02/26.
-//
 
 import UIKit
 
@@ -76,8 +70,6 @@ final class SightabilityGraphView: UIView {
         }
 
         clearTextLayers()
-
-        // Draw axes
         let yAxisPath = UIBezierPath()
         yAxisPath.move(to: CGPoint(x: rect.minX, y: rect.minY))
         yAxisPath.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
@@ -87,8 +79,6 @@ final class SightabilityGraphView: UIView {
         xAxisPath.move(to: CGPoint(x: rect.minX, y: rect.maxY))
         xAxisPath.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         xAxisLayer.path = xAxisPath.cgPath
-
-        // Draw Y grid + labels to represent 1-100%
         let yTicks = [1, 25, 50, 75, 100]
         let gridPath = UIBezierPath()
         for tick in yTicks {
@@ -103,8 +93,6 @@ final class SightabilityGraphView: UIView {
             )
         }
         gridLayer.path = gridPath.cgPath
-
-        // Draw X month labels Jan to Dec
         let monthStep = rect.width / 11.0
         for (index, month) in monthLabels.enumerated() {
             let x = rect.minX + CGFloat(index) * monthStep
@@ -115,8 +103,6 @@ final class SightabilityGraphView: UIView {
                 alignment: .center
             )
         }
-
-        // Y axis title
         addVerticalTextLayer(
             text: "Percentage of\nabundance",
             center: CGPoint(x: 16, y: rect.midY),

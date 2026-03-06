@@ -1,9 +1,3 @@
-//
-//  BirdDatabaseSeeder.swift
-//  SkyTrails
-//
-//  Seeds Bird entities from bird_database.json
-//
 
 import Foundation
 import SwiftData
@@ -49,7 +43,6 @@ final class BirdDatabaseSeeder {
     func seed(modelContext: ModelContext) throws {
         let hasSeededKey = "kBirdDatabaseSeeded_v2"
         if UserDefaults.standard.bool(forKey: hasSeededKey) {
-            print("ℹ️ [BirdDatabaseSeeder] Bird database already seeded. Skipping.")
             return
         }
 
@@ -201,7 +194,6 @@ final class BirdDatabaseSeeder {
 
         try modelContext.save()
         UserDefaults.standard.set(true, forKey: hasSeededKey)
-        print("✅ [BirdDatabaseSeeder] Seeded \(payload.birds.count) birds from bird_database.json")
     }
 
     @discardableResult

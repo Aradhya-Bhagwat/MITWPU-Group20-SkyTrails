@@ -1,9 +1,3 @@
-//
-//  ResultCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by Disha Jain on 19/01/26.
-//
 
 import UIKit
 
@@ -39,8 +33,6 @@ class ResultCollectionViewCell: UICollectionViewCell {
         updateSelectionAppearance()
     }
 
-    // MARK: - Reuse
-
     override func prepareForReuse() {
         super.prepareForReuse()
         resultImageView.image = nil
@@ -49,8 +41,6 @@ class ResultCollectionViewCell: UICollectionViewCell {
         isSelectedCell = false
         updateSelectionAppearance()
     }
-
-    // MARK: - Configuration
 
     func configure(image: UIImage?, name: String, percentage: String) {
         resultImageView.image = image
@@ -69,8 +59,6 @@ class ResultCollectionViewCell: UICollectionViewCell {
         percentageLabel.textColor = .secondaryLabel
         menuButton.tintColor = .secondaryLabel
     }
-
-    // MARK: - Selection Appearance
 
     private func updateSelectionAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
@@ -126,8 +114,6 @@ class ResultCollectionViewCell: UICollectionViewCell {
     private func handleUserInterfaceStyleChange() {
         updateSelectionAppearance()
     }
-
-    // MARK: - Context Menu
 
     func setupMenu() {
         let predictAction = UIAction(title: "Predict Species",

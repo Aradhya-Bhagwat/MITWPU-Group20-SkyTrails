@@ -1,10 +1,3 @@
-//
-//  HomeViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 25/11/25.
-//  Refactored to Strict MVC
-//
 
 import UIKit
 import CoreLocation
@@ -18,8 +11,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var homeScreenData: HomeScreenData?
     private let homeTitleProfileImageView = UIImageView()
     private var homeTitleProfileImageConstraints: [NSLayoutConstraint] = []
-
-    // UI Data (cached for collection view)
     private var upcomingBirds: [UpcomingBirdUI] = []
     private var spots: [PopularSpotUI] = []
     private var observations: [CommunityObservation] = []
@@ -66,7 +57,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         attachHomeTitleProfileImageViewIfNeeded()
-        // Refresh data when returning to screen
         refreshHomeData()
         loadUserProfileImage()
     }
@@ -112,8 +102,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         }
 
         let photo = user.profilePhoto
-
-        // Google image (URL)
         if photo.starts(with: "http") {
 
             loadImage(from: photo)
@@ -310,55 +298,39 @@ extension HomeViewController {
         homeCollectionView.collectionViewLayout = createLayout()
     }
 
-    // MARK: - Data Loading
-
     private func loadHomeData() {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
-            
-            print("📱 [PredictionDebug] HomeViewController: Loading home data")
             let userLocation = self.getUserLocation()
-            print("📱 [PredictionDebug]   User location: \(userLocation?.latitude ?? 0), \(userLocation?.longitude ?? 0)")
-
-            // Load all home screen data
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             self.homeScreenData = data
 
             if let errorMessage = data.errorMessage {
-                print("❌ [PredictionDebug]   Error message: \(errorMessage)")
                 self.showErrorAlert(message: errorMessage)
             }
-
-            // Update local caches from computed properties
             self.upcomingBirds = data.displayableUpcomingBirds
             self.spots = data.displayableSpots
             self.observations = data.recentObservations
             self.news = data.news
             self.migrationCards = data.migrationCards
-            
-            print("📱 [PredictionDebug]   Migration cards count: \(self.migrationCards.count)")
             if let first = self.migrationCards.first {
                 switch first {
                 case .combined(let migration, let hotspot):
-                    print("📱 [PredictionDebug]     First card: \(migration.birdName) at \(hotspot.placeName), birds: \(hotspot.birdSpecies.count)")
                 }
             }
             
             self.homeCollectionView.reloadData()
-            print("📱 [PredictionDebug]   homeCollectionView reloaded")
         }
     }
 
     private func refreshHomeData() {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
-            print("📱 [PredictionDebug] HomeViewController: Refreshing home data")
             let userLocation = self.getUserLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             
             self.homeScreenData = data
             if let errorMessage = data.errorMessage {
-                print("❌ [PredictionDebug]   Error message during refresh: \(errorMessage)")
                 self.showErrorAlert(message: errorMessage)
             }
             self.upcomingBirds = data.displayableUpcomingBirds
@@ -366,9 +338,6 @@ extension HomeViewController {
             self.observations = data.recentObservations
             self.news = data.news
             self.migrationCards = data.migrationCards
-            
-            print("📱 [PredictionDebug]   Migration cards count after refresh: \(self.migrationCards.count)")
-            
             self.homeCollectionView.reloadData()
         }
     }
@@ -377,7 +346,6 @@ extension HomeViewController {
         if let homeLocation = LocationPreferences.shared.homeLocation {
             return homeLocation
         }
-        // Option 3: Fallback to Pune for testing
         return CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
     }
 
@@ -409,18 +377,14 @@ extension HomeViewController {
         self.present(alert, animated: true)
     }
 
-
     private func useCurrentLocationAsHome() {
         Task {
             do {
                 let locationData = try await LocationService.shared.getCurrentLocation()
                 let coord = CLLocationCoordinate2D(latitude: locationData.lat, longitude: locationData.lon)
                 await LocationPreferences.shared.setHomeLocation(coord, name: locationData.displayName)
-                
-                // Refresh data once location is set
                 self.loadHomeData()
             } catch {
-                print("❌ [Home] Error getting current location: \(error)")
                 let errorAlert = UIAlertController(
                     title: "Location Unavailable",
                     message: "Could not determine your current location. Please ensure location services are enabled or set it manually in your profile.",
@@ -652,11 +616,7 @@ extension HomeViewController {
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let screenWidth = self.view.bounds.width
         let absoluteCardWidth = screenWidth - 32
-        
-        // Use aspect ratio 361:440
         var calculatedHeight = absoluteCardWidth * (440.0 / 361.0)
-        
-        // Limit height to 650 if screen width crosses 400
         if screenWidth > 400 {
             calculatedHeight = min(calculatedHeight, 650)
         }
@@ -689,7 +649,6 @@ extension HomeViewController: UICollectionViewDataSource {
         switch section {
         case 0: 
             let count = min(migrationCards.count, 1)
-            print("📱 [PredictionDebug] numberOfItemsInSection(0) = \(count)")
             return count
         case 1: return upcomingBirds.count
         case 2: return min(spots.count, 5)
@@ -886,11 +845,6 @@ extension HomeViewController {
             }
 					
         case 1:
-            // Determine source object (Watchlist vs Recommended) based on index and watchlist count
-            // However, upcomingBirds is already flattened.
-            // We need to find the underlying Bird object.
-            // Option 1: Store underlying result in upcomingBirds UI model (make it generic or hold reference)
-            // Option 2: Re-calculate index
             
             let watchlistCount = homeScreenData?.myWatchlistBirds.count ?? 0
             
@@ -898,12 +852,10 @@ extension HomeViewController {
             let statusText: String
             
             if indexPath.row < watchlistCount {
-                // It's a watchlist item
                 guard let result = homeScreenData?.myWatchlistBirds[safe: indexPath.row] else { return }
                 bird = result.bird
                 statusText = result.statusText
             } else {
-                // It's a recommended item
                 let recommendedIndex = indexPath.row - watchlistCount
                 guard let recResult = homeScreenData?.recommendedBirds[safe: recommendedIndex] else { return }
                 bird = recResult.bird

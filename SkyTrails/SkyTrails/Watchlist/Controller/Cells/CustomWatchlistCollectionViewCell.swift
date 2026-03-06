@@ -1,9 +1,3 @@
-//
-//  CustomWatchlistCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 26/11/25.
-//
 
 import UIKit
 
@@ -11,8 +5,6 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "CustomWatchlistCollectionViewCell"
     private var defaultCoverOverImageBackgroundColor: UIColor?
-    
-    // MARK: - IBOutlets
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var coverImageView: UIImageView!
     @IBOutlet weak var coverOverImageView: UIView!
@@ -39,25 +31,16 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        // Container Styling
         updateCardAppearance()
         containerView.layer.cornerRadius = 16
         containerView.layer.masksToBounds = false
-        
-        // Image Styling
         coverImageView.layer.cornerRadius = 16
         coverImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         coverImageView.clipsToBounds = true
         coverImageView.contentMode = .scaleAspectFill
-        
-        // Overlap View Styling
         coverOverImageView.layer.cornerRadius = 16
-        
-        // Badge Styling
         setupBadge(leftBadgeView, label: leftBadgeLabel, color: .systemGreen, cornerRadius: 8)
         setupBadge(rightBadgeView, label: rightBadgeLabel, color: .systemBlue, cornerRadius: 8)
-        
-        // Text Styling
         titleLabel.textColor = .label
         [dateLabel, locationLabel].forEach {
             $0?.font = .systemFont(ofSize: 13, weight: .medium)
@@ -86,42 +69,30 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     func configure(with dto: WatchlistSummaryDTO) {
         updateCardAppearance()
         titleLabel.text = dto.title
-        
-        // Location
         locationLabel.addIcon(text: dto.subtitle, iconName: "location.fill")
-        
-        // Date
         if !dto.dateText.isEmpty {
             dateLabel.addIcon(text: dto.dateText, iconName: "calendar")
             dateLabel.isHidden = false
         } else {
             dateLabel.isHidden = true
         }
-        
-        // Badges
         leftBadgeLabel.addIcon(text: "\(dto.stats.totalCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
-        
-        // Cover Image - show local immediately, update from Supabase in background
         if let imageName = dto.image {
-            // Try 1: User-uploaded photo from Documents (instant)
             if let userPhoto = loadUserPhoto(named: imageName) {
                 coverImageView.image = userPhoto
                 coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
                 alignImageTop()
             } 
-            // Try 2: Local bundle asset (instant)
             else if let assetImage = UIImage(named: imageName) {
                 coverImageView.image = assetImage
                 coverImageView.backgroundColor = .systemGray5
-                // Update from Supabase in background
                 Task { @MainActor in
                     if let supabaseImage = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
                         self.coverImageView.image = supabaseImage
                     }
                 }
             } else {
-                // Try 3: Supabase bird bucket async
                 coverImageView.backgroundColor = .systemGray5
                 Task { @MainActor in
                     if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
@@ -132,14 +103,11 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
                 }
             }
         } else {
-            // No image name provided - show placeholder
             coverImageView.image = nil
             coverImageView.backgroundColor = .systemGray5
             coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
         }
     }
-    
-    // MARK: - Helpers
     
     private func loadUserPhoto(named imageName: String) -> UIImage? {
         let fileManager = FileManager.default
@@ -153,47 +121,29 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     private func isDateValid(start: Date, end: Date) -> Bool {
         return start != end
     }
-    
-		// MARK: - Image Alignment Helper
 	
 	private func alignImageTop() {
 		guard let image = coverImageView.image else { return }
 		
 		let viewWidth = coverImageView.bounds.width
 		let viewHeight = coverImageView.bounds.height
-		
-			// Guard to prevent division by zero if layout hasn't happened yet
 		guard viewWidth > 0, viewHeight > 0, image.size.width > 0, image.size.height > 0 else { return }
 		
 		let viewRatio = viewWidth / viewHeight
 		let imageRatio = image.size.width / image.size.height
 		
 		if imageRatio < viewRatio {
-				// CASE: Image is "Taller" than the view (e.g., Portrait bird photo in a landscape card)
-				// Behavior: Scale width to fit, align top, cut off bottom.
-			
-				// 1. Calculate how much we scaled the image down to fit the width
 			let scale = viewWidth / image.size.width
-			
-				// 2. Calculate the "height" of the view in the coordinates of the original image
 			let visibleHeightInImage = viewHeight / scale
-			
-				// 3. Normalize this (0.0 to 1.0) for the layer
 			let normalizedHeight = visibleHeightInImage / image.size.height
-			
-				// 4. Set the rect: (x:0, y:0) is Top-Left. Width is full (1.0). Height is the calculated portion.
 			coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: normalizedHeight)
 			
 		} else {
-				// CASE: Image is "Wider" or equal (e.g., Panorama)
-				// Behavior: Standard AspectFill (Center alignment) is usually preferred here,
-				// but you can reset it to default (0,0,1,1) to be safe.
 			coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
 		}
 	}
 	override func layoutSubviews() {
 		super.layoutSubviews()
-			// We call this here to ensure it updates if the cell size changes (e.g. rotation)
         updateCardAppearance()
 		alignImageTop()
 	}

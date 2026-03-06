@@ -1,9 +1,3 @@
-//
-//  subcardViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 17/02/26.
-//
 
 import UIKit
 
@@ -97,7 +91,6 @@ class subcardViewCell: UICollectionViewCell {
         }
         
         func configure(with birdData: BirdSpeciesDisplay, accentColor: UIColor? = nil) {
-            print(" [PredictionDebug] subcardViewCell configure: \(birdData.birdName)")
             self.accentColor = accentColor ?? .systemBlue
             birdNameLabel.text = birdData.birdName
             compactBirdNameLabel?.text = birdData.statusBadge.title
@@ -105,16 +98,12 @@ class subcardViewCell: UICollectionViewCell {
             if let image = UIImage(named: birdData.birdImageName) {
                 birdImageView.image = image
                 compactBirdImageView?.image = image
-                print("[PredictionDebug]  Image loaded: \(birdData.birdImageName)")
             } else {
                 birdImageView.image = UIImage(systemName: "bird.fill")
                 birdImageView.tintColor = .systemGray4
                 compactBirdImageView?.image = UIImage(systemName: "bird.fill")
                 compactBirdImageView?.tintColor = .systemGray4
-                print("[PredictionDebug]  Image NOT FOUND: \(birdData.birdImageName)")
             }
-            
-            // Badge
             badgeTitleLabel.text = birdData.weekNumber ?? birdData.statusBadge.title
             badgeSubtitleLabel.text = birdData.residencyStatus ?? birdData.statusBadge.subtitle
             
@@ -125,22 +114,16 @@ class subcardViewCell: UICollectionViewCell {
             case "systemOrange": badgeColor = .systemOrange
             case "systemPink", "BadgePink": badgeColor = .systemPink
             default:
-                // Fall back to named asset, then grey
                 badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
             }
             let effectiveBadgeColor = accentColor ?? badgeColor
             statusBadgeContainer.backgroundColor = effectiveBadgeColor.withAlphaComponent(0.2)
-            print("🐦 [PredictionDebug]   Badge color: \(birdData.statusBadge.backgroundColorName)")
-            
             let compactPointSize = compactBirdNameLabel?.font.pointSize ?? 12
             updateCompactStatusIcon(pointSize: compactPointSize)
             updateExpandedBadgeIcon()
             let sightabilityPointSize = sightabilityTextLabel.font.pointSize
             updateSightabilityIcon(pointSize: sightabilityPointSize, color: effectiveBadgeColor.withAlphaComponent(1.0))
-            
-            // Sightability
             sightabilityTextLabel.text = "Sightability - \(birdData.sightabilityPercent)%"
-            print("🐦 [PredictionDebug]   Sightability set to \(birdData.sightabilityPercent)%")
         }
     
     func setExpanded(_ expanded: Bool) {
@@ -159,7 +142,6 @@ class subcardViewCell: UICollectionViewCell {
     }
     
     private func updateExpandedBadgeCircle() {
-        // The icon container view is square in XIB, so half-size corner radius creates a true circle.
         let circleHost = badgeIconImageView.superview
         circleHost?.layer.cornerRadius = min(circleHost?.bounds.width ?? 0, circleHost?.bounds.height ?? 0) / 2
         circleHost?.clipsToBounds = true

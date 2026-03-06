@@ -1,10 +1,3 @@
-//
-//  WatchlistPersistenceService.swift
-//  SkyTrails
-//
-//  Pure CRUD operations on SwiftData - NO business logic
-//  Strict MVC Refactoring
-//
 
 import Foundation
 import SwiftData
@@ -24,8 +17,6 @@ final class WatchlistPersistenceService {
     }
 
     private func isWatchlistAccessible(_ watchlist: Watchlist) -> Bool {
-        // Guest (not logged in): only see nil owner_id (own guest-created watchlists)
-        // Logged in: only see own watchlists OR shared watchlists
         guard let userID = activeUserID else {
             return watchlist.owner_id == nil
         }
@@ -36,26 +27,14 @@ final class WatchlistPersistenceService {
     private func scoped(_ watchlists: [Watchlist]) -> [Watchlist] {
         watchlists.filter { isWatchlistAccessible($0) }
     }
-    
-    // MARK: - Sync Helper
-    
-    /// Fire-and-forget sync to Supabase (only if authenticated)
     private func queueSync(_ operation: @escaping @Sendable () async -> Void) {
-        print("🔍 [Persistence] queueSync called, activeUserID: \(activeUserID?.uuidString ?? "nil")")
-        
         guard activeUserID != nil else {
-            print("🔍 [Persistence] ❌ SKIPPING SYNC - no activeUserID (user not authenticated)")
             return
         }
-        
-        print("🔍 [Persistence] ✅ Proceeding with sync, launching Task.detached")
         Task.detached(priority: .utility) {
-            print("🔍 [Persistence] Inside Task.detached, executing operation")
             await operation()
         }
     }
-    
-    // MARK: - Watchlist CRUD
     
     func createWatchlist(
         title: String,
@@ -65,11 +44,6 @@ final class WatchlistPersistenceService {
         endDate: Date?,
         type: WatchlistType = .custom
     ) throws -> Watchlist {
-        print("🔍 [Persistence] createWatchlist called:")
-        print("   - title: \(title)")
-        print("   - activeUserID: \(activeUserID?.uuidString ?? "nil")")
-        print("   - isAuthenticated: \(UserSession.shared.isAuthenticatedWithSupabase())")
-        
         let watchlist = Watchlist(
             owner_id: activeUserID,
             title: title,
@@ -79,23 +53,12 @@ final class WatchlistPersistenceService {
             endDate: endDate
         )
         watchlist.type = type
-        
-        print("🔍 [Persistence] Created watchlist with id: \(watchlist.id)")
-        print("   - owner_id: \(watchlist.owner_id?.uuidString ?? "nil")")
-        
         context.insert(watchlist)
         try saveContext()
-        print("🔍 [Persistence] SwiftData context saved successfully")
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let watchlistId = watchlist.id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .create)
         let updatedAt = watchlist.updated_at
-        
-        print("🔍 [Persistence] Payload data: \(payloadData != nil ? "present (\(payloadData!.count) bytes)" : "nil")")
-        
         queueSync {
-            print("🔍 [Persistence] Inside queueSync closure, calling BackgroundSyncAgent.queueWatchlist")
             await BackgroundSyncAgent.shared.queueWatchlist(
                 id: watchlistId,
                 payloadData: payloadData,
@@ -119,8 +82,6 @@ final class WatchlistPersistenceService {
         let descriptor = FetchDescriptor<Watchlist>(
             sortBy: [SortDescriptor(\.created_at, order: .reverse)]
         )
-        
-        // Note: SwiftData enum predicates are limited, filter post-fetch if type is specified
         let all = scoped(try context.fetch(descriptor))
         
         if let type = type {
@@ -150,8 +111,6 @@ final class WatchlistPersistenceService {
         watchlist.updated_at = Date()
         watchlist.syncStatus = .pendingUpdate
         try saveContext()
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let watchlistId = watchlist.id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .update)
         let updatedAt = watchlist.updated_at
@@ -173,13 +132,9 @@ final class WatchlistPersistenceService {
         guard let watchlist = try context.fetch(descriptor).first, isWatchlistAccessible(watchlist) else {
             throw WatchlistError.watchlistNotFound(.custom(id))
         }
-        
-        // Soft delete - mark for sync deletion
         watchlist.deleted_at = Date()
         watchlist.syncStatus = .pendingDelete
         try saveContext()
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let watchlistId = watchlist.id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .delete)
         let updatedAt = watchlist.updated_at
@@ -193,8 +148,6 @@ final class WatchlistPersistenceService {
             )
         }
     }
-    
-    // MARK: - Entry CRUD
     
     func createEntry(
         watchlistID: UUID,
@@ -226,11 +179,7 @@ final class WatchlistPersistenceService {
         
         context.insert(entry)
         try saveContext()
-        
-        // Update watchlist stats
         try recalculateWatchlistStats(watchlistID: watchlistID)
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let entryId = entry.id
         let payloadData = buildEntryPayloadData(entry, for: .create)
         let localUpdatedAt = entry.observationDate ?? entry.addedDate
@@ -258,8 +207,6 @@ final class WatchlistPersistenceService {
         guard let watchlist = try fetchWatchlist(id: watchlistID) else {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
-        
-        // Filter out entries pending deletion (soft-deleted locally)
         var entries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
         
         if let status = status {
@@ -302,13 +249,9 @@ final class WatchlistPersistenceService {
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
-        
-        // Update parent watchlist stats
         if let watchlistID = entry.watchlist?.id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let entryId = entry.id
         let payloadData = buildEntryPayloadData(entry, for: .update)
         let localUpdatedAt = entry.observationDate ?? entry.addedDate
@@ -330,17 +273,11 @@ final class WatchlistPersistenceService {
         guard let entry = try context.fetch(descriptor).first else {
             throw WatchlistError.entryNotFound(id)
         }
-        
-        // Soft delete - mark for sync deletion
         entry.syncStatus = .pendingDelete
         try saveContext()
-        
-        // Update parent watchlist stats
         if let watchlistID = entry.watchlist?.id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let entryId = entry.id
         let payloadData = buildEntryPayloadData(entry, for: .delete)
         let localUpdatedAt = entry.observationDate ?? entry.addedDate
@@ -362,8 +299,6 @@ final class WatchlistPersistenceService {
         
         let wasToObserve = entry.status == .to_observe
         let hadRemindersEnabled = entry.notify_upcoming
-        
-        // If changing from to_observe to observed, cancel reminders
         if wasToObserve && hadRemindersEnabled {
             Task {
                 await NotificationService.shared.cancelReminders(for: entry.id)
@@ -377,13 +312,9 @@ final class WatchlistPersistenceService {
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
-        
-        // Update parent watchlist stats
         if let watchlistID = entry.watchlist?.id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let entryId = entry.id
         let payloadData = buildEntryPayloadData(entry, for: .update)
         let localUpdatedAt = entry.observationDate ?? entry.addedDate
@@ -407,8 +338,6 @@ final class WatchlistPersistenceService {
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
-        
-        // Schedule or cancel notifications
         if notify {
             Task {
                 await NotificationService.shared.scheduleReminders(for: entry)
@@ -418,8 +347,6 @@ final class WatchlistPersistenceService {
                 await NotificationService.shared.cancelReminders(for: entry.id)
             }
         }
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let entryId = entry.id
         let payloadData = buildEntryPayloadData(entry, for: .update)
         let localUpdatedAt = entry.addedDate
@@ -447,7 +374,6 @@ final class WatchlistPersistenceService {
         var createdEntries: [WatchlistEntry] = []
         
         for bird in birds {
-            // Skip if already exists
             guard !existingBirdIDs.contains(bird.id) else {
                 continue
             }
@@ -470,8 +396,6 @@ final class WatchlistPersistenceService {
         if !createdEntries.isEmpty {
             try saveContext()
             try recalculateWatchlistStats(watchlistID: watchlistID)
-            
-            // Queue sync for all created entries - extract Sendable primitives before crossing actor boundary
             let entrySyncItems = createdEntries.map { entry -> (id: UUID, payloadData: Data?, localUpdatedAt: Date?) in
                 (entry.id, buildEntryPayloadData(entry, for: .create), entry.observationDate ?? entry.addedDate)
             }
@@ -489,8 +413,6 @@ final class WatchlistPersistenceService {
         
         return createdEntries
     }
-    
-    // MARK: - Rule CRUD
     
     func createRule(
         watchlistID: UUID,
@@ -513,8 +435,6 @@ final class WatchlistPersistenceService {
         
         context.insert(rule)
         try saveContext()
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let ruleId = rule.id
         let payloadData = buildRulePayloadData(rule, for: .create)
         let localUpdatedAt = rule.created_at
@@ -597,8 +517,6 @@ final class WatchlistPersistenceService {
         rule.is_active = !rule.is_active
         rule.syncStatus = .pendingUpdate
         try saveContext()
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let ruleId = rule.id
         let payloadData = buildRulePayloadData(rule, for: .update)
         let localUpdatedAt = rule.created_at
@@ -620,13 +538,9 @@ final class WatchlistPersistenceService {
         guard let rule = try context.fetch(descriptor).first else {
             throw WatchlistError.ruleValidationFailed("Rule not found")
         }
-        
-        // Soft delete
         rule.syncStatus = .pendingDelete
         rule.deleted_at = Date()
         try saveContext()
-        
-        // Queue sync - extract Sendable primitives before crossing actor boundary
         let ruleId = rule.id
         let payloadData = buildRulePayloadData(rule, for: .delete)
         let localUpdatedAt = rule.created_at
@@ -648,8 +562,6 @@ final class WatchlistPersistenceService {
         }
         try deleteRule(id: rule.id)
     }
-    
-    // MARK: - Bird CRUD
     
     func fetchBird(id: UUID) throws -> Bird? {
         let descriptor = FetchDescriptor<Bird>(
@@ -686,24 +598,17 @@ final class WatchlistPersistenceService {
                 adoptedCount += 1
             }
         }
-
-        // Adopt entries, rules, and photos
         for watchlist in allWatchlists where watchlist.owner_id == userID {
-            // Adopt entries
             for entry in watchlist.entries ?? [] {
                 if entry.syncStatus == .pendingOwner || entry.syncStatus == .pendingCreate {
                     entry.syncStatus = .pendingUpdate
                 }
             }
-            
-            // Adopt rules
             for rule in watchlist.rules ?? [] {
                 if rule.syncStatus == .pendingOwner || rule.syncStatus == .pendingCreate {
                     rule.syncStatus = .pendingUpdate
                 }
             }
-            
-            // Adopt photos
             for entry in watchlist.entries ?? [] {
                 for photo in entry.photos ?? [] {
                     if photo.syncStatus == .pendingOwner || photo.syncStatus == .pendingCreate {
@@ -715,8 +620,6 @@ final class WatchlistPersistenceService {
 
         if changed {
             try saveContext()
-            
-            // Sync all adopted items
             queueSync {
                 await BackgroundSyncAgent.shared.syncAll()
             }
@@ -730,7 +633,6 @@ final class WatchlistPersistenceService {
         scientificName: String = "Unknown",
         staticImageName: String = "photo",
     ) throws -> Bird {
-        // Check for duplicate
         if try fetchBird(byCommonName: commonName) != nil {
             throw WatchlistError.duplicateEntry(birdName: commonName)
         }
@@ -748,8 +650,6 @@ final class WatchlistPersistenceService {
         
         return bird
     }
-    
-    // MARK: - Private Helpers
     
     private func saveContext() throws {
         do {
@@ -773,10 +673,7 @@ final class WatchlistPersistenceService {
         try saveContext()
     }
     
-    // MARK: - Payload Builders (for Sendable extraction)
-    
     private func buildWatchlistPayloadData(_ watchlist: Watchlist, for operation: SyncOperationType) -> Data? {
-        // Note: sync_status, row_version, last_synced_at are LOCAL-only fields - not sent to Supabase
         var payload: [String: Any] = [
             "id": watchlist.id.uuidString,
             "owner_id": watchlist.owner_id?.uuidString as Any,
@@ -798,12 +695,9 @@ final class WatchlistPersistenceService {
     }
     
     private func buildEntryPayloadData(_ entry: WatchlistEntry, for operation: SyncOperationType) -> Data? {
-        // Note: sync_status, row_version, last_synced_at, bird_id are LOCAL-only fields
-        // bird_id references local SwiftData birds that may not exist in Supabase
         var payload: [String: Any] = [
             "id": entry.id.uuidString,
             "watchlist_id": entry.watchlist?.id.uuidString as Any,
-            // bird_id intentionally omitted - birds are local-only (SwiftData seeded, Supabase may be empty)
             "nickname": entry.nickname as Any,
             "status": entry.status.rawValue,
             "notes": entry.notes as Any,
@@ -829,7 +723,6 @@ final class WatchlistPersistenceService {
     }
     
     private func buildRulePayloadData(_ rule: WatchlistRule, for operation: SyncOperationType) -> Data? {
-        // Note: sync_status, row_version, last_synced_at are LOCAL-only fields - not sent to Supabase
         var payload: [String: Any] = [
             "id": rule.id.uuidString,
             "watchlist_id": rule.watchlist?.id.uuidString as Any,

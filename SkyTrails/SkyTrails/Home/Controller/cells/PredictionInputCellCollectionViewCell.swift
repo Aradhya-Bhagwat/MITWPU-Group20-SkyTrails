@@ -1,9 +1,3 @@
-//
-//  PredictionInputCellCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 11/12/25.
-//
 
 import UIKit
 import MapKit
@@ -181,7 +175,6 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
-            print("Location Access Denied")
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
@@ -231,6 +224,5 @@ extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location Error: \(error.localizedDescription)")
     }
 }

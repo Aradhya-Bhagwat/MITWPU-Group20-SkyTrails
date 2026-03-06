@@ -1,9 +1,3 @@
-//
-//  WatchlistSectionWithPlusCollectionReusableView.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 21/01/26.
-//
 
 import UIKit
 
@@ -27,8 +21,6 @@ class WatchlistSectionWithPlusCollectionReusableView: UICollectionReusableView {
     private func setupStyle() {
         sectionTitleLabel.font = UIFont.preferredFont(forTextStyle: .headline)
         sectionTitleLabel.textColor = .label
-        
-        // Make sure buttons have proper tint color
         chevronButton.tintColor = .label
         plusButton.tintColor = .label
     }

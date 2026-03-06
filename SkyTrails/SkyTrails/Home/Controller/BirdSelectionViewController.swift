@@ -1,9 +1,3 @@
-//
-//  BirdSelectionViewController.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 12/12/25.
-//
 
 import UIKit
 
@@ -63,8 +57,6 @@ class BirdSelectionViewController: UIViewController {
     private func setupCollectionView() {
         searchCollection.collectionViewLayout = createLayout()
         searchCollection.backgroundColor = .clear
-        
-        // Register Cell
         searchCollection.register(
             UINib(nibName: "GridUpcomingBirdCollectionViewCell", bundle: nil),
             forCellWithReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier
@@ -86,8 +78,6 @@ class BirdSelectionViewController: UIViewController {
         )
         navigationItem.rightBarButtonItem?.tintColor = .systemBlue
     }
-    
-    // Layout logic from AllUpcomingBirdsViewController
     private func createLayout() -> UICollectionViewLayout {
         return UICollectionViewCompositionalLayout { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
             guard let self = self else { return nil }
@@ -211,12 +201,9 @@ extension BirdSelectionViewController: UICollectionViewDataSource, UICollectionV
         }
         
         let species = filteredSpecies[indexPath.row]
-        // Map SpeciesData to UpcomingBird for configuration
         let upcomingBird = UpcomingBird(imageName: species.imageName, title: species.name, date: "")
         cell.configure(with: upcomingBird)
         cell.DateLabel.isHidden = true
-        
-        // Handle selection state
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         let baseColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         if selectedSpecies.contains(species.id) {

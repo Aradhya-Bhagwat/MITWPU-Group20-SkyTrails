@@ -1,9 +1,3 @@
-//
-//  WatchlitEmptyCollectionViewCell.swift
-//  SkyTrails
-//
-//  Created by SDC-USER on 18/02/26.
-//
 
 import UIKit
 

@@ -10,12 +10,8 @@ class GUIViewController: UIViewController {
     
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
-    
-    // Aligned with models: stores the specific field marks selected in the previous step
     private var categories: [BirdFieldMark] = []
     private var currentCategoryIndex: Int = 0
-
-    // Local state for UI tracking (Area Name : Variant Name)
     private var selectedVariations: [String: String] = [:]
     
     private var baseShapeLayer: UIImageView!
@@ -59,17 +55,12 @@ class GUIViewController: UIViewController {
     }
     
     private func loadData() {
-        // Aligning with Manager: Get marks based on tempSelectedAreas strings
         guard !viewModel.tempSelectedAreas.isEmpty else {
             self.categories = []
             return
         }
-        
-        // Filter the marks belonging to the selected shape
         let allMarksForShape = viewModel.selectedShape?.fieldMarks ?? []
         self.categories = allMarksForShape.filter { viewModel.tempSelectedAreas.contains($0.area) }
-        
-        // Sync already selected variations from the viewModel if they exist
         for mark in categories {
             if let variant = viewModel.selectedFieldMarks[mark.id] {
                 selectedVariations[mark.area] = variant.name
@@ -202,14 +193,11 @@ class GUIViewController: UIViewController {
     
     func getVariantsForCurrentCategory() -> [FieldMarkVariant] {
         guard currentCategoryIndex < categories.count else { return [] }
-        // Accessing the relationship from BirdFieldMark model
         return categories[currentCategoryIndex].variants ?? []
     }
     
     @IBAction func nextTapped(_ sender: Any) {
         guard !selectedVariations.isEmpty else { return }
-        // The viewModel.filterBirds logic remains unchanged as requested,
-        // we just ensure the manager's internal filter is triggered.
         delegate?.didFinishStep()
     }
 }
@@ -248,8 +236,6 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let currentMark = categories[currentCategoryIndex]
             
             selectedVariations[currentMark.area] = variant.name
-            
-            // Aligning with IdentificationManager.swift: call toggleVariant to update model state
             viewModel.toggleVariant(variant, for: currentMark)
             
             variationsCollectionView.reloadData()
