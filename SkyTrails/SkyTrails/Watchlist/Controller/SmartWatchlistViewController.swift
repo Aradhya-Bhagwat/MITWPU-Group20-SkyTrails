@@ -92,8 +92,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                     var seenToObs = Set<String>()
                     
                     for wl in allWls {
-                        let obs = try manager.fetchEntries(watchlistID: wl.id, status: .observed)
-                        let toObs = try manager.fetchEntries(watchlistID: wl.id, status: .to_observe)
+                        let obs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .observed)
+                        let toObs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .to_observe)
                         
                         for entry in obs {
                             if let name = entry.bird?.name, !seenObs.contains(name) {
@@ -154,7 +154,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		
 		if watchlistType == .myWatchlist {
 			let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
-				let entries = (try? manager.fetchEntries(watchlistID: watchlist.id, status: isObserved ? .observed : .to_observe)) ?? []
+				let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: isObserved ? .observed : .to_observe)) ?? []
 				let matching = entries.filter { entry in
 					guard let bird = entry.bird else { return false }
 					return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)

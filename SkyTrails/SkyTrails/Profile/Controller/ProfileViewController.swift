@@ -273,7 +273,7 @@ class ProfileViewController: UIViewController,
         guard let jpeg = image.jpegData(compressionQuality: 0.8),
               let user = UserSession.shared.getUser() else { return }
 
-        let fileName = "profile_\(user.id.uuidString).jpg"
+        let fileName = "profile_\(user.user_id.uuidString).jpg"
 
         let url = FileManager.default.urls(for: .documentDirectory,
                                            in: .userDomainMask)[0]

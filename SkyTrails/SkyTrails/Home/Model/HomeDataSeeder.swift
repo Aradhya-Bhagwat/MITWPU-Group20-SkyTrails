@@ -84,12 +84,12 @@ class HomeDataSeeder {
             existing.weeklyProbabilities = data.weeklyProbabilities
             existing.probability = data.probability
             if existing.bird == nil {
-                existing.bird = fetchBird(id: data.birdId, context: context)
+                existing.bird = fetchBird(bird_id: data.birdId, context: context)
             }
             if existing.bird == nil {
             }
         } else {
-            let bird = fetchBird(id: data.birdId, context: context)
+            let bird = fetchBird(bird_id: data.birdId, context: context)
             if bird == nil {
                 return
             }
@@ -117,10 +117,10 @@ class HomeDataSeeder {
                 session.endWeek = item.endWeek
                 session.hemisphere = item.hemisphere
                 if session.bird == nil {
-                     session.bird = fetchBird(id: item.birdId, context: context)
+                     session.bird = fetchBird(bird_id: item.birdId, context: context)
                 }
             } else {
-                let bird = fetchBird(id: item.birdId, context: context)
+                let bird = fetchBird(bird_id: item.birdId, context: context)
                 session = MigrationSession(
                     id: item.id,
                     bird: bird,
@@ -202,8 +202,8 @@ class HomeDataSeeder {
         }
     }
     
-    private func fetchBird(id: UUID, context: ModelContext) -> Bird? {
-        let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.id == id })
+    private func fetchBird(bird_id: UUID, context: ModelContext) -> Bird? {
+        let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.bird_id == bird_id })
         return try? context.fetch(descriptor).first
     }
 }

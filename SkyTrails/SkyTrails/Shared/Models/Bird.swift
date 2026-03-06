@@ -6,7 +6,7 @@ import SwiftData
 @Model
 final class BirdFieldMarkVariantLink {
     @Attribute(.unique)
-    var id: UUID
+    var bird_field_mark_variant_link_id: UUID
 
     var bird: Bird?
     var fieldMark: BirdFieldMark?
@@ -14,13 +14,13 @@ final class BirdFieldMarkVariantLink {
     var area: String
 
     init(
-        id: UUID = UUID(),
+        bird_field_mark_variant_link_id: UUID = UUID(),
         bird: Bird? = nil,
         fieldMark: BirdFieldMark? = nil,
         variant: FieldMarkVariant? = nil,
         area: String
     ) {
-        self.id = id
+        self.bird_field_mark_variant_link_id = bird_field_mark_variant_link_id
         self.bird = bird
         self.fieldMark = fieldMark
         self.variant = variant
@@ -31,7 +31,7 @@ final class BirdFieldMarkVariantLink {
 @Model
 final class Bird {
     @Attribute(.unique)
-    var id: UUID
+    var bird_id: UUID
     var commonName: String
     var scientificName: String
     var staticImageName: String
@@ -64,7 +64,7 @@ final class Bird {
     var name: String { return commonName }
 
     init(
-            id: UUID = UUID(),
+            bird_id: UUID = UUID(),
             commonName: String,
             scientificName: String,
             staticImageName: String,
@@ -81,7 +81,7 @@ final class Bird {
             size_category: Int? = nil,
             shape: BirdShape? = nil
         ) {
-            self.id = id
+            self.bird_id = bird_id
             self.commonName = commonName
             self.scientificName = scientificName
             self.staticImageName = staticImageName

@@ -252,7 +252,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                     )
                     if let photoName = selectedImageName {
                         for watchlistId in matchedWatchlistIds {
-                            if let entry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: watchlistId) {
+                            if let entry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: watchlistId) {
                                 try manager.attachPhoto(entryId: entry.id, imageName: photoName)
                             }
                         }
@@ -264,7 +264,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                     
                     try manager.addBirds([birdToUse], to: targetWatchlistId, asObserved: true)
                     
-                    if let newEntry = try? manager.findEntry(birdId: birdToUse.id, watchlistId: targetWatchlistId) {
+                    if let newEntry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: targetWatchlistId) {
                         try manager.updateEntry(
                             entryId: newEntry.id,
                             notes: notesTextView.text,

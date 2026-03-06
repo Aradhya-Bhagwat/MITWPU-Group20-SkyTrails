@@ -11,8 +11,8 @@ class IdentificationManager {
     var tempSelectedAreas: [String] = []
     var allShapes: [BirdShape] = []
     var selectedShapeId: String? {
-            selectedShape?.id
-        }
+        selectedShape?.bird_shape_id
+    }
     var selectedLocationId: UUID?
     var selectedShape: BirdShape? {
         didSet {
@@ -33,11 +33,6 @@ class IdentificationManager {
     var selectedMenuOptionRawValues: [String] = []
     var results: [IdentificationCandidate] = []
     
-    private let supportedHabitats: Set<String> = [
-        "urban", "wetlands", "forest", "grassland", "desert",
-        "coastal", "mountain", "bush", "ground", "sky", "treetop", "open sea",
-    ]
-
     private var currentUserId: UUID? {
         UserSession.shared.currentUserID
     }
@@ -82,13 +77,13 @@ class IdentificationManager {
                 birdsInScope = try modelContext.fetch(FetchDescriptor<Bird>(predicate: predicate))
             }
 
-            let birdShapeIds = Set(birdsInScope.compactMap { $0.shape?.id ?? $0.shape_id })
+            let birdShapeIds = Set(birdsInScope.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
             var visibleShapeIds = birdShapeIds
 
             let needsFieldMarks = selectedMenuOptionRawValues.contains(FilterCategory.fieldMarks.rawValue)
             if needsFieldMarks {
                 let marks = try modelContext.fetch(FetchDescriptor<BirdFieldMark>())
-                let markShapeIds = Set(marks.compactMap { $0.shape?.id })
+                let markShapeIds = Set(marks.compactMap { $0.shape?.bird_shape_id })
                 let intersection = birdShapeIds.intersection(markShapeIds)
                 if !intersection.isEmpty {
                     visibleShapeIds = intersection
@@ -97,7 +92,7 @@ class IdentificationManager {
                 }
             }
 
-            let filtered = allShapes.filter { visibleShapeIds.contains($0.id) }
+            let filtered = allShapes.filter { visibleShapeIds.contains($0.bird_shape_id) }
             return filtered.isEmpty ? allShapes : filtered
 
         } catch {
@@ -120,15 +115,14 @@ class IdentificationManager {
         
         var candidates: [IdentificationCandidate] = []
         let searchMonth = Calendar.current.component(.month, from: selectedDate)
-        let userHabitat = canonicalHabitat(from: selectedLocation)
         let userLocationTokens = tokenSet(from: selectedLocation)
         
         for bird in allBirds {
             var score = 0.0
             var matchedFeats: [String] = []
             var mismatchedFeats: [String] = []
-            if let userShapeId = selectedShape?.id {
-                if (bird.shape?.id ?? bird.shape_id) == userShapeId {
+            if let userShapeId = selectedShape?.bird_shape_id {
+                if (bird.shape?.bird_shape_id ?? bird.shape_id) == userShapeId {
                     score += 30
                     matchedFeats.append("Shape")
                 } else {
@@ -145,15 +139,6 @@ class IdentificationManager {
                 } else {
                     score -= 20
                     mismatchedFeats.append("Size")
-                }
-            }
-            if let birdHabitat = canonicalHabitat(from: bird.likelySpot), let userHabitat {
-                if birdHabitat == userHabitat {
-                    score += 20
-                    matchedFeats.append("Habitat")
-                } else {
-                    score -= 8
-                    mismatchedFeats.append("Habitat")
                 }
             }
             if !userLocationTokens.isEmpty,
@@ -186,7 +171,7 @@ class IdentificationManager {
                     guard let userFieldMark = userVariant.fieldMark else { continue }
                     let areaName = userFieldMark.area
                     let matched = birdLinks.contains {
-                        $0.area == areaName && $0.variant?.id == userVariant.id
+                        $0.area == areaName && $0.variant?.field_mark_variant_id == userVariant.field_mark_variant_id
                     }
 
                     if matched {
@@ -219,20 +204,6 @@ class IdentificationManager {
         self.results = candidates.sorted { $0.confidence > $1.confidence }
     }
     
-    private func canonicalHabitat(from raw: String?) -> String? {
-        guard let raw else { return nil }
-        let lower = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        if supportedHabitats.contains(lower) {
-            return lower
-        }
-        for token in tokenSet(from: raw) {
-            if supportedHabitats.contains(token) {
-                return token
-            }
-        }
-        return nil
-    }
-    
     private func tokenSet(from raw: String?) -> Set<String> {
         guard let raw, !raw.isEmpty else { return [] }
         let lower = raw.lowercased()
@@ -242,10 +213,10 @@ class IdentificationManager {
     }
 
     func toggleVariant(_ variant: FieldMarkVariant, for mark: BirdFieldMark) {
-        if selectedFieldMarks[mark.id] == variant {
-            selectedFieldMarks.removeValue(forKey: mark.id)
+        if selectedFieldMarks[mark.bird_field_mark_id] == variant {
+            selectedFieldMarks.removeValue(forKey: mark.bird_field_mark_id)
         } else {
-            selectedFieldMarks[mark.id] = variant
+            selectedFieldMarks[mark.bird_field_mark_id] = variant
         }
         runFilter()
     }
@@ -289,7 +260,7 @@ class IdentificationManager {
             } else {
                 result = IdentificationResult(
                     session: sessionToUpdate,
-                    ownerId: sessionToUpdate.ownerId
+                    uuser_id: sessionToUpdate.uuser_id
                 )
                 sessionToUpdate.result = result
             }
@@ -325,8 +296,8 @@ class IdentificationManager {
         }
 
         let newSession = IdentificationSession(
-            id: UUID(),
-            ownerId: currentUserId,
+            identification_session_id: UUID(),
+            uuser_id: currentUserId,
             shape: selectedShape,
             locationId: selectedLocationId,
             locationDisplayName: selectedLocation,
@@ -354,7 +325,7 @@ class IdentificationManager {
 
         let result = IdentificationResult(
             session: newSession,
-            ownerId: newSession.ownerId,
+            uuser_id: newSession.uuser_id,
             bird: winningCandidate?.bird
         )
 
@@ -390,8 +361,8 @@ class IdentificationManager {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         var sessionPayload: [String: Any] = [
-            "id": session.id.uuidString,
-            "user_id": session.ownerId?.uuidString ?? userId.uuidString,
+            "identification_session_id": session.identification_session_id.uuidString,
+            "user_id": session.uuser_id?.uuidString ?? userId.uuidString,
             "status": session.status.rawValue,
             "created_at": ISO8601DateFormatter().string(from: session.created_at),
             "updated_at": ISO8601DateFormatter().string(from: session.updated_at ?? Date())
@@ -402,7 +373,7 @@ class IdentificationManager {
         }
         
         var metadata: [String: Any] = [:]
-        if let shapeId = session.shape?.id {
+        if let shapeId = session.shape?.bird_shape_id {
             metadata["shapeId"] = shapeId
         }
         if let sizeCategory = session.sizeCategory {
@@ -417,7 +388,7 @@ class IdentificationManager {
         
         let sessionData = try? JSONSerialization.data(withJSONObject: sessionPayload)
         await BackgroundSyncAgent.shared.queueIdentificationSession(
-            id: session.id,
+            id: session.identification_session_id,
             payloadData: sessionData,
             localUpdatedAt: session.updated_at,
             operation: .create
@@ -426,16 +397,16 @@ class IdentificationManager {
         if let marks = session.selectedMarks {
             for mark in marks {
                 let markPayload: [String: Any] = [
-                    "id": mark.id.uuidString,
-                    "session_id": session.id.uuidString,
-                    "field_mark_id": mark.fieldMark?.id.uuidString ?? "",
-                    "variant_id": mark.variant?.id.uuidString ?? "",
+                    "identification_session_mark_id": mark.identification_session_mark_id.uuidString,
+                    "identification_session_id": session.identification_session_id.uuidString,
+                    "field_mark_id": mark.fieldMark?.bird_field_mark_id.uuidString ?? "",
+                    "variant_id": mark.variant?.field_mark_variant_id.uuidString ?? "",
                     "area": mark.area,
                     "created_at": ISO8601DateFormatter().string(from: session.created_at)
                 ]
                 let markData = try? JSONSerialization.data(withJSONObject: markPayload)
                 await BackgroundSyncAgent.shared.queueIdentificationSessionMark(
-                    id: mark.id,
+                    id: mark.identification_session_mark_id,
                     payloadData: markData,
                     localUpdatedAt: Date(),
                     operation: .create
@@ -444,16 +415,16 @@ class IdentificationManager {
         }
         if let result = session.result {
             let resultPayload: [String: Any] = [
-                "id": result.id.uuidString,
-                "session_id": session.id.uuidString,
-                "owner_id": result.ownerId?.uuidString ?? userId.uuidString,
-                "bird_id": result.bird?.id.uuidString ?? NSNull(),
+                "identification_result_id": result.identification_result_id.uuidString,
+                "identification_session_id": session.identification_session_id.uuidString,
+                "user_id": result.uuser_id?.uuidString ?? userId.uuidString,
+                "bird_id": result.bird?.bird_id.uuidString ?? NSNull(),
                 "created_at": ISO8601DateFormatter().string(from: result.created_at),
                 "updated_at": ISO8601DateFormatter().string(from: result.updated_at ?? Date())
             ]
             let resultData = try? JSONSerialization.data(withJSONObject: resultPayload)
             await BackgroundSyncAgent.shared.queueIdentificationResult(
-                id: result.id,
+                id: result.identification_result_id,
                 payloadData: resultData,
                 localUpdatedAt: result.updated_at,
                 operation: .create
@@ -461,9 +432,9 @@ class IdentificationManager {
             if let candidates = result.candidates {
                 for candidate in candidates {
                     let candidatePayload: [String: Any] = [
-                        "id": candidate.id.uuidString,
-                        "result_id": result.id.uuidString,
-                        "bird_id": candidate.bird?.id.uuidString ?? NSNull(),
+                        "identification_candidate_id": candidate.identification_candidate_id.uuidString,
+                        "identification_result_id": result.identification_result_id.uuidString,
+                        "bird_id": candidate.bird?.bird_id.uuidString ?? NSNull(),
                         "confidence": candidate.confidence,
                         "rank": candidate.rank ?? NSNull(),
                         "matched_features": candidate.matchScore?.matchedFeatures ?? [],
@@ -473,7 +444,7 @@ class IdentificationManager {
                     ]
                     let candidateData = try? JSONSerialization.data(withJSONObject: candidatePayload)
                     await BackgroundSyncAgent.shared.queueIdentificationCandidate(
-                        id: candidate.id,
+                        id: candidate.identification_candidate_id,
                         payloadData: candidateData,
                         localUpdatedAt: candidate.updated_at,
                         operation: .create
@@ -510,7 +481,7 @@ class IdentificationManager {
         if let sessionMarks = session.selectedMarks {
             for sessionMark in sessionMarks {
                 if let fieldMark = sessionMark.fieldMark, let variant = sessionMark.variant {
-                    newFieldMarks[fieldMark.id] = variant
+                    newFieldMarks[fieldMark.bird_field_mark_id] = variant
                 }
             }
             self.tempSelectedAreas = sessionMarks.map { $0.area }

@@ -88,7 +88,7 @@ struct WatchlistSeeder {
 			let type: WatchlistType = .custom
 			
 			let watchlist = Watchlist(
-				id: dto.id,
+				watchlist_id: dto.id,
 				type: type,
 				title: dto.title,
 				location: dto.location,
@@ -117,7 +117,7 @@ struct WatchlistSeeder {
 		let dtos = try JSONDecoder().decode([JSONSharedWatchlistDTO].self, from: data)
 		for (index, dto) in dtos.enumerated() {
 			let watchlist = Watchlist(
-				id: dto.id,
+				watchlist_id: dto.id,
 				type: .shared,
 				title: dto.title,
 				location: dto.location,
@@ -164,7 +164,7 @@ struct WatchlistSeeder {
 	private static func findOrCreateBird(from dto: JSONBirdDTO, in context: ModelContext) -> Bird {
 		let id = dto.id
 		let descriptor = FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
-			bird.id == id
+			bird.bird_id == id
 		})
 		if let existing = try? context.fetch(descriptor).first {
 			return existing
@@ -176,8 +176,7 @@ struct WatchlistSeeder {
 		if let existingByName = try? context.fetch(nameDescriptor).first {
 			return existingByName
 		}
-		let placeholder = Bird(
-			id: dto.id,
+		let placeholder = Bird(bird_id: dto.id,
 			commonName: dto.name,
 			scientificName: dto.scientificName,
 			staticImageName: dto.images.first ?? "placeholder",

@@ -69,10 +69,10 @@ class AllUpcomingBirdsViewController: UIViewController {
         
         let allSpeciesData = WatchlistManager.shared.fetchAllBirds()
         selectionVC.allSpecies = allSpeciesData.map {
-            SpeciesData(id: $0.id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+            SpeciesData(id: $0.bird_id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
         }
         let watchlistTitles = watchlistData.map { $0.bird.commonName }
-        let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.commonName) }.map { $0.id.uuidString }
+        let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.commonName) }.map { $0.bird_id.uuidString }
         selectionVC.selectedSpecies = Set(preSelectedIDs)
         navigationController?.pushViewController(selectionVC, animated: true)
     }
@@ -219,7 +219,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
         let finalEnd = parsedEnd ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: finalStart) ?? finalStart
 
         let input = BirdDateInput(
-            species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+            species: SpeciesData(id: bird.bird_id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
             startDate: finalStart,
             endDate: finalEnd
         )

@@ -63,14 +63,14 @@ actor IdentificationSyncService {
         let existingSessions = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationSession] = [:]
         for session in existingSessions {
-            existingById[session.id] = session
+            existingById[session.identification_session_id] = session
         }
         
         let shapesDescriptor = FetchDescriptor<BirdShape>()
         let shapes = try context.fetch(shapesDescriptor)
         var shapeById: [String: BirdShape] = [:]
         for shape in shapes {
-            shapeById[shape.id] = shape
+            shapeById[shape.bird_shape_id] = shape
         }
         
         var syncedCount = 0
@@ -100,8 +100,8 @@ actor IdentificationSyncService {
         let filterCategories = row.metadata?["filterCategories"]?.components(separatedBy: ",")
         
         let session = IdentificationSession(
-            id: row.id,
-            ownerId: row.userId,
+            identification_session_id: row.id,
+            uuser_id: row.userId,
             shape: shape,
             locationId: nil,
             locationDisplayName: locationDisplayName,
@@ -116,7 +116,7 @@ actor IdentificationSyncService {
     }
     
     private nonisolated func updateSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
-        session.ownerId = row.userId
+        session.uuser_id = row.userId
         
         if let shapeId = row.metadata?["shapeId"] {
             session.shape = shapeById[shapeId]
@@ -152,14 +152,14 @@ actor IdentificationSyncService {
                 return []
             }
         }
-        for session in pendingSessions where session.ownerId == nil || session.ownerId == userId {
+        for session in pendingSessions where session.uuser_id == nil || session.uuser_id == userId {
             try await pushSession(session, userId: userId, config: config, accessToken: accessToken)
         }
     }
     
     func pushSession(_ session: IdentificationSession, userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
         var metadata: [String: String] = [:]
-        if let shapeId = session.shape?.id {
+        if let shapeId = session.shape?.bird_shape_id {
             metadata["shapeId"] = shapeId
         }
         if let locationDisplayName = session.locationDisplayName {
@@ -173,8 +173,8 @@ actor IdentificationSyncService {
         }
         
         let row = IdentificationSessionRow(
-            id: session.id,
-            userId: session.ownerId ?? userId,
+            id: session.identification_session_id,
+            userId: session.uuser_id ?? userId,
             status: session.status.rawValue,
             locationLat: nil,
             locationLong: nil,
@@ -272,7 +272,7 @@ actor IdentificationSyncService {
                 let pendingSessions = try WatchlistManager.shared.context.fetch(descriptor)
                 
                 for session in pendingSessions {
-                    session.ownerId = userId
+                    session.uuser_id = userId
                     session.syncStatus = .pendingCreate
                 }
                 
@@ -313,4 +313,3 @@ actor IdentificationSyncService {
         }
     }
 }
-

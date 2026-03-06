@@ -38,7 +38,7 @@ final class UserSyncService {
             throw UserSyncError.networkError("Invalid URL")
         }
         components.path = "/rest/v1/users"
-        components.percentEncodedQuery = "on_conflict=id"
+        components.percentEncodedQuery = "on_conflict=user_id"
 
         guard let url = components.url else {
             throw UserSyncError.networkError("Invalid URL")
@@ -67,7 +67,7 @@ final class UserSyncService {
         }
     }
 
-    func fetchUser(id: UUID) async throws -> User? {
+    func fetchUser(user_id: UUID) async throws -> User? {
         guard let accessToken = UserSession.shared.getAccessToken() else {
             throw UserSyncError.notAuthenticated
         }
@@ -78,7 +78,7 @@ final class UserSyncService {
             throw UserSyncError.networkError("Invalid URL")
         }
         components.path = "/rest/v1/users"
-        components.percentEncodedQuery = "id=eq.\(id.uuidString)"
+        components.percentEncodedQuery = "user_id=eq.\(user_id.uuidString)"
 
         guard let url = components.url else {
             throw UserSyncError.networkError("Invalid URL")
@@ -116,7 +116,7 @@ final class UserSyncService {
         }
     }
 
-    func deleteUser(id: UUID) async throws {
+    func deleteUser(user_id: UUID) async throws {
         guard let accessToken = UserSession.shared.getAccessToken() else {
             throw UserSyncError.notAuthenticated
         }
@@ -127,7 +127,7 @@ final class UserSyncService {
             throw UserSyncError.networkError("Invalid URL")
         }
         components.path = "/rest/v1/users"
-        components.percentEncodedQuery = "id=eq.\(id.uuidString)"
+        components.percentEncodedQuery = "user_id=eq.\(user_id.uuidString)"
 
         guard let url = components.url else {
             throw UserSyncError.networkError("Invalid URL")

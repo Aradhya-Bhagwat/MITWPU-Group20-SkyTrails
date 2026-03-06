@@ -144,7 +144,7 @@ class SignUpViewController: UIViewController {
             let authResult = try await SupabaseAuthService.shared.verifyOTP(email: email, token: token)
 
             let user = User(
-                id: authResult.userID,
+                user_id: authResult.userID,
                 name: authResult.displayName ?? (fullName.isEmpty ? "User" : fullName),
                 gender: authResult.gender ?? "Not Specified",
                 email: authResult.email,
@@ -157,11 +157,11 @@ class SignUpViewController: UIViewController {
                 refreshToken: authResult.refreshToken
             )
             do {
-                _ = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
             }
             do {
-                try await IdentificationSyncService.shared.performSync(userId: user.id)
+                try await IdentificationSyncService.shared.performSync(userId: user.user_id)
             } catch {
             }
 

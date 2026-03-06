@@ -49,7 +49,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let preselectedBirdId: UUID?
         if let history = historyItem {
             self.birdResults = (history.candidates?.isEmpty == false) ? (history.candidates ?? []) : viewModel.results
-            preselectedBirdId = history.bird?.id
+            preselectedBirdId = history.bird?.bird_id
         } else {
             viewModel.filterBirds(
                 shape: viewModel.selectedShapeId,
@@ -62,7 +62,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         }
 
         if let preselectedBirdId,
-           let selectedItem = birdResults.firstIndex(where: { $0.bird?.id == preselectedBirdId }) {
+           let selectedItem = birdResults.firstIndex(where: { $0.bird?.bird_id == preselectedBirdId }) {
             selectedIndexPath = IndexPath(item: selectedItem, section: 0)
             selectedResult = birdResults[selectedItem].bird
         }
@@ -259,7 +259,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         if let birdSelectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController {
-            birdSelectionVC.selectedSpecies = [bird.id.uuidString]
+            birdSelectionVC.selectedSpecies = [bird.bird_id.uuidString]
             self.navigationController?.pushViewController(birdSelectionVC, animated: true)
         }
     }

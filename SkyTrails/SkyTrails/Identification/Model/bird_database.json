@@ -419,7 +419,6 @@
   },
   "birds": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440007",
       "commonName": "Amur Falcon",
       "scientificName": "Falco amurensis",
       "staticImageName": "amur_falcon",
@@ -430,10 +429,10 @@
       "size_category": 2,
       "descriptionText": "A small raptor that breeds in Siberia and migrates across India to Southern Africa.",
       "conservation_status": "Least Concern",
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440007"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440001",
       "commonName": "House Sparrow",
       "scientificName": "Passer domesticus",
       "staticImageName": "house_sparrow",
@@ -473,10 +472,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000006"
         }
       ],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440001"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440002",
       "commonName": "Red Avadavat",
       "scientificName": "Amandava amandava",
       "staticImageName": "red_avadavat",
@@ -517,10 +516,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000009"
         }
       ],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440002"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440003",
       "commonName": "Baya Weaver",
       "scientificName": "Ploceus philippinus",
       "staticImageName": "baya_weaver",
@@ -561,10 +560,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000030"
         }
       ],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440003"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440004",
       "commonName": "White-rumped Munia",
       "scientificName": "Lonchura striata",
       "staticImageName": "white_rumped_munia",
@@ -605,10 +604,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000009"
         }
       ],
-      "likelySpot": "Treetop"
+      "likelySpot": "Treetop",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440004"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440005",
       "commonName": "Scaly-breasted Munia",
       "scientificName": "Lonchura punctulata",
       "staticImageName": "scaly_breasted_munia",
@@ -649,10 +648,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000023"
         }
       ],
-      "likelySpot": "Bush"
+      "likelySpot": "Bush",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440005"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440006",
       "commonName": "Indian Silverbill",
       "scientificName": "Euodice malabarica",
       "staticImageName": "indian_silverbill",
@@ -693,10 +692,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000023"
         }
       ],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440006"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440008",
       "commonName": "Common Rosefinch",
       "scientificName": "Carpodacus erythrinus",
       "staticImageName": "common_rosefinch",
@@ -732,10 +731,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000009"
         }
       ],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440008"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440009",
       "commonName": "European Goldfinch",
       "scientificName": "Carduelis carduelis",
       "staticImageName": "european_goldfinch",
@@ -771,10 +770,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000009"
         }
       ],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440009"
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440010",
       "commonName": "Black-headed Greenfinch",
       "scientificName": "Chloris ambigua",
       "staticImageName": "black_headed_greenfinch",
@@ -811,10 +810,10 @@
           "variantId": "6a1f0000-0000-0000-0000-000000000030"
         }
       ],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "550e8400-e29b-41d4-a716-446655440010"
     },
     {
-      "id": "0be09e60-fde6-40ff-9655-a1672af90bad",
       "commonName": "Eurasian Wigeon",
       "scientificName": "Mareca penelope",
       "staticImageName": "eurasian_wigeon",
@@ -841,10 +840,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "0be09e60-fde6-40ff-9655-a1672af90bad"
     },
     {
-      "id": "9a669edc-bb7e-417b-b303-82bc99a9735c",
       "commonName": "Malabar Trogon",
       "scientificName": "Harpactes fasciatus",
       "staticImageName": "malabar_trogon",
@@ -871,10 +870,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "9a669edc-bb7e-417b-b303-82bc99a9735c"
     },
     {
-      "id": "362c8b72-d531-438e-ae56-595ec7e3c1f2",
       "commonName": "Little Bittern",
       "scientificName": "Ixobrychus minutus",
       "staticImageName": "little_bittern",
@@ -901,10 +900,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "362c8b72-d531-438e-ae56-595ec7e3c1f2"
     },
     {
-      "id": "30558f45-a487-485b-b424-808d94329807",
       "commonName": "Striated Heron",
       "scientificName": "Butorides striata",
       "staticImageName": "striated_heron",
@@ -931,10 +930,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "30558f45-a487-485b-b424-808d94329807"
     },
     {
-      "id": "f376c01c-515d-45a0-87d0-93129b7f6eb5",
       "commonName": "Greater Flamingo",
       "scientificName": "Phoenicopterus roseus",
       "staticImageName": "flamingo",
@@ -961,10 +960,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "f376c01c-515d-45a0-87d0-93129b7f6eb5"
     },
     {
-      "id": "3f2a9c79-557b-4c63-a7b5-9b82783aa7f0",
       "commonName": "Black Drongo",
       "scientificName": "Dicrurus macrocercus",
       "staticImageName": "black_drongo",
@@ -991,10 +990,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "3f2a9c79-557b-4c63-a7b5-9b82783aa7f0"
     },
     {
-      "id": "a70b9586-1d5d-4e56-bfe9-001064311e3e",
       "commonName": "House Crow",
       "scientificName": "Corvus splendens",
       "staticImageName": "crow",
@@ -1021,10 +1020,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "a70b9586-1d5d-4e56-bfe9-001064311e3e"
     },
     {
-      "id": "f6f97e0d-24e2-4965-84f0-248fa70f0ddb",
       "commonName": "Spectacled Finch",
       "scientificName": "Callacanthis burtoni",
       "staticImageName": "spectacled_finch",
@@ -1051,10 +1050,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "f6f97e0d-24e2-4965-84f0-248fa70f0ddb"
     },
     {
-      "id": "b28ae7f6-6c53-4fc8-83de-f77eea8bfa8d",
       "commonName": "Russet Sparrow",
       "scientificName": "Passer cinnamomeus",
       "staticImageName": "russet_sparrow",
@@ -1081,10 +1080,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "b28ae7f6-6c53-4fc8-83de-f77eea8bfa8d"
     },
     {
-      "id": "459fa337-231d-47d7-ba30-e51b0d7e414d",
       "commonName": "Indian Paradise Flycatcher",
       "scientificName": "Terpsiphone paradisi",
       "staticImageName": "paradise_flycatcher",
@@ -1111,10 +1110,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "459fa337-231d-47d7-ba30-e51b0d7e414d"
     },
     {
-      "id": "dc79a955-8900-49bb-82a1-80a4bc9475f9",
       "commonName": "Indian Robin",
       "scientificName": "Saxicoloides fulicatus",
       "staticImageName": "indian_robin",
@@ -1141,10 +1140,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "dc79a955-8900-49bb-82a1-80a4bc9475f9"
     },
     {
-      "id": "00729f9d-dcfb-4dcb-9a70-a5c861bd35fb",
       "commonName": "Oriental Magpie-Robin",
       "scientificName": "Copsychus saularis",
       "staticImageName": "oriental_magpie_robin",
@@ -1171,10 +1170,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Bush"
+      "likelySpot": "Bush",
+      "bird_id": "00729f9d-dcfb-4dcb-9a70-a5c861bd35fb"
     },
     {
-      "id": "ba022a51-66cd-4150-a99f-8aa8e2dd8e56",
       "commonName": "Pied Bushchat",
       "scientificName": "Saxicola caprata",
       "staticImageName": "pied_bushchat",
@@ -1201,10 +1200,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "ba022a51-66cd-4150-a99f-8aa8e2dd8e56"
     },
     {
-      "id": "58b8fd41-bc3c-4e47-9d76-47c3c92c24b9",
       "commonName": "Red-vented Bulbul",
       "scientificName": "Pycnonotus cafer",
       "staticImageName": "red_vented_bulbul",
@@ -1231,10 +1230,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Bush"
+      "likelySpot": "Bush",
+      "bird_id": "58b8fd41-bc3c-4e47-9d76-47c3c92c24b9"
     },
     {
-      "id": "6151cf4d-d6ac-4043-b6c8-cc2ac5e5d4ed",
       "commonName": "Red-whiskered Bulbul",
       "scientificName": "Pycnonotus jocosus",
       "staticImageName": "red_whiskered_bulbul",
@@ -1261,10 +1260,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "6151cf4d-d6ac-4043-b6c8-cc2ac5e5d4ed"
     },
     {
-      "id": "b66a14d3-d59c-4682-8fdb-2627ec3cdd4e",
       "commonName": "Great Indian Bustard",
       "scientificName": "Ardeotis nigriceps",
       "staticImageName": "great_indian_bustard",
@@ -1291,10 +1290,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "b66a14d3-d59c-4682-8fdb-2627ec3cdd4e"
     },
     {
-      "id": "ec28ecc4-664e-47f5-944b-f2147d4988f5",
       "commonName": "Coppersmith Barbet",
       "scientificName": "Psilopogon haemacephalus",
       "staticImageName": "coppersmith_barbet",
@@ -1321,10 +1320,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "ec28ecc4-664e-47f5-944b-f2147d4988f5"
     },
     {
-      "id": "69b307ad-d75b-4435-a2d4-3504db7c6bb7",
       "commonName": "Laughing Dove",
       "scientificName": "Spilopelia senegalensis",
       "staticImageName": "laughing_dove",
@@ -1351,10 +1350,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Bush"
+      "likelySpot": "Bush",
+      "bird_id": "69b307ad-d75b-4435-a2d4-3504db7c6bb7"
     },
     {
-      "id": "aa1be099-b28f-4e6d-95a3-03615a401e77",
       "commonName": "Spotted Dove",
       "scientificName": "Spilopelia chinensis",
       "staticImageName": "spotted_dove",
@@ -1381,10 +1380,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "aa1be099-b28f-4e6d-95a3-03615a401e77"
     },
     {
-      "id": "ced614d3-887f-4ce8-8a78-329ba5208559",
       "commonName": "Brown-headed Barbet",
       "scientificName": "Psilopogon zeylanicus",
       "staticImageName": "brown_headed_barbet",
@@ -1411,10 +1410,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "ced614d3-887f-4ce8-8a78-329ba5208559"
     },
     {
-      "id": "107faec9-819c-41da-a92b-832b1e6d48f0",
       "commonName": "Himalayan Monal",
       "scientificName": "Lophophorus impejanus",
       "staticImageName": "himalayan_monal",
@@ -1441,10 +1440,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "107faec9-819c-41da-a92b-832b1e6d48f0"
     },
     {
-      "id": "9486bbc8-ddf5-4f17-977e-c62d3c9f4555",
       "commonName": "Indian Pitta",
       "scientificName": "Pitta brachyura",
       "staticImageName": "indian_pitta",
@@ -1471,10 +1470,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "9486bbc8-ddf5-4f17-977e-c62d3c9f4555"
     },
     {
-      "id": "11c93317-4a47-496f-bf30-983fb8f4fa76",
       "commonName": "Rose-ringed Parakeet",
       "scientificName": "Psittacula krameri",
       "staticImageName": "rose_ringed_parakeet",
@@ -1501,10 +1500,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Bush"
+      "likelySpot": "Bush",
+      "bird_id": "11c93317-4a47-496f-bf30-983fb8f4fa76"
     },
     {
-      "id": "cfa8e3d9-be7c-4837-92fa-2866efa42a88",
       "commonName": "Pink-browed Rosefinch",
       "scientificName": "Carpodacus rodochroa",
       "staticImageName": "pink_browed_rosefinch",
@@ -1531,10 +1530,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "cfa8e3d9-be7c-4837-92fa-2866efa42a88"
     },
     {
-      "id": "1531e211-0a05-4536-a538-f909792047c5",
       "commonName": "Sarus Crane",
       "scientificName": "Antigone antigone",
       "staticImageName": "sarus_crane",
@@ -1561,10 +1560,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Treetop"
+      "likelySpot": "Treetop",
+      "bird_id": "1531e211-0a05-4536-a538-f909792047c5"
     },
     {
-      "id": "0cce5207-02cc-4d70-86d1-121b4e28dc94",
       "commonName": "Painted Stork",
       "scientificName": "Mycteria leucocephala",
       "staticImageName": "painted_stork",
@@ -1591,10 +1590,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "0cce5207-02cc-4d70-86d1-121b4e28dc94"
     },
     {
-      "id": "9aaf3820-ffbf-4954-a557-020038280c69",
       "commonName": "Asian Koel",
       "scientificName": "Eudynamys scolopaceus",
       "staticImageName": "asian_koel",
@@ -1621,10 +1620,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "9aaf3820-ffbf-4954-a557-020038280c69"
     },
     {
-      "id": "41fb086c-02d8-405e-b3cf-9ce57e7fdbe2",
       "commonName": "White Wagtail",
       "scientificName": "Motacilla alba",
       "staticImageName": "white_wagtail",
@@ -1651,10 +1650,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "41fb086c-02d8-405e-b3cf-9ce57e7fdbe2"
     },
     {
-      "id": "3390cb7d-33f1-4751-9cfc-a12e5feea3be",
       "commonName": "Wire-tailed Swallow",
       "scientificName": "Hirundo smithii",
       "staticImageName": "wire_tailed_swallow",
@@ -1681,10 +1680,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Ground"
+      "likelySpot": "Ground",
+      "bird_id": "3390cb7d-33f1-4751-9cfc-a12e5feea3be"
     },
     {
-      "id": "f9dd7e72-0e16-46c8-a43f-f77917c3582a",
       "commonName": "Purple Sunbird",
       "scientificName": "Cinnyris asiaticus",
       "staticImageName": "purple_sunbird",
@@ -1711,10 +1710,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "f9dd7e72-0e16-46c8-a43f-f77917c3582a"
     },
     {
-      "id": "4ddb2745-10b3-44b1-aa69-2a222c089779",
       "commonName": "White-throated Kingfisher",
       "scientificName": "Halcyon smyrnensis",
       "staticImageName": "white_throated_kingfisher",
@@ -1741,10 +1740,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Wetlands"
+      "likelySpot": "Wetlands",
+      "bird_id": "4ddb2745-10b3-44b1-aa69-2a222c089779"
     },
     {
-      "id": "a4c26ca3-6beb-49fc-83b0-de1036a48c5a",
       "commonName": "Great Hornbill",
       "scientificName": "Buceros bicornis",
       "staticImageName": "great_hornbill",
@@ -1771,10 +1770,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "a4c26ca3-6beb-49fc-83b0-de1036a48c5a"
     },
     {
-      "id": "25eb9fbd-aae9-4a1b-a3dd-0195062024a0",
       "commonName": "Indian Scops Owl",
       "scientificName": "Otus bakkamoena",
       "staticImageName": "indian_scops_owl",
@@ -1801,10 +1800,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "25eb9fbd-aae9-4a1b-a3dd-0195062024a0"
     },
     {
-      "id": "20e12bec-47ac-4431-81dd-a46af5a46c34",
       "commonName": "Indian Grey Hornbill",
       "scientificName": "Ocyceros birostris",
       "staticImageName": "indian_grey_hornbill",
@@ -1831,10 +1830,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "20e12bec-47ac-4431-81dd-a46af5a46c34"
     },
     {
-      "id": "6fcfa3a6-4bdd-47ed-8335-6135f2f37bf0",
       "commonName": "Shikra",
       "scientificName": "Accipiter badius",
       "staticImageName": "shikra",
@@ -1861,10 +1860,10 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Sky"
+      "likelySpot": "Sky",
+      "bird_id": "6fcfa3a6-4bdd-47ed-8335-6135f2f37bf0"
     },
     {
-      "id": "9ab7c5bf-c132-4926-a1fe-a980bc8dbc34",
       "commonName": "Black Kite",
       "scientificName": "Milvus migrans",
       "staticImageName": "black_kite",
@@ -1891,7 +1890,8 @@
         12
       ],
       "fieldMarkData": [],
-      "likelySpot": "Open Sea"
+      "likelySpot": "Open Sea",
+      "bird_id": "9ab7c5bf-c132-4926-a1fe-a980bc8dbc34"
     }
   ]
 }

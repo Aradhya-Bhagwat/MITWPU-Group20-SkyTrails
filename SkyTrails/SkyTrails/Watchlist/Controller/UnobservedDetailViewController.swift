@@ -243,7 +243,7 @@ class UnobservedDetailViewController: UIViewController {
                             }
                             try manager.addBirds([bird], to: targetWatchlistId, asObserved: false)
                             
-                            if let newEntry = try? manager.findEntry(birdId: bird.id, watchlistId: targetWatchlistId) {
+                            if let newEntry = try? manager.findEntry(birdId: bird.bird_id, watchlistId: targetWatchlistId) {
                                 newEntry.toObserveStartDate = startDatePicker.date
                                 newEntry.toObserveEndDate = endDatePicker.date
                                 
