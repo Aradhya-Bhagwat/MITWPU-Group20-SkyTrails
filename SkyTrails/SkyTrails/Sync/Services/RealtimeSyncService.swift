@@ -235,6 +235,7 @@ final class RealtimeSyncService: NSObject {
                 case "observed_bird_photos":
                     try await handlePhotoEvent(payload)
                 default:
+                    break
                 }
             } catch {
             }

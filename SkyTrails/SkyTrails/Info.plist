@@ -6,6 +6,18 @@
 	<array>
 		<string>com.skytrails.sync.watchlist</string>
 	</array>
+	<key>BIRD_NEWS_API_KEY</key>
+	<string>200143b5e8f234f9ac8a2c8893f274c2</string>
+	<key>BIRD_NEWS_ENABLE_API</key>
+	<false/>
+	<key>BIRD_NEWS_LANG</key>
+	<string>en</string>
+	<key>BIRD_NEWS_MAX_RESULTS</key>
+	<integer>5</integer>
+	<key>BIRD_NEWS_QUERY</key>
+	<string>(birds OR avian OR ornithology OR migratory birds)</string>
+	<key>BIRD_NEWS_USE_LOCAL_JSON</key>
+	<true/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -19,24 +31,6 @@
 	</array>
 	<key>SEED_WATCHLISTS</key>
 	<false/>
-	<key>BIRD_NEWS_API_KEY</key>
-	<string>200143b5e8f234f9ac8a2c8893f274c2</string>
-	<key>BIRD_NEWS_ENABLE_API</key>
-	<false/>
-	<key>BIRD_NEWS_LANG</key>
-	<string>en</string>
-	<key>BIRD_NEWS_MAX_RESULTS</key>
-	<integer>5</integer>
-	<key>BIRD_NEWS_QUERY</key>
-	<string>(birds OR avian OR ornithology OR migratory birds)</string>
-	<key>BIRD_NEWS_USE_LOCAL_JSON</key>
-	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>SkyTrails uses the camera so you can set your profile photo.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>SkyTrails may save edited profile photos to your library when requested.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>SkyTrails accesses your photo library so you can choose a profile photo.</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsYXdhaG50dGdpb3N3ZmRuenV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzgzOTYsImV4cCI6MjA4Njk1NDM5Nn0.enPngCMlBvB6f3_UUK8hpIZIvZ6lARGr_TEGgBiomXw</string>
 	<key>SUPABASE_BIRD_BUCKET</key>
@@ -59,10 +53,10 @@
 	<string>https://qlawahnttgioswfdnzuz.supabase.co</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
-		<key>UIApplicationSupportsTabbedSceneCollection</key>
-		<false/>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<true/>
+		<key>UIApplicationSupportsTabbedSceneCollection</key>
+		<false/>
 		<key>UISceneConfigurations</key>
 		<dict>
 			<key>UIWindowSceneSessionRoleApplication</key>

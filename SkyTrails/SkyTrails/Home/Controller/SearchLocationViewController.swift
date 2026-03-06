@@ -147,6 +147,7 @@ class SearchLocationViewController: UIViewController {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
+            break
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:

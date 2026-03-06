@@ -316,6 +316,7 @@ extension HomeViewController {
             if let first = self.migrationCards.first {
                 switch first {
                 case .combined(let migration, let hotspot):
+                    break
                 }
             }
             

@@ -638,6 +638,7 @@ actor BackgroundSyncAgent {
                 }
                 
             default:
+                break
             }
         } catch {
         }
