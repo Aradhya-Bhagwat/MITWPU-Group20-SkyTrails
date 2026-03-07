@@ -98,20 +98,13 @@ class SearchLocationViewController: UIViewController {
     private func cityState(from mapItem: MKMapItem?) -> String? {
         guard let mapItem else { return nil }
         
-        if #available(iOS 26.0, *) {
-            if let cityState = mapItem.addressRepresentations?.cityWithContext(MKAddressRepresentations.ContextStyle.full) {
-                return cityState
-            }
-            return mapItem.addressRepresentations?.cityName
-        } else {
-            let placemark = mapItem.placemark
-            let city = placemark.locality ?? placemark.subLocality
-            let state = placemark.administrativeArea
-            if let city, let state, !city.isEmpty, !state.isEmpty {
-                return "\(city), \(state)"
-            }
-            return city ?? state
+        let city = mapItem.addressRepresentations?.cityName ?? mapItem.placemark.locality ?? mapItem.placemark.subLocality
+        let state = mapItem.placemark.administrativeArea
+        
+        if let city, let state, !city.isEmpty, !state.isEmpty {
+            return "\(city), \(state)"
         }
+        return city ?? state
     }
 
     private func finalizeSelection(name: String, detail: String?, lat: Double, lon: Double) {

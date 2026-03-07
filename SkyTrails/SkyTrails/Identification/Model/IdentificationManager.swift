@@ -260,7 +260,7 @@ class IdentificationManager {
             } else {
                 result = IdentificationResult(
                     session: sessionToUpdate,
-                    uuser_id: sessionToUpdate.uuser_id
+                    user_id: sessionToUpdate.user_id
                 )
                 sessionToUpdate.result = result
             }
@@ -297,7 +297,7 @@ class IdentificationManager {
 
         let newSession = IdentificationSession(
             identification_session_id: UUID(),
-            uuser_id: currentUserId,
+            user_id: currentUserId,
             shape: selectedShape,
             locationId: selectedLocationId,
             locationDisplayName: selectedLocation,
@@ -325,7 +325,7 @@ class IdentificationManager {
 
         let result = IdentificationResult(
             session: newSession,
-            uuser_id: newSession.uuser_id,
+            user_id: newSession.user_id,
             bird: winningCandidate?.bird
         )
 
@@ -362,7 +362,7 @@ class IdentificationManager {
         encoder.dateEncodingStrategy = .iso8601
         var sessionPayload: [String: Any] = [
             "identification_session_id": session.identification_session_id.uuidString,
-            "user_id": session.uuser_id?.uuidString ?? userId.uuidString,
+            "user_id": session.user_id?.uuidString ?? userId.uuidString,
             "status": session.status.rawValue,
             "created_at": ISO8601DateFormatter().string(from: session.created_at),
             "updated_at": ISO8601DateFormatter().string(from: session.updated_at ?? Date())
@@ -417,7 +417,7 @@ class IdentificationManager {
             let resultPayload: [String: Any] = [
                 "identification_result_id": result.identification_result_id.uuidString,
                 "identification_session_id": session.identification_session_id.uuidString,
-                "user_id": result.uuser_id?.uuidString ?? userId.uuidString,
+                "user_id": result.user_id?.uuidString ?? userId.uuidString,
                 "bird_id": result.bird?.bird_id.uuidString ?? NSNull(),
                 "created_at": ISO8601DateFormatter().string(from: result.created_at),
                 "updated_at": ISO8601DateFormatter().string(from: result.updated_at ?? Date())

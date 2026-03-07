@@ -64,9 +64,7 @@ struct WatchlistSeeder {
 		}
         do {
             let descriptor = FetchDescriptor<Watchlist>()
-            let allWatchlists = try context.fetch(descriptor)
-            let withCover = allWatchlists.filter { $0.coverImagePath != nil }.count
-            let withoutCover = allWatchlists.count - withCover
+            let _ = try context.fetch(descriptor)
         } catch {
         }
 		do {
@@ -74,7 +72,7 @@ struct WatchlistSeeder {
 		} catch {
 			throw SeederError.saveFailed(error)
 		}
-		let finalCount = try context.fetchCount(descriptor)
+		_ = try context.fetchCount(descriptor)
 	}
 	
 	@MainActor

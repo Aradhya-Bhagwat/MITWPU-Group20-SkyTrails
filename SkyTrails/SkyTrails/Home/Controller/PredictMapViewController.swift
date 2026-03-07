@@ -154,17 +154,19 @@ class PredictMapViewController: UIViewController {
         do {
             let response = try await MKLocalSearch(request: request).start()
 
-            let nearest = nearestMapItem(to: coordinate, from: response.mapItems)
-            if let regionPolygon = polygonCoordinates(
-                from: response.boundingRegion,
-                near: coordinate,
-                nearestResultCoordinate: nearest?.location.coordinate
-            ) {
-                return .polygon(regionPolygon)
-            }
+            if let nearest = nearestMapItem(to: coordinate, from: response.mapItems) {
+                if let regionPolygon = polygonCoordinates(
+                    from: response.boundingRegion,
+                    near: coordinate,
+                    nearestResultCoordinate: nearest.location.coordinate
+                ) {
+                    return .polygon(regionPolygon)
+                }
 
-            if let circularRegion = nearest?.placemark.region as? CLCircularRegion {
-                let radiusKm = max(0.2, circularRegion.radius / 1000.0)
+                // If no polygon, use a circular representation of the bounding region
+                let span = response.boundingRegion.span
+                let radiusMeters = max(span.latitudeDelta, span.longitudeDelta) * 111_000.0 / 2.0
+                let radiusKm = max(0.2, radiusMeters / 1000.0)
                 return .circle(radiusKm: radiusKm)
             }
         } catch {

@@ -368,7 +368,7 @@ struct IdentificationSessionRow: Codable, Sendable {
 struct IdentificationResultRow: Codable, Sendable {
     let id: UUID
     let sessionId: UUID
-    let uuser_id: UUID?
+    let user_id: UUID?
     let birdId: UUID?
     let syncStatus: String
     let rowVersion: Int
@@ -380,7 +380,7 @@ struct IdentificationResultRow: Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id = "identification_result_id"
         case sessionId = "identification_session_id"
-        case uuser_id = "user_id"
+        case user_id
         case birdId = "bird_id"
         case syncStatus = "sync_status"
         case rowVersion = "row_version"

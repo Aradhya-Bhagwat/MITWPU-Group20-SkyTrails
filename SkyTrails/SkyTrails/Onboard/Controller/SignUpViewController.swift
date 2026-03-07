@@ -166,13 +166,26 @@ class SignUpViewController: UIViewController {
             }
 
             Task {
-                try? await UserSyncService.shared.upsertUser(user)
+                do {
+                    try await UserSyncService.shared.upsertUser(user)
+                } catch {
+                    print("DEBUG: User sync failed: \(error)")
+                    await MainActor.run {
+                        self.show("Account created locally, but could not sync details: \(error.localizedDescription)") {
+                            self.goToMain()
+                        }
+                    }
+                    return
+                }
+
+                await MainActor.run {
+                    self.show("Account created successfully!") {
+                        self.goToMain()
+                    }
+                }
             }
 
             await WatchlistManager.shared.bindCurrentUserOwnership()
-            show("Account created successfully!") {
-                self.goToMain()
-            }
         } catch {
             show(error.localizedDescription)
         }
