@@ -222,7 +222,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             )
             let sessions = try context.fetch(descriptor)
             self.histories = sessions.filter {
-                $0.status == .completed && (currentUserId == nil ? $0.uuser_id == nil : $0.uuser_id == currentUserId)
+                $0.status == .completed && (currentUserId == nil ? $0.user_id == nil : $0.user_id == currentUserId)
             }
         } catch {
             self.histories = []

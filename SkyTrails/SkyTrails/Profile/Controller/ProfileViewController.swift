@@ -24,6 +24,13 @@ class ProfileViewController: UIViewController,
 
     // MARK: - Lifecycle
 
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            self.hidesBottomBarWhenPushed = true
+        }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -36,7 +43,7 @@ class ProfileViewController: UIViewController,
         super.viewDidLayoutSubviews()
 
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
-        logoutButton.layer.cornerRadius = 20
+        logoutButton.layer.cornerRadius = 22
     }
 
     // MARK: - UI Setup
@@ -45,11 +52,17 @@ class ProfileViewController: UIViewController,
 
         view.backgroundColor = .systemBackground
 
+        // Remove from storyboard to clear constraints and re-add for programmatic layout
+        let elements = [profileImageView, nameLabel, emailButton, logoutButton]
+        elements.forEach { $0?.removeFromSuperview() }
+        elements.forEach { if let el = $0 { view.addSubview(el) } }
+
         profileImageView.clipsToBounds = true
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.isUserInteractionEnabled = true
 
         nameLabel.font = .systemFont(ofSize: 26, weight: .bold)
+        nameLabel.textAlignment = .center
 
         // Email button style
         emailButton.configuration = .filled()
@@ -91,11 +104,14 @@ class ProfileViewController: UIViewController,
 
             nameLabel.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 16),
             nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            nameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            nameLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
             emailButton.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
             emailButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emailButton.heightAnchor.constraint(equalToConstant: 34),
-            emailButton.widthAnchor.constraint(lessThanOrEqualToConstant: 240)
+            // Use intrinsic content size with a safe maximum
+            emailButton.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -32)
         ])
     }
 
@@ -353,7 +369,13 @@ class ProfileViewController: UIViewController,
     // MARK: - Row Actions
 
     @objc private func editProfile() {
-        navigationController?.pushViewController(EditProfileViewController(), animated: true)
+        let editVC = EditProfileViewController()
+        editVC.onProfileUpdated = { [weak self] in
+            DispatchQueue.main.async {
+                self?.loadUser()
+            }
+        }
+        navigationController?.pushViewController(editVC, animated: true)
     }
 
     @objc private func openSettings() {
@@ -363,14 +385,23 @@ class ProfileViewController: UIViewController,
     @objc private func shareProfileTapped() {
 
         let message = """
-Hey! I'm using SkyTrails 🐦
+🌟 Join me on SkyTrails! 🐦
 
-SkyTrails predicts bird migration and helps discover amazing bird sightings.
+SkyTrails helps you track and predict bird migrations, discover rare sightings, and explore the wonders of the avian world. 🌍✨
 
-Join me on SkyTrails and explore birdwatching like never before!
+Check it out and join the community here:
+https://skytrails.app/download
+
+Let's explore birdwatching together! 🕊️🔭
 """
 
         let shareVC = UIActivityViewController(activityItems: [message], applicationActivities: nil)
+
+        if let popover = shareVC.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
 
         present(shareVC, animated: true)
     }
@@ -383,9 +414,9 @@ Join me on SkyTrails and explore birdwatching like never before!
 
         NSLayoutConstraint.activate([
             logoutButton.topAnchor.constraint(equalTo: actionsStack.bottomAnchor, constant: 20),
-            logoutButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            logoutButton.widthAnchor.constraint(equalToConstant: 160),
-            logoutButton.heightAnchor.constraint(equalToConstant: 44)
+            logoutButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            logoutButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            logoutButton.heightAnchor.constraint(equalToConstant: 48)
         ])
     }
 
@@ -405,13 +436,15 @@ Join me on SkyTrails and explore birdwatching like never before!
 
         aboutLabel.text = "SkyTrails"
         aboutLabel.textAlignment = .center
-        aboutLabel.font = .systemFont(ofSize: 13)
+        aboutLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        aboutLabel.textColor = .secondaryLabel
 
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
         versionLabel.text = "Version \(version)"
         versionLabel.textAlignment = .center
-        versionLabel.font = .systemFont(ofSize: 12)
+        versionLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        versionLabel.textColor = .tertiaryLabel
 
         view.addSubview(aboutLabel)
         view.addSubview(versionLabel)
@@ -424,7 +457,7 @@ Join me on SkyTrails and explore birdwatching like never before!
 
         NSLayoutConstraint.activate([
 
-            versionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+            versionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
             versionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
             aboutLabel.bottomAnchor.constraint(equalTo: versionLabel.topAnchor, constant: -2),

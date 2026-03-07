@@ -101,7 +101,7 @@ actor IdentificationSyncService {
         
         let session = IdentificationSession(
             identification_session_id: row.id,
-            uuser_id: row.userId,
+            user_id: row.userId,
             shape: shape,
             locationId: nil,
             locationDisplayName: locationDisplayName,
@@ -116,7 +116,7 @@ actor IdentificationSyncService {
     }
     
     private nonisolated func updateSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
-        session.uuser_id = row.userId
+        session.user_id = row.userId
         
         if let shapeId = row.metadata?["shapeId"] {
             session.shape = shapeById[shapeId]
@@ -139,57 +139,65 @@ actor IdentificationSyncService {
     }
     
     func pushPendingSessions(userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
-        let pendingSessions = await MainActor.run { () -> [IdentificationSession] in
+        let pendingSessionIDs = await MainActor.run { () -> [UUID] in
             do {
                 let descriptor = FetchDescriptor<IdentificationSession>(
                     sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
                 )
                 let sessions = try WatchlistManager.shared.context.fetch(descriptor)
-                for s in sessions {
-                }
-                return sessions
+                return sessions.filter { $0.user_id == nil || $0.user_id == userId }.map { $0.identification_session_id }
             } catch {
                 return []
             }
         }
-        for session in pendingSessions where session.uuser_id == nil || session.uuser_id == userId {
-            try await pushSession(session, userId: userId, config: config, accessToken: accessToken)
+        for sessionID in pendingSessionIDs {
+            try await pushSession(sessionID: sessionID, userId: userId, config: config, accessToken: accessToken)
         }
     }
     
-    func pushSession(_ session: IdentificationSession, userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
-        var metadata: [String: String] = [:]
-        if let shapeId = session.shape?.bird_shape_id {
-            metadata["shapeId"] = shapeId
-        }
-        if let locationDisplayName = session.locationDisplayName {
-            metadata["locationDisplayName"] = locationDisplayName
-        }
-        if let sizeCategory = session.sizeCategory {
-            metadata["sizeCategory"] = String(sizeCategory)
-        }
-        if let filterCategories = session.selectedFilterCategories {
-            metadata["filterCategories"] = filterCategories.joined(separator: ",")
-        }
+    func pushSession(sessionID: UUID, userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
         
-        let row = IdentificationSessionRow(
-            id: session.identification_session_id,
-            userId: session.uuser_id ?? userId,
-            status: session.status.rawValue,
-            locationLat: nil,
-            locationLong: nil,
-            deviceInfo: nil,
-            notes: nil,
-            isPublic: false,
-            weatherConditions: nil,
-            metadata: metadata.isEmpty ? nil : metadata,
-            createdAt: session.created_at,
-            updatedAt: session.updated_at
-        )
-        
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(row)
+        let (row, data) = try await MainActor.run { () -> (IdentificationSessionRow, Data) in
+            let descriptor = FetchDescriptor<IdentificationSession>(
+                predicate: #Predicate { $0.identification_session_id == sessionID }
+            )
+            guard let session = try WatchlistManager.shared.context.fetch(descriptor).first else {
+                throw IdentificationSyncError.contextError("Session not found")
+            }
+            
+            var metadata: [String: String] = [:]
+            if let shapeId = session.shape?.bird_shape_id {
+                metadata["shapeId"] = shapeId
+            }
+            if let locationDisplayName = session.locationDisplayName {
+                metadata["locationDisplayName"] = locationDisplayName
+            }
+            if let sizeCategory = session.sizeCategory {
+                metadata["sizeCategory"] = String(sizeCategory)
+            }
+            if let filterCategories = session.selectedFilterCategories {
+                metadata["filterCategories"] = filterCategories.joined(separator: ",")
+            }
+            
+            let row = IdentificationSessionRow(
+                id: session.identification_session_id,
+                userId: session.user_id ?? userId,
+                status: session.status.rawValue,
+                locationLat: nil,
+                locationLong: nil,
+                deviceInfo: nil,
+                notes: nil,
+                isPublic: false,
+                weatherConditions: nil,
+                metadata: metadata.isEmpty ? nil : metadata,
+                createdAt: session.created_at,
+                updatedAt: session.updated_at
+            )
+            
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            return (row, try encoder.encode(row))
+        }
         
         let urlString = "\(config.projectURL.absoluteString)/rest/v1/identification_sessions"
         guard let url = URL(string: urlString) else {
@@ -213,8 +221,13 @@ actor IdentificationSyncService {
         }
         
         await MainActor.run {
-            session.syncStatus = .synced
-            session.lastSyncedAt = Date()
+            let descriptor = FetchDescriptor<IdentificationSession>(
+                predicate: #Predicate { $0.identification_session_id == sessionID }
+            )
+            if let session = try? WatchlistManager.shared.context.fetch(descriptor).first {
+                session.syncStatus = .synced
+                session.lastSyncedAt = Date()
+            }
         }
     }
     
@@ -272,7 +285,7 @@ actor IdentificationSyncService {
                 let pendingSessions = try WatchlistManager.shared.context.fetch(descriptor)
                 
                 for session in pendingSessions {
-                    session.uuser_id = userId
+                    session.user_id = userId
                     session.syncStatus = .pendingCreate
                 }
                 

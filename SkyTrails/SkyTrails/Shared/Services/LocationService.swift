@@ -90,30 +90,17 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
     func reverseGeocode(lat: Double, lon: Double) async -> String? {
         let location = CLLocation(latitude: lat, longitude: lon)
         
-        if #available(iOS 26.0, *) {
-            do {
-                guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
-                let mapItems = try await request.mapItems
-                guard let mapItem = mapItems.first else { return nil }
-                
-                if let cityState = mapItem.addressRepresentations?.cityWithContext(MKAddressRepresentations.ContextStyle.full) {
-                    return cityState
-                }
-                return mapItem.addressRepresentations?.cityName ?? mapItem.name
-            } catch {
-                logger.log(error: error, context: "LocationService.reverseGeocode")
-                return nil
-            }
-        } else {
-            let geocoder = CLGeocoder()
-            do {
-                let placemarks = try await geocoder.reverseGeocodeLocation(location)
-                guard let placemark = placemarks.first else { return nil }
-                return placemark.locality ?? placemark.name ?? placemark.country
-            } catch {
-                logger.log(error: error, context: "LocationService.reverseGeocode")
-                return nil
-            }
+        let geocoder = CLGeocoder()
+        do {
+            let placemarks = try await geocoder.reverseGeocodeLocation(location)
+            guard let placemark = placemarks.first else { return nil }
+            
+            // In iOS 26+ CLPlacemark might be deprecated or its properties changed
+            // Using a resilient strategy: locality -> name -> subLocality -> country
+            return placemark.locality ?? placemark.name ?? placemark.subLocality ?? placemark.country
+        } catch {
+            logger.log(error: error, context: "LocationService.reverseGeocode")
+            return nil
         }
     }
     func getCurrentLocation() async throws -> LocationData {

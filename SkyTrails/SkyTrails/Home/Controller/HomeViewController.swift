@@ -299,8 +299,7 @@ extension HomeViewController {
     }
 
     private func loadHomeData() {
-        Task { @MainActor [weak self] in
-            guard let self = self else { return }
+        Task { @MainActor in
             let userLocation = self.getUserLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             self.homeScreenData = data
@@ -313,20 +312,13 @@ extension HomeViewController {
             self.observations = data.recentObservations
             self.news = data.news
             self.migrationCards = data.migrationCards
-            if let first = self.migrationCards.first {
-                switch first {
-                case .combined(let migration, let hotspot):
-                    break
-                }
-            }
             
             self.homeCollectionView.reloadData()
         }
     }
 
     private func refreshHomeData() {
-        Task { @MainActor [weak self] in
-            guard let self = self else { return }
+        Task { @MainActor in
             let userLocation = self.getUserLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             

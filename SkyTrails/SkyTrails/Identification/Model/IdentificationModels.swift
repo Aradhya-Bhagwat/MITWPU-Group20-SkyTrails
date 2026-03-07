@@ -86,7 +86,7 @@ final class IdentificationSession {
     @Attribute(.unique)
     var identification_session_id: UUID
     
-    var uuser_id: UUID?
+    var user_id: UUID?
     var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
     var syncStatus: SyncStatus {
         get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
@@ -118,7 +118,7 @@ final class IdentificationSession {
 
     init(
         identification_session_id: UUID = UUID(),
-        uuser_id: UUID? = nil,
+        user_id: UUID? = nil,
         shape: BirdShape?,
         locationId: UUID? = nil,
         locationDisplayName: String? = nil,
@@ -129,8 +129,8 @@ final class IdentificationSession {
         selectedFilterCategories: [String]? = nil
     ) {
         self.identification_session_id = identification_session_id
-        self.uuser_id = uuser_id
-        self.syncStatusRaw = uuser_id == nil ? SyncStatus.pendingOwner.rawValue : SyncStatus.pendingCreate.rawValue
+        self.user_id = user_id
+        self.syncStatusRaw = user_id == nil ? SyncStatus.pendingOwner.rawValue : SyncStatus.pendingCreate.rawValue
         self.shape = shape
         self.locationId = locationId
         self.locationDisplayName = locationDisplayName
@@ -176,7 +176,7 @@ final class IdentificationResult {
     var identification_result_id: UUID
     
     var session: IdentificationSession?
-    var uuser_id: UUID?
+    var user_id: UUID?
     var syncStatus: SyncStatus?
     
     var bird: Bird?
@@ -195,14 +195,14 @@ final class IdentificationResult {
     init(
         identification_result_id: UUID = UUID(),
         session: IdentificationSession? = nil,
-        uuser_id: UUID? = nil,
+        user_id: UUID? = nil,
         bird: Bird? = nil,
         createdAt: Date = Date()
     ) {
         self.identification_result_id = identification_result_id
         self.session = session
-        self.uuser_id = uuser_id
-        self.syncStatus = uuser_id == nil ? .pendingOwner : .pendingCreate
+        self.user_id = user_id
+        self.syncStatus = user_id == nil ? .pendingOwner : .pendingCreate
         self.bird = bird
         self.createdAt = createdAt
         self.created_at = createdAt
