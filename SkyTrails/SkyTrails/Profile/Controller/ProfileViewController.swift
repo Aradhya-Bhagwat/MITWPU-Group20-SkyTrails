@@ -3,6 +3,8 @@ import Photos
 import AVFoundation
 import ImageIO
 
+import SwiftUI
+
 class ProfileViewController: UIViewController,
                              UIImagePickerControllerDelegate,
                              UINavigationControllerDelegate {
@@ -21,7 +23,7 @@ class ProfileViewController: UIViewController,
     private let actionsStack = UIStackView()
     private let aboutLabel = UILabel()
     private let versionLabel = UILabel()
-
+    
     // MARK: - Lifecycle
 
     override func awakeFromNib() {
@@ -43,7 +45,7 @@ class ProfileViewController: UIViewController,
         super.viewDidLayoutSubviews()
 
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
-        logoutButton.layer.cornerRadius = 22
+        logoutButton.layer.cornerRadius = 24
     }
 
     // MARK: - UI Setup
@@ -64,11 +66,13 @@ class ProfileViewController: UIViewController,
         nameLabel.font = .systemFont(ofSize: 26, weight: .bold)
         nameLabel.textAlignment = .center
 
-        // Email button style
+        // Email button style - now clearly an interactive element
         emailButton.configuration = .filled()
-        emailButton.configuration?.baseBackgroundColor = .secondarySystemBackground
+        emailButton.configuration?.baseBackgroundColor = .systemBlue.withAlphaComponent(0.12)
         emailButton.configuration?.baseForegroundColor = .systemBlue
         emailButton.configuration?.cornerStyle = .capsule
+        emailButton.configuration?.image = UIImage(systemName: "bird.fill")
+        emailButton.configuration?.imagePadding = 10
 
         emailButton.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -107,11 +111,10 @@ class ProfileViewController: UIViewController,
             nameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             nameLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            emailButton.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
+            emailButton.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 14),
             emailButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emailButton.heightAnchor.constraint(equalToConstant: 34),
-            // Use intrinsic content size with a safe maximum
-            emailButton.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -32)
+            emailButton.heightAnchor.constraint(equalToConstant: 44),
+            emailButton.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -40)
         ])
     }
 
@@ -138,24 +141,19 @@ class ProfileViewController: UIViewController,
         }
     }
 
-    // MARK: - Email Share
+    // MARK: - Mini-Game
 
     @objc private func emailTapped() {
-
-        guard let email = emailButton.title(for: .normal) else { return }
-
-        let activityVC = UIActivityViewController(activityItems: [email], applicationActivities: nil)
-
-        if let popover = activityVC.popoverPresentationController {
-            popover.sourceView = emailButton
-            popover.sourceRect = emailButton.bounds
-        }
-
-        present(activityVC, animated: true)
+        // Remove standard sharing and present the polished SwiftUI game view instead
+        let gameView = MigrationGameView()
+        let hostingController = UIHostingController(rootView: gameView)
+        hostingController.modalPresentationStyle = .fullScreen
+        hostingController.modalTransitionStyle = .coverVertical
+        
+        present(hostingController, animated: true)
     }
 
     // MARK: - Logout
-
     @IBAction func logoutTapped(_ sender: UIButton) {
         logout()
     }
@@ -365,8 +363,6 @@ class ProfileViewController: UIViewController,
 
         return container
     }
-
-    // MARK: - Row Actions
 
     @objc private func editProfile() {
         let editVC = EditProfileViewController()
