@@ -66,6 +66,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidEnterBackground(_ scene: UIScene) {
         sessionValidationTimer?.invalidate()
         sessionValidationTimer = nil
+        RealtimeSyncService.shared.disconnect()
         Task {
             await BackgroundSyncAgent.shared.scheduleBackgroundSync()
         }
@@ -178,7 +179,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
 
-        if RealtimeSyncService.shared.connectionState != .connected {
+        if RealtimeSyncService.shared.connectionState == .disconnected {
             do {
                 try await RealtimeSyncService.shared.connect()
                 try await RealtimeSyncService.shared.subscribeAll()
