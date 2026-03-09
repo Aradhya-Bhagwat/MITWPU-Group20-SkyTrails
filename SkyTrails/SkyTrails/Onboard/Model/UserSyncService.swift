@@ -63,6 +63,7 @@ final class UserSyncService {
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = data.isEmpty ? "Unknown error" : String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("DEBUG: UserSyncService upsertUser failed - Status: \(httpResponse.statusCode), Response: \(message)")
             throw UserSyncError.serverError("Status \(httpResponse.statusCode): \(message)")
         }
     }
