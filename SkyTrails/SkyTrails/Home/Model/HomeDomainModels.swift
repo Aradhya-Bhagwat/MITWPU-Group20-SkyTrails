@@ -75,7 +75,7 @@ struct HomeScreenData {
     }
     
     var displayableSpots: [PopularSpotUI] {
-        let sourceSpots = watchlistSpots.isEmpty ? recommendedSpots : watchlistSpots
+        let sourceSpots = recommendedSpots.isEmpty ? watchlistSpots : recommendedSpots
         return sourceSpots.map { spot in
             PopularSpotUI(
                 id: spot.id,
@@ -257,6 +257,38 @@ struct RelevantSighting {
     let lat: Double
     let lon: Double
     let week: Int
+}
+
+struct NearbyHotspotEdgeRequest: Encodable {
+    let lat: Double
+    let lng: Double
+}
+
+struct NearbyHotspotEdgeResponse: Codable {
+    let card: NearbyHotspotEdgeCard?
+    let nearbyHotspots: [NearbyHotspotEdgeCard]?
+    let meta: NearbyHotspotEdgeMeta?
+}
+
+struct NearbyHotspotEdgeCard: Codable {
+    let hotspotId: String
+    let placeName: String
+    let locationDetail: String
+    let weekNumber: String?
+    let speciesCount: Int?
+    let distanceKm: Double?
+    let distanceString: String?
+    let center: NearbyHotspotEdgeCenter
+}
+
+struct NearbyHotspotEdgeCenter: Codable {
+    let lat: Double
+    let lng: Double
+}
+
+struct NearbyHotspotEdgeMeta: Codable {
+    let hotspotCacheHit: Bool
+    let ebirdCacheUsed: Bool
 }
 
 extension Date {

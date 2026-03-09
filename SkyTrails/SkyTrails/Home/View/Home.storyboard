@@ -155,7 +155,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="98y-JM-3ya" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1932.06106870229" y="134.50704225352112"/>
+            <point key="canvasLocation" x="1931" y="130"/>
         </scene>
         <!--Predict Map View Controller-->
         <scene sceneID="tKp-G2-UKG">
@@ -393,7 +393,8 @@
                             <constraint firstItem="bUG-Ir-K8P" firstAttribute="trailing" secondItem="Jfq-sv-K0l" secondAttribute="trailing" constant="8" id="Sp5-GN-MS3"/>
                             <constraint firstItem="bUG-Ir-K8P" firstAttribute="trailing" secondItem="Prz-cx-UXq" secondAttribute="trailing" constant="8" id="T8K-8l-Eiw"/>
                             <constraint firstItem="o99-tw-G13" firstAttribute="top" secondItem="Prz-cx-UXq" secondAttribute="bottom" constant="8" id="TAM-Cr-sEN"/>
-                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="bottom" secondItem="o99-tw-G13" secondAttribute="bottom" id="Vsl-BG-Uno"/>
+                            <constraint firstItem="bUG-Ir-K8P" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="o99-tw-G13" secondAttribute="bottom" id="Vsl-BG-Uno"/>
+                            <constraint firstItem="o99-tw-G13" firstAttribute="height" secondItem="5cL-C3-3Jg" secondAttribute="height" multiplier="0.660946" id="aQz-uQ-lzH"/>
                             <constraint firstItem="Jfq-sv-K0l" firstAttribute="leading" secondItem="bUG-Ir-K8P" secondAttribute="leading" constant="8" id="c0R-4U-etA"/>
                             <constraint firstItem="bUG-Ir-K8P" firstAttribute="trailing" secondItem="o99-tw-G13" secondAttribute="trailing" id="cXj-Yr-ayL"/>
                             <constraint firstItem="Jfq-sv-K0l" firstAttribute="top" secondItem="bUG-Ir-K8P" secondAttribute="top" id="l8v-DI-FIe"/>
@@ -665,7 +666,6 @@
                 <navigationController storyboardIdentifier="PredictInputNavigationController" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Nhn-U1-icH" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="neq-PX-sWh">
-                        <rect key="frame" x="0.0" y="124" width="402" height="54"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>

@@ -16,6 +16,7 @@ class HomeManager {
     private let newsService: NewsServiceProtocol
     private let locationService: LocationServiceProtocol
     private let logger: LoggingServiceProtocol
+    private let recommendationCacheStore = RecommendationCacheStore()
     let spotSpeciesCountCache: NSCache<NSString, NSNumber> = {
         let cache = NSCache<NSString, NSNumber>()
         cache.countLimit = 100
@@ -50,7 +51,6 @@ class HomeManager {
     ) async -> HomeScreenData {
         
         let location = userLocation ?? LocationPreferences.shared.homeLocation
-        var errorOccurred: String? = nil
         async let upcoming = getUpcomingBirds(userLocation: location)
         async let myWatchlist: [UpcomingBirdResult] = {
             if let loc = location { return await getMyWatchlistBirds(userLocation: loc) }
@@ -66,58 +66,48 @@ class HomeManager {
             return []
         }()
         async let mapCards = getDynamicMapCards(userLocation: location)
-        async let observations = getRecentObservations(near: location)
+        async let observations: [CommunityObservation] = {
+            do {
+                return try await getRecentObservations(near: location)
+            } catch {
+                logger.log(error: error, context: "HomeManager.getHomeScreenData.observations")
+                return []
+            }
+        }()
         async let news = newsService.fetchNews()
-        
-        do {
-            let (
-                upcomingResult,
-                myWatchlistResult,
-                recommendedResult,
-                watchlistSpotsResult,
-                recommendedSpotsResult,
-                mapCardsResult,
-                observationsResult,
-                newsResult
-            ) = await (
-                upcoming,
-                myWatchlist,
-                recommended,
-                watchlistSpots,
-                recommendedSpots,
-                mapCards,
-                try observations,
-                news
-            )
 
-            return HomeScreenData(
-                upcomingBirds: upcomingResult,
-                myWatchlistBirds: myWatchlistResult,
-                recommendedBirds: recommendedResult,
-                watchlistSpots: watchlistSpotsResult,
-                recommendedSpots: recommendedSpotsResult,
-                migrationCards: mapCardsResult,
-                recentObservations: observationsResult,
-                birdCategories: getBirdCategories(),
-                news: newsResult,
-                errorMessage: nil
-            )
-        } catch {
-            logger.log(error: error, context: "HomeManager.getHomeScreenData")
-            errorOccurred = "Failed to load some dashboard items. Please check your connection."
-            return HomeScreenData(
-                upcomingBirds: [],
-                myWatchlistBirds: [],
-                recommendedBirds: [],
-                watchlistSpots: [],
-                recommendedSpots: [],
-                migrationCards: [],
-                recentObservations: [],
-                birdCategories: getBirdCategories(),
-                news: [],
-                errorMessage: errorOccurred
-            )
-        }
+        let (
+            upcomingResult,
+            myWatchlistResult,
+            recommendedResult,
+            watchlistSpotsResult,
+            recommendedSpotsResult,
+            mapCardsResult,
+            observationsResult,
+            newsResult
+        ) = await (
+            upcoming,
+            myWatchlist,
+            recommended,
+            watchlistSpots,
+            recommendedSpots,
+            mapCards,
+            observations,
+            news
+        )
+
+        return HomeScreenData(
+            upcomingBirds: upcomingResult,
+            myWatchlistBirds: myWatchlistResult,
+            recommendedBirds: recommendedResult,
+            watchlistSpots: watchlistSpotsResult,
+            recommendedSpots: recommendedSpotsResult,
+            migrationCards: mapCardsResult,
+            recentObservations: observationsResult,
+            birdCategories: getBirdCategories(),
+            news: newsResult,
+            errorMessage: nil
+        )
     }
     
     func getUpcomingBirds(
@@ -236,58 +226,38 @@ class HomeManager {
     func getRecommendedSpots(
         near location: CLLocationCoordinate2D,
         radiusInKm: Double = 100.0,
-        limit: Int = 10
+        limit: Int = 5
     ) async -> [PopularSpotResult] {
-        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-        
-        let descriptor = FetchDescriptor<Hotspot>()
-        let allHotspots: [Hotspot]
         do {
-            allHotspots = try watchlistManager.fetchAll(Hotspot.self, descriptor: descriptor)
+            let response = try await fetchNearbyHotspotCardFromEdge(near: location)
+            let candidates = Array((response.nearbyHotspots ?? []).dropFirst().prefix(max(0, limit)))
+
+            guard !candidates.isEmpty else {
+                return []
+            }
+
+            return candidates.map { item in
+                PopularSpotResult(
+                    id: UUID(uuidString: item.hotspotId) ?? UUID(),
+                    title: item.placeName,
+                    location: item.locationDetail,
+                    latitude: item.center.lat,
+                    longitude: item.center.lng,
+                    speciesCount: max(0, item.speciesCount ?? 0),
+                    observedCount: 0,
+                    radius: 5.0,
+                    imageName: "placeholder_image",
+                    distanceKm: item.distanceKm
+                )
+            }
         } catch {
-            logger.log(error: error, context: "HomeManager.getRecommendedSpots")
-            allHotspots = []
-        }
-        
-        let nearbyHotspots = allHotspots.filter { hotspot in
-            let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
-            return locationService.distance(from: location, to: hotspotLoc) <= (radiusInKm * 1000)
-        }
-        
-        let watchlistSpotNames = Set((try? watchlistManager.fetchWatchlists())?.compactMap { $0.location } ?? [])
-        
-        let recommended = nearbyHotspots
-            .filter { !watchlistSpotNames.contains($0.name) }
-            .prefix(limit)
-
-        var results: [PopularSpotResult] = []
-        for hotspot in recommended {
-            let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
-            let cardRadiusKm = 5.0
-            let speciesCount = await getActiveSpeciesCount(
-                at: hotspotLoc,
-                duringWeek: currentWeek,
-                radiusInKm: cardRadiusKm
+            logger.log(error: error, context: "HomeManager.getRecommendedSpots.edge")
+            return await getRecommendedSpotsFromLocalStore(
+                near: location,
+                radiusInKm: radiusInKm,
+                limit: limit
             )
-            let distance = locationService.distance(from: location, to: hotspotLoc)
-            spotSpeciesCountCache.setObject(NSNumber(value: speciesCount), forKey: hotspot.name as NSString)
-
-            let result = PopularSpotResult(
-                id: hotspot.id,
-                title: hotspot.name,
-                location: hotspot.locality ?? "Unknown",
-                latitude: hotspot.lat,
-                longitude: hotspot.lon,
-                speciesCount: speciesCount,
-                observedCount: 0,
-                radius: cardRadiusKm,
-                imageName: hotspot.imageName,
-                distanceKm: distance / 1000.0
-            )
-            results.append(result)
         }
-
-        return results
     }
 
     private func getActiveSpeciesCount(
@@ -335,6 +305,110 @@ class HomeManager {
         guard let userLocation = userLocation ?? locationService.currentLocation else {
             return []
         }
+        do {
+            let edgeResponse = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
+            if let edgeCard = edgeResponse.card,
+               let mappedCard = await mapEdgeCardToDynamicMapCard(edgeCard, userLocation: userLocation) {
+                return [mappedCard]
+            }
+        } catch {
+            logger.log(error: error, context: "HomeManager.getDynamicMapCards.edge")
+        }
+        return await getDynamicMapCardsFromLocal(userLocation: userLocation)
+    }
+
+    private func mapEdgeCardToDynamicMapCard(
+        _ card: NearbyHotspotEdgeCard,
+        userLocation: CLLocationCoordinate2D
+    ) async -> DynamicMapCard? {
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        let coordinate = CLLocationCoordinate2D(latitude: card.center.lat, longitude: card.center.lng)
+        let localBirds = await hotspotManager.getBirdsPresent(
+            at: coordinate,
+            duringWeek: currentWeek,
+            radiusInKm: 10.0
+        )
+        let limitedBirds = Array(localBirds.prefix(8))
+
+        let displaySpecies: [BirdSpeciesDisplay] = limitedBirds.map { bird in
+            BirdSpeciesDisplay(
+                birdName: bird.commonName,
+                birdImageName: bird.staticImageName,
+                statusBadge: BirdSpeciesDisplay.StatusBadge(
+                    title: "Present",
+                    subtitle: "Nearby",
+                    iconName: "bird.circle.fill",
+                    backgroundColorName: "systemGreen"
+                ),
+                sightabilityPercent: 70,
+                weekNumber: card.weekNumber ?? formatWeekDescription(week: currentWeek),
+                residencyStatus: "Recently observed"
+            )
+        }
+
+        let fallbackSpecies = displaySpecies.isEmpty
+            ? [
+                BirdSpeciesDisplay(
+                    birdName: "Recent Birds",
+                    birdImageName: "placeholder_image",
+                    statusBadge: BirdSpeciesDisplay.StatusBadge(
+                        title: "Nearby",
+                        subtitle: "Birding Spot",
+                        iconName: "bird.circle.fill",
+                        backgroundColorName: "systemGreen"
+                    ),
+                    sightabilityPercent: 60,
+                    weekNumber: card.weekNumber ?? formatWeekDescription(week: currentWeek),
+                    residencyStatus: "Check nearby sightings"
+                )
+            ]
+            : displaySpecies
+
+        let resolvedDistanceString: String = {
+            if let value = card.distanceString, !value.isEmpty {
+                return value
+            }
+            let distanceKm = Int(locationService.distance(from: userLocation, to: coordinate) / 1000.0)
+            return distanceKm == 0 ? "Nearby" : "\(distanceKm) km"
+        }()
+
+        let primaryBird = fallbackSpecies.first?.birdName ?? "Nearby Birds"
+        let primaryImage = fallbackSpecies.first?.birdImageName ?? "placeholder_image"
+        let weekText = card.weekNumber ?? formatWeekDescription(week: currentWeek)
+
+        let migrationPrediction = MigrationPrediction(
+            birdName: primaryBird,
+            birdImageName: primaryImage,
+            startLocation: "Nearby",
+            endLocation: card.placeName,
+            currentProgress: 1.0,
+            dateRange: weekText,
+            pathCoordinates: []
+        )
+
+        let hotspotPrediction = HotspotPrediction(
+            placeName: card.placeName,
+            locationDetail: card.locationDetail,
+            weekNumber: weekText,
+            speciesCount: fallbackSpecies.count,
+            distanceString: resolvedDistanceString,
+            dateRange: weekText,
+            placeImageName: "placeholder_image",
+            terrainTag: "Nature",
+            seasonTag: seasonTag(for: [currentWeek]),
+            centerCoordinate: coordinate,
+            pinRadiusKm: 0.5,
+            areaOverlay: .circle(radiusKm: 2.0),
+            hotspots: fallbackSpecies.prefix(5).map {
+                HotspotBirdSpot(coordinate: coordinate, birdImageName: $0.birdImageName)
+            },
+            birdSpecies: fallbackSpecies
+        )
+
+        return .combined(migration: migrationPrediction, hotspot: hotspotPrediction)
+    }
+
+    private func getDynamicMapCardsFromLocal(userLocation: CLLocationCoordinate2D) async -> [DynamicMapCard] {
         let nearbyHotspots = findNearbyHotspots(near: userLocation, radiusKm: 100.0)
         guard !nearbyHotspots.isEmpty else {
             return []
@@ -389,7 +463,7 @@ class HomeManager {
             } else {
                 status = "Migrating"
             }
-            
+
             let weekNum = weeks.first ?? currentWeek
             let weekText = formatWeekDescription(week: weekNum)
 
@@ -954,6 +1028,90 @@ class HomeManager {
 
         return (start, end)
     }
+
+    private func fetchNearbyHotspotCardFromEdge(
+        near location: CLLocationCoordinate2D
+    ) async throws -> NearbyHotspotEdgeResponse {
+        if let cached = recommendationCacheStore.load(),
+           !recommendationCacheStore.shouldRefresh(
+            cachedRecord: cached,
+            currentLocation: location,
+            distanceService: locationService
+           ) {
+            return cached.response
+        }
+
+        let bearerToken: String? = (try? SupabaseConfig.load().anonKey) ?? UserSession.shared.getAccessToken()
+
+        let response: NearbyHotspotEdgeResponse = try await SupabaseClient.shared.post(
+            path: "/functions/v1/get-nearby-birds",
+            body: NearbyHotspotEdgeRequest(lat: location.latitude, lng: location.longitude),
+            options: SupabaseRequestOptions(bearerTokenOverride: bearerToken),
+            responseType: NearbyHotspotEdgeResponse.self
+        )
+        recommendationCacheStore.save(
+            response: response,
+            fetchLocation: location
+        )
+        return response
+    }
+
+    private func getRecommendedSpotsFromLocalStore(
+        near location: CLLocationCoordinate2D,
+        radiusInKm: Double,
+        limit: Int
+    ) async -> [PopularSpotResult] {
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+
+        let descriptor = FetchDescriptor<Hotspot>()
+        let allHotspots: [Hotspot]
+        do {
+            allHotspots = try watchlistManager.fetchAll(Hotspot.self, descriptor: descriptor)
+        } catch {
+            logger.log(error: error, context: "HomeManager.getRecommendedSpots")
+            return []
+        }
+
+        let nearbyHotspots = allHotspots.filter { hotspot in
+            let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
+            return locationService.distance(from: location, to: hotspotLoc) <= (radiusInKm * 1000)
+        }
+
+        let watchlistSpotNames = Set((try? watchlistManager.fetchWatchlists())?.compactMap { $0.location } ?? [])
+        let recommended = nearbyHotspots
+            .filter { !watchlistSpotNames.contains($0.name) }
+            .prefix(limit)
+
+        var results: [PopularSpotResult] = []
+        for hotspot in recommended {
+            let hotspotLoc = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
+            let cardRadiusKm = 5.0
+            let speciesCount = await getActiveSpeciesCount(
+                at: hotspotLoc,
+                duringWeek: currentWeek,
+                radiusInKm: cardRadiusKm
+            )
+            let distance = locationService.distance(from: location, to: hotspotLoc)
+            spotSpeciesCountCache.setObject(NSNumber(value: speciesCount), forKey: hotspot.name as NSString)
+
+            results.append(
+                PopularSpotResult(
+                    id: hotspot.id,
+                    title: hotspot.name,
+                    location: hotspot.locality ?? "Unknown",
+                    latitude: hotspot.lat,
+                    longitude: hotspot.lon,
+                    speciesCount: speciesCount,
+                    observedCount: 0,
+                    radius: cardRadiusKm,
+                    imageName: hotspot.imageName,
+                    distanceKm: distance / 1000.0
+                )
+            )
+        }
+
+        return results
+    }
     
     private func findNearbyHotspots(near location: CLLocationCoordinate2D, radiusKm: Double = 100.0) -> [Hotspot] {
         let descriptor = FetchDescriptor<Hotspot>()
@@ -1102,6 +1260,52 @@ class HomeManager {
         }
 
         return sightings.sorted { $0.week < $1.week }
+    }
+}
+
+private struct RecommendationCacheRecord: Codable {
+    let fetchLat: Double
+    let fetchLng: Double
+    let fetchedAt: Date
+    let response: NearbyHotspotEdgeResponse
+}
+
+private final class RecommendationCacheStore {
+    private let defaults = UserDefaults.standard
+    private let key = "home_recommendation_edge_cache_v1"
+    private let minRefreshDistanceMeters: CLLocationDistance = 5_000
+    private let maxCacheAge: TimeInterval = 60 * 60 * 6
+
+    func load() -> RecommendationCacheRecord? {
+        guard let data = defaults.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(RecommendationCacheRecord.self, from: data)
+    }
+
+    func save(response: NearbyHotspotEdgeResponse, fetchLocation: CLLocationCoordinate2D) {
+        let record = RecommendationCacheRecord(
+            fetchLat: fetchLocation.latitude,
+            fetchLng: fetchLocation.longitude,
+            fetchedAt: Date(),
+            response: response
+        )
+        guard let data = try? JSONEncoder().encode(record) else { return }
+        defaults.set(data, forKey: key)
+    }
+
+    func shouldRefresh(
+        cachedRecord: RecommendationCacheRecord,
+        currentLocation: CLLocationCoordinate2D,
+        distanceService: LocationServiceProtocol
+    ) -> Bool {
+        if Date().timeIntervalSince(cachedRecord.fetchedAt) > maxCacheAge {
+            return true
+        }
+        let cachedLocation = CLLocationCoordinate2D(
+            latitude: cachedRecord.fetchLat,
+            longitude: cachedRecord.fetchLng
+        )
+        let movedDistance = distanceService.distance(from: currentLocation, to: cachedLocation)
+        return movedDistance >= minRefreshDistanceMeters
     }
 }
 
