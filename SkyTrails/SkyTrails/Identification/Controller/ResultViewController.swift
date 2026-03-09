@@ -48,7 +48,9 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     private func loadData() {
         let preselectedBirdId: UUID?
         if let history = historyItem {
-            self.birdResults = (history.candidates?.isEmpty == false) ? (history.candidates ?? []) : viewModel.results
+            var candidates = (history.candidates?.isEmpty == false) ? (history.candidates ?? []) : viewModel.results
+            candidates.sort { ($0.confidence) > ($1.confidence) }
+            self.birdResults = candidates
             preselectedBirdId = history.bird?.bird_id
         } else {
             viewModel.filterBirds(
