@@ -99,7 +99,7 @@ class IdentificationManager {
             return allShapes
         }
     }
-  
+   
 
     func updateSize(_ size: Int) {
         self.selectedSizeCategory = size
