@@ -331,11 +331,11 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
         if cardWidth > 450 {
             cardHeight = min(calculatedHeight, 180)
         } else {
-            cardHeight = calculatedHeight
+            cardHeight = max(calculatedHeight, 146)
         }
 
         if indexPath.item == selectedPredictionIndex {
-            cardHeight += 60
+            cardHeight += 56
         }
 
         return CGSize(width: cardWidth, height: ceil(cardHeight))

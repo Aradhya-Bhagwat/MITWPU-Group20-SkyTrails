@@ -42,6 +42,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
+        mainStackView.distribution = .fill
         setupAppearance()
         updateCardVariant()
         setupActionButtons()
@@ -253,9 +254,11 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     private func updateScaledLayout() {
-        let cardView = (bounds.width >= 450) ? wideCardView : compactCardView
+        let isWide = bounds.width >= 450
+        let cardView = isWide ? wideCardView : compactCardView
         let cardHeight = cardView?.bounds.height ?? bounds.height
-        let heightRatio = max(0.7, cardHeight / baseCardHeight)
+        let maxRatio: CGFloat = isWide ? 1.12 : 1.0
+        let heightRatio = min(maxRatio, max(0.85, cardHeight / baseCardHeight))
         let titleSize = max(17, 17 * heightRatio)
         let bodySize = max(12, 12 * heightRatio)
 
