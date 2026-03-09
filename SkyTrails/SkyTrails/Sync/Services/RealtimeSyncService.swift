@@ -244,70 +244,70 @@ final class RealtimeSyncService: NSObject {
     
     private func handleWatchlistEvent(_ payload: RealtimePayload) async throws {
         guard let record = payload.record,
-              let id = record.uuid(for: "id") else { return }
+              let id = record.uuid(for: "watchlist_id") else { return }
         
         switch payload.type {
         case .insert, .update:
             try await upsertWatchlist(from: record, id: id)
         case .delete:
             guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "id") else { return }
+                  let deleteId = oldRecord.uuid(for: "watchlist_id") else { return }
             try await deleteWatchlist(id: deleteId)
         }
     }
     
     private func handleEntryEvent(_ payload: RealtimePayload) async throws {
         guard let record = payload.record,
-              let id = record.uuid(for: "id") else { return }
+              let id = record.uuid(for: "watchlist_entry_id") else { return }
         
         switch payload.type {
         case .insert, .update:
             try await upsertEntry(from: record, id: id)
         case .delete:
             guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "id") else { return }
+                  let deleteId = oldRecord.uuid(for: "watchlist_entry_id") else { return }
             try await deleteEntry(id: deleteId)
         }
     }
     
     private func handleRuleEvent(_ payload: RealtimePayload) async throws {
         guard let record = payload.record,
-              let id = record.uuid(for: "id") else { return }
+              let id = record.uuid(for: "watchlist_rule_id") else { return }
         
         switch payload.type {
         case .insert, .update:
             try await upsertRule(from: record, id: id)
         case .delete:
             guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "id") else { return }
+                  let deleteId = oldRecord.uuid(for: "watchlist_rule_id") else { return }
             try await deleteRule(id: deleteId)
         }
     }
     
     private func handlePhotoEvent(_ payload: RealtimePayload) async throws {
         guard let record = payload.record,
-              let id = record.uuid(for: "id") else { return }
+              let id = record.uuid(for: "observed_bird_photo_id") else { return }
         
         switch payload.type {
         case .insert, .update:
             try await upsertPhoto(from: record, id: id)
         case .delete:
             guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "id") else { return }
+                  let deleteId = oldRecord.uuid(for: "observed_bird_photo_id") else { return }
             try await deletePhoto(id: deleteId)
         }
     }
     
     private func handleShareEvent(_ payload: RealtimePayload) async throws {
         guard let record = payload.record,
-              let id = record.uuid(for: "id") else { return }
+              let id = record.uuid(for: "watchlist_share_id") else { return }
         
         switch payload.type {
         case .insert, .update:
             try await upsertShare(from: record, id: id)
         case .delete:
             guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "id") else { return }
+                  let deleteId = oldRecord.uuid(for: "watchlist_share_id") else { return }
             try await deleteShare(id: deleteId)
         }
     }
@@ -317,7 +317,7 @@ final class RealtimeSyncService: NSObject {
         let existing = try WatchlistManager.shared.getWatchlist(by: id)
         
         if let watchlist = existing {
-            watchlist.owner_id = record.uuid(for: "owner_id")
+            watchlist.user_id = record.uuid(for: "user_id")
             watchlist.type = record.string(for: "type").flatMap { WatchlistType(rawValue: $0) } ?? .custom
             watchlist.title = record.string(for: "title")
             watchlist.location = record.string(for: "location")
@@ -336,8 +336,8 @@ final class RealtimeSyncService: NSObject {
             try? context.save()
         } else {
             let watchlist = Watchlist(
-                id: id,
-                owner_id: record.uuid(for: "owner_id"),
+                watchlist_id: id,
+                user_id: record.uuid(for: "user_id"),
                 type: record.string(for: "type").flatMap { WatchlistType(rawValue: $0) } ?? .custom,
                 title: record.string(for: "title"),
                 location: record.string(for: "location"),
@@ -376,7 +376,7 @@ final class RealtimeSyncService: NSObject {
         
         if let entry = existingEntry {
             if let birdId = record.uuid(for: "bird_id") {
-                entry.bird = try? WatchlistManager.shared.fetchBird(id: birdId)
+                entry.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
             }
             entry.status = record.string(for: "status") == "observed" ? .observed : .to_observe
             entry.nickname = record.string(for: "nickname")
@@ -398,7 +398,7 @@ final class RealtimeSyncService: NSObject {
             
             try? WatchlistManager.shared.context.save()
         } else {
-            let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(id: $0) }
+            let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(bird_id: $0) }
             let entry = WatchlistEntry(
                 id: id,
                 watchlist: watchlist,

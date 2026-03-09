@@ -417,7 +417,7 @@
         <!--View Controller-->
         <scene sceneID="qWs-LL-ZP1">
             <objects>
-                <viewController id="rI3-HC-eTl" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="DetailPlaceholder" id="rI3-HC-eTl" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Qtb-r4-XQT">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

@@ -34,7 +34,7 @@ final class IdentificationSeeder {
     }
     
     private struct BirdDTO: Codable {
-        let id: UUID
+        let bird_id: UUID
         let commonName: String
         let scientificName: String
         let staticImageName: String
@@ -97,22 +97,22 @@ final class IdentificationSeeder {
         let db = try JSONDecoder().decode(BirdDB.self, from: data)
 
         let existingShapes = try context.fetch(FetchDescriptor<BirdShape>())
-        var shapeMap = Dictionary(uniqueKeysWithValues: existingShapes.map { ($0.id, $0) })
+        var shapeMap = Dictionary(uniqueKeysWithValues: existingShapes.map { ($0.bird_shape_id, $0) })
 
         let existingFieldMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
         var fieldMarkMap: [String: BirdFieldMark] = [:]
         for fieldMark in existingFieldMarks {
-            fieldMarkMap[fieldMark.id.uuidString.lowercased()] = fieldMark
+            fieldMarkMap[fieldMark.bird_field_mark_id.uuidString.lowercased()] = fieldMark
         }
 
         let existingVariants = try context.fetch(FetchDescriptor<FieldMarkVariant>())
         var variantMap: [String: FieldMarkVariant] = [:]
         for variant in existingVariants {
-            variantMap[variant.id.uuidString.lowercased()] = variant
+            variantMap[variant.field_mark_variant_id.uuidString.lowercased()] = variant
         }
 
         let existingBirds = try context.fetch(FetchDescriptor<Bird>())
-        let existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
+        let existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.bird_id, $0) })
         for shapeDTO in db.reference_data.shapes {
             if let existing = shapeMap[shapeDTO.id] {
                 var didUpdate = false
@@ -130,7 +130,7 @@ final class IdentificationSeeder {
                 continue
             }
             let shape = BirdShape(
-                id: shapeDTO.id,
+                bird_shape_id: shapeDTO.id,
                 name: shapeDTO.name,
                 icon: shapeDTO.icon
             )
@@ -146,7 +146,7 @@ final class IdentificationSeeder {
                     existing.area = fieldMarkDTO.area
                     didUpdate = true
                 }
-                if existing.shape?.id != fieldMarkDTO.shapeId,
+                if existing.shape?.bird_shape_id != fieldMarkDTO.shapeId,
                    let shape = shapeMap[fieldMarkDTO.shapeId] {
                     existing.shape = shape
                     didUpdate = true
@@ -157,7 +157,7 @@ final class IdentificationSeeder {
                 continue
             }
             let fieldMark = BirdFieldMark(area: fieldMarkDTO.area)
-            fieldMark.id = fieldMarkId
+            fieldMark.bird_field_mark_id = fieldMarkId
             if let shape = shapeMap[fieldMarkDTO.shapeId] {
                 fieldMark.shape = shape
             }
@@ -174,7 +174,7 @@ final class IdentificationSeeder {
                     existing.name = variantDTO.name
                     didUpdate = true
                 }
-                if existing.fieldMark?.id.uuidString.lowercased() != variantDTO.fieldMarkId.lowercased(),
+                if existing.fieldMark?.bird_field_mark_id.uuidString.lowercased() != variantDTO.fieldMarkId.lowercased(),
                    let fieldMark = fieldMarkMap[variantDTO.fieldMarkId.lowercased()] {
                     existing.fieldMark = fieldMark
                     didUpdate = true
@@ -185,7 +185,7 @@ final class IdentificationSeeder {
                 continue
             }
             let variant = FieldMarkVariant(name: variantDTO.name)
-            variant.id = variantId
+            variant.field_mark_variant_id = variantId
             if let fieldMark = fieldMarkMap[variantDTO.fieldMarkId.lowercased()] {
                 variant.fieldMark = fieldMark
             }
@@ -196,20 +196,8 @@ final class IdentificationSeeder {
         for birdDTO in db.birds {
             let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
             let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
-            var fieldMarkData: [BirdFieldMarkData] = []
-            if let markDataDTOs = birdDTO.fieldMarkData {
-                for dto in markDataDTOs {
-                    if let variantUUID = UUID(uuidString: dto.variantId) {
-                        let data = BirdFieldMarkData(
-                            area: dto.area,
-                            variantId: variantUUID
-                        )
-                        fieldMarkData.append(data)
-                    }
-                }
-            }
 
-            if let existing = existingBirdMap[birdDTO.id] {
+            if let existing = existingBirdMap[birdDTO.bird_id] {
                 var didUpdate = false
                 if existing.shape_id == nil, let shapeId = birdDTO.shape_id {
                     existing.shape_id = shapeId
@@ -239,11 +227,6 @@ final class IdentificationSeeder {
                     existing.likelySpot = likelySpot
                     didUpdate = true
                 }
-                if (existing.fieldMarkData == nil || existing.fieldMarkData?.isEmpty == true),
-                   !fieldMarkData.isEmpty {
-                    existing.fieldMarkData = fieldMarkData
-                    didUpdate = true
-                }
                 if upsertBirdMarkLinks(
                     bird: existing,
                     markDataDTOs: birdDTO.fieldMarkData,
@@ -259,7 +242,7 @@ final class IdentificationSeeder {
             }
 
             let bird = Bird(
-                id: birdDTO.id,
+                bird_id: birdDTO.bird_id,
                 commonName: birdDTO.commonName,
                 scientificName: birdDTO.scientificName,
                 staticImageName: birdDTO.staticImageName,
@@ -268,7 +251,6 @@ final class IdentificationSeeder {
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
                 migration_strategy: nil,
-                hemisphere: nil,
                 validLocations: normalizedValidLocations,
                 validMonths: birdDTO.validMonths,
                 likelySpot: normalizedLikelySpot,
@@ -276,7 +258,6 @@ final class IdentificationSeeder {
                 size_category: birdDTO.size_category,
                 shape: birdDTO.shape_id.flatMap { shapeMap[$0] }
             )
-            bird.fieldMarkData = fieldMarkData.isEmpty ? nil : fieldMarkData
             _ = upsertBirdMarkLinks(
                 bird: bird,
                 markDataDTOs: birdDTO.fieldMarkData,
@@ -307,7 +288,7 @@ final class IdentificationSeeder {
         var existingKeys = Set<String>()
         if let links = bird.fieldMarkLinks {
             for link in links {
-                if let variantId = link.variant?.id {
+                if let variantId = link.variant?.field_mark_variant_id {
                     existingKeys.insert("\(link.area.lowercased())|\(variantId.uuidString.lowercased())")
                 }
             }
@@ -316,7 +297,7 @@ final class IdentificationSeeder {
         for dto in markDataDTOs {
             let variantKey = dto.variantId.lowercased()
             guard let variant = variantMap[variantKey] else { continue }
-            let key = "\(dto.area.lowercased())|\(variant.id.uuidString.lowercased())"
+            let key = "\(dto.area.lowercased())|\(variant.field_mark_variant_id.uuidString.lowercased())"
             if existingKeys.contains(key) {
                 continue
             }

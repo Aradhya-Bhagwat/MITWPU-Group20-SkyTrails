@@ -139,7 +139,7 @@ final class SupabaseAuthService {
             ?? normalizedEmail
 
         let rows: [SupabaseUserExistsRow] = try await request(
-            path: "/rest/v1/users?select=id&email=eq.\(encodedEmail)&limit=1",
+            path: "/rest/v1/users?select=user_id&email=eq.\(encodedEmail)&limit=1",
             method: "GET",
             body: nil
         )
@@ -550,5 +550,5 @@ private struct SupabaseErrorResponse: Decodable {
 struct EmptyResponse: Decodable {}
 
 private struct SupabaseUserExistsRow: Decodable {
-    let id: UUID
+    let user_id: UUID
 }

@@ -75,7 +75,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         
         let shape = filteredShapes[indexPath.item]
         cell.configure(with: shape.name, imageName: shape.icon)
-        let isSelected = (shape.id == selectedShapeId)
+        let isSelected = (shape.bird_shape_id == selectedShapeId)
         updateCellUI(cell, isSelected: isSelected)
         
         return cell
@@ -122,7 +122,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedShape = filteredShapes[indexPath.item]
         viewModel.selectedShape = selectedShape
-        self.selectedShapeId = selectedShape.id
+        self.selectedShapeId = selectedShape.bird_shape_id
         updateNextButtonState()
         
         collectionView.reloadData()

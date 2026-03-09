@@ -13,7 +13,7 @@ final class BirdDatabaseSeeder {
     }
 
     private struct BirdDTO: Codable {
-        let id: UUID
+        let bird_id: UUID
         let commonName: String
         let scientificName: String
         let staticImageName: String
@@ -66,25 +66,17 @@ final class BirdDatabaseSeeder {
 
         let birdDescriptor = FetchDescriptor<Bird>()
         let existingBirds = try modelContext.fetch(birdDescriptor)
-        var existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.id, $0) })
+        var existingBirdMap = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.bird_id, $0) })
         let shapes = try modelContext.fetch(FetchDescriptor<BirdShape>())
-        let shapeById = Dictionary(uniqueKeysWithValues: shapes.map { ($0.id, $0) })
+        let shapeById = Dictionary(uniqueKeysWithValues: shapes.map { ($0.bird_shape_id, $0) })
         let variants = try modelContext.fetch(FetchDescriptor<FieldMarkVariant>())
-        let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.id, $0) })
+        let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.field_mark_variant_id, $0) })
 
         for birdDTO in payload.birds {
             let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
             let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
-            var fieldMarks: [BirdFieldMarkData] = []
-            if let markDTOs = birdDTO.fieldMarkData {
-                for mark in markDTOs {
-                    if let variantUUID = UUID(uuidString: mark.variantId) {
-                        fieldMarks.append(BirdFieldMarkData(area: mark.area, variantId: variantUUID))
-                    }
-                }
-            }
 
-            if let existing = existingBirdMap[birdDTO.id] {
+            if let existing = existingBirdMap[birdDTO.bird_id] {
                 var didUpdate = false
 
                 if existing.commonName.isEmpty {
@@ -143,11 +135,6 @@ final class BirdDatabaseSeeder {
                     existing.size_category = sizeCategory
                     didUpdate = true
                 }
-                if (existing.fieldMarkData == nil || existing.fieldMarkData?.isEmpty == true),
-                   !fieldMarks.isEmpty {
-                    existing.fieldMarkData = fieldMarks
-                    didUpdate = true
-                }
                 if upsertBirdMarkLinks(
                     bird: existing,
                     markDTOs: birdDTO.fieldMarkData,
@@ -163,8 +150,7 @@ final class BirdDatabaseSeeder {
                 continue
             }
 
-            let bird = Bird(
-                id: birdDTO.id,
+            let bird = Bird(bird_id: birdDTO.bird_id,
                 commonName: birdDTO.commonName,
                 scientificName: birdDTO.scientificName,
                 staticImageName: birdDTO.staticImageName,
@@ -173,7 +159,6 @@ final class BirdDatabaseSeeder {
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
                 migration_strategy: nil,
-                hemisphere: nil,
                 validLocations: normalizedValidLocations,
                 validMonths: birdDTO.validMonths,
                 likelySpot: normalizedLikelySpot,
@@ -181,7 +166,6 @@ final class BirdDatabaseSeeder {
                 size_category: birdDTO.size_category,
                 shape: birdDTO.shape_id.flatMap { shapeById[$0] }
             )
-            bird.fieldMarkData = fieldMarks.isEmpty ? nil : fieldMarks
             _ = upsertBirdMarkLinks(
                 bird: bird,
                 markDTOs: birdDTO.fieldMarkData,
@@ -189,7 +173,7 @@ final class BirdDatabaseSeeder {
                 modelContext: modelContext
             )
             modelContext.insert(bird)
-            existingBirdMap[bird.id] = bird
+            existingBirdMap[bird.bird_id] = bird
         }
 
         try modelContext.save()
@@ -209,7 +193,7 @@ final class BirdDatabaseSeeder {
         var existingKeys = Set<String>()
         if let links = bird.fieldMarkLinks {
             for link in links {
-                if let variantId = link.variant?.id {
+                if let variantId = link.variant?.field_mark_variant_id {
                     existingKeys.insert("\(link.area.lowercased())|\(variantId.uuidString.lowercased())")
                 }
             }

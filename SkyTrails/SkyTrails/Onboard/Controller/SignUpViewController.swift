@@ -144,7 +144,7 @@ class SignUpViewController: UIViewController {
             let authResult = try await SupabaseAuthService.shared.verifyOTP(email: email, token: token)
 
             let user = User(
-                id: authResult.userID,
+                user_id: authResult.userID,
                 name: authResult.displayName ?? (fullName.isEmpty ? "User" : fullName),
                 gender: authResult.gender ?? "Not Specified",
                 email: authResult.email,
@@ -157,22 +157,36 @@ class SignUpViewController: UIViewController {
                 refreshToken: authResult.refreshToken
             )
             do {
-                _ = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
             }
             do {
-                try await IdentificationSyncService.shared.performSync(userId: user.id)
+                try await IdentificationSyncService.shared.performSync(userId: user.user_id)
             } catch {
             }
 
             Task {
-                try? await UserSyncService.shared.upsertUser(user)
+                do {
+                    try await UserSyncService.shared.upsertUser(user)
+                } catch {
+                    print("DEBUG: User sync failed: \(error)")
+                    print("DEBUG: Error details: \(String(describing: error))")
+                    await MainActor.run {
+                        self.show("Account created locally, but could not sync details: \(error.localizedDescription)") {
+                            self.goToMain()
+                        }
+                    }
+                    return
+                }
+
+                await MainActor.run {
+                    self.show("Account created successfully!") {
+                        self.goToMain()
+                    }
+                }
             }
 
             await WatchlistManager.shared.bindCurrentUserOwnership()
-            show("Account created successfully!") {
-                self.goToMain()
-            }
         } catch {
             show(error.localizedDescription)
         }

@@ -62,7 +62,7 @@ class GUIViewController: UIViewController {
         let allMarksForShape = viewModel.selectedShape?.fieldMarks ?? []
         self.categories = allMarksForShape.filter { viewModel.tempSelectedAreas.contains($0.area) }
         for mark in categories {
-            if let variant = viewModel.selectedFieldMarks[mark.id] {
+            if let variant = viewModel.selectedFieldMarks[mark.bird_field_mark_id] {
                 selectedVariations[mark.area] = variant.name
             }
         }

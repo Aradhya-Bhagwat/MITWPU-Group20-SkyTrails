@@ -275,8 +275,8 @@ final class ProfileSettingsViewController: UIViewController {
                     self.showMessage("My Watchlist not found.")
                     return
                 }
-                let observed = try manager.fetchEntries(watchlistID: watchlist.id, status: .observed)
-                let toObserve = try manager.fetchEntries(watchlistID: watchlist.id, status: .to_observe)
+                let observed = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .observed)
+                let toObserve = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .to_observe)
                 for entry in observed + toObserve {
                     try manager.deleteEntry(entryId: entry.id)
                 }

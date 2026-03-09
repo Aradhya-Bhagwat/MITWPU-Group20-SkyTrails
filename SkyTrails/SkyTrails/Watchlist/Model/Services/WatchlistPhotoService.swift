@@ -244,7 +244,7 @@ final class WatchlistPhotoService {
     
     private func buildPhotoPayloadData(_ photo: ObservedBirdPhoto, for operation: SyncOperationType) -> Data? {
         var payload: [String: Any] = [
-            "id": photo.id.uuidString,
+            "observed_bird_photo_id": photo.id.uuidString,
             "watchlist_entry_id": photo.watchlistEntry?.id.uuidString as Any,
             "image_path": photo.imagePath,
             "storage_url": photo.storageUrl as Any,

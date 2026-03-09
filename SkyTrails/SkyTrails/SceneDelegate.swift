@@ -116,7 +116,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 ?? "defaultProfile"
 
             let user = User(
-                id: authResult.userID,
+                user_id: authResult.userID,
                 name: resolvedName,
                 gender: authResult.gender ?? cached?.gender ?? "Not Specified",
                 email: authResult.email,
@@ -129,11 +129,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 refreshToken: authResult.refreshToken
             )
             do {
-                _ = try await InitialSyncService.shared.performInitialSync(userId: user.id)
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
             }
             do {
-                try await IdentificationSyncService.shared.performSync(userId: user.id)
+                try await IdentificationSyncService.shared.performSync(userId: user.user_id)
             } catch {
             }
 
