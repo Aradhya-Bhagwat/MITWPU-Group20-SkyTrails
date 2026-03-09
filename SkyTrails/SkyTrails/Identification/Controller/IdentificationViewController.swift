@@ -203,9 +203,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
 
     private func deselectShapeForReloadKeepingSavedShape() {
-        if let shapeIndex = options.firstIndex(where: { $0.category == .shape }) {
-            options[shapeIndex].isSelected = false
-        }
         model.selectedMenuOptionRawValues = options
             .filter { $0.isSelected }
             .map { $0.category.rawValue }
