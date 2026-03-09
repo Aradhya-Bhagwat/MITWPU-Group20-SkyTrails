@@ -18,10 +18,10 @@ final class WatchlistPersistenceService {
 
     private func isWatchlistAccessible(_ watchlist: Watchlist) -> Bool {
         guard let userID = activeUserID else {
-            return watchlist.owner_id == nil
+            return watchlist.user_id == nil
         }
         
-        return watchlist.owner_id == userID || watchlist.type == .shared
+        return watchlist.user_id == userID || watchlist.type == .shared
     }
 
     private func scoped(_ watchlists: [Watchlist]) -> [Watchlist] {
@@ -45,7 +45,7 @@ final class WatchlistPersistenceService {
         type: WatchlistType = .custom
     ) throws -> Watchlist {
         let watchlist = Watchlist(
-            owner_id: activeUserID,
+            user_id: activeUserID,
             title: title,
             location: location,
             locationDisplayName: locationDisplayName,
@@ -55,7 +55,7 @@ final class WatchlistPersistenceService {
         watchlist.type = type
         context.insert(watchlist)
         try saveContext()
-        let watchlistId = watchlist.id
+        let watchlistId = watchlist.watchlist_id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .create)
         let updatedAt = watchlist.updated_at
         queueSync {
@@ -72,7 +72,7 @@ final class WatchlistPersistenceService {
     
     func fetchWatchlist(id: UUID) throws -> Watchlist? {
         let descriptor = FetchDescriptor<Watchlist>(
-            predicate: #Predicate { $0.id == id }
+            predicate: #Predicate { $0.watchlist_id == id }
         )
         guard let watchlist = try context.fetch(descriptor).first else { return nil }
         return isWatchlistAccessible(watchlist) ? watchlist : nil
@@ -111,7 +111,7 @@ final class WatchlistPersistenceService {
         watchlist.updated_at = Date()
         watchlist.syncStatus = .pendingUpdate
         try saveContext()
-        let watchlistId = watchlist.id
+        let watchlistId = watchlist.watchlist_id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .update)
         let updatedAt = watchlist.updated_at
         
@@ -127,7 +127,7 @@ final class WatchlistPersistenceService {
     
     func deleteWatchlist(id: UUID) throws {
         let descriptor = FetchDescriptor<Watchlist>(
-            predicate: #Predicate { $0.id == id }
+            predicate: #Predicate { $0.watchlist_id == id }
         )
         guard let watchlist = try context.fetch(descriptor).first, isWatchlistAccessible(watchlist) else {
             throw WatchlistError.watchlistNotFound(.custom(id))
@@ -135,7 +135,7 @@ final class WatchlistPersistenceService {
         watchlist.deleted_at = Date()
         watchlist.syncStatus = .pendingDelete
         try saveContext()
-        let watchlistId = watchlist.id
+        let watchlistId = watchlist.watchlist_id
         let payloadData = buildWatchlistPayloadData(watchlist, for: .delete)
         let updatedAt = watchlist.updated_at
         
@@ -249,7 +249,7 @@ final class WatchlistPersistenceService {
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
-        if let watchlistID = entry.watchlist?.id {
+        if let watchlistID = entry.watchlist?.watchlist_id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
         let entryId = entry.id
@@ -275,7 +275,7 @@ final class WatchlistPersistenceService {
         }
         entry.syncStatus = .pendingDelete
         try saveContext()
-        if let watchlistID = entry.watchlist?.id {
+        if let watchlistID = entry.watchlist?.watchlist_id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
         let entryId = entry.id
@@ -312,7 +312,7 @@ final class WatchlistPersistenceService {
         entry.syncStatus = .pendingUpdate
         
         try saveContext()
-        if let watchlistID = entry.watchlist?.id {
+        if let watchlistID = entry.watchlist?.watchlist_id {
             try recalculateWatchlistStats(watchlistID: watchlistID)
         }
         let entryId = entry.id
@@ -370,11 +370,11 @@ final class WatchlistPersistenceService {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
         
-        let existingBirdIDs = Set((watchlist.entries ?? []).compactMap { $0.bird?.id })
+        let existingBirdIDs = Set((watchlist.entries ?? []).compactMap { $0.bird?.bird_id })
         var createdEntries: [WatchlistEntry] = []
         
         for bird in birds {
-            guard !existingBirdIDs.contains(bird.id) else {
+            guard !existingBirdIDs.contains(bird.bird_id) else {
                 continue
             }
             
@@ -563,9 +563,9 @@ final class WatchlistPersistenceService {
         try deleteRule(id: rule.id)
     }
     
-    func fetchBird(id: UUID) throws -> Bird? {
+    func fetchBird(bird_id: UUID) throws -> Bird? {
         let descriptor = FetchDescriptor<Bird>(
-            predicate: #Predicate { $0.id == id }
+            predicate: #Predicate { $0.bird_id == bird_id }
         )
         return try context.fetch(descriptor).first
     }
@@ -591,14 +591,14 @@ final class WatchlistPersistenceService {
         var changed = false
         var adoptedCount = 0
         for watchlist in allWatchlists where watchlist.type != .shared {
-            if watchlist.owner_id == nil || watchlist.owner_id == WatchlistConstants.legacyDefaultOwnerID {
-                watchlist.owner_id = userID
+            if watchlist.user_id == nil || watchlist.user_id == WatchlistConstants.legacyDefaultOwnerID {
+                watchlist.user_id = userID
                 watchlist.syncStatus = .pendingUpdate
                 changed = true
                 adoptedCount += 1
             }
         }
-        for watchlist in allWatchlists where watchlist.owner_id == userID {
+        for watchlist in allWatchlists where watchlist.user_id == userID {
             for entry in watchlist.entries ?? [] {
                 if entry.syncStatus == .pendingOwner || entry.syncStatus == .pendingCreate {
                     entry.syncStatus = .pendingUpdate
@@ -637,8 +637,7 @@ final class WatchlistPersistenceService {
             throw WatchlistError.duplicateEntry(birdName: commonName)
         }
         
-        let bird = Bird(
-            id: UUID(),
+        let bird = Bird(bird_id: UUID(),
             commonName: commonName,
             scientificName: scientificName,
             staticImageName: staticImageName,
@@ -664,7 +663,7 @@ final class WatchlistPersistenceService {
         
         let activeEntries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
         let observedCount = activeEntries.filter { $0.status == .observed }.count
-        let speciesCount = Set(activeEntries.map { $0.bird?.id ?? $0.id }).count
+        let speciesCount = Set(activeEntries.map { $0.bird?.bird_id ?? $0.id }).count
         
         watchlist.observedCount = observedCount
         watchlist.speciesCount = speciesCount
@@ -675,8 +674,8 @@ final class WatchlistPersistenceService {
     
     private func buildWatchlistPayloadData(_ watchlist: Watchlist, for operation: SyncOperationType) -> Data? {
         var payload: [String: Any] = [
-            "id": watchlist.id.uuidString,
-            "owner_id": watchlist.owner_id?.uuidString as Any,
+            "watchlist_id": watchlist.watchlist_id.uuidString,
+            "user_id": watchlist.user_id?.uuidString as Any,
             "type": watchlist.type?.rawValue ?? "custom",
             "title": watchlist.title as Any,
             "location": watchlist.location as Any,
@@ -696,8 +695,8 @@ final class WatchlistPersistenceService {
     
     private func buildEntryPayloadData(_ entry: WatchlistEntry, for operation: SyncOperationType) -> Data? {
         var payload: [String: Any] = [
-            "id": entry.id.uuidString,
-            "watchlist_id": entry.watchlist?.id.uuidString as Any,
+            "watchlist_entry_id": entry.id.uuidString,
+            "watchlist_id": entry.watchlist?.watchlist_id.uuidString as Any,
             "nickname": entry.nickname as Any,
             "status": entry.status.rawValue,
             "notes": entry.notes as Any,
@@ -724,8 +723,8 @@ final class WatchlistPersistenceService {
     
     private func buildRulePayloadData(_ rule: WatchlistRule, for operation: SyncOperationType) -> Data? {
         var payload: [String: Any] = [
-            "id": rule.id.uuidString,
-            "watchlist_id": rule.watchlist?.id.uuidString as Any,
+            "watchlist_rule_id": rule.id.uuidString,
+            "watchlist_id": rule.watchlist?.watchlist_id.uuidString as Any,
             "rule_type": rule.rule_type.rawValue,
             "lat": rule.lat as Any,
             "lon": rule.lon as Any,

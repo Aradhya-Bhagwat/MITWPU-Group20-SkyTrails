@@ -33,7 +33,7 @@ final class WatchlistQueryService {
         let allEntries = allLists.flatMap { $0.entries ?? [] }
         var uniqueEntries: [UUID: WatchlistEntry] = [:]
         for entry in allEntries {
-            if let birdId = entry.bird?.id {
+            if let birdId = entry.bird?.bird_id {
                 if let existing = uniqueEntries[birdId] {
                     if entry.status == .observed && existing.status != .observed {
                         uniqueEntries[birdId] = entry
@@ -231,7 +231,7 @@ final class WatchlistQueryService {
                     radiusInKm: radiusInKm
                 )
                 
-                if presentBirds.contains(where: { $0.id == bird.id }) {
+                if presentBirds.contains(where: { $0.bird_id == bird.bird_id }) {
                     results.append(UpcomingBirdResult(
                         bird: bird,
                         entry: entry,

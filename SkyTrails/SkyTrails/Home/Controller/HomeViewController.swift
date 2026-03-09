@@ -313,12 +313,6 @@ extension HomeViewController {
             self.observations = data.recentObservations
             self.news = data.news
             self.migrationCards = data.migrationCards
-            if let first = self.migrationCards.first {
-                switch first {
-                case .combined(let migration, let hotspot):
-                    break
-                }
-            }
             
             self.homeCollectionView.reloadData()
         }
@@ -442,7 +436,7 @@ extension HomeViewController {
         let endDate = parsedEnd ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
 
         let input = BirdDateInput(
-            species: SpeciesData(id: bird.id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+            species: SpeciesData(id: bird.bird_id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
             startDate: startDate,
             endDate: endDate
         )

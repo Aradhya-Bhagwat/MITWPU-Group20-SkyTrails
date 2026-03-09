@@ -32,7 +32,6 @@ struct MigrationSessionData: Decodable {
     let birdId: UUID
     let startWeek: Int
     let endWeek: Int
-    let hemisphere: String?
     let trajectoryPaths: [TrajectoryPathData]?
 }
 

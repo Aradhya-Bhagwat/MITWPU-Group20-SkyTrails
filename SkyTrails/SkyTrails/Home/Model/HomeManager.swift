@@ -167,12 +167,12 @@ class HomeManager {
         )) ?? []
         
         var results: [UpcomingBirdResult] = []
-        let locationBirdIds = Set(birdsAtLocation.map { $0.id })
+        let locationBirdIds = Set(birdsAtLocation.map { $0.bird_id })
         
         for entry in watchlistEntries {
             guard let bird = entry.bird else { continue }
             
-            if locationBirdIds.contains(bird.id) {
+            if locationBirdIds.contains(bird.bird_id) {
                 let dateRange = getMigrationDateRange(for: bird, userLocation: userLocation, radiusInKm: radiusInKm)
                 results.append(UpcomingBirdResult(
                     bird: bird,
@@ -207,7 +207,7 @@ class HomeManager {
             spotSpeciesCountCache.setObject(NSNumber(value: birdCount), forKey: (watchlist.title ?? "Unknown") as NSString)
 
             let result = PopularSpotResult(
-                id: watchlist.id,
+                id: watchlist.watchlist_id,
                 title: watchlist.title ?? "Unnamed Spot",
                 location: watchlist.locationDisplayName ?? location,
                 latitude: coordinate.latitude,
@@ -416,9 +416,9 @@ class HomeManager {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         let weekRange = (currentWeek...(currentWeek + 4)).map { ($0 - 1) % 52 + 1 }
         let migrations = await getActiveMigrations()
-        let migratingBirdIds = Set(migrations.compactMap { $0.bird.id })
+        let migratingBirdIds = Set(migrations.compactMap { $0.bird.bird_id })
         let migrationsByBirdId: [UUID: MigrationCardResult] = Dictionary(
-            migrations.map { ($0.bird.id, $0) },
+            migrations.map { ($0.bird.bird_id, $0) },
             uniquingKeysWith: { first, _ in first }
         )
         struct HotspotScore {
@@ -437,7 +437,7 @@ class HomeManager {
                 duringWeeks: weekRange,
                 radiusInKm: 10.0
             )
-            let migratingBirds = birdsWithWeeks.filter { migratingBirdIds.contains($0.bird.id) }
+            let migratingBirds = birdsWithWeeks.filter { migratingBirdIds.contains($0.bird.bird_id) }
             guard !migratingBirds.isEmpty else {
                 continue
             }
@@ -453,7 +453,7 @@ class HomeManager {
             let bird = birdData.bird
             let weeks = birdData.weeks
 
-            let hotspotPresence = top.hotspot.speciesList?.first(where: { $0.bird?.id == bird.id })
+            let hotspotPresence = top.hotspot.speciesList?.first(where: { $0.bird?.bird_id == bird.bird_id })
             let isResident = (hotspotPresence?.validWeeks?.count ?? 0) >= 52
             let status: String
             if isResident {
@@ -493,7 +493,7 @@ class HomeManager {
             }
 
             let speciesPresence = top.hotspot.speciesList?
-                .first(where: { $0.bird?.id == bird.id })
+                .first(where: { $0.bird?.bird_id == bird.bird_id })
             let probability = sightabilityProbability(
                 from: speciesPresence,
                 preferredWeeks: weekRange,
@@ -511,13 +511,13 @@ class HomeManager {
         }
         let primaryBird = top.migratingBirds.max { a, b in
             let pa = sightabilityProbability(
-                from: top.hotspot.speciesList?.first(where: { $0.bird?.id == a.bird.id }),
+                from: top.hotspot.speciesList?.first(where: { $0.bird?.bird_id == a.bird.bird_id }),
                 preferredWeeks: weekRange,
                 currentWeek: currentWeek,
                 fallback: 0
             )
             let pb = sightabilityProbability(
-                from: top.hotspot.speciesList?.first(where: { $0.bird?.id == b.bird.id }),
+                from: top.hotspot.speciesList?.first(where: { $0.bird?.bird_id == b.bird.bird_id }),
                 preferredWeeks: weekRange,
                 currentWeek: currentWeek,
                 fallback: 0
@@ -525,7 +525,7 @@ class HomeManager {
             return pa < pb
         }?.bird ?? top.migratingBirds[0].bird
 
-        let primaryMigration = migrationsByBirdId[primaryBird.id]
+        let primaryMigration = migrationsByBirdId[primaryBird.bird_id]
         let distanceKm = Int(top.distance / 1000)
         let distanceString = distanceKm == 0 ? "Nearby" : "\(distanceKm) km"
         let topHotspotLoc = CLLocationCoordinate2D(latitude: top.hotspot.lat, longitude: top.hotspot.lon)
@@ -556,7 +556,7 @@ class HomeManager {
         let birdPins: [HotspotBirdSpot] = top.migratingBirds.map { birdData in
             let coordinate: CLLocationCoordinate2D
 
-            if let migration = migrationsByBirdId[birdData.bird.id],
+            if let migration = migrationsByBirdId[birdData.bird.bird_id],
                let nearest = nearestTrajectoryCoordinate(
                 to: topHotspotLoc,
                 from: migration.paths
@@ -899,7 +899,7 @@ class HomeManager {
         
         for hotspot in nearbyHotspots {
             if let speciesList = hotspot.speciesList,
-               let presence = speciesList.first(where: { $0.bird?.id == bird.id }),
+               let presence = speciesList.first(where: { $0.bird?.bird_id == bird.bird_id }),
                let weeks = presence.validWeeks {
                 let sortedWeeks = weeks.sorted()
                 if let first = sortedWeeks.first, let last = sortedWeeks.last {
@@ -968,7 +968,7 @@ class HomeManager {
         let radiusMeters = searchRadiusKm * 1000.0
         let nearestPresence = hotspots
             .compactMap { hotspot -> (presence: HotspotSpeciesPresence, distance: Double)? in
-                guard let presence = hotspot.speciesList?.first(where: { $0.bird?.id == bird.id }) else { return nil }
+                guard let presence = hotspot.speciesList?.first(where: { $0.bird?.bird_id == bird.bird_id }) else { return nil }
                 let coord = CLLocationCoordinate2D(latitude: hotspot.lat, longitude: hotspot.lon)
                 let distance = locationService.distance(from: location, to: coord)
                 guard distance <= radiusMeters else { return nil }
@@ -1153,7 +1153,7 @@ class HomeManager {
             let matchingWeeks = birdData.weeks
             let matchingPresence = nearbyHotspots
                 .compactMap { hotspot in
-                    hotspot.speciesList?.first(where: { $0.bird?.id == bird.id })
+                    hotspot.speciesList?.first(where: { $0.bird?.bird_id == bird.bird_id })
                 }
             
             let probability = matchingPresence
@@ -1217,7 +1217,7 @@ class HomeManager {
 
         let birdDescriptor = FetchDescriptor<Bird>(
             predicate: #Predicate { bird in
-                bird.id == birdId
+                bird.bird_id == birdId
             }
         )
 
@@ -1393,13 +1393,13 @@ final class HotspotManager {
                 guard let bird = presence.bird, let validWeeks = presence.validWeeks else { continue }
                 let matchingWeeks = weeks.filter { validWeeks.contains($0) }
                 guard !matchingWeeks.isEmpty else { continue }
-                birdWeekMap[bird.id, default: []].formUnion(matchingWeeks)
-                birdMap[bird.id] = bird
+                birdWeekMap[bird.bird_id, default: []].formUnion(matchingWeeks)
+                birdMap[bird.bird_id] = bird
             }
         }
 
         return birdMap.values.map { bird in
-            (bird: bird, weeks: Array(birdWeekMap[bird.id] ?? []).sorted())
+            (bird: bird, weeks: Array(birdWeekMap[bird.bird_id] ?? []).sorted())
         }
     }
 }
@@ -1459,10 +1459,10 @@ final class MigrationManager {
     }
 
     func getSessions(for bird: Bird) -> [MigrationSession] {
-        let birdId = bird.id
+        let birdId = bird.bird_id
         let descriptor = FetchDescriptor<MigrationSession>(
             predicate: #Predicate { session in
-                session.bird?.id == birdId
+                session.bird?.bird_id == birdId
             }
         )
         do {

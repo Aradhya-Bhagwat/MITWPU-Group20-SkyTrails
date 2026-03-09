@@ -135,8 +135,8 @@ class EditWatchlistDetailViewController: UIViewController {
     private func loadAvailableShapes() {
         let allShapes = (try? manager.fetchAll(BirdShape.self)) ?? []
         let allBirds = manager.fetchAllBirds()
-        let usedShapeIds = Set(allBirds.compactMap { $0.shape?.id ?? $0.shape_id })
-        availableShapes = allShapes.filter { usedShapeIds.contains($0.id) }
+        let usedShapeIds = Set(allBirds.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
+        availableShapes = allShapes.filter { usedShapeIds.contains($0.bird_shape_id) }
     }
     
     private func setupRulesUI() {
@@ -351,7 +351,7 @@ class EditWatchlistDetailViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             Task {
                 do {
-                    try await self?.repository.deleteWatchlist(id: watchlist.id)
+                    try await self?.repository.deleteWatchlist(id: watchlist.watchlist_id)
                     self?.navigateToWatchlistHomeAfterDelete()
                 } catch {
                     self?.presentAlert(title: "Delete Failed", message: error.localizedDescription)
@@ -519,9 +519,9 @@ class EditWatchlistDetailViewController: UIViewController {
             let watchlistId: UUID
             
             if let watchlist = watchlistToEdit {
-                watchlistId = watchlist.id
+                watchlistId = watchlist.watchlist_id
                 try manager.updateWatchlist(
-                    id: watchlist.id,
+                    id: watchlist.watchlist_id,
                     title: title,
                     location: location,
                     locationDisplayName: locationDisplayName,
@@ -704,7 +704,7 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
         cell.contentView.layer.cornerRadius = 12
         cell.contentView.layer.masksToBounds = true
         
-        let isSelected = (shape.id == selectedShapeId)
+        let isSelected = (shape.bird_shape_id == selectedShapeId)
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         
         if isSelected {
@@ -746,7 +746,7 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let shape = availableShapes[indexPath.item]
-        selectedShapeId = shape.id
+        selectedShapeId = shape.bird_shape_id
         collectionView.reloadData()
     }
 }

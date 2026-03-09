@@ -263,12 +263,15 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private func classifyTerrain(from placemark: CLPlacemark) -> TerrainInfo {
         let skyBlue = UIColor(red: 0.53, green: 0.81, blue: 0.98, alpha: 1.0)
         
-        if placemark.ocean != nil {
-            return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
-        }
+        // Resilience against property name changes in future iOS
+        let locality = placemark.locality
+        let name = placemark.name ?? ""
         
-        if placemark.inlandWater != nil {
-            return TerrainInfo(name: "Freshwater", symbolName: "drop.fill", color: .systemTeal, defaultImageName: "Terrain_Freshwater")
+        if let areas = placemark.areasOfInterest, !areas.isEmpty {
+            let waterKeywords = ["ocean", "sea", "bay", "gulf", "lake", "river", "water"]
+            if areas.contains(where: { area in waterKeywords.contains(where: { area.lowercased().contains($0) }) }) {
+                return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
+            }
         }
         
         if let interests = placemark.areasOfInterest, !interests.isEmpty {
@@ -283,7 +286,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             }
         }
         
-        if placemark.locality != nil {
+        if locality != nil || name.contains("St") || name.contains("Rd") || name.contains("Ave") {
             return TerrainInfo(name: "Residential", symbolName: "building.2.fill", color: skyBlue, defaultImageName: "Terrain_Residential")
         }
         

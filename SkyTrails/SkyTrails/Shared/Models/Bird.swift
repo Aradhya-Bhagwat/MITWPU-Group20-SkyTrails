@@ -3,15 +3,10 @@ import Foundation
 import CoreLocation
 import SwiftData
 
-struct BirdFieldMarkData: Codable, Hashable {
-    var area: String
-    var variantId: UUID
-}
-
 @Model
 final class BirdFieldMarkVariantLink {
     @Attribute(.unique)
-    var id: UUID
+    var bird_field_mark_variant_link_id: UUID
 
     var bird: Bird?
     var fieldMark: BirdFieldMark?
@@ -19,13 +14,13 @@ final class BirdFieldMarkVariantLink {
     var area: String
 
     init(
-        id: UUID = UUID(),
+        bird_field_mark_variant_link_id: UUID = UUID(),
         bird: Bird? = nil,
         fieldMark: BirdFieldMark? = nil,
         variant: FieldMarkVariant? = nil,
         area: String
     ) {
-        self.id = id
+        self.bird_field_mark_variant_link_id = bird_field_mark_variant_link_id
         self.bird = bird
         self.fieldMark = fieldMark
         self.variant = variant
@@ -36,7 +31,7 @@ final class BirdFieldMarkVariantLink {
 @Model
 final class Bird {
     @Attribute(.unique)
-    var id: UUID
+    var bird_id: UUID
     var commonName: String
     var scientificName: String
     var staticImageName: String
@@ -47,14 +42,12 @@ final class Bird {
     
    
     var migration_strategy: String?
-    var hemisphere: String?
    
     var validLocations: [String]?
     var validMonths: [Int]?
     var likelySpot: String?
     var shape_id: String?
     var size_category: Int?
-    var fieldMarkData: [BirdFieldMarkData]? = []
 
     var shape: BirdShape?
 
@@ -70,7 +63,7 @@ final class Bird {
     var name: String { return commonName }
 
     init(
-            id: UUID = UUID(),
+            bird_id: UUID = UUID(),
             commonName: String,
             scientificName: String,
             staticImageName: String,
@@ -79,7 +72,6 @@ final class Bird {
             descriptionText: String? = nil,
             conservation_status: String? = nil,
             migration_strategy: String? = nil,
-            hemisphere: String? = nil,
             validLocations: [String]? = nil,
             validMonths: [Int]? = nil,
             likelySpot: String? = nil,
@@ -87,7 +79,7 @@ final class Bird {
             size_category: Int? = nil,
             shape: BirdShape? = nil
         ) {
-            self.id = id
+            self.bird_id = bird_id
             self.commonName = commonName
             self.scientificName = scientificName
             self.staticImageName = staticImageName
@@ -96,7 +88,6 @@ final class Bird {
             self.descriptionText = descriptionText
             self.conservation_status = conservation_status
             self.migration_strategy = migration_strategy
-            self.hemisphere = hemisphere
             self.validLocations = validLocations
             self.validMonths = validMonths
             self.likelySpot = likelySpot

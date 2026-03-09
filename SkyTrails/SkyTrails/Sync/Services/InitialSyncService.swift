@@ -59,35 +59,35 @@ actor InitialSyncService {
         }
         let watchlistRows: [WatchlistRow] = try await fetchFromSupabase(
             table: "watchlists",
-            query: "select=*&owner_id=eq.\(userId.uuidString)&deleted_at=is.null",
+            query: "select=*&user_id=eq.\(userId.uuidString)&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )
         
         let entryRows: [WatchlistEntryRow] = try await fetchFromSupabase(
             table: "watchlist_entries",
-            query: "select=*&watchlist_id=in.(select id from watchlists where owner_id=eq.\(userId.uuidString))",
+            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=eq.\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
         
         let ruleRows: [WatchlistRuleRow] = try await fetchFromSupabase(
             table: "watchlist_rules",
-            query: "select=*&watchlist_id=in.(select id from watchlists where owner_id=eq.\(userId.uuidString))",
+            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=eq.\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
         
         let shareRows: [WatchlistShareRow] = try await fetchFromSupabase(
             table: "watchlist_shares",
-            query: "select=*&or=(watchlist_id.in.(select id from watchlists where owner_id=eq.\(userId.uuidString)),user_id.eq.\(userId.uuidString))",
+            query: "select=*&or=(watchlist_id.in.(select watchlist_id from watchlists where user_id=eq.\(userId.uuidString)),user_id.eq.\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
         
         let photoRows: [ObservedBirdPhotoRow] = try await fetchFromSupabase(
             table: "observed_bird_photos",
-            query: "select=*&watchlist_entry_id=in.(select id from watchlist_entries where watchlist_id in (select id from watchlists where owner_id=eq.\(userId.uuidString)))",
+            query: "select=*&watchlist_entry_id=in.(select watchlist_entry_id from watchlist_entries where watchlist_id in (select watchlist_id from watchlists where user_id=eq.\(userId.uuidString)))",
             config: config,
             accessToken: accessToken
         )
@@ -120,8 +120,8 @@ actor InitialSyncService {
         let existingWatchlists = try context.fetch(FetchDescriptor<Watchlist>())
         var existingById: [UUID: Watchlist] = [:]
         for watchlist in existingWatchlists {
-            if watchlist.owner_id != nil && existingById[watchlist.id] == nil {
-                existingById[watchlist.id] = watchlist
+            if watchlist.user_id != nil && existingById[watchlist.watchlist_id] == nil {
+                existingById[watchlist.watchlist_id] = watchlist
             }
         }
         
@@ -129,7 +129,7 @@ actor InitialSyncService {
         
         for row in rows {
             let watchlist: Watchlist
-            if let existing = existingById[row.id] {
+            if let existing = existingById[row.watchlist_id] {
                 updateWatchlist(existing, from: row)
                 watchlist = existing
             } else {
@@ -155,14 +155,14 @@ actor InitialSyncService {
         let watchlists = try context.fetch(watchlistsDescriptor)
         var watchlistById: [UUID: Watchlist] = [:]
         for watchlist in watchlists {
-            watchlistById[watchlist.id] = watchlist
+            watchlistById[watchlist.watchlist_id] = watchlist
         }
         
         let birdsDescriptor = FetchDescriptor<Bird>()
         let birds = try context.fetch(birdsDescriptor)
         var birdById: [UUID: Bird] = [:]
         for bird in birds {
-            birdById[bird.id] = bird
+            birdById[bird.bird_id] = bird
         }
         
         var syncedCount = 0
@@ -195,7 +195,7 @@ actor InitialSyncService {
         let watchlists = try context.fetch(watchlistsDescriptor)
         var watchlistById: [UUID: Watchlist] = [:]
         for watchlist in watchlists {
-            watchlistById[watchlist.id] = watchlist
+            watchlistById[watchlist.watchlist_id] = watchlist
         }
         
         var syncedCount = 0
@@ -228,7 +228,7 @@ actor InitialSyncService {
         let watchlists = try context.fetch(watchlistsDescriptor)
         var watchlistById: [UUID: Watchlist] = [:]
         for watchlist in watchlists {
-            watchlistById[watchlist.id] = watchlist
+            watchlistById[watchlist.watchlist_id] = watchlist
         }
         
         var syncedCount = 0
@@ -328,8 +328,8 @@ actor InitialSyncService {
     
     private nonisolated func createWatchlist(from row: WatchlistRow) -> Watchlist {
         let watchlist = Watchlist(
-            id: row.id,
-            owner_id: row.ownerId,
+            watchlist_id: row.watchlist_id,
+            user_id: row.user_id,
             type: WatchlistType(rawValue: row.type) ?? .custom,
             title: row.title,
             location: row.location,
@@ -342,7 +342,7 @@ actor InitialSyncService {
     }
     
     private nonisolated func updateWatchlist(_ watchlist: Watchlist, from row: WatchlistRow) {
-        watchlist.owner_id = row.ownerId
+        watchlist.user_id = row.user_id
         watchlist.type = WatchlistType(rawValue: row.type) ?? .custom
         watchlist.title = row.title
         watchlist.location = row.location

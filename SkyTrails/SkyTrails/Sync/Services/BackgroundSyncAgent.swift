@@ -387,8 +387,9 @@ actor BackgroundSyncAgent {
         }
         
         components.path = "/rest/v1/\(table)"
+        let primaryKey = primaryKeyColumn(for: table)
         components.queryItems = [
-            URLQueryItem(name: "id", value: "eq.\(recordId.uuidString)"),
+            URLQueryItem(name: primaryKey, value: "eq.\(recordId.uuidString)"),
             URLQueryItem(name: "select", value: "updated_at,deleted_at")
         ]
         
@@ -468,7 +469,7 @@ actor BackgroundSyncAgent {
         token: String?
     ) async throws {
         let isIdentificationTable = table.hasPrefix("identification_")
-        let path = isIdentificationTable ? "/rest/v1/\(table)?on_conflict=id" : "/rest/v1/\(table)"
+        let path = isIdentificationTable ? "/rest/v1/\(table)?on_conflict=\(primaryKeyColumn(for: table))" : "/rest/v1/\(table)"
         
         var request = try buildRequest(
             path: path,
@@ -494,8 +495,9 @@ actor BackgroundSyncAgent {
         config: SupabaseConfig,
         token: String?
     ) async throws {
+        let primaryKey = primaryKeyColumn(for: table)
         var request = try buildRequest(
-            path: "/rest/v1/\(table)?id=eq.\(recordId.uuidString)",
+            path: "/rest/v1/\(table)?\(primaryKey)=eq.\(recordId.uuidString)",
             method: "PATCH",
             config: config,
             token: token
@@ -513,9 +515,10 @@ actor BackgroundSyncAgent {
         config: SupabaseConfig,
         token: String?
     ) async throws {
+        let primaryKey = primaryKeyColumn(for: table)
         if table == "observed_bird_photos" {
             var request = try buildRequest(
-                path: "/rest/v1/\(table)?id=eq.\(recordId.uuidString)",
+                path: "/rest/v1/\(table)?\(primaryKey)=eq.\(recordId.uuidString)",
                 method: "DELETE",
                 config: config,
                 token: token
@@ -529,7 +532,7 @@ actor BackgroundSyncAgent {
         ]
         
         var request = try buildRequest(
-            path: "/rest/v1/\(table)?id=eq.\(recordId.uuidString)",
+            path: "/rest/v1/\(table)?\(primaryKey)=eq.\(recordId.uuidString)",
             method: "PATCH",
             config: config,
             token: token
@@ -588,7 +591,7 @@ actor BackgroundSyncAgent {
         do {
             switch table {
             case "watchlists":
-                let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate { $0.id == recordId })
+                let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == recordId })
                 if let watchlist = try context.fetch(descriptor).first {
                     context.delete(watchlist)
                     try context.save()
@@ -624,14 +627,14 @@ actor BackgroundSyncAgent {
                 }
                 
             case "identification_sessions":
-                let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.id == recordId })
+                let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })
                 if let session = try context.fetch(descriptor).first {
                     context.delete(session)
                     try context.save()
                 }
                 
             case "identification_results":
-                let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.id == recordId })
+                let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })
                 if let result = try context.fetch(descriptor).first {
                     context.delete(result)
                     try context.save()
@@ -641,6 +644,31 @@ actor BackgroundSyncAgent {
                 break
             }
         } catch {
+        }
+    }
+
+    private func primaryKeyColumn(for table: String) -> String {
+        switch table {
+        case "watchlists":
+            return "watchlist_id"
+        case "watchlist_entries":
+            return "watchlist_entry_id"
+        case "watchlist_rules":
+            return "watchlist_rule_id"
+        case "watchlist_shares":
+            return "watchlist_share_id"
+        case "observed_bird_photos":
+            return "observed_bird_photo_id"
+        case "identification_sessions":
+            return "identification_session_id"
+        case "identification_session_marks":
+            return "identification_session_mark_id"
+        case "identification_results":
+            return "identification_result_id"
+        case "identification_candidates":
+            return "identification_candidate_id"
+        default:
+            return "id"
         }
     }
     
@@ -695,7 +723,7 @@ extension BackgroundSyncAgent {
         let storagePath = "\(userIdStr)/\(imagePath)"
         let storageURLStr = try await uploadToStorage(path: storagePath, data: data, config: config, token: token)
         payload["storage_url"] = storageURLStr
-        if let idStr = payload["id"] as? String, let id = UUID(uuidString: idStr) {
+        if let idStr = payload["observed_bird_photo_id"] as? String, let id = UUID(uuidString: idStr) {
             await MainActor.run {
                 do {
                     NotificationCenter.default.post(

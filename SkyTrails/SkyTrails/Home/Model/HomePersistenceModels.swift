@@ -61,7 +61,6 @@ final class MigrationSession {
     var bird: Bird?
     var startWeek: Int
     var endWeek: Int
-    var hemisphere: String?
     @Relationship(deleteRule: .cascade, inverse: \TrajectoryPath.session)
     var trajectoryPaths: [TrajectoryPath]?
     
@@ -72,14 +71,12 @@ final class MigrationSession {
         id: UUID = UUID(),
         bird: Bird? = nil,
         startWeek: Int,
-        endWeek: Int,
-        hemisphere: String? = nil
+        endWeek: Int
     ) {
         self.id = id
         self.bird = bird
         self.startWeek = startWeek
         self.endWeek = endWeek
-        self.hemisphere = hemisphere
     }
 }
 

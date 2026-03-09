@@ -203,9 +203,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
 
     private func deselectShapeForReloadKeepingSavedShape() {
-        if let shapeIndex = options.firstIndex(where: { $0.category == .shape }) {
-            options[shapeIndex].isSelected = false
-        }
         model.selectedMenuOptionRawValues = options
             .filter { $0.isSelected }
             .map { $0.category.rawValue }
@@ -222,7 +219,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             )
             let sessions = try context.fetch(descriptor)
             self.histories = sessions.filter {
-                $0.status == .completed && (currentUserId == nil ? $0.ownerId == nil : $0.ownerId == currentUserId)
+                $0.status == .completed && (currentUserId == nil ? $0.user_id == nil : $0.user_id == currentUserId)
             }
         } catch {
             self.histories = []

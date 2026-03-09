@@ -134,7 +134,7 @@ class SharedWatchlistsViewController: UIViewController {
 
         vc.watchlistType = .shared
         if let watchlist = watchlist {
-             vc.watchlistIdToEdit = watchlist.id
+             vc.watchlistIdToEdit = watchlist.watchlist_id
         }
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -168,7 +168,7 @@ class SharedWatchlistsViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
             guard let self = self else { return }
             Task {
-                try? await self.manager.deleteWatchlist(id: shared.id)
+                try? await self.manager.deleteWatchlist(id: shared.watchlist_id)
                 await MainActor.run {
                     self.refreshData()
                 }
@@ -191,7 +191,7 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
 
         let item = filteredWatchlists[indexPath.row]
         let userImages: [UIImage] = []
-        let stats = (try? manager.getStats(for: item.id)) ?? (observed: 0, total: 0)
+        let stats = (try? manager.getStats(for: item.watchlist_id)) ?? (observed: 0, total: 0)
         var image: UIImage? = nil
         if let path = item.coverImagePath {
             image = UIImage(named: path)
@@ -232,7 +232,7 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
 
         smartVC.watchlistType = .shared
         smartVC.watchlistTitle = item.title ?? "Shared Watchlist"
-        smartVC.currentWatchlistId = item.id
+        smartVC.currentWatchlistId = item.watchlist_id
 
         navigationController?.pushViewController(smartVC, animated: true)
     }
