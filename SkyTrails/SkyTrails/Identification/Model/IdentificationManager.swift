@@ -63,40 +63,18 @@ class IdentificationManager {
     
     func availableShapesForSelectedSize() -> [BirdShape] {
         do {
-            let birdsInScope: [Bird]
-            if selectedSizeRange.isEmpty {
-                birdsInScope = try modelContext.fetch(FetchDescriptor<Bird>())
-            } else {
-                let predicate = #Predicate<Bird> { bird in
-                    if let sizeCategory = bird.size_category {
-                        return selectedSizeRange.contains(sizeCategory)
-                    } else {
-                        return false
-                    }
-                }
-                birdsInScope = try modelContext.fetch(FetchDescriptor<Bird>(predicate: predicate))
+            let allBirds = try modelContext.fetch(FetchDescriptor<Bird>())
+            let birdShapeIds = Set(allBirds.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
+            
+            if birdShapeIds.isEmpty {
+                return []
             }
-
-            let birdShapeIds = Set(birdsInScope.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
-            var visibleShapeIds = birdShapeIds
-
-            let needsFieldMarks = selectedMenuOptionRawValues.contains(FilterCategory.fieldMarks.rawValue)
-            if needsFieldMarks {
-                let marks = try modelContext.fetch(FetchDescriptor<BirdFieldMark>())
-                let markShapeIds = Set(marks.compactMap { $0.shape?.bird_shape_id })
-                let intersection = birdShapeIds.intersection(markShapeIds)
-                if !intersection.isEmpty {
-                    visibleShapeIds = intersection
-                } else if !markShapeIds.isEmpty {
-                    visibleShapeIds = markShapeIds
-                }
-            }
-
-            let filtered = allShapes.filter { visibleShapeIds.contains($0.bird_shape_id) }
-            return filtered.isEmpty ? allShapes : filtered
+            
+            let filtered = allShapes.filter { birdShapeIds.contains($0.bird_shape_id) }
+            return filtered.isEmpty ? [] : filtered
 
         } catch {
-            return allShapes
+            return []
         }
     }
    
