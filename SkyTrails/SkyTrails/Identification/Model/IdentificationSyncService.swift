@@ -99,13 +99,19 @@ actor IdentificationSyncService {
         let sizeCategory = row.metadata?["sizeCategory"].flatMap { Int($0) }
         let filterCategories = row.metadata?["filterCategories"]?.components(separatedBy: ",")
         
+        var observationDate = row.createdAt
+        if let obsDateStr = row.metadata?["observationDate"],
+           let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
+            observationDate = parsedDate
+        }
+        
         let session = IdentificationSession(
             identification_session_id: row.id,
             user_id: row.userId,
             shape: shape,
             locationId: nil,
             locationDisplayName: locationDisplayName,
-            observationDate: row.createdAt,
+            observationDate: observationDate,
             createdAt: row.createdAt,
             status: SessionStatus(rawValue: row.status) ?? .completed,
             sizeCategory: sizeCategory,
@@ -122,7 +128,14 @@ actor IdentificationSyncService {
             session.shape = shapeById[shapeId]
         }
         session.locationDisplayName = row.metadata?["locationDisplayName"]
-        session.observationDate = row.createdAt
+        
+        if let obsDateStr = row.metadata?["observationDate"],
+           let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
+            session.observationDate = parsedDate
+        } else {
+            session.observationDate = row.createdAt
+        }
+        
         session.status = SessionStatus(rawValue: row.status) ?? .completed
         
         if let sizeStr = row.metadata?["sizeCategory"], let size = Int(sizeStr) {
@@ -178,6 +191,7 @@ actor IdentificationSyncService {
             if let filterCategories = session.selectedFilterCategories {
                 metadata["filterCategories"] = filterCategories.joined(separator: ",")
             }
+            metadata["observationDate"] = ISO8601DateFormatter().string(from: session.observationDate)
             
             let row = IdentificationSessionRow(
                 id: session.identification_session_id,

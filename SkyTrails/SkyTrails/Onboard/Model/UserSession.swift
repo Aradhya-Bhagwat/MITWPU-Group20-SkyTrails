@@ -152,7 +152,6 @@ class UserSession {
                 accessToken: authResult.accessToken ?? accessToken,
                 refreshToken: authResult.refreshToken ?? refreshToken
             )
-            await connectRealtimeAndSync()
             do {
                 let summary = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
