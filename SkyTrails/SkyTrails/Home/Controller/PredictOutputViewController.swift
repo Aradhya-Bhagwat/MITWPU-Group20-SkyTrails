@@ -3,6 +3,10 @@ import UIKit
 import CoreLocation
 import MapKit
 
+protocol ModalSheetHeightAware: AnyObject {
+    func updateVisibleSheetHeight(_ height: CGFloat)
+}
+
 class PredictOutputViewController: UIViewController {
     var predictions: [FinalPredictionResult] = []
     var inputData: [PredictionInputData] = []
@@ -15,6 +19,9 @@ class PredictOutputViewController: UIViewController {
     private var yearlySeriesByBird: [String: [Int]] = [:]
     private var selectedPredictionIndex: Int = 0
     private var headerLocationRequestID: UUID?
+    private var dynamicCollectionHeightConstraint: NSLayoutConstraint?
+    private var fixedCollectionHeightConstraint: NSLayoutConstraint?
+    private var latestVisibleSheetHeight: CGFloat?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,6 +36,7 @@ class PredictOutputViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        updateCollectionHeightForCurrentSheetPosition()
         updateHeaderLabelTypography()
     }
 
@@ -83,6 +91,36 @@ class PredictOutputViewController: UIViewController {
         )
         collectionView.dataSource = self
         collectionView.delegate = self
+        configureDynamicCollectionHeightIfNeeded()
+    }
+
+    private func configureDynamicCollectionHeightIfNeeded() {
+        guard fixedCollectionHeightConstraint == nil else { return }
+
+        fixedCollectionHeightConstraint = view.constraints.first(where: { constraint in
+            guard constraint.firstItem as? UIView === collectionView else { return false }
+            return constraint.firstAttribute == .height
+        })
+        fixedCollectionHeightConstraint?.isActive = false
+
+        let dynamic = collectionView.heightAnchor.constraint(equalToConstant: 200)
+        dynamic.priority = .required
+        dynamic.isActive = true
+        dynamicCollectionHeightConstraint = dynamic
+    }
+
+    private func updateCollectionHeightForCurrentSheetPosition() {
+        configureDynamicCollectionHeightIfNeeded()
+        guard let dynamicCollectionHeightConstraint else { return }
+
+        let visibleSheetHeight = latestVisibleSheetHeight ?? view.bounds.height
+        let topY = collectionView.frame.minY
+        let bottomInset = view.safeAreaInsets.bottom
+        let available = visibleSheetHeight - topY - bottomInset
+        let newHeight = max(120, floor(available))
+        guard abs(dynamicCollectionHeightConstraint.constant - newHeight) > 0.5 else { return }
+        dynamicCollectionHeightConstraint.constant = newHeight
+        collectionView.collectionViewLayout.invalidateLayout()
     }
 
     private func applySemanticAppearance() {
@@ -220,6 +258,14 @@ class PredictOutputViewController: UIViewController {
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
         }
+    }
+}
+
+extension PredictOutputViewController: ModalSheetHeightAware {
+    func updateVisibleSheetHeight(_ height: CGFloat) {
+        latestVisibleSheetHeight = max(0, height)
+        guard isViewLoaded else { return }
+        updateCollectionHeightForCurrentSheetPosition()
     }
 }
 

@@ -155,14 +155,6 @@ class PredictMapViewController: UIViewController {
             let response = try await MKLocalSearch(request: request).start()
 
             let nearest = nearestMapItem(to: coordinate, from: response.mapItems)
-            if let regionPolygon = polygonCoordinates(
-                from: response.boundingRegion,
-                near: coordinate,
-                nearestResultCoordinate: nearest?.location.coordinate
-            ) {
-                return .polygon(regionPolygon)
-            }
-
             if let circularRegion = nearest?.placemark.region as? CLCircularRegion {
                 let radiusKm = max(0.2, circularRegion.radius / 1000.0)
                 return .circle(radiusKm: radiusKm)
@@ -171,54 +163,6 @@ class PredictMapViewController: UIViewController {
         }
 
         return .circle(radiusKm: 2.0)
-    }
-
-    private func polygonCoordinates(
-        from region: MKCoordinateRegion,
-        near anchorCoordinate: CLLocationCoordinate2D,
-        nearestResultCoordinate: CLLocationCoordinate2D?
-    ) -> [CLLocationCoordinate2D]? {
-        let span = region.span
-        guard span.latitudeDelta > 0.0001, span.longitudeDelta > 0.0001 else {
-            return nil
-        }
-
-        let regionCenterDistanceKm = distanceInKm(from: anchorCoordinate, to: region.center)
-        guard regionCenterDistanceKm <= 1.0 else {
-            return nil
-        }
-
-        if let nearestResultCoordinate {
-            let nearestResultDistanceKm = distanceInKm(from: anchorCoordinate, to: nearestResultCoordinate)
-            guard nearestResultDistanceKm <= 1.5 else {
-                return nil
-            }
-        }
-
-        let center = region.center
-        let latDelta = span.latitudeDelta / 2.0
-        let lonDelta = span.longitudeDelta / 2.0
-
-        let north = center.latitude + latDelta
-        let south = center.latitude - latDelta
-        let east = center.longitude + lonDelta
-        let west = center.longitude - lonDelta
-
-        let polygon = [
-            CLLocationCoordinate2D(latitude: north, longitude: west),
-            CLLocationCoordinate2D(latitude: north, longitude: east),
-            CLLocationCoordinate2D(latitude: south, longitude: east),
-            CLLocationCoordinate2D(latitude: south, longitude: west)
-        ]
-
-        let maxCornerDistanceKm = polygon
-            .map { distanceInKm(from: anchorCoordinate, to: $0) }
-            .max() ?? .greatestFiniteMagnitude
-        guard maxCornerDistanceKm <= 8.0 else {
-            return nil
-        }
-
-        return polygon
     }
 
     private func nearestMapItem(
@@ -297,6 +241,7 @@ class PredictMapViewController: UIViewController {
         
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
         navVC.navigationBar.addGestureRecognizer(panGesture)
+        notifyVisibleSheetHeightChanged()
     }
 
         @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
@@ -317,6 +262,7 @@ class PredictMapViewController: UIViewController {
                 }
                 
                 view.layoutIfNeeded()
+                notifyVisibleSheetHeightChanged()
                 
             case .ended, .cancelled:
                 break
@@ -374,6 +320,7 @@ class PredictMapViewController: UIViewController {
             outputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!).isActive = true
             outputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!).isActive = true
             outputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!).isActive = true
+            self?.notifyVisibleSheetHeightChanged()
         }
     }
 
@@ -412,6 +359,17 @@ class PredictMapViewController: UIViewController {
             inputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!).isActive = true
             inputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!).isActive = true
             inputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!).isActive = true
+            self?.notifyVisibleSheetHeightChanged()
+        }
+    }
+
+    private func notifyVisibleSheetHeightChanged() {
+        let visibleHeight = max(0, view.bounds.height - modalTopConstraint.constant)
+        if let nav = currentChildVC as? UINavigationController,
+           let top = nav.topViewController as? ModalSheetHeightAware {
+            top.updateVisibleSheetHeight(visibleHeight)
+        } else if let aware = currentChildVC as? ModalSheetHeightAware {
+            aware.updateVisibleSheetHeight(visibleHeight)
         }
     }
  

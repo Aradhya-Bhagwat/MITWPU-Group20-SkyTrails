@@ -301,7 +301,7 @@ extension HomeViewController {
     private func loadHomeData() {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
-            let userLocation = self.getUserLocation()
+            let userLocation = await self.resolveQueryLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             self.homeScreenData = data
 
@@ -327,7 +327,7 @@ extension HomeViewController {
     private func refreshHomeData() {
         Task { @MainActor [weak self] in
             guard let self = self else { return }
-            let userLocation = self.getUserLocation()
+            let userLocation = await self.resolveQueryLocation()
             let data = await self.homeManager.getHomeScreenData(userLocation: userLocation)
             
             self.homeScreenData = data
@@ -343,10 +343,30 @@ extension HomeViewController {
         }
     }
 
-    private func getUserLocation() -> CLLocationCoordinate2D? {
-        if let homeLocation = LocationPreferences.shared.homeLocation {
-            return homeLocation
+    private func resolveQueryLocation() async -> CLLocationCoordinate2D? {
+        if let liveLocation = LocationService.shared.currentLocation {
+            await LocationPreferences.shared.setHomeLocation(
+                liveLocation,
+                name: LocationPreferences.shared.homeLocationName
+            )
+            return liveLocation
         }
+
+        do {
+            let locationData = try await LocationService.shared.getCurrentLocation()
+            let coordinate = CLLocationCoordinate2D(
+                latitude: locationData.lat,
+                longitude: locationData.lon
+            )
+            await LocationPreferences.shared.setHomeLocation(coordinate, name: locationData.displayName)
+            return coordinate
+        } catch {
+        }
+
+        if let storedHomeLocation = LocationPreferences.shared.homeLocation {
+            return storedHomeLocation
+        }
+
         return CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
     }
 
@@ -690,7 +710,9 @@ extension HomeViewController: UICollectionViewDataSource {
             cell.configure(
                 image: UIImage(named: item.imageName),
                 title: item.title,
-                speciesCount: item.speciesCount
+                speciesCount: item.speciesCount,
+                latitude: item.latitude,
+                longitude: item.longitude
             )
             return cell
         }
