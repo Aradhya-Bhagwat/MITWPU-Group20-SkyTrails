@@ -170,6 +170,7 @@ class SignUpViewController: UIViewController {
                     try await UserSyncService.shared.upsertUser(user)
                 } catch {
                     print("DEBUG: User sync failed: \(error)")
+                    print("DEBUG: Error details: \(String(describing: error))")
                     await MainActor.run {
                         self.show("Account created locally, but could not sync details: \(error.localizedDescription)") {
                             self.goToMain()

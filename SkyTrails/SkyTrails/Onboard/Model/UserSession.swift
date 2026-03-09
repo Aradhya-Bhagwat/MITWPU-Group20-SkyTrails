@@ -40,7 +40,7 @@ class UserSession {
 
         notifyAuthStateChanged()
         Task {
-            await createUserInSupabase(userId: user.user_id)
+            await createUserInSupabase(user: user)
         }
         Task { @MainActor in
             if let token = getAccessToken() {
@@ -198,15 +198,27 @@ class UserSession {
         return await DeviceSessionService.shared.validateCurrentSession(userId: userId, accessToken: token)
     }
     
-    private func createUserInSupabase(userId: UUID) async {
+    private func createUserInSupabase(user: User) async {
         guard let config = try? SupabaseConfig.load(),
               let accessToken = getAccessToken() else {
             return
         }
         
-        let payload: [String: Any] = ["user_id": userId.uuidString]
+        let payload: [String: Any] = [
+            "user_id": user.user_id.uuidString,
+            "name": user.name,
+            "email": user.email,
+            "gender": user.gender,
+            "profile_photo": user.profilePhoto
+        ]
         
-        guard let url = URL(string: "\(config.projectURL.absoluteString)/rest/v1/users") else {
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
+            return
+        }
+        components.path = "/rest/v1/users"
+        components.percentEncodedQuery = "on_conflict=user_id"
+        
+        guard let url = components.url else {
             return
         }
         
@@ -215,17 +227,23 @@ class UserSession {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
         
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
+                    print("DEBUG: User created successfully in database")
                 } else if httpResponse.statusCode == 409 {
+                    print("DEBUG: User already exists in database")
                 } else {
+                    let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown"
+                    print("DEBUG: User creation failed with status: \(httpResponse.statusCode), error: \(errorMsg)")
                 }
             }
         } catch {
+            print("DEBUG: User creation error: \(error)")
         }
     }
 }
