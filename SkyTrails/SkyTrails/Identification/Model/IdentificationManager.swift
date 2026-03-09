@@ -360,6 +360,7 @@ class IdentificationManager {
         if let filterCategories = session.selectedFilterCategories {
             metadata["filterCategories"] = filterCategories.joined(separator: ",")
         }
+        metadata["observationDate"] = ISO8601DateFormatter().string(from: session.observationDate)
         if !metadata.isEmpty {
             sessionPayload["metadata"] = metadata
         }

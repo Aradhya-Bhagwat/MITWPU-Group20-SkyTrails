@@ -38,6 +38,7 @@ final class RealtimeSyncService: NSObject {
     static let shared = RealtimeSyncService()
     
     private var webSocket: URLSessionWebSocketTask?
+    private var session: URLSession?
     private var config: SupabaseConfig?
     
     private(set) var connectionState: RealtimeConnectionState = .disconnected
@@ -76,6 +77,9 @@ final class RealtimeSyncService: NSObject {
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
         
+        session?.invalidateAndCancel()
+        session = nil
+        
         subscribedTables.removeAll()
         updateConnectionState(.disconnected)
     }
@@ -90,6 +94,9 @@ final class RealtimeSyncService: NSObject {
     }
     
     private func establishConnection() async throws {
+        webSocket?.cancel(with: .goingAway, reason: nil)
+        session?.invalidateAndCancel()
+        
         guard let config = config else {
             throw RealtimeSyncError.connectionFailed("Config not set")
         }
@@ -109,14 +116,14 @@ final class RealtimeSyncService: NSObject {
         guard let wsURL = components.url else {
             throw RealtimeSyncError.connectionFailed("Invalid WebSocket URL")
         }
-        let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+        session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
         var request = URLRequest(url: wsURL)
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         if let token = UserSession.shared.getAccessToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
-        webSocket = session.webSocketTask(with: request)
+        webSocket = session?.webSocketTask(with: request)
         webSocket?.resume()
         receiveMessage()
         startHeartbeat()
@@ -149,6 +156,11 @@ final class RealtimeSyncService: NSObject {
         guard isConnected, let webSocket else {
             throw RealtimeSyncError.notConnected
         }
+        
+        guard !subscribedTables.contains(table) else {
+            return
+        }
+        
         let channelConfig = RealtimeChannelPayloadConfig(
             postgresChanges: [RealtimePostgresChange(table: table)]
         )
