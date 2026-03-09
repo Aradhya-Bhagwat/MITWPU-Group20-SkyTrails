@@ -110,7 +110,7 @@ final class WatchlistManager: WatchlistRepository {
                 options: [.skipsHiddenFiles]
               ) else { return }
 
-        // SwiftData default store typically uses default.store + sidecar files.
+       
         let candidates = fileURLs.filter { url in
             let name = url.lastPathComponent
             return name == "default.store" || name.hasPrefix("default.store-")
