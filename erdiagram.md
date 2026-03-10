@@ -34,6 +34,15 @@ Enum SessionStatus {
   abandoned
 }
 
+Enum SyncStatus {
+  pendingOwner
+  pendingCreate
+  pendingUpdate
+  pendingDelete
+  synced
+  failed
+}
+
 // MARK: - Reference & Core Bird Models
 
 Table Bird {
@@ -46,11 +55,12 @@ Table Bird {
   descriptionText String
   conservation_status String
   migration_strategy String
-  hemisphere String
+
   validLocations "[String]"
   validMonths "[Int]"
   likelySpot String
-  // Note: shape_id, size_category, and fieldMarkData are omitted (legacy)
+  shape_id String
+  size_category Int
 }
 
 Table BirdShape {
@@ -58,7 +68,7 @@ Table BirdShape {
   name String
   icon String
 }
-Ref: Bird.id - BirdShape.id
+Ref: Bird.shape_id - BirdShape.id
 
 Table BirdFieldMark {
   id UUID [primary key]
@@ -279,7 +289,7 @@ Table MigrationSession {
   bird_id UUID
   startWeek Int
   endWeek Int
-  hemisphere String
+
 }
 Ref: MigrationSession.bird_id > Bird.id
 
@@ -323,7 +333,7 @@ Table CommunityObservation {
 // -----------------------------------------------------------------------------
 
 Table public.bird_field_mark_variant_links {
-  id uuid [primary key]
+  bird_field_mark_variant_link_id uuid [primary key]
   bird_id uuid [not null]
   field_mark_id uuid
   variant_id uuid
@@ -331,7 +341,7 @@ Table public.bird_field_mark_variant_links {
 }
 
 Table public.birds {
-  id uuid [primary key]
+  bird_id uuid [primary key]
   common_name text [not null]
   scientific_name text
   static_image_name text
@@ -340,17 +350,25 @@ Table public.birds {
   description_text text
   conservation_status text
   migration_strategy text
-  hemisphere text
-  valid_locations jsonb
   valid_months jsonb
   shape_id text
   size_category integer
   field_mark_data jsonb
 }
 
+Table public.hotspots_geo {
+  hotspot_geo_id uuid [primary key]
+  ebird_hotspot_id text [unique]
+  name text [not null]
+  locality text
+  location USER-DEFINED [not null]
+  image_name text
+  updated_at timestamp
+}
+
 Table public.identification_candidates {
-  id uuid [primary key]
-  result_id uuid
+  identification_candidate_id uuid [primary key]
+  identification_result_id uuid
   bird_id uuid
   confidence double_precision
   rank integer
@@ -361,17 +379,17 @@ Table public.identification_candidates {
 }
 
 Table public.identification_results {
-  id uuid [primary key]
-  session_id uuid
-  owner_id uuid
+  identification_result_id uuid [primary key]
+  identification_session_id uuid
+  user_id uuid
   bird_id uuid
   created_at timestamp
   updated_at timestamp
 }
 
 Table public.identification_session_marks {
-  id uuid [primary key]
-  session_id uuid
+  identification_session_mark_id uuid [primary key]
+  identification_session_id uuid
   field_mark_id uuid
   variant_id uuid
   area text
@@ -380,7 +398,7 @@ Table public.identification_session_marks {
 }
 
 Table public.identification_sessions {
-  id uuid [primary key]
+  identification_session_id uuid [primary key]
   user_id uuid
   status text
   location_lat double_precision
@@ -395,7 +413,7 @@ Table public.identification_sessions {
 }
 
 Table public.news_articles {
-  id uuid [primary key]
+  news_article_id uuid [primary key]
   title text
   description text
   image_url text
@@ -406,7 +424,7 @@ Table public.news_articles {
 }
 
 Table public.observed_bird_photos {
-  id uuid [primary key]
+  observed_bird_photo_id uuid [primary key]
   watchlist_entry_id uuid [not null]
   image_path text [not null]
   storage_url text
@@ -419,7 +437,7 @@ Table public.observed_bird_photos {
 }
 
 Table public.photo_delete_gc_queue {
-  id uuid [primary key]
+  photo_delete_gc_queue_id uuid [primary key]
   photo_id uuid
   storage_path text [not null]
   status text [not null]
@@ -429,8 +447,15 @@ Table public.photo_delete_gc_queue {
   updated_at timestamp
 }
 
+Table public.user_nearby_spot_cache {
+  user_id uuid [primary key]
+  anchor_location USER-DEFINED [not null]
+  hotspot_id uuid [not null]
+  updated_at timestamp
+}
+
 Table public.users {
-  id uuid [primary key]
+  user_id uuid [primary key]
   name text [not null]
   gender text
   email text [not null]
@@ -444,7 +469,7 @@ Table auth.users {
 }
 
 Table public.watchlist_entries {
-  id uuid [primary key]
+  watchlist_entry_id uuid [primary key]
   watchlist_id uuid [not null]
   bird_id uuid
   nickname text
@@ -469,8 +494,8 @@ Table public.watchlist_entries {
 }
 
 Table public.watchlist_rule_migration_audit {
-  id bigint [primary key]
-  rule_id uuid [not null]
+  watchlist_rule_migration_audit_id bigint [primary key]
+  watchlist_rule_id uuid [not null]
   watchlist_id uuid [not null]
   parameters_json text
   error_reason text [not null]
@@ -478,7 +503,7 @@ Table public.watchlist_rule_migration_audit {
 }
 
 Table public.watchlist_rules {
-  id uuid [primary key]
+  watchlist_rule_id uuid [primary key]
   watchlist_id uuid [not null]
   rule_type text [not null]
   is_active boolean
@@ -498,7 +523,7 @@ Table public.watchlist_rules {
 }
 
 Table public.watchlist_shares {
-  id uuid [primary key]
+  watchlist_share_id uuid [primary key]
   watchlist_id uuid [not null]
   user_id uuid [not null]
   permission text
@@ -511,8 +536,8 @@ Table public.watchlist_shares {
 }
 
 Table public.watchlists {
-  id uuid [primary key]
-  owner_id uuid
+  watchlist_id uuid [primary key]
+  user_id uuid
   type text
   title text
   location text
@@ -530,21 +555,25 @@ Table public.watchlists {
 }
 
 // Relationships
-Ref: public.bird_field_mark_variant_links.bird_id > public.birds.id
-Ref: public.identification_candidates.result_id > public.identification_results.id
-Ref: public.identification_candidates.bird_id > public.birds.id
-Ref: public.identification_results.session_id > public.identification_sessions.id
-Ref: public.identification_results.owner_id > auth.users.id
-Ref: public.identification_results.bird_id > public.birds.id
-Ref: public.identification_session_marks.session_id > public.identification_sessions.id
+Ref: public.bird_field_mark_variant_links.bird_id > public.birds.bird_id
+Ref: public.identification_candidates.identification_result_id > public.identification_results.identification_result_id
+Ref: public.identification_candidates.bird_id > public.birds.bird_id
+Ref: public.identification_results.identification_session_id > public.identification_sessions.identification_session_id
+Ref: public.identification_results.user_id > auth.users.id
+Ref: public.identification_results.bird_id > public.birds.bird_id
+Ref: public.identification_session_marks.identification_session_id > public.identification_sessions.identification_session_id
 Ref: public.identification_sessions.user_id > auth.users.id
-Ref: public.observed_bird_photos.watchlist_entry_id > public.watchlist_entries.id
-Ref: public.users.id - auth.users.id
-Ref: public.watchlist_entries.bird_id > public.birds.id
+Ref: public.observed_bird_photos.watchlist_entry_id > public.watchlist_entries.watchlist_entry_id
+Ref: public.user_nearby_spot_cache.user_id > auth.users.id
+Ref: public.user_nearby_spot_cache.hotspot_id > public.hotspots_geo.hotspot_geo_id
+Ref: public.users.user_id - auth.users.id
+Ref: public.watchlist_entries.bird_id > public.birds.bird_id
 Ref: public.watchlist_entries.observed_by_user_id > auth.users.id
-Ref: public.watchlist_entries.watchlist_id > public.watchlists.id
-Ref: public.watchlist_rules.watchlist_id > public.watchlists.id
-Ref: public.watchlist_shares.watchlist_id > public.watchlists.id
+Ref: public.watchlist_entries.watchlist_id > public.watchlists.watchlist_id
+Ref: public.watchlist_rule_migration_audit.watchlist_rule_id > public.watchlist_rules.watchlist_rule_id
+Ref: public.watchlist_rule_migration_audit.watchlist_id > public.watchlists.watchlist_id
+Ref: public.watchlist_rules.watchlist_id > public.watchlists.watchlist_id
+Ref: public.watchlist_shares.watchlist_id > public.watchlists.watchlist_id
 Ref: public.watchlist_shares.user_id > auth.users.id
 Ref: public.watchlist_shares.shared_by_user_id > auth.users.id
-Ref: public.watchlists.owner_id > auth.users.id
+Ref: public.watchlists.user_id > auth.users.id
