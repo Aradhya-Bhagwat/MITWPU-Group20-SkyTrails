@@ -15,6 +15,8 @@ class IdentificationSizeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationItem.title = "Estimate Size"
+        self.tabBarItem.title = "Identification"
         setupTraitChangeHandling()
         
         birdSlider.minimumValue = 0
@@ -37,9 +39,18 @@ class IdentificationSizeViewController: UIViewController {
     }
 
     private func applySemanticAppearance() {
+        birdLabel.font = .preferredFont(forTextStyle: .headline)
+        birdLabel.adjustsFontForContentSizeCategory = true
         birdLabel.textColor = .label
+        
+        smallBirdNameLabel.font = .preferredFont(forTextStyle: .caption1)
+        smallBirdNameLabel.adjustsFontForContentSizeCategory = true
         smallBirdNameLabel.textColor = .secondaryLabel
+        
+        largeBirdNameLabel.font = .preferredFont(forTextStyle: .caption1)
+        largeBirdNameLabel.adjustsFontForContentSizeCategory = true
         largeBirdNameLabel.textColor = .secondaryLabel
+
         birdSlider.minimumTrackTintColor = .systemBlue
         birdSlider.maximumTrackTintColor = .systemGray4
         birdSlider.thumbTintColor = .systemBlue

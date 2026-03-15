@@ -1,4 +1,3 @@
-
 import UIKit
 import MapKit
 import CoreLocation
@@ -92,16 +91,17 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         terrainTagImageView.layer.cornerRadius = terrainTagImageView.bounds.height / 2
     }
     
+    // Updates font sizes and item dimensions based on card height
     private func updateNestedLayout() {
         let cardHeight = self.bounds.height
         let heightRatio = cardHeight / 440.0
         let titleSize = max(17, 17 * heightRatio)
-        titleLabel.font = .systemFont(ofSize: titleSize, weight: .bold)
+        titleLabel.font = .preferredFont(forTextStyle: .headline)
         let otherSize = max(12, 12 * heightRatio)
-        subtitleLabel.font = .systemFont(ofSize: otherSize)
-        weekLabel.font = .systemFont(ofSize: otherSize)
-        terrainTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
-        seasonTagLabel.font = .systemFont(ofSize: otherSize, weight: .medium)
+        subtitleLabel.font = .preferredFont(forTextStyle: .subheadline)
+        weekLabel.font = .preferredFont(forTextStyle: .caption1)
+        terrainTagLabel.font = .preferredFont(forTextStyle: .caption2)
+        seasonTagLabel.font = .preferredFont(forTextStyle: .caption2)
         updateDistanceLabelFont(size: otherSize)
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let itemHeight = nestedItemHeight(cardHeight: cardHeight)
@@ -119,11 +119,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
     
     private func expandedItemWidth(itemHeight: CGFloat) -> CGFloat {
-        var width = itemHeight * expandedWidthRatio
-        if width > 400 {
-            width = 400
-        }
-        return width
+        return min(itemHeight * expandedWidthRatio, 400)
     }
     
     private func compactItemWidth(itemHeight: CGFloat) -> CGFloat {
@@ -142,14 +138,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
         
         let attributedString = NSMutableAttributedString(attachment: attachment)
-        let cleanText: String
-        if existingText.contains(" - ") {
-            cleanText = existingText.components(separatedBy: " - ").last ?? existingText
-        } else {
-            cleanText = existingText
-        }
+        let cleanText = existingText.contains(" - ") ? existingText.components(separatedBy: " - ").last ?? existingText : existingText
         
-        attributedString.append(NSAttributedString(string: " - \(cleanText)", attributes: [.font: UIFont.systemFont(ofSize: size, weight: .semibold)]))
+        attributedString.append(NSAttributedString(string: " - \(cleanText)", attributes: [.font: UIFont.preferredFont(forTextStyle: .caption1)]))
         distanceLabel.attributedText = attributedString
     }
     
@@ -175,6 +166,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         layer.masksToBounds = false
     }
     
+    // populates UI with migration and hotspot data
     func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
         titleLabel.text = hotspot.placeName
         subtitleLabel.text = hotspot.locationDetail
@@ -184,6 +176,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
         seasonTagImageView.image = UIImage(named: seasonAssetName(for: hotspot.seasonTag))
         tag2View.backgroundColor = seasonTagBackgroundColor(for: hotspot.seasonTag)
+        
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
         let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
             .withTintColor(.systemGray, renderingMode: .alwaysOriginal)
@@ -211,6 +204,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         fetchTerrain(for: hotspot.centerCoordinate)
     }
     
+    // Background task to resolve terrain information and scene snapshots
     private func fetchTerrain(for coordinate: CLLocationCoordinate2D) {
         let cacheKey = String(format: "%.4f,%.4f", coordinate.latitude, coordinate.longitude)
         if let info = Self.terrainCache[cacheKey] {
@@ -247,24 +241,16 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
                 }
                 
                 guard !Task.isCancelled else { return }
-                
-                await MainActor.run {
-                    self.applyTerrain(info, image: finalImage)
-                }
+                await MainActor.run { self.applyTerrain(info, image: finalImage) }
             } catch {
                 let fallback = TerrainInfo(name: "Remote Area", symbolName: "mappin.circle", color: .systemGray, defaultImageName: "Terrain_Remote")
-                await MainActor.run {
-                    self.applyTerrain(fallback, image: UIImage(named: fallback.defaultImageName))
-                }
+                await MainActor.run { self.applyTerrain(fallback, image: UIImage(named: fallback.defaultImageName)) }
             }
         }
     }
     
     private func classifyTerrain(from placemark: CLPlacemark) -> TerrainInfo {
         let skyBlue = UIColor(red: 0.53, green: 0.81, blue: 0.98, alpha: 1.0)
-        
-        // Resilience against property name changes in future iOS
-        let locality = placemark.locality
         let name = placemark.name ?? ""
         
         if let areas = placemark.areasOfInterest, !areas.isEmpty {
@@ -272,21 +258,14 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             if areas.contains(where: { area in waterKeywords.contains(where: { area.lowercased().contains($0) }) }) {
                 return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
             }
-        }
-        
-        if let interests = placemark.areasOfInterest, !interests.isEmpty {
+            
             let forestKeywords = ["park", "forest", "nature", "reserve", "wilderness", "mountain", "wildlife", "rainforest"]
-            let isRainforest = interests.contains { interest in
-                forestKeywords.contains { keyword in
-                    interest.lowercased().contains(keyword)
-                }
-            }
-            if isRainforest {
+            if areas.contains(where: { area in forestKeywords.contains(where: { area.lowercased().contains($0) }) }) {
                 return TerrainInfo(name: "Rainforest", symbolName: "tree.fill", color: UIColor(red: 0.0, green: 0.6, blue: 0.45, alpha: 1.0), defaultImageName: "Terrain_Wilderness")
             }
         }
         
-        if locality != nil || name.contains("St") || name.contains("Rd") || name.contains("Ave") {
+        if placemark.locality != nil || name.contains("St") || name.contains("Rd") || name.contains("Ave") {
             return TerrainInfo(name: "Residential", symbolName: "building.2.fill", color: skyBlue, defaultImageName: "Terrain_Residential")
         }
         
@@ -296,25 +275,17 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private func applyTerrain(_ info: TerrainInfo, image: UIImage?) {
         terrainTagLabel.text = info.name
         terrainTagImageView.isHidden = false
-        terrainTagImageView.alpha = 1.0
         terrainTagImageView.image = image
         terrainTagImageView.contentMode = .scaleAspectFill
         terrainTagImageView.clipsToBounds = true
         tag1View.backgroundColor = info.color.withAlphaComponent(0.4)
     }
 
-    private func setupMap(
-        pathCoordinates: [CLLocationCoordinate2D],
-        hotspotCenter: CLLocationCoordinate2D,
-        areaOverlay: HotspotAreaOverlay,
-        birdPins: [HotspotBirdSpot]
-    ) {
+    private func setupMap(pathCoordinates: [CLLocationCoordinate2D], hotspotCenter: CLLocationCoordinate2D, areaOverlay: HotspotAreaOverlay, birdPins: [HotspotBirdSpot]) {
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
 
         var mapRect = MKMapRect.null
-
-        _ = pathCoordinates
 
         switch areaOverlay {
         case .polygon(let coordinates):
@@ -338,34 +309,24 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
         if !mapRect.isNull {
             let padding = UIEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
-            mapView.setVisibleMapRect(mapRect, edgePadding: padding, animated: false)
+            mapView.setVisibleMapRect(mapRect, edgePadding: padding, animated: true)
         }
 
         refreshPinSelectionState()
     }
 
     private func deconflictedAnnotations(from pins: [HotspotBirdSpot]) -> [BirdPinAnnotation] {
-        let keyFor: (CLLocationCoordinate2D) -> String = { coordinate in
-            let lat = String(format: "%.5f", coordinate.latitude)
-            let lon = String(format: "%.5f", coordinate.longitude)
-            return "\(lat),\(lon)"
-        }
-
+        let keyFor: (CLLocationCoordinate2D) -> String = { "\(String(format: "%.5f", $0.latitude)),\(String(format: "%.5f", $0.longitude))" }
         var countByKey: [String: Int] = [:]
         var baseByKey: [String: CLLocationCoordinate2D] = [:]
         for pin in pins {
             let key = keyFor(pin.coordinate)
             countByKey[key, default: 0] += 1
-            if baseByKey[key] == nil {
-                baseByKey[key] = pin.coordinate
-            }
+            if baseByKey[key] == nil { baseByKey[key] = pin.coordinate }
         }
 
         var seenByKey: [String: Int] = [:]
-        var result: [BirdPinAnnotation] = []
-        result.reserveCapacity(pins.count)
-
-        for (index, pin) in pins.enumerated() {
+        return pins.enumerated().map { (index, pin) in
             let key = keyFor(pin.coordinate)
             let totalInGroup = countByKey[key] ?? 1
             let seen = seenByKey[key, default: 0]
@@ -373,55 +334,34 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
             let coordinate: CLLocationCoordinate2D
             if totalInGroup > 1, let base = baseByKey[key] {
-                let radiusMeters: Double = 60.0
-                let metersPerDegreeLat: Double = 111_000.0
-                let metersPerDegreeLon = max(1.0, cos(base.latitude * .pi / 180.0) * 111_000.0)
-                let angle = (2.0 * Double.pi * Double(seen)) / Double(totalInGroup)
-                let dLat = (radiusMeters * sin(angle)) / metersPerDegreeLat
-                let dLon = (radiusMeters * cos(angle)) / metersPerDegreeLon
-                coordinate = CLLocationCoordinate2D(
-                    latitude: base.latitude + dLat,
-                    longitude: base.longitude + dLon
-                )
+                let angle = (2.0 * .pi * Double(seen)) / Double(totalInGroup)
+                let dLat = (60.0 * sin(angle)) / 111_000.0
+                let dLon = (60.0 * cos(angle)) / max(1.0, cos(base.latitude * .pi / 180.0) * 111_000.0)
+                coordinate = CLLocationCoordinate2D(latitude: base.latitude + dLat, longitude: base.longitude + dLon)
             } else {
                 coordinate = pin.coordinate
             }
 
-            result.append(
-                BirdPinAnnotation(
-                    coordinate: coordinate,
-                    birdImageName: pin.birdImageName,
-                    birdIndex: index,
-                    pinColor: pinColor(for: pin.birdImageName, index: index)
-                )
-            )
+            return BirdPinAnnotation(coordinate: coordinate, birdImageName: pin.birdImageName, birdIndex: index, pinColor: pinColor(for: pin.birdImageName, index: index))
         }
-
-        return result
     }
 
     private func pinColor(for birdImageName: String, index: Int) -> UIColor {
-        let baseSeed = Double(abs(birdImageName.hashValue % 10_000)) / 10_000.0
-        let hue = (baseSeed + (Double(index) * 0.61803398875)).truncatingRemainder(dividingBy: 1.0)
-        return UIColor(
-            hue: CGFloat(hue),
-            saturation: 0.72,
-            brightness: 0.90,
-            alpha: 1.0
-        )
+        let hue = (Double(abs(birdImageName.hashValue % 10_000)) / 10_000.0 + (Double(index) * 0.61803398875)).truncatingRemainder(dividingBy: 1.0)
+        return UIColor(hue: CGFloat(hue), saturation: 0.72, brightness: 0.90, alpha: 1.0)
     }
 
     private func refreshPinSelectionState() {
         for annotation in mapView.annotations {
             guard let birdAnnotation = annotation as? BirdPinAnnotation,
-                  let view = mapView.view(for: birdAnnotation) as? MKMarkerAnnotationView else {
-                continue
-            }
+                  let view = mapView.view(for: birdAnnotation) as? MKMarkerAnnotationView else { continue }
             let isSelected = birdAnnotation.birdIndex == selectedBirdIndex
             applyPinStyle(view, baseColor: birdAnnotation.pinColor, isSelected: isSelected)
-            view.layer.zPosition = isSelected ? 1000 : 0
-            if isSelected {
-                mapView.bringSubviewToFront(view)
+            if isSelected { 
+                view.layer.zPosition = 1000
+                mapView.setCenter(birdAnnotation.coordinate, animated: true)
+            } else {
+                view.layer.zPosition = 0
             }
         }
     }
@@ -429,24 +369,13 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private func applyPinStyle(_ view: MKMarkerAnnotationView, baseColor: UIColor, isSelected: Bool) {
         view.markerTintColor = baseColor
         view.glyphTintColor = .white
+        let scale: CGFloat = isSelected ? 1.25 : 0.82
+        let alpha: CGFloat = isSelected ? 1.0 : 0.72
+        view.zPriority = isSelected ? .max : .defaultUnselected
 
-        let targetTransform: CGAffineTransform
-        let targetAlpha: CGFloat
-        if isSelected {
-            targetTransform = CGAffineTransform(scaleX: 1.18, y: 1.18)
-            targetAlpha = 1.0
-            view.zPriority = .max
-        } else {
-            targetTransform = CGAffineTransform(scaleX: 0.82, y: 0.82)
-            targetAlpha = 0.72
-            view.zPriority = .defaultUnselected
-        }
-
-        if view.transform != targetTransform || view.alpha != targetAlpha {
-            UIView.animate(withDuration: 0.22, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
-                view.transform = targetTransform
-                view.alpha = targetAlpha
-            }
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: [.beginFromCurrentState, .allowUserInteraction]) {
+            view.transform = CGAffineTransform(scaleX: scale, y: scale)
+            view.alpha = alpha
         }
     }
 }
@@ -459,8 +388,7 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as! subcardViewCell
         let bird = birdSpecies[indexPath.row]
-        let accentColor = pinColor(for: bird.birdImageName, index: indexPath.row)
-        cell.configure(with: bird, accentColor: accentColor)
+        cell.configure(with: bird, accentColor: pinColor(for: bird.birdImageName, index: indexPath.row))
         cell.setExpanded(indexPath.row == selectedBirdIndex)
         return cell
     }
@@ -469,31 +397,22 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
         updateSelectedBirdIndex(indexPath.item, animated: true)
     }
     
-    func collectionView(
-        _ collectionView: UICollectionView,
-        layout collectionViewLayout: UICollectionViewLayout,
-        sizeForItemAt indexPath: IndexPath
-    ) -> CGSize {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let itemHeight = nestedItemHeight(cardHeight: bounds.height)
-        let isSelected = indexPath.item == selectedBirdIndex
-        let width = isSelected ? expandedItemWidth(itemHeight: itemHeight) : compactItemWidth(itemHeight: itemHeight)
+        let width = indexPath.item == selectedBirdIndex ? expandedItemWidth(itemHeight: itemHeight) : compactItemWidth(itemHeight: itemHeight)
         return CGSize(width: width, height: itemHeight)
     }
     
     private func updateSelectedBirdIndex(_ newIndex: Int, animated: Bool) {
-        guard !birdSpecies.isEmpty else { return }
-        let clamped = min(max(newIndex, 0), birdSpecies.count - 1)
         let oldIndex = selectedBirdIndex
-        guard clamped != oldIndex else {
-            if animated {
-                alignToSelectedCard(animated: true)
-            }
+        guard !birdSpecies.isEmpty, newIndex != oldIndex else {
+            if animated { alignToSelectedCard(animated: true) }
             return
         }
         
-        selectedBirdIndex = clamped
+        selectedBirdIndex = min(max(newIndex, 0), birdSpecies.count - 1)
         birdListCollectionView.performBatchUpdates({
-            birdListCollectionView.reloadItems(at: [IndexPath(item: oldIndex, section: 0), IndexPath(item: clamped, section: 0)])
+            birdListCollectionView.reloadItems(at: [IndexPath(item: oldIndex, section: 0), IndexPath(item: selectedBirdIndex, section: 0)])
         })
         
         refreshPinSelectionState()
@@ -503,63 +422,32 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     private func alignToSelectedCard(animated: Bool) {
         guard !birdSpecies.isEmpty else { return }
         birdListCollectionView.layoutIfNeeded()
-        let x = targetOffsetX(for: selectedBirdIndex)
-        birdListCollectionView.setContentOffset(CGPoint(x: x, y: 0), animated: animated)
+        birdListCollectionView.setContentOffset(CGPoint(x: targetOffsetX(for: selectedBirdIndex), y: 0), animated: animated)
     }
     
     private func targetOffsetX(for index: Int) -> CGFloat {
-        guard let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
-            return birdListCollectionView.contentOffset.x
-        }
-        
+        guard let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return birdListCollectionView.contentOffset.x }
         let clamped = min(max(index, 0), birdSpecies.count - 1)
-        let indexPath = IndexPath(item: clamped, section: 0)
-        
-        let rawX: CGFloat
-        if clamped == birdSpecies.count - 1 {
-            rawX = maxScrollableOffsetX()
-        } else if let attributes = layout.layoutAttributesForItem(at: indexPath) {
-            rawX = attributes.frame.minX - layout.sectionInset.left
-        } else {
-            rawX = birdListCollectionView.contentOffset.x
-        }
-        
-        return clampOffsetX(rawX)
+        let rawX = clamped == birdSpecies.count - 1 ? maxScrollableOffsetX() : (layout.layoutAttributesForItem(at: IndexPath(item: clamped, section: 0))?.frame.minX ?? 0) - layout.sectionInset.left
+        return max(-birdListCollectionView.contentInset.left, min(rawX, maxScrollableOffsetX()))
     }
     
     private func maxScrollableOffsetX() -> CGFloat {
-        let maxX = birdListCollectionView.contentSize.width - birdListCollectionView.bounds.width + birdListCollectionView.contentInset.right
-        let minX = -birdListCollectionView.contentInset.left
-        return max(minX, maxX)
-    }
-    
-    private func clampOffsetX(_ x: CGFloat) -> CGFloat {
-        let minX = -birdListCollectionView.contentInset.left
-        let maxX = maxScrollableOffsetX()
-        return min(max(x, minX), maxX)
+        return max(-birdListCollectionView.contentInset.left, birdListCollectionView.contentSize.width - birdListCollectionView.bounds.width + birdListCollectionView.contentInset.right)
     }
     
     private func seasonAssetName(for season: String) -> String {
-        if season == "Rainy" {
-            return "Rainy "
-        }
-        return season
+        return season == "Rainy" ? "Rainy " : season
     }
     
     private func seasonTagBackgroundColor(for season: String) -> UIColor {
         switch season {
-        case "Summer":
-            return UIColor(red: 0.85, green: 0.95, blue: 0.45, alpha: 0.4)
-        case "Spring":
-            return UIColor(red: 0.95, green: 0.60, blue: 0.80, alpha: 0.4)
-        case "Autumn":
-            return UIColor(red: 1.00, green: 0.70, blue: 0.45, alpha: 0.4)
-        case "Winter":
-            return UIColor.systemBlue.withAlphaComponent(0.4)
-        case "Rainy":
-            return UIColor.systemGray.withAlphaComponent(0.4)
-        default:
-            return UIColor.systemGray5.withAlphaComponent(0.4)
+        case "Summer": return UIColor(red: 0.85, green: 0.95, blue: 0.45, alpha: 0.4)
+        case "Spring": return UIColor(red: 0.95, green: 0.60, blue: 0.80, alpha: 0.4)
+        case "Autumn": return UIColor(red: 1.00, green: 0.70, blue: 0.45, alpha: 0.4)
+        case "Winter": return UIColor.systemBlue.withAlphaComponent(0.4)
+        case "Rainy": return UIColor.systemGray.withAlphaComponent(0.4)
+        default: return UIColor.systemGray5.withAlphaComponent(0.4)
         }
     }
 }
@@ -567,44 +455,28 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
 extension NewMigrationCollectionViewCell: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard let birdAnnotation = annotation as? BirdPinAnnotation else { return nil }
-
-        let identifier = "BirdPinAnnotationView"
-        let view = (mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView)
-            ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-        view.annotation = annotation
-        view.canShowCallout = false
+        let view = (mapView.dequeueReusableAnnotationView(withIdentifier: "BirdPinAnnotationView") as? MKMarkerAnnotationView) ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "BirdPinAnnotationView")
         view.glyphImage = UIImage(systemName: "bird.fill")
         view.displayPriority = .required
-        view.collisionMode = .none
-        view.clusteringIdentifier = nil
-        view.titleVisibility = .hidden
-        view.subtitleVisibility = .hidden
         applyPinStyle(view, baseColor: birdAnnotation.pinColor, isSelected: birdAnnotation.birdIndex == selectedBirdIndex)
-
         return view
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polygon = overlay as? MKPolygon {
-            let renderer = MKPolygonRenderer(polygon: polygon)
-            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
-            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
-            renderer.lineWidth = 1.6
-            return renderer
+            let r = MKPolygonRenderer(polygon: polygon)
+            r.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75); r.fillColor = UIColor.systemBlue.withAlphaComponent(0.10); r.lineWidth = 1.6
+            return r
         }
         if let polyline = overlay as? MKPolyline {
-            let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = .systemBlue
-            renderer.lineWidth = 3
-            renderer.lineDashPattern = [2, 4]
-            return renderer
+            let r = MKPolylineRenderer(polyline: polyline)
+            r.strokeColor = .systemBlue; r.lineWidth = 3; r.lineDashPattern = [2, 4]
+            return r
         }
         if let circle = overlay as? MKCircle {
-            let renderer = MKCircleRenderer(circle: circle)
-            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7)
-            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08)
-            renderer.lineWidth = 1.5
-            return renderer
+            let r = MKCircleRenderer(circle: circle)
+            r.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7); r.fillColor = UIColor.systemBlue.withAlphaComponent(0.08); r.lineWidth = 1.5
+            return r
         }
         return MKOverlayRenderer()
     }

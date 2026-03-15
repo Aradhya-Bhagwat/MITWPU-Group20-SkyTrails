@@ -26,6 +26,8 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationItem.title = "Identify Markings"
+        self.tabBarItem.title = "Identification"
         setupUI()
         for (index, mark) in availableMarks.enumerated() {
             if viewModel.tempSelectedAreas.contains(mark.area) {

@@ -34,7 +34,7 @@ class UnobservedDetailViewController: UIViewController {
 		configureView()
 	}
 	private func setupUI() {
-		title = bird?.name ?? "Add Species"
+		title = bird?.name ?? "Plan Sighting"
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
         suggestionsTableView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
@@ -127,7 +127,7 @@ class UnobservedDetailViewController: UIViewController {
 	private func configureView() {
 		guard let bird = bird else { return }
 		
-		navigationItem.title = "Edit Species"
+		navigationItem.title = "Discovery Details"
 		loadImage(for: bird)
 		
         if let entry = entry {

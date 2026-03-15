@@ -29,7 +29,8 @@ class WatchlistActionCell: UICollectionViewCell {
 		self.layer.masksToBounds = false
 		iconImageView.contentMode = .scaleAspectFit
 		iconImageView.tintColor = .systemBlue
-		titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+		titleLabel.font = .preferredFont(forTextStyle: .subheadline)
+		titleLabel.adjustsFontForContentSizeCategory = true
 		titleLabel.textAlignment = .center
 		titleLabel.numberOfLines = 2
 	}

@@ -1,74 +1,76 @@
+# 🏗️ SkyTrails System Architecture
+
+SkyTrails is built on a modern, decoupled architecture designed for scalability, performance, and a seamless native user experience. The system follows a **Clean MVC** pattern enhanced with a **Service-Oriented** persistence layer and a robust **Supabase** backend for cloud synchronization.
+
+---
+
+## 🗺️ High-Level Architecture
+
+The following diagram illustrates the flow of data and responsibility across the different layers of the application.
+
+```mermaid
 flowchart TD
-
-    subgraph UI["UI Layer"]
-        %% ViewControllers handle the views and user input
+    subgraph UI ["📱 Presentation Layer (UIKit)"]
         VC[ViewControllers]
+        Cells[Custom Collection/Table Cells]
+        SwiftUI[SwiftUI Mini-Games]
     end
 
-
-    subgraph APP["Application Layer"]
-        %% Coordinator manages the navigation flow between ViewControllers
-        COORD[Coordinator]
+    subgraph APP ["⚙️ Application & Business Logic"]
+        COORD[Coordinators]
         
-        %% Managers encapsulate domain-specific business logic 
-        MAN[
-            Managers:  
-        1.Watchlist     
-2.Home  
-        3.Identification]
+        subgraph Managers ["Managers"]
+            WM[WatchlistManager]
+            HM[HomeManager]
+            IM[IdentificationManager]
+        end
     end
 
-
-
-    subgraph DATA["Local Persistence"]
-        %% Services act as repositories, fetching and preparing data
-        SVC[Services]
-        
-        %% SwiftData container providing context for CRUD operations
-        STORE[ModelContainer + Context]
-        
-        %% Schema models mapping to the local SwiftData storage
+    subgraph DATA ["💾 Local Persistence (SwiftData)"]
+        SVC[Specialized Services]
+        STORE[ModelContainer & Context]
         MODELS[SwiftData Models]
     end
 
-
-
-
-    subgraph BACKEND["Supabase Backend"]
-        %% Handles user authentication and sessions
-        AUTH[Auth]
-        
-        %% Main Supabase SDK client wrapper
-        SB[Client]
-        
-        %% Remote PostgreSQL database
-        PG[(Postgres)]
-        
-        %% Cloud storage for media/images
-        ST[(Storage)]
-        
-        %% WebSocket connections for live data syncing
-        RT[(Realtime)]
+    subgraph CLOUD ["☁️ Backend Layer (Supabase)"]
+        AUTH[Auth Service]
+        CLIENT[Supabase SDK Client]
+        DB[(PostgreSQL)]
+        STORAGE[(Cloud Storage)]
+        RT[(Realtime Sync)]
     end
 
+    %% Interaction Flows
+    UI <--> APP
+    APP <--> DATA
+    DATA <--> MODELS
+    APP <--> CLOUD
+    
+    %% Cloud Sub-Interactions
+    CLIENT --- DB
+    CLIENT --- STORAGE
+    AUTH --- DB
+    RT --- DB
+```
 
-    %% UI requests data/actions from Application logic
-    UI --> APP
-    
-    %% Application logic fetches/saves via Local Persistence
-    APP --> DATA
-    
-    %% Persistence saves directly to SwiftData schema
-    DATA --> MODELS
-    
-    %% Application layer manages external cloud synchronization
-    APP --> BACKEND
-    
-    %% Supabase SDK interacts with Database & Storage
-    SB --> PG & ST
-    
-    %% Auth service ties directly to remote Database policies
-    AUTH --> PG
-    
-    %% Realtime subscriptions sync data live from the Postgres DB
-    RT --> PG
+---
+
+## 🧩 Architectural Components
+
+### 1. Presentation Layer (UI)
+*   **UIKit & Storyboards:** Primary framework for navigation and complex layouts.
+*   **Compositional Layouts:** Used for highly dynamic and responsive collection views on the Home and Watchlist screens.
+*   **SwiftUI Integration:** Leveraged for interactive elements like the Migration Mini-Game via `UIHostingController`.
+
+### 2. Application Layer
+*   **Managers (Singletons):** Central hubs for domain-specific logic (Home, Watchlist, Identification). They coordinate between the UI and various data services.
+*   **Coordinators:** Manage complex navigation flows to keep ViewControllers lean and focused on UI logic.
+
+### 3. Local Persistence Layer
+*   **SwiftData:** The core engine for native object persistence, replacing traditional Core Data with a more modern, Swift-native approach.
+*   **Service-Oriented Architecture:** Specialized services (e.g., `WatchlistPersistenceService`, `WatchlistRuleService`) handle isolated tasks, ensuring high maintainability and testability.
+
+### 4. Backend & Cloud Layer
+*   **Supabase:** Provides a robust backend-as-a-service (BaaS) infrastructure.
+*   **PostgreSQL:** Handles relational data storage with PostGIS support for geospatial queries.
+*   **Realtime:** Enables live synchronization of shared watchlists and community observations across multiple devices.

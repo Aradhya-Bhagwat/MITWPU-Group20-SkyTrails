@@ -63,6 +63,10 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
         setupTraitChangeHandling()
         contentView.clipsToBounds = true
+        specieNameLabel.font = .preferredFont(forTextStyle: .subheadline)
+        specieNameLabel.adjustsFontForContentSizeCategory = true
+        dateLabel.font = .preferredFont(forTextStyle: .caption1)
+        dateLabel.adjustsFontForContentSizeCategory = true
         applySelectionAppearance()
     }
 

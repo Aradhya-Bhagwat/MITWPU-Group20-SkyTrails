@@ -6,8 +6,9 @@ struct MigrationGameView: View {
     @State private var score = 0
     @State private var timeRemaining = 30
     @State private var birds: [BirdInstance] = []
-    @State private var gameActive = true
+    @State private var gameActive = false
     @State private var showGameOver = false
+    @State private var showExplanation = true
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     let spawnTimer = Timer.publish(every: 0.8, on: .main, in: .common).autoconnect()
@@ -116,16 +117,69 @@ struct MigrationGameView: View {
             }
         }
         .onAppear {
-            // Initial birds
-            for _ in 0..<3 { spawnBird() }
+            // Game starts paused showing explanation
         }
         .overlay(
             Group {
-                if showGameOver {
+                if showExplanation {
+                    explanationOverlay
+                } else if showGameOver {
                     gameOverOverlay
                 }
             }
         )
+    }
+
+    var explanationOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.85).ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                Image(systemName: "bird.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.blue)
+                
+                Text("Help the Birds Migrate!")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    BulletPoint(text: "Tap the birds as they fly across the screen.")
+                    BulletPoint(text: "Each bird you help scores 1 point.")
+                    BulletPoint(text: "You have 30 seconds to help as many as you can.")
+                }
+                .padding(.horizontal)
+                
+                Button(action: {
+                    showExplanation = false
+                    gameActive = true
+                    for _ in 0..<3 { spawnBird() }
+                }) {
+                    Text("Start Migration")
+                        .fontWeight(.bold)
+                        .frame(width: 200)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(15)
+                }
+            }
+            .padding(40)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(30)
+            .padding()
+        }
+    }
+
+    struct BulletPoint: View {
+        let text: String
+        var body: some View {
+            HStack(alignment: .top) {
+                Text("•").foregroundColor(.blue).fontWeight(.bold)
+                Text(text).foregroundColor(.white.opacity(0.9))
+            }
+        }
     }
     
     var gameOverOverlay: some View {

@@ -47,6 +47,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationItem.title = "Identify Bird"
+        self.tabBarItem.title = "Identification"
         setupTraitChangeHandling()
         setupModel()
         setupOptions()
@@ -392,6 +394,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
         let item = options[indexPath.row]
         cell.textLabel?.text = item.category.rawValue
+        cell.textLabel?.font = .preferredFont(forTextStyle: .body)
+        cell.textLabel?.adjustsFontForContentSizeCategory = true
         cell.textLabel?.textColor = .label
         cell.backgroundColor = rowColor
         cell.contentView.backgroundColor = rowColor
@@ -517,7 +521,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             speciesText = histories[indexPath.row].result?.bird?.commonName ?? "Unknown Species"
         }
 
-        let speciesFont = UIFont.systemFont(ofSize: 15)
+        let speciesFont = UIFont.preferredFont(forTextStyle: .subheadline)
         let maxSpeciesLabelHeight = ceil(speciesFont.lineHeight * 2)
         let measuredSpeciesHeight = ceil(
             (speciesText as NSString).boundingRect(
@@ -528,7 +532,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             ).height
         )
         let speciesLabelHeight = min(maxSpeciesLabelHeight, measuredSpeciesHeight)
-        let dateLabelHeight = ceil(UIFont.systemFont(ofSize: 13).lineHeight)
+        let dateLabelHeight = ceil(UIFont.preferredFont(forTextStyle: .caption1).lineHeight)
 
         let totalHeight = topMargin +
                          imageHeight +

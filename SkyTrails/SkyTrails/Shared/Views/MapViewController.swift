@@ -84,8 +84,23 @@ class MapViewController: UIViewController {
         let annotation = MKPointAnnotation()
         annotation.coordinate = coord
         mapView.addAnnotation(annotation)
-        let region = MKCoordinateRegion(center: coord, latitudinalMeters: 5000, longitudinalMeters: 5000)
-        mapView.setRegion(region, animated: true)
+        
+        // Initial wide region for "zoom from space" effect
+        let currentRegion = mapView.region
+        let wideSpan = MKCoordinateSpan(
+            latitudeDelta: max(currentRegion.span.latitudeDelta, 1.5),
+            longitudeDelta: max(currentRegion.span.longitudeDelta, 1.5)
+        )
+        let wideRegion = MKCoordinateRegion(center: coord, span: wideSpan)
+        mapView.setRegion(wideRegion, animated: false)
+        
+        // Animate to target zoom
+        let targetRegion = MKCoordinateRegion(center: coord, latitudinalMeters: 3000, longitudinalMeters: 3000)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.mapView.setRegion(targetRegion, animated: true)
+        }
+
         if let providedName = name {
             self.selectedLocationName = providedName
             self.searchBar.text = providedName

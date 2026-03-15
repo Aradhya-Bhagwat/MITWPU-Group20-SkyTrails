@@ -55,7 +55,7 @@ class EditWatchlistDetailViewController: UIViewController {
 	private func setupUI() {
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
-		self.title = (watchlistToEdit == nil) ? "New Watchlist" : "Edit Watchlist"
+		self.title = (watchlistToEdit == nil) ? "Create Collection" : "Collection Settings"
 		let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
 		titleTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
@@ -163,8 +163,8 @@ class EditWatchlistDetailViewController: UIViewController {
         rulesContainerView.layer.masksToBounds = false
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Auto-Assignment Rules"
-        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        titleLabel.text = "Smart Filters"
+        titleLabel.font = .preferredFont(forTextStyle: .headline)
         titleLabel.textColor = .label
         rulesContainerView.addSubview(titleLabel)
         let rulesStack = UIStackView()
@@ -173,7 +173,7 @@ class EditWatchlistDetailViewController: UIViewController {
         rulesStack.spacing = 20
         rulesStack.alignment = .fill
         rulesContainerView.addSubview(rulesStack)
-        let speciesSection = createRuleSection(title: "Species Filter")
+        let speciesSection = createRuleSection(title: "Species Inclusion")
         speciesRuleToggle = UISwitch()
         speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
         addToggleToSection(section: speciesSection, toggle: speciesRuleToggle)
@@ -195,7 +195,7 @@ class EditWatchlistDetailViewController: UIViewController {
         speciesSection.addArrangedSubview(shapeCollectionView)
         
         rulesStack.addArrangedSubview(speciesSection)
-        let locationSection = createRuleSection(title: "Location Filter")
+        let locationSection = createRuleSection(title: "Region Boundaries")
         locationRuleToggle = UISwitch()
         locationRuleToggle.addTarget(self, action: #selector(locationRuleToggled), for: .valueChanged)
         addToggleToSection(section: locationSection, toggle: locationRuleToggle)
@@ -216,7 +216,7 @@ class EditWatchlistDetailViewController: UIViewController {
         locationSection.addArrangedSubview(locationRuleInfoLabel)
         
         rulesStack.addArrangedSubview(locationSection)
-        let dateSection = createRuleSection(title: "Date Filter")
+        let dateSection = createRuleSection(title: "Temporal Bounds")
         dateRuleToggle = UISwitch()
         dateRuleToggle.addTarget(self, action: #selector(dateRuleToggled), for: .valueChanged)
         addToggleToSection(section: dateSection, toggle: dateRuleToggle)
