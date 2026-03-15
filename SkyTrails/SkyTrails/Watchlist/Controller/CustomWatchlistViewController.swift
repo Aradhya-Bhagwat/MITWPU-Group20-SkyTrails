@@ -37,7 +37,8 @@ class CustomWatchlistViewController: UIViewController {
         loadData()
     }
     private func setupUI() {
-        title = "Custom Watchlists"
+        self.navigationItem.title = "Personal Collections"
+        self.tabBarItem.title = "Watchlist"
         view.backgroundColor = .systemGroupedBackground
         searchBar.searchBarStyle = .minimal
         searchBar.delegate = self

@@ -63,7 +63,8 @@ class ProfileViewController: UIViewController,
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.isUserInteractionEnabled = true
 
-        nameLabel.font = .systemFont(ofSize: 26, weight: .bold)
+        nameLabel.font = .preferredFont(forTextStyle: .title1)
+        nameLabel.adjustsFontForContentSizeCategory = true
         nameLabel.textAlignment = .center
 
         // Email button style - now clearly an interactive element
@@ -155,7 +156,16 @@ class ProfileViewController: UIViewController,
 
     // MARK: - Logout
     @IBAction func logoutTapped(_ sender: UIButton) {
-        logout()
+        let alert = UIAlertController(title: "Logout",
+                                      message: "Are you sure you want to log out of SkyTrails?",
+                                      preferredStyle: .alert)
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Logout", style: .destructive) { [weak self] _ in
+            self?.logout()
+        })
+        
+        present(alert, animated: true, completion: nil)
     }
 
     private func logout() {
@@ -335,7 +345,8 @@ class ProfileViewController: UIViewController,
 
         let label = UILabel()
         label.text = title
-        label.font = .systemFont(ofSize: 17, weight: .medium)
+        label.font = .preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
         chevron.tintColor = .systemBlue
@@ -432,14 +443,16 @@ Let's explore birdwatching together! 🕊️🔭
 
         aboutLabel.text = "SkyTrails"
         aboutLabel.textAlignment = .center
-        aboutLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        aboutLabel.font = .preferredFont(forTextStyle: .footnote)
+        aboutLabel.adjustsFontForContentSizeCategory = true
         aboutLabel.textColor = .secondaryLabel
 
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
         versionLabel.text = "Version \(version)"
         versionLabel.textAlignment = .center
-        versionLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        versionLabel.font = .preferredFont(forTextStyle: .caption2)
+        versionLabel.adjustsFontForContentSizeCategory = true
         versionLabel.textColor = .tertiaryLabel
 
         view.addSubview(aboutLabel)

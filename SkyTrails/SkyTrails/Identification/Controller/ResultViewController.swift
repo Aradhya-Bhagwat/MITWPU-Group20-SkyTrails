@@ -19,6 +19,8 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationItem.title = "Identification Results"
+        self.tabBarItem.title = "Identification"
         setupTraitChangeHandling()
 
         resultCollectionView.register(

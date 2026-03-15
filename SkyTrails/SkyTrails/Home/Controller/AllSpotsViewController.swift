@@ -11,7 +11,7 @@ class AllSpotsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "All Spots"
+        self.title = "Explore Hotspots"
         setupTraitChangeHandling()
         applySemanticAppearance()
         setupNavigationBar()
@@ -170,10 +170,10 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         
         if indexPath.section == 0 {
             header.isHidden = watchlistData.isEmpty
-            header.configure(title: "Your Watchlist")
+            header.configure(title: "Your Saved Spots")
         } else {
             header.isHidden = false
-            header.configure(title: "Recommendations")
+            header.configure(title: "Trending Hotspots")
         }
         return header
     }

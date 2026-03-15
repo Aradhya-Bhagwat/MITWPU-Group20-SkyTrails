@@ -72,11 +72,13 @@ final class ProfileSettingsViewController: UIViewController {
         let titleLabel = UILabel()
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 16, weight: .regular)
+        titleLabel.font = .preferredFont(forTextStyle: .body)
+        titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.textColor = .label
 
         valueLabel.translatesAutoresizingMaskIntoConstraints = false
-        valueLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        valueLabel.font = .preferredFont(forTextStyle: .body)
+        valueLabel.adjustsFontForContentSizeCategory = true
         valueLabel.textColor = .systemBlue
         valueLabel.textAlignment = .right
 
@@ -120,7 +122,8 @@ final class ProfileSettingsViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = title
-        label.font = .systemFont(ofSize: 16, weight: .regular)
+        label.font = .preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
         label.textColor = .label
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
@@ -159,7 +162,8 @@ final class ProfileSettingsViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = title
-        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.font = .preferredFont(forTextStyle: .headline)
+        label.adjustsFontForContentSizeCategory = true
         label.textColor = .systemRed
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))

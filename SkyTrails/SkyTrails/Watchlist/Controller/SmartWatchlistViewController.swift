@@ -73,7 +73,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         do {
             switch watchlistType {
                 case .myWatchlist:
-                    self.title = "My Watchlist"
+                    self.navigationItem.title = "Your Favorites"
+                    self.tabBarItem.title = "Watchlist"
                     self.currentWatchlistId = WatchlistConstants.myWatchlistID
                     self.sourceWatchlists = try manager.fetchWatchlists()
                     
@@ -109,7 +110,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                         }
                     }
                     
-                    updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "All Species")
+                    updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "Universal Index")
             }
         } catch {
         }
@@ -120,11 +121,13 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	private func updateSingleWatchlistData(observed: [WatchlistEntry], toObserve: [WatchlistEntry], title: String) {
 		self.observedEntries = observed
 		self.toObserveEntries = toObserve
-		self.title = title
+		self.navigationItem.title = title
+		self.tabBarItem.title = "Watchlist"
 	}
 	
 	private func setupUI() {
-		self.title = watchlistTitle
+		self.navigationItem.title = watchlistTitle
+		self.tabBarItem.title = "Watchlist"
 		self.view.backgroundColor = .systemGroupedBackground
 		self.navigationItem.largeTitleDisplayMode = .never
 		
@@ -140,8 +143,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		searchBar.searchTextField.backgroundColor = searchIsDarkMode ? .secondarySystemBackground : .systemBackground
 		searchBar.delegate = self
 		segmentedControl.selectedSegmentIndex = 0
-		segmentedControl.setTitle("Observed", forSegmentAt: 0)
-		segmentedControl.setTitle("To Observe", forSegmentAt: 1)
+		segmentedControl.setTitle("Sightings", forSegmentAt: 0)
+		segmentedControl.setTitle("To Discover", forSegmentAt: 1)
 	}
 	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
 		currentSegmentIndex = sender.selectedSegmentIndex

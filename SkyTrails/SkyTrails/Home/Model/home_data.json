@@ -1,7 +1,7 @@
 {
     "hotspots": [
         {
-            "id": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678",
+            "id": "b0a1c2d3-e4f5-4678-90ab-cdef12345678",
             "name": "Pangti Village",
             "locality": "Nagaland",
             "lat": 26.3137,
@@ -9,7 +9,7 @@
             "imageName": "amur_falcon",
             "speciesList": [
                 {
-                    "id": "A1B2C3D4-E5F6-4789-01BC-DEF234567891",
+                    "id": "a1b2c3d4-e5f6-4789-01bc-def234567891",
                     "birdId": "550e8400-e29b-41d4-a716-446655440007",
                     "validWeeks": [
                         40,
@@ -38,7 +38,7 @@
             ]
         },
         {
-            "id": "C1B2A3D4-E5F6-4789-01BC-DEF234567890",
+            "id": "c1b2a3d4-e5f6-4789-01bc-def234567890",
             "name": "Doyang Reservoir",
             "locality": "Nagaland",
             "lat": 26.3137,
@@ -46,7 +46,7 @@
             "imageName": "amur_falcon",
             "speciesList": [
                 {
-                    "id": "B2C3D4E5-F6A7-4890-12CD-EF3456789012",
+                    "id": "b2c3d4e5-f6a7-4890-12cd-ef3456789012",
                     "birdId": "550e8400-e29b-41d4-a716-446655440007",
                     "validWeeks": [
                         40,
@@ -75,7 +75,7 @@
             ]
         },
         {
-            "id": "D2C3B4A5-F6E7-4890-12CD-EF3456789012",
+            "id": "d2c3b4a5-f6e7-4890-12cd-ef3456789012",
             "name": "Umrangso",
             "locality": "Assam",
             "lat": 25.5,
@@ -83,7 +83,7 @@
             "imageName": "amur_falcon",
             "speciesList": [
                 {
-                    "id": "C3D4E5F6-A7B8-4901-23DE-F45678901234",
+                    "id": "c3d4e5f6-a7b8-4901-23de-f45678901234",
                     "birdId": "550e8400-e29b-41d4-a716-446655440007",
                     "validWeeks": [
                         40,
@@ -112,7 +112,7 @@
             ]
         },
         {
-            "id": "E3D4C5B6-A7B8-4901-23DE-F45678901234",
+            "id": "e3d4c5b6-a7b8-4901-23de-f45678901234",
             "name": "Lonavala",
             "locality": "Maharashtra",
             "lat": 18.75,
@@ -120,7 +120,7 @@
             "imageName": "amur_falcon",
             "speciesList": [
                 {
-                    "id": "D4E5F6A7-B8C9-4012-34EF-567890123456",
+                    "id": "d4e5f6a7-b8c9-4012-34ef-567890123456",
                     "birdId": "550e8400-e29b-41d4-a716-446655440007",
                     "validWeeks": [
                         48,
@@ -141,7 +141,7 @@
             ]
         },
         {
-            "id": "3F2111CA-CDF5-49E5-9064-AC686AF63EF8",
+            "id": "3f2111ca-cdf5-49e5-9064-ac686af63ef8",
             "name": "Okhla Bird Sanctuary",
             "locality": "Noida, Uttar Pradesh",
             "lat": 28.57,
@@ -149,7 +149,7 @@
             "imageName": "spot_bharatpur",
             "speciesList": [
                 {
-                    "id": "96E1D89F-F9BB-465A-837F-7A77774C51CC",
+                    "id": "96e1d89f-f9bb-465a-837f-7a77774c51cc",
                     "birdId": "550e8400-e29b-41d4-a716-446655440001",
                     "validWeeks": [
                         1,
@@ -262,7 +262,7 @@
                     ]
                 },
                 {
-                    "id": "132F91BE-1038-4699-A454-AB6265F574DE",
+                    "id": "132f91be-1038-4699-a454-ab6265f574de",
                     "birdId": "550e8400-e29b-41d4-a716-446655440002",
                     "validWeeks": [
                         1,
@@ -377,7 +377,7 @@
             ]
         },
         {
-            "id": "DFD8E91F-B258-4D84-9642-41AC5CF85D84",
+            "id": "dfd8e91f-b258-4d84-9642-41ac5cf85d84",
             "name": "Saras Baug Gardens",
             "locality": "Pune, Maharashtra",
             "lat": 18.50083,
@@ -385,7 +385,7 @@
             "imageName": "spot_saras_baug_gardens",
             "speciesList": [
                 {
-                    "id": "FADDDCBC-4FEF-4507-9A65-D2E6AF54A704",
+                    "id": "fadddcbc-4fef-4507-9a65-d2e6af54a704",
                     "birdId": "550e8400-e29b-41d4-a716-446655440001",
                     "validWeeks": [
                         1,
@@ -418,7 +418,7 @@
                     ]
                 },
                 {
-                    "id": "4543C5DB-9E35-448A-9529-097577926E3A",
+                    "id": "4543c5db-9e35-448a-9529-097577926e3a",
                     "birdId": "550e8400-e29b-41d4-a716-446655440002",
                     "validWeeks": [
                         2,
@@ -453,7 +453,7 @@
                     ]
                 },
                 {
-                    "id": "A78A73FD-78DC-40FE-A2ED-C1BA32893099",
+                    "id": "a78a73fd-78dc-40fe-a2ed-c1ba32893099",
                     "birdId": "550e8400-e29b-41d4-a716-446655440003",
                     "validWeeks": [
                         3,
@@ -490,7 +490,7 @@
                     ]
                 },
                 {
-                    "id": "FCC55AF8-5C9D-454C-B9F8-E1BCE30F253F",
+                    "id": "fcc55af8-5c9d-454c-b9f8-e1bce30f253f",
                     "birdId": "550e8400-e29b-41d4-a716-446655440004",
                     "validWeeks": [
                         4,
@@ -523,7 +523,7 @@
                     ]
                 },
                 {
-                    "id": "10DEE166-6A84-40D4-8061-EEC1A8DB951F",
+                    "id": "10dee166-6a84-40d4-8061-eec1a8db951f",
                     "birdId": "550e8400-e29b-41d4-a716-446655440005",
                     "validWeeks": [
                         5,
@@ -558,7 +558,7 @@
                     ]
                 },
                 {
-                    "id": "8D1B1540-0DFE-4587-9190-6342EE827E61",
+                    "id": "8d1b1540-0dfe-4587-9190-6342ee827e61",
                     "birdId": "550e8400-e29b-41d4-a716-446655440006",
                     "validWeeks": [
                         1,
@@ -597,7 +597,7 @@
             ]
         },
         {
-            "id": "6A6FD986-BCD7-4ACD-A2C2-318C38E21719",
+            "id": "6a6fd986-bcd7-4acd-a2c2-318c38e21719",
             "name": "Pashan Lake",
             "locality": "Pune, Maharashtra",
             "lat": 18.5415,
@@ -605,7 +605,7 @@
             "imageName": "spot_pashan_lake",
             "speciesList": [
                 {
-                    "id": "990AF643-4CDE-4BAD-BFC6-CD6F5E0CAAD6",
+                    "id": "990af643-4cde-4bad-bfc6-cd6f5e0caad6",
                     "birdId": "550e8400-e29b-41d4-a716-446655440001",
                     "validWeeks": [
                         1,
@@ -718,7 +718,7 @@
                     ]
                 },
                 {
-                    "id": "4DE41E78-8531-4BA3-A9B6-45D44BC1BD9F",
+                    "id": "4de41e78-8531-4ba3-a9b6-45d44bc1bd9f",
                     "birdId": "550e8400-e29b-41d4-a716-446655440002",
                     "validWeeks": [
                         1,
@@ -831,7 +831,7 @@
                     ]
                 },
                 {
-                    "id": "9885A346-334C-48F9-ACA6-9D564EF4DBA4",
+                    "id": "9885a346-334c-48f9-aca6-9d564ef4dba4",
                     "birdId": "550e8400-e29b-41d4-a716-446655440003",
                     "validWeeks": [
                         1,
@@ -944,7 +944,7 @@
                     ]
                 },
                 {
-                    "id": "48AA6131-0CBF-4B42-9013-9D755BC24FC3",
+                    "id": "48aa6131-0cbf-4b42-9013-9d755bc24fc3",
                     "birdId": "550e8400-e29b-41d4-a716-446655440004",
                     "validWeeks": [
                         1,
@@ -1059,7 +1059,7 @@
             ]
         },
         {
-            "id": "0B7F943F-19DE-4A8C-821F-BB94B671C617",
+            "id": "0b7f943f-19de-4a8c-821f-bb94b671c617",
             "name": "Khadakwasla Backwaters",
             "locality": "Pune, Maharashtra",
             "lat": 18.4392,
@@ -1067,7 +1067,7 @@
             "imageName": "spot_khadakwasla",
             "speciesList": [
                 {
-                    "id": "BF2BFCB7-E963-4379-9463-A480C8F19F91",
+                    "id": "bf2bfcb7-e963-4379-9463-a480c8f19f91",
                     "birdId": "550e8400-e29b-41d4-a716-446655440001",
                     "validWeeks": [
                         1,
@@ -1128,7 +1128,7 @@
                     ]
                 },
                 {
-                    "id": "F9066617-9C1C-4864-9172-AE93D1E7FA6A",
+                    "id": "f9066617-9c1c-4864-9172-ae93d1e7fa6a",
                     "birdId": "550e8400-e29b-41d4-a716-446655440002",
                     "validWeeks": [
                         1,
@@ -1241,7 +1241,7 @@
                     ]
                 },
                 {
-                    "id": "E81B4C1D-9D5C-4546-B572-1E2C4CD47A6C",
+                    "id": "e81b4c1d-9d5c-4546-b572-1e2c4cd47a6c",
                     "birdId": "550e8400-e29b-41d4-a716-446655440003",
                     "validWeeks": [
                         1,
@@ -1354,7 +1354,7 @@
                     ]
                 },
                 {
-                    "id": "1D6E3543-B800-4EB1-ACB2-BBDB37872DC2",
+                    "id": "1d6e3543-b800-4eb1-acb2-bbdb37872dc2",
                     "birdId": "550e8400-e29b-41d4-a716-446655440004",
                     "validWeeks": [
                         1,
@@ -1469,7 +1469,7 @@
             ]
         },
         {
-            "id": "F1A2B3C4-D5E6-7F89-0A1B-2C3D4E5F6A7B",
+            "id": "f1a2b3c4-d5e6-7f89-0a1b-2c3d4e5f6a7b",
             "name": "Bhandardara Lake",
             "locality": "Ahmednagar, Maharashtra",
             "lat": 19.55,
@@ -1477,7 +1477,7 @@
             "imageName": "spot_bhandardara",
             "speciesList": [
                 {
-                    "id": "B1C2D3E4-F5A6-7B89-0C1D-2E3F4A5B6C7D",
+                    "id": "b1c2d3e4-f5a6-7b89-0c1d-2e3f4a5b6c7d",
                     "birdId": "550e8400-e29b-41d4-a716-446655440001",
                     "validWeeks": [
                         7,
@@ -1494,7 +1494,7 @@
                     ]
                 },
                 {
-                    "id": "C2D3E4F5-A6B7-8C90-1D2E-3F4A5B6C7D8E",
+                    "id": "c2d3e4f5-a6b7-8c90-1d2e-3f4a5b6c7d8e",
                     "birdId": "550e8400-e29b-41d4-a716-446655440002",
                     "validWeeks": [
                         7,
@@ -1513,7 +1513,7 @@
                     ]
                 },
                 {
-                    "id": "D3E4F5A6-B7C8-9D01-2E3F-4A5B6C7D8E9F",
+                    "id": "d3e4f5a6-b7c8-9d01-2e3f-4a5b6c7d8e9f",
                     "birdId": "550e8400-e29b-41d4-a716-446655440003",
                     "validWeeks": [
                         7,
@@ -1534,7 +1534,7 @@
                     ]
                 },
                 {
-                    "id": "E4F5A6B7-C8D9-0E12-3F4A-5B6C7D8E9F0A",
+                    "id": "e4f5a6b7-c8d9-0e12-3f4a-5b6c7d8e9f0a",
                     "birdId": "550e8400-e29b-41d4-a716-446655440004",
                     "validWeeks": [
                         7,
@@ -1553,7 +1553,7 @@
                     ]
                 },
                 {
-                    "id": "F5A6B7C8-D9E0-1F23-4A5B-6C7D8E9F0A1B",
+                    "id": "f5a6b7c8-d9e0-1f23-4a5b-6c7d8e9f0a1b",
                     "birdId": "550e8400-e29b-41d4-a716-446655440005",
                     "validWeeks": [
                         8,
@@ -1572,7 +1572,7 @@
                     ]
                 },
                 {
-                    "id": "A6B7C8D9-E0F1-2A34-5B6C-7D8E9F0A1B2C",
+                    "id": "a6b7c8d9-e0f1-2a34-5b6c-7d8e9f0a1b2c",
                     "birdId": "550e8400-e29b-41d4-a716-446655440006",
                     "validWeeks": [
                         7,
@@ -1591,7 +1591,7 @@
             ]
         },
         {
-            "id": "B2C3D4E5-F6A7-8B90-1C2D-3E4F5A6B7C8D",
+            "id": "b2c3d4e5-f6a7-8b90-1c2d-3e4f5a6b7c8d",
             "name": "Ahmednagar Bird Reserve",
             "locality": "Ahmednagar, Maharashtra",
             "lat": 19.1,
@@ -1599,7 +1599,7 @@
             "imageName": "spot_ahmednagar",
             "speciesList": [
                 {
-                    "id": "C3D4E5F6-A7B8-9C01-2D3E-4F5A6B7C8D9E",
+                    "id": "c3d4e5f6-a7b8-9c01-2d3e-4f5a6b7c8d9e",
                     "birdId": "550e8400-e29b-41d4-a716-446655440001",
                     "validWeeks": [
                         7,
@@ -1614,7 +1614,7 @@
                     ]
                 },
                 {
-                    "id": "D4E5F6A7-B8C9-0D12-3E4F-5A6B7C8D9E0F",
+                    "id": "d4e5f6a7-b8c9-0d12-3e4f-5a6b7c8d9e0f",
                     "birdId": "550e8400-e29b-41d4-a716-446655440002",
                     "validWeeks": [
                         7,
@@ -1631,7 +1631,7 @@
                     ]
                 },
                 {
-                    "id": "E5F6A7B8-C9D0-1E23-4F5A-6B7C8D9E0F1A",
+                    "id": "e5f6a7b8-c9d0-1e23-4f5a-6b7c8d9e0f1a",
                     "birdId": "550e8400-e29b-41d4-a716-446655440003",
                     "validWeeks": [
                         8,
@@ -1648,7 +1648,7 @@
                     ]
                 },
                 {
-                    "id": "F6A7B8C9-D0E1-2F34-5A6B-7C8D9E0F1A2B",
+                    "id": "f6a7b8c9-d0e1-2f34-5a6b-7c8d9e0f1a2b",
                     "birdId": "550e8400-e29b-41d4-a716-446655440004",
                     "validWeeks": [
                         8,
@@ -1663,7 +1663,7 @@
                     ]
                 },
                 {
-                    "id": "A7B8C9D0-E1F2-3A45-6B7C-8D9E0F1A2B3C",
+                    "id": "a7b8c9d0-e1f2-3a45-6b7c-8d9e0f1a2b3c",
                     "birdId": "550e8400-e29b-41d4-a716-446655440005",
                     "validWeeks": [
                         8,
@@ -1680,7 +1680,7 @@
                     ]
                 },
                 {
-                    "id": "B8C9D0E1-F2A3-4B56-7C8D-9E0F1A2B3C4D",
+                    "id": "b8c9d0e1-f2a3-4b56-7c8d-9e0f1a2b3c4d",
                     "birdId": "550e8400-e29b-41d4-a716-446655440006",
                     "validWeeks": [
                         7,
@@ -1701,90 +1701,90 @@
     ],
     "migration_sessions": [
         {
-            "id": "A99E315E-132C-487F-9C3C-38B7E059A1DE",
+            "id": "a99e315e-132c-487f-9c3c-38b7e059a1de",
             "birdId": "550e8400-e29b-41d4-a716-446655440001",
             "startWeek": 1,
             "endWeek": 12,
             "trajectoryPaths": [
                 {
-                    "id": "EFDAE25B-9BB3-4854-A176-D0E6D66B13E2",
+                    "id": "efdae25b-9bb3-4854-a176-d0e6d66b13e2",
                     "week": 1,
                     "lat": 10,
                     "lon": 70,
                     "probability": 20
                 },
                 {
-                    "id": "79D86C72-A87E-40C2-93A1-DCDF44A752B6",
+                    "id": "79d86c72-a87e-40c2-93a1-dcdf44a752b6",
                     "week": 2,
                     "lat": 11.5,
                     "lon": 71,
                     "probability": 30
                 },
                 {
-                    "id": "A2BFA33B-07B2-4290-91B9-462BDF8AD84B",
+                    "id": "a2bfa33b-07b2-4290-91b9-462bdf8ad84b",
                     "week": 3,
                     "lat": 13,
                     "lon": 71.5,
                     "probability": 45
                 },
                 {
-                    "id": "BDB1606B-5453-400D-ABE9-22F1EC54841D",
+                    "id": "bdb1606b-5453-400d-abe9-22f1ec54841d",
                     "week": 4,
                     "lat": 14.5,
                     "lon": 72,
                     "probability": 60
                 },
                 {
-                    "id": "F9BBB6DD-4A7A-40EA-B8E3-CC3A0F300134",
+                    "id": "f9bbb6dd-4a7a-40ea-b8e3-cc3a0f300134",
                     "week": 5,
                     "lat": 16,
                     "lon": 72.8,
                     "probability": 75
                 },
                 {
-                    "id": "407B910E-CDE2-4340-80C6-05A8FD6CDF31",
+                    "id": "407b910e-cde2-4340-80c6-05a8fd6cdf31",
                     "week": 6,
                     "lat": 17.5,
                     "lon": 73.4,
                     "probability": 85
                 },
                 {
-                    "id": "5876CC70-77DF-445D-A993-88B5CDCFCA5D",
+                    "id": "5876cc70-77df-445d-a993-88b5cdcfca5d",
                     "week": 7,
                     "lat": 18.5204,
                     "lon": 73.8567,
                     "probability": 95
                 },
                 {
-                    "id": "1DF36EB3-8C06-4247-A85A-C2677975CE3F",
+                    "id": "1df36eb3-8c06-4247-a85a-c2677975ce3f",
                     "week": 8,
                     "lat": 19.5,
                     "lon": 74.2,
                     "probability": 80
                 },
                 {
-                    "id": "88285E83-1EBE-4270-BD1B-64C3C1F6979F",
+                    "id": "88285e83-1ebe-4270-bd1b-64c3c1f6979f",
                     "week": 9,
                     "lat": 21,
                     "lon": 75,
                     "probability": 65
                 },
                 {
-                    "id": "4B94A6FA-7D6D-4E06-A2CC-7290A5246BA9",
+                    "id": "4b94a6fa-7d6d-4e06-a2cc-7290a5246ba9",
                     "week": 10,
                     "lat": 22.5,
                     "lon": 76,
                     "probability": 50
                 },
                 {
-                    "id": "94BD7F06-53D7-49F0-A59E-0514C65E1A86",
+                    "id": "94bd7f06-53d7-49f0-a59e-0514c65e1a86",
                     "week": 11,
                     "lat": 24,
                     "lon": 77,
                     "probability": 35
                 },
                 {
-                    "id": "5D8B97B6-D1B7-4A74-B641-EABED2293421",
+                    "id": "5d8b97b6-d1b7-4a74-b641-eabed2293421",
                     "week": 12,
                     "lat": 25.5,
                     "lon": 78,
@@ -1793,97 +1793,97 @@
             ]
         },
         {
-            "id": "FA27F7B2-16A7-493E-B704-A8FE589D259E",
+            "id": "fa27f7b2-16a7-493e-b704-a8fe589d259e",
             "birdId": "550e8400-e29b-41d4-a716-446655440002",
             "startWeek": 2,
             "endWeek": 14,
             "trajectoryPaths": [
                 {
-                    "id": "9FFAB2D4-B876-481F-AB92-73CCC137B690",
+                    "id": "9ffab2d4-b876-481f-ab92-73ccc137b690",
                     "week": 2,
                     "lat": 11,
                     "lon": 71,
                     "probability": 15
                 },
                 {
-                    "id": "D9FD25E0-656A-45ED-BA61-2A318E134729",
+                    "id": "d9fd25e0-656a-45ed-ba61-2a318e134729",
                     "week": 3,
                     "lat": 12.5,
                     "lon": 71.8,
                     "probability": 25
                 },
                 {
-                    "id": "73712DF5-4373-417E-9ED9-94A925D239CB",
+                    "id": "73712df5-4373-417e-9ed9-94a925d239cb",
                     "week": 4,
                     "lat": 14,
                     "lon": 72.2,
                     "probability": 40
                 },
                 {
-                    "id": "9B3BB21A-A31B-43A2-B303-592FA888DF10",
+                    "id": "9b3bb21a-a31b-43a2-b303-592fa888df10",
                     "week": 5,
                     "lat": 15.5,
                     "lon": 72.8,
                     "probability": 60
                 },
                 {
-                    "id": "8A367F0B-17C6-431B-A17A-4F4B0E72BF43",
+                    "id": "8a367f0b-17c6-431b-a17a-4f4b0e72bf43",
                     "week": 6,
                     "lat": 17,
                     "lon": 73.4,
                     "probability": 80
                 },
                 {
-                    "id": "B17A8F81-C73D-488E-B30D-36E7684A4C56",
+                    "id": "b17a8f81-c73d-488e-b30d-36e7684a4c56",
                     "week": 7,
                     "lat": 18.5204,
                     "lon": 73.8567,
                     "probability": 90
                 },
                 {
-                    "id": "2D80687A-AB6E-4F09-9BA0-A0BF4FF405B6",
+                    "id": "2d80687a-ab6e-4f09-9ba0-a0bf4ff405b6",
                     "week": 8,
                     "lat": 19.8,
                     "lon": 74.3,
                     "probability": 85
                 },
                 {
-                    "id": "6CAEB35B-4FB6-4CC6-857B-61EA48FB5C5F",
+                    "id": "6caeb35b-4fb6-4cc6-857b-61ea48fb5c5f",
                     "week": 9,
                     "lat": 21.2,
                     "lon": 75.1,
                     "probability": 75
                 },
                 {
-                    "id": "0B81D82F-8A07-4201-9BF8-541312F820C7",
+                    "id": "0b81d82f-8a07-4201-9bf8-541312f820c7",
                     "week": 10,
                     "lat": 22.6,
                     "lon": 76.2,
                     "probability": 60
                 },
                 {
-                    "id": "B16F717D-FCFE-4F11-9CC5-A570D325D9F4",
+                    "id": "b16f717d-fcfe-4f11-9cc5-a570d325d9f4",
                     "week": 11,
                     "lat": 23.8,
                     "lon": 77.4,
                     "probability": 45
                 },
                 {
-                    "id": "095529C4-974A-4A23-A1C8-39267641BBB6",
+                    "id": "095529c4-974a-4a23-a1c8-39267641bbb6",
                     "week": 12,
                     "lat": 25,
                     "lon": 78.6,
                     "probability": 30
                 },
                 {
-                    "id": "2B1BF9CE-2A32-4C53-BA8C-9DAF90B194E4",
+                    "id": "2b1bf9ce-2a32-4c53-ba8c-9daf90b194e4",
                     "week": 13,
                     "lat": 26.2,
                     "lon": 79.8,
                     "probability": 20
                 },
                 {
-                    "id": "0D3DF495-3FBB-4C03-8305-8E26679C70D3",
+                    "id": "0d3df495-3fbb-4c03-8305-8e26679c70d3",
                     "week": 14,
                     "lat": 27.5,
                     "lon": 81,
@@ -1892,104 +1892,104 @@
             ]
         },
         {
-            "id": "B377BB63-85F8-4734-800E-7D112FA0EABF",
+            "id": "b377bb63-85f8-4734-800e-7d112fa0eabf",
             "birdId": "550e8400-e29b-41d4-a716-446655440003",
             "startWeek": 3,
             "endWeek": 16,
             "trajectoryPaths": [
                 {
-                    "id": "C04E0C6E-D601-44B3-B7A3-081A3E283A59",
+                    "id": "c04e0c6e-d601-44b3-b7a3-081a3e283a59",
                     "week": 3,
                     "lat": 12,
                     "lon": 71.5,
                     "probability": 10
                 },
                 {
-                    "id": "11EA5BCE-0D85-483F-8B33-64807F5B8C99",
+                    "id": "11ea5bce-0d85-483f-8b33-64807f5b8c99",
                     "week": 4,
                     "lat": 13.5,
                     "lon": 72,
                     "probability": 20
                 },
                 {
-                    "id": "A0470531-A108-4F1E-922E-B011583FF367",
+                    "id": "a0470531-a108-4f1e-922e-b011583ff367",
                     "week": 5,
                     "lat": 15,
                     "lon": 72.6,
                     "probability": 35
                 },
                 {
-                    "id": "053B55F8-3C47-484E-9CB6-3DDFFD6755CA",
+                    "id": "053b55f8-3c47-484e-9cb6-3ddffd6755ca",
                     "week": 6,
                     "lat": 16.5,
                     "lon": 73.2,
                     "probability": 55
                 },
                 {
-                    "id": "992AF369-8F44-49B6-9F1D-1399553F780C",
+                    "id": "992af369-8f44-49b6-9f1d-1399553f780c",
                     "week": 7,
                     "lat": 18.5204,
                     "lon": 73.8567,
                     "probability": 85
                 },
                 {
-                    "id": "DD7D2E6C-6F16-40B8-A68E-F6D4E05281BA",
+                    "id": "dd7d2e6c-6f16-40b8-a68e-f6d4e05281ba",
                     "week": 8,
                     "lat": 20,
                     "lon": 74.5,
                     "probability": 90
                 },
                 {
-                    "id": "DC3B53AF-098F-4C5A-8BD3-84B47B628AF2",
+                    "id": "dc3b53af-098f-4c5a-8bd3-84b47b628af2",
                     "week": 9,
                     "lat": 21.5,
                     "lon": 75.5,
                     "probability": 80
                 },
                 {
-                    "id": "B02471E4-1AAF-4D1C-9FEB-2946EFDAC375",
+                    "id": "b02471e4-1aaf-4d1c-9feb-2946efdac375",
                     "week": 10,
                     "lat": 23,
                     "lon": 76.5,
                     "probability": 70
                 },
                 {
-                    "id": "0A65DA83-B761-4303-A03A-59B276FBF0FC",
+                    "id": "0a65da83-b761-4303-a03a-59b276fbf0fc",
                     "week": 11,
                     "lat": 24.5,
                     "lon": 77.5,
                     "probability": 55
                 },
                 {
-                    "id": "B9F824F1-3AAD-4D4A-B180-73E73C646A0F",
+                    "id": "b9f824f1-3aad-4d4a-b180-73e73c646a0f",
                     "week": 12,
                     "lat": 26,
                     "lon": 78.5,
                     "probability": 40
                 },
                 {
-                    "id": "11C97760-72B3-4D5F-AF15-8AD60787E53E",
+                    "id": "11c97760-72b3-4d5f-af15-8ad60787e53e",
                     "week": 13,
                     "lat": 27.5,
                     "lon": 79.5,
                     "probability": 30
                 },
                 {
-                    "id": "37AB2FAC-9F6A-4B56-957B-C4460D7D3AA7",
+                    "id": "37ab2fac-9f6a-4b56-957b-c4460d7d3aa7",
                     "week": 14,
                     "lat": 29,
                     "lon": 80.5,
                     "probability": 20
                 },
                 {
-                    "id": "2A5F34B9-9F57-4FA6-950A-485A52C6D0DC",
+                    "id": "2a5f34b9-9f57-4fa6-950a-485a52c6d0dc",
                     "week": 15,
                     "lat": 30.5,
                     "lon": 81.5,
                     "probability": 15
                 },
                 {
-                    "id": "5BF464DA-F9C6-4262-A666-88FAFC284A8E",
+                    "id": "5bf464da-f9c6-4262-a666-88fafc284a8e",
                     "week": 16,
                     "lat": 32,
                     "lon": 82.5,
@@ -1998,90 +1998,90 @@
             ]
         },
         {
-            "id": "38BB74B4-F0FB-4EF5-888D-A5FA82921F6A",
+            "id": "38bb74b4-f0fb-4ef5-888d-a5fa82921f6a",
             "birdId": "550e8400-e29b-41d4-a716-446655440004",
             "startWeek": 4,
             "endWeek": 15,
             "trajectoryPaths": [
                 {
-                    "id": "78F6C5CB-AA75-4236-8377-112AED559E49",
+                    "id": "78f6c5cb-aa75-4236-8377-112aed559e49",
                     "week": 4,
                     "lat": 13,
                     "lon": 72,
                     "probability": 15
                 },
                 {
-                    "id": "A17BB52B-3107-4A32-A70A-8560359F39F6",
+                    "id": "a17bb52b-3107-4a32-a70a-8560359f39f6",
                     "week": 5,
                     "lat": 14.8,
                     "lon": 72.6,
                     "probability": 25
                 },
                 {
-                    "id": "20F62E13-6B0E-4284-A159-73049C287918",
+                    "id": "20f62e13-6b0e-4284-a159-73049c287918",
                     "week": 6,
                     "lat": 16.6,
                     "lon": 73.2,
                     "probability": 45
                 },
                 {
-                    "id": "D5B5E77E-837D-45FC-B16B-285B8C13D4CD",
+                    "id": "d5b5e77e-837d-45fc-b16b-285b8c13d4cd",
                     "week": 7,
                     "lat": 18.5204,
                     "lon": 73.8567,
                     "probability": 80
                 },
                 {
-                    "id": "69D41D95-1425-49F4-81F7-5BFBC0582AB9",
+                    "id": "69d41d95-1425-49f4-81f7-5bfbc0582ab9",
                     "week": 8,
                     "lat": 20.2,
                     "lon": 74.4,
                     "probability": 75
                 },
                 {
-                    "id": "F8A36A4A-88EE-409C-93BA-874FA90025C9",
+                    "id": "f8a36a4a-88ee-409c-93ba-874fa90025c9",
                     "week": 9,
                     "lat": 22,
                     "lon": 75.2,
                     "probability": 65
                 },
                 {
-                    "id": "DB4BD49E-75B4-4DD3-9B34-01FAD62D6F14",
+                    "id": "db4bd49e-75b4-4dd3-9b34-01fad62d6f14",
                     "week": 10,
                     "lat": 23.8,
                     "lon": 76,
                     "probability": 55
                 },
                 {
-                    "id": "5282AC8E-94C2-4DCD-92FA-7672C2FBF3FD",
+                    "id": "5282ac8e-94c2-4dcd-92fa-7672c2fbf3fd",
                     "week": 11,
                     "lat": 25.6,
                     "lon": 76.8,
                     "probability": 45
                 },
                 {
-                    "id": "EDFD895F-F128-474B-844E-960CB7E2A811",
+                    "id": "edfd895f-f128-474b-844e-960cb7e2a811",
                     "week": 12,
                     "lat": 27.4,
                     "lon": 77.6,
                     "probability": 35
                 },
                 {
-                    "id": "61665242-9691-44F3-BFF7-56496C7A5CC9",
+                    "id": "61665242-9691-44f3-bff7-56496c7a5cc9",
                     "week": 13,
                     "lat": 29.2,
                     "lon": 78.4,
                     "probability": 25
                 },
                 {
-                    "id": "48F10C35-A4C1-4BAD-A14F-BACC6C764311",
+                    "id": "48f10c35-a4c1-4bad-a14f-bacc6c764311",
                     "week": 14,
                     "lat": 31,
                     "lon": 79.2,
                     "probability": 15
                 },
                 {
-                    "id": "76110958-B9EB-4B5E-8D53-2C8FC9D4AD89",
+                    "id": "76110958-b9eb-4b5e-8d53-2c8fc9d4ad89",
                     "week": 15,
                     "lat": 32.8,
                     "lon": 80,
@@ -2090,97 +2090,97 @@
             ]
         },
         {
-            "id": "CD350172-C1DB-428C-893E-AA0C893AB781",
+            "id": "cd350172-c1db-428c-893e-aa0c893ab781",
             "birdId": "550e8400-e29b-41d4-a716-446655440005",
             "startWeek": 5,
             "endWeek": 17,
             "trajectoryPaths": [
                 {
-                    "id": "D92A48E3-E11B-4EB3-BB77-454C103693ED",
+                    "id": "d92a48e3-e11b-4eb3-bb77-454c103693ed",
                     "week": 5,
                     "lat": 14,
                     "lon": 72.4,
                     "probability": 10
                 },
                 {
-                    "id": "9F8754B1-BD96-49D3-A485-7BCD21BB4B8A",
+                    "id": "9f8754b1-bd96-49d3-a485-7bcd21bb4b8a",
                     "week": 6,
                     "lat": 16.2,
                     "lon": 73.2,
                     "probability": 20
                 },
                 {
-                    "id": "178E8E94-FD13-47CB-B1E2-751E2445FC4C",
+                    "id": "178e8e94-fd13-47cb-b1e2-751e2445fc4c",
                     "week": 7,
                     "lat": 18.5204,
                     "lon": 73.8567,
                     "probability": 60
                 },
                 {
-                    "id": "EA489A6B-AF90-4C2B-AFBA-29291F9531AA",
+                    "id": "ea489a6b-af90-4c2b-afba-29291f9531aa",
                     "week": 8,
                     "lat": 20.6,
                     "lon": 74.6,
                     "probability": 80
                 },
                 {
-                    "id": "111DDDA0-E858-44CD-A977-6DA130AD79EB",
+                    "id": "111ddda0-e858-44cd-a977-6da130ad79eb",
                     "week": 9,
                     "lat": 22.8,
                     "lon": 75.4,
                     "probability": 70
                 },
                 {
-                    "id": "6C1F3B92-F7A0-4708-AB41-2D81CBAE9930",
+                    "id": "6c1f3b92-f7a0-4708-ab41-2d81cbae9930",
                     "week": 10,
                     "lat": 25,
                     "lon": 76.2,
                     "probability": 60
                 },
                 {
-                    "id": "619B5EF4-C88D-42F0-B541-ADEE7BA6E44D",
+                    "id": "619b5ef4-c88d-42f0-b541-adee7ba6e44d",
                     "week": 11,
                     "lat": 27.2,
                     "lon": 77,
                     "probability": 50
                 },
                 {
-                    "id": "D7F6B338-773B-438A-9F85-9DFCF888346E",
+                    "id": "d7f6b338-773b-438a-9f85-9dfcf888346e",
                     "week": 12,
                     "lat": 29.4,
                     "lon": 77.8,
                     "probability": 40
                 },
                 {
-                    "id": "51085CC9-0856-4601-928F-2C3BD760FD1E",
+                    "id": "51085cc9-0856-4601-928f-2c3bd760fd1e",
                     "week": 13,
                     "lat": 31.6,
                     "lon": 78.6,
                     "probability": 30
                 },
                 {
-                    "id": "2C39414F-4E2A-46CE-903A-ABC19643E356",
+                    "id": "2c39414f-4e2a-46ce-903a-abc19643e356",
                     "week": 14,
                     "lat": 33.8,
                     "lon": 79.4,
                     "probability": 20
                 },
                 {
-                    "id": "D613717B-A2C7-4258-B87A-547B3D5BFC19",
+                    "id": "d613717b-a2c7-4258-b87a-547b3d5bfc19",
                     "week": 15,
                     "lat": 36,
                     "lon": 80.2,
                     "probability": 15
                 },
                 {
-                    "id": "A02F9009-DA8C-45DA-B0C5-24BE18E9549F",
+                    "id": "a02f9009-da8c-45da-b0c5-24be18e9549f",
                     "week": 16,
                     "lat": 38.2,
                     "lon": 81,
                     "probability": 10
                 },
                 {
-                    "id": "A2AC735A-5975-4B7A-A96A-701256A01CD5",
+                    "id": "a2ac735a-5975-4b7a-a96a-701256a01cd5",
                     "week": 17,
                     "lat": 40.4,
                     "lon": 81.8,
@@ -2189,104 +2189,104 @@
             ]
         },
         {
-            "id": "BE331F44-0E8F-47D0-9F01-DC7F0EE8D5E8",
+            "id": "be331f44-0e8f-47d0-9f01-dc7f0ee8d5e8",
             "birdId": "550e8400-e29b-41d4-a716-446655440006",
             "startWeek": 1,
             "endWeek": 14,
             "trajectoryPaths": [
                 {
-                    "id": "894E36DA-EF4D-4DA4-8EBC-EC3E963359DC",
+                    "id": "894e36da-ef4d-4da4-8ebc-ec3e963359dc",
                     "week": 1,
                     "lat": 10,
                     "lon": 70,
                     "probability": 10
                 },
                 {
-                    "id": "6C488D56-68FB-40AC-9171-C4922B8C063B",
+                    "id": "6c488d56-68fb-40ac-9171-c4922b8c063b",
                     "week": 2,
                     "lat": 11.5,
                     "lon": 70.8,
                     "probability": 20
                 },
                 {
-                    "id": "ED2D4AEE-FB3B-45DC-BAD8-EA07BF2697A6",
+                    "id": "ed2d4aee-fb3b-45dc-bad8-ea07bf2697a6",
                     "week": 3,
                     "lat": 13,
                     "lon": 71.5,
                     "probability": 35
                 },
                 {
-                    "id": "92D45C0E-A475-41D9-AD62-779728A0F166",
+                    "id": "92d45c0e-a475-41d9-ad62-779728a0f166",
                     "week": 4,
                     "lat": 14.5,
                     "lon": 72.2,
                     "probability": 50
                 },
                 {
-                    "id": "D62ED0A8-1F7A-4D05-A868-1415942F0139",
+                    "id": "d62ed0a8-1f7a-4d05-a868-1415942f0139",
                     "week": 5,
                     "lat": 16,
                     "lon": 73,
                     "probability": 70
                 },
                 {
-                    "id": "596CBDB4-401B-4A2E-9367-A74870DAB0CE",
+                    "id": "596cbdb4-401b-4a2e-9367-a74870dab0ce",
                     "week": 6,
                     "lat": 17.5,
                     "lon": 73.4,
                     "probability": 85
                 },
                 {
-                    "id": "56B23431-5159-466C-8247-2BF683FC66E2",
+                    "id": "56b23431-5159-466c-8247-2bf683fc66e2",
                     "week": 7,
                     "lat": 18.5204,
                     "lon": 73.8567,
                     "probability": 90
                 },
                 {
-                    "id": "37F7AEE5-CDD4-4057-90C4-D91C72568EB7",
+                    "id": "37f7aee5-cdd4-4057-90c4-d91c72568eb7",
                     "week": 8,
                     "lat": 19.8,
                     "lon": 74.3,
                     "probability": 80
                 },
                 {
-                    "id": "C89F7269-F7E6-47CA-A31A-65925137BF45",
+                    "id": "c89f7269-f7e6-47ca-a31a-65925137bf45",
                     "week": 9,
                     "lat": 21.2,
                     "lon": 75,
                     "probability": 65
                 },
                 {
-                    "id": "91F5915F-66F4-4EB1-83AC-D4C7D2E943DE",
+                    "id": "91f5915f-66f4-4eb1-83ac-d4c7d2e943de",
                     "week": 10,
                     "lat": 22.6,
                     "lon": 75.8,
                     "probability": 50
                 },
                 {
-                    "id": "76F207E9-9FFB-44A2-A6C3-9F35C8B691FE",
+                    "id": "76f207e9-9ffb-44a2-a6c3-9f35c8b691fe",
                     "week": 11,
                     "lat": 24,
                     "lon": 76.6,
                     "probability": 35
                 },
                 {
-                    "id": "3635A8DE-5681-4EF3-96FA-E77FB1C42C07",
+                    "id": "3635a8de-5681-4ef3-96fa-e77fb1c42c07",
                     "week": 12,
                     "lat": 25.4,
                     "lon": 77.4,
                     "probability": 25
                 },
                 {
-                    "id": "0D72C1CD-291F-469C-95DA-7BD8C35E9B43",
+                    "id": "0d72c1cd-291f-469c-95da-7bd8c35e9b43",
                     "week": 13,
                     "lat": 26.8,
                     "lon": 78.2,
                     "probability": 15
                 },
                 {
-                    "id": "6D0EA03F-278B-41BA-8727-1D732BE96DFB",
+                    "id": "6d0ea03f-278b-41ba-8727-1d732be96dfb",
                     "week": 14,
                     "lat": 28.2,
                     "lon": 79,
@@ -2394,19 +2394,19 @@
             ],
             "hotspotScores": [
                 {
-                    "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678",
+                    "hotspotId": "b0a1c2d3-e4f5-4678-90ab-cdef12345678",
                     "probability": 23
                 },
                 {
-                    "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890",
+                    "hotspotId": "c1b2a3d4-e5f6-4789-01bc-def234567890",
                     "probability": 23
                 },
                 {
-                    "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012",
+                    "hotspotId": "d2c3b4a5-f6e7-4890-12cd-ef3456789012",
                     "probability": 1
                 },
                 {
-                    "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234",
+                    "hotspotId": "e3d4c5b6-a7b8-4901-23de-f45678901234",
                     "probability": 7
                 }
             ]
@@ -2414,7 +2414,7 @@
     ],
     "community_observations": [
         {
-            "id": "37E96C96-BAE1-4A33-AE6E-8AAFC566B8FA",
+            "id": "37e96c96-bae1-4a33-ae6e-8aafc566b8fa",
             "username": "bird_lover_99",
             "userAvatar": "avatar_1",
             "observationTitle": "Spotted House Sparrow near the lake",
@@ -2427,7 +2427,7 @@
             "birdName": "House Sparrow"
         },
         {
-            "id": "29E95C34-72D6-4845-A663-8BD95B01F9CD",
+            "id": "29e95c34-72d6-4845-a663-8bd95b01f9cd",
             "username": "nature_pro",
             "userAvatar": "avatar_2",
             "observationTitle": "Spotted Red-headed Bunting near the lake",
@@ -2440,7 +2440,7 @@
             "birdName": "Red-headed Bunting"
         },
         {
-            "id": "56ACCBD0-0067-4D55-B19C-32FD8FECED14",
+            "id": "56accbd0-0067-4d55-b19c-32fd8feced14",
             "username": "sky_watcher",
             "userAvatar": "avatar_3",
             "observationTitle": "Spotted Baya Weaver near the lake",
@@ -2453,7 +2453,7 @@
             "birdName": "Baya Weaver"
         },
         {
-            "id": "641D40AB-F3EB-49DC-B726-E62487D2EF89",
+            "id": "641d40ab-f3eb-49dc-b726-e62487d2ef89",
             "username": "pune_birder",
             "userAvatar": "avatar_4",
             "observationTitle": "Spotted White-rumped Munia near the lake",
@@ -2466,7 +2466,7 @@
             "birdName": "White-rumped Munia"
         },
         {
-            "id": "6C5E06F9-78CB-4F53-81E0-F408C8177CB3",
+            "id": "6c5e06f9-78cb-4f53-81e0-f408c8177cb3",
             "username": "bird_lover_99",
             "userAvatar": "avatar_5",
             "observationTitle": "Spotted Scaly-breasted Munia near the lake",

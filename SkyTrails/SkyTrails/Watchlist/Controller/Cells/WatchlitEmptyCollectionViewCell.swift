@@ -25,13 +25,15 @@ final class WatchlitEmptyCollectionViewCell: UICollectionViewCell {
 		emptyImageView.contentMode = .scaleAspectFit
 		emptyImageView.clipsToBounds = true
 
-		titleLabel.font = .systemFont(ofSize: 26, weight: .bold)
+		titleLabel.font = .preferredFont(forTextStyle: .title1)
+		titleLabel.adjustsFontForContentSizeCategory = true
 		titleLabel.textColor = .label
 		titleLabel.numberOfLines = 2
 		titleLabel.adjustsFontSizeToFitWidth = false
 		titleLabel.minimumScaleFactor = 1.0
 
-		subtitleLabel.font = .systemFont(ofSize: 16, weight: .regular)
+		subtitleLabel.font = .preferredFont(forTextStyle: .body)
+		subtitleLabel.adjustsFontForContentSizeCategory = true
 		subtitleLabel.textColor = .secondaryLabel
 		subtitleLabel.numberOfLines = 2
 		subtitleLabel.adjustsFontSizeToFitWidth = false

@@ -193,12 +193,27 @@ class WatchlistLocationRuleMapViewController: UIViewController {
         mapView.addAnnotation(annotation)
         radiusAnnotation = annotation
         updateRadiusCircle()
-        let region = MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: currentRadiusKm * 1000 * 2,
-            longitudinalMeters: currentRadiusKm * 1000 * 2
+        
+        // Initial wide region for "zoom from space" effect
+        let currentRegion = mapView.region
+        let wideSpan = MKCoordinateSpan(
+            latitudeDelta: max(currentRegion.span.latitudeDelta, 2.0),
+            longitudeDelta: max(currentRegion.span.longitudeDelta, 2.0)
         )
-        mapView.setRegion(region, animated: true)
+        let wideRegion = MKCoordinateRegion(center: coordinate, span: wideSpan)
+        mapView.setRegion(wideRegion, animated: false)
+        
+        // Animate to target zoom
+        let targetRegion = MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: currentRadiusKm * 1000 * 2.5,
+            longitudinalMeters: currentRadiusKm * 1000 * 2.5
+        )
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.mapView.setRegion(targetRegion, animated: true)
+        }
+        
         doneButton.isEnabled = true
         doneButton.alpha = 1.0
         resultsTableView.isHidden = true

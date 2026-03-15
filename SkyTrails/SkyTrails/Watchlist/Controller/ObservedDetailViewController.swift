@@ -36,10 +36,10 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     override func viewDidLoad() {
         super.viewDidLoad()
         if let entry = entry {
-            self.title = entry.bird?.commonName
+            self.title = entry.bird?.commonName ?? "Update Sighting"
             self.bird = entry.bird
         } else {
-            self.title = bird?.commonName
+            self.title = bird?.commonName ?? "Log Sighting"
         }
         
         setupStyling()
@@ -56,7 +56,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             birdImageView.image = UIImage(named: birdData.staticImageName) ?? UIImage(systemName: "photo")
             setupRightBarButtons()
         } else {
-            self.navigationItem.title = "New Observation"
+            self.navigationItem.title = "Log Sighting"
             birdImageView.image = UIImage(named: "custom.bird.viewfinder.badge.plus")
 			birdImageView.tintColor = .systemBlue
 			birdImageView.transform = CGAffineTransform(scaleX: 0.75, y: 0.75)

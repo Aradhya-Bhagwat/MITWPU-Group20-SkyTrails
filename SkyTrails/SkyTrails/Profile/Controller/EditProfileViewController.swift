@@ -59,7 +59,8 @@ final class EditProfileViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = title
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.font = .preferredFont(forTextStyle: .caption1)
+        label.adjustsFontForContentSizeCategory = true
         label.textColor = .secondaryLabel
 
         field.translatesAutoresizingMaskIntoConstraints = false
@@ -67,7 +68,8 @@ final class EditProfileViewController: UIViewController {
         field.keyboardType = keyboardType
         field.autocorrectionType = .no
         field.autocapitalizationType = keyboardType == .emailAddress ? .none : .words
-        field.font = .systemFont(ofSize: 17, weight: .regular)
+        field.font = .preferredFont(forTextStyle: .body)
+        field.adjustsFontForContentSizeCategory = true
         field.textColor = .label
         field.clearButtonMode = .whileEditing
 

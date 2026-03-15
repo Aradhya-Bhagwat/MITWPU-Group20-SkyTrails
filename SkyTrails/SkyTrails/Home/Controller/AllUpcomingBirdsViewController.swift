@@ -12,7 +12,7 @@ class AllUpcomingBirdsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "All Upcoming Birds"
+        self.title = "Bird Sightings"
         setupTraitChangeHandling()
         applySemanticAppearance()
         setupNavigationBar()
@@ -189,10 +189,10 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
         
         if indexPath.section == 0 {
             header.isHidden = watchlistData.isEmpty
-            header.configure(title: "Your Bird Watchlist")
+            header.configure(title: "From Your Watchlist")
         } else {
             header.isHidden = false
-            header.configure(title: "Recommended Birds")
+            header.configure(title: "Discover New Birds")
         }
         return header
     }

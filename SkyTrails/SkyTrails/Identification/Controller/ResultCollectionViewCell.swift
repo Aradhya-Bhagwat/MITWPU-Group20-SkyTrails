@@ -29,6 +29,12 @@ class ResultCollectionViewCell: UICollectionViewCell {
         contentView.layer.masksToBounds = true
         cardContainerView.layer.cornerRadius = 12
         cardContainerView.layer.masksToBounds = true
+        
+        nameLabel.font = .preferredFont(forTextStyle: .headline)
+        nameLabel.adjustsFontForContentSizeCategory = true
+        percentageLabel.font = .preferredFont(forTextStyle: .subheadline)
+        percentageLabel.adjustsFontForContentSizeCategory = true
+        
         setupMenu()
         updateSelectionAppearance()
     }

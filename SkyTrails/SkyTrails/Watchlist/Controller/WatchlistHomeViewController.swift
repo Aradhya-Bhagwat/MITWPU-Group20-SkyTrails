@@ -16,9 +16,9 @@ class WatchlistHomeViewController: UIViewController {
 		
 		var title: String {
 			switch self {
-				case .myWatchlist: return "My Watchlist"
-				case .customWatchlist: return "Custom Watchlist"
-				case .sharedWatchlist: return "Shared Watchlist"
+				case .myWatchlist: return "Your Favorites"
+				case .customWatchlist: return "Curated Collections"
+				case .sharedWatchlist: return "Global Communities"
 			}
 		}
 	}
@@ -102,7 +102,8 @@ class WatchlistHomeViewController: UIViewController {
 		}
 	}
 	private func setupUI() {
-		self.title = "Watchlist"
+		self.navigationItem.title = "Personal Collections"
+		self.tabBarItem.title = "Watchlist"
 		self.navigationItem.largeTitleDisplayMode = .always
 	}
 	
@@ -336,9 +337,9 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 				} else {
 					let actionIndex = indexPath.item - 1
 					if actionIndex == 0 {
-						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Add Observed", color: .systemGreen)
+						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Log Observation", color: .systemGreen)
 					} else {
-						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Add Unobserved", color: .systemOrange)
+						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Track New Bird", color: .systemOrange)
 					}
 				}
 			case .customWatchlist:
@@ -346,8 +347,8 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 					return configureWatchlistEmptyStateCell(
 						in: collectionView,
 						at: indexPath,
-						title: "No custom watchlists yet",
-						subtitle: "Create a watchlist to organize birds you want to track"
+						title: "Discovery Awaits",
+						subtitle: "Organize the birds you've seen and want to find"
 					)
 				}
 				return configureCustomWatchlistCell(in: collectionView, at: indexPath)
@@ -396,9 +397,9 @@ extension WatchlistHomeViewController {
 
 	private func myWatchlistEmptyStateActions() -> [(title: String, color: UIColor, icon: String, isEnabled: Bool)] {
 		return [
-			(title: "Add Observed", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
-			(title: "Add Unobserved", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
-			(title: "Create Watchlist", color: .systemBlue, icon: "custom.list.number.badge.plus", isEnabled: true)
+			(title: "Record Sighting", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
+			(title: "Plan Next Find", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
+			(title: "Start New List", color: .systemBlue, icon: "custom.list.number.badge.plus", isEnabled: true)
 		]
 	}
 
