@@ -24,11 +24,11 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
 
     private let emptyNewsItem = NewsItem(
-        title: "No latest news to load",
-        summary: "Please try again later.",
+        title: "The Birds are Resting",
+        summary: "No new stories at the moment. Check back soon for the latest updates from the avian world.",
         link: "",
-        imageName: "defaultProfile",
-        sourceName: nil,
+        imageName: "feather", // Using the feather asset which is already in xcassets
+        sourceName: "SkyTrails Nature Desk",
         publishedAt: nil
     )
 
@@ -416,7 +416,7 @@ extension HomeViewController: UICollectionViewDataSource {
             else if indexPath.section == 1 { header.configure(title: upcomingBirds.isEmpty ? "No Recent Sightings" : "Birding Highlights", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
             else if indexPath.section == 2 { header.configure(title: spots.isEmpty ? "No Nearby Hotspots" : "Top Birding Spots", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllSpots", sender: nil) }) }
             else if indexPath.section == 3 { header.configure(title: observations.isEmpty ? "No Recent Community Posts" : "Community Sightings") }
-            else if indexPath.section == 4 { header.configure(title: news.isEmpty ? "No Latest News" : "Ornithology News") }
+            else if indexPath.section == 4 { header.configure(title: news.isEmpty ? "No Latest News" : "Birders' Gossip") }
             return header
         }
          return UICollectionReusableView()
