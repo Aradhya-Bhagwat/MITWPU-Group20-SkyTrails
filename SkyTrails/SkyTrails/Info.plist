@@ -6,8 +6,6 @@
 	<array>
 		<string>com.skytrails.sync.watchlist</string>
 	</array>
-	<key>BIRD_NEWS_ENABLE_API</key>
-	<true/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
