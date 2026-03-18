@@ -19,7 +19,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		case startDate
 		case endDate
 		case rarity
-		case oldestFirst
 	}
 	
 	private let manager = WatchlistManager.shared
@@ -233,14 +232,21 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
 		guard #unavailable(iOS 14.0) else { return }
 		let alert = UIAlertController(title: "Filter", message: nil, preferredStyle: .actionSheet)
-		alert.addAction(UIAlertAction(title: "Sort by", style: .default, handler: { [weak self, weak sender] _ in
-			guard let self, let sender else { return }
-			self.presentSortByMenu(from: sender)
-		}))
-		alert.addAction(UIAlertAction(title: "Recently Added", style: .default, handler: { [weak self] _ in
-			self?.currentSortOption = .newestFirst
-			self?.applyFilters()
-		}))
+		let options: [(String, SortOption)] = [
+			("Name (A to Z)", .nameAZ),
+			("Name (Z to A)", .nameZA),
+			("Month", .month),
+			("Start Date", .startDate),
+			("End date", .endDate),
+			("Rarity", .rarity),
+			("Recently Added", .newestFirst)
+		]
+		for (title, option) in options {
+			alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
+				self?.currentSortOption = option
+				self?.applyFilters()
+			}))
+		}
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 		configurePopover(for: alert, sender: sender)
 		present(alert, animated: true)
@@ -271,9 +277,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 
 	@available(iOS 14.0, *)
 	private func buildFilterMenu() -> UIMenu {
-		let sortMenu = UIMenu(
-			title: "Sort By",
-			options: .displayInline,
+		return UIMenu(
+			title: "Filter",
 			children: [
 				makeSortAction(title: "Name (A to Z)", option: .nameAZ),
 				makeSortAction(title: "Name (Z to A)", option: .nameZA),
@@ -281,28 +286,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 				makeSortAction(title: "Start Date", option: .startDate),
 				makeSortAction(title: "End date", option: .endDate),
 				makeSortAction(title: "Rarity", option: .rarity),
-				makeSortAction(title: "Recently Added", option: .newestFirst),
-				makeSortAction(title: "Oldest Added", option: .oldestFirst)
-			]
-		)
-
-		let quickRecent = UIAction(
-			title: "Recently Added",
-			image: UIImage(systemName: "clock"),
-			state: currentSortOption == .newestFirst ? .on : .off
-		) { [weak self] _ in
-			self?.currentSortOption = .newestFirst
-			self?.applyFilters()
-			if #available(iOS 14.0, *), let self = self {
-				self.configureFilterButtonMenusIfAvailable()
-			}
-		}
-
-		return UIMenu(
-			title: "Filter",
-			children: [
-				UIMenu(title: "Sort by", image: UIImage(systemName: "arrow.up.arrow.down"), children: sortMenu.children),
-				quickRecent
+				makeSortAction(title: "Recently Added", option: .newestFirst)
 			]
 		)
 	}
@@ -321,29 +305,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		}
 	}
 
-	private func presentSortByMenu(from sender: UIButton) {
-		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-		let options: [(String, SortOption)] = [
-			("Name (A to Z)", .nameAZ),
-			("Name (Z to A)", .nameZA),
-			("Month", .month),
-			("Start Date", .startDate),
-			("End date", .endDate),
-			("Rarity", .rarity),
-			("Recently Added", .newestFirst),
-			("Oldest Added", .oldestFirst)
-		]
-		for (title, option) in options {
-			alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
-				self?.currentSortOption = option
-				self?.applyFilters()
-			}))
-		}
-		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-		configurePopover(for: alert, sender: sender)
-		present(alert, animated: true)
-	}
-
 	private func sortEntries(_ entries: [WatchlistEntry]) -> [WatchlistEntry] {
 		switch currentSortOption {
 		case .nameAZ:
@@ -356,8 +317,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			}
 		case .newestFirst:
 			return entries.sorted { $0.addedDate > $1.addedDate }
-		case .oldestFirst:
-			return entries.sorted { $0.addedDate < $1.addedDate }
 		case .month:
 			return entries.sorted { monthValue(for: $0) < monthValue(for: $1) }
 		case .startDate:
