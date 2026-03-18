@@ -297,7 +297,11 @@ final class ImageService: ImageProviding {
         guard key.hasPrefix("id_canvas_"), key.hasSuffix("_default") else {
             return false
         }
-        return !allowedDefaultProfileKeys.contains(key)
+        // Keep finch guardrails, but allow default profile keys for other shapes.
+        if key.hasPrefix("id_canvas_finch_") {
+            return !allowedDefaultProfileKeys.contains(key)
+        }
+        return false
     }
 
     private func shouldTryBirdBucketFallback(for key: String) -> Bool {

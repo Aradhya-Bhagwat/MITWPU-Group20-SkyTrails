@@ -123,7 +123,11 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
                 "canvas_\(shapeID)_\(cleanCategory)_color",
             ]
             layer.image = selectedAssetNames.lazy.compactMap { UIImage(named: $0) }.first ?? defaultImage
-            loadBestImage(for: category, candidates: selectedAssetNames, fallback: layer.image ?? defaultImage, shapeId: shapeID)
+            var candidates = selectedAssetNames
+            if let defaultName {
+                candidates.append(defaultName)
+            }
+            loadBestImage(for: category, candidates: candidates, fallback: layer.image ?? defaultImage, shapeId: shapeID)
         } else {
             layer.image = defaultImage
             if let defaultName {
