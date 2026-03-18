@@ -76,7 +76,8 @@ class birdspredViewController: UIViewController {
     private func setupUI() {
         self.title = ""
         
-        let addIcon = UIImage(systemName: "custom.list.bullet.badge.plus")
+        let addIcon = UIImage(named: "SF_addToWatchlist")?.withRenderingMode(.alwaysTemplate)
+            ?? UIImage(systemName: "list.bullet.badge.plus")
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: addIcon, style: .plain, target: self, action: #selector(didTapAddToWatchlist))
         
         
@@ -125,7 +126,7 @@ class birdspredViewController: UIViewController {
     private func applySemanticAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         view.backgroundColor = .systemBackground
-        navigationItem.rightBarButtonItem?.tintColor = .systemBlue
+        navigationItem.rightBarButtonItem?.tintColor = .black
         pageControl.pageIndicatorTintColor = .systemGray4
         pageControl.currentPageIndicatorTintColor = .systemBlue
         pillLabel.textColor = .label
@@ -286,10 +287,30 @@ class birdspredViewController: UIViewController {
     }
 
     @objc private func didTapAddToWatchlist() {
-        let name = predictionInputs[currentSpeciesIndex].species.name
-        let alert = UIAlertController(title: "Watchlist", message: "\(name) added to your watchlist.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        guard predictionInputs.indices.contains(currentSpeciesIndex) else { return }
+        let species = predictionInputs[currentSpeciesIndex].species
+        let manager = WatchlistManager.shared
+
+        let bird: Bird
+        if let birdID = UUID(uuidString: species.id),
+           let matchedByID = try? manager.fetchBird(bird_id: birdID) {
+            bird = matchedByID
+        } else if let matchedByName = manager.findBird(byName: species.name) {
+            bird = matchedByName
+        } else {
+            bird = manager.createBird(name: species.name)
+        }
+
+        do {
+            try manager.addBirds([bird], to: WatchlistConstants.myWatchlistID, asObserved: false)
+            let alert = UIAlertController(title: "Watchlist", message: "\(species.name) added to your watchlist.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        } catch {
+            let alert = UIAlertController(title: "Error", message: "Failed to add bird to watchlist: \(error.localizedDescription)", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
     }
     
     private func showCardState() {

@@ -538,6 +538,7 @@ extension WatchlistHomeViewController {
 	private func layoutMyWatchlistSection(env: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection {
 		let containerWidth = env.container.effectiveContentSize.width
 		let isWide = containerWidth > 700
+		let myWatchlistHeight: CGFloat = env.traitCollection.userInterfaceIdiom == .pad ? 400 : LayoutConstants.myWatchlistHeight
 
 		if !isMyWatchlistEmptyState {
 			if isWide {
@@ -565,7 +566,7 @@ extension WatchlistHomeViewController {
 				let containerGroup = NSCollectionLayoutGroup.horizontal(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
-						heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+						heightDimension: .absolute(myWatchlistHeight)
 					),
 					subitems: [mainCardItem, actionGroup]
 				)
@@ -579,7 +580,7 @@ extension WatchlistHomeViewController {
 				let mainCardItem = NSCollectionLayoutItem(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
-						heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+						heightDimension: .absolute(myWatchlistHeight)
 					)
 				)
 				mainCardItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
@@ -587,7 +588,7 @@ extension WatchlistHomeViewController {
 				let mainCardGroup = NSCollectionLayoutGroup.horizontal(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
-						heightDimension: .absolute(LayoutConstants.myWatchlistHeight)
+						heightDimension: .absolute(myWatchlistHeight)
 					),
 					subitems: [mainCardItem]
 				)
@@ -610,7 +611,7 @@ extension WatchlistHomeViewController {
 				let outerGroup = NSCollectionLayoutGroup.vertical(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
-						heightDimension: .absolute(LayoutConstants.myWatchlistHeight + 8 + LayoutConstants.actionCellHeight)
+						heightDimension: .absolute(myWatchlistHeight + 8 + LayoutConstants.actionCellHeight)
 					),
 					subitems: [mainCardGroup, actionGroup]
 				)
