@@ -18,6 +18,7 @@ class GUIViewController: UIViewController {
     private var partLayers: [String: UIImageView] = [:]
     private var layerLoadTasks: [String: Task<Void, Never>] = [:]
     private var variationThumbnailTasks: [IndexPath: Task<Void, Never>] = [:]
+    private var variationThumbnailCache: [String: UIImage] = [:]
     
     private let layerOrder = [
         "Tail", "Leg", "Thigh", "Head", "Neck", "Back", "Underparts",
@@ -196,6 +197,10 @@ class GUIViewController: UIViewController {
         return UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
     }
 
+    private func variationThumbnailCacheKey(shapeID: String, categoryName: String, variantName: String) -> String {
+        "\(shapeID)|\(cleanForFilename(categoryName))|\(cleanForFilename(variantName))"
+    }
+
     private func loadVariationThumbnailRemotely(
         for cell: VariationCell,
         at indexPath: IndexPath,
@@ -210,6 +215,12 @@ class GUIViewController: UIViewController {
         let cleanVariant = cleanForFilename(variantName)
         let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
         let baseName = "id_shape_\(shapeID)_base"
+        let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
+
+        if let cached = variationThumbnailCache[cacheKey] {
+            cell.configure(image: cached, isSelected: isSelected)
+            return
+        }
 
         variationThumbnailTasks[indexPath] = Task { [weak self, weak cell] in
             guard let self else { return }
@@ -227,6 +238,7 @@ class GUIViewController: UIViewController {
             }()
 
             guard let thumb = composed else { return }
+            self.variationThumbnailCache[cacheKey] = thumb
             guard let cell else { return }
             guard let currentIndexPath = self.variationsCollectionView.indexPath(for: cell),
                   currentIndexPath == indexPath else { return }
@@ -271,7 +283,9 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             
             let isSelected = selectedVariations[categoryName] == variant.name
             let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
-            let thumb = variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
+            let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
+            let thumb = variationThumbnailCache[cacheKey]
+                ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
             cell.configure(image: thumb, isSelected: isSelected)
             loadVariationThumbnailRemotely(
                 for: cell,
@@ -291,11 +305,17 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         } else {
             let variant = getVariantsForCurrentCategory()[indexPath.row]
             let currentMark = categories[currentCategoryIndex]
+            let previousVariantName = selectedVariations[currentMark.area]
             
             selectedVariations[currentMark.area] = variant.name
             viewModel.toggleVariant(variant, for: currentMark)
-            cancelVariationThumbnailTasks()
-            variationsCollectionView.reloadData()
+            var indexPathsToReload: [IndexPath] = [indexPath]
+            if let previousVariantName,
+               let previousIndex = getVariantsForCurrentCategory().firstIndex(where: { $0.name == previousVariantName }),
+               previousIndex != indexPath.row {
+                indexPathsToReload.append(IndexPath(item: previousIndex, section: 0))
+            }
+            variationsCollectionView.reloadItems(at: indexPathsToReload)
             updateCanvas(category: currentMark.area, variant: variant.name)
             updateNextButtonState()
         }
