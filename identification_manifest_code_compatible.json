@@ -1,0 +1,1351 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-03-02T00:00:00Z",
+  "items": {
+    "AppIcon.appiconset": {
+      "path": "AppIcon.appiconset.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Autumn": {
+      "path": "Autumn.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Brand_Launch": {
+      "path": "Brand_Launch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Brand_Logo": {
+      "path": "Brand_Logo.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Grosbeak": {
+      "path": "Grosbeak.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Icon_Apple": {
+      "path": "Icon_Apple.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Icon_Facebook": {
+      "path": "Icon_Facebook.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Icon_Google": {
+      "path": "Icon_Google.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Rainy ": {
+      "path": "Rainy .png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Spring": {
+      "path": "Spring.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Summer": {
+      "path": "Summer.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Tanmay Dani": {
+      "path": "Tanmay Dani.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "Winter": {
+      "path": "Winter.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "amur_falcon": {
+      "path": "amur_falcon.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "arctic_tern": {
+      "path": "arctic_tern.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "asian_fairy_bluebird": {
+      "path": "asian_fairy_bluebird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "asian_koel": {
+      "path": "asian_koel.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "auth_apple_icon": {
+      "path": "auth_apple_icon.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "auth_google_icon": {
+      "path": "auth_google_icon.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "bar_headed_goose": {
+      "path": "bar_headed_goose.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "baya_weaver": {
+      "path": "baya_weaver.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "black_drongo": {
+      "path": "black_drongo.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "black_headed_greenfinch": {
+      "path": "black_headed_greenfinch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "black_kite": {
+      "path": "black_kite.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "black_winged_stilt": {
+      "path": "black_winged_stilt.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "blue_grosbeak": {
+      "path": "blue_grosbeak.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "blue_tailed_bee_eater": {
+      "path": "blue_tailed_bee_eater.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "blue_throated_barbet": {
+      "path": "blue_throated_barbet.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "brown_headed_barbet": {
+      "path": "brown_headed_barbet.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "brown_headed_barbet_alt": {
+      "path": "brown_headed_barbet_alt.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_beak_color": {
+      "path": "canvas_finch_beak_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_crown_color": {
+      "path": "canvas_finch_crown_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_eye_color": {
+      "path": "canvas_finch_eye_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_facemask_color": {
+      "path": "canvas_finch_facemask_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_head_color": {
+      "path": "canvas_finch_head_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_neck_color": {
+      "path": "canvas_finch_neck_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_tail_color": {
+      "path": "canvas_finch_tail_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_throat_color": {
+      "path": "canvas_finch_throat_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_underparts_color": {
+      "path": "canvas_finch_underparts_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_leg_color": {
+      "path": "canvas_finch_leg_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_wings_color": {
+      "path": "canvas_finch_wings_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "canvas_finch_back_color": {
+      "path": "canvas_finch_back_color.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "common_kingfisher": {
+      "path": "common_kingfisher.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "common_rosefinch": {
+      "path": "common_rosefinch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "coppersmith_barbet": {
+      "path": "coppersmith_barbet.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "crow": {
+      "path": "crow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "defaultProfile": {
+      "path": "defaultProfile.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "demoiselle_crane": {
+      "path": "demoiselle_crane.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "eurasian_tree_sparrow": {
+      "path": "eurasian_tree_sparrow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "eurasian_wigeon": {
+      "path": "eurasian_wigeon.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "european_goldfinch": {
+      "path": "european_goldfinch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "feather": {
+      "path": "feather.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "flamingo": {
+      "path": "flamingo.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "great_hornbill": {
+      "path": "great_hornbill.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "great_indian_bustard": {
+      "path": "great_indian_bustard.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "greater_coucal": {
+      "path": "greater_coucal.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "greater_flameback": {
+      "path": "greater_flameback.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "himalayan_monal": {
+      "path": "himalayan_monal.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "home_icn_location_date_pin": {
+      "path": "home_icn_location_date_pin.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "home_news_climate_change": {
+      "path": "home_news_climate_change.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "home_news_rare_migratory": {
+      "path": "home_news_rare_migratory.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "honey_buzzard": {
+      "path": "honey_buzzard.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "hoopoe": {
+      "path": "hoopoe.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "house_sparrow": {
+      "path": "house_sparrow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird0": {
+      "path": "id_bird0.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird1": {
+      "path": "id_bird1.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird2": {
+      "path": "id_bird2.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird3": {
+      "path": "id_bird3.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird4": {
+      "path": "id_bird4.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_back": {
+      "path": "id_bird_back.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_beak": {
+      "path": "id_bird_beak.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_chest": {
+      "path": "id_bird_chest.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_crown": {
+      "path": "id_bird_crown.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_eye": {
+      "path": "id_bird_eye.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_facemask": {
+      "path": "id_bird_facemask.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_leg": {
+      "path": "id_bird_leg.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_nape": {
+      "path": "id_bird_nape.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_neck": {
+      "path": "id_bird_neck.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_tail": {
+      "path": "id_bird_tail.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_thigh": {
+      "path": "id_bird_thigh.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_throat": {
+      "path": "id_bird_throat.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_underparts": {
+      "path": "id_bird_underparts.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_bird_wings": {
+      "path": "id_bird_wings.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_back_iridescent": {
+      "path": "id_canvas_finch_back_iridescent.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_back_mottled": {
+      "path": "id_canvas_finch_back_mottled.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_back_solid": {
+      "path": "id_canvas_finch_back_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_back_streaked": {
+      "path": "id_canvas_finch_back_streaked.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_casque": {
+      "path": "id_canvas_finch_beak_casque.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_curved": {
+      "path": "id_canvas_finch_beak_curved.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_default": {
+      "path": "id_canvas_finch_beak_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_heavy": {
+      "path": "id_canvas_finch_beak_heavy.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_hooked": {
+      "path": "id_canvas_finch_beak_hooked.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_long": {
+      "path": "id_canvas_finch_beak_long.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_pale": {
+      "path": "id_canvas_finch_beak_pale.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_short": {
+      "path": "id_canvas_finch_beak_short.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_beak_spoon_shaped": {
+      "path": "id_canvas_finch_beak_spoon_shaped.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_crown_cap": {
+      "path": "id_canvas_finch_crown_cap.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_crown_crest": {
+      "path": "id_canvas_finch_crown_crest.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_crown_solid": {
+      "path": "id_canvas_finch_crown_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_crown_striped": {
+      "path": "id_canvas_finch_crown_striped.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_eye_mask": {
+      "path": "id_canvas_finch_eye_mask.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_eye_ring": {
+      "path": "id_canvas_finch_eye_ring.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_eye_solid": {
+      "path": "id_canvas_finch_eye_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_facemask_earpatched": {
+      "path": "id_canvas_finch_facemask_earpatched.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_facemask_eyeline": {
+      "path": "id_canvas_finch_facemask_eyeline.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_facemask_lore_pointed": {
+      "path": "id_canvas_finch_facemask_lore_pointed.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_facemask_masked": {
+      "path": "id_canvas_finch_facemask_masked.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_facemask_moustached": {
+      "path": "id_canvas_finch_facemask_moustached.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_head_default": {
+      "path": "id_canvas_finch_head_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_leg_default": {
+      "path": "id_canvas_finch_leg_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_leg_long": {
+      "path": "id_canvas_finch_leg_long.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_leg_pink": {
+      "path": "id_canvas_finch_leg_pink.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_leg_short": {
+      "path": "id_canvas_finch_leg_short.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_leg_yellow": {
+      "path": "id_canvas_finch_leg_yellow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_nape_patch": {
+      "path": "id_canvas_finch_nape_patch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_nape_solid": {
+      "path": "id_canvas_finch_nape_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_neck_bibbed": {
+      "path": "id_canvas_finch_neck_bibbed.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_neck_naped": {
+      "path": "id_canvas_finch_neck_naped.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_neck_ring": {
+      "path": "id_canvas_finch_neck_ring.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_neck_ruffed": {
+      "path": "id_canvas_finch_neck_ruffed.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_default": {
+      "path": "id_canvas_finch_tail_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_forked": {
+      "path": "id_canvas_finch_tail_forked.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_long": {
+      "path": "id_canvas_finch_tail_long.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_notched": {
+      "path": "id_canvas_finch_tail_notched.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_rufous": {
+      "path": "id_canvas_finch_tail_rufous.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_short": {
+      "path": "id_canvas_finch_tail_short.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_square": {
+      "path": "id_canvas_finch_tail_square.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_tail_train": {
+      "path": "id_canvas_finch_tail_train.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_throat_patch": {
+      "path": "id_canvas_finch_throat_patch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_throat_solid": {
+      "path": "id_canvas_finch_throat_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_throat_white": {
+      "path": "id_canvas_finch_throat_white.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_banded": {
+      "path": "id_canvas_finch_underparts_banded.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_barred": {
+      "path": "id_canvas_finch_underparts_barred.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_bibbed": {
+      "path": "id_canvas_finch_underparts_bibbed.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_mottled": {
+      "path": "id_canvas_finch_underparts_mottled.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_mottled_1": {
+      "path": "id_canvas_finch_underparts_mottled_1.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_pale": {
+      "path": "id_canvas_finch_underparts_pale.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_scaled": {
+      "path": "id_canvas_finch_underparts_scaled.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_solid": {
+      "path": "id_canvas_finch_underparts_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_spotted": {
+      "path": "id_canvas_finch_underparts_spotted.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_streaked": {
+      "path": "id_canvas_finch_underparts_streaked.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_underparts_white": {
+      "path": "id_canvas_finch_underparts_white.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_wings_bar": {
+      "path": "id_canvas_finch_wings_bar.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_wings_patch": {
+      "path": "id_canvas_finch_wings_patch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_wings_solid": {
+      "path": "id_canvas_finch_wings_solid.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_finch_wings_striped": {
+      "path": "id_canvas_finch_wings_striped.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_icn_field_marks": {
+      "path": "id_icn_field_marks.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_icn_shape_bird_question": {
+      "path": "id_icn_shape_bird_question.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_icn_size": {
+      "path": "id_icn_size.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_accipitridae": {
+      "path": "id_shape_accipitridae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_alcedinidae": {
+      "path": "id_shape_alcedinidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_anatidae": {
+      "path": "id_shape_anatidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_apodidae": {
+      "path": "id_shape_apodidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_ardeidae": {
+      "path": "id_shape_ardeidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_auks": {
+      "path": "id_shape_auks.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_charadriidae": {
+      "path": "id_shape_charadriidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_chickadees": {
+      "path": "id_shape_chickadees.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_columbidae": {
+      "path": "id_shape_columbidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_corvidae": {
+      "path": "id_shape_corvidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_doves": {
+      "path": "id_shape_doves.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_ducks": {
+      "path": "id_shape_ducks.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_finch": {
+      "path": "id_shape_finch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_finch_base": {
+      "path": "id_shape_finch_base.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_finch_base_core": {
+      "path": "id_shape_finch_base_core.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_finch_base_no_leg": {
+      "path": "id_shape_finch_base_no_leg.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_finch_base_no_leg_tail": {
+      "path": "id_shape_finch_base_no_leg_tail.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_finch_base_no_tail": {
+      "path": "id_shape_finch_base_no_tail.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_game_bird": {
+      "path": "id_shape_game_bird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_hawks_and_falcons": {
+      "path": "id_shape_hawks_and_falcons.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_heron": {
+      "path": "id_shape_heron.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_hummingbird": {
+      "path": "id_shape_hummingbird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_muscicapidae": {
+      "path": "id_shape_muscicapidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_nectariniidae": {
+      "path": "id_shape_nectariniidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_owls": {
+      "path": "id_shape_owls.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_passeridae": {
+      "path": "id_shape_passeridae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_phasianidae": {
+      "path": "id_shape_phasianidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_picidae": {
+      "path": "id_shape_picidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_psittaculidae": {
+      "path": "id_shape_psittaculidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_pycnonotidae": {
+      "path": "id_shape_pycnonotidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_shorebird": {
+      "path": "id_shape_shorebird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_strigidae": {
+      "path": "id_shape_strigidae.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_wrens": {
+      "path": "id_shape_wrens.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_0_large_house_sparrow": {
+      "path": "id_size_0_large_house_sparrow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_0_large_tailorbird": {
+      "path": "id_size_0_large_tailorbird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_0_small_flowerpecker": {
+      "path": "id_size_0_small_flowerpecker.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_1_large_bulbul": {
+      "path": "id_size_1_large_bulbul.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_1_small_munia": {
+      "path": "id_size_1_small_munia.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_2_large_peahen": {
+      "path": "id_size_2_large_peahen.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_2_small_myna": {
+      "path": "id_size_2_small_myna.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_3_large_pond_heron": {
+      "path": "id_size_3_large_pond_heron.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_3_small_house_crow": {
+      "path": "id_size_3_small_house_crow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_4_large_greater_flamingo": {
+      "path": "id_size_4_large_greater_flamingo.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_4_large_sarus_crane": {
+      "path": "id_size_4_large_sarus_crane.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_size_4_small_cattle_egret": {
+      "path": "id_size_4_small_cattle_egret.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_grey_hornbill": {
+      "path": "indian_grey_hornbill.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_peafowl": {
+      "path": "indian_peafowl.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_pitta": {
+      "path": "indian_pitta.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_robin": {
+      "path": "indian_robin.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_roller": {
+      "path": "indian_roller.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_scops_owl": {
+      "path": "indian_scops_owl.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indian_silverbill": {
+      "path": "indian_silverbill.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "indigo_bunting": {
+      "path": "indigo_bunting.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "kingfisher": {
+      "path": "kingfisher.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "laughing_dove": {
+      "path": "laughing_dove.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "lazuli_bunting": {
+      "path": "lazuli_bunting.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "little_bittern": {
+      "path": "little_bittern.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "malabar_trogon": {
+      "path": "malabar_trogon.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "mountain_bluebird": {
+      "path": "mountain_bluebird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "northern_pintail": {
+      "path": "northern_pintail.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "oriental_magpie_robin": {
+      "path": "oriental_magpie_robin.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "painted_stork": {
+      "path": "painted_stork.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "paradise_flycatcher": {
+      "path": "paradise_flycatcher.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "pied_bushcat": {
+      "path": "pied_bushcat.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "pied_bushchat": {
+      "path": "pied_bushchat.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "pied_cuckoo": {
+      "path": "pied_cuckoo.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "pink_browed_rosefinch": {
+      "path": "pink_browed_rosefinch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "placeholder_image": {
+      "path": "placeholder_image.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "purple_rumped_sunbird": {
+      "path": "purple_rumped_sunbird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "purple_sunbird": {
+      "path": "purple_sunbird.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "red_avadavat": {
+      "path": "red_avadavat.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "red_headed_bunting": {
+      "path": "red_headed_bunting.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "red_vented_bulbul": {
+      "path": "red_vented_bulbul.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "red_whiskered_bulbul": {
+      "path": "red_whiskered_bulbul.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "rose_ringed_parakeet": {
+      "path": "rose_ringed_parakeet.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "rosy_starling": {
+      "path": "rosy_starling.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "russet_sparrow": {
+      "path": "russet_sparrow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "sarus_crane": {
+      "path": "sarus_crane.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "scaly_breasted_munia": {
+      "path": "scaly_breasted_munia.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "shikra": {
+      "path": "shikra.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "siberian_crane": {
+      "path": "siberian_crane.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spectacled_finch": {
+      "path": "spectacled_finch.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spoonbill": {
+      "path": "spoonbill.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_ahmednagar": {
+      "path": "spot_ahmednagar.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_bhandardara": {
+      "path": "spot_bhandardara.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_bharatpur": {
+      "path": "spot_bharatpur.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_chilika": {
+      "path": "spot_chilika.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_kashmir": {
+      "path": "spot_kashmir.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_kaziranga": {
+      "path": "spot_kaziranga.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_khadakwasla": {
+      "path": "spot_khadakwasla.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_kumarakom": {
+      "path": "spot_kumarakom.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_nalsarovar": {
+      "path": "spot_nalsarovar.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_pashan_lake": {
+      "path": "spot_pashan_lake.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_ranganathittu": {
+      "path": "spot_ranganathittu.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_salimali": {
+      "path": "spot_salimali.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_saras_baug_gardens": {
+      "path": "spot_saras_baug_gardens.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_sundarbans": {
+      "path": "spot_sundarbans.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spot_thattekkad": {
+      "path": "spot_thattekkad.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "spotted_dove": {
+      "path": "spotted_dove.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "striated_heron": {
+      "path": "striated_heron.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "upcomingBirds": {
+      "path": "upcomingBirds.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "watchlist_empty_bird ": {
+      "path": "watchlist_empty_bird .png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "watchlist_user_profile": {
+      "path": "watchlist_user_profile.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "white_rumped_munia": {
+      "path": "white_rumped_munia.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "white_throated_kingfisher": {
+      "path": "white_throated_kingfisher.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "white_wagtail": {
+      "path": "white_wagtail.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "wire_tailed_swallow": {
+      "path": "wire_tailed_swallow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "yellow_throated_sparrow": {
+      "path": "yellow_throated_sparrow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_beak_heavy": {
+      "path": "id_canvas_accipitridae_beak_heavy.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_beak_hooked": {
+      "path": "id_canvas_accipitridae_beak_hooked.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_crown_pale": {
+      "path": "id_canvas_accipitridae_crown_pale.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_eye_dark_iris": {
+      "path": "id_canvas_accipitridae_eye_dark_iris.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_eye_pale_iris": {
+      "path": "id_canvas_accipitridae_eye_pale_iris.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_leg_yellow": {
+      "path": "id_canvas_accipitridae_leg_yellow.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_beak_default": {
+      "path": "id_canvas_accipitridae_beak_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_head_default": {
+      "path": "id_canvas_accipitridae_head_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_leg_default": {
+      "path": "id_canvas_accipitridae_leg_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_canvas_accipitridae_tail_default": {
+      "path": "id_canvas_accipitridae_tail_default.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_accipitridae_base_core": {
+      "path": "id_shape_accipitridae_base_core.png",
+      "checksum": "",
+      "contentType": "image/png"
+    },
+    "id_shape_accipitridae_base": {
+      "path": "id_shape_accipitridae_base.png",
+      "checksum": "",
+      "contentType": "image/png"
+    }
+  }
+}

@@ -17,11 +17,16 @@ class GUIViewController: UIViewController {
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
     private var layerLoadTasks: [String: Task<Void, Never>] = [:]
+    private var variationThumbnailTasks: [IndexPath: Task<Void, Never>] = [:]
     
     private let layerOrder = [
         "Tail", "Leg", "Thigh", "Head", "Neck", "Back", "Underparts",
         "Nape", "Throat", "Crown", "Facemask", "Beak", "Eye", "Wings"
     ]
+
+    deinit {
+        cancelVariationThumbnailTasks()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -139,7 +144,7 @@ class GUIViewController: UIViewController {
         let mark = categories[index]
         
         categoryLabel.text = mark.area
-        
+        cancelVariationThumbnailTasks()
         variationsCollectionView.reloadData()
         categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
     }
@@ -190,6 +195,50 @@ class GUIViewController: UIViewController {
         }
         return UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
     }
+
+    private func loadVariationThumbnailRemotely(
+        for cell: VariationCell,
+        at indexPath: IndexPath,
+        shapeID: String,
+        categoryName: String,
+        variantName: String,
+        isSelected: Bool
+    ) {
+        variationThumbnailTasks[indexPath]?.cancel()
+
+        let cleanCategory = cleanForFilename(categoryName)
+        let cleanVariant = cleanForFilename(variantName)
+        let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
+        let baseName = "id_shape_\(shapeID)_base"
+
+        variationThumbnailTasks[indexPath] = Task { [weak self, weak cell] in
+            guard let self else { return }
+            let remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
+            let remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
+            guard !Task.isCancelled else { return }
+
+            let composed: UIImage? = {
+                guard let base = remoteBase, let canvas = remoteCanvas else { return nil }
+                let renderer = UIGraphicsImageRenderer(size: base.size)
+                return renderer.image { _ in
+                    base.draw(in: CGRect(origin: .zero, size: base.size))
+                    canvas.draw(in: CGRect(origin: .zero, size: base.size))
+                }
+            }()
+
+            guard let thumb = composed else { return }
+            guard let cell else { return }
+            guard let currentIndexPath = self.variationsCollectionView.indexPath(for: cell),
+                  currentIndexPath == indexPath else { return }
+
+            cell.configure(image: thumb, isSelected: isSelected)
+        }
+    }
+
+    private func cancelVariationThumbnailTasks() {
+        variationThumbnailTasks.values.forEach { $0.cancel() }
+        variationThumbnailTasks.removeAll()
+    }
     
     func getVariantsForCurrentCategory() -> [FieldMarkVariant] {
         guard currentCategoryIndex < categories.count else { return [] }
@@ -224,6 +273,14 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
             let thumb = variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
             cell.configure(image: thumb, isSelected: isSelected)
+            loadVariationThumbnailRemotely(
+                for: cell,
+                at: indexPath,
+                shapeID: shapeID,
+                categoryName: categoryName,
+                variantName: variant.name,
+                isSelected: isSelected
+            )
             return cell
         }
     }
@@ -237,7 +294,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             
             selectedVariations[currentMark.area] = variant.name
             viewModel.toggleVariant(variant, for: currentMark)
-            
+            cancelVariationThumbnailTasks()
             variationsCollectionView.reloadData()
             updateCanvas(category: currentMark.area, variant: variant.name)
             updateNextButtonState()
