@@ -212,6 +212,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         guard let name = nameTextField.text, !name.isEmpty else {
             return
         }
+        var callbackBird: Bird?
         if let existingEntry = entry {
             do {
                 try manager.updateEntry(
@@ -226,7 +227,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                     try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
                 }
                 if let bird = existingEntry.bird {
-                    onSave?(bird)
+                    callbackBird = bird
                 }
             } catch {
             }
@@ -279,7 +280,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                         }
                     }
                 }
-                onSave?(birdToUse)
+                callbackBird = birdToUse
             } catch WatchlistError.noMatchingWatchlists {
                 let alert = UIAlertController(
                     title: "No Matching Watchlists",
@@ -292,7 +293,11 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             } catch {
             }
         }
-        navigationController?.popViewController(animated: true)
+        if let callbackBird, let onSave {
+            onSave(callbackBird)
+        } else {
+            navigationController?.popViewController(animated: true)
+        }
     }
     
     func configure(with entry: WatchlistEntry) {
