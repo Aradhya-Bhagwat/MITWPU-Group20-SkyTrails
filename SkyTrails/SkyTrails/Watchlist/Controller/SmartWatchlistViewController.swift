@@ -11,6 +11,16 @@ enum WatchlistPresentationMode {
 
 @MainActor
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
+	private enum SortOption {
+		case nameAZ
+		case nameZA
+		case newestFirst
+		case month
+		case startDate
+		case endDate
+		case rarity
+		case oldestFirst
+	}
 	
 	private let manager = WatchlistManager.shared
 	@IBOutlet weak var tableView: UITableView!
@@ -27,6 +37,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	public var toObserveEntries: [WatchlistEntry] = []
 	private var currentList: [WatchlistEntry] = []
     private var currentSegmentIndex: Int = 0
+	private var currentSortOption: SortOption = .nameAZ
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -145,6 +156,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		segmentedControl.selectedSegmentIndex = 0
 		segmentedControl.setTitle("Sightings", forSegmentAt: 0)
 		segmentedControl.setTitle("To Discover", forSegmentAt: 1)
+		if #available(iOS 14.0, *) {
+			configureFilterButtonMenusIfAvailable()
+		}
 	}
 	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
 		currentSegmentIndex = sender.selectedSegmentIndex
@@ -166,13 +180,14 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			}
 			
 			allWatchlists = filteredResults.map { $0.0 }
-			filteredSections = filteredResults.map { $0.1 }
+			filteredSections = filteredResults.map { sortEntries($0.1) }
 		} else {
 			let sourceList = isObserved ? observedEntries : toObserveEntries
 			currentList = sourceList.filter { entry in
 				guard let bird = entry.bird else { return false }
 				return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
 			}
+			currentList = sortEntries(currentList)
 		}
 		
         tableView.reloadData()
@@ -216,6 +231,170 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
+		guard #unavailable(iOS 14.0) else { return }
+		let alert = UIAlertController(title: "Filter", message: nil, preferredStyle: .actionSheet)
+		alert.addAction(UIAlertAction(title: "Sort by", style: .default, handler: { [weak self, weak sender] _ in
+			guard let self, let sender else { return }
+			self.presentSortByMenu(from: sender)
+		}))
+		alert.addAction(UIAlertAction(title: "Recently Added", style: .default, handler: { [weak self] _ in
+			self?.currentSortOption = .newestFirst
+			self?.applyFilters()
+		}))
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+		configurePopover(for: alert, sender: sender)
+		present(alert, animated: true)
+	}
+
+	@available(iOS 14.0, *)
+	private func configureFilterButtonMenusIfAvailable() {
+		let buttons = allButtons(in: view).filter { button in
+			let actions = button.actions(forTarget: self, forControlEvent: .touchUpInside) ?? []
+			return actions.contains("filterButtonTapped:")
+		}
+		for button in buttons {
+			button.menu = buildFilterMenu()
+			button.showsMenuAsPrimaryAction = true
+		}
+	}
+
+	private func allButtons(in root: UIView) -> [UIButton] {
+		var result: [UIButton] = []
+		if let button = root as? UIButton {
+			result.append(button)
+		}
+		for subview in root.subviews {
+			result.append(contentsOf: allButtons(in: subview))
+		}
+		return result
+	}
+
+	@available(iOS 14.0, *)
+	private func buildFilterMenu() -> UIMenu {
+		let sortMenu = UIMenu(
+			title: "Sort By",
+			options: .displayInline,
+			children: [
+				makeSortAction(title: "Name (A to Z)", option: .nameAZ),
+				makeSortAction(title: "Name (Z to A)", option: .nameZA),
+				makeSortAction(title: "Month", option: .month),
+				makeSortAction(title: "Start Date", option: .startDate),
+				makeSortAction(title: "End date", option: .endDate),
+				makeSortAction(title: "Rarity", option: .rarity),
+				makeSortAction(title: "Recently Added", option: .newestFirst),
+				makeSortAction(title: "Oldest Added", option: .oldestFirst)
+			]
+		)
+
+		let quickRecent = UIAction(
+			title: "Recently Added",
+			image: UIImage(systemName: "clock"),
+			state: currentSortOption == .newestFirst ? .on : .off
+		) { [weak self] _ in
+			self?.currentSortOption = .newestFirst
+			self?.applyFilters()
+			if #available(iOS 14.0, *), let self = self {
+				self.configureFilterButtonMenusIfAvailable()
+			}
+		}
+
+		return UIMenu(
+			title: "Filter",
+			children: [
+				UIMenu(title: "Sort by", image: UIImage(systemName: "arrow.up.arrow.down"), children: sortMenu.children),
+				quickRecent
+			]
+		)
+	}
+
+	@available(iOS 14.0, *)
+	private func makeSortAction(title: String, option: SortOption) -> UIAction {
+		UIAction(
+			title: title,
+			state: currentSortOption == option ? .on : .off
+		) { [weak self] _ in
+			self?.currentSortOption = option
+			self?.applyFilters()
+			if #available(iOS 14.0, *), let self = self {
+				self.configureFilterButtonMenusIfAvailable()
+			}
+		}
+	}
+
+	private func presentSortByMenu(from sender: UIButton) {
+		let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
+		let options: [(String, SortOption)] = [
+			("Name (A to Z)", .nameAZ),
+			("Name (Z to A)", .nameZA),
+			("Month", .month),
+			("Start Date", .startDate),
+			("End date", .endDate),
+			("Rarity", .rarity),
+			("Recently Added", .newestFirst),
+			("Oldest Added", .oldestFirst)
+		]
+		for (title, option) in options {
+			alert.addAction(UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
+				self?.currentSortOption = option
+				self?.applyFilters()
+			}))
+		}
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+		configurePopover(for: alert, sender: sender)
+		present(alert, animated: true)
+	}
+
+	private func sortEntries(_ entries: [WatchlistEntry]) -> [WatchlistEntry] {
+		switch currentSortOption {
+		case .nameAZ:
+			return entries.sorted {
+				($0.bird?.name ?? "").localizedCaseInsensitiveCompare($1.bird?.name ?? "") == .orderedAscending
+			}
+		case .nameZA:
+			return entries.sorted {
+				($0.bird?.name ?? "").localizedCaseInsensitiveCompare($1.bird?.name ?? "") == .orderedDescending
+			}
+		case .newestFirst:
+			return entries.sorted { $0.addedDate > $1.addedDate }
+		case .oldestFirst:
+			return entries.sorted { $0.addedDate < $1.addedDate }
+		case .month:
+			return entries.sorted { monthValue(for: $0) < monthValue(for: $1) }
+		case .startDate:
+			return entries.sorted {
+				($0.toObserveStartDate ?? $0.observationDate ?? Date.distantFuture) <
+				($1.toObserveStartDate ?? $1.observationDate ?? Date.distantFuture)
+			}
+		case .endDate:
+			return entries.sorted {
+				($0.toObserveEndDate ?? $0.observationDate ?? Date.distantFuture) <
+				($1.toObserveEndDate ?? $1.observationDate ?? Date.distantFuture)
+			}
+		case .rarity:
+			return entries.sorted { rarityRank(for: $0) < rarityRank(for: $1) }
+		}
+	}
+
+	private func monthValue(for entry: WatchlistEntry) -> Int {
+		if let observationDate = entry.observationDate {
+			return Calendar.current.component(.month, from: observationDate)
+		}
+		if let startDate = entry.toObserveStartDate {
+			return Calendar.current.component(.month, from: startDate)
+		}
+		return entry.bird?.validMonths?.min() ?? 13
+	}
+
+	private func rarityRank(for entry: WatchlistEntry) -> Int {
+		let rarity = entry.bird?.conservation_status?.lowercased() ?? ""
+		let order: [String: Int] = [
+			"critically endangered": 0,
+			"endangered": 1,
+			"vulnerable": 2,
+			"near threatened": 3,
+			"least concern": 4
+		]
+		return order[rarity] ?? 5
 	}
 	
 	private func configurePopover(for alert: UIAlertController, sender: Any) {

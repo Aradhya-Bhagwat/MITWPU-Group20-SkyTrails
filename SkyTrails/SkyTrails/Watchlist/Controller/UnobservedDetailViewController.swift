@@ -268,8 +268,11 @@ class UnobservedDetailViewController: UIViewController {
                         return
                     } catch {
                     }
-        			onSave?(bird)
-        			navigationController?.popViewController(animated: true)
+                    if let onSave {
+                        onSave(bird)
+                    } else {
+                        navigationController?.popViewController(animated: true)
+                    }
         
         		} else {
             navigationController?.popViewController(animated: true)
