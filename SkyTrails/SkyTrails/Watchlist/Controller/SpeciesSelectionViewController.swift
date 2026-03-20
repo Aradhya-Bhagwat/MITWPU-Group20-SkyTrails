@@ -80,7 +80,7 @@ extension SpeciesSelectionViewController {
     }
     
     private func finalizeLoop() {
-        navigationController?.popViewController(animated: true)
+        navigationController?.popToRootViewController(animated: true)
     }
     
     private func showBirdDetail(bird: Bird) {

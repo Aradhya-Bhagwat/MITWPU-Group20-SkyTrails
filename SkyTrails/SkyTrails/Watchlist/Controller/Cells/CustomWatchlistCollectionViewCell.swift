@@ -69,7 +69,12 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     func configure(with dto: WatchlistSummaryDTO) {
         updateCardAppearance()
         titleLabel.text = dto.title
-        locationLabel.addIcon(text: dto.subtitle, iconName: "location.fill")
+        if !dto.subtitle.isEmpty {
+            locationLabel.addIcon(text: dto.subtitle, iconName: "location.fill")
+            locationLabel.isHidden = false
+        } else {
+            locationLabel.isHidden = true
+        }
         if !dto.dateText.isEmpty {
             dateLabel.addIcon(text: dto.dateText, iconName: "calendar")
             dateLabel.isHidden = false
