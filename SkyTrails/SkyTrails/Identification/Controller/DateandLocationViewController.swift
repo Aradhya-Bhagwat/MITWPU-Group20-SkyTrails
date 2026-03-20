@@ -110,18 +110,17 @@ class DateandLocationViewController: UIViewController {
     @IBAction func nextTapped(_ sender: Any) {
         guard navigationItem.rightBarButtonItem?.isEnabled == true else { return }
         viewModel.selectedDate = selectedDate
-        viewModel.selectedLocation = searchQuery.isEmpty ? nil : searchQuery
+        viewModel.updateSelectedLocation(searchQuery.isEmpty ? nil : searchQuery)
         if searchQuery.isEmpty {
             viewModel.selectedLocationId = nil
         } else {
             viewModel.registerLocationName(searchQuery, for: viewModel.selectedLocationId)
         }
-        viewModel.runFilter()
         delegate?.didFinishStep()
     }
     
     private func updateLocationSelection(_ name: String) {
-        viewModel.selectedLocation = name
+        viewModel.updateSelectedLocation(name)
         viewModel.registerLocationName(name, for: viewModel.selectedLocationId)
         searchQuery = name
         searchResults = []

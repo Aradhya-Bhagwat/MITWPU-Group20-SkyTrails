@@ -187,6 +187,11 @@ class GUIViewController: UIViewController {
         let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
         let baseName = "id_shape_\(shapeID)_base"
         
+        if let cachedBase = IdentificationImageService.shared.cachedImage(for: baseName, shapeId: shapeID),
+           let cachedCanvas = IdentificationImageService.shared.cachedImage(for: canvasName, shapeId: shapeID) {
+            return composeThumbnail(base: cachedBase, canvas: cachedCanvas)
+        }
+        
         if let canvas = UIImage(named: canvasName), let base = UIImage(named: baseName) {
             let renderer = UIGraphicsImageRenderer(size: base.size)
             return renderer.image { _ in
@@ -195,6 +200,14 @@ class GUIViewController: UIViewController {
             }
         }
         return UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
+    }
+    
+    private func composeThumbnail(base: UIImage, canvas: UIImage) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: base.size)
+        return renderer.image { _ in
+            base.draw(in: CGRect(origin: .zero, size: base.size))
+            canvas.draw(in: CGRect(origin: .zero, size: base.size))
+        }
     }
 
     private func variationThumbnailCacheKey(shapeID: String, categoryName: String, variantName: String) -> String {

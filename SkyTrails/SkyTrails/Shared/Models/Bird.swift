@@ -43,7 +43,6 @@ final class Bird {
    
     var migration_strategy: String?
    
-    var validLocations: [String]?
     var validMonths: [Int]?
     var likelySpot: String?
     var shape_id: String?
@@ -72,7 +71,6 @@ final class Bird {
             descriptionText: String? = nil,
             conservation_status: String? = nil,
             migration_strategy: String? = nil,
-            validLocations: [String]? = nil,
             validMonths: [Int]? = nil,
             likelySpot: String? = nil,
             shape_id: String? = nil,
@@ -88,7 +86,6 @@ final class Bird {
             self.descriptionText = descriptionText
             self.conservation_status = conservation_status
             self.migration_strategy = migration_strategy
-            self.validLocations = validLocations
             self.validMonths = validMonths
             self.likelySpot = likelySpot
             self.shape_id = shape_id

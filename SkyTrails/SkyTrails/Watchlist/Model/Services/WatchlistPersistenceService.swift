@@ -640,8 +640,7 @@ final class WatchlistPersistenceService {
         let bird = Bird(bird_id: UUID(),
             commonName: commonName,
             scientificName: scientificName,
-            staticImageName: staticImageName,
-            validLocations: []
+            staticImageName: staticImageName
         )
         
         context.insert(bird)

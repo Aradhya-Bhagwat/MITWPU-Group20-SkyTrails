@@ -572,9 +572,6 @@
       "rarityLevel": "common",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Pune, Maharashtra"
-      ],
       "validMonths": [
         1,
         2,
@@ -615,10 +612,6 @@
       "rarityLevel": "common",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Bharatpur, Rajasthan",
-        "Pune, Maharashtra"
-      ],
       "validMonths": [
         1,
         2,
@@ -659,10 +652,6 @@
       "rarityLevel": "common",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Bharatpur, Rajasthan",
-        "Pune, Maharashtra"
-      ],
       "validMonths": [
         1,
         2,
@@ -703,10 +692,6 @@
       "rarityLevel": "common",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Pune, Maharashtra",
-        "Bharatpur, Rajasthan"
-      ],
       "validMonths": [
         1,
         2,
@@ -747,10 +732,6 @@
       "rarityLevel": "common",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Pune, Maharashtra",
-        "Bharatpur, Rajasthan"
-      ],
       "validMonths": [
         1,
         2,
@@ -791,10 +772,6 @@
       "rarityLevel": "common",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Pune, Maharashtra",
-        "Thar Desert, Rajasthan"
-      ],
       "validMonths": [
         1,
         2,
@@ -835,10 +812,6 @@
       "rarityLevel": "uncommon",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Himalayan Region, Uttarakhand",
-        "Western Ghats, Kerala"
-      ],
       "validMonths": [
         10,
         11,
@@ -874,10 +847,6 @@
       "rarityLevel": "uncommon",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Himalayan Region, Uttarakhand",
-        "Pune, Maharashtra"
-      ],
       "validMonths": [
         10,
         11,
@@ -913,9 +882,6 @@
       "rarityLevel": "uncommon",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Himalayan Region, Uttarakhand"
-      ],
       "validMonths": [
         1,
         2,
@@ -953,9 +919,6 @@
       "rarityLevel": "rare",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Himalayan Region, Uttarakhand"
-      ],
       "validMonths": [
         1,
         2,
@@ -970,9 +933,7 @@
         11,
         12
       ],
-      "fieldMarkData": [
-
-      ],
+      "fieldMarkData": [],
       "likelySpot": "Wetlands",
       "bird_id": "f6f97e0d-24e2-4965-84f0-248fa70f0ddb"
     },
@@ -985,9 +946,6 @@
       "rarityLevel": "rare",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Himalayan Region, Uttarakhand"
-      ],
       "validMonths": [
         1,
         2,
@@ -1002,9 +960,7 @@
         11,
         12
       ],
-      "fieldMarkData": [
-
-      ],
+      "fieldMarkData": [],
       "likelySpot": "Open Sea",
       "bird_id": "b28ae7f6-6c53-4fc8-83de-f77eea8bfa8d"
     },
@@ -1017,9 +973,6 @@
       "rarityLevel": "rare",
       "shape_id": "Passeridae_Fringillidae",
       "size_category": 1,
-      "validLocations": [
-        "Himalayan Region, Uttarakhand"
-      ],
       "validMonths": [
         1,
         2,
@@ -1034,9 +987,7 @@
         11,
         12
       ],
-      "fieldMarkData": [
-
-      ],
+      "fieldMarkData": [],
       "likelySpot": "Ground",
       "bird_id": "cfa8e3d9-be7c-4837-92fa-2866efa42a88"
     },
