@@ -58,6 +58,35 @@ final class ImageService: ImageProviding {
     private init() {
         memoryCache.countLimit = 500
     }
+    
+    func cachedImage(for key: String, shapeId: String? = nil) -> UIImage? {
+        var normalizedKey = normalizeKey(key)
+        let targetShape = "Passeridae_Fringillidae"
+        if normalizedKey.lowercased().contains(targetShape.lowercased()) {
+            if let range = normalizedKey.range(of: targetShape, options: .caseInsensitive) {
+                normalizedKey.replaceSubrange(range, with: "finch")
+            }
+        }
+        
+        if normalizedKey.isEmpty { return nil }
+        
+        if localOnlyKeys.contains(normalizedKey) {
+            return nil
+        }
+        
+        let memKey = normalizedKey as NSString
+        if let cached = memoryCache.object(forKey: memKey) {
+            return cached
+        }
+        
+        let diskKey = diskCacheKey(for: normalizedKey)
+        if let diskImage = loadFromDisk(cacheKey: diskKey) {
+            memoryCache.setObject(diskImage, forKey: memKey)
+            return diskImage
+        }
+        
+        return nil
+    }
 
     func image(for key: String, shapeId: String? = nil) async -> UIImage? {
         var normalizedKey = normalizeKey(key)

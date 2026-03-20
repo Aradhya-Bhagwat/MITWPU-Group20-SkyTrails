@@ -177,8 +177,7 @@ struct WatchlistSeeder {
 		let placeholder = Bird(bird_id: dto.id,
 			commonName: dto.name,
 			scientificName: dto.scientificName,
-			staticImageName: dto.images.first ?? "placeholder",
-			validLocations: dto.location
+			staticImageName: dto.images.first ?? "placeholder"
 		)
 		context.insert(placeholder)
 		return placeholder

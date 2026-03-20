@@ -147,7 +147,7 @@ class UnobservedDetailViewController: UIViewController {
 				await MainActor.run { self.updateLocationSelection(name, lat: lat, lon: lon) }
 			}
 		} else {
-			updateLocationSelection(bird.validLocations?.first ?? "")
+			updateLocationSelection(bird.likelySpot ?? "")
 		}
 	}
 	

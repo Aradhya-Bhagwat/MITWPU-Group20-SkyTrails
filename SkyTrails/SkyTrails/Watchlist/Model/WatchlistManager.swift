@@ -380,8 +380,7 @@ final class WatchlistManager: WatchlistRepository {
         return (try? persistence.createBird(commonName: name)) ?? Bird(bird_id: UUID(),
             commonName: name,
             scientificName: "Unknown",
-            staticImageName: "photo",
-            validLocations: []
+            staticImageName: "photo"
         )
     }
     func getStats(for watchlistID: UUID) throws -> (observed: Int, total: Int) {

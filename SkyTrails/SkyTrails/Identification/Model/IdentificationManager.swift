@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import CoreLocation
 
 @Observable
 class IdentificationManager {
@@ -36,6 +37,11 @@ class IdentificationManager {
     private var currentUserId: UUID? {
         UserSession.shared.currentUserID
     }
+    
+    private var userLocationCoordinate: CLLocationCoordinate2D?
+    private var mlPredictedBirdIds: Set<UUID> = []
+    private var isFetchingMLData = false
+    private let locationService = LocationService.shared
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -77,7 +83,79 @@ class IdentificationManager {
             return []
         }
     }
-   
+    
+    func updateSelectedLocation(_ locationName: String?) {
+        self.selectedLocation = locationName
+        self.userLocationCoordinate = nil
+        self.mlPredictedBirdIds = []
+        
+        guard let name = locationName, !name.isEmpty else { return }
+        
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            do {
+                let locationData = try await self.locationService.geocode(query: name)
+                self.userLocationCoordinate = CLLocationCoordinate2D(
+                    latitude: locationData.lat,
+                    longitude: locationData.lon
+                )
+                self.fetchMLPredictedBirds()
+            } catch {
+                print("Failed to geocode location: \(error)")
+            }
+        }
+    }
+    
+    private func fetchMLPredictedBirds() {
+        guard let coordinate = userLocationCoordinate, !isFetchingMLData else { return }
+        isFetchingMLData = true
+        
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            
+            let week = Calendar.current.component(.weekOfYear, from: self.selectedDate)
+            let radiusInKm: Double = 50.0
+            
+            let descriptor = FetchDescriptor<Hotspot>()
+            
+            do {
+                let allHotspots = try self.modelContext.fetch(descriptor)
+                let queryLoc = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                
+                let nearbyHotspots = allHotspots.filter { hotspot in
+                    let hotspotLoc = CLLocation(latitude: hotspot.lat, longitude: hotspot.lon)
+                    return hotspotLoc.distance(from: queryLoc) <= (radiusInKm * 1000)
+                }
+                
+                var predictedIds: Set<UUID> = []
+                
+                for hotspot in nearbyHotspots {
+                    guard let speciesList = hotspot.speciesList else { continue }
+                    for presence in speciesList {
+                        if let validWeeks = presence.validWeeks,
+                           validWeeks.contains(week),
+                           let bird = presence.bird {
+                            predictedIds.insert(bird.bird_id)
+                        }
+                    }
+                }
+                
+                self.mlPredictedBirdIds = predictedIds
+                self.runFilter()
+            } catch {
+                print("Error fetching ML predicted birds: \(error)")
+            }
+            
+            self.isFetchingMLData = false
+        }
+    }
+    
+    private func getMLLocationScore(for bird: Bird) -> Double {
+        if mlPredictedBirdIds.contains(bird.bird_id) {
+            return 15.0
+        }
+        return 0.0
+    }
 
     func updateSize(_ size: Int) {
         self.selectedSizeCategory = size
@@ -93,7 +171,6 @@ class IdentificationManager {
         
         var candidates: [IdentificationCandidate] = []
         let searchMonth = Calendar.current.component(.month, from: selectedDate)
-        let userLocationTokens = tokenSet(from: selectedLocation)
         
         for bird in allBirds {
             var score = 0.0
@@ -119,20 +196,11 @@ class IdentificationManager {
                     mismatchedFeats.append("Size")
                 }
             }
-            if !userLocationTokens.isEmpty,
-               let birdLocs = bird.validLocations,
-               !birdLocs.isEmpty {
-                let birdTokens = tokenSet(from: birdLocs.joined(separator: " "))
-                if !birdTokens.isEmpty {
-                    let overlap = birdTokens.intersection(userLocationTokens)
-                    if !overlap.isEmpty {
-                        score += 10
-                        matchedFeats.append("Location")
-                    } else {
-                        score -= 6
-                        mismatchedFeats.append("Location")
-                    }
-                }
+            
+            let mlScore = getMLLocationScore(for: bird)
+            if mlScore > 0 {
+                score += mlScore
+                matchedFeats.append("Location")
             }
             
             if let birdMonths = bird.validMonths {

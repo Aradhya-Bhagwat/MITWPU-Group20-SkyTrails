@@ -57,7 +57,6 @@ Table Bird {
   conservation_status String
   migration_strategy String
   hemisphere String
-  validLocations "[String]"
   validMonths "[Int]"
   likelySpot String
   // Note: shape_id, size_category, and fieldMarkData are omitted (legacy)
@@ -351,7 +350,6 @@ Table public.birds {
   conservation_status text
   migration_strategy text
   hemisphere text
-  valid_locations jsonb
   valid_months jsonb
   shape_id text
   size_category integer

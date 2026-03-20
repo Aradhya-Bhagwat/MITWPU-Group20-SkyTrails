@@ -21,7 +21,6 @@ final class BirdDatabaseSeeder {
         let order_name: String?
         let descriptionText: String?
         let conservation_status: String?
-        let validLocations: [String]?
         let validMonths: [Int]?
         let likelySpot: String?
         let shape_id: String?
@@ -74,7 +73,6 @@ final class BirdDatabaseSeeder {
 
         for birdDTO in payload.birds {
             let normalizedLikelySpot = normalizeLikelySpot(birdDTO.likelySpot)
-            let normalizedValidLocations = normalizeValidLocations(birdDTO.validLocations)
 
             if let existing = existingBirdMap[birdDTO.bird_id] {
                 var didUpdate = false
@@ -105,11 +103,6 @@ final class BirdDatabaseSeeder {
                 }
                 if existing.conservation_status == nil, let status = birdDTO.conservation_status {
                     existing.conservation_status = status
-                    didUpdate = true
-                }
-                if (existing.validLocations == nil || existing.validLocations?.isEmpty == true),
-                   let validLocations = normalizedValidLocations {
-                    existing.validLocations = validLocations
                     didUpdate = true
                 }
                 if (existing.validMonths == nil || existing.validMonths?.isEmpty == true),
@@ -159,7 +152,6 @@ final class BirdDatabaseSeeder {
                 descriptionText: birdDTO.descriptionText,
                 conservation_status: birdDTO.conservation_status,
                 migration_strategy: nil,
-                validLocations: normalizedValidLocations,
                 validMonths: birdDTO.validMonths,
                 likelySpot: normalizedLikelySpot,
                 shape_id: birdDTO.shape_id,
@@ -233,32 +225,5 @@ final class BirdDatabaseSeeder {
         default:
             return trimmed
         }
-    }
-
-    private func normalizeValidLocations(_ raw: [String]?) -> [String]? {
-        guard let raw else { return nil }
-        var seen = Set<String>()
-        let normalized = raw.compactMap { value -> String? in
-            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            let mapped: String
-            switch trimmed.lowercased() {
-            case "dessert", "desert":
-                mapped = "Thar Desert, Rajasthan"
-            case "urban", "pune, india":
-                mapped = "Pune, Maharashtra"
-            case "wetlands":
-                mapped = "Bharatpur, Rajasthan"
-            case "himalayas":
-                mapped = "Himalayan Region, Uttarakhand"
-            case "western ghats":
-                mapped = "Western Ghats, Kerala"
-            default:
-                mapped = trimmed
-            }
-            if mapped.isEmpty || seen.contains(mapped) { return nil }
-            seen.insert(mapped)
-            return mapped
-        }
-        return normalized.isEmpty ? nil : normalized
     }
 }

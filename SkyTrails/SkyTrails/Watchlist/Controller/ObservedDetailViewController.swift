@@ -318,8 +318,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                 }
             }
         } else {
-            let fallbackLocation = bird.validLocations?.first ?? ""
-            updateLocationSelection(fallbackLocation)
+            updateLocationSelection(bird.likelySpot ?? "")
         }
         birdImageView.image = ObservedDetailViewController.loadImage(for: entry)
         
