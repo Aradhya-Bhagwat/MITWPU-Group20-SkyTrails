@@ -37,7 +37,7 @@ class CustomWatchlistViewController: UIViewController {
         loadData()
     }
     private func setupUI() {
-        self.navigationItem.title = "Personal Collections"
+        self.navigationItem.title = "Watchlist"
         self.tabBarItem.title = "Watchlist"
         view.backgroundColor = .systemGroupedBackground
         searchBar.searchBarStyle = .minimal
@@ -71,12 +71,27 @@ class CustomWatchlistViewController: UIViewController {
         }
     }
 
+    enum SortOption {
+        case nameAZ, nameZA, observedCount
+    }
+    private var currentSortOption: SortOption = .nameAZ
+
     private func updateData() {
+        var list = allWatchlistsDTOs
         if let text = searchBar.text, !text.isEmpty {
-            filteredWatchlists = allWatchlistsDTOs.filter { $0.title.localizedCaseInsensitiveContains(text) }
-        } else {
-            filteredWatchlists = allWatchlistsDTOs
+            list = list.filter { $0.title.localizedCaseInsensitiveContains(text) }
         }
+        
+        switch currentSortOption {
+        case .nameAZ:
+            list.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .nameZA:
+            list.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        case .observedCount:
+            list.sort { $0.stats.observedCount > $1.stats.observedCount }
+        }
+        
+        filteredWatchlists = list
         collectionView.reloadData()
     }
     @IBAction func addTapped(_ sender: Any) {
@@ -84,6 +99,29 @@ class CustomWatchlistViewController: UIViewController {
     }
     
     @IBAction func filterButtonTapped(_ sender: UIButton) {
+        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Name (A-Z)", style: .default) { [weak self] _ in
+            self?.currentSortOption = .nameAZ
+            self?.updateData()
+        })
+        alert.addAction(UIAlertAction(title: "Name (Z-A)", style: .default) { [weak self] _ in
+            self?.currentSortOption = .nameZA
+            self?.updateData()
+        })
+        alert.addAction(UIAlertAction(title: "Most Observed", style: .default) { [weak self] _ in
+            self?.currentSortOption = .observedCount
+            self?.updateData()
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = sender
+            popover.sourceRect = sender.bounds
+        }
+        
+        present(alert, animated: true)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

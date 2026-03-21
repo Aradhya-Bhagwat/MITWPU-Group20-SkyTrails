@@ -36,16 +36,19 @@ class EditWatchlistDetailViewController: UIViewController {
 	private var availableShapes: [BirdShape] = []
 	private var selectedShapeId: String?
 	private var locationRuleToggle: UISwitch!
-	private var locationRuleLabel: UILabel!
-	private var locationRuleButton: UIButton!
-	private var locationRuleInfoLabel: UILabel!
-	private var selectedRuleLocation: CLLocationCoordinate2D?
-	private var selectedRuleRadius: Double = 50.0
-	private var selectedRuleLocationDisplayName: String?
+    private var locationRuleMapView: MKMapView!
+    private var locationRulePlaceholderLabel: UILabel!
+    private var selectedRuleCircle: MKCircle?
+    
 	private var dateRuleToggle: UISwitch!
 	private var dateRuleLabel: UILabel!
 	private var dateRuleStartPicker: UIDatePicker!
 	private var dateRuleEndPicker: UIDatePicker!
+    
+    private var selectedRuleLocation: CLLocationCoordinate2D?
+    private var selectedRuleRadius: Double = 50.0
+    private var selectedRuleLocationDisplayName: String?
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
@@ -152,6 +155,26 @@ class EditWatchlistDetailViewController: UIViewController {
         } else {
             return
         }
+
+        let headerStack = UIStackView()
+        headerStack.translatesAutoresizingMaskIntoConstraints = false
+        headerStack.axis = .horizontal
+        headerStack.alignment = .center
+        headerStack.spacing = 8
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Smart Filters"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .label
+        headerStack.addArrangedSubview(titleLabel)
+
+        let infoButton = UIButton(type: .system)
+        infoButton.setImage(UIImage(systemName: "info.circle"), for: .normal)
+        infoButton.tintColor = .systemBlue
+        infoButton.addTarget(self, action: #selector(didTapSmartFiltersInfo), for: .touchUpInside)
+        headerStack.addArrangedSubview(infoButton)
+        headerStack.addArrangedSubview(UIView()) // Spacer
+
         rulesContainerView = UIView()
         rulesContainerView.translatesAutoresizingMaskIntoConstraints = false
         rulesContainerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
@@ -161,22 +184,19 @@ class EditWatchlistDetailViewController: UIViewController {
         rulesContainerView.layer.shadowOffset = CGSize(width: 0, height: 4)
         rulesContainerView.layer.shadowRadius = 12
         rulesContainerView.layer.masksToBounds = false
-        let titleLabel = UILabel()
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Smart Filters"
-        titleLabel.font = .preferredFont(forTextStyle: .headline)
-        titleLabel.textColor = .label
-        rulesContainerView.addSubview(titleLabel)
+
         let rulesStack = UIStackView()
         rulesStack.translatesAutoresizingMaskIntoConstraints = false
         rulesStack.axis = .vertical
         rulesStack.spacing = 20
         rulesStack.alignment = .fill
         rulesContainerView.addSubview(rulesStack)
+
         let speciesSection = createRuleSection(title: "Species Inclusion")
         speciesRuleToggle = UISwitch()
         speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
         addToggleToSection(section: speciesSection, toggle: speciesRuleToggle)
+        
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumInteritemSpacing = 12
@@ -195,27 +215,46 @@ class EditWatchlistDetailViewController: UIViewController {
         speciesSection.addArrangedSubview(shapeCollectionView)
         
         rulesStack.addArrangedSubview(speciesSection)
+        
         let locationSection = createRuleSection(title: "Region Boundaries")
         locationRuleToggle = UISwitch()
         locationRuleToggle.addTarget(self, action: #selector(locationRuleToggled), for: .valueChanged)
         addToggleToSection(section: locationSection, toggle: locationRuleToggle)
         
-        locationRuleButton = UIButton(type: .system)
-        locationRuleButton.translatesAutoresizingMaskIntoConstraints = false
-        locationRuleButton.setTitle("Select Location on Map", for: .normal)
-        locationRuleButton.addTarget(self, action: #selector(didTapLocationRuleMap), for: .touchUpInside)
-        locationRuleButton.isHidden = true
-        locationSection.addArrangedSubview(locationRuleButton)
+        locationRuleMapView = MKMapView()
+        locationRuleMapView.translatesAutoresizingMaskIntoConstraints = false
+        locationRuleMapView.layer.cornerRadius = 16
+        locationRuleMapView.clipsToBounds = true
+        locationRuleMapView.isUserInteractionEnabled = true
+        locationRuleMapView.heightAnchor.constraint(equalToConstant: 160).isActive = true
+        locationRuleMapView.isHidden = true
+        locationRuleMapView.delegate = self
         
-        locationRuleInfoLabel = UILabel()
-        locationRuleInfoLabel.translatesAutoresizingMaskIntoConstraints = false
-        locationRuleInfoLabel.font = .systemFont(ofSize: 14)
-        locationRuleInfoLabel.textColor = .secondaryLabel
-        locationRuleInfoLabel.numberOfLines = 0
-        locationRuleInfoLabel.isHidden = true
-        locationSection.addArrangedSubview(locationRuleInfoLabel)
+        let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapLocationRuleMap))
+        locationRuleMapView.addGestureRecognizer(mapTap)
+        
+        locationRulePlaceholderLabel = UILabel()
+        locationRulePlaceholderLabel.text = "Tap to set region on map"
+        locationRulePlaceholderLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        locationRulePlaceholderLabel.textColor = .secondaryLabel
+        locationRulePlaceholderLabel.textAlignment = .center
+        locationRulePlaceholderLabel.backgroundColor = .systemGray6.withAlphaComponent(0.8)
+        locationRulePlaceholderLabel.layer.cornerRadius = 8
+        locationRulePlaceholderLabel.clipsToBounds = true
+        locationRulePlaceholderLabel.translatesAutoresizingMaskIntoConstraints = false
+        locationRuleMapView.addSubview(locationRulePlaceholderLabel)
+        
+        locationSection.addArrangedSubview(locationRuleMapView)
+        
+        NSLayoutConstraint.activate([
+            locationRulePlaceholderLabel.centerXAnchor.constraint(equalTo: locationRuleMapView.centerXAnchor),
+            locationRulePlaceholderLabel.centerYAnchor.constraint(equalTo: locationRuleMapView.centerYAnchor),
+            locationRulePlaceholderLabel.widthAnchor.constraint(equalTo: locationRuleMapView.widthAnchor, multiplier: 0.7),
+            locationRulePlaceholderLabel.heightAnchor.constraint(equalToConstant: 36)
+        ])
         
         rulesStack.addArrangedSubview(locationSection)
+        
         let dateSection = createRuleSection(title: "Temporal Bounds")
         dateRuleToggle = UISwitch()
         dateRuleToggle.addTarget(self, action: #selector(dateRuleToggled), for: .valueChanged)
@@ -227,50 +266,48 @@ class EditWatchlistDetailViewController: UIViewController {
         datePickersStack.spacing = 12
         datePickersStack.isHidden = true
         
+        let startContainer = UIStackView()
+        startContainer.axis = .horizontal
+        startContainer.distribution = .equalSpacing
+        startContainer.alignment = .center
         let startLabel = UILabel()
         startLabel.text = "Start Date"
-        startLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        datePickersStack.addArrangedSubview(startLabel)
-        
+        startLabel.font = .systemFont(ofSize: 16, weight: .regular)
+        startLabel.textColor = .label
         dateRuleStartPicker = UIDatePicker()
         dateRuleStartPicker.datePickerMode = .date
-        datePickersStack.addArrangedSubview(dateRuleStartPicker)
+        dateRuleStartPicker.preferredDatePickerStyle = .compact
+        startContainer.addArrangedSubview(startLabel)
+        startContainer.addArrangedSubview(dateRuleStartPicker)
         
+        let endContainer = UIStackView()
+        endContainer.axis = .horizontal
+        endContainer.distribution = .equalSpacing
+        endContainer.alignment = .center
         let endLabel = UILabel()
         endLabel.text = "End Date"
-        endLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        datePickersStack.addArrangedSubview(endLabel)
-        
+        endLabel.font = .systemFont(ofSize: 16, weight: .regular)
+        endLabel.textColor = .label
         dateRuleEndPicker = UIDatePicker()
         dateRuleEndPicker.datePickerMode = .date
-        datePickersStack.addArrangedSubview(dateRuleEndPicker)
+        dateRuleEndPicker.preferredDatePickerStyle = .compact
+        endContainer.addArrangedSubview(endLabel)
+        endContainer.addArrangedSubview(dateRuleEndPicker)
         
-        dateSection.addArrangedSubview(datePickersStack)
+        datePickersStack.addArrangedSubview(startContainer)
+        datePickersStack.addArrangedSubview(endContainer)
         datePickersStack.accessibilityIdentifier = "DatePickersStack"
         
+        dateSection.addArrangedSubview(datePickersStack)
         rulesStack.addArrangedSubview(dateSection)
-        if watchlistIdToEdit != nil {
-            let deleteButton = UIButton(type: .system)
-            deleteButton.translatesAutoresizingMaskIntoConstraints = false
-            deleteButton.setTitle("Delete Watchlist", for: .normal)
-            deleteButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-            deleteButton.setTitleColor(.systemRed, for: .normal)
-            deleteButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-            deleteButton.layer.cornerRadius = 12
-            deleteButton.addTarget(self, action: #selector(didTapDeleteWatchlist), for: .touchUpInside)
-            deleteButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-            rulesStack.addArrangedSubview(deleteButton)
-        }
+
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: rulesContainerView.trailingAnchor, constant: -16),
-            
-            rulesStack.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            rulesStack.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
             rulesStack.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
             rulesStack.trailingAnchor.constraint(equalTo: rulesContainerView.trailingAnchor, constant: -16),
             rulesStack.bottomAnchor.constraint(equalTo: rulesContainerView.bottomAnchor, constant: -16)
         ])
+
         if let dateSectionIndex = mainStackView.arrangedSubviews.firstIndex(where: { view -> Bool in
             if let label = view.subviews.first(where: { $0 is UILabel }) as? UILabel {
                 return label.text == "Date"
@@ -278,10 +315,46 @@ class EditWatchlistDetailViewController: UIViewController {
             return false
         }) {
             let insertIndex = min(dateSectionIndex + 2, mainStackView.arrangedSubviews.count)
-            mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex)
+            mainStackView.insertArrangedSubview(headerStack, at: insertIndex)
+            mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex + 1)
+            
+            if watchlistIdToEdit != nil {
+                let clearButton = UIButton(type: .system)
+                clearButton.translatesAutoresizingMaskIntoConstraints = false
+                clearButton.setTitle("Clear Collection", for: .normal)
+                clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+                clearButton.setTitleColor(.systemRed, for: .normal)
+                clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+                clearButton.layer.cornerRadius = 12
+                clearButton.addTarget(self, action: #selector(didTapClearWatchlist), for: .touchUpInside)
+                clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+                
+                mainStackView.insertArrangedSubview(clearButton, at: insertIndex + 2)
+            }
         } else {
+            mainStackView.addArrangedSubview(headerStack)
             mainStackView.addArrangedSubview(rulesContainerView)
+            
+            if watchlistIdToEdit != nil {
+                let clearButton = UIButton(type: .system)
+                clearButton.translatesAutoresizingMaskIntoConstraints = false
+                clearButton.setTitle("Clear Collection", for: .normal)
+                clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+                clearButton.setTitleColor(.systemRed, for: .normal)
+                clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+                clearButton.layer.cornerRadius = 12
+                clearButton.addTarget(self, action: #selector(didTapClearWatchlist), for: .touchUpInside)
+                clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+                mainStackView.addArrangedSubview(clearButton)
+            }
         }
+    }
+
+    @objc private func didTapSmartFiltersInfo() {
+        let message = "Smart Filters automatically populate your collection with birds matching your criteria. \n\n• Species Inclusion: Add all birds of a certain shape.\n• Region Boundaries: Add birds frequently spotted in a specific area.\n• Temporal Bounds: Add birds typically seen during a specific time of year.\n\nThis helps you quickly build comprehensive lists for your birding trips!"
+        let alert = UIAlertController(title: "About Smart Filters", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Got it", style: .default))
+        present(alert, animated: true)
     }
     
     private func createRuleSection(title: String) -> UIStackView {
@@ -298,7 +371,7 @@ class EditWatchlistDetailViewController: UIViewController {
         
         let label = UILabel()
         label.text = title
-        label.font = .systemFont(ofSize: 17, weight: .semibold)
+        label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .label
         headerStack.addArrangedSubview(label)
         
@@ -321,8 +394,7 @@ class EditWatchlistDetailViewController: UIViewController {
     }
     
     @objc private func locationRuleToggled() {
-        locationRuleButton.isHidden = !locationRuleToggle.isOn
-        locationRuleInfoLabel.isHidden = !locationRuleToggle.isOn
+        locationRuleMapView.isHidden = !locationRuleToggle.isOn
     }
     
     @objc private func dateRuleToggled() {
@@ -338,23 +410,23 @@ class EditWatchlistDetailViewController: UIViewController {
         navigationController?.pushViewController(mapVC, animated: true)
     }
     
-    @objc private func didTapDeleteWatchlist() {
+    @objc private func didTapClearWatchlist() {
         guard let watchlist = watchlistToEdit else { return }
         
         let alert = UIAlertController(
-            title: "Delete Watchlist",
-            message: "Are you sure you want to delete '\(watchlist.title ?? "this watchlist")'?",
+            title: "Clear Collection",
+            message: "Remove all birds from '\(watchlist.title ?? "this collection")'? The collection settings will be saved.",
             preferredStyle: .alert
         )
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive, handler: { [weak self] _ in
             Task {
                 do {
-                    try await self?.repository.deleteWatchlist(id: watchlist.watchlist_id)
-                    self?.navigateToWatchlistHomeAfterDelete()
+                    try self?.manager.clearWatchlist(id: watchlist.watchlist_id)
+                    self?.navigationController?.popViewController(animated: true)
                 } catch {
-                    self?.presentAlert(title: "Delete Failed", message: error.localizedDescription)
+                    self?.presentAlert(title: "Clear Failed", message: error.localizedDescription)
                 }
             }
         }))
@@ -396,23 +468,14 @@ class EditWatchlistDetailViewController: UIViewController {
            let lat = locationRule.lat,
            let lon = locationRule.lon {
             locationRuleToggle.isOn = true
-            locationRuleButton.isHidden = false
-            locationRuleInfoLabel.isHidden = false
+            locationRuleMapView.isHidden = false
             selectedRuleLocation = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             selectedRuleRadius = locationRule.radius_km ?? 50.0
-            locationRuleInfoLabel.text = "Within \(Int(selectedRuleRadius))km of selected location"
-            Task {
-                if let name = await locationService.reverseGeocode(lat: lat, lon: lon) {
-                    await MainActor.run {
-                        self.selectedRuleLocationDisplayName = name
-                        self.locationRuleInfoLabel.text = "Within \(Int(self.selectedRuleRadius))km of \(name)"
-                    }
-                }
-            }
+            
+            updateMiniMapSelection(location: selectedRuleLocation!, radiusKm: selectedRuleRadius)
         } else {
             locationRuleToggle.isOn = false
-            locationRuleButton.isHidden = true
-            locationRuleInfoLabel.isHidden = true
+            locationRuleMapView.isHidden = true
         }
         
         if let dateRule = activeRules.first(where: { $0.rule_type == .date_range }),
@@ -689,9 +752,47 @@ extension EditWatchlistDetailViewController: WatchlistLocationRuleDelegate {
         selectedRuleLocation = location
         selectedRuleRadius = radiusKm
         selectedRuleLocationDisplayName = displayName
-        locationRuleInfoLabel.text = "Within \(Int(radiusKm))km of \(displayName)"
+        updateMiniMapSelection(location: location, radiusKm: radiusKm)
     }
 }
+
+extension EditWatchlistDetailViewController: MKMapViewDelegate {
+    func updateMiniMapSelection(location: CLLocationCoordinate2D, radiusKm: Double) {
+        locationRulePlaceholderLabel.isHidden = true
+        
+        locationRuleMapView.removeAnnotations(locationRuleMapView.annotations)
+        if let circle = selectedRuleCircle {
+            locationRuleMapView.removeOverlay(circle)
+        }
+        
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location
+        locationRuleMapView.addAnnotation(annotation)
+        
+        let circle = MKCircle(center: location, radius: radiusKm * 1000)
+        locationRuleMapView.addOverlay(circle)
+        selectedRuleCircle = circle
+        
+        let region = MKCoordinateRegion(
+            center: location,
+            latitudinalMeters: radiusKm * 1000 * 3.0,
+            longitudinalMeters: radiusKm * 1000 * 3.0
+        )
+        locationRuleMapView.setRegion(region, animated: true)
+    }
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let circleOverlay = overlay as? MKCircle {
+            let renderer = MKCircleRenderer(circle: circleOverlay)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.12)
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.6)
+            renderer.lineWidth = 2
+            return renderer
+        }
+        return MKOverlayRenderer(overlay: overlay)
+    }
+}
+
 extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return availableShapes.count

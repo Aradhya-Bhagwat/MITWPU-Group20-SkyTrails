@@ -149,6 +149,37 @@ final class WatchlistPersistenceService {
         }
     }
     
+    func clearWatchlist(id: UUID) throws {
+        guard let watchlist = try fetchWatchlist(id: id) else {
+            throw WatchlistError.watchlistNotFound(.custom(id))
+        }
+        
+        let entries = watchlist.entries ?? []
+        for entry in entries {
+            entry.syncStatus = .pendingDelete
+        }
+        
+        try saveContext()
+        try recalculateWatchlistStats(watchlistID: id)
+
+        let syncItems = entries.map { entry in
+            (id: entry.id, payload: self.buildEntryPayloadData(entry, for: .delete))
+        }
+
+        // Sync each entry deletion
+        queueSync {
+            for item in syncItems {
+                let localUpdatedAt = Date()
+                await BackgroundSyncAgent.shared.queueEntry(
+                    id: item.id,
+                    payloadData: item.payload,
+                    localUpdatedAt: localUpdatedAt,
+                    operation: .delete
+                )
+            }
+        }
+    }
+    
     func createEntry(
         watchlistID: UUID,
         bird: Bird,

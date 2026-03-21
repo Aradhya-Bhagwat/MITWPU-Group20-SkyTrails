@@ -34,7 +34,7 @@ Manages high-resolution photo attachments for sightings, handling local file sys
 
 ## 3. User Interface & Flow
 
-### 📋 Personal Collections Dashboard (`WatchlistHomeViewController`)
+### 📋 Watchlist Dashboard (`WatchlistHomeViewController`)
 The primary hub of the tab. It features:
 *   **Aggregated Favorites:** A high-level overview of the user's entire collection.
 *   **Action Hub:** Quick access to "Log Observation" and "Track New Bird."

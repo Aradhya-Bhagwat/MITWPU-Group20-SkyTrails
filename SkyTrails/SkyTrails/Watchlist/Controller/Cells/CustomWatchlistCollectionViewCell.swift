@@ -25,9 +25,56 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
         defaultCoverOverImageBackgroundColor = coverOverImageView.backgroundColor
         setupUI()
+        setupInteractions()
         
         self.clipsToBounds = false
         self.contentView.clipsToBounds = false
+    }
+    
+    private func setupInteractions() {
+        leftBadgeView.isUserInteractionEnabled = true
+        rightBadgeView.isUserInteractionEnabled = true
+        
+        let leftTap = UITapGestureRecognizer(target: self, action: #selector(didTapLeftBadge))
+        leftBadgeView.addGestureRecognizer(leftTap)
+        
+        let rightTap = UITapGestureRecognizer(target: self, action: #selector(didTapRightBadge))
+        rightBadgeView.addGestureRecognizer(rightTap)
+    }
+    
+    @objc private func didTapLeftBadge() {
+        showBadgeInfo(
+            title: "Birds to Observe",
+            message: "The green icon shows the total number of species included in this collection for you to discover."
+        )
+    }
+    
+    @objc private func didTapRightBadge() {
+        showBadgeInfo(
+            title: "Birds Spotted",
+            message: "The blue icon shows how many species from this collection you have already successfully spotted!"
+        )
+    }
+    
+    private func showBadgeInfo(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Got it", style: .default))
+        
+        if let vc = self.window?.rootViewController {
+            let topVC = getTopViewController(from: vc)
+            topVC.present(alert, animated: true)
+        }
+    }
+    
+    private func getTopViewController(from viewController: UIViewController) -> UIViewController {
+        if let nav = viewController as? UINavigationController {
+            return getTopViewController(from: nav.visibleViewController ?? nav)
+        } else if let tab = viewController as? UITabBarController {
+            return getTopViewController(from: tab.selectedViewController ?? tab)
+        } else if let presented = viewController.presentedViewController {
+            return getTopViewController(from: presented)
+        }
+        return viewController
     }
     
     private func setupUI() {
