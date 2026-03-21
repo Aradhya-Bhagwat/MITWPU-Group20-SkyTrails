@@ -84,7 +84,12 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
 
     private func updateSaveButtonState() {
-        navigationItem.rightBarButtonItem?.isEnabled = (selectedIndexPath != nil)
+        let hasResults = !birdResults.isEmpty
+        if hasResults {
+            navigationItem.rightBarButtonItem?.isEnabled = selectedIndexPath != nil
+        } else {
+            navigationItem.rightBarButtonItem?.isEnabled = true
+        }
     }
 
     private func setupCollectionViewLayout() {
