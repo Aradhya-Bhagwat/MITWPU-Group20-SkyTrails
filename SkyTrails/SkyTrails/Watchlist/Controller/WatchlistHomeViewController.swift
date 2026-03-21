@@ -755,9 +755,9 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 			case .myWatchlist:
 				showChevron = true
 				showPlus = false
-			case .customWatchlist:
-				showChevron = shouldShowHeader(for: .customWatchlist)
-				showPlus = false
+		case .customWatchlist:
+			showChevron = shouldShowHeader(for: .customWatchlist)
+			showPlus = shouldShowHeader(for: .customWatchlist)
 			case .sharedWatchlist:
 				showChevron = shouldShowHeader(for: .sharedWatchlist)
 				showPlus = shouldShowHeader(for: .sharedWatchlist)
