@@ -58,7 +58,7 @@ class EditWatchlistDetailViewController: UIViewController {
 	private func setupUI() {
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
-		self.title = (watchlistToEdit == nil) ? "Create Collection" : "Collection Settings"
+		self.title = (watchlistToEdit == nil) ? "Create Watchlist" : "Watchlist Settings"
 		let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
 		titleTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
@@ -321,7 +321,7 @@ class EditWatchlistDetailViewController: UIViewController {
             if watchlistIdToEdit != nil {
                 let clearButton = UIButton(type: .system)
                 clearButton.translatesAutoresizingMaskIntoConstraints = false
-                clearButton.setTitle("Clear Collection", for: .normal)
+                clearButton.setTitle("Clear Watchlist", for: .normal)
                 clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
                 clearButton.setTitleColor(.systemRed, for: .normal)
                 clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
@@ -338,7 +338,7 @@ class EditWatchlistDetailViewController: UIViewController {
             if watchlistIdToEdit != nil {
                 let clearButton = UIButton(type: .system)
                 clearButton.translatesAutoresizingMaskIntoConstraints = false
-                clearButton.setTitle("Clear Collection", for: .normal)
+                clearButton.setTitle("Clear Watchlist", for: .normal)
                 clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
                 clearButton.setTitleColor(.systemRed, for: .normal)
                 clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
@@ -351,7 +351,7 @@ class EditWatchlistDetailViewController: UIViewController {
     }
 
     @objc private func didTapSmartFiltersInfo() {
-        let message = "Smart Filters automatically populate your collection with birds matching your criteria. \n\n• Species Inclusion: Add all birds of a certain shape.\n• Region Boundaries: Add birds frequently spotted in a specific area.\n• Temporal Bounds: Add birds typically seen during a specific time of year.\n\nThis helps you quickly build comprehensive lists for your birding trips!"
+        let message = "Smart Filters automatically populate your watchlist with birds matching your criteria. \n\n• Species Inclusion: Add all birds of a certain shape.\n• Region Boundaries: Add birds frequently spotted in a specific area.\n• Temporal Bounds: Add birds typically seen during a specific time of year.\n\nThis helps you quickly build comprehensive lists for your birding trips!"
         let alert = UIAlertController(title: "About Smart Filters", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Got it", style: .default))
         present(alert, animated: true)
@@ -414,8 +414,8 @@ class EditWatchlistDetailViewController: UIViewController {
         guard let watchlist = watchlistToEdit else { return }
         
         let alert = UIAlertController(
-            title: "Clear Collection",
-            message: "Remove all birds from '\(watchlist.title ?? "this collection")'? The collection settings will be saved.",
+            title: "Clear Watchlist",
+            message: "Remove all birds from '\(watchlist.title ?? "this watchlist")'? The watchlist settings will be saved.",
             preferredStyle: .alert
         )
         

@@ -156,7 +156,9 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         cell.configure(
             image: UIImage(named: item.imageName ?? "placeholder_image"),
             title: item.title,
-            speciesCount: activeCount
+            speciesCount: activeCount,
+            latitude: item.latitude,
+            longitude: item.longitude
         )
         
         return cell

@@ -1,9 +1,9 @@
 
 import UIKit
 
-final class WatchlitEmptyCollectionViewCell: UICollectionViewCell {
+final class WatchlistEmptyCollectionViewCell: UICollectionViewCell {
 
-	static let identifier = "WatchlitEmptyCollectionViewCell"
+	static let identifier = "WatchlistEmptyCollectionViewCell"
 
 	@IBOutlet weak var containerView: UIView!
 	@IBOutlet weak var emptyImageView: UIImageView!

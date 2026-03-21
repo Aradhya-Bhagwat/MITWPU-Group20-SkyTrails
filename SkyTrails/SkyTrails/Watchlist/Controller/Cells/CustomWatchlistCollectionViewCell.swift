@@ -45,14 +45,14 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     @objc private func didTapLeftBadge() {
         showBadgeInfo(
             title: "Birds to Observe",
-            message: "The green icon shows the total number of species included in this collection for you to discover."
+            message: "The green icon shows the total number of species included in this watchlist for you to discover."
         )
     }
     
     @objc private func didTapRightBadge() {
         showBadgeInfo(
             title: "Birds Spotted",
-            message: "The blue icon shows how many species from this collection you have already successfully spotted!"
+            message: "The blue icon shows how many species from this watchlist you have already successfully spotted!"
         )
     }
     

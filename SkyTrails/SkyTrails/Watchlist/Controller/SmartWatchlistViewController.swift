@@ -87,7 +87,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             isShowingRecommendations = false
             switch watchlistType {
                 case .myWatchlist:
-                    self.navigationItem.title = "My Collections"
+                    self.navigationItem.title = "My Watchlists"
                     self.tabBarItem.title = "Watchlist"
                     self.currentWatchlistId = WatchlistConstants.myWatchlistID
                     self.sourceWatchlists = try manager.fetchWatchlists()
@@ -203,8 +203,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         guard let id = currentWatchlistId else { return }
         
         let alert = UIAlertController(
-            title: "Clear Collection",
-            message: "This will remove all birds from '\(watchlistTitle)'. The collection itself will be kept. Proceed?",
+            title: "Clear Watchlist",
+            message: "This will remove all birds from '\(watchlistTitle)'. The watchlist itself will be kept. Proceed?",
             preferredStyle: .alert
         )
         
@@ -499,7 +499,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	}
 	
 	func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if isShowingRecommendations { return "Recommended for you" }
+        if isShowingRecommendations { return "Recommended For You" }
 		return watchlistType == .myWatchlist ? allWatchlists[section].title : nil
 	}
 	
@@ -605,7 +605,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	}
     
     private func showRecommendationAction(for bird: Bird) {
-        let alert = UIAlertController(title: bird.name, message: "Add this bird to your collection?", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: bird.name, message: "Add this bird to your watchlist?", preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
             self?.addBirdToMyWatchlist(bird, observed: true)

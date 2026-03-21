@@ -1,4 +1,5 @@
-    import UIKit
+import UIKit
+import MapKit
 
     class GridSpotsToVisitCollectionViewCell: UICollectionViewCell {
 
@@ -10,6 +11,9 @@
         @IBOutlet weak var containerView: UIView!
         
         private var currentSpeciesCount: Int = 0
+        private var currentSnapshotTask: Task<Void, Never>?
+        private var representedSnapshotKey: String?
+        private static let snapshotCache = NSCache<NSString, UIImage>()
 
             override func awakeFromNib() {
                 super.awakeFromNib()
@@ -88,14 +92,84 @@
                 locationLabel.font = UIFont.systemFont(ofSize: calculatedLocSize, weight: .regular)
                 updateSpeciesLabel(count: currentSpeciesCount, fontSize: locationLabel.font.pointSize)
             }
-            func configure(image: UIImage?, title: String, speciesCount: Int) {
+            func configure(
+                image: UIImage?,
+                title: String,
+                speciesCount: Int,
+                latitude: Double? = nil,
+                longitude: Double? = nil
+            ) {
+                currentSnapshotTask?.cancel()
+                currentSnapshotTask = nil
                 locationImage.image = image
                 titleLabel.text = title
                 self.currentSpeciesCount = speciesCount
                 
+                if let latitude, let longitude {
+                    let key = Self.snapshotKey(lat: latitude, lon: longitude)
+                    representedSnapshotKey = key
+                    if let cached = Self.snapshotCache.object(forKey: key as NSString) {
+                        locationImage.image = cached
+                    } else {
+                        currentSnapshotTask = Task { [weak self] in
+                            guard let self else { return }
+                            let size = self.locationImage.bounds.size
+                            let targetSize = size.width > 0 ? size : CGSize(width: 200, height: 120)
+                            let rendered = await Self.snapshotImage(
+                                latitude: latitude,
+                                longitude: longitude,
+                                targetSize: targetSize
+                            )
+                            guard !Task.isCancelled, let rendered else { return }
+                            await MainActor.run {
+                                guard self.representedSnapshotKey == key else { return }
+                                Self.snapshotCache.setObject(rendered, forKey: key as NSString)
+                                self.locationImage.image = rendered
+                            }
+                        }
+                    }
+                } else {
+                    representedSnapshotKey = nil
+                }
+                
                 updateSpeciesLabel(count: speciesCount, fontSize: locationLabel.font.pointSize)
             }
             
+            private static func snapshotKey(lat: Double, lon: Double) -> String {
+                String(format: "%.4f,%.4f", lat, lon)
+            }
+
+            private static func snapshotImage(
+                latitude: Double,
+                longitude: Double,
+                targetSize: CGSize
+            ) async -> UIImage? {
+                guard CLLocationCoordinate2DIsValid(CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) else {
+                    return nil
+                }
+
+                let snapshotWidth = max(80, targetSize.width)
+                let snapshotHeight = max(80, targetSize.height)
+                let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+
+                let options = MKMapSnapshotter.Options()
+                options.size = CGSize(width: snapshotWidth, height: snapshotHeight)
+                options.region = MKCoordinateRegion(
+                    center: center,
+                    latitudinalMeters: 2000,
+                    longitudinalMeters: 2000
+                )
+                options.mapType = .hybrid
+
+                let snapshotter = MKMapSnapshotter(options: options)
+                do {
+                    let snapshot = try await snapshotter.start()
+                    return snapshot.image
+                } catch {
+                    return nil
+                }
+            }
+
             private func updateSpeciesLabel(count: Int, fontSize: CGFloat) {
                 let text = "\(count) Species active now"
                 locationLabel.attributedText = createIconString(
@@ -125,6 +199,9 @@
             
             override func prepareForReuse() {
                 super.prepareForReuse()
+                currentSnapshotTask?.cancel()
+                currentSnapshotTask = nil
+                representedSnapshotKey = nil
                 locationImage.image = nil
                 titleLabel.text = nil
                 locationLabel.attributedText = nil

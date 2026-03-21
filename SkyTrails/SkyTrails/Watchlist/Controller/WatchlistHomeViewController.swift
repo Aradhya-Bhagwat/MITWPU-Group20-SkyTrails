@@ -16,8 +16,8 @@ class WatchlistHomeViewController: UIViewController {
 		
 		var title: String {
 			switch self {
-				case .myWatchlist: return "My Collections"
-				case .customWatchlist: return "Curated Collections"
+				case .myWatchlist: return "My Watchlists"
+				case .customWatchlist: return "Curated Watchlists"
 				case .sharedWatchlist: return "Global Communities"
 			}
 		}
@@ -136,8 +136,8 @@ class WatchlistHomeViewController: UIViewController {
 			forCellWithReuseIdentifier: MyWatchlistCollectionViewCell.identifier
 		)
 		summaryCardCollectionView.register(
-			UINib(nibName: WatchlitEmptyCollectionViewCell.identifier, bundle: nil),
-			forCellWithReuseIdentifier: WatchlitEmptyCollectionViewCell.identifier
+			UINib(nibName: WatchlistEmptyCollectionViewCell.identifier, bundle: nil),
+			forCellWithReuseIdentifier: WatchlistEmptyCollectionViewCell.identifier
 		)
 		
 		summaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
@@ -286,7 +286,7 @@ extension WatchlistHomeViewController {
 			} else if let dto = sender as? WatchlistSummaryDTO {
 				if dto.type == .my_watchlist {
 					destVC.watchlistType = .myWatchlist
-					destVC.watchlistTitle = "My Collections"
+					destVC.watchlistTitle = "My Watchlists"
 				} else if dto.type == .shared {
 					destVC.watchlistType = .shared
 					destVC.watchlistTitle = dto.title
@@ -448,9 +448,9 @@ extension WatchlistHomeViewController {
 		subtitle: String
 	) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(
-			withReuseIdentifier: WatchlitEmptyCollectionViewCell.identifier,
+			withReuseIdentifier: WatchlistEmptyCollectionViewCell.identifier,
 			for: indexPath
-		) as! WatchlitEmptyCollectionViewCell
+		) as! WatchlistEmptyCollectionViewCell
 		cell.configure(
 			imageName: "watchlist_empty_bird",
 			title: title,
