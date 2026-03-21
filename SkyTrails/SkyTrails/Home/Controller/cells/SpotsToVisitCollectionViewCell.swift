@@ -153,10 +153,12 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
                     birdImageView2.image = image
                     currentSnapshotTask = Task { [weak self] in
                         guard let self else { return }
+                        let size = self.birdImageView2.bounds.size
+                        let targetSize = size.width > 0 ? size : CGSize(width: 200, height: 120)
                         let rendered = await Self.snapshotImage(
                             latitude: latitude,
                             longitude: longitude,
-                            targetSize: self.birdImageView2.bounds.size
+                            targetSize: targetSize
                         )
                         guard !Task.isCancelled, let rendered else { return }
                         await MainActor.run {

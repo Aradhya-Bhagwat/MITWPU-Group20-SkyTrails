@@ -69,7 +69,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         emptyMessageLabel.textColor = .secondaryLabel
         emptyMessageLabel.font = .systemFont(ofSize: 17, weight: .medium)
         emptyMessageLabel.translatesAutoresizingMaskIntoConstraints = false
-        emptyMessageLabel.text = "The skies are waiting.\nAdd a bird to your collection to begin your trail."
+        emptyMessageLabel.text = "The skies are waiting.\nAdd a bird to your watchlist to begin your trail."
         
         emptyStateContainer.addSubview(emptyMessageLabel)
         
