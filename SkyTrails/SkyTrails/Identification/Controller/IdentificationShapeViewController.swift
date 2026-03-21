@@ -17,6 +17,8 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         super.viewDidLoad()
         self.navigationItem.title = "Select Shape"
         self.tabBarItem.title = "Identification"
+        
+        viewModel.fetchShapes()
         filteredShapes = viewModel.availableShapesForSelectedSize()
         selectedShapeId = viewModel.selectedShapeId
         

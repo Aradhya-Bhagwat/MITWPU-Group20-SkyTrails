@@ -29,7 +29,7 @@ final class IdentificationSeeder {
     
     private struct VariantDTO: Codable {
         let id: String
-        let fieldMarkId: String
+        let fieldMarkId: String?
         let name: String
     }
     
@@ -74,6 +74,7 @@ final class IdentificationSeeder {
                 bird.shape != nil && bird.size_category != nil
             })
         )
+        
         let needsSeeding =
             shapeCount == 0 ||
             fieldMarkCount == 0 ||
@@ -81,6 +82,7 @@ final class IdentificationSeeder {
             identificationBirdCount == 0 ||
             linkedFieldMarkCount < fieldMarkCount ||
             linkedVariantCount < variantCount
+        
         guard needsSeeding else { return }
 
         try BirdDatabaseSeeder.shared.seed(modelContext: context)
@@ -136,6 +138,7 @@ final class IdentificationSeeder {
             context.insert(shape)
             shapeMap[shapeDTO.id] = shape
         }
+        
         for fieldMarkDTO in db.reference_data.fieldMarks {
             let fieldMarkKey = fieldMarkDTO.id.lowercased()
             let fieldMarkId = UUID(uuidString: fieldMarkDTO.id) ?? UUID()
@@ -173,8 +176,10 @@ final class IdentificationSeeder {
                     existing.name = variantDTO.name
                     didUpdate = true
                 }
-                if existing.fieldMark?.bird_field_mark_id.uuidString.lowercased() != variantDTO.fieldMarkId.lowercased(),
-                   let fieldMark = fieldMarkMap[variantDTO.fieldMarkId.lowercased()] {
+                if let fieldMarkId = variantDTO.fieldMarkId,
+                   let existingFieldMarkId = existing.fieldMark?.bird_field_mark_id.uuidString.lowercased(),
+                   existingFieldMarkId != fieldMarkId.lowercased(),
+                   let fieldMark = fieldMarkMap[fieldMarkId.lowercased()] {
                     existing.fieldMark = fieldMark
                     didUpdate = true
                 }
@@ -185,7 +190,7 @@ final class IdentificationSeeder {
             }
             let variant = FieldMarkVariant(name: variantDTO.name)
             variant.field_mark_variant_id = variantId
-            if let fieldMark = fieldMarkMap[variantDTO.fieldMarkId.lowercased()] {
+            if let fieldMarkId = variantDTO.fieldMarkId, let fieldMark = fieldMarkMap[fieldMarkId.lowercased()] {
                 variant.fieldMark = fieldMark
             }
             
