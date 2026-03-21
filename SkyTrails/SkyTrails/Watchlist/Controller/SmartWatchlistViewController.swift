@@ -37,6 +37,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	private var currentList: [WatchlistEntry] = []
     private var currentSegmentIndex: Int = 0
 	private var currentSortOption: SortOption = .nameAZ
+    
+    private var isShowingRecommendations = false
+    private var recommendedBirds: [Bird] = []
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -81,12 +84,42 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	
 	private func refreshData() {
         do {
+            isShowingRecommendations = false
             switch watchlistType {
                 case .myWatchlist:
-                    self.navigationItem.title = "Your Favorites"
+                    self.navigationItem.title = "My Collections"
                     self.tabBarItem.title = "Watchlist"
                     self.currentWatchlistId = WatchlistConstants.myWatchlistID
                     self.sourceWatchlists = try manager.fetchWatchlists()
+                    
+                    let allWls = try manager.fetchWatchlists()
+                    var uniqueObserved: [WatchlistEntry] = []
+                    var uniqueToObserve: [WatchlistEntry] = []
+                    var seenObs = Set<String>()
+                    var seenToObs = Set<String>()
+                    
+                    for wl in allWls {
+                        let obs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .observed)
+                        let toObs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .to_observe)
+                        
+                        for entry in obs {
+                            if let name = entry.bird?.name, !seenObs.contains(name) {
+                                seenObs.insert(name)
+                                uniqueObserved.append(entry)
+                            }
+                        }
+                        for entry in toObs {
+                            if let name = entry.bird?.name, !seenToObs.contains(name) {
+                                seenToObs.insert(name)
+                                uniqueToObserve.append(entry)
+                            }
+                        }
+                    }
+                    
+                    if uniqueObserved.isEmpty && uniqueToObserve.isEmpty {
+                        isShowingRecommendations = true
+                        recommendedBirds = Array(manager.fetchAllBirds().prefix(10))
+                    }
                     
                 case .custom, .shared:
                     guard let id = currentWatchlistId else { return }
@@ -143,7 +176,13 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		
 		if watchlistType == .myWatchlist || watchlistType == .allSpecies {
 			navigationItem.rightBarButtonItems = nil
-		}
+		} else {
+            let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd(_:)))
+            let editButton = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .plain, target: self, action: #selector(didTapEdit(_:)))
+            
+            navigationItem.rightBarButtonItems = [addButton, editButton]
+        }
+        
 		tableView.delegate = self
 		tableView.dataSource = self
 		tableView.backgroundColor = .clear
@@ -159,6 +198,28 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			configureFilterButtonMenusIfAvailable()
 		}
 	}
+
+    @objc private func didTapClear() {
+        guard let id = currentWatchlistId else { return }
+        
+        let alert = UIAlertController(
+            title: "Clear Collection",
+            message: "This will remove all birds from '\(watchlistTitle)'. The collection itself will be kept. Proceed?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
+            do {
+                try self?.manager.clearWatchlist(id: id)
+                self?.refreshData()
+            } catch {
+            }
+        })
+        
+        present(alert, animated: true)
+    }
+
 	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
 		currentSegmentIndex = sender.selectedSegmentIndex
 		applyFilters()
@@ -168,6 +229,11 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		let searchText = searchBar.text ?? ""
 		let isObserved = (currentSegmentIndex == 0)
 		
+        if isShowingRecommendations {
+            tableView.reloadData()
+            return
+        }
+
 		if watchlistType == .myWatchlist {
 			let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
 				let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: isObserved ? .observed : .to_observe)) ?? []
@@ -423,14 +489,17 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSource {
 	
 	func numberOfSections(in tableView: UITableView) -> Int {
+        if isShowingRecommendations { return 1 }
 		return watchlistType == .myWatchlist ? allWatchlists.count : 1
 	}
 	
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if isShowingRecommendations { return recommendedBirds.count }
 		return watchlistType == .myWatchlist ? filteredSections[section].count : currentList.count
 	}
 	
 	func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if isShowingRecommendations { return "Recommended for you" }
 		return watchlistType == .myWatchlist ? allWatchlists[section].title : nil
 	}
 	
@@ -445,6 +514,13 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 			return UITableViewCell()
 		}
 		
+        if isShowingRecommendations {
+            let bird = recommendedBirds[indexPath.row]
+            cell.configure(with: bird)
+            cell.shouldShowAvatars = false
+            return cell
+        }
+
 		let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
 		cell.shouldShowAvatars = (watchlistType == .shared)
 		cell.configure(with: entry)
@@ -463,6 +539,12 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		tableView.deselectRow(at: indexPath, animated: true)
 		
+        if isShowingRecommendations {
+            let bird = recommendedBirds[indexPath.row]
+            showRecommendationAction(for: bird)
+            return
+        }
+
 		let entry: WatchlistEntry
 		
 		if watchlistType == .myWatchlist {
@@ -475,6 +557,8 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	}
 	
 		func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+            if isShowingRecommendations { return nil }
+            
 			let entry: WatchlistEntry
 			
 			if watchlistType == .myWatchlist {			entry = filteredSections[indexPath.section][indexPath.row]
@@ -519,4 +603,30 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
 		return UISwipeActionsConfiguration(actions: actions)
 	}
+    
+    private func showRecommendationAction(for bird: Bird) {
+        let alert = UIAlertController(title: bird.name, message: "Add this bird to your collection?", preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
+            self?.addBirdToMyWatchlist(bird, observed: true)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Add to Find List", style: .default) { [weak self] _ in
+            self?.addBirdToMyWatchlist(bird, observed: false)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func addBirdToMyWatchlist(_ bird: Bird, observed: Bool) {
+        Task {
+            do {
+                let id = try await manager.ensureMyWatchlistExists()
+                try manager.addBirds([bird], to: id, asObserved: observed)
+                refreshData()
+            } catch {
+            }
+        }
+    }
 }

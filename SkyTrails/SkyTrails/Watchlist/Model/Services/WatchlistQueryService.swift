@@ -53,7 +53,7 @@ final class WatchlistQueryService {
                 }
                 return entry.bird?.staticImageName
             }
-            .prefix(4)
+            .prefix(10)
             .map { String($0) }
         
         return WatchlistSummaryDTO(

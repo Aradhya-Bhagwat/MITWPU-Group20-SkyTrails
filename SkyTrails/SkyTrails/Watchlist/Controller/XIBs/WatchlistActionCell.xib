@@ -23,31 +23,35 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="XjK-hN-cEr" userLabel="Container View">
                                 <rect key="frame" x="8" y="8" width="164" height="114"/>
                                 <subviews>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="list.bullet.badge.plus" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="xQZ-Rf-gXk">
-                                        <rect key="frame" x="57" y="32" width="50" height="50"/>
-                                        <color key="tintColor" systemColor="systemBlueColor"/>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="vStack">
+                                        <rect key="frame" x="8" y="17" width="148" height="80"/>
+                                        <subviews>
+                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="list.bullet.badge.plus" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="xQZ-Rf-gXk">
+                                                <rect key="frame" x="51.5" y="2" width="45" height="45"/>
+                                                <color key="tintColor" systemColor="systemBlueColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="45" id="UWr-Vl-gqe"/>
+                                                    <constraint firstAttribute="height" constant="45" id="xRd-hj-j5C"/>
+                                                </constraints>
+                                            </imageView>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Create Watchlist" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gfc-LQ-8dH">
+                                                <rect key="frame" x="0.0" y="53" width="148" height="27"/>
+                                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
+                                                <color key="textColor" systemColor="systemBlueColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
                                         <constraints>
-                                            <constraint firstAttribute="width" constant="50" id="UWr-Vl-gqe"/>
-                                            <constraint firstAttribute="height" constant="50" id="xRd-hj-j5C"/>
+                                            <constraint firstItem="Gfc-LQ-8dH" firstAttribute="leading" secondItem="vStack" secondAttribute="leading" id="l1"/>
+                                            <constraint firstAttribute="trailing" secondItem="Gfc-LQ-8dH" secondAttribute="trailing" id="l2"/>
                                         </constraints>
-                                    </imageView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Create Watchlist" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gfc-LQ-8dH">
-                                        <rect key="frame" x="12" y="90" width="140" height="22"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="22" id="GdD-mK-ggv"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="14"/>
-                                        <color key="textColor" systemColor="systemBlueColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
+                                    </stackView>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemMintColor"/>
                                 <constraints>
-                                    <constraint firstAttribute="trailing" secondItem="Gfc-LQ-8dH" secondAttribute="trailing" constant="12" id="0EB-gV-GZC"/>
-                                    <constraint firstItem="xQZ-Rf-gXk" firstAttribute="centerX" secondItem="XjK-hN-cEr" secondAttribute="centerX" id="2l2-fJ-hNW"/>
-                                    <constraint firstItem="Gfc-LQ-8dH" firstAttribute="top" secondItem="xQZ-Rf-gXk" secondAttribute="bottom" constant="8" id="6oL-Wl-lVY"/>
-                                    <constraint firstItem="Gfc-LQ-8dH" firstAttribute="leading" secondItem="XjK-hN-cEr" secondAttribute="leading" constant="12" id="Vob-nW-Peb"/>
-                                    <constraint firstItem="xQZ-Rf-gXk" firstAttribute="centerY" secondItem="XjK-hN-cEr" secondAttribute="centerY" id="xrx-JF-afk"/>
+                                    <constraint firstItem="vStack" firstAttribute="centerY" secondItem="XjK-hN-cEr" secondAttribute="centerY" id="c1"/>
+                                    <constraint firstItem="vStack" firstAttribute="leading" secondItem="XjK-hN-cEr" secondAttribute="leading" constant="8" id="c2"/>
+                                    <constraint firstAttribute="trailing" secondItem="vStack" secondAttribute="trailing" constant="8" id="c3"/>
                                 </constraints>
                             </view>
                         </subviews>
@@ -71,13 +75,9 @@
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="TAZ-lc-aJi" secondAttribute="bottom" id="F0n-7n-U9B"/>
-                <constraint firstAttribute="bottom" secondItem="TAZ-lc-aJi" secondAttribute="bottom" id="Jqh-Gt-Yos"/>
                 <constraint firstAttribute="trailing" secondItem="TAZ-lc-aJi" secondAttribute="trailing" id="OW2-wm-lIv"/>
                 <constraint firstItem="TAZ-lc-aJi" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="dkl-zj-rOI"/>
-                <constraint firstAttribute="trailing" secondItem="TAZ-lc-aJi" secondAttribute="trailing" id="nzT-xy-cWU"/>
                 <constraint firstItem="TAZ-lc-aJi" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="qbB-fT-vOr"/>
-                <constraint firstItem="TAZ-lc-aJi" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="rk1-we-U1P"/>
-                <constraint firstItem="TAZ-lc-aJi" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="ukQ-AE-Mul"/>
             </constraints>
             <size key="customSize" width="180" height="130"/>
             <connections>
@@ -86,7 +86,6 @@
                 <outlet property="systemBackgroundView" destination="TAZ-lc-aJi" id="CyT-Sb-Z4d"/>
                 <outlet property="titleLabel" destination="Gfc-LQ-8dH" id="cJi-YU-YYL"/>
             </connections>
-            <point key="canvasLocation" x="100" y="20"/>
         </collectionViewCell>
     </objects>
     <resources>

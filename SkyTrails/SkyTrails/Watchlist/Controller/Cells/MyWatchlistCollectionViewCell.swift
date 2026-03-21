@@ -1,3 +1,4 @@
+
 import UIKit
 
 struct WatchlistData {
@@ -21,12 +22,11 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	static let identifier = "MyWatchlistCollectionViewCell"
 	
 	@IBOutlet weak var mainContainerView: UIView!
-	@IBOutlet weak var titleLabel: UILabel!
 	@IBOutlet weak var image1: UIImageView!
 	@IBOutlet weak var image2: UIImageView!
-	@IBOutlet weak var stackContainerView: UIView!
-	@IBOutlet weak var stackFrontImage: UIImageView!
-	@IBOutlet weak var stackBackImage: UIImageView!
+    @IBOutlet weak var imageStackView: UIStackView!
+    @IBOutlet weak var contentStackView: UIStackView!
+	
 	@IBOutlet weak var speciesContainer: UIView!
 	@IBOutlet weak var speciesCountLabel: UILabel!
 	@IBOutlet weak var speciesIcon: UIImageView!
@@ -36,70 +36,127 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	@IBOutlet weak var observedCountLabel: UILabel!
 	@IBOutlet weak var observedIcon: UIImageView!
 	@IBOutlet weak var observedTitleLabel: UILabel!
+    
+    private var emptyStateContainer: UIView!
+    private var emptyMessageLabel: UILabel!
+    private var allImages: [UIImage] = []
+    private var slideshowTimer: Timer?
+    private var currentImageIndex = 0
+    private var activeSlot = 0 // 0 for image1, 1 for image2
 	
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		setupStyling()
+        setupEmptyStateView()
 	}
 	
 	override func prepareForReuse() {
 		super.prepareForReuse()
 		image1.image = nil
 		image2.image = nil
-		stackFrontImage.image = nil
-		stackBackImage.image = nil
-		stackContainerView.isHidden = true
-		stackBackImage.isHidden = true
-		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
+        stopSlideshow()
+        allImages = []
 	}
+    
+    private func setupEmptyStateView() {
+        emptyStateContainer = UIView()
+        emptyStateContainer.translatesAutoresizingMaskIntoConstraints = false
+        emptyStateContainer.isHidden = true
+        
+        emptyMessageLabel = UILabel()
+        emptyMessageLabel.numberOfLines = 0
+        emptyMessageLabel.textAlignment = .center
+        emptyMessageLabel.textColor = .secondaryLabel
+        emptyMessageLabel.font = .systemFont(ofSize: 17, weight: .medium)
+        emptyMessageLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyMessageLabel.text = "The skies are waiting.\nAdd a bird to your collection to begin your trail."
+        
+        emptyStateContainer.addSubview(emptyMessageLabel)
+        
+        NSLayoutConstraint.activate([
+            emptyMessageLabel.centerXAnchor.constraint(equalTo: emptyStateContainer.centerXAnchor),
+            emptyMessageLabel.centerYAnchor.constraint(equalTo: emptyStateContainer.centerYAnchor),
+            emptyMessageLabel.leadingAnchor.constraint(equalTo: emptyStateContainer.leadingAnchor, constant: 32),
+            emptyMessageLabel.trailingAnchor.constraint(equalTo: emptyStateContainer.trailingAnchor, constant: -32)
+        ])
+        
+        // Insert into content stack at the top
+        contentStackView.insertArrangedSubview(emptyStateContainer, at: 0)
+    }
 	
 	func configure(with data: WatchlistData) {
-		titleLabel.text = "All my birds"
         let unobservedCount = data.totalCount - data.observedCount
 		speciesCountLabel.text = "\(unobservedCount)"
         speciesTitleLabel.text = "Unobserved"
-        
 		observedCountLabel.text = "\(data.observedCount)"
 		
-		let images = data.images
-		if images.indices.contains(0) {
-			image1.isHidden = false
-			image1.image = images[0]
-			image1.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-			alignImageTop(image1)
-		} else {
-			image1.isHidden = true
-		}
-		if images.indices.contains(1) {
-			image2.isHidden = false
-			image2.image = images[1]
-			image2.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-			alignImageTop(image2)
-		} else {
-			image2.isHidden = true
-		}
-		if images.indices.contains(2) {
-			stackContainerView.isHidden = false
-			stackFrontImage.image = images[2]
-			stackFrontImage.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-			alignImageTop(stackFrontImage)
-			let hasMoreContent = data.totalImageCount > 3
-			
-			if hasMoreContent {
-				stackBackImage.isHidden = false
-				let backImg = images.indices.contains(3) ? images[3] : images[2]
-				stackBackImage.image = backImg
-				stackBackImage.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-				alignImageTop(stackBackImage)
-				
-				addBlurToBackImage()
-			} else {
-				stackBackImage.isHidden = true
-			}
-		} else {
-			stackContainerView.isHidden = true
-		}
+		self.allImages = data.images
+        
+        if allImages.isEmpty {
+            imageStackView.isHidden = true
+            emptyStateContainer.isHidden = false
+            stopSlideshow()
+        } else {
+            imageStackView.isHidden = false
+            emptyStateContainer.isHidden = true
+            
+            if allImages.count == 1 {
+                // Show only one image, filling the entire stack view
+                image1.isHidden = false
+                image2.isHidden = true
+                image1.image = allImages[0]
+                alignImageTop(image1)
+                stopSlideshow()
+            } else {
+                // Initial setup for two images
+                image1.isHidden = false
+                image2.isHidden = false
+                image1.image = allImages[0]
+                image2.image = allImages[1]
+                alignImageTop(image1)
+                alignImageTop(image2)
+                
+                if allImages.count > 2 {
+                    currentImageIndex = 2
+                    startSlideshow()
+                } else {
+                    stopSlideshow()
+                }
+            }
+        }
 	}
+
+    private func startSlideshow() {
+        stopSlideshow()
+        guard allImages.count > 2 else { return }
+        
+        slideshowTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { [weak self] _ in
+            self?.cycleImage()
+        }
+    }
+    
+    private func stopSlideshow() {
+        slideshowTimer?.invalidate()
+        slideshowTimer = nil
+    }
+    
+    private func cycleImage() {
+        guard allImages.count > 2 else { return }
+        if currentImageIndex >= allImages.count {
+            currentImageIndex = 0
+        }
+        
+        let nextImage = allImages[currentImageIndex]
+        let slotToUpdate = activeSlot == 0 ? image1 : image2
+        
+        UIView.transition(with: slotToUpdate!, duration: 1.0, options: .transitionCrossDissolve, animations: {
+            slotToUpdate?.image = nextImage
+            self.alignImageTop(slotToUpdate!)
+        }, completion: nil)
+        
+        activeSlot = (activeSlot + 1) % 2
+        currentImageIndex += 1
+    }
 
 	private func alignImageTop(_ imageView: UIImageView) {
 		guard let image = imageView.image else { return }
@@ -123,60 +180,54 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	}
 	
 	private func setupStyling() {
-		self.contentView.layer.cornerRadius = 22
+		self.contentView.layer.cornerRadius = 24
 		self.contentView.layer.masksToBounds = true
 		
 		mainContainerView.backgroundColor = .secondarySystemGroupedBackground
-		mainContainerView.layer.cornerRadius = 22
+		mainContainerView.layer.cornerRadius = 24
 		mainContainerView.layer.masksToBounds = true
 		self.layer.shadowColor = UIColor.black.cgColor
-		self.layer.shadowOpacity = 0.08
-		self.layer.shadowOffset = CGSize(width: 0, height: 4)
-		self.layer.shadowRadius = 8
+		self.layer.shadowOpacity = 0.06
+		self.layer.shadowOffset = CGSize(width: 0, height: 2)
+		self.layer.shadowRadius = 10
 		self.layer.masksToBounds = false
-		let imageRadius: CGFloat = 12
-		let images = [image1, image2, stackFrontImage, stackBackImage]
+		
+		let images = [image1, image2]
 		
 		images.forEach { imageView in
-			imageView?.layer.cornerRadius = imageRadius
+			imageView?.layer.cornerRadius = 16
 			imageView?.layer.cornerCurve = .continuous
 			imageView?.clipsToBounds = true
 			imageView?.contentMode = .scaleAspectFill
 		}
-		speciesContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
-		speciesContainer.layer.cornerRadius = 8
+		speciesContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
+		speciesContainer.layer.cornerRadius = 12
 		speciesContainer.layer.masksToBounds = true
 		
 		speciesCountLabel.textColor = .systemGreen
 		speciesIcon.tintColor = .systemGreen
+		speciesIcon.image = UIImage(systemName: "bird")
 		speciesTitleLabel.textColor = .systemGreen
-		observedContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.15)
-		observedContainer.layer.cornerRadius = 8
+        speciesCountLabel.font = .systemFont(ofSize: 22, weight: .semibold)
+        
+		observedContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+		observedContainer.layer.cornerRadius = 12
 		observedContainer.layer.masksToBounds = true
 		
 		observedCountLabel.textColor = .systemBlue
 		observedIcon.tintColor = .systemBlue
+		observedIcon.image = UIImage(systemName: "bird.fill")
 		observedTitleLabel.textColor = .systemBlue
-	}
-	
-	private func addBlurToBackImage() {
-		stackBackImage.subviews.forEach { $0.removeFromSuperview() }
-		
-		let blurEffect = UIBlurEffect(style: .regular)
-		let blurView = UIVisualEffectView(effect: blurEffect)
-		
-		blurView.frame = stackBackImage.bounds
-		blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-		blurView.alpha = 0.5
-		
-		stackBackImage.addSubview(blurView)
+        observedCountLabel.font = .systemFont(ofSize: 22, weight: .semibold)
+        
+        [speciesTitleLabel, observedTitleLabel].forEach {
+            $0?.font = .systemFont(ofSize: 14, weight: .medium)
+        }
 	}
 
 	override func layoutSubviews() {
 		super.layoutSubviews()
 		alignImageTop(image1)
 		alignImageTop(image2)
-		alignImageTop(stackFrontImage)
-		alignImageTop(stackBackImage)
 	}
 }

@@ -16,7 +16,7 @@ class WatchlistHomeViewController: UIViewController {
 		
 		var title: String {
 			switch self {
-				case .myWatchlist: return "Your Favorites"
+				case .myWatchlist: return "My Collections"
 				case .customWatchlist: return "Curated Collections"
 				case .sharedWatchlist: return "Global Communities"
 			}
@@ -26,10 +26,10 @@ class WatchlistHomeViewController: UIViewController {
 	private struct LayoutConstants {
 		static let myWatchlistHeight: CGFloat = 280
 		static let actionCellHeight: CGFloat = 130
-		static let customWatchlistHeight: CGFloat = 280
+		static let customWatchlistHeight: CGFloat = 220
 		static let sharedWatchlistHeight: CGFloat = 140
 		static let emptyStateHeight: CGFloat = 200
-		static let headerHeight: CGFloat = 40
+		static let headerHeight: CGFloat = 60
 	}
 
 	private var hasAnyWatchlist: Bool {
@@ -102,7 +102,7 @@ class WatchlistHomeViewController: UIViewController {
 		}
 	}
 	private func setupUI() {
-		self.navigationItem.title = "Personal Collections"
+		self.navigationItem.title = "Watchlist"
 		self.tabBarItem.title = "Watchlist"
 		self.navigationItem.largeTitleDisplayMode = .always
 	}
@@ -286,7 +286,7 @@ extension WatchlistHomeViewController {
 			} else if let dto = sender as? WatchlistSummaryDTO {
 				if dto.type == .my_watchlist {
 					destVC.watchlistType = .myWatchlist
-					destVC.watchlistTitle = "My Watchlist"
+					destVC.watchlistTitle = "My Collections"
 				} else if dto.type == .shared {
 					destVC.watchlistType = .shared
 					destVC.watchlistTitle = dto.title
@@ -573,7 +573,7 @@ extension WatchlistHomeViewController {
 
 				let section = NSCollectionLayoutSection(group: containerGroup)
 				section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
-				section.boundarySupplementaryItems = []
+				section.boundarySupplementaryItems = shouldShowHeader(for: .myWatchlist) ? [createHeader()] : []
 				return section
 
 			} else {
@@ -608,10 +608,11 @@ extension WatchlistHomeViewController {
 					subitems: [actionItem, actionItem]
 				)
 				actionGroup.interItemSpacing = .fixed(8)
+				let actionGroupHeight: CGFloat = env.traitCollection.userInterfaceStyle == .dark ? LayoutConstants.actionCellHeight : 130
 				let outerGroup = NSCollectionLayoutGroup.vertical(
 					layoutSize: NSCollectionLayoutSize(
 						widthDimension: .fractionalWidth(1.0),
-						heightDimension: .absolute(myWatchlistHeight + 8 + LayoutConstants.actionCellHeight)
+						heightDimension: .absolute(myWatchlistHeight + 8 + 130)
 					),
 					subitems: [mainCardGroup, actionGroup]
 				)
@@ -619,7 +620,7 @@ extension WatchlistHomeViewController {
 
 				let section = NSCollectionLayoutSection(group: outerGroup)
 				section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
-				section.boundarySupplementaryItems = []
+				section.boundarySupplementaryItems = shouldShowHeader(for: .myWatchlist) ? [createHeader()] : []
 				return section
 			}
 
@@ -674,18 +675,18 @@ extension WatchlistHomeViewController {
 			return section
 		}
 
+		let isPad = env.traitCollection.userInterfaceIdiom == .pad
+		let cardHeight: CGFloat = isPad ? 340 : LayoutConstants.customWatchlistHeight
+		let columns = isPad ? 3 : 2
+
 		let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
-		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 12)
+		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 6, bottom: 12, trailing: 6)
 		
-		let containerWidth = env.container.effectiveContentSize.width
-		let fraction: CGFloat = containerWidth > 700 ? 0.28 : 0.45
-		
-		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(fraction), heightDimension: .absolute(LayoutConstants.customWatchlistHeight))
-		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(cardHeight))
+		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: columns)
 		
 		let section = NSCollectionLayoutSection(group: group)
-		section.orthogonalScrollingBehavior = .continuous
-		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16)
+		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 20, trailing: 10)
 		section.boundarySupplementaryItems = shouldShowHeader(for: .customWatchlist) ? [createHeader()] : []
 		return section
 	}
@@ -722,7 +723,7 @@ extension WatchlistHomeViewController {
 	private func shouldShowHeader(for sectionType: WatchlistSection) -> Bool {
 		switch sectionType {
 		case .myWatchlist:
-			return false
+			return true
 		case .customWatchlist:
 			return !customWatchlists.isEmpty
 		case .sharedWatchlist:
@@ -752,11 +753,11 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 			
 			switch sectionType {
 			case .myWatchlist:
-				showChevron = false
+				showChevron = true
 				showPlus = false
 			case .customWatchlist:
 				showChevron = shouldShowHeader(for: .customWatchlist)
-				showPlus = shouldShowHeader(for: .customWatchlist)
+				showPlus = false
 			case .sharedWatchlist:
 				showChevron = shouldShowHeader(for: .sharedWatchlist)
 				showPlus = shouldShowHeader(for: .sharedWatchlist)
@@ -782,11 +783,14 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 		guard let sectionType = WatchlistSection(rawValue: section) else { return }
 		guard shouldShowHeader(for: sectionType) else { return }
 		switch sectionType {
+			case .myWatchlist:
+				if let wl = myWatchlist {
+					performSegue(withIdentifier: "ShowSmartWatchlist", sender: wl)
+				}
 			case .customWatchlist:
 				performSegue(withIdentifier: "ShowCustomWatchlistGrid", sender: self)
 			case .sharedWatchlist:
 				performSegue(withIdentifier: "ShowSharedWatchlistGrid", sender: self)
-			default: break
 		}
 	}
 }

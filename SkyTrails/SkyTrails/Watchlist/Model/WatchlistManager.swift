@@ -210,6 +210,10 @@ final class WatchlistManager: WatchlistRepository {
         try persistence.deleteWatchlist(id: id)
     }
     
+    func clearWatchlist(id: UUID) throws {
+        try persistence.clearWatchlist(id: id)
+    }
+    
     func ensureMyWatchlistExists() async throws -> UUID {
         return WatchlistConstants.myWatchlistID
     }
