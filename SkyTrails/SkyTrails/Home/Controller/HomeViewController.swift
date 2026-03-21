@@ -346,7 +346,7 @@ extension HomeViewController {
     private func createCommunityObservationsSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let height: CGFloat = isPad ? 280 : 159
+        let height: CGFloat = isPad ? 159 : 158
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height)), subitems: [item])
         group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         let section = NSCollectionLayoutSection(group: group)

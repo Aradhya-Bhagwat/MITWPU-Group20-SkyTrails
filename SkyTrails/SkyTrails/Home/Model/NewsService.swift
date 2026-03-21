@@ -5,7 +5,8 @@ protocol NewsServiceProtocol: Sendable {
     func fetchNews() async -> [NewsItem]
 }
 
-struct SupabaseNewsRow: Codable {
+/// Matches the single-row cache structure in Supabase: news_cache (id: 1, content: JSONB, last_updated: TIMESTAMPTZ)
+private struct SupabaseNewsRow: Codable {
     let id: Int
     let content: [NewsItem]
     let last_updated: String
@@ -13,7 +14,7 @@ struct SupabaseNewsRow: Codable {
 
 final class NewsService: NewsServiceProtocol {
     private let logger: LoggingServiceProtocol
-    private let refreshInterval: TimeInterval = 6 * 60 * 60
+    private let refreshInterval: TimeInterval = 10 * 60 // 10 minutes
     private let cacheKey = "cached_news_items"
     private let lastFetchKey = "last_news_fetch_timestamp"
     private let maxNewsCount = 5
@@ -27,20 +28,14 @@ final class NewsService: NewsServiceProtocol {
         let lastLocalFetch = UserDefaults.standard.double(forKey: lastFetchKey)
         let now = Date().timeIntervalSince1970
         
+        // 1. If local cache is fresh (< 6h), return immediately
         if (now - lastLocalFetch) < refreshInterval && !cached.isEmpty {
             return Array(cached.prefix(maxNewsCount))
         }
         
+        // 2. Local cache is stale or missing, fetch from Supabase
         do {
             if let supabaseData = try await fetchFromSupabaseTable() {
-                let lastUpdated = isoDate(from: supabaseData.last_updated) ?? Date(timeIntervalSince1970: 0)
-                let supabaseAge = Date().timeIntervalSince(lastUpdated)
-                
-                if supabaseAge < refreshInterval && !supabaseData.content.isEmpty {
-                    saveToCache(supabaseData.content)
-                    return Array(supabaseData.content.prefix(maxNewsCount))
-                }
-
                 if !supabaseData.content.isEmpty {
                     saveToCache(supabaseData.content)
                     return Array(supabaseData.content.prefix(maxNewsCount))
@@ -50,13 +45,12 @@ final class NewsService: NewsServiceProtocol {
             logger.log(message: "Supabase news cache fetch failed: \(error.localizedDescription)", context: "NewsService")
         }
 
-        if !cached.isEmpty {
-            return Array(cached.prefix(maxNewsCount))
-        }
-        return []
+        // 3. Fallback: If Supabase fetch fails or is empty, use stale local cache as last resort
+        return Array(cached.prefix(maxNewsCount))
     }
     
     private func fetchFromSupabaseTable() async throws -> SupabaseNewsRow? {
+        // Fetch only from news_cache where id = 1
         let rows: [SupabaseNewsRow] = try await SupabaseClient.shared.get(
             path: "rest/v1/news_cache",
             options: SupabaseRequestOptions(queryItems: [
@@ -86,13 +80,5 @@ final class NewsService: NewsServiceProtocol {
             logger.log(error: error, context: "NewsService")
             return []
         }
-    }
-    
-    private func isoDate(from raw: String) -> Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = formatter.date(from: raw) { return date }
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter.date(from: raw)
     }
 }
