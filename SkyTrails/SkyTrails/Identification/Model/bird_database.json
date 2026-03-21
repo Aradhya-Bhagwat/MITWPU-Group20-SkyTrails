@@ -1,8 +1,8 @@
 {
   "metadata": {
     "version": "3.0",
-    "total_species": 12,
-    "description": "Fixed shapes and sizes for proper bird identification. 16 shape categories."
+    "total_species": 32,
+    "description": "Updated with 20 Accipitridae birds"
   },
   "reference_data": {
     "shapes": [
@@ -149,34 +149,14 @@
         "area": "Back"
       },
       {
-        "id": "59f8fc62-1a35-424a-a378-35edcf53abaf",
-        "shapeId": "Accipitridae",
-        "area": "Beak"
-      },
-      {
         "id": "f3a15a8f-5430-4c8d-aecf-04d3b77d4944",
         "shapeId": "Accipitridae",
         "area": "Crown"
       },
       {
-        "id": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "shapeId": "Accipitridae",
-        "area": "Eye"
-      },
-      {
-        "id": "4f5ed235-4fd6-48df-87fa-bdc3cc65318c",
-        "shapeId": "Accipitridae",
-        "area": "Leg"
-      },
-      {
         "id": "f07be23a-3a27-4ec0-918b-16c1f9d2c360",
         "shapeId": "Accipitridae",
         "area": "Neck"
-      },
-      {
-        "id": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
-        "shapeId": "Accipitridae",
-        "area": "Tail"
       },
       {
         "id": "f917451b-8cbb-4544-95e1-6ad157382c80",
@@ -192,6 +172,21 @@
         "id": "b554d4c8-736e-4854-be9a-b03af359aa79",
         "shapeId": "Accipitridae",
         "area": "Wings"
+      },
+      {
+        "id": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
+        "shapeId": "Accipitridae",
+        "area": "Tail"
+      },
+      {
+        "id": "4f5ed235-4fd6-48df-87fa-bdc3cc65318c",
+        "shapeId": "Accipitridae",
+        "area": "Leg"
+      },
+      {
+        "id": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "shapeId": "Accipitridae",
+        "area": "Eye"
       }
     ],
     "variants": [
@@ -476,16 +471,6 @@
         "name": "Streaked"
       },
       {
-        "id": "38a1dcc9-c75d-4846-bf45-0ab38eadf477",
-        "fieldMarkId": "59f8fc62-1a35-424a-a378-35edcf53abaf",
-        "name": "Hooked"
-      },
-      {
-        "id": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d",
-        "fieldMarkId": "59f8fc62-1a35-424a-a378-35edcf53abaf",
-        "name": "Heavy"
-      },
-      {
         "id": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf",
         "fieldMarkId": "f3a15a8f-5430-4c8d-aecf-04d3b77d4944",
         "name": "Plain"
@@ -493,22 +478,17 @@
       {
         "id": "e119b716-91c4-4f76-bbfc-bb65a6a64045",
         "fieldMarkId": "f3a15a8f-5430-4c8d-aecf-04d3b77d4944",
-        "name": "Pale"
+        "name": "Streaked"
       },
       {
         "id": "7331bc62-9d9f-4d42-9925-4ece29ca6972",
         "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Dark iris"
+        "name": "Plain"
       },
       {
         "id": "ec066f2c-a72a-43d1-942b-81d223dab482",
         "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Pale iris"
-      },
-      {
-        "id": "8bf48b6f-0436-4bdf-9375-245a287cf77d",
-        "fieldMarkId": "4f5ed235-4fd6-48df-87fa-bdc3cc65318c",
-        "name": "Yellow"
+        "name": "Eyeline"
       },
       {
         "id": "f7e1afbb-8bba-4056-807c-c42dccb84d92",
@@ -518,32 +498,12 @@
       {
         "id": "0aebb638-34b8-4e21-b10c-a34266591bdb",
         "fieldMarkId": "f07be23a-3a27-4ec0-918b-16c1f9d2c360",
-        "name": "Ruff"
-      },
-      {
-        "id": "9771b11d-6a92-4cec-b6c8-409eda88422f",
-        "fieldMarkId": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
-        "name": "Forked"
-      },
-      {
-        "id": "82635e7c-8de4-428c-ba50-65d1437a1d2a",
-        "fieldMarkId": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
-        "name": "Rounded"
-      },
-      {
-        "id": "5943df75-0c35-4c89-afb6-7ad69ffdeee7",
-        "fieldMarkId": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
-        "name": "Banded"
-      },
-      {
-        "id": "cfd60380-775b-4948-8d4f-b10fce3aeca1",
-        "fieldMarkId": "f917451b-8cbb-4544-95e1-6ad157382c80",
-        "name": "Streaked"
+        "name": "Collared"
       },
       {
         "id": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85",
         "fieldMarkId": "9db374e3-7cee-4299-96cd-38ac86e81f73",
-        "name": "Barred"
+        "name": "Plain"
       },
       {
         "id": "905ebe36-a791-484c-a664-9118d23d99ff",
@@ -553,12 +513,137 @@
       {
         "id": "64e58edf-7757-4bed-b307-d3430c1e5bad",
         "fieldMarkId": "b554d4c8-736e-4854-be9a-b03af359aa79",
-        "name": "Dark tips"
+        "name": "Plain"
       },
       {
         "id": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7379",
         "fieldMarkId": "b554d4c8-736e-4854-be9a-b03af359aa79",
+        "name": "Wing-bars"
+      },
+      {
+        "id": "5943df75-0c35-4c89-afb6-7ad69ffdeee7",
+        "fieldMarkId": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
+        "name": "Plain"
+      },
+      {
+        "id": "9771b11d-6a92-4cec-b6c8-409eda88422f",
+        "fieldMarkId": "8f6648bf-31cf-4804-8253-8098a01b1e1c",
         "name": "Banded"
+      },
+      {
+        "id": "8bf48b6f-0436-4bdf-9375-245a287cf77d",
+        "fieldMarkId": "4f5ed235-4fd6-48df-87fa-bdc3cc65318c",
+        "name": "Plain"
+      },
+      {
+        "id": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d",
+        "fieldMarkId": "4f5ed235-4fd6-48df-87fa-bdc3cc65318c",
+        "name": "Feathered"
+      },
+      {
+        "id": "4ad6eaed-0c4a-4efe-adc4-9b5bb670ac00",
+        "fieldMarkId": "f3a15a8f-5430-4c8d-aecf-04d3b77d4944",
+        "name": "Crested"
+      },
+      {
+        "id": "ec066f2c-a72a-43d1-942b-81d223dab4ff",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Mask"
+      },
+      {
+        "id": "ec066f2c-a72a-43d1-942b-81d223dab5ee",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Eye-ring"
+      },
+      {
+        "id": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8b",
+        "fieldMarkId": "9db374e3-7cee-4299-96cd-38ac86e81f73",
+        "name": "Barred"
+      },
+      {
+        "id": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8c",
+        "fieldMarkId": "9db374e3-7cee-4299-96cd-38ac86e81f73",
+        "name": "Spotted"
+      },
+      {
+        "id": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370",
+        "fieldMarkId": "b554d4c8-736e-4854-be9a-b03af359aa79",
+        "name": "Patches"
+      },
+      {
+        "id": "2451fcad-2ab7-42e4-90a7-3c4e48939100",
+        "fieldMarkId": "b0fb6b2d-0368-4153-a23b-1eff94ce87f0",
+        "name": "Spotted"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000",
+        "fieldMarkId": null,
+        "name": "Plain"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf001",
+        "fieldMarkId": null,
+        "name": "Eyeline"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002",
+        "fieldMarkId": null,
+        "name": "Mask"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf003",
+        "fieldMarkId": null,
+        "name": "Supercilium"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf004",
+        "fieldMarkId": null,
+        "name": "Eye-ring"
+      },
+      {
+        "id": "0fd60380-775b-4948-8d4f-b10fce3ae000",
+        "fieldMarkId": "f917451b-8cbb-4544-95e1-6ad157382c80",
+        "name": "Plain"
+      },
+      {
+        "id": "0fd60380-775b-4948-8d4f-b10fce3ae001",
+        "fieldMarkId": "f917451b-8cbb-4544-95e1-6ad157382c80",
+        "name": "Bib"
+      },
+      {
+        "id": "0fd60380-775b-4948-8d4f-b10fce3ae002",
+        "fieldMarkId": "f917451b-8cbb-4544-95e1-6ad157382c80",
+        "name": "Spotted"
+      },
+      {
+        "id": "0fd60380-775b-4948-8d4f-b10fce3ae003",
+        "fieldMarkId": "f917451b-8cbb-4544-95e1-6ad157382c80",
+        "name": "Malar-striped"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Plain"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf001",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Eyeline"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Mask"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf003",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Supercilium"
+      },
+      {
+        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf004",
+        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
+        "name": "Eye-ring"
       }
     ]
   },
@@ -1017,11 +1102,7 @@
       "fieldMarkData": [
         {
           "area": "Back",
-          "variantId": "2451fcad-2ab7-42e4-90a7-3c4e48939121"
-        },
-        {
-          "area": "Beak",
-          "variantId": "38a1dcc9-c75d-4846-bf45-0ab38eadf477"
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
         },
         {
           "area": "Crown",
@@ -1029,23 +1110,399 @@
         },
         {
           "area": "Eye",
-          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
-        },
-        {
-          "area": "Leg",
-          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
         },
         {
           "area": "Neck",
           "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
         },
         {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "bird_id": "8331033f-c993-44bf-96b0-ce68faca9a0b",
+      "likelySpot": "Urban"
+    },
+    {
+      "commonName": "Brahminy Kite",
+      "scientificName": "Haliastur indus",
+      "staticImageName": "brahminy_kite",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "common",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Coastal",
+      "bird_id": "d737353f-8fef-4493-9283-3073b7f9e153"
+    },
+    {
+      "commonName": "Black-winged Kite",
+      "scientificName": "Elanus caeruleus",
+      "staticImageName": "black_winged_kite",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 3,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Wetlands",
+      "bird_id": "a7aa89f7-7979-4979-89e8-336b08ba0d06"
+    },
+    {
+      "commonName": "Shikra",
+      "scientificName": "Accipiter badius",
+      "staticImageName": "shikra",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "common",
+      "shape_id": "Accipitridae",
+      "size_category": 2,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8b"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
           "area": "Tail",
           "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
         },
         {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Forest Edge",
+      "bird_id": "e14e79f9-fca6-45de-bf70-8722cc15d17a"
+    },
+    {
+      "commonName": "Eurasian Sparrowhawk",
+      "scientificName": "Accipiter nisus",
+      "staticImageName": "eurasian_sparrowhawk",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 2,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
           "area": "Throat",
-          "variantId": "cfd60380-775b-4948-8d4f-b10fce3aeca1"
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8b"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "57b1e3e0-cd55-4246-a9b9-9c2ab0da90b6"
+    },
+    {
+      "commonName": "Crested Serpent Eagle",
+      "scientificName": "Spilornis cheela",
+      "staticImageName": "crested_serpent_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670ac00"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8c"
+        },
+        {
+          "area": "Wings",
+          "variantId": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "90ec8e06-b1d2-48a3-b929-fcba9a967b5f"
+    },
+    {
+      "commonName": "Changeable Hawk-Eagle",
+      "scientificName": "Nisaetus cirrhatus",
+      "staticImageName": "changeable_hawk_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670ac00"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
         },
         {
           "area": "Underparts",
@@ -1054,9 +1511,850 @@
         {
           "area": "Wings",
           "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
         }
       ],
-      "bird_id": "8331033f-c993-44bf-96b0-ce68faca9a0b"
+      "likelySpot": "Forest",
+      "bird_id": "e51a518f-5679-4de4-9aa5-51b9b90ed2df"
+    },
+    {
+      "commonName": "Booted Eagle",
+      "scientificName": "Hieraaetus pennatus",
+      "staticImageName": "booted_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "rare",
+      "shape_id": "Accipitridae",
+      "size_category": 3,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Hills",
+      "bird_id": "b60e49e0-b73e-47b7-9e97-72f8d9cea2cb"
+    },
+    {
+      "commonName": "Tawny Eagle",
+      "scientificName": "Aquila rapax",
+      "staticImageName": "tawny_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Open Country",
+      "bird_id": "15fc39a9-3845-40d1-8118-aeb9f3fe7603"
+    },
+    {
+      "commonName": "Steppe Eagle",
+      "scientificName": "Aquila nipalensis",
+      "staticImageName": "steppe_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Open Country",
+      "bird_id": "bb14dc64-cdb2-43ea-9610-b908931c66dc"
+    },
+    {
+      "commonName": "Bonelli's Eagle",
+      "scientificName": "Aquila fasciata",
+      "staticImageName": "bonellis_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "rare",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "905ebe36-a791-484c-a664-9118d23d99ff"
+        },
+        {
+          "area": "Wings",
+          "variantId": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Hills",
+      "bird_id": "c4e762ab-5ec2-48b5-a6c1-3b29ec2c5961"
+    },
+    {
+      "commonName": "Indian Spotted Eagle",
+      "scientificName": "Clanga hastata",
+      "staticImageName": "indian_spotted_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "rare",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "2451fcad-2ab7-42e4-90a7-3c4e48939100"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8c"
+        },
+        {
+          "area": "Wings",
+          "variantId": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "5244d612-d1da-4395-a432-87c9b886592c"
+    },
+    {
+      "commonName": "Greater Spotted Eagle",
+      "scientificName": "Clanga clanga",
+      "staticImageName": "greater_spotted_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "rare",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "2451fcad-2ab7-42e4-90a7-3c4e48939100"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8c"
+        },
+        {
+          "area": "Wings",
+          "variantId": "65d578c6-3e5f-4ae7-aabe-1d3ee63e7370"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Wetlands",
+      "bird_id": "589343e9-73cd-4d1d-a834-0091a169d120"
+    },
+    {
+      "commonName": "Oriental Honey Buzzard",
+      "scientificName": "Pernis ptilorhynchus",
+      "staticImageName": "oriental_honey_buzzard",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8b"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "a0ed5657-702f-42af-8ae5-99476d47c5b5"
+    },
+    {
+      "commonName": "White-eyed Buzzard",
+      "scientificName": "Butastur teesa",
+      "staticImageName": "white_eyed_buzzard",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 3,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf004"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8b"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Open Country",
+      "bird_id": "edc3d5fd-793b-4ad1-afd4-dbf052c7caa7"
+    },
+    {
+      "commonName": "Long-legged Buzzard",
+      "scientificName": "Buteo rufinus",
+      "staticImageName": "long_legged_buzzard",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "rare",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "8bf48b6f-0436-4bdf-9375-245a287cf77d"
+        }
+      ],
+      "likelySpot": "Hills",
+      "bird_id": "7d80f27e-3f1d-4cee-9321-8e894dce10f8"
+    },
+    {
+      "commonName": "Short-toed Snake Eagle",
+      "scientificName": "Circaetus gallicus",
+      "staticImageName": "short_toed_snake_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e8c"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Open Country",
+      "bird_id": "9f02075d-f7b0-4b1c-990e-9116c8e739cf"
+    },
+    {
+      "commonName": "Crested Hawk-Eagle",
+      "scientificName": "Nisaetus nipalensis",
+      "staticImageName": "crested_hawk_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670ac00"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "905ebe36-a791-484c-a664-9118d23d99ff"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "9771b11d-6a92-4cec-b6c8-409eda88422f"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "9800fb1e-fd4b-4cd7-beb1-c23405cb83bb"
+    },
+    {
+      "commonName": "Black Eagle",
+      "scientificName": "Ictinaetus malaiensis",
+      "staticImageName": "black_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "uncommon",
+      "shape_id": "Accipitridae",
+      "size_category": 4,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "384f719c-ef52-48b5-92a6-1ecca035c591"
+    },
+    {
+      "commonName": "Rufous-bellied Eagle",
+      "scientificName": "Lophotriorchis kienerii",
+      "staticImageName": "rufous_bellied_eagle",
+      "family": "Accipitridae",
+      "order_name": "Accipitriformes",
+      "rarityLevel": "rare",
+      "shape_id": "Accipitridae",
+      "size_category": 3,
+      "validMonths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "fieldMarkData": [
+        {
+          "area": "Back",
+          "variantId": "02114048-4cfa-441d-af71-612abbff8f99"
+        },
+        {
+          "area": "Crown",
+          "variantId": "4ad6eaed-0c4a-4efe-adc4-9b5bb670adbf"
+        },
+        {
+          "area": "Eye",
+          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+        },
+        {
+          "area": "Neck",
+          "variantId": "f7e1afbb-8bba-4056-807c-c42dccb84d92"
+        },
+        {
+          "area": "Throat",
+          "variantId": "0fd60380-775b-4948-8d4f-b10fce3ae000"
+        },
+        {
+          "area": "Underparts",
+          "variantId": "05fa82a5-bfd8-48da-86e4-2f024ddb3e85"
+        },
+        {
+          "area": "Wings",
+          "variantId": "64e58edf-7757-4bed-b307-d3430c1e5bad"
+        },
+        {
+          "area": "Tail",
+          "variantId": "5943df75-0c35-4c89-afb6-7ad69ffdeee7"
+        },
+        {
+          "area": "Leg",
+          "variantId": "dc28e5e9-64d4-4278-9fa9-5bd3b7b1c85d"
+        }
+      ],
+      "likelySpot": "Forest",
+      "bird_id": "e175b2af-3efe-456d-bacb-ff76e2625a2f"
     }
   ]
 }

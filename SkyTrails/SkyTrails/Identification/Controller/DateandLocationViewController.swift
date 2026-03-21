@@ -55,8 +55,7 @@ class DateandLocationViewController: UIViewController {
     }
 
     private func updateNextButtonState() {
-        let hasLocationSelection = !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        navigationItem.rightBarButtonItem?.isEnabled = hasDateSelection || hasLocationSelection
+        navigationItem.rightBarButtonItem?.isEnabled = true
     }
     
     private func setupUI() {
