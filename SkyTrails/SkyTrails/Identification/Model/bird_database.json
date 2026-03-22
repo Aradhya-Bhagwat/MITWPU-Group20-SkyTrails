@@ -571,34 +571,9 @@
         "name": "Patches"
       },
       {
-        "id": "2451fcad-2ab7-42e4-90a7-3c4e48939100",
+        "id": "2451fcad-2ab7-42e4-90a7-3c4e48939121",
         "fieldMarkId": "b0fb6b2d-0368-4153-a23b-1eff94ce87f0",
         "name": "Spotted"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000",
-        "fieldMarkId": null,
-        "name": "Plain"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf001",
-        "fieldMarkId": null,
-        "name": "Eyeline"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002",
-        "fieldMarkId": null,
-        "name": "Mask"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf003",
-        "fieldMarkId": null,
-        "name": "Supercilium"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf004",
-        "fieldMarkId": null,
-        "name": "Eye-ring"
       },
       {
         "id": "0fd60380-775b-4948-8d4f-b10fce3ae000",
@@ -619,31 +594,6 @@
         "id": "0fd60380-775b-4948-8d4f-b10fce3ae003",
         "fieldMarkId": "f917451b-8cbb-4544-95e1-6ad157382c80",
         "name": "Malar-striped"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000",
-        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Plain"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf001",
-        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Eyeline"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002",
-        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Mask"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf003",
-        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Supercilium"
-      },
-      {
-        "id": "0ea1dcc9-c75d-4846-bf45-0ab38eadf004",
-        "fieldMarkId": "1805dd3f-8025-4e4c-bcf7-0dcc157f2321",
-        "name": "Eye-ring"
       }
     ]
   },
@@ -1110,7 +1060,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1174,7 +1124,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1238,7 +1188,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002"
+          "variantId": "ec066f2c-a72a-43d1-942b-81d223dab4ff"
         },
         {
           "area": "Neck",
@@ -1302,7 +1252,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1366,7 +1316,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1430,7 +1380,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1494,7 +1444,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1558,7 +1508,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1622,7 +1572,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1686,7 +1636,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1750,7 +1700,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1814,7 +1764,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1878,7 +1828,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -1942,7 +1892,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf002"
+          "variantId": "ec066f2c-a72a-43d1-942b-81d223dab4ff"
         },
         {
           "area": "Neck",
@@ -2006,7 +1956,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf004"
+          "variantId": "ec066f2c-a72a-43d1-942b-81d223dab5ee"
         },
         {
           "area": "Neck",
@@ -2070,7 +2020,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -2134,7 +2084,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -2198,7 +2148,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -2262,7 +2212,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",
@@ -2326,7 +2276,7 @@
         },
         {
           "area": "Eye",
-          "variantId": "0ea1dcc9-c75d-4846-bf45-0ab38eadf000"
+          "variantId": "7331bc62-9d9f-4d42-9925-4ece29ca6972"
         },
         {
           "area": "Neck",

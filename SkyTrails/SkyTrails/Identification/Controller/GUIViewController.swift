@@ -199,7 +199,17 @@ class GUIViewController: UIViewController {
                 canvas.draw(in: CGRect(origin: .zero, size: base.size))
             }
         }
-        return UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
+        
+        let bundleCanvas = UIImage(named: canvasName)
+        let bundleBase = UIImage(named: baseName)
+        let bundleIcon = UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
+        
+        print("[DEBUG] KITE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
+        print("        canvasName: \(canvasName) - exists: \(bundleCanvas != nil)")
+        print("        baseName: \(baseName) - exists: \(bundleBase != nil)")
+        print("        fallback icon: id_icon_\(cleanCategory)_\(cleanVariant) - exists: \(bundleIcon != nil)")
+        
+        return bundleIcon
     }
     
     private func composeThumbnail(base: UIImage, canvas: UIImage) -> UIImage {
@@ -235,11 +245,23 @@ class GUIViewController: UIViewController {
             return
         }
 
+        if let diskCached = IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey) {
+            variationThumbnailCache[cacheKey] = diskCached
+            cell.configure(image: diskCached, isSelected: isSelected)
+            return
+        }
+
         variationThumbnailTasks[indexPath] = Task { [weak self, weak cell] in
             guard let self else { return }
             let remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
             let remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
             guard !Task.isCancelled else { return }
+
+            if remoteBase == nil || remoteCanvas == nil {
+                print("[DEBUG] KITE REMOTE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
+                print("        canvasName: \(canvasName) - remote: \(remoteCanvas != nil)")
+                print("        baseName: \(baseName) - remote: \(remoteBase != nil)")
+            }
 
             let composed: UIImage? = {
                 guard let base = remoteBase, let canvas = remoteCanvas else { return nil }
@@ -250,8 +272,13 @@ class GUIViewController: UIViewController {
                 }
             }()
 
+            if composed == nil {
+                print("[DEBUG] KITE THUMBNAIL COMPOSE FAILED - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
+            }
+
             guard let thumb = composed else { return }
             self.variationThumbnailCache[cacheKey] = thumb
+            IdentificationImageService.shared.saveComposedThumbnail(thumb, cacheKey: cacheKey)
             guard let cell else { return }
             guard let currentIndexPath = self.variationsCollectionView.indexPath(for: cell),
                   currentIndexPath == indexPath else { return }
@@ -267,7 +294,18 @@ class GUIViewController: UIViewController {
     
     func getVariantsForCurrentCategory() -> [FieldMarkVariant] {
         guard currentCategoryIndex < categories.count else { return [] }
-        return categories[currentCategoryIndex].variants ?? []
+        let variants = categories[currentCategoryIndex].variants ?? []
+        
+        let names = variants.map { $0.name }
+        let uniqueNames = Set(names)
+        if names.count != uniqueNames.count {
+            print("[DEBUG] DUPLICATE VARIANTS FOUND for \(categories[currentCategoryIndex].area):")
+            for variant in variants {
+                print("       - \(variant.name) (id: \(variant.field_mark_variant_id))")
+            }
+        }
+        
+        return variants
     }
     
     @IBAction func nextTapped(_ sender: Any) {
@@ -298,6 +336,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
             let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
             let thumb = variationThumbnailCache[cacheKey]
+                ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
                 ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
             cell.configure(image: thumb, isSelected: isSelected)
             loadVariationThumbnailRemotely(
