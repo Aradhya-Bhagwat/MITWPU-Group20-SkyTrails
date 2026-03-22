@@ -35,26 +35,39 @@ class EditWatchlistDetailViewController: UIViewController {
 	private var shapeCollectionView: UICollectionView!
 	private var availableShapes: [BirdShape] = []
 	private var selectedShapeId: String?
-	private var locationRuleToggle: UISwitch!
-    private var locationRuleMapView: MKMapView!
-    private var locationRulePlaceholderLabel: UILabel!
-    private var selectedRuleCircle: MKCircle?
     
-	private var dateRuleToggle: UISwitch!
-	private var dateRuleLabel: UILabel!
-	private var dateRuleStartPicker: UIDatePicker!
-	private var dateRuleEndPicker: UIDatePicker!
-    
-    private var selectedRuleLocation: CLLocationCoordinate2D?
     private var selectedRuleRadius: Double = 50.0
-    private var selectedRuleLocationDisplayName: String?
+
+	@IBOutlet weak var locationInputToggle: UISwitch!
+    @IBOutlet weak var dateInputToggle: UISwitch!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		setupUI()
 		setupLocationServices()
 		configureInitialData()
+        DispatchQueue.main.async {
+            self.setupRulesUI()
+            self.populateRuleDataForEdit()
+        }
 	}
+    
+    @IBAction private func dateInputToggled() {
+        UIView.animate(withDuration: 0.3) {
+            self.dateCardView.isHidden = !self.dateInputToggle.isOn
+            self.dateCardView.alpha = self.dateInputToggle.isOn ? 1.0 : 0.0
+        }
+    }
+    
+    @IBAction private func locationInputToggled() {
+        UIView.animate(withDuration: 0.3) {
+            self.locationSearchBar.isHidden = !self.locationInputToggle.isOn
+            self.locationOptionsContainer.isHidden = !self.locationInputToggle.isOn
+            self.locationSearchBar.alpha = self.locationInputToggle.isOn ? 1.0 : 0.0
+            self.locationOptionsContainer.alpha = self.locationInputToggle.isOn ? 1.0 : 0.0
+        }
+    }
+    
 	private func setupUI() {
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
@@ -130,10 +143,6 @@ class EditWatchlistDetailViewController: UIViewController {
         initializeParticipants()
         populateDataForEdit()
         loadAvailableShapes()
-        DispatchQueue.main.async {
-            self.setupRulesUI()
-            self.populateRuleDataForEdit()
-        }
     }
     private func loadAvailableShapes() {
         let allShapes = (try? manager.fetchAll(BirdShape.self)) ?? []
@@ -192,7 +201,7 @@ class EditWatchlistDetailViewController: UIViewController {
         rulesStack.alignment = .fill
         rulesContainerView.addSubview(rulesStack)
 
-        let speciesSection = createRuleSection(title: "Species Inclusion")
+        let speciesSection = createRuleSection(title: "Species Filter")
         speciesRuleToggle = UISwitch()
         speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
         addToggleToSection(section: speciesSection, toggle: speciesRuleToggle)
@@ -216,91 +225,6 @@ class EditWatchlistDetailViewController: UIViewController {
         
         rulesStack.addArrangedSubview(speciesSection)
         
-        let locationSection = createRuleSection(title: "Region Boundaries")
-        locationRuleToggle = UISwitch()
-        locationRuleToggle.addTarget(self, action: #selector(locationRuleToggled), for: .valueChanged)
-        addToggleToSection(section: locationSection, toggle: locationRuleToggle)
-        
-        locationRuleMapView = MKMapView()
-        locationRuleMapView.translatesAutoresizingMaskIntoConstraints = false
-        locationRuleMapView.layer.cornerRadius = 16
-        locationRuleMapView.clipsToBounds = true
-        locationRuleMapView.isUserInteractionEnabled = true
-        locationRuleMapView.heightAnchor.constraint(equalToConstant: 160).isActive = true
-        locationRuleMapView.isHidden = true
-        locationRuleMapView.delegate = self
-        
-        let mapTap = UITapGestureRecognizer(target: self, action: #selector(didTapLocationRuleMap))
-        locationRuleMapView.addGestureRecognizer(mapTap)
-        
-        locationRulePlaceholderLabel = UILabel()
-        locationRulePlaceholderLabel.text = "Tap to set region on map"
-        locationRulePlaceholderLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        locationRulePlaceholderLabel.textColor = .secondaryLabel
-        locationRulePlaceholderLabel.textAlignment = .center
-        locationRulePlaceholderLabel.backgroundColor = .systemGray6.withAlphaComponent(0.8)
-        locationRulePlaceholderLabel.layer.cornerRadius = 8
-        locationRulePlaceholderLabel.clipsToBounds = true
-        locationRulePlaceholderLabel.translatesAutoresizingMaskIntoConstraints = false
-        locationRuleMapView.addSubview(locationRulePlaceholderLabel)
-        
-        locationSection.addArrangedSubview(locationRuleMapView)
-        
-        NSLayoutConstraint.activate([
-            locationRulePlaceholderLabel.centerXAnchor.constraint(equalTo: locationRuleMapView.centerXAnchor),
-            locationRulePlaceholderLabel.centerYAnchor.constraint(equalTo: locationRuleMapView.centerYAnchor),
-            locationRulePlaceholderLabel.widthAnchor.constraint(equalTo: locationRuleMapView.widthAnchor, multiplier: 0.7),
-            locationRulePlaceholderLabel.heightAnchor.constraint(equalToConstant: 36)
-        ])
-        
-        rulesStack.addArrangedSubview(locationSection)
-        
-        let dateSection = createRuleSection(title: "Temporal Bounds")
-        dateRuleToggle = UISwitch()
-        dateRuleToggle.addTarget(self, action: #selector(dateRuleToggled), for: .valueChanged)
-        addToggleToSection(section: dateSection, toggle: dateRuleToggle)
-        
-        let datePickersStack = UIStackView()
-        datePickersStack.translatesAutoresizingMaskIntoConstraints = false
-        datePickersStack.axis = .vertical
-        datePickersStack.spacing = 12
-        datePickersStack.isHidden = true
-        
-        let startContainer = UIStackView()
-        startContainer.axis = .horizontal
-        startContainer.distribution = .equalSpacing
-        startContainer.alignment = .center
-        let startLabel = UILabel()
-        startLabel.text = "Start Date"
-        startLabel.font = .systemFont(ofSize: 16, weight: .regular)
-        startLabel.textColor = .label
-        dateRuleStartPicker = UIDatePicker()
-        dateRuleStartPicker.datePickerMode = .date
-        dateRuleStartPicker.preferredDatePickerStyle = .compact
-        startContainer.addArrangedSubview(startLabel)
-        startContainer.addArrangedSubview(dateRuleStartPicker)
-        
-        let endContainer = UIStackView()
-        endContainer.axis = .horizontal
-        endContainer.distribution = .equalSpacing
-        endContainer.alignment = .center
-        let endLabel = UILabel()
-        endLabel.text = "End Date"
-        endLabel.font = .systemFont(ofSize: 16, weight: .regular)
-        endLabel.textColor = .label
-        dateRuleEndPicker = UIDatePicker()
-        dateRuleEndPicker.datePickerMode = .date
-        dateRuleEndPicker.preferredDatePickerStyle = .compact
-        endContainer.addArrangedSubview(endLabel)
-        endContainer.addArrangedSubview(dateRuleEndPicker)
-        
-        datePickersStack.addArrangedSubview(startContainer)
-        datePickersStack.addArrangedSubview(endContainer)
-        datePickersStack.accessibilityIdentifier = "DatePickersStack"
-        
-        dateSection.addArrangedSubview(datePickersStack)
-        rulesStack.addArrangedSubview(dateSection)
-
         NSLayoutConstraint.activate([
             rulesStack.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
             rulesStack.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
@@ -393,23 +317,6 @@ class EditWatchlistDetailViewController: UIViewController {
         }
     }
     
-    @objc private func locationRuleToggled() {
-        locationRuleMapView.isHidden = !locationRuleToggle.isOn
-    }
-    
-    @objc private func dateRuleToggled() {
-        if let dateSection = dateRuleToggle.superview?.superview as? UIStackView,
-           let datePickersStack = dateSection.arrangedSubviews.last(where: { $0.accessibilityIdentifier == "DatePickersStack" }) {
-            datePickersStack.isHidden = !dateRuleToggle.isOn
-        }
-    }
-    
-    @objc private func didTapLocationRuleMap() {
-        let mapVC = WatchlistLocationRuleMapViewController()
-        mapVC.delegate = self
-        navigationController?.pushViewController(mapVC, animated: true)
-    }
-    
     @objc private func didTapClearWatchlist() {
         guard let watchlist = watchlistToEdit else { return }
         
@@ -467,29 +374,28 @@ class EditWatchlistDetailViewController: UIViewController {
         if let locationRule = activeRules.first(where: { $0.rule_type == .location }),
            let lat = locationRule.lat,
            let lon = locationRule.lon {
-            locationRuleToggle.isOn = true
-            locationRuleMapView.isHidden = false
-            selectedRuleLocation = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            locationInputToggle.isOn = true
             selectedRuleRadius = locationRule.radius_km ?? 50.0
+            selectedLocation = LocationService.LocationData(displayName: watchlist.locationDisplayName ?? watchlist.location ?? "", lat: lat, lon: lon)
+            locationSearchBar.text = selectedLocation?.displayName
             
-            updateMiniMapSelection(location: selectedRuleLocation!, radiusKm: selectedRuleRadius)
+            locationInputToggled()
         } else {
-            locationRuleToggle.isOn = false
-            locationRuleMapView.isHidden = true
+            locationInputToggle.isOn = false
+            locationInputToggled()
         }
         
         if let dateRule = activeRules.first(where: { $0.rule_type == .date_range }),
            let startDate = dateRule.start_date,
            let endDate = dateRule.end_date {
-            dateRuleToggle.isOn = true
-            dateRuleStartPicker.date = startDate
-            dateRuleEndPicker.date = endDate
+            dateInputToggle.isOn = true
+            startDatePicker.date = startDate
+            endDatePicker.date = endDate
+            
+            dateInputToggled()
         } else {
-            dateRuleToggle.isOn = false
-        }
-        if let dateSection = dateRuleToggle.superview?.superview as? UIStackView,
-           let datePickersStack = dateSection.arrangedSubviews.last(where: { $0.accessibilityIdentifier == "DatePickersStack" }) {
-            datePickersStack.isHidden = !dateRuleToggle.isOn
+            dateInputToggle.isOn = false
+            dateInputToggled()
         }
     }
 
@@ -620,11 +526,11 @@ class EditWatchlistDetailViewController: UIViewController {
         )
         
         let locationParams: RuleParameters?
-        if locationRuleToggle.isOn, let ruleLocation = selectedRuleLocation {
+        if locationInputToggle.isOn, let selectedLoc = selectedLocation {
             locationParams = .location(
                 LocationRuleParams(
-                    lat: ruleLocation.latitude,
-                    lon: ruleLocation.longitude,
+                    lat: selectedLoc.lat,
+                    lon: selectedLoc.lon,
                     radiusKm: selectedRuleRadius
                 )
             )
@@ -637,8 +543,8 @@ class EditWatchlistDetailViewController: UIViewController {
             parameters: locationParams
         )
         
-        let dateParams: RuleParameters? = dateRuleToggle.isOn
-            ? .dateRange(DateRangeRuleParams(startDate: dateRuleStartPicker.date, endDate: dateRuleEndPicker.date))
+        let dateParams: RuleParameters? = dateInputToggle.isOn
+            ? .dateRange(DateRangeRuleParams(startDate: startDatePicker.date, endDate: endDatePicker.date))
             : nil
         try manager.upsertRule(
             watchlistId: watchlistId,
@@ -745,51 +651,6 @@ extension EditWatchlistDetailViewController: UISearchBarDelegate, MKLocalSearchC
 extension EditWatchlistDetailViewController: MapSelectionDelegate {
     func didSelectMapLocation(name: String, lat: Double, lon: Double) {
         updateLocationSelection(LocationService.LocationData(displayName: name, lat: lat, lon: lon))
-    }
-}
-extension EditWatchlistDetailViewController: WatchlistLocationRuleDelegate {
-    func didSelectLocationRule(location: CLLocationCoordinate2D, radiusKm: Double, displayName: String) {
-        selectedRuleLocation = location
-        selectedRuleRadius = radiusKm
-        selectedRuleLocationDisplayName = displayName
-        updateMiniMapSelection(location: location, radiusKm: radiusKm)
-    }
-}
-
-extension EditWatchlistDetailViewController: MKMapViewDelegate {
-    func updateMiniMapSelection(location: CLLocationCoordinate2D, radiusKm: Double) {
-        locationRulePlaceholderLabel.isHidden = true
-        
-        locationRuleMapView.removeAnnotations(locationRuleMapView.annotations)
-        if let circle = selectedRuleCircle {
-            locationRuleMapView.removeOverlay(circle)
-        }
-        
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = location
-        locationRuleMapView.addAnnotation(annotation)
-        
-        let circle = MKCircle(center: location, radius: radiusKm * 1000)
-        locationRuleMapView.addOverlay(circle)
-        selectedRuleCircle = circle
-        
-        let region = MKCoordinateRegion(
-            center: location,
-            latitudinalMeters: radiusKm * 1000 * 3.0,
-            longitudinalMeters: radiusKm * 1000 * 3.0
-        )
-        locationRuleMapView.setRegion(region, animated: true)
-    }
-    
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        if let circleOverlay = overlay as? MKCircle {
-            let renderer = MKCircleRenderer(circle: circleOverlay)
-            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.12)
-            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.6)
-            renderer.lineWidth = 2
-            return renderer
-        }
-        return MKOverlayRenderer(overlay: overlay)
     }
 }
 
