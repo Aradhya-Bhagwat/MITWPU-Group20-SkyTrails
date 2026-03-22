@@ -148,6 +148,8 @@ final class WatchlistManager: WatchlistRepository {
 
         if let photo = try? context.fetch(descriptor).first {
             photo.storageUrl = storageUrl
+            photo.syncStatus = .synced
+            photo.lastSyncedAt = Date()
             try? context.save()
         }
     }

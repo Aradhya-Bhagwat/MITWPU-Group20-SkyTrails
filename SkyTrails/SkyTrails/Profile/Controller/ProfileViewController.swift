@@ -39,10 +39,9 @@ class ProfileViewController: UIViewController,
         configureUI()
         configureActions()
         loadUser()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(handleProfileUpdate), name: NSNotification.Name("UserProfileDidChange"), object: nil)
-    }
 
+        NotificationCenter.default.addObserver(self, selector: #selector(handleProfileUpdate), name: UserSession.userProfileDidChangeNotification, object: nil)
+        }
     @objc private func handleProfileUpdate() {
         DispatchQueue.main.async {
             self.loadUser()

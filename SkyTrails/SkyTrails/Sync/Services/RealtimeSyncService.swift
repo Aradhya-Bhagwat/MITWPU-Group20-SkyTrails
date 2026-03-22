@@ -337,8 +337,6 @@ final class RealtimeSyncService: NSObject {
             )
             
             UserSession.shared.saveUser(updatedUser)
-            // Notify UI to refresh profile
-            NotificationCenter.default.post(name: NSNotification.Name("UserProfileDidChange"), object: nil)
         case .delete:
             // User deleted from another device? Logout.
             UserSession.shared.logout()

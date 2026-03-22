@@ -35,6 +35,17 @@ final class WatchlistPhotoService {
         
         do {
             try context.save()
+            let photoId = photo.id
+            let payloadData = buildPhotoPayloadData(photo, for: .create)
+            let localUpdatedAt = photo.uploaded_at
+            Task {
+                await BackgroundSyncAgent.shared.queuePhoto(
+                    id: photoId,
+                    payloadData: payloadData,
+                    localUpdatedAt: localUpdatedAt,
+                    operation: .create
+                )
+            }
         } catch {
             try? deleteImageFromDisk(filename: filename)
             throw WatchlistError.persistenceFailed(underlying: error)
@@ -64,6 +75,17 @@ final class WatchlistPhotoService {
         
         do {
             try context.save()
+            let photoId = photo.id
+            let payloadData = buildPhotoPayloadData(photo, for: .create)
+            let localUpdatedAt = photo.uploaded_at
+            Task {
+                await BackgroundSyncAgent.shared.queuePhoto(
+                    id: photoId,
+                    payloadData: payloadData,
+                    localUpdatedAt: localUpdatedAt,
+                    operation: .create
+                )
+            }
         } catch {
             throw WatchlistError.persistenceFailed(underlying: error)
         }
