@@ -61,10 +61,10 @@ class EditWatchlistDetailViewController: UIViewController {
     
     @IBAction private func locationInputToggled() {
         UIView.animate(withDuration: 0.3) {
-            self.locationSearchBar.isHidden = !self.locationInputToggle.isOn
-            self.locationOptionsContainer.isHidden = !self.locationInputToggle.isOn
-            self.locationSearchBar.alpha = self.locationInputToggle.isOn ? 1.0 : 0.0
-            self.locationOptionsContainer.alpha = self.locationInputToggle.isOn ? 1.0 : 0.0
+            self.locationSearchBar.isHidden = false
+            self.locationOptionsContainer.isHidden = false
+            self.locationSearchBar.alpha = 1.0
+            self.locationOptionsContainer.alpha = 1.0
         }
     }
     

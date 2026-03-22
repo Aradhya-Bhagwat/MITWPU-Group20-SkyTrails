@@ -23,9 +23,33 @@ class SpeciesSelectionViewController: UIViewController {
     private var selectedBirds: Set<UUID> = []
     private var birdQueue: [Bird] = []
     private var processedBirds: [Bird] = []
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupDataObservers()
+        loadData()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadData()
+    }
+
+    private func setupDataObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDataLoaded(_:)),
+            name: WatchlistManager.didLoadDataNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleDataLoaded(_ notification: Notification) {
         loadData()
     }
     private func setupUI() {
@@ -42,7 +66,12 @@ class SpeciesSelectionViewController: UIViewController {
     
     private func loadData() {
         self.allBirds = manager.fetchAllBirds()
-        self.filteredBirds = allBirds
+        let searchText = searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if searchText.isEmpty {
+            self.filteredBirds = allBirds
+        } else {
+            self.filteredBirds = allBirds.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
         tableView.reloadData()
     }
     
