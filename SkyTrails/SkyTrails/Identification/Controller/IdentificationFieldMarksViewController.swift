@@ -140,17 +140,28 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
 
     private func loadBestImage(for category: String, candidates: [String], fallback: UIImage?, shapeId: String) {
         layerLoadTasks[category]?.cancel()
+        print("[DEBUG-FIELDMARK] Loading images for category: \(category), shapeId: \(shapeId)")
+        print("[DEBUG-FIELDMARK] Candidates: \(candidates)")
+        for key in candidates {
+            let exists = UIImage(named: key) != nil
+            print("[DEBUG-FIELDMARK] Bundle: \(key) - exists: \(exists)")
+        }
         layerLoadTasks[category] = Task { [weak self] in
             guard let self else { return }
             var selectedImage: UIImage?
             for key in candidates {
-                if let img = await IdentificationImageService.shared.image(for: key, shapeId: shapeId) {
+                let img = await IdentificationImageService.shared.image(for: key, shapeId: shapeId)
+                print("[DEBUG-FIELDMARK] Remote: \(key) - loaded: \(img != nil)")
+                if let img {
                     selectedImage = img
                     break
                 }
             }
             guard !Task.isCancelled else { return }
             guard let layer = self.partLayers[category] else { return }
+            if selectedImage == nil {
+                print("[DEBUG-FIELDMARK] FAILED to load: \(candidates) for \(category)")
+            }
             layer.image = selectedImage ?? fallback
         }
     }

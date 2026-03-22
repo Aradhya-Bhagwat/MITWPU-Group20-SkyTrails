@@ -18,6 +18,8 @@ protocol ImageProviding {
     func image(for key: String, shapeId: String?) async -> UIImage?
     func prefetch(keys: [String]) async
     func refreshManifestIfNeeded(force: Bool) async
+    func saveComposedThumbnail(_ image: UIImage, cacheKey: String)
+    func loadComposedThumbnail(cacheKey: String) -> UIImage?
 }
 
 @MainActor
@@ -57,6 +59,27 @@ final class ImageService: ImageProviding {
 
     private init() {
         memoryCache.countLimit = 500
+    }
+
+    func saveComposedThumbnail(_ image: UIImage, cacheKey: String) {
+        guard let data = image.pngData(),
+              let file = composedThumbCacheDirectory()?.appendingPathComponent(cacheKey) else { return }
+        try? data.write(to: file, options: .atomic)
+    }
+
+    func loadComposedThumbnail(cacheKey: String) -> UIImage? {
+        guard let file = composedThumbCacheDirectory()?.appendingPathComponent(cacheKey),
+              let data = try? Data(contentsOf: file) else { return nil }
+        return UIImage(data: data)
+    }
+
+    private func composedThumbCacheDirectory() -> URL? {
+        guard let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        let dir = base.appendingPathComponent("VariationThumbnails", isDirectory: true)
+        if !fileManager.fileExists(atPath: dir.path) {
+            try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir
     }
     
     func cachedImage(for key: String, shapeId: String? = nil) -> UIImage? {
