@@ -70,7 +70,8 @@ A logic-driven, step-by-step identification engine designed for accuracy in the 
 *   **iOS 26.0+** (Target device or Simulator)
 
 #### Steps
-1.  **Clone the Repository:** `git clone https://github.com/aradhya0507/SkyTrails.git`
+1.  **Clone the Repository:** 
+`git clone https://github.com/Aradhya-Bhagwat/MITWPU-Group20-SkyTrails.git`
 2.  **Open Project:** Open `SkyTrails/SkyTrails.xcodeproj` in Xcode.
 3.  **Build and Run:** Select your target device and press `⌘R`.
 

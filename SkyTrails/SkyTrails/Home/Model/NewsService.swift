@@ -14,10 +14,10 @@ private struct SupabaseNewsRow: Codable {
 
 final class NewsService: NewsServiceProtocol {
     private let logger: LoggingServiceProtocol
-    private let refreshInterval: TimeInterval = 10 * 60 // 10 minutes
+    private let refreshInterval: TimeInterval = 60 * 60 // 1 hour
     private let cacheKey = "cached_news_items"
     private let lastFetchKey = "last_news_fetch_timestamp"
-    private let maxNewsCount = 5
+    private let maxNewsCount = 8
     
     init(logger: LoggingServiceProtocol = LoggingService.shared) {
         self.logger = logger

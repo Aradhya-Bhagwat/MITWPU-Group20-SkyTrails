@@ -28,7 +28,7 @@ struct User: Codable {
         case name
         case gender
         case email
-        case profilePhoto
+        case profilePhoto = "profile_photo"
     }
 
     init(from decoder: Decoder) throws {

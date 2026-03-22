@@ -2537,6 +2537,30 @@
             "imageName": "indian_peafowl",
             "sourceName": "RSPB",
             "publishedAt": "2026-02-28T00:00:00Z"
+        },
+        {
+            "title": "National Geographic Birding",
+            "summary": "Stunning photography and deep dives into the lives of migratory birds across continents.",
+            "link": "https://www.nationalgeographic.com/animals/birds/",
+            "imageName": "himalayan_monal",
+            "sourceName": "National Geographic",
+            "publishedAt": "2026-02-27T00:00:00Z"
+        },
+        {
+            "title": "The Cornell Lab News",
+            "summary": "Breaking research from the Cornell Lab of Ornithology on bird health and ecosystem status.",
+            "link": "https://www.birds.cornell.edu/home/news/",
+            "imageName": "brown_headed_barbet",
+            "sourceName": "Cornell Lab",
+            "publishedAt": "2026-02-26T00:00:00Z"
+        },
+        {
+            "title": "Smithsonian Bird News",
+            "summary": "Historical perspectives and current conservation science from the Smithsonian Migratory Bird Center.",
+            "link": "https://nationalzoo.si.edu/migratory-birds/news",
+            "imageName": "coppersmith_barbet",
+            "sourceName": "Smithsonian",
+            "publishedAt": "2026-02-25T00:00:00Z"
         }
     ]
 }

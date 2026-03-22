@@ -53,13 +53,13 @@ actor IdentificationSyncService {
         )
         try await MainActor.run {
             let context = WatchlistManager.shared.context
-            let count = try mergeSessions(sessionRows, context: context)
+            _ = try mergeSessions(sessionRows, context: context)
             try context.save()
         }
     }
     
     private nonisolated func mergeSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
-        let descriptor = FetchDescriptor<IdentificationSession>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
+        let descriptor = FetchDescriptor<IdentificationSession>()
         let existingSessions = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationSession] = [:]
         for session in existingSessions {
@@ -99,10 +99,12 @@ actor IdentificationSyncService {
         let sizeCategory = row.metadata?["sizeCategory"].flatMap { Int($0) }
         let filterCategories = row.metadata?["filterCategories"]?.components(separatedBy: ",")
         
-        var observationDate = row.createdAt
+        let observationDate: Date
         if let obsDateStr = row.metadata?["observationDate"],
            let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
             observationDate = parsedDate
+        } else {
+            observationDate = row.created_at
         }
         
         let session = IdentificationSession(
@@ -112,7 +114,7 @@ actor IdentificationSyncService {
             locationId: nil,
             locationDisplayName: locationDisplayName,
             observationDate: observationDate,
-            createdAt: row.createdAt,
+            createdAt: row.created_at,
             status: SessionStatus(rawValue: row.status) ?? .completed,
             sizeCategory: sizeCategory,
             selectedFilterCategories: filterCategories
@@ -133,7 +135,7 @@ actor IdentificationSyncService {
            let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
             session.observationDate = parsedDate
         } else {
-            session.observationDate = row.createdAt
+            session.observationDate = row.created_at
         }
         
         session.status = SessionStatus(rawValue: row.status) ?? .completed
@@ -145,17 +147,25 @@ actor IdentificationSyncService {
             session.selectedFilterCategories = filterStr.components(separatedBy: ",")
         }
         
+        session.locationLat = row.locationLat
+        session.locationLong = row.locationLong
+        session.deviceInfo = row.deviceInfo
+        session.notes = row.notes
+        session.isPublic = row.isPublic ?? false
+        session.weatherConditions = row.weatherConditions
+        session.metadata = row.metadata
+        
         session.serverRowVersion = nil
         session.deletedAt = nil
-        session.created_at = row.createdAt
-        session.updated_at = row.updatedAt
+        session.created_at = row.created_at
+        session.updated_at = row.updated_at
     }
     
     func pushPendingSessions(userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
         let pendingSessionIDs = await MainActor.run { () -> [UUID] in
             do {
                 let descriptor = FetchDescriptor<IdentificationSession>(
-                    sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+                    sortBy: [SortDescriptor(\.created_at, order: .reverse)]
                 )
                 let sessions = try WatchlistManager.shared.context.fetch(descriptor)
                 return sessions.filter { $0.user_id == nil || $0.user_id == userId }.map { $0.identification_session_id }
@@ -178,7 +188,7 @@ actor IdentificationSyncService {
                 throw IdentificationSyncError.contextError("Session not found")
             }
             
-            var metadata: [String: String] = [:]
+            var metadata: [String: String] = session.metadata ?? [:]
             if let shapeId = session.shape?.bird_shape_id {
                 metadata["shapeId"] = shapeId
             }
@@ -197,15 +207,15 @@ actor IdentificationSyncService {
                 id: session.identification_session_id,
                 userId: session.user_id ?? userId,
                 status: session.status.rawValue,
-                locationLat: nil,
-                locationLong: nil,
-                deviceInfo: nil,
-                notes: nil,
-                isPublic: false,
-                weatherConditions: nil,
+                locationLat: session.locationLat,
+                locationLong: session.locationLong,
+                deviceInfo: session.deviceInfo,
+                notes: session.notes,
+                isPublic: session.isPublic,
+                weatherConditions: session.weatherConditions,
                 metadata: metadata.isEmpty ? nil : metadata,
-                createdAt: session.created_at,
-                updatedAt: session.updated_at
+                created_at: session.created_at,
+                updated_at: session.updated_at
             )
             
             let encoder = JSONEncoder()
@@ -223,7 +233,9 @@ actor IdentificationSyncService {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
         request.httpBody = data
+        
         let (responseData, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw IdentificationSyncError.networkError("Invalid response")

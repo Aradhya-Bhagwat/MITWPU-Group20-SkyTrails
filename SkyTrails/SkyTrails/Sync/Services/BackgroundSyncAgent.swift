@@ -1,4 +1,3 @@
-
 import Foundation
 import SwiftData
 import BackgroundTasks
@@ -15,7 +14,7 @@ struct SyncOperation: Sendable, Codable {
     let table: String
     let recordId: UUID
     let payloadData: Data?
-    let createdAt: Date
+    let created_at: Date
     let localUpdatedAt: Date?
     var attempts: Int = 0
     var lastError: String?
@@ -26,7 +25,7 @@ struct SyncOperation: Sendable, Codable {
         self.table = table
         self.recordId = recordId
         self.payloadData = payloadData
-        self.createdAt = Date()
+        self.created_at = Date()
         self.localUpdatedAt = localUpdatedAt
     }
 }
@@ -83,138 +82,396 @@ actor BackgroundSyncAgent {
         guard let data = try? JSONEncoder().encode(ops) else { return }
         try? data.write(to: deadLetterFileURL)
     }
-    func queueWatchlist(id: UUID, payloadData: Data?, updatedAt: Date?, operation: SyncOperationType) {
-        if let data = payloadData, let jsonStr = String(data: data, encoding: .utf8) {
-        }
-        
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "watchlists",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: updatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+
+    // --- Queue Methods ---
+
+    func queueWatchlist(id: UUID, payloadData: Data?, updated_at: Date?, operation: SyncOperationType) {
+        let syncOp = SyncOperation(type: operation, table: "watchlists", recordId: id, payloadData: payloadData, localUpdatedAt: updated_at)
+        addToQueue(syncOp)
     }
+
     func queueEntry(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "watchlist_entries",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "watchlist_entries", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queueRule(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "watchlist_rules",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "watchlist_rules", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queueShare(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "watchlist_shares",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "watchlist_shares", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queuePhoto(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "observed_bird_photos",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "observed_bird_photos", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queueIdentificationSession(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "identification_sessions",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "identification_sessions", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queueIdentificationResult(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "identification_results",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "identification_results", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queueIdentificationCandidate(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "identification_candidates",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
-        Self.saveQueueToDisk(queue)
-        Task {
-            await processQueue()
-        }
+        let syncOp = SyncOperation(type: operation, table: "identification_candidates", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
     }
+
     func queueIdentificationSessionMark(id: UUID, payloadData: Data?, localUpdatedAt: Date?, operation: SyncOperationType) {
-        let syncOp = SyncOperation(
-            type: operation,
-            table: "identification_session_marks",
-            recordId: id,
-            payloadData: payloadData,
-            localUpdatedAt: localUpdatedAt
-        )
-        queue.append(syncOp)
+        let syncOp = SyncOperation(type: operation, table: "identification_session_marks", recordId: id, payloadData: payloadData, localUpdatedAt: localUpdatedAt)
+        addToQueue(syncOp)
+    }
+
+    private func addToQueue(_ op: SyncOperation) {
+        queue.append(op)
         Self.saveQueueToDisk(queue)
         Task {
             await processQueue()
         }
     }
+
+    // --- Sync All & Scanning ---
+
     func syncAll() async {
+        await scanForPendingChanges()
         await processQueue()
     }
+
+    private func scanForPendingChanges() async {
+        await MainActor.run {
+            let context = WatchlistManager.shared.context
+            
+            scanWatchlists(context: context)
+            scanEntries(context: context)
+            scanRules(context: context)
+            scanShares(context: context)
+            scanPhotos(context: context)
+            scanIdentificationSessions(context: context)
+            scanIdentificationResults(context: context)
+            scanIdentificationCandidates(context: context)
+            scanIdentificationSessionMarks(context: context)
+        }
+    }
+
+    @MainActor
+    private func scanWatchlists(context: ModelContext) {
+        let descriptor = FetchDescriptor<Watchlist>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildWatchlistPayload(item)
+                let id = item.watchlist_id
+                let updated_at = item.updated_at
+                Task {
+                    await self.queueWatchlist(id: id, payloadData: payload, updated_at: updated_at, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanEntries(context: ModelContext) {
+        let descriptor = FetchDescriptor<WatchlistEntry>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildEntryPayload(item)
+                let id = item.id
+                let localUpdatedAt = item.observationDate ?? item.addedDate
+                Task {
+                    await self.queueEntry(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanRules(context: ModelContext) {
+        let descriptor = FetchDescriptor<WatchlistRule>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildRulePayload(item)
+                let id = item.id
+                let localUpdatedAt = item.created_at
+                Task {
+                    await self.queueRule(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanShares(context: ModelContext) {
+        let descriptor = FetchDescriptor<WatchlistShare>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildSharePayload(item)
+                let id = item.id
+                let localUpdatedAt = item.shared_at
+                Task {
+                    await self.queueShare(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanPhotos(context: ModelContext) {
+        let descriptor = FetchDescriptor<ObservedBirdPhoto>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildPhotoPayload(item)
+                let id = item.id
+                let localUpdatedAt = item.captured_at ?? item.created_at
+                Task {
+                    await self.queuePhoto(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanIdentificationSessions(context: ModelContext) {
+        let descriptor = FetchDescriptor<IdentificationSession>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced && item.user_id != nil {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildIdentificationSessionPayload(item)
+                let id = item.identification_session_id
+                let localUpdatedAt = item.created_at
+                Task {
+                    await self.queueIdentificationSession(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanIdentificationResults(context: ModelContext) {
+        let descriptor = FetchDescriptor<IdentificationResult>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced && item.user_id != nil {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildIdentificationResultPayload(item)
+                let id = item.identification_result_id
+                let localUpdatedAt = item.created_at
+                Task {
+                    await self.queueIdentificationResult(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanIdentificationCandidates(context: ModelContext) {
+        let descriptor = FetchDescriptor<IdentificationCandidate>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildIdentificationCandidatePayload(item)
+                let id = item.identification_candidate_id
+                let localUpdatedAt = item.created_at
+                Task {
+                    await self.queueIdentificationCandidate(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func scanIdentificationSessionMarks(context: ModelContext) {
+        let descriptor = FetchDescriptor<IdentificationSessionFieldMark>()
+        if let items = try? context.fetch(descriptor) {
+            for item in items where item.syncStatus != .synced {
+                let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
+                let payload = buildIdentificationSessionMarkPayload(item)
+                let id = item.identification_session_mark_id
+                let localUpdatedAt = item.created_at
+                Task {
+                    await self.queueIdentificationSessionMark(id: id, payloadData: payload, localUpdatedAt: localUpdatedAt, operation: opType)
+                }
+            }
+        }
+    }
+
+    // --- Payload Builders ---
+
+    @MainActor
+    private func buildWatchlistPayload(_ item: Watchlist) -> Data? {
+        let userId = item.user_id?.uuidString ?? UserSession.shared.currentUser?.user_id.uuidString
+        let payload: [String: Any] = [
+            "watchlist_id": item.watchlist_id.uuidString,
+            "user_id": userId as Any,
+            "type": item.type?.rawValue ?? "custom",
+            "title": item.title as Any,
+            "location": item.location as Any,
+            "location_display_name": item.locationDisplayName as Any,
+            "start_date": item.startDate != nil ? ISO8601DateFormatter().string(from: item.startDate!) : NSNull(),
+            "end_date": item.endDate != nil ? ISO8601DateFormatter().string(from: item.endDate!) : NSNull(),
+            "cover_image_path": item.coverImagePath as Any,
+            "updated_at": ISO8601DateFormatter().string(from: Date()),
+            "deleted_at": item.deleted_at != nil ? ISO8601DateFormatter().string(from: item.deleted_at!) : NSNull()
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildEntryPayload(_ item: WatchlistEntry) -> Data? {
+        let observedByUserId = item.observedByUserId?.uuidString ?? (item.status == .observed ? UserSession.shared.currentUser?.user_id.uuidString : nil)
+        let payload: [String: Any] = [
+            "watchlist_entry_id": item.id.uuidString,
+            "watchlist_id": item.watchlist?.watchlist_id.uuidString as Any,
+            "nickname": item.nickname as Any,
+            "status": item.status.rawValue,
+            "notes": item.notes as Any,
+            "observation_date": item.observationDate != nil ? ISO8601DateFormatter().string(from: item.observationDate!) : NSNull(),
+            "to_observe_start_date": item.toObserveStartDate != nil ? ISO8601DateFormatter().string(from: item.toObserveStartDate!) : NSNull(),
+            "to_observe_end_date": item.toObserveEndDate != nil ? ISO8601DateFormatter().string(from: item.toObserveEndDate!) : NSNull(),
+            "observed_by": item.observedBy as Any,
+            "observed_by_user_id": observedByUserId as Any,
+            "lat": item.lat as Any,
+            "lon": item.lon as Any,
+            "location_display_name": item.locationDisplayName as Any,
+            "priority": item.priority,
+            "notify_upcoming": item.notify_upcoming,
+            "added_date": ISO8601DateFormatter().string(from: item.addedDate),
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildRulePayload(_ item: WatchlistRule) -> Data? {
+        let payload: [String: Any] = [
+            "watchlist_rule_id": item.id.uuidString,
+            "watchlist_id": item.watchlist?.watchlist_id.uuidString as Any,
+            "rule_type": item.rule_type.rawValue,
+            "lat": item.lat as Any,
+            "lon": item.lon as Any,
+            "radius_km": item.radius_km as Any,
+            "start_date": item.start_date != nil ? ISO8601DateFormatter().string(from: item.start_date!) : NSNull(),
+            "end_date": item.end_date != nil ? ISO8601DateFormatter().string(from: item.end_date!) : NSNull(),
+            "shape_id": item.shape_id as Any,
+            "pattern_key": item.pattern_key as Any,
+            "is_active": item.is_active,
+            "priority": item.priority,
+            "updated_at": ISO8601DateFormatter().string(from: Date()),
+            "deleted_at": item.deleted_at != nil ? ISO8601DateFormatter().string(from: item.deleted_at!) : NSNull()
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildSharePayload(_ item: WatchlistShare) -> Data? {
+        let payload: [String: Any] = [
+            "watchlist_share_id": item.id.uuidString,
+            "watchlist_id": item.watchlist?.watchlist_id.uuidString as Any,
+            "user_id": item.user_id.uuidString,
+            "permission": item.permission.rawValue,
+            "shared_at": ISO8601DateFormatter().string(from: item.shared_at),
+            "shared_by_user_id": item.shared_by_user_id?.uuidString as Any,
+            "deleted_at": item.deleted_at != nil ? ISO8601DateFormatter().string(from: item.deleted_at!) : NSNull()
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildPhotoPayload(_ item: ObservedBirdPhoto) -> Data? {
+        let payload: [String: Any] = [
+            "observed_bird_photo_id": item.id.uuidString,
+            "watchlist_entry_id": item.watchlistEntry?.id.uuidString as Any,
+            "image_path": item.imagePath,
+            "storage_url": item.storageUrl as Any,
+            "captured_at": item.captured_at != nil ? ISO8601DateFormatter().string(from: item.captured_at!) : NSNull(),
+            "uploaded_at": ISO8601DateFormatter().string(from: item.uploaded_at),
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildIdentificationSessionPayload(_ item: IdentificationSession) -> Data? {
+        var metadata: [String: String] = item.metadata ?? [:]
+        if let shapeId = item.shape?.bird_shape_id { metadata["shapeId"] = shapeId }
+        if let locationDisplayName = item.locationDisplayName { metadata["locationDisplayName"] = locationDisplayName }
+        if let sizeCategory = item.sizeCategory { metadata["sizeCategory"] = String(sizeCategory) }
+        if let filterCategories = item.selectedFilterCategories { metadata["filterCategories"] = filterCategories.joined(separator: ",") }
+        metadata["observationDate"] = ISO8601DateFormatter().string(from: item.observationDate)
+
+        let payload: [String: Any] = [
+            "identification_session_id": item.identification_session_id.uuidString,
+            "user_id": item.user_id?.uuidString as Any,
+            "status": item.status.rawValue,
+            "location_lat": item.locationLat as Any,
+            "location_long": item.locationLong as Any,
+            "device_info": item.deviceInfo as Any,
+            "notes": item.notes as Any,
+            "is_public": item.isPublic,
+            "weather_conditions": item.weatherConditions as Any,
+            "metadata": metadata,
+            "created_at": ISO8601DateFormatter().string(from: item.created_at),
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildIdentificationResultPayload(_ item: IdentificationResult) -> Data? {
+        let ownerId = item.user_id?.uuidString ?? UserSession.shared.currentUser?.user_id.uuidString
+        let payload: [String: Any] = [
+            "identification_result_id": item.identification_result_id.uuidString,
+            "identification_session_id": item.session?.identification_session_id.uuidString as Any,
+            "owner_id": ownerId as Any,
+            "bird_id": item.bird?.bird_id.uuidString as Any,
+            "created_at": ISO8601DateFormatter().string(from: item.created_at),
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildIdentificationCandidatePayload(_ item: IdentificationCandidate) -> Data? {
+        let payload: [String: Any] = [
+            "identification_candidate_id": item.identification_candidate_id.uuidString,
+            "identification_result_id": item.result?.identification_result_id.uuidString as Any,
+            "bird_id": item.bird?.bird_id.uuidString as Any,
+            "confidence": item.confidence,
+            "confidence_rank": item.rank as Any,
+            "matched_features": item.matchScore?.matchedFeatures ?? [],
+            "mismatched_features": item.matchScore?.mismatchedFeatures ?? [],
+            "created_at": ISO8601DateFormatter().string(from: item.created_at),
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    @MainActor
+    private func buildIdentificationSessionMarkPayload(_ item: IdentificationSessionFieldMark) -> Data? {
+        let payload: [String: Any] = [
+            "identification_session_mark_id": item.identification_session_mark_id.uuidString,
+            "identification_session_id": item.identification_session_id.uuidString,
+            "field_mark_id": item.field_mark_id.uuidString,
+            "variant_id": item.variant_id.uuidString,
+            "area": item.area,
+            "created_at": ISO8601DateFormatter().string(from: item.created_at),
+            "updated_at": ISO8601DateFormatter().string(from: Date())
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    // --- Processing ---
+
     func retryFailed() async {
         let retryableItems = deadLetterQueue.filter { $0.attempts < maxRetries }
         deadLetterQueue.removeAll { $0.attempts < maxRetries }
@@ -223,6 +480,7 @@ actor BackgroundSyncAgent {
         Self.saveQueueToDisk(queue)
         await processQueue()
     }
+
     func clearAll() {
         queue.removeAll()
         deadLetterQueue.removeAll()
@@ -264,9 +522,7 @@ actor BackgroundSyncAgent {
 
     #if os(iOS)
     private func handleBackgroundTask(_ task: BGProcessingTask) async {
-        task.expirationHandler = {
-        }
-
+        task.expirationHandler = { }
         await syncAll()
         task.setTaskCompleted(success: true)
     }
@@ -277,31 +533,82 @@ actor BackgroundSyncAgent {
         
         isProcessing = true
         defer { isProcessing = false }
-        if config == nil {
-            config = try? SupabaseConfig.load()
-        }
         
-        guard let config else {
-            return
-        }
-        let isAuthenticated = await MainActor.run(body: { UserSession.shared.isAuthenticatedWithSupabase() })
-        guard isAuthenticated else {
-            return
-        }
+        if config == nil { config = try? SupabaseConfig.load() }
+        guard let config else { return }
+        
+        let isAuthenticated = await MainActor.run { UserSession.shared.isAuthenticatedWithSupabase() }
+        guard isAuthenticated else { return }
+        
         let pendingOperations = queue
         var processedOperationIDs = Set<UUID>()
 
         for operation in pendingOperations {
             do {
                 let shouldProceed = try await checkServerConflict(operation, config: config)
-                
                 if shouldProceed {
                     try await processOperation(operation, config: config)
                     processedOperationIDs.insert(operation.id)
-                    if operation.type == .delete {
-                        await MainActor.run {
+
+                    // MARK: - Update Local Sync Status
+                    await MainActor.run {
+                        let context = WatchlistManager.shared.context
+                        let recordId = operation.recordId
+
+                        switch operation.table {
+                        case "watchlists":
+                            if let item = try? context.fetch(FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "watchlist_entries":
+                            if let item = try? context.fetch(FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "watchlist_rules":
+                            if let item = try? context.fetch(FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "watchlist_shares":
+                            if let item = try? context.fetch(FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "observed_bird_photos":
+                            if let item = try? context.fetch(FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "identification_sessions":
+                            if let item = try? context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "identification_results":
+                            if let item = try? context.fetch(FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "identification_candidates":
+                            if let item = try? context.fetch(FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        case "identification_session_marks":
+                            if let item = try? context.fetch(FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == recordId })).first {
+                                item.syncStatus = .synced
+                                item.lastSyncedAt = Date()
+                            }
+                        default: break
+                        }
+                        
+                        if operation.type == .delete {
                             self.hardDeleteLocalRecord(table: operation.table, recordId: operation.recordId)
                         }
+                        
+                        try? context.save()
                     }
                 } else {
                     processedOperationIDs.insert(operation.id)
@@ -316,9 +623,7 @@ actor BackgroundSyncAgent {
                     processedOperationIDs.insert(operation.id)
                     Self.saveDeadLetterToDisk(deadLetterQueue)
                 } else {
-                    if replaceQueuedOperation(with: failedOp) {
-                    } else {
-                    }
+                    _ = replaceQueuedOperation(with: failedOp)
                 }
             }
         }
@@ -330,37 +635,21 @@ actor BackgroundSyncAgent {
     }
 
     private func replaceQueuedOperation(with operation: SyncOperation) -> Bool {
-        guard let index = queue.firstIndex(where: { $0.id == operation.id }) else {
-            return false
-        }
+        guard let index = queue.firstIndex(where: { $0.id == operation.id }) else { return false }
         queue[index] = operation
         return true
     }
     
     private func checkServerConflict(_ operation: SyncOperation, config: SupabaseConfig) async throws -> Bool {
-        if operation.type == .create {
-            return true
-        }
+        if operation.type == .create { return true }
+        
+        let serverRecord = try await fetchServerRecord(table: operation.table, recordId: operation.recordId, config: config)
+        
         if operation.type == .delete {
-            let serverRecord = try await fetchServerRecord(
-                table: operation.table,
-                recordId: operation.recordId,
-                config: config
-            )
-            if serverRecord == nil {
-                return false
-            }
-            if let deletedAt = serverRecord?["deleted_at"] as? String, !deletedAt.isEmpty {
-                return false
-            }
-            
+            if serverRecord == nil { return false }
+            if let deletedAt = serverRecord?["deleted_at"] as? String, !deletedAt.isEmpty { return false }
             return true
         }
-        let serverRecord = try await fetchServerRecord(
-            table: operation.table,
-            recordId: operation.recordId,
-            config: config
-        )
         
         guard let serverRecord,
               let serverUpdatedAtStr = serverRecord["updated_at"] as? String,
@@ -368,23 +657,13 @@ actor BackgroundSyncAgent {
               let localUpdatedAt = operation.localUpdatedAt else {
             return true
         }
-        if serverUpdatedAt > localUpdatedAt {
-            return false
-        }
         
-        return true
+        return localUpdatedAt >= serverUpdatedAt
     }
     
-    private func fetchServerRecord(
-        table: String,
-        recordId: UUID,
-        config: SupabaseConfig
-    ) async throws -> [String: Any]? {
+    private func fetchServerRecord(table: String, recordId: UUID, config: SupabaseConfig) async throws -> [String: Any]? {
         let token = await MainActor.run { UserSession.shared.getAccessToken() }
-        
-        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
-            return nil
-        }
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else { return nil }
         
         components.path = "/rest/v1/\(table)"
         let primaryKey = primaryKeyColumn(for: table)
@@ -394,27 +673,16 @@ actor BackgroundSyncAgent {
         ]
         
         guard let url = components.url else { return nil }
-        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        
-        if let token {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            return nil
-        }
-        
-        guard let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-              let firstRecord = jsonArray.first else {
-            return nil
-        }
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+              let firstRecord = jsonArray.first else { return nil }
         
         return firstRecord
     }
@@ -426,271 +694,143 @@ actor BackgroundSyncAgent {
             payload = (try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any]) ?? [:]
         }
         
-        if operation.table == "observed_bird_photos" && (operation.type == .create || operation.type == .update) {
-            try await uploadPhotoIfNeeded(payload: &payload, config: config, token: token)
+        // Log the payload for debugging
+        if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            print("DEBUG: BackgroundSyncAgent - Sending payload to table '\(operation.table)':\n\(jsonString)")
         }
-        
-        if operation.table == "observed_bird_photos" && operation.type == .delete {
-            try await deletePhotoFromStorage(payload: payload, config: config, token: token)
+
+        if operation.table == "observed_bird_photos" {
+            if operation.type == .create || operation.type == .update {
+                try await uploadPhotoIfNeeded(payload: &payload, config: config, token: token)
+            } else if operation.type == .delete {
+                try await deletePhotoFromStorage(payload: payload, config: config, token: token)
+            }
         }
         
         switch operation.type {
-        case .create:
-            try await createRecord(
-                table: operation.table,
-                payload: payload,
-                config: config,
-                token: token
-            )
-            
-        case .update:
-            try await updateRecord(
-                table: operation.table,
-                recordId: operation.recordId,
-                payload: payload,
-                config: config,
-                token: token
-            )
-            
-        case .delete:
-            try await deleteRecord(
-                table: operation.table,
-                recordId: operation.recordId,
-                config: config,
-                token: token
-            )
+        case .create: try await createRecord(table: operation.table, payload: payload, config: config, token: token)
+        case .update: try await updateRecord(table: operation.table, recordId: operation.recordId, payload: payload, config: config, token: token)
+        case .delete: try await deleteRecord(table: operation.table, recordId: operation.recordId, config: config, token: token)
         }
     }
     
-    private func createRecord(
-        table: String,
-        payload: [String: Any],
-        config: SupabaseConfig,
-        token: String?
-    ) async throws {
-        let isIdentificationTable = table.hasPrefix("identification_")
-        let path = isIdentificationTable ? "/rest/v1/\(table)?on_conflict=\(primaryKeyColumn(for: table))" : "/rest/v1/\(table)"
+    private func createRecord(table: String, payload: [String: Any], config: SupabaseConfig, token: String?) async throws {
+        let isIdTable = table.hasPrefix("identification_")
+        let pk = primaryKeyColumn(for: table)
+        let path = isIdTable ? "/rest/v1/\(table)?on_conflict=\(pk)" : "/rest/v1/\(table)"
         
-        var request = try buildRequest(
-            path: path,
-            method: "POST",
-            config: config,
-            token: token
-        )
-        
-        if isIdentificationTable {
-            request.setValue("return=minimal,resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
-        } else {
-            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        }
-        
+        var request = try buildRequest(path: path, method: "POST", config: config, token: token)
+        request.setValue("return=representation" + (isIdTable ? ",resolution=merge-duplicates" : ""), forHTTPHeaderField: "Prefer")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         try await executeRequest(request)
     }
     
-    private func updateRecord(
-        table: String,
-        recordId: UUID,
-        payload: [String: Any],
-        config: SupabaseConfig,
-        token: String?
-    ) async throws {
-        let primaryKey = primaryKeyColumn(for: table)
-        var request = try buildRequest(
-            path: "/rest/v1/\(table)?\(primaryKey)=eq.\(recordId.uuidString)",
-            method: "PATCH",
-            config: config,
-            token: token
-        )
-        
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+    private func updateRecord(table: String, recordId: UUID, payload: [String: Any], config: SupabaseConfig, token: String?) async throws {
+        let pk = primaryKeyColumn(for: table)
+        var request = try buildRequest(path: "/rest/v1/\(table)?\(pk)=eq.\(recordId.uuidString)", method: "PATCH", config: config, token: token)
+        request.setValue("return=representation", forHTTPHeaderField: "Prefer")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-        
         try await executeRequest(request)
     }
     
-    private func deleteRecord(
-        table: String,
-        recordId: UUID,
-        config: SupabaseConfig,
-        token: String?
-    ) async throws {
-        let primaryKey = primaryKeyColumn(for: table)
-        if table == "observed_bird_photos" {
-            var request = try buildRequest(
-                path: "/rest/v1/\(table)?\(primaryKey)=eq.\(recordId.uuidString)",
-                method: "DELETE",
-                config: config,
-                token: token
-            )
-            request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-            try await executeRequest(request)
-            return
+    private func deleteRecord(table: String, recordId: UUID, config: SupabaseConfig, token: String?) async throws {
+        let pk = primaryKeyColumn(for: table)
+        let method = (table == "observed_bird_photos") ? "DELETE" : "PATCH"
+        var path = "/rest/v1/\(table)?\(pk)=eq.\(recordId.uuidString)"
+        
+        var request = try buildRequest(path: path, method: method, config: config, token: token)
+        request.setValue("return=representation", forHTTPHeaderField: "Prefer")
+        
+        if method == "PATCH" {
+            let payload: [String: Any] = ["deleted_at": ISO8601DateFormatter().string(from: Date())]
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         }
-        let payload: [String: Any] = [
-            "deleted_at": ISO8601DateFormatter().string(from: Date())
-        ]
-        
-        var request = try buildRequest(
-            path: "/rest/v1/\(table)?\(primaryKey)=eq.\(recordId.uuidString)",
-            method: "PATCH",
-            config: config,
-            token: token
-        )
-        
-        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         
         try await executeRequest(request)
     }
     
-    private func buildRequest(
-        path: String,
-        method: String,
-        config: SupabaseConfig,
-        token: String?
-    ) throws -> URLRequest {
+    private func buildRequest(path: String, method: String, config: SupabaseConfig, token: String?) throws -> URLRequest {
         guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
             throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
         }
-        let (pathOnly, queryString) = splitPathAndQuery(path)
-        components.path = pathOnly
-        components.percentEncodedQuery = queryString
+        let parts = path.split(separator: "?", maxSplits: 1)
+        components.path = String(parts[0])
+        if parts.count > 1 { components.percentEncodedQuery = String(parts[1]) }
         
-        guard let url = components.url else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
-        
+        guard let url = components.url else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]) }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        
-        if let token {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         return request
-    }
-    
-    private func splitPathAndQuery(_ raw: String) -> (path: String, query: String?) {
-        let cleaned = raw.hasPrefix("/") ? raw : "/" + raw
-        guard let index = cleaned.firstIndex(of: "?") else {
-            return (cleaned, nil)
-        }
-        
-        let path = String(cleaned[..<index])
-        let queryStart = cleaned.index(after: index)
-        let query = String(cleaned[queryStart...])
-        return (path, query.isEmpty ? nil : query)
-    }
-    @MainActor
-    private func hardDeleteLocalRecord(table: String, recordId: UUID) {
-        let context = WatchlistManager.shared.context
-        
-        do {
-            switch table {
-            case "watchlists":
-                let descriptor = FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == recordId })
-                if let watchlist = try context.fetch(descriptor).first {
-                    context.delete(watchlist)
-                    try context.save()
-                }
-                
-            case "watchlist_entries":
-                let descriptor = FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == recordId })
-                if let entry = try context.fetch(descriptor).first {
-                    context.delete(entry)
-                    try context.save()
-                    NotificationCenter.default.post(name: WatchlistManager.didLoadDataNotification, object: nil)
-                }
-                
-            case "watchlist_rules":
-                let descriptor = FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == recordId })
-                if let rule = try context.fetch(descriptor).first {
-                    context.delete(rule)
-                    try context.save()
-                }
-                
-            case "watchlist_shares":
-                let descriptor = FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == recordId })
-                if let share = try context.fetch(descriptor).first {
-                    context.delete(share)
-                    try context.save()
-                }
-                
-            case "observed_bird_photos":
-                let descriptor = FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })
-                if let photo = try context.fetch(descriptor).first {
-                    context.delete(photo)
-                    try context.save()
-                }
-                
-            case "identification_sessions":
-                let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })
-                if let session = try context.fetch(descriptor).first {
-                    context.delete(session)
-                    try context.save()
-                }
-                
-            case "identification_results":
-                let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })
-                if let result = try context.fetch(descriptor).first {
-                    context.delete(result)
-                    try context.save()
-                }
-                
-            default:
-                break
-            }
-        } catch {
-        }
     }
 
     private func primaryKeyColumn(for table: String) -> String {
         switch table {
-        case "watchlists":
-            return "watchlist_id"
-        case "watchlist_entries":
-            return "watchlist_entry_id"
-        case "watchlist_rules":
-            return "watchlist_rule_id"
-        case "watchlist_shares":
-            return "watchlist_share_id"
-        case "observed_bird_photos":
-            return "observed_bird_photo_id"
-        case "identification_sessions":
-            return "identification_session_id"
-        case "identification_session_marks":
-            return "identification_session_mark_id"
-        case "identification_results":
-            return "identification_result_id"
-        case "identification_candidates":
-            return "identification_candidate_id"
-        default:
-            return "id"
+        case "watchlists": return "watchlist_id"
+        case "watchlist_entries": return "watchlist_entry_id"
+        case "watchlist_rules": return "watchlist_rule_id"
+        case "watchlist_shares": return "watchlist_share_id"
+        case "observed_bird_photos": return "observed_bird_photo_id"
+        case "identification_sessions": return "identification_session_id"
+        case "identification_results": return "identification_result_id"
+        case "identification_candidates": return "identification_candidate_id"
+        case "identification_session_marks": return "identification_session_mark_id"
+        default: return "id"
         }
     }
-    
+
+    @MainActor
+    private func hardDeleteLocalRecord(table: String, recordId: UUID) {
+        let context = WatchlistManager.shared.context
+        do {
+            switch table {
+            case "watchlists":
+                if let item = try context.fetch(FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == recordId })).first { context.delete(item) }
+            case "watchlist_entries":
+                if let item = try context.fetch(FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == recordId })).first {
+                    context.delete(item)
+                    NotificationCenter.default.post(name: WatchlistManager.didLoadDataNotification, object: nil)
+                }
+            case "watchlist_rules":
+                if let item = try context.fetch(FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == recordId })).first { context.delete(item) }
+            case "watchlist_shares":
+                if let item = try context.fetch(FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == recordId })).first { context.delete(item) }
+            case "observed_bird_photos":
+                if let item = try context.fetch(FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })).first { context.delete(item) }
+            case "identification_sessions":
+                if let item = try context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })).first { context.delete(item) }
+            case "identification_results":
+                if let item = try context.fetch(FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })).first { context.delete(item) }
+            case "identification_candidates":
+                if let item = try context.fetch(FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == recordId })).first { context.delete(item) }
+            case "identification_session_marks":
+                if let item = try context.fetch(FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == recordId })).first { context.delete(item) }
+            default: break
+            }
+        } catch { }
+    }
+
     private func executeRequest(_ request: URLRequest) async throws {
         let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]) }
         
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
-        }
+        let responseBody = String(data: data, encoding: .utf8) ?? "(empty)"
+        print("DEBUG: BackgroundSyncAgent response - Status: \(httpResponse.statusCode)")
+        print("DEBUG: Response Body: \(responseBody)")
         
-        let responseBody = String(data: data, encoding: .utf8) ?? ""
         if !(200...299).contains(httpResponse.statusCode) {
-            if responseBody.contains("foreign key constraint") {
-            } else if responseBody.contains("row-level security") {
-            } else if responseBody.contains("trigger") {
+            var errorInfo: [String: Any] = [NSLocalizedDescriptionKey: responseBody]
+            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                let message = errorJson["message"] as? String ?? "No message"
+                let details = errorJson["details"] as? String ?? "No details"
+                print("DEBUG: Supabase Sync Error - Message: \(message), Details: \(details)")
+                errorInfo["supabase_message"] = message
+                errorInfo["supabase_details"] = details
             }
-            
-            throw NSError(
-                domain: "SyncAgent",
-                code: httpResponse.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: responseBody]
-            )
+            throw NSError(domain: "SyncAgent", code: httpResponse.statusCode, userInfo: errorInfo)
         }
     }
 }
@@ -699,24 +839,13 @@ import Foundation
 import SwiftData
 
 extension BackgroundSyncAgent {
-    
     func uploadPhotoIfNeeded(payload: inout [String: Any], config: SupabaseConfig, token: String?) async throws {
-        if let storageUrl = payload["storage_url"] as? String, !storageUrl.isEmpty {
-            return
-        }
-        
-        guard let imagePath = payload["image_path"] as? String else {
-            return
-        }
-        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            throw NSError(domain: "SyncAgent", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not access documents directory"])
-        }
+        if let storageUrl = payload["storage_url"] as? String, !storageUrl.isEmpty { return }
+        guard let imagePath = payload["image_path"] as? String,
+              let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         
         let fileURL = documentsURL.appendingPathComponent("ObservedBirdPhotos", isDirectory: true).appendingPathComponent(imagePath)
-        
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            throw NSError(domain: "SyncAgent", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local photo file not found: \(imagePath)"])
-        }
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { throw NSError(domain: "SyncAgent", code: 404, userInfo: [NSLocalizedDescriptionKey: "Local photo file not found: \(imagePath)"]) }
         
         let data = try Data(contentsOf: fileURL)
         let userIdStr = await MainActor.run { UserSession.shared.currentUserID?.uuidString ?? "guest" }
@@ -724,96 +853,51 @@ extension BackgroundSyncAgent {
         let storageURLStr = try await uploadToStorage(path: storagePath, data: data, config: config, token: token)
         payload["storage_url"] = storageURLStr
         if let idStr = payload["observed_bird_photo_id"] as? String, let id = UUID(uuidString: idStr) {
-            await MainActor.run {
-                do {
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name("DidUploadPhoto"),
-                        object: nil,
-                        userInfo: ["id": id, "storageUrl": storageURLStr]
-                    )
-                }
-            }
+            await MainActor.run { NotificationCenter.default.post(name: NSNotification.Name("DidUploadPhoto"), object: nil, userInfo: ["id": id, "storageUrl": storageURLStr]) }
         }
     }
     
     func deletePhotoFromStorage(payload: [String: Any]?, config: SupabaseConfig, token: String?) async throws {
-        guard let payload = payload,
-              let storageUrlStr = payload["storage_url"] as? String else {
-            return
-        }
-        guard let storageUrl = URL(string: storageUrlStr),
-              storageUrl.pathComponents.contains("photos") else {
-            return
-        }
-        if let index = storageUrl.pathComponents.firstIndex(of: "photos") {
-            let relativePathComponents = storageUrl.pathComponents.suffix(from: index + 1)
-            let storagePath = relativePathComponents.joined(separator: "/")
-            
-            try await deleteFromStorage(path: storagePath, config: config, token: token)
-        }
+        guard let payload = payload, let storageUrlStr = payload["storage_url"] as? String,
+              let storageUrl = URL(string: storageUrlStr), storageUrl.pathComponents.contains("photos"),
+              let index = storageUrl.pathComponents.firstIndex(of: "photos") else { return }
+        
+        let storagePath = storageUrl.pathComponents.suffix(from: index + 1).joined(separator: "/")
+        try await deleteFromStorage(path: storagePath, config: config, token: token)
     }
     
     private func uploadToStorage(path: String, data: Data, config: SupabaseConfig, token: String?) async throws -> String {
-        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]) }
         components.path = "/storage/v1/object/photos/\(path)"
-        
-        guard let url = components.url else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
+        guard let url = components.url else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]) }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        
-        if let token {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         
         let (responseData, response) = try await URLSession.shared.upload(for: request, from: data)
+        guard let httpResponse = response as? HTTPURLResponse else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]) }
         
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
-        }
-        
-        if httpResponse.statusCode == 400 || httpResponse.statusCode == 409 {
-        } else if !(200...299).contains(httpResponse.statusCode) {
+        if httpResponse.statusCode != 400 && httpResponse.statusCode != 409 && !(200...299).contains(httpResponse.statusCode) {
             let message = String(data: responseData, encoding: .utf8) ?? "Unknown error"
-            throw NSError(
-                domain: "SyncAgent",
-                code: httpResponse.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: message]
-            )
+            throw NSError(domain: "SyncAgent", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
         }
-        let publicUrl = config.projectURL.appendingPathComponent("storage/v1/object/public/photos/\(path)").absoluteString
-        return publicUrl
+        return config.projectURL.appendingPathComponent("storage/v1/object/public/photos/\(path)").absoluteString
     }
     
     private func deleteFromStorage(path: String, config: SupabaseConfig, token: String?) async throws {
-        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
-        
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]) }
         components.path = "/storage/v1/object/photos/\(path)"
-        
-        guard let url = components.url else {
-            throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-        }
+        guard let url = components.url else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]) }
         
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         
-        if let token {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        
-        let (responseData, response) = try await URLSession.shared.data(for: request)
-        
-        if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-            let message = String(data: responseData, encoding: .utf8) ?? "Unknown error"
-        }
+        let (_, response) = try await URLSession.shared.data(for: request)
+        if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) { }
     }
 }

@@ -39,6 +39,14 @@ class ProfileViewController: UIViewController,
         configureUI()
         configureActions()
         loadUser()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleProfileUpdate), name: NSNotification.Name("UserProfileDidChange"), object: nil)
+    }
+
+    @objc private func handleProfileUpdate() {
+        DispatchQueue.main.async {
+            self.loadUser()
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -309,6 +317,17 @@ class ProfileViewController: UIViewController,
         updated.profilePhoto = url.path
 
         UserSession.shared.saveUser(updated)
+        
+        Task {
+            do {
+                let publicUrl = try await UserSyncService.shared.uploadProfilePhoto(data: jpeg, user_id: user.user_id)
+                updated.profilePhoto = publicUrl
+                UserSession.shared.saveUser(updated)
+                try await UserSyncService.shared.upsertUser(updated)
+            } catch {
+                print("DEBUG: Profile photo upload/sync failed: \(error)")
+            }
+        }
     }
 
     // MARK: - Action Rows

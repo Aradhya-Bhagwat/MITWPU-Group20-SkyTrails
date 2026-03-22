@@ -380,7 +380,7 @@ extension HomeViewController: UICollectionViewDataSource {
         switch section {
         case 0: return min(migrationCards.count, 1)
         case 1: return upcomingBirds.count; case 2: return min(spots.count, 5)
-        case 3: return observations.count; case 4: return max(min(news.count, 5), 1)
+        case 3: return observations.count; case 4: return max(min(news.count, 8), 1)
         default: return 0
         }
     }
@@ -410,7 +410,7 @@ extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
          if kind == "CommunityPageControlFooter" || kind == "NewsPageControlFooter" {
              let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier, for: indexPath) as! PageControlReusableViewCollectionReusableView
-             let count = kind == "CommunityPageControlFooter" ? observations.count : (news.isEmpty ? 0 : min(news.count, 5))
+             let count = kind == "CommunityPageControlFooter" ? observations.count : (news.isEmpty ? 0 : min(news.count, 8))
              footer.configure(numberOfPages: count, currentPage: 0); return footer
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
@@ -434,7 +434,7 @@ extension HomeViewController {
         if indexPath.section == 3, let footer = collectionView.supplementaryView(forElementKind: "CommunityPageControlFooter", at: IndexPath(item: 0, section: 3)) as? PageControlReusableViewCollectionReusableView {
             footer.configure(numberOfPages: observations.count, currentPage: indexPath.row)
         } else if indexPath.section == 4, let footer = collectionView.supplementaryView(forElementKind: "NewsPageControlFooter", at: IndexPath(item: 0, section: 4)) as? PageControlReusableViewCollectionReusableView {
-            footer.configure(numberOfPages: news.isEmpty ? 0 : min(news.count, 5), currentPage: indexPath.row)
+            footer.configure(numberOfPages: news.isEmpty ? 0 : min(news.count, 8), currentPage: indexPath.row)
         }
     }
     

@@ -233,7 +233,7 @@ class LoginViewController: UIViewController {
             return nil
         }
         components.path = "/rest/v1/users"
-        components.percentEncodedQuery = "id=eq.\(userID.uuidString)&select=name,gender,profile_photo"
+        components.percentEncodedQuery = "user_id=eq.\(userID.uuidString)&select=name,gender,profile_photo"
 
         guard let url = components.url else { return nil }
 

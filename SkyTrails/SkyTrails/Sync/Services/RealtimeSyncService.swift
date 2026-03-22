@@ -49,7 +49,7 @@ final class RealtimeSyncService: NSObject {
     private var maxReconnectAttempts: Int = 5
     private var reconnectDelay: TimeInterval = 1.0
     
-    private let tables: [String] = ["watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos"]
+    private let tables: [String] = ["watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos", "users"]
     private var subscribedTables: Set<String> = []
     var onConnectionStateChanged: ((RealtimeConnectionState) -> Void)?
     var onSyncEvent: ((RealtimePayload) -> Void)?
@@ -246,6 +246,8 @@ final class RealtimeSyncService: NSObject {
                     try await handleShareEvent(payload)
                 case "observed_bird_photos":
                     try await handlePhotoEvent(payload)
+                case "users":
+                    try await handleUserEvent(payload)
                 default:
                     break
                 }
@@ -307,6 +309,39 @@ final class RealtimeSyncService: NSObject {
             guard let oldRecord = payload.oldRecord,
                   let deleteId = oldRecord.uuid(for: "observed_bird_photo_id") else { return }
             try await deletePhoto(id: deleteId)
+        }
+    }
+    
+    private func handleUserEvent(_ payload: RealtimePayload) async throws {
+        guard let record = payload.record,
+              let id = record.uuid(for: "user_id") else { return }
+        
+        // Only care about updates to the current user
+        guard let currentUser = UserSession.shared.getUser(), currentUser.user_id == id else {
+            return
+        }
+        
+        switch payload.type {
+        case .insert, .update:
+            let name = record.string(for: "name") ?? currentUser.name
+            let gender = record.string(for: "gender") ?? currentUser.gender
+            let email = record.string(for: "email") ?? currentUser.email
+            let photo = record.string(for: "profile_photo") ?? currentUser.profilePhoto
+            
+            let updatedUser = User(
+                user_id: id,
+                name: name,
+                gender: gender,
+                email: email,
+                profilePhoto: photo
+            )
+            
+            UserSession.shared.saveUser(updatedUser)
+            // Notify UI to refresh profile
+            NotificationCenter.default.post(name: NSNotification.Name("UserProfileDidChange"), object: nil)
+        case .delete:
+            // User deleted from another device? Logout.
+            UserSession.shared.logout()
         }
     }
     

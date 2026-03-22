@@ -223,6 +223,7 @@ final class ObservedBirdPhoto {
     var serverRowVersion: Int = 0
     var captured_at: Date?
     var uploaded_at: Date = Date()
+    var created_at: Date = Date()
     
     var syncStatus: SyncStatus {
         get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
@@ -233,6 +234,7 @@ final class ObservedBirdPhoto {
         self.id = id
         self.watchlistEntry = watchlistEntry
         self.imagePath = imagePath
+        self.created_at = Date()
     }
 }
 
