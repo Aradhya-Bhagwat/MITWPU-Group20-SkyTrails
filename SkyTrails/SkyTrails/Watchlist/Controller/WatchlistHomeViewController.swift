@@ -18,7 +18,7 @@ class WatchlistHomeViewController: UIViewController {
 			switch self {
 				case .myWatchlist: return "My Watchlists"
 				case .customWatchlist: return "Curated Watchlists"
-				case .sharedWatchlist: return "Global Communities"
+				case .sharedWatchlist: return "Shared Watchlists"
 			}
 		}
 	}
@@ -347,8 +347,8 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 					return configureWatchlistEmptyStateCell(
 						in: collectionView,
 						at: indexPath,
-						title: "Discovery Awaits",
-						subtitle: "Organize the birds you've seen and want to find"
+					title: "No custom watchlists yet",
+					subtitle: "Create a watchlist to organize birds you want to track"
 					)
 				}
 				return configureCustomWatchlistCell(in: collectionView, at: indexPath)
@@ -398,7 +398,7 @@ extension WatchlistHomeViewController {
 	private func myWatchlistEmptyStateActions() -> [(title: String, color: UIColor, icon: String, isEnabled: Bool)] {
 		return [
 			(title: "Record Sighting", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
-			(title: "Plan Next Find", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
+			(title: "Find Species", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
 			(title: "Start New List", color: .systemBlue, icon: "custom.list.number.badge.plus", isEnabled: true)
 		]
 	}
