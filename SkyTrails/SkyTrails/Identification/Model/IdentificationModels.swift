@@ -98,11 +98,18 @@ final class IdentificationSession {
     var locationId: UUID?
     var locationDisplayName: String?
     var observationDate: Date
-    var createdAt: Date
     
     var status: SessionStatus
     var sizeCategory: Int?
     var selectedFilterCategories: [String]?
+    
+    var locationLat: Double?
+    var locationLong: Double?
+    var deviceInfo: String?
+    var notes: String?
+    var isPublic: Bool = false
+    var weatherConditions: String?
+    var metadata: [String: String]?
     
     var serverRowVersion: Int64?
     var lastSyncedAt: Date?
@@ -119,10 +126,10 @@ final class IdentificationSession {
     init(
         identification_session_id: UUID = UUID(),
         user_id: UUID? = nil,
-        shape: BirdShape?,
+        shape: BirdShape? = nil,
         locationId: UUID? = nil,
         locationDisplayName: String? = nil,
-        observationDate: Date,
+        observationDate: Date = Date(),
         createdAt: Date = Date(),
         status: SessionStatus = .inProgress,
         sizeCategory: Int? = nil,
@@ -135,7 +142,6 @@ final class IdentificationSession {
         self.locationId = locationId
         self.locationDisplayName = locationDisplayName
         self.observationDate = observationDate
-        self.createdAt = createdAt
         self.status = status
         self.sizeCategory = sizeCategory
         self.selectedFilterCategories = selectedFilterCategories
@@ -149,24 +155,50 @@ final class IdentificationSessionFieldMark {
     @Attribute(.unique)
     var identification_session_mark_id: UUID
     
+    var identification_session_id: UUID
     var session: IdentificationSession?
+    var field_mark_id: UUID
     var fieldMark: BirdFieldMark?
+    var variant_id: UUID
     var variant: FieldMarkVariant?
     
     var area: String
 
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
+    var serverRowVersion: Int64?
+    var lastSyncedAt: Date?
+    var deletedAt: Date?
+    var created_at: Date
+    var updated_at: Date?
+
     init(
         identification_session_mark_id: UUID = UUID(),
+        identification_session_id: UUID? = nil,
         session: IdentificationSession? = nil,
-        fieldMark: BirdFieldMark?,
+        field_mark_id: UUID? = nil,
+        fieldMark: BirdFieldMark? = nil,
+        variant_id: UUID? = nil,
         variant: FieldMarkVariant? = nil,
         area: String
     ) {
         self.identification_session_mark_id = identification_session_mark_id
+        
+        self.identification_session_id = identification_session_id ?? session?.identification_session_id ?? UUID()
         self.session = session
+        
+        self.field_mark_id = field_mark_id ?? fieldMark?.bird_field_mark_id ?? UUID()
         self.fieldMark = fieldMark
+        
+        self.variant_id = variant_id ?? variant?.field_mark_variant_id ?? UUID()
         self.variant = variant
+        
         self.area = area
+        self.created_at = Date()
+        self.updated_at = Date()
     }
 }
 
@@ -177,11 +209,14 @@ final class IdentificationResult {
     
     var session: IdentificationSession?
     var user_id: UUID?
-    var syncStatus: SyncStatus?
+    
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
     
     var bird: Bird?
-    
-    var createdAt: Date
     
     var serverRowVersion: Int64?
     var lastSyncedAt: Date?
@@ -202,9 +237,8 @@ final class IdentificationResult {
         self.identification_result_id = identification_result_id
         self.session = session
         self.user_id = user_id
-        self.syncStatus = user_id == nil ? .pendingOwner : .pendingCreate
+        self.syncStatusRaw = user_id == nil ? SyncStatus.pendingOwner.rawValue : SyncStatus.pendingCreate.rawValue
         self.bird = bird
-        self.createdAt = createdAt
         self.created_at = createdAt
         self.updated_at = Date()
     }
@@ -221,7 +255,12 @@ final class IdentificationCandidate {
     var confidence: Double
     var rank: Int?
     
-    var syncStatus: SyncStatus?
+    var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
+    var syncStatus: SyncStatus {
+        get { SyncStatus(rawValue: syncStatusRaw) ?? .pendingCreate }
+        set { syncStatusRaw = newValue.rawValue }
+    }
+    
     var serverRowVersion: Int64?
     var lastSyncedAt: Date?
     var deletedAt: Date?
@@ -243,7 +282,7 @@ final class IdentificationCandidate {
         self.confidence = confidence
         self.rank = rank
         self.matchScore = matchScore
-        self.syncStatus = .pendingCreate
+        self.syncStatusRaw = SyncStatus.pendingCreate.rawValue
         self.created_at = Date()
         self.updated_at = Date()
     }

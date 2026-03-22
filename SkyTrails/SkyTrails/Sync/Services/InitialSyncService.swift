@@ -30,10 +30,15 @@ struct InitialSyncSummary: Sendable {
     let rulesSynced: Int
     let sharesSynced: Int
     let photosSynced: Int
+    let sessionsSynced: Int
+    let resultsSynced: Int
+    let candidatesSynced: Int
+    let marksSynced: Int
     let timestamp: Date
     
     nonisolated var totalSynced: Int {
-        watchlistsSynced + entriesSynced + rulesSynced + sharesSynced + photosSynced
+        watchlistsSynced + entriesSynced + rulesSynced + sharesSynced + photosSynced +
+        sessionsSynced + resultsSynced + candidatesSynced + marksSynced
     }
 }
 
@@ -57,6 +62,27 @@ actor InitialSyncService {
         guard let accessToken = await MainActor.run(body: { UserSession.shared.getAccessToken() }) else {
             throw InitialSyncError.notAuthenticated
         }
+
+        // --- STEP: Restore User Profile ---
+        do {
+            if let serverUser = try await UserSyncService.shared.fetchUser(user_id: userId) {
+                await MainActor.run {
+                    if let currentUser = UserSession.shared.getUser() {
+                        var updated = currentUser
+                        updated.name = serverUser.name
+                        updated.gender = serverUser.gender
+                        updated.profilePhoto = serverUser.profilePhoto
+                        UserSession.shared.saveUser(updated)
+                    } else {
+                        UserSession.shared.saveUser(serverUser)
+                    }
+                }
+            }
+        } catch {
+            print("DEBUG: InitialSyncService - Failed to restore user profile: \(error)")
+        }
+        // ---------------------------------
+
         let watchlistRows: [WatchlistRow] = try await fetchFromSupabase(
             table: "watchlists",
             query: "select=*&user_id=eq.\(userId.uuidString)&deleted_at=is.null",
@@ -91,7 +117,37 @@ actor InitialSyncService {
             config: config,
             accessToken: accessToken
         )
-        let (watchlistsCount, entriesCount, rulesCount, sharesCount, photosCount) = try await MainActor.run {
+
+        // Identification Sync
+        let sessionRows: [IdentificationSessionRow] = try await fetchFromSupabase(
+            table: "identification_sessions",
+            query: "select=*&user_id=eq.\(userId.uuidString)",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let resultRows: [IdentificationResultRow] = try await fetchFromSupabase(
+            table: "identification_results",
+            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=eq.\(userId.uuidString))",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let candidateRows: [IdentificationCandidateRow] = try await fetchFromSupabase(
+            table: "identification_candidates",
+            query: "select=*&identification_result_id=in.(select identification_result_id from identification_results where identification_session_id in (select identification_session_id from identification_sessions where user_id=eq.\(userId.uuidString)))",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let markRows: [IdentificationSessionFieldMarkRow] = try await fetchFromSupabase(
+            table: "identification_session_marks",
+            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=eq.\(userId.uuidString))",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let counts = try await MainActor.run {
             let context = WatchlistManager.shared.context
             
             let wCount = try mergeWatchlists(watchlistRows, context: context)
@@ -100,17 +156,26 @@ actor InitialSyncService {
             let sCount = try mergeShares(shareRows, context: context)
             let pCount = try mergePhotos(photoRows, context: context)
             
+            let sessCount = try mergeIdentificationSessions(sessionRows, context: context)
+            let resCount = try mergeIdentificationResults(resultRows, context: context)
+            let candCount = try mergeIdentificationCandidates(candidateRows, context: context)
+            let markCount = try mergeIdentificationSessionMarks(markRows, context: context)
+
             try context.save()
             
-            return (wCount, eCount, rCount, sCount, pCount)
+            return (wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
         }
         
         let summary = InitialSyncSummary(
-            watchlistsSynced: watchlistsCount,
-            entriesSynced: entriesCount,
-            rulesSynced: rulesCount,
-            sharesSynced: sharesCount,
-            photosSynced: photosCount,
+            watchlistsSynced: counts.0,
+            entriesSynced: counts.1,
+            rulesSynced: counts.2,
+            sharesSynced: counts.3,
+            photosSynced: counts.4,
+            sessionsSynced: counts.5,
+            resultsSynced: counts.6,
+            candidatesSynced: counts.7,
+            marksSynced: counts.8,
             timestamp: Date()
         )
         return summary
@@ -120,7 +185,7 @@ actor InitialSyncService {
         let existingWatchlists = try context.fetch(FetchDescriptor<Watchlist>())
         var existingById: [UUID: Watchlist] = [:]
         for watchlist in existingWatchlists {
-            if watchlist.user_id != nil && existingById[watchlist.watchlist_id] == nil {
+            if existingById[watchlist.watchlist_id] == nil {
                 existingById[watchlist.watchlist_id] = watchlist
             }
         }
@@ -280,6 +345,157 @@ actor InitialSyncService {
         }
         return syncedCount
     }
+
+    private nonisolated func mergeIdentificationSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
+        let descriptor = FetchDescriptor<IdentificationSession>()
+        let existingSessions = try context.fetch(descriptor)
+        var existingById: [UUID: IdentificationSession] = [:]
+        for session in existingSessions {
+            existingById[session.identification_session_id] = session
+        }
+
+        let shapesDescriptor = FetchDescriptor<BirdShape>()
+        let shapes = try context.fetch(shapesDescriptor)
+        var shapeById: [String: BirdShape] = [:]
+        for shape in shapes {
+            shapeById[shape.bird_shape_id] = shape
+        }
+
+        var syncedCount = 0
+        for row in rows {
+            let session: IdentificationSession
+            if let existing = existingById[row.id] {
+                updateIdentificationSession(existing, from: row, shapeById: shapeById)
+                session = existing
+            } else {
+                session = createIdentificationSession(from: row, shapeById: shapeById)
+                context.insert(session)
+            }
+            session.syncStatus = .synced
+            session.lastSyncedAt = Date()
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeIdentificationResults(_ rows: [IdentificationResultRow], context: ModelContext) throws -> Int {
+        let descriptor = FetchDescriptor<IdentificationResult>()
+        let existingResults = try context.fetch(descriptor)
+        var existingById: [UUID: IdentificationResult] = [:]
+        for result in existingResults {
+            existingById[result.identification_result_id] = result
+        }
+
+        let sessionsDescriptor = FetchDescriptor<IdentificationSession>()
+        let sessions = try context.fetch(sessionsDescriptor)
+        var sessionById: [UUID: IdentificationSession] = [:]
+        for session in sessions {
+            sessionById[session.identification_session_id] = session
+        }
+
+        let birdsDescriptor = FetchDescriptor<Bird>()
+        let birds = try context.fetch(birdsDescriptor)
+        var birdById: [UUID: Bird] = [:]
+        for bird in birds {
+            birdById[bird.bird_id] = bird
+        }
+
+        var syncedCount = 0
+        for row in rows {
+            // Safer check: only merge if the parent session exists locally
+            guard sessionById[row.sessionId] != nil else { continue }
+            
+            let result: IdentificationResult
+            if let existing = existingById[row.id] {
+                updateIdentificationResult(existing, from: row, sessionById: sessionById, birdById: birdById)
+                result = existing
+            } else {
+                result = createIdentificationResult(from: row, sessionById: sessionById, birdById: birdById)
+                context.insert(result)
+            }
+            result.syncStatus = .synced
+            result.lastSyncedAt = Date()
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeIdentificationCandidates(_ rows: [IdentificationCandidateRow], context: ModelContext) throws -> Int {
+        let descriptor = FetchDescriptor<IdentificationCandidate>()
+        let existingCandidates = try context.fetch(descriptor)
+        var existingById: [UUID: IdentificationCandidate] = [:]
+        for candidate in existingCandidates {
+            existingById[candidate.identification_candidate_id] = candidate
+        }
+
+        let resultsDescriptor = FetchDescriptor<IdentificationResult>()
+        let results = try context.fetch(resultsDescriptor)
+        var resultById: [UUID: IdentificationResult] = [:]
+        for result in results {
+            resultById[result.identification_result_id] = result
+        }
+
+        let birdsDescriptor = FetchDescriptor<Bird>()
+        let birds = try context.fetch(birdsDescriptor)
+        var birdById: [UUID: Bird] = [:]
+        for bird in birds {
+            birdById[bird.bird_id] = bird
+        }
+
+        var syncedCount = 0
+        for row in rows {
+            // Safer check: only merge if parent result and target bird exist locally
+            guard resultById[row.resultId] != nil, birdById[row.birdId] != nil else { continue }
+            
+            let candidate: IdentificationCandidate
+            if let existing = existingById[row.id] {
+                updateIdentificationCandidate(existing, from: row, resultById: resultById, birdById: birdById)
+                candidate = existing
+            } else {
+                candidate = createIdentificationCandidate(from: row, resultById: resultById, birdById: birdById)
+                context.insert(candidate)
+            }
+            candidate.syncStatus = .synced
+            candidate.lastSyncedAt = Date()
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeIdentificationSessionMarks(_ rows: [IdentificationSessionFieldMarkRow], context: ModelContext) throws -> Int {
+        let descriptor = FetchDescriptor<IdentificationSessionFieldMark>()
+        let existingMarks = try context.fetch(descriptor)
+        var existingById: [UUID: IdentificationSessionFieldMark] = [:]
+        for mark in existingMarks {
+            existingById[mark.identification_session_mark_id] = mark
+        }
+
+        let sessionsDescriptor = FetchDescriptor<IdentificationSession>()
+        let sessions = try context.fetch(sessionsDescriptor)
+        var sessionById: [UUID: IdentificationSession] = [:]
+        for session in sessions {
+            sessionById[session.identification_session_id] = session
+        }
+
+        var syncedCount = 0
+        for row in rows {
+            // Safer check: only merge if parent session exists locally
+            guard sessionById[row.sessionId] != nil else { continue }
+            
+            let mark: IdentificationSessionFieldMark
+            if let existing = existingById[row.id] {
+                updateIdentificationSessionMark(existing, from: row, sessionById: sessionById)
+                mark = existing
+            } else {
+                mark = createIdentificationSessionMark(from: row, sessionById: sessionById)
+                context.insert(mark)
+            }
+            mark.syncStatus = .synced
+            mark.lastSyncedAt = Date()
+            syncedCount += 1
+        }
+        return syncedCount
+    }
     
     private nonisolated func fetchFromSupabase<T: Decodable>(
         table: String,
@@ -354,8 +570,8 @@ actor InitialSyncService {
         watchlist.coverImagePath = row.coverImagePath
         watchlist.serverRowVersion = row.rowVersion
         watchlist.deleted_at = row.deletedAt
-        watchlist.created_at = row.createdAt
-        watchlist.updated_at = row.updatedAt
+        watchlist.created_at = row.created_at
+        watchlist.updated_at = row.updated_at
     }
     
     private nonisolated func createEntry(
@@ -434,7 +650,7 @@ actor InitialSyncService {
         rule.priority = row.priority
         rule.serverRowVersion = row.rowVersion
         rule.deleted_at = row.deletedAt
-        rule.created_at = row.createdAt
+        rule.created_at = row.created_at
     }
     
     private nonisolated func createShare(
@@ -488,5 +704,134 @@ actor InitialSyncService {
         photo.serverRowVersion = row.rowVersion
         photo.captured_at = row.capturedAt
         photo.uploaded_at = row.uploadedAt ?? Date()
+    }
+
+    private nonisolated func createIdentificationSession(from row: IdentificationSessionRow, shapeById: [String: BirdShape]) -> IdentificationSession {
+        let obsDate: Date
+        if let obsDateStr = row.metadata?["observationDate"],
+           let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
+            obsDate = parsedDate
+        } else {
+            obsDate = row.created_at
+        }
+        
+        let session = IdentificationSession(
+            identification_session_id: row.id,
+            user_id: row.userId,
+            observationDate: obsDate,
+            createdAt: row.created_at,
+            status: SessionStatus(rawValue: row.status) ?? .completed
+        )
+        updateIdentificationSession(session, from: row, shapeById: shapeById)
+        return session
+    }
+
+    private nonisolated func updateIdentificationSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
+        session.user_id = row.userId
+        session.status = SessionStatus(rawValue: row.status) ?? .completed
+        session.locationLat = row.locationLat
+        session.locationLong = row.locationLong
+        session.deviceInfo = row.deviceInfo
+        session.notes = row.notes
+        session.isPublic = row.isPublic ?? false
+        session.weatherConditions = row.weatherConditions
+        session.metadata = row.metadata
+        
+        if let shapeId = row.metadata?["shapeId"] {
+            session.shape = shapeById[shapeId]
+        }
+        session.locationDisplayName = row.metadata?["locationDisplayName"]
+        if let sizeStr = row.metadata?["sizeCategory"], let size = Int(sizeStr) {
+            session.sizeCategory = size
+        }
+        if let filterStr = row.metadata?["filterCategories"] {
+            session.selectedFilterCategories = filterStr.components(separatedBy: ",")
+        }
+        if let obsDateStr = row.metadata?["observationDate"],
+           let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
+            session.observationDate = parsedDate
+        } else {
+            session.observationDate = row.created_at
+        }
+
+        session.created_at = row.created_at
+        session.updated_at = row.updated_at
+    }
+private nonisolated func createIdentificationResult(from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) -> IdentificationResult {
+    let result = IdentificationResult(
+        identification_result_id: row.id,
+        session: sessionById[row.sessionId],
+        user_id: row.ownerId,
+        createdAt: row.created_at
+    )
+        updateIdentificationResult(result, from: row, sessionById: sessionById, birdById: birdById)
+        return result
+    }
+
+    private nonisolated func updateIdentificationResult(_ result: IdentificationResult, from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) {
+        if let session = sessionById[row.sessionId] {
+            result.session = session
+        }
+        if let birdId = row.birdId {
+            result.bird = birdById[birdId]
+        }
+        result.user_id = row.ownerId
+        result.serverRowVersion = Int64(row.rowVersion)
+        result.deletedAt = row.deletedAt
+        result.created_at = row.created_at
+        result.created_at = row.created_at
+        result.updated_at = row.updated_at
+    }
+
+    private nonisolated func createIdentificationCandidate(from row: IdentificationCandidateRow, resultById: [UUID: IdentificationResult], birdById: [UUID: Bird]) -> IdentificationCandidate {
+        let candidate = IdentificationCandidate(
+            identification_candidate_id: row.id,
+            result: resultById[row.resultId],
+            bird: birdById[row.birdId],
+            confidence: row.confidence
+        )
+        updateIdentificationCandidate(candidate, from: row, resultById: resultById, birdById: birdById)
+        return candidate
+    }
+
+    private nonisolated func updateIdentificationCandidate(_ candidate: IdentificationCandidate, from row: IdentificationCandidateRow, resultById: [UUID: IdentificationResult], birdById: [UUID: Bird]) {
+        if let result = resultById[row.resultId] {
+            candidate.result = result
+        }
+        if let bird = birdById[row.birdId] {
+            candidate.bird = bird
+        }
+        candidate.confidence = row.confidence
+        candidate.rank = row.rank
+        candidate.serverRowVersion = Int64(row.rowVersion)
+        candidate.deletedAt = row.deletedAt
+        candidate.created_at = row.created_at
+        candidate.updated_at = row.updated_at
+    }
+
+    private nonisolated func createIdentificationSessionMark(from row: IdentificationSessionFieldMarkRow, sessionById: [UUID: IdentificationSession]) -> IdentificationSessionFieldMark {
+        let mark = IdentificationSessionFieldMark(
+            identification_session_mark_id: row.id,
+            identification_session_id: row.sessionId,
+            field_mark_id: row.fieldMarkId,
+            variant_id: row.variantId,
+            area: row.area
+        )
+        updateIdentificationSessionMark(mark, from: row, sessionById: sessionById)
+        return mark
+    }
+
+    private nonisolated func updateIdentificationSessionMark(_ mark: IdentificationSessionFieldMark, from row: IdentificationSessionFieldMarkRow, sessionById: [UUID: IdentificationSession]) {
+        mark.identification_session_id = row.sessionId
+        if let session = sessionById[row.sessionId] {
+            mark.session = session
+        }
+        mark.field_mark_id = row.fieldMarkId
+        mark.variant_id = row.variantId
+        mark.area = row.area
+        mark.serverRowVersion = Int64(row.rowVersion)
+        mark.deletedAt = row.deletedAt
+        mark.created_at = row.created_at
+        mark.updated_at = row.updated_at
     }
 }

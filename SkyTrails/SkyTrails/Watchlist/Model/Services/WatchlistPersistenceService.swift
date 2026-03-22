@@ -44,8 +44,9 @@ final class WatchlistPersistenceService {
         endDate: Date?,
         type: WatchlistType = .custom
     ) throws -> Watchlist {
+        let userID = activeUserID ?? UserSession.shared.currentUser?.user_id
         let watchlist = Watchlist(
-            user_id: activeUserID,
+            user_id: userID,
             title: title,
             location: location,
             locationDisplayName: locationDisplayName,
@@ -62,7 +63,7 @@ final class WatchlistPersistenceService {
             await BackgroundSyncAgent.shared.queueWatchlist(
                 id: watchlistId,
                 payloadData: payloadData,
-                updatedAt: updatedAt,
+                updated_at: updatedAt,
                 operation: .create
             )
         }
@@ -119,7 +120,7 @@ final class WatchlistPersistenceService {
             await BackgroundSyncAgent.shared.queueWatchlist(
                 id: watchlistId,
                 payloadData: payloadData,
-                updatedAt: updatedAt,
+                updated_at: updatedAt,
                 operation: .update
             )
         }
@@ -143,7 +144,7 @@ final class WatchlistPersistenceService {
             await BackgroundSyncAgent.shared.queueWatchlist(
                 id: watchlistId,
                 payloadData: payloadData,
-                updatedAt: updatedAt,
+                updated_at: updatedAt,
                 operation: .delete
             )
         }
@@ -193,13 +194,14 @@ final class WatchlistPersistenceService {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
         
+        let userID = activeUserID ?? UserSession.shared.currentUser?.user_id
         let entry = WatchlistEntry(
             watchlist: watchlist,
             bird: bird,
             status: status,
             notes: notes,
             observationDate: observationDate,
-            observedByUserId: (status == .observed) ? activeUserID : nil
+            observedByUserId: (status == .observed) ? userID : nil
         )
         entry.toObserveStartDate = toObserveStartDate
         entry.toObserveEndDate = toObserveEndDate
@@ -401,6 +403,7 @@ final class WatchlistPersistenceService {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
         
+        let userID = activeUserID ?? UserSession.shared.currentUser?.user_id
         let existingBirdIDs = Set((watchlist.entries ?? []).compactMap { $0.bird?.bird_id })
         var createdEntries: [WatchlistEntry] = []
         
@@ -413,7 +416,7 @@ final class WatchlistPersistenceService {
                 watchlist: watchlist,
                 bird: bird,
                 status: status,
-                observedByUserId: (status == .observed) ? activeUserID : nil
+                observedByUserId: (status == .observed) ? userID : nil
             )
             
             if status == .observed {
@@ -649,13 +652,45 @@ final class WatchlistPersistenceService {
             }
         }
 
-        if changed {
+        let adoptedIdentification = try bindIdentificationToCurrentUser()
+        adoptedCount += adoptedIdentification
+
+        if changed || adoptedIdentification > 0 {
             try saveContext()
             queueSync {
                 await BackgroundSyncAgent.shared.syncAll()
             }
         }
 
+        return adoptedCount
+    }
+
+    func bindIdentificationToCurrentUser() throws -> Int {
+        let userID = activeUserID ?? UserSession.shared.currentUser?.user_id
+        guard let userID else { return 0 }
+        
+        var adoptedCount = 0
+        
+        let sessionDescriptor = FetchDescriptor<IdentificationSession>()
+        let sessions = try context.fetch(sessionDescriptor)
+        
+        for session in sessions {
+            if session.user_id == nil {
+                session.user_id = userID
+                session.syncStatus = .pendingCreate
+                adoptedCount += 1
+            }
+        }
+        
+        let resultDescriptor = FetchDescriptor<IdentificationResult>()
+        let results = try context.fetch(resultDescriptor)
+        for result in results {
+            if result.user_id == nil {
+                result.user_id = userID
+                result.syncStatus = .pendingCreate
+            }
+        }
+        
         return adoptedCount
     }
     
@@ -710,8 +745,8 @@ final class WatchlistPersistenceService {
             "title": watchlist.title as Any,
             "location": watchlist.location as Any,
             "location_display_name": watchlist.locationDisplayName as Any,
-            "start_date": watchlist.startDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "end_date": watchlist.endDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "start_date": watchlist.startDate != nil ? ISO8601DateFormatter().string(from: watchlist.startDate!) : NSNull(),
+            "end_date": watchlist.endDate != nil ? ISO8601DateFormatter().string(from: watchlist.endDate!) : NSNull(),
             "cover_image_path": watchlist.coverImagePath as Any,
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
@@ -730,9 +765,9 @@ final class WatchlistPersistenceService {
             "nickname": entry.nickname as Any,
             "status": entry.status.rawValue,
             "notes": entry.notes as Any,
-            "observation_date": entry.observationDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "to_observe_start_date": entry.toObserveStartDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "to_observe_end_date": entry.toObserveEndDate.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "observation_date": entry.observationDate != nil ? ISO8601DateFormatter().string(from: entry.observationDate!) : NSNull(),
+            "to_observe_start_date": entry.toObserveStartDate != nil ? ISO8601DateFormatter().string(from: entry.toObserveStartDate!) : NSNull(),
+            "to_observe_end_date": entry.toObserveEndDate != nil ? ISO8601DateFormatter().string(from: entry.toObserveEndDate!) : NSNull(),
             "observed_by": entry.observedBy as Any,
             "observed_by_user_id": entry.observedByUserId?.uuidString as Any,
             "lat": entry.lat as Any,
@@ -759,8 +794,8 @@ final class WatchlistPersistenceService {
             "lat": rule.lat as Any,
             "lon": rule.lon as Any,
             "radius_km": rule.radius_km as Any,
-            "start_date": rule.start_date.map { ISO8601DateFormatter().string(from: $0) } as Any,
-            "end_date": rule.end_date.map { ISO8601DateFormatter().string(from: $0) } as Any,
+            "start_date": rule.start_date != nil ? ISO8601DateFormatter().string(from: rule.start_date!) : NSNull(),
+            "end_date": rule.end_date != nil ? ISO8601DateFormatter().string(from: rule.end_date!) : NSNull(),
             "shape_id": rule.shape_id as Any,
             "pattern_key": rule.pattern_key as Any,
             "is_active": rule.is_active,

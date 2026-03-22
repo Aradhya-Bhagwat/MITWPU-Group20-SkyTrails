@@ -75,8 +75,8 @@ struct WatchlistRow: Codable, Sendable {
     let rowVersion: Int
     let lastSyncedAt: Date?
     let deletedAt: Date?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case watchlist_id
@@ -93,8 +93,8 @@ struct WatchlistRow: Codable, Sendable {
         case rowVersion = "row_version"
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 
     nonisolated init(from decoder: Decoder) throws {
@@ -113,8 +113,8 @@ struct WatchlistRow: Codable, Sendable {
         rowVersion = try container.decode(Int.self, forKey: .rowVersion)
         lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
         deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+        created_at = try container.decode(Date.self, forKey: .created_at)
+        updated_at = try container.decodeIfPresent(Date.self, forKey: .updated_at)
     }
 }
 
@@ -139,8 +139,8 @@ struct WatchlistEntryRow: Codable, Sendable {
     let rowVersion: Int
     let lastSyncedAt: Date?
     let deletedAt: Date?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case id = "watchlist_entry_id"
@@ -163,8 +163,8 @@ struct WatchlistEntryRow: Codable, Sendable {
         case rowVersion = "row_version"
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 
     nonisolated init(from decoder: Decoder) throws {
@@ -189,8 +189,8 @@ struct WatchlistEntryRow: Codable, Sendable {
         rowVersion = try container.decode(Int.self, forKey: .rowVersion)
         lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
         deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+        created_at = try container.decode(Date.self, forKey: .created_at)
+        updated_at = try container.decodeIfPresent(Date.self, forKey: .updated_at)
     }
 }
 
@@ -210,8 +210,8 @@ struct WatchlistRuleRow: Codable, Sendable {
     let rowVersion: Int
     let lastSyncedAt: Date?
     let deletedAt: Date?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case id = "watchlist_rule_id"
@@ -229,8 +229,8 @@ struct WatchlistRuleRow: Codable, Sendable {
         case rowVersion = "row_version"
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 
     nonisolated init(from decoder: Decoder) throws {
@@ -250,8 +250,8 @@ struct WatchlistRuleRow: Codable, Sendable {
         rowVersion = try container.decode(Int.self, forKey: .rowVersion)
         lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
         deletedAt = try container.decodeIfPresent(Date.self, forKey: .deletedAt)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+        created_at = try container.decode(Date.self, forKey: .created_at)
+        updated_at = try container.decodeIfPresent(Date.self, forKey: .updated_at)
     }
 }
 
@@ -346,8 +346,8 @@ struct IdentificationSessionRow: Codable, Sendable {
     let isPublic: Bool?
     let weatherConditions: String?
     let metadata: [String: String]?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case id = "identification_session_id"
@@ -360,34 +360,34 @@ struct IdentificationSessionRow: Codable, Sendable {
         case isPublic = "is_public"
         case weatherConditions = "weather_conditions"
         case metadata
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 }
 
 struct IdentificationResultRow: Codable, Sendable {
     let id: UUID
     let sessionId: UUID
-    let user_id: UUID?
+    let ownerId: UUID?
     let birdId: UUID?
     let syncStatus: String
     let rowVersion: Int
     let lastSyncedAt: Date?
     let deletedAt: Date?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case id = "identification_result_id"
         case sessionId = "identification_session_id"
-        case user_id
+        case ownerId = "owner_id"
         case birdId = "bird_id"
         case syncStatus = "sync_status"
         case rowVersion = "row_version"
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 }
 
@@ -403,23 +403,23 @@ struct IdentificationCandidateRow: Codable, Sendable {
     let rowVersion: Int
     let lastSyncedAt: Date?
     let deletedAt: Date?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case id = "identification_candidate_id"
         case resultId = "identification_result_id"
         case birdId = "bird_id"
         case confidence
-        case rank
+        case rank = "confidence_rank"
         case matchedFeatures = "matched_features"
         case mismatchedFeatures = "mismatched_features"
         case syncStatus = "sync_status"
         case rowVersion = "row_version"
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 }
 
@@ -433,8 +433,8 @@ struct IdentificationSessionFieldMarkRow: Codable, Sendable {
     let rowVersion: Int
     let lastSyncedAt: Date?
     let deletedAt: Date?
-    let createdAt: Date
-    let updatedAt: Date?
+    let created_at: Date
+    let updated_at: Date?
 
     enum CodingKeys: String, CodingKey {
         case id = "identification_session_mark_id"
@@ -446,7 +446,7 @@ struct IdentificationSessionFieldMarkRow: Codable, Sendable {
         case rowVersion = "row_version"
         case lastSyncedAt = "last_synced_at"
         case deletedAt = "deleted_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
+        case created_at = "created_at"
+        case updated_at = "updated_at"
     }
 }

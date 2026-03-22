@@ -61,10 +61,17 @@ final class UserSyncService {
             throw UserSyncError.networkError("Invalid response")
         }
 
+        let responseBody = String(data: data, encoding: .utf8) ?? "(empty)"
+        print("DEBUG: UserSyncService upsertUser response - Status: \(httpResponse.statusCode)")
+        print("DEBUG: Response Body: \(responseBody)")
+
         guard (200...299).contains(httpResponse.statusCode) else {
-            let message = data.isEmpty ? "Unknown error" : String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("DEBUG: UserSyncService upsertUser failed - Status: \(httpResponse.statusCode), Response: \(message)")
-            throw UserSyncError.serverError("Status \(httpResponse.statusCode): \(message)")
+            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                let message = errorJson["message"] as? String ?? "No message"
+                let details = errorJson["details"] as? String ?? "No details"
+                print("DEBUG: Supabase Error - Message: \(message), Details: \(details)")
+            }
+            throw UserSyncError.serverError("Status \(httpResponse.statusCode): \(responseBody)")
         }
     }
 
@@ -149,5 +156,56 @@ final class UserSyncService {
             let message = data.isEmpty ? "Unknown error" : String(data: data, encoding: .utf8) ?? "Unknown error"
             throw UserSyncError.serverError("Status \(httpResponse.statusCode): \(message)")
         }
+    }
+
+    func uploadProfilePhoto(data: Data, user_id: UUID) async throws -> String {
+        guard let accessToken = UserSession.shared.getAccessToken() else {
+            throw UserSyncError.notAuthenticated
+        }
+
+        let config = try SupabaseConfig.load()
+        let fileName = "profile_\(user_id.uuidString)_\(Int(Date().timeIntervalSince1970)).jpg"
+        let storagePath = "\(user_id.uuidString)/\(fileName)"
+
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
+            throw UserSyncError.networkError("Invalid URL")
+        }
+        
+        // We'll use the 'photos' bucket for now as it's already used in BackgroundSyncAgent
+        // and we can prefix it with 'profiles/' to keep it organized.
+        components.path = "/storage/v1/object/photos/profiles/\(storagePath)"
+
+        guard let url = components.url else {
+            throw UserSyncError.networkError("Invalid URL")
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
+
+        let (responseData, response) = try await URLSession.shared.upload(for: request, from: data)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw UserSyncError.networkError("Invalid response")
+        }
+
+        let responseBody = String(data: responseData, encoding: .utf8) ?? "(empty)"
+        print("DEBUG: UserSyncService uploadProfilePhoto response - Status: \(httpResponse.statusCode)")
+        print("DEBUG: Response Body: \(responseBody)")
+
+        guard (200...299).contains(httpResponse.statusCode) || httpResponse.statusCode == 409 else {
+            if let errorJson = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any] {
+                let message = errorJson["message"] as? String ?? "No message"
+                let details = errorJson["details"] as? String ?? "No details"
+                print("DEBUG: Storage Error - Message: \(message), Details: \(details)")
+            }
+            throw UserSyncError.serverError("Storage Status \(httpResponse.statusCode): \(responseBody)")
+        }
+
+        let publicUrl = config.projectURL.appendingPathComponent("storage/v1/object/public/photos/profiles/\(storagePath)").absoluteString
+        return publicUrl
     }
 }
