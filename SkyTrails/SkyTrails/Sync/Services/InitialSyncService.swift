@@ -83,37 +83,75 @@ actor InitialSyncService {
         }
         // ---------------------------------
 
-        let watchlistRows: [WatchlistRow] = try await fetchFromSupabase(
+        let ownedWatchlistRows: [WatchlistRow] = try await fetchFromSupabase(
             table: "watchlists",
             query: "select=*&user_id=eq.\(userId.uuidString)&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )
-        
-        let entryRows: [WatchlistEntryRow] = try await fetchFromSupabase(
-            table: "watchlist_entries",
-            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=\(userId.uuidString))",
-            config: config,
-            accessToken: accessToken
-        )
-        
-        let ruleRows: [WatchlistRuleRow] = try await fetchFromSupabase(
-            table: "watchlist_rules",
-            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=\(userId.uuidString))",
-            config: config,
-            accessToken: accessToken
-        )
-        
-        let shareRows: [WatchlistShareRow] = try await fetchFromSupabase(
+
+        let ownedWatchlistIDs = ownedWatchlistRows.map(\.watchlist_id)
+        let ownedWatchlistIDSet = Set(ownedWatchlistIDs)
+
+        let receivedShareRows: [WatchlistShareRow] = try await fetchFromSupabase(
             table: "watchlist_shares",
-            query: "select=*&or=(watchlist_id.in.(select watchlist_id from watchlists where user_id=\(userId.uuidString)),user_id.eq.\(userId.uuidString))",
+            query: "select=*&user_id=eq.\(userId.uuidString)&deleted_at=is.null",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let sharedWatchlistIDs = receivedShareRows
+            .map(\.watchlistId)
+            .filter { !ownedWatchlistIDSet.contains($0) }
+
+        let sharedWatchlistRows: [WatchlistRow] = try await fetchFromSupabaseByIDs(
+            table: "watchlists",
+            column: "watchlist_id",
+            ids: sharedWatchlistIDs,
+            baseQuery: "select=*&deleted_at=is.null",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let watchlistRows = uniqueRows(ownedWatchlistRows + sharedWatchlistRows) { $0.watchlist_id }
+        let allWatchlistIDs = watchlistRows.map(\.watchlist_id)
+        
+        let entryRows: [WatchlistEntryRow] = try await fetchFromSupabaseByIDs(
+            table: "watchlist_entries",
+            column: "watchlist_id",
+            ids: allWatchlistIDs,
+            baseQuery: "select=*",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let entryIDs = entryRows.map(\.id)
+        
+        let ruleRows: [WatchlistRuleRow] = try await fetchFromSupabaseByIDs(
+            table: "watchlist_rules",
+            column: "watchlist_id",
+            ids: allWatchlistIDs,
+            baseQuery: "select=*",
             config: config,
             accessToken: accessToken
         )
         
-        let photoRows: [ObservedBirdPhotoRow] = try await fetchFromSupabase(
+        let ownerShareRows: [WatchlistShareRow] = try await fetchFromSupabaseByIDs(
+            table: "watchlist_shares",
+            column: "watchlist_id",
+            ids: ownedWatchlistIDs,
+            baseQuery: "select=*&deleted_at=is.null",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let shareRows = uniqueRows(receivedShareRows + ownerShareRows) { $0.id }
+        
+        let photoRows: [ObservedBirdPhotoRow] = try await fetchFromSupabaseByIDs(
             table: "observed_bird_photos",
-            query: "select=*&watchlist_entry_id=in.(select watchlist_entry_id from watchlist_entries where watchlist_id in (select watchlist_id from watchlists where user_id=\(userId.uuidString)))",
+            column: "watchlist_entry_id",
+            ids: entryIDs,
+            baseQuery: "select=*",
             config: config,
             accessToken: accessToken
         )
@@ -126,23 +164,33 @@ actor InitialSyncService {
             accessToken: accessToken
         )
 
-        let resultRows: [IdentificationResultRow] = try await fetchFromSupabase(
+        let sessionIDs = sessionRows.map(\.id)
+
+        let resultRows: [IdentificationResultRow] = try await fetchFromSupabaseByIDs(
             table: "identification_results",
-            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=\(userId.uuidString))",
+            column: "identification_session_id",
+            ids: sessionIDs,
+            baseQuery: "select=*",
             config: config,
             accessToken: accessToken
         )
 
-        let candidateRows: [IdentificationCandidateRow] = try await fetchFromSupabase(
+        let resultIDs = resultRows.map(\.id)
+
+        let candidateRows: [IdentificationCandidateRow] = try await fetchFromSupabaseByIDs(
             table: "identification_candidates",
-            query: "select=*&identification_result_id=in.(select identification_result_id from identification_results where identification_session_id in (select identification_session_id from identification_sessions where user_id=\(userId.uuidString)))",
+            column: "identification_result_id",
+            ids: resultIDs,
+            baseQuery: "select=*",
             config: config,
             accessToken: accessToken
         )
 
-        let markRows: [IdentificationSessionFieldMarkRow] = try await fetchFromSupabase(
+        let markRows: [IdentificationSessionFieldMarkRow] = try await fetchFromSupabaseByIDs(
             table: "identification_session_marks",
-            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=\(userId.uuidString))",
+            column: "identification_session_id",
+            ids: sessionIDs,
+            baseQuery: "select=*",
             config: config,
             accessToken: accessToken
         )
@@ -195,6 +243,41 @@ actor InitialSyncService {
             timestamp: Date()
         )
         return summary
+    }
+
+    private func fetchFromSupabaseByIDs<T: Decodable>(
+        table: String,
+        column: String,
+        ids: [UUID],
+        baseQuery: String = "select=*",
+        config: SupabaseConfig,
+        accessToken: String
+    ) async throws -> [T] {
+        let uniqueIDs = Array(Set(ids))
+        guard !uniqueIDs.isEmpty else { return [] }
+
+        let inList = uniqueIDs.map(\.uuidString).joined(separator: ",")
+        let query = "\(baseQuery)&\(column)=in.(\(inList))"
+        return try await fetchFromSupabase(
+            table: table,
+            query: query,
+            config: config,
+            accessToken: accessToken
+        )
+    }
+
+    private func uniqueRows<T, K: Hashable>(_ rows: [T], key: (T) -> K) -> [T] {
+        var seen = Set<K>()
+        var result: [T] = []
+
+        for row in rows {
+            let rowKey = key(row)
+            if seen.insert(rowKey).inserted {
+                result.append(row)
+            }
+        }
+
+        return result
     }
     
     private nonisolated func mergeWatchlists(_ rows: [WatchlistRow], context: ModelContext) throws -> Int {
