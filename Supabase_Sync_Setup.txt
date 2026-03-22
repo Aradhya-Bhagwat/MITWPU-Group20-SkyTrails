@@ -1,0 +1,131 @@
+### Supabase Configuration & Sync Setup
+
+In order for SkyTrails to synchronize watchlists, identification history, and profile photos correctly across devices, you must ensure that your Supabase project is configured to allow these actions. 
+
+If data works fine on a single device but does not appear on another device logged into the exact same account, it usually means:
+1. Row-Level Security (RLS) policies are missing or incorrectly configured, silently blocking the app from reading/writing its own data.
+2. Realtime replication is not enabled for the specific tables.
+
+Follow the instructions below to configure your Supabase backend.
+
+---
+
+#### 1. Enable Realtime Replication
+By default, Supabase does not broadcast changes over WebSockets (which the app uses for instant updates). You must enable it for your tables:
+1. Go to your **Supabase Dashboard**.
+2. Navigate to **Database** -> **Replication**.
+3. Under `supabase_realtime`, click **X tables** (or "0 tables").
+4. Toggle the switch to **ON** for the following tables:
+   - `users`
+   - `watchlists`
+   - `watchlist_entries`
+   - `watchlist_rules`
+   - `watchlist_shares`
+   - `observed_bird_photos`
+   - `identification_sessions`
+   - `identification_results`
+   - `identification_candidates`
+   - `identification_session_marks`
+
+#### 2. Apply Row-Level Security (RLS) Policies
+If RLS is enabled but you haven't created policies, the database will return `[]` (empty arrays) when the InitialSyncService asks for data, making it seem like nothing exists.
+
+Go to **SQL Editor** in Supabase and run the following script to ensure the logged-in user can read and write their own data:
+
+```sql
+-- 1. USERS Table
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view their own profile" ON public.users FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update their own profile" ON public.users FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own profile" ON public.users FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 2. WATCHLISTS Table
+ALTER TABLE public.watchlists ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own watchlists" ON public.watchlists FOR ALL USING (auth.uid() = user_id);
+
+-- 3. WATCHLIST ENTRIES Table
+ALTER TABLE public.watchlist_entries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own watchlist entries" ON public.watchlist_entries FOR ALL USING (
+    watchlist_id IN (SELECT watchlist_id FROM public.watchlists WHERE user_id = auth.uid())
+);
+
+-- 4. WATCHLIST RULES Table
+ALTER TABLE public.watchlist_rules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own watchlist rules" ON public.watchlist_rules FOR ALL USING (
+    watchlist_id IN (SELECT watchlist_id FROM public.watchlists WHERE user_id = auth.uid())
+);
+
+-- 5. WATCHLIST SHARES Table
+ALTER TABLE public.watchlist_shares ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own watchlist shares" ON public.watchlist_shares FOR ALL USING (
+    watchlist_id IN (SELECT watchlist_id FROM public.watchlists WHERE user_id = auth.uid()) OR user_id = auth.uid()
+);
+
+-- 6. OBSERVED BIRD PHOTOS Table
+ALTER TABLE public.observed_bird_photos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own bird photos" ON public.observed_bird_photos FOR ALL USING (
+    watchlist_entry_id IN (
+        SELECT id FROM public.watchlist_entries WHERE watchlist_id IN (
+            SELECT watchlist_id FROM public.watchlists WHERE user_id = auth.uid()
+        )
+    )
+);
+
+-- 7. IDENTIFICATION SESSIONS
+ALTER TABLE public.identification_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own identification sessions" ON public.identification_sessions FOR ALL USING (auth.uid() = user_id);
+
+-- 8. IDENTIFICATION RESULTS
+ALTER TABLE public.identification_results ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own identification results" ON public.identification_results FOR ALL USING (owner_id = auth.uid() OR auth.uid() = user_id);
+
+-- 9. IDENTIFICATION CANDIDATES
+ALTER TABLE public.identification_candidates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own identification candidates" ON public.identification_candidates FOR ALL USING (
+    result_id IN (SELECT id FROM public.identification_results WHERE owner_id = auth.uid())
+);
+
+-- 10. IDENTIFICATION SESSION MARKS
+ALTER TABLE public.identification_session_marks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage their own session marks" ON public.identification_session_marks FOR ALL USING (
+    session_id IN (SELECT id FROM public.identification_sessions WHERE user_id = auth.uid())
+);
+```
+
+#### 3. Supabase Storage Policies
+Your photos and profile images are saved to Supabase Storage. If the app is uploading a photo but getting a "403 Unauthorized", the public URL will be blank or missing.
+Go to **Storage** -> **Policies** and run/create these rules for the `photos` bucket:
+
+```sql
+-- Allow anyone to read the images (since they are referenced via public URL)
+CREATE POLICY "Public Read Access" ON storage.objects FOR SELECT USING (bucket_id = 'photos');
+
+-- Allow authenticated users to upload files
+CREATE POLICY "Auth Users Upload" ON storage.objects FOR INSERT WITH CHECK (
+    bucket_id = 'photos' AND auth.role() = 'authenticated'
+);
+
+-- Allow users to update their own files
+CREATE POLICY "Auth Users Update" ON storage.objects FOR UPDATE USING (
+    bucket_id = 'photos' AND auth.role() = 'authenticated'
+);
+```
+
+---
+
+### Code Changes Implemented in the App
+
+To ensure perfect synchronization on the device side, the following robust adjustments were made to the iOS codebase:
+
+1. **`BackgroundSyncAgent.swift`**:
+   - Replaced basic looping with a `while !queue.isEmpty` block to guarantee that rapid changes (like taking multiple photos or rapidly saving birds) are fully pushed to the database without skipping items.
+   - Now checks if the object successfully inserted before deleting from the queue.
+
+2. **`InitialSyncService.swift`**:
+   - Multi-stage saving logic added. In SwiftData, if you insert an Entry before inserting its Watchlist, the relationship is lost. Now, the context saves *after each category* (Watchlists -> context.save() -> Entries -> context.save()). This guarantees cross-device initial pulls correctly rebuild your database.
+
+3. **`UserSession.swift`**:
+   - Restructured the login workflow. Upon login, the app immediately establishes Realtime WebSockets, adopts local guest data, then performs the full `InitialSyncService.performInitialSync`, and finally triggers the `BackgroundSyncAgent` to push local data out. This prevents device state fragmentation.
+
+4. **`WatchlistManager.swift`**:
+   - Updated the photo upload listener to perform "In-Place" updates. The moment a photo successfully uploads, the model is marked as `.synced`, giving the user immediate visual feedback without waiting for the database table to update.

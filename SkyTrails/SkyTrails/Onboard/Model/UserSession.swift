@@ -5,6 +5,7 @@ class UserSession {
 
     static let shared = UserSession()
     static let authStateDidChangeNotification = Notification.Name("UserSessionAuthStateDidChange")
+    static let userProfileDidChangeNotification = Notification.Name("UserProfileDidChange")
 
     private let userKey = "loggedInUser"
     private let accessTokenKey = "supabase_access_token"
@@ -16,6 +17,7 @@ class UserSession {
 
         if let encoded = try? JSONEncoder().encode(user) {
             UserDefaults.standard.set(encoded, forKey: userKey)
+            NotificationCenter.default.post(name: Self.userProfileDidChangeNotification, object: nil)
         }
     }
 
@@ -50,15 +52,24 @@ class UserSession {
                     return
                 }
             }
+            
+            // 1. Establish Realtime Connection
             await connectRealtimeAndSync()
+            
+            // 2. Adopt any guest data created before login
             do {
                 try await IdentificationSyncService.shared.adoptGuestSessions(to: user.user_id)
             } catch {
             }
+            
+            // 3. Pull all data from Supabase that might have been created on other devices
             do {
-                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
             }
+            
+            // 4. Trigger Background Agent to push any newly adopted pending changes
+            await BackgroundSyncAgent.shared.syncAll()
         }
     }
 
@@ -196,6 +207,21 @@ class UserSession {
         }
         return await DeviceSessionService.shared.validateCurrentSession(userId: userId, accessToken: token)
     }
+
+    func syncProfileWithServer() async {
+        guard let user = getUser() else { return }
+        do {
+            if let serverUser = try await UserSyncService.shared.fetchUser(user_id: user.user_id) {
+                var updated = user
+                updated.name = serverUser.name
+                updated.gender = serverUser.gender
+                updated.profilePhoto = serverUser.profilePhoto
+                saveUser(updated)
+            }
+        } catch {
+            print("DEBUG: UserSession - Failed to sync profile with server: \(error)")
+        }
+    }
     
     private func createUserInSupabase(user: User) async {
         guard let config = try? SupabaseConfig.load(),
@@ -203,13 +229,16 @@ class UserSession {
             return
         }
         
-        let payload: [String: Any] = [
+        var payload: [String: Any] = [
             "user_id": user.user_id.uuidString,
             "name": user.name,
             "email": user.email,
-            "gender": user.gender,
-            "profile_photo": user.profilePhoto
+            "gender": user.gender
         ]
+        
+        if user.profilePhoto != "defaultProfile" {
+            payload["profile_photo"] = user.profilePhoto
+        }
         
         guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
             return

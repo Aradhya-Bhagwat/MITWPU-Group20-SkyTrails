@@ -34,7 +34,8 @@ struct UserRow: Codable {
         self.name = user.name
         self.gender = user.gender
         self.email = user.email
-        self.profilePhoto = user.profilePhoto
+        // If it's the default string, set to nil so we don't overwrite server-side URLs
+        self.profilePhoto = user.profilePhoto == "defaultProfile" ? nil : user.profilePhoto
         self.createdAt = Date()
         self.updatedAt = nil
     }

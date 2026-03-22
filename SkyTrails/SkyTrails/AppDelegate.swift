@@ -13,9 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             await WatchlistManager.shared.performGlobalSeeding()
 		}
 
-        Task {
-            await BackgroundSyncAgent.shared.registerBackgroundTasks()
-        }
+        BackgroundSyncAgent.shared.registerBackgroundTasks()
 		
 		return true
 	}

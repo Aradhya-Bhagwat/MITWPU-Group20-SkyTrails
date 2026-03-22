@@ -92,28 +92,28 @@ actor InitialSyncService {
         
         let entryRows: [WatchlistEntryRow] = try await fetchFromSupabase(
             table: "watchlist_entries",
-            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=eq.\(userId.uuidString))",
+            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
         
         let ruleRows: [WatchlistRuleRow] = try await fetchFromSupabase(
             table: "watchlist_rules",
-            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=eq.\(userId.uuidString))",
+            query: "select=*&watchlist_id=in.(select watchlist_id from watchlists where user_id=\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
         
         let shareRows: [WatchlistShareRow] = try await fetchFromSupabase(
             table: "watchlist_shares",
-            query: "select=*&or=(watchlist_id.in.(select watchlist_id from watchlists where user_id=eq.\(userId.uuidString)),user_id.eq.\(userId.uuidString))",
+            query: "select=*&or=(watchlist_id.in.(select watchlist_id from watchlists where user_id=\(userId.uuidString)),user_id.eq.\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
         
         let photoRows: [ObservedBirdPhotoRow] = try await fetchFromSupabase(
             table: "observed_bird_photos",
-            query: "select=*&watchlist_entry_id=in.(select watchlist_entry_id from watchlist_entries where watchlist_id in (select watchlist_id from watchlists where user_id=eq.\(userId.uuidString)))",
+            query: "select=*&watchlist_entry_id=in.(select watchlist_entry_id from watchlist_entries where watchlist_id in (select watchlist_id from watchlists where user_id=\(userId.uuidString)))",
             config: config,
             accessToken: accessToken
         )
@@ -128,21 +128,21 @@ actor InitialSyncService {
 
         let resultRows: [IdentificationResultRow] = try await fetchFromSupabase(
             table: "identification_results",
-            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=eq.\(userId.uuidString))",
+            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
 
         let candidateRows: [IdentificationCandidateRow] = try await fetchFromSupabase(
             table: "identification_candidates",
-            query: "select=*&identification_result_id=in.(select identification_result_id from identification_results where identification_session_id in (select identification_session_id from identification_sessions where user_id=eq.\(userId.uuidString)))",
+            query: "select=*&identification_result_id=in.(select identification_result_id from identification_results where identification_session_id in (select identification_session_id from identification_sessions where user_id=\(userId.uuidString)))",
             config: config,
             accessToken: accessToken
         )
 
         let markRows: [IdentificationSessionFieldMarkRow] = try await fetchFromSupabase(
             table: "identification_session_marks",
-            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=eq.\(userId.uuidString))",
+            query: "select=*&identification_session_id=in.(select identification_session_id from identification_sessions where user_id=\(userId.uuidString))",
             config: config,
             accessToken: accessToken
         )
@@ -150,18 +150,34 @@ actor InitialSyncService {
         let counts = try await MainActor.run {
             let context = WatchlistManager.shared.context
             
+            // 1. Identify and Merge Parent Objects first
             let wCount = try mergeWatchlists(watchlistRows, context: context)
-            let eCount = try mergeEntries(entryRows, context: context)
-            let rCount = try mergeRules(ruleRows, context: context)
-            let sCount = try mergeShares(shareRows, context: context)
-            let pCount = try mergePhotos(photoRows, context: context)
+            try? context.save()
             
             let sessCount = try mergeIdentificationSessions(sessionRows, context: context)
+            try? context.save()
+            
+            // 2. Merge Child Objects that depend on parents
+            let eCount = try mergeEntries(entryRows, context: context)
+            try? context.save()
+            
+            let rCount = try mergeRules(ruleRows, context: context)
+            try? context.save()
+            
+            let sCount = try mergeShares(shareRows, context: context)
+            try? context.save()
+            
+            let pCount = try mergePhotos(photoRows, context: context)
+            try? context.save()
+            
             let resCount = try mergeIdentificationResults(resultRows, context: context)
+            try? context.save()
+            
             let candCount = try mergeIdentificationCandidates(candidateRows, context: context)
+            try? context.save()
+            
             let markCount = try mergeIdentificationSessionMarks(markRows, context: context)
-
-            try context.save()
+            try? context.save()
             
             return (wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
         }

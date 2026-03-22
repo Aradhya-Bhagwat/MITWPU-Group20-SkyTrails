@@ -627,7 +627,12 @@ final class WatchlistPersistenceService {
         for watchlist in allWatchlists where watchlist.type != .shared {
             if watchlist.user_id == nil || watchlist.user_id == WatchlistConstants.legacyDefaultOwnerID {
                 watchlist.user_id = userID
-                watchlist.syncStatus = .pendingUpdate
+                // Keep pendingCreate if it was never synced, otherwise set to pendingUpdate
+                if watchlist.syncStatus != .synced {
+                    watchlist.syncStatus = .pendingCreate
+                } else {
+                    watchlist.syncStatus = .pendingUpdate
+                }
                 changed = true
                 adoptedCount += 1
             }
@@ -635,18 +640,18 @@ final class WatchlistPersistenceService {
         for watchlist in allWatchlists where watchlist.user_id == userID {
             for entry in watchlist.entries ?? [] {
                 if entry.syncStatus == .pendingOwner || entry.syncStatus == .pendingCreate {
-                    entry.syncStatus = .pendingUpdate
+                    entry.syncStatus = .pendingCreate
                 }
             }
             for rule in watchlist.rules ?? [] {
                 if rule.syncStatus == .pendingOwner || rule.syncStatus == .pendingCreate {
-                    rule.syncStatus = .pendingUpdate
+                    rule.syncStatus = .pendingCreate
                 }
             }
             for entry in watchlist.entries ?? [] {
                 for photo in entry.photos ?? [] {
                     if photo.syncStatus == .pendingOwner || photo.syncStatus == .pendingCreate {
-                        photo.syncStatus = .pendingUpdate
+                        photo.syncStatus = .pendingCreate
                     }
                 }
             }

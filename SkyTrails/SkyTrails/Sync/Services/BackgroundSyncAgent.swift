@@ -165,7 +165,7 @@ actor BackgroundSyncAgent {
     private func scanWatchlists(context: ModelContext) {
         let descriptor = FetchDescriptor<Watchlist>()
         if let items = try? context.fetch(descriptor) {
-            for item in items where item.syncStatus != .synced {
+            for item in items where item.syncStatus != .synced && item.user_id != nil {
                 let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
                 let payload = buildWatchlistPayload(item)
                 let id = item.watchlist_id
@@ -182,6 +182,7 @@ actor BackgroundSyncAgent {
         let descriptor = FetchDescriptor<WatchlistEntry>()
         if let items = try? context.fetch(descriptor) {
             for item in items where item.syncStatus != .synced {
+                // Entries depend on their watchlist which now has a user check
                 let opType: SyncOperationType = (item.syncStatus == .pendingDelete) ? .delete : (item.syncStatus == .pendingCreate ? .create : .update)
                 let payload = buildEntryPayload(item)
                 let id = item.id
@@ -496,7 +497,7 @@ actor BackgroundSyncAgent {
         return deadLetterQueue.count
     }
 
-    func registerBackgroundTasks() {
+    nonisolated func registerBackgroundTasks() {
         #if os(iOS)
         BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.taskIdentifier, using: nil) { task in
             guard let processingTask = task as? BGProcessingTask else { return }
@@ -540,16 +541,37 @@ actor BackgroundSyncAgent {
         let isAuthenticated = await MainActor.run { UserSession.shared.isAuthenticatedWithSupabase() }
         guard isAuthenticated else { return }
         
-        let pendingOperations = queue
-        var processedOperationIDs = Set<UUID>()
-
-        for operation in pendingOperations {
+        // --- Prioritize Operations ---
+        let priorityMap: [String: Int] = [
+            "users": 1,
+            "watchlists": 2,
+            "watchlist_entries": 3,
+            "identification_sessions": 4,
+            "identification_results": 5,
+            "identification_candidates": 6,
+            "identification_session_marks": 6,
+            "watchlist_rules": 7,
+            "watchlist_shares": 8,
+            "observed_bird_photos": 9
+        ]
+        
+        queue.sort { op1, op2 in
+            let p1 = priorityMap[op1.table] ?? 100
+            let p2 = priorityMap[op2.table] ?? 100
+            if p1 != p2 {
+                return p1 < p2
+            }
+            return op1.localUpdatedAt ?? Date.distantPast < op2.localUpdatedAt ?? Date.distantPast
+        }
+        
+        // Use a while loop to handle items added during processing
+        while !queue.isEmpty {
+            let operation = queue[0]
             do {
                 let shouldProceed = try await checkServerConflict(operation, config: config)
                 if shouldProceed {
                     try await processOperation(operation, config: config)
-                    processedOperationIDs.insert(operation.id)
-
+                    
                     // MARK: - Update Local Sync Status
                     await MainActor.run {
                         let context = WatchlistManager.shared.context
@@ -610,28 +632,43 @@ actor BackgroundSyncAgent {
                         
                         try? context.save()
                     }
-                } else {
-                    processedOperationIDs.insert(operation.id)
                 }
+                
+                // Remove from queue ONLY after success or confirmed skip
+                queue.remove(at: 0)
+                Self.saveQueueToDisk(queue)
+                
             } catch {
                 var failedOp = operation
+                
+                // Special handling for 409 (Conflict/Foreign Key violation)
+                if let nsError = error as NSError?, nsError.code == 409 {
+                    print("DEBUG: BackgroundSyncAgent - 409 Conflict for \(operation.table). Moving to back of queue.")
+                    queue.remove(at: 0)
+                    queue.append(failedOp)
+                    Self.saveQueueToDisk(queue)
+                    // Continue to next item without incrementing attempts immediately
+                    // This allows other creates (like parents) to finish first.
+                    continue
+                }
+                
                 failedOp.attempts += 1
                 failedOp.lastError = error.localizedDescription
                 
                 if failedOp.attempts >= maxRetries {
                     deadLetterQueue.append(failedOp)
-                    processedOperationIDs.insert(operation.id)
+                    queue.remove(at: 0)
                     Self.saveDeadLetterToDisk(deadLetterQueue)
+                    Self.saveQueueToDisk(queue)
                 } else {
-                    _ = replaceQueuedOperation(with: failedOp)
+                    // Update the operation in the queue and try again next loop or next run
+                    queue[0] = failedOp
+                    Self.saveQueueToDisk(queue)
+                    // Wait a bit before retrying the same item
+                    try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
                 }
             }
         }
-
-        if !processedOperationIDs.isEmpty {
-            queue.removeAll { processedOperationIDs.contains($0.id) }
-        }
-        Self.saveQueueToDisk(queue)
     }
 
     private func replaceQueuedOperation(with operation: SyncOperation) -> Bool {
@@ -716,12 +753,12 @@ actor BackgroundSyncAgent {
     }
     
     private func createRecord(table: String, payload: [String: Any], config: SupabaseConfig, token: String?) async throws {
-        let isIdTable = table.hasPrefix("identification_")
         let pk = primaryKeyColumn(for: table)
-        let path = isIdTable ? "/rest/v1/\(table)?on_conflict=\(pk)" : "/rest/v1/\(table)"
+        // Always use upsert logic (POST with on_conflict) for better resilience
+        let path = "/rest/v1/\(table)?on_conflict=\(pk)"
         
         var request = try buildRequest(path: path, method: "POST", config: config, token: token)
-        request.setValue("return=representation" + (isIdTable ? ",resolution=merge-duplicates" : ""), forHTTPHeaderField: "Prefer")
+        request.setValue("return=representation,resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         try await executeRequest(request)
     }

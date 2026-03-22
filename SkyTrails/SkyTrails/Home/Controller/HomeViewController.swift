@@ -146,6 +146,12 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         authStateObserver = NotificationCenter.default.addObserver(forName: UserSession.authStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.loadUserProfileImage()
         }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleUserProfileChange), name: UserSession.userProfileDidChangeNotification, object: nil)
+    }
+    
+    @objc private func handleUserProfileChange() {
+        loadUserProfileImage()
     }
 
     // Places the profile image in the large title navigation bar area

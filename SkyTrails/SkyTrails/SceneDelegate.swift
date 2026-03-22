@@ -35,9 +35,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 return
             }
 
-            _ = await UserSession.shared.restoreSessionIfNeeded()
-            if UserSession.shared.isAuthenticatedWithSupabase() {
+            let restored = await UserSession.shared.restoreSessionIfNeeded()
+            if restored, let user = UserSession.shared.currentUser {
+                // Ensure local data is bound to user and pulled from server before showing main UI
                 await WatchlistManager.shared.bindCurrentUserOwnership()
+                do {
+                    _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
+                } catch {
+                    print("DEBUG: SceneDelegate - Initial launch sync failed: \(error)")
+                }
             }
             routeToCurrentSessionRoot()
         }
@@ -171,13 +177,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func handleForegroundReconnect() async {
-        guard UserSession.shared.isAuthenticatedWithSupabase() else { return }
+        guard let user = UserSession.shared.currentUser else { return }
         let sessionValid = await UserSession.shared.validateCurrentDeviceSession()
         if !sessionValid {
             UserSession.shared.logout()
             routeToCurrentSessionRoot()
             return
         }
+
+        // Pull latest profile and data changes from other devices (like iPad)
+        await UserSession.shared.syncProfileWithServer()
+        _ = try? await InitialSyncService.shared.performInitialSync(userId: user.user_id)
 
         if RealtimeSyncService.shared.connectionState == .disconnected {
             do {
