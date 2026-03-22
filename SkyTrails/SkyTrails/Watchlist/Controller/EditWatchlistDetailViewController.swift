@@ -145,7 +145,8 @@ class EditWatchlistDetailViewController: UIViewController {
         loadAvailableShapes()
     }
     private func loadAvailableShapes() {
-        let allShapes = (try? manager.fetchAll(BirdShape.self)) ?? []
+        let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
+        let allShapes = (try? manager.fetchAll(BirdShape.self, descriptor: descriptor)) ?? []
         let allBirds = manager.fetchAllBirds()
         let usedShapeIds = Set(allBirds.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
         availableShapes = allShapes.filter { usedShapeIds.contains($0.bird_shape_id) }
@@ -241,36 +242,23 @@ class EditWatchlistDetailViewController: UIViewController {
             let insertIndex = min(dateSectionIndex + 2, mainStackView.arrangedSubviews.count)
             mainStackView.insertArrangedSubview(headerStack, at: insertIndex)
             mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex + 1)
-            
-            if watchlistIdToEdit != nil {
-                let clearButton = UIButton(type: .system)
-                clearButton.translatesAutoresizingMaskIntoConstraints = false
-                clearButton.setTitle("Clear Watchlist", for: .normal)
-                clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-                clearButton.setTitleColor(.systemRed, for: .normal)
-                clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-                clearButton.layer.cornerRadius = 12
-                clearButton.addTarget(self, action: #selector(didTapClearWatchlist), for: .touchUpInside)
-                clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-                
-                mainStackView.insertArrangedSubview(clearButton, at: insertIndex + 2)
-            }
         } else {
             mainStackView.addArrangedSubview(headerStack)
             mainStackView.addArrangedSubview(rulesContainerView)
+        }
+        
+        if watchlistIdToEdit != nil {
+            let clearButton = UIButton(type: .system)
+            clearButton.translatesAutoresizingMaskIntoConstraints = false
+            clearButton.setTitle("Clear Watchlist", for: .normal)
+            clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+            clearButton.setTitleColor(.systemRed, for: .normal)
+            clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+            clearButton.layer.cornerRadius = 12
+            clearButton.addTarget(self, action: #selector(didTapClearWatchlist), for: .touchUpInside)
+            clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
             
-            if watchlistIdToEdit != nil {
-                let clearButton = UIButton(type: .system)
-                clearButton.translatesAutoresizingMaskIntoConstraints = false
-                clearButton.setTitle("Clear Watchlist", for: .normal)
-                clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-                clearButton.setTitleColor(.systemRed, for: .normal)
-                clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-                clearButton.layer.cornerRadius = 12
-                clearButton.addTarget(self, action: #selector(didTapClearWatchlist), for: .touchUpInside)
-                clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-                mainStackView.addArrangedSubview(clearButton)
-            }
+            mainStackView.addArrangedSubview(clearButton)
         }
     }
 
