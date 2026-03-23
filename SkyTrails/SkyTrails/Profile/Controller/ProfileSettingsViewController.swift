@@ -39,7 +39,7 @@ final class ProfileSettingsViewController: UIViewController {
         contentStack.addArrangedSubview(profileRow)
         contentStack.addArrangedSubview(colorModeRow)
         contentStack.addArrangedSubview(makeActionRow(title: "Manage Permissions", systemImage: "lock.shield", action: #selector(managePermissionsTapped)))
-        contentStack.addArrangedSubview(makeResetRow(title: "Clear My Watchlist", action: #selector(clearMyWatchlistTapped)))
+        contentStack.addArrangedSubview(makeResetRow(title: "Clear All Watchlist", action: #selector(clearAllWatchlistTapped)))
 
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("Save", for: .normal)
@@ -222,12 +222,12 @@ final class ProfileSettingsViewController: UIViewController {
         openSystemSettings()
     }
 
-    @objc private func clearMyWatchlistTapped() {
+    @objc private func clearAllWatchlistTapped() {
         presentResetConfirmation(
-            title: "Clear My Watchlist",
-            message: "Are you sure you want to clear My Watchlist? This action cannot be undone."
+            title: "Clear All Watchlist",
+            message: "Are you sure you want to clear all your Watchlists? This action cannot be undone."
         ) { [weak self] in
-            self?.clearMyWatchlist()
+            self?.clearAllWatchlists()
         }
     }
 
@@ -269,24 +269,27 @@ final class ProfileSettingsViewController: UIViewController {
         present(alert, animated: true)
     }
 
-    private func clearMyWatchlist() {
+    private func clearAllWatchlists() {
         Task { @MainActor in
             do {
                 let manager = WatchlistManager.shared
-                let customWatchlists = try manager.fetchWatchlists(type: .custom)
-                let target = customWatchlists.first(where: { ($0.title ?? "").caseInsensitiveCompare("My Watchlist") == .orderedSame })
-                guard let watchlist = target else {
-                    self.showMessage("My Watchlist not found.")
+                let allWatchlists = try manager.fetchWatchlists()
+                
+                if allWatchlists.isEmpty {
+                    self.showMessage("No watchlists found.")
                     return
                 }
-                let observed = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .observed)
-                let toObserve = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .to_observe)
-                for entry in observed + toObserve {
-                    try manager.deleteEntry(entryId: entry.id)
+
+                for watchlist in allWatchlists {
+                    let observed = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .observed)
+                    let toObserve = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .to_observe)
+                    for entry in observed + toObserve {
+                        try manager.deleteEntry(entryId: entry.id)
+                    }
                 }
-                self.showMessage("My Watchlist cleared.")
+                self.showMessage("All Watchlists cleared.")
             } catch {
-                self.showMessage("Could not clear My Watchlist.")
+                self.showMessage("Could not clear Watchlists.")
             }
         }
     }

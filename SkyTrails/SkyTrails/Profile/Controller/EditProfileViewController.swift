@@ -6,8 +6,11 @@ final class EditProfileViewController: UIViewController {
 
     private let firstNameField = UITextField()
     private let lastNameField = UITextField()
+    private let genderValueLabel = UILabel()
     private let saveButton = UIButton(type: .system)
     private let contentStack = UIStackView()
+
+    private var selectedGender: String = "Prefer not to say"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,6 +30,7 @@ final class EditProfileViewController: UIViewController {
 
         contentStack.addArrangedSubview(makeFieldRow(title: "First Name", field: firstNameField, keyboardType: .default))
         contentStack.addArrangedSubview(makeFieldRow(title: "Last Name", field: lastNameField, keyboardType: .default))
+        contentStack.addArrangedSubview(makeGenderRow())
 
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("Save Changes", for: .normal)
@@ -90,6 +94,58 @@ final class EditProfileViewController: UIViewController {
         return container
     }
 
+    private func makeGenderRow() -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .secondarySystemBackground
+        container.layer.cornerRadius = 14
+        container.heightAnchor.constraint(equalToConstant: 84).isActive = true
+
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Gender"
+        label.font = .preferredFont(forTextStyle: .caption1)
+        label.adjustsFontForContentSizeCategory = true
+        label.textColor = .secondaryLabel
+
+        genderValueLabel.translatesAutoresizingMaskIntoConstraints = false
+        genderValueLabel.font = .preferredFont(forTextStyle: .body)
+        genderValueLabel.adjustsFontForContentSizeCategory = true
+        genderValueLabel.textColor = .label
+        genderValueLabel.text = selectedGender
+
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.up.chevron.down"))
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+        chevron.tintColor = .secondaryLabel
+        chevron.contentMode = .scaleAspectFit
+
+        container.addSubview(label)
+        container.addSubview(genderValueLabel)
+        container.addSubview(chevron)
+
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 14),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+
+            genderValueLabel.topAnchor.constraint(equalTo: label.bottomAnchor, constant: 6),
+            genderValueLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            genderValueLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+
+            chevron.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+            chevron.centerYAnchor.constraint(equalTo: genderValueLabel.centerYAnchor),
+            chevron.widthAnchor.constraint(equalToConstant: 14),
+            chevron.heightAnchor.constraint(equalToConstant: 14),
+            
+            genderValueLabel.trailingAnchor.constraint(equalTo: chevron.leadingAnchor, constant: -8)
+        ])
+
+        container.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(genderTapped)))
+        container.isUserInteractionEnabled = true
+
+        return container
+    }
+
     private func loadCurrentUser() {
         guard let user = UserSession.shared.getUser() else { return }
 
@@ -104,6 +160,35 @@ final class EditProfileViewController: UIViewController {
             firstNameField.text = parts.first
             lastNameField.text = parts.dropFirst().joined(separator: " ")
         }
+        
+        selectedGender = user.gender.isEmpty ? "Prefer not to say" : user.gender
+        genderValueLabel.text = selectedGender
+    }
+
+    @objc private func genderTapped() {
+        presentGenderChoice()
+    }
+
+    private func presentGenderChoice() {
+        let sheet = UIAlertController(title: "Gender", message: nil, preferredStyle: .actionSheet)
+        let options = ["Male", "Female", "Prefer not to say"]
+        
+        for option in options {
+            let actionTitle = option == selectedGender ? "\(option) ✓" : option
+            sheet.addAction(UIAlertAction(title: actionTitle, style: .default) { [weak self] _ in
+                self?.selectedGender = option
+                self?.genderValueLabel.text = option
+            })
+        }
+        
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popover = sheet.popoverPresentationController {
+            popover.sourceView = genderValueLabel
+            popover.sourceRect = genderValueLabel.bounds
+        }
+        
+        present(sheet, animated: true)
     }
 
     @objc private func saveTapped() {
@@ -120,6 +205,8 @@ final class EditProfileViewController: UIViewController {
 
         let fullName = [firstName, lastName].filter { !$0.isEmpty }.joined(separator: " ")
         user.name = fullName
+        user.gender = selectedGender
+        
         UserSession.shared.saveUser(user)
 
         Task {
