@@ -86,15 +86,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
 
     private func prefetchLikelyIdentificationImages() {
-        let defaultIconKeys = [
-            "id_bird_back", "id_bird_beak", "id_bird_chest", "id_bird_crown",
-            "id_bird_eye", "id_bird_facemask", "id_bird_leg", "id_bird_nape",
-            "id_bird_neck", "id_bird_tail", "id_bird_thigh", "id_bird_throat",
-            "id_bird_underparts", "id_bird_wings",
-        ]
         let historyBirdKeys = histories.compactMap { $0.result?.bird?.staticImageName }
         Task {
-            await IdentificationImageService.shared.prefetch(keys: defaultIconKeys + historyBirdKeys)
+            await IdentificationImageService.shared.prefetch(keys: historyBirdKeys)
         }
     }
 
