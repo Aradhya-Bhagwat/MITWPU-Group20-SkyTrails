@@ -35,6 +35,8 @@ class EditWatchlistDetailViewController: UIViewController {
 	private var shapeCollectionView: UICollectionView!
 	private var availableShapes: [BirdShape] = []
 	private var selectedShapeId: String?
+    private var existingLocationRuleData: (lat: Double, lon: Double, radiusKm: Double)?
+    private var existingSpeciesShapeId: String?
     
     private var selectedRuleRadius: Double = 50.0
 
@@ -54,8 +56,8 @@ class EditWatchlistDetailViewController: UIViewController {
     
     @IBAction private func dateInputToggled() {
         UIView.animate(withDuration: 0.3) {
-            self.dateCardView.isHidden = !self.dateInputToggle.isOn
-            self.dateCardView.alpha = self.dateInputToggle.isOn ? 1.0 : 0.0
+            self.dateCardView.isHidden = false
+            self.dateCardView.alpha = 1.0
         }
     }
     
@@ -94,8 +96,36 @@ class EditWatchlistDetailViewController: UIViewController {
 		suggestionsTableView.delegate = self
 		suggestionsTableView.dataSource = self
 		locationSearchBar.delegate = self
+
+		wireInfoButtons()
 		
 		setupLocationOptionsInteractions()
+	}
+
+	private func wireInfoButtons() {
+		if let dateInfoButton = view.viewWithTag(12748140) as? UIButton {
+			dateInfoButton.addTarget(self, action: #selector(didTapDateInfo), for: .touchUpInside)
+		}
+		wireInfoButtons(in: view)
+	}
+
+	private func wireInfoButtons(in root: UIView) {
+		if let stack = root as? UIStackView {
+			let labels = stack.arrangedSubviews.compactMap { $0 as? UILabel }
+			let buttons = stack.arrangedSubviews.compactMap { $0 as? UIButton }
+			if let button = buttons.first {
+				if labels.contains(where: { ($0.text ?? "").localizedCaseInsensitiveContains("date") }) {
+					button.addTarget(self, action: #selector(didTapDateInfo), for: .touchUpInside)
+				}
+				if labels.contains(where: { ($0.text ?? "").localizedCaseInsensitiveContains("location") }) {
+					button.addTarget(self, action: #selector(didTapLocationInfo), for: .touchUpInside)
+				}
+			}
+		}
+
+		for subview in root.subviews {
+			wireInfoButtons(in: subview)
+		}
 	}
 
 	private func styleSearchBar(_ searchBar: UISearchBar, isDarkMode: Bool) {
@@ -173,7 +203,7 @@ class EditWatchlistDetailViewController: UIViewController {
         headerStack.spacing = 8
 
         let titleLabel = UILabel()
-        titleLabel.text = "Smart Filters"
+        titleLabel.text = "Species"
         titleLabel.font = .boldSystemFont(ofSize: 20)
         titleLabel.textColor = .label
         headerStack.addArrangedSubview(titleLabel)
@@ -181,9 +211,16 @@ class EditWatchlistDetailViewController: UIViewController {
         let infoButton = UIButton(type: .system)
         infoButton.setImage(UIImage(systemName: "info.circle"), for: .normal)
         infoButton.tintColor = .systemBlue
-        infoButton.addTarget(self, action: #selector(didTapSmartFiltersInfo), for: .touchUpInside)
+        infoButton.addTarget(self, action: #selector(didTapSpeciesInfo), for: .touchUpInside)
         headerStack.addArrangedSubview(infoButton)
-        headerStack.addArrangedSubview(UIView()) // Spacer
+
+        let spacer = UIView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        headerStack.addArrangedSubview(spacer)
+
+        speciesRuleToggle = UISwitch()
+        speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
+        headerStack.addArrangedSubview(speciesRuleToggle)
 
         rulesContainerView = UIView()
         rulesContainerView.translatesAutoresizingMaskIntoConstraints = false
@@ -202,11 +239,6 @@ class EditWatchlistDetailViewController: UIViewController {
         rulesStack.alignment = .fill
         rulesContainerView.addSubview(rulesStack)
 
-        let speciesSection = createRuleSection(title: "Species Filter")
-        speciesRuleToggle = UISwitch()
-        speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
-        addToggleToSection(section: speciesSection, toggle: speciesRuleToggle)
-        
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.minimumInteritemSpacing = 12
@@ -220,11 +252,9 @@ class EditWatchlistDetailViewController: UIViewController {
         shapeCollectionView.delegate = self
         shapeCollectionView.dataSource = self
         shapeCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "ShapeCell")
-        shapeCollectionView.isHidden = true
         shapeCollectionView.heightAnchor.constraint(equalToConstant: 100).isActive = true
-        speciesSection.addArrangedSubview(shapeCollectionView)
         
-        rulesStack.addArrangedSubview(speciesSection)
+        rulesStack.addArrangedSubview(shapeCollectionView)
         
         NSLayoutConstraint.activate([
             rulesStack.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
@@ -233,15 +263,25 @@ class EditWatchlistDetailViewController: UIViewController {
             rulesStack.bottomAnchor.constraint(equalTo: rulesContainerView.bottomAnchor, constant: -16)
         ])
 
-        if let dateSectionIndex = mainStackView.arrangedSubviews.firstIndex(where: { view -> Bool in
-            if let label = view.subviews.first(where: { $0 is UILabel }) as? UILabel {
-                return label.text == "Date"
+        if let locationSectionIndex = mainStackView.arrangedSubviews.firstIndex(where: { view -> Bool in
+            if view is UISearchBar {
+                return true
+            }
+            if view == self.locationOptionsContainer {
+                return true
             }
             return false
         }) {
-            let insertIndex = min(dateSectionIndex + 2, mainStackView.arrangedSubviews.count)
-            mainStackView.insertArrangedSubview(headerStack, at: insertIndex)
-            mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex + 1)
+            // Find the last view related to Location (the container)
+            var insertIndex = locationSectionIndex
+            for i in locationSectionIndex..<mainStackView.arrangedSubviews.count {
+                if mainStackView.arrangedSubviews[i] == self.locationOptionsContainer {
+                    insertIndex = i
+                    break
+                }
+            }
+            mainStackView.insertArrangedSubview(headerStack, at: insertIndex + 1)
+            mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex + 2)
         } else {
             mainStackView.addArrangedSubview(headerStack)
             mainStackView.addArrangedSubview(rulesContainerView)
@@ -259,47 +299,47 @@ class EditWatchlistDetailViewController: UIViewController {
             clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
             
             mainStackView.addArrangedSubview(clearButton)
+
+			let deleteButton = UIButton(type: .system)
+			deleteButton.translatesAutoresizingMaskIntoConstraints = false
+			deleteButton.setTitle("Delete Watchlist", for: .normal)
+			deleteButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+			deleteButton.setTitleColor(.systemRed, for: .normal)
+			deleteButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+			deleteButton.layer.cornerRadius = 12
+			deleteButton.addTarget(self, action: #selector(didTapDeleteWatchlist), for: .touchUpInside)
+			deleteButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+
+			mainStackView.addArrangedSubview(deleteButton)
         }
     }
 
-    @objc private func didTapSmartFiltersInfo() {
-        let message = "Smart Filters automatically populate your watchlist with birds matching your criteria. \n\n• Species Inclusion: Add all birds of a certain shape.\n• Region Boundaries: Add birds frequently spotted in a specific area.\n• Temporal Bounds: Add birds typically seen during a specific time of year.\n\nThis helps you quickly build comprehensive lists for your birding trips!"
-        let alert = UIAlertController(title: "About Smart Filters", message: message, preferredStyle: .alert)
+    @IBAction private func didTapDateInfo() {
+        let message = "Temporal Bounds: Add birds typically seen during a specific time of year."
+        let alert = UIAlertController(title: "About Date Filter", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Got it", style: .default))
         present(alert, animated: true)
     }
-    
-    private func createRuleSection(title: String) -> UIStackView {
-        let section = UIStackView()
-        section.translatesAutoresizingMaskIntoConstraints = false
-        section.axis = .vertical
-        section.spacing = 12
-        section.alignment = .fill
-        
-        let headerStack = UIStackView()
-        headerStack.axis = .horizontal
-        headerStack.alignment = .center
-        headerStack.distribution = .equalSpacing
-        
-        let label = UILabel()
-        label.text = title
-        label.font = .systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .label
-        headerStack.addArrangedSubview(label)
-        
-        section.addArrangedSubview(headerStack)
-        
-        return section
+
+    @IBAction private func didTapLocationInfo() {
+        let message = "Region Boundaries: Add birds frequently spotted in a specific area."
+        let alert = UIAlertController(title: "About Location Filter", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Got it", style: .default))
+        present(alert, animated: true)
     }
-    
-    private func addToggleToSection(section: UIStackView, toggle: UISwitch) {
-        if let header = section.arrangedSubviews.first as? UIStackView {
-            header.addArrangedSubview(toggle)
-        }
+
+    @objc private func didTapSpeciesInfo() {
+        let message = "Species Inclusion: Add all birds of a certain shape."
+        let alert = UIAlertController(title: "About Species Filter", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Got it", style: .default))
+        present(alert, animated: true)
     }
-    
+
     @objc private func speciesRuleToggled() {
-        shapeCollectionView.isHidden = !speciesRuleToggle.isOn
+        UIView.animate(withDuration: 0.3) {
+            self.rulesContainerView.isHidden = !self.speciesRuleToggle.isOn
+            self.rulesContainerView.alpha = self.speciesRuleToggle.isOn ? 1.0 : 0.0
+        }
         if speciesRuleToggle.isOn {
             shapeCollectionView.reloadData()
         }
@@ -329,6 +369,30 @@ class EditWatchlistDetailViewController: UIViewController {
         present(alert, animated: true)
     }
 
+	@objc private func didTapDeleteWatchlist() {
+		guard let watchlist = watchlistToEdit else { return }
+
+		let alert = UIAlertController(
+			title: "Delete Watchlist",
+			message: "Permanently delete '\(watchlist.title ?? "this watchlist")'? This cannot be undone.",
+			preferredStyle: .alert
+		)
+
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+		alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+			Task {
+				do {
+					try await self?.manager.deleteWatchlist(id: watchlist.watchlist_id)
+					self?.navigateToWatchlistHomeAfterDelete()
+				} catch {
+					self?.presentAlert(title: "Delete Failed", message: error.localizedDescription)
+				}
+			}
+		}))
+
+		present(alert, animated: true)
+	}
+
     private func navigateToWatchlistHomeAfterDelete() {
         guard let nav = navigationController else { return }
 
@@ -345,38 +409,44 @@ class EditWatchlistDetailViewController: UIViewController {
             return
         }
         
-        let activeRules = (watchlist.rules ?? []).filter { $0.is_active && $0.deleted_at == nil }
+        let existingRules = (watchlist.rules ?? []).filter { $0.deleted_at == nil }
         
-        if let speciesRule = activeRules.first(where: { $0.rule_type == .species_family }),
+        if let speciesRule = existingRules.first(where: { $0.rule_type == .species_family }),
            let shapeId = speciesRule.shape_id {
-            speciesRuleToggle.isOn = true
+            speciesRuleToggle.isOn = speciesRule.is_active
             selectedShapeId = shapeId
-            shapeCollectionView.isHidden = false
+            existingSpeciesShapeId = shapeId
+            rulesContainerView.isHidden = !speciesRuleToggle.isOn
+            rulesContainerView.alpha = speciesRuleToggle.isOn ? 1.0 : 0.0
             shapeCollectionView.reloadData()
         } else {
             speciesRuleToggle.isOn = false
             selectedShapeId = nil
-            shapeCollectionView.isHidden = true
+            existingSpeciesShapeId = nil
+            rulesContainerView.isHidden = true
+            rulesContainerView.alpha = 0.0
         }
         
-        if let locationRule = activeRules.first(where: { $0.rule_type == .location }),
+        if let locationRule = existingRules.first(where: { $0.rule_type == .location }),
            let lat = locationRule.lat,
            let lon = locationRule.lon {
-            locationInputToggle.isOn = true
+            locationInputToggle.isOn = locationRule.is_active
             selectedRuleRadius = locationRule.radius_km ?? 50.0
+            existingLocationRuleData = (lat, lon, selectedRuleRadius)
             selectedLocation = LocationService.LocationData(displayName: watchlist.locationDisplayName ?? watchlist.location ?? "", lat: lat, lon: lon)
             locationSearchBar.text = selectedLocation?.displayName
             
             locationInputToggled()
         } else {
             locationInputToggle.isOn = false
+            existingLocationRuleData = nil
             locationInputToggled()
         }
         
-        if let dateRule = activeRules.first(where: { $0.rule_type == .date_range }),
+        if let dateRule = existingRules.first(where: { $0.rule_type == .date_range }),
            let startDate = dateRule.start_date,
            let endDate = dateRule.end_date {
-            dateInputToggle.isOn = true
+            dateInputToggle.isOn = dateRule.is_active
             startDatePicker.date = startDate
             endDatePicker.date = endDate
             
@@ -504,22 +574,32 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
     
     private func saveRules(for watchlistId: UUID) throws {
-        let speciesParams: RuleParameters? = speciesRuleToggle.isOn ? selectedShapeId.map {
+        let speciesShape = selectedShapeId ?? existingSpeciesShapeId
+        let speciesParams: RuleParameters? = speciesShape.map {
             .speciesFamily(SpeciesFamilyRuleParams(shapeId: $0))
-        } : nil
+        }
         try manager.upsertRule(
             watchlistId: watchlistId,
             type: .species_family,
-            parameters: speciesParams
+            parameters: speciesParams,
+            isActive: speciesRuleToggle.isOn
         )
         
         let locationParams: RuleParameters?
-        if locationInputToggle.isOn, let selectedLoc = selectedLocation {
+        if let selectedLoc = selectedLocation {
             locationParams = .location(
                 LocationRuleParams(
                     lat: selectedLoc.lat,
                     lon: selectedLoc.lon,
                     radiusKm: selectedRuleRadius
+                )
+            )
+        } else if let existingLocationRuleData {
+            locationParams = .location(
+                LocationRuleParams(
+                    lat: existingLocationRuleData.lat,
+                    lon: existingLocationRuleData.lon,
+                    radiusKm: existingLocationRuleData.radiusKm
                 )
             )
         } else {
@@ -528,16 +608,18 @@ class EditWatchlistDetailViewController: UIViewController {
         try manager.upsertRule(
             watchlistId: watchlistId,
             type: .location,
-            parameters: locationParams
+            parameters: locationParams,
+            isActive: locationInputToggle.isOn
         )
         
-        let dateParams: RuleParameters? = dateInputToggle.isOn
-            ? .dateRange(DateRangeRuleParams(startDate: startDatePicker.date, endDate: endDatePicker.date))
-            : nil
+        let dateParams: RuleParameters? = .dateRange(
+            DateRangeRuleParams(startDate: startDatePicker.date, endDate: endDatePicker.date)
+        )
         try manager.upsertRule(
             watchlistId: watchlistId,
             type: .date_range,
-            parameters: dateParams
+            parameters: dateParams,
+            isActive: dateInputToggle.isOn
         )
     }
 	private func presentAlert(title: String, message: String) {

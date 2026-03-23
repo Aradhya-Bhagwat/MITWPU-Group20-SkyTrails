@@ -455,6 +455,7 @@ final class WatchlistManager: WatchlistRepository {
         watchlistId: UUID,
         type: WatchlistRuleType,
         parameters: RuleParameters?,
+        isActive: Bool = true,
         priority: Int = 0
     ) throws {
         if let parameters {
@@ -463,6 +464,7 @@ final class WatchlistManager: WatchlistRepository {
                 watchlistID: watchlistId,
                 type: type,
                 parameters: parameters,
+                isActive: isActive,
                 priority: priority
             )
         } else {

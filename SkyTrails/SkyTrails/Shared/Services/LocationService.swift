@@ -146,10 +146,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
     }
 
     private func ensureLocationAuthorization() async throws {
-        guard CLLocationManager.locationServicesEnabled() else {
-            throw LocationError.serviceUnavailable
-        }
-
         let currentStatus = locationManager.authorizationStatus
         switch currentStatus {
         case .authorizedAlways, .authorizedWhenInUse:
