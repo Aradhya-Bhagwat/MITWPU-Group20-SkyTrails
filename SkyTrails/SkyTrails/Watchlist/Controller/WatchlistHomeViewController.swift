@@ -327,21 +327,21 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 			return collectionView.dequeueReusableCell(withReuseIdentifier: "PlaceholderCell", for: indexPath)
 		}
 		
-		switch sectionType {
-			case .myWatchlist:
-				if isMyWatchlistEmptyState {
-					return configureMyWatchlistEmptyStateCell(in: collectionView, at: indexPath)
-				}
-				if indexPath.item == 0 {
-					return configureMyWatchlistCell(in: collectionView, at: indexPath)
-				} else {
-					let actionIndex = indexPath.item - 1
-					if actionIndex == 0 {
-						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Log Observation", color: .systemGreen)
-					} else {
-						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Find new species List", color: .systemOrange)
+			switch sectionType {
+				case .myWatchlist:
+					if isMyWatchlistEmptyState {
+						return configureMyWatchlistEmptyStateCell(in: collectionView, at: indexPath)
 					}
-				}
+					if indexPath.item == 0 {
+						return configureMyWatchlistCell(in: collectionView, at: indexPath)
+					} else {
+						let actionIndex = indexPath.item - 1
+						if actionIndex == 0 {
+							return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Log Observation", color: .systemGreen, icon: "custom.bird.fill.badge.plus")
+						} else {
+							return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Find new species", color: .systemOrange, icon: "custom.bird.badge.plus")
+						}
+					}
 			case .customWatchlist:
 				if customWatchlists.isEmpty {
 					return configureWatchlistEmptyStateCell(
@@ -429,10 +429,10 @@ extension WatchlistHomeViewController {
 		}
 	}
 	
-	private func configureAddBirdActionCell(in cv: UICollectionView, at indexPath: IndexPath, title: String, color: UIColor) -> UICollectionViewCell {
+	private func configureAddBirdActionCell(in cv: UICollectionView, at indexPath: IndexPath, title: String, color: UIColor, icon: String) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
 		cell.configure(
-			icon: "custom.bird.fill.badge.plus",
+			icon: icon,
 			title: title,
 			color: color
 		)
