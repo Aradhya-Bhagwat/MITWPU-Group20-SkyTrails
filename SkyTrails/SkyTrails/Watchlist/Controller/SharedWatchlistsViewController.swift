@@ -192,6 +192,8 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         let item = filteredWatchlists[indexPath.row]
         let userImages: [UIImage] = []
         let stats = (try? manager.getStats(for: item.watchlist_id)) ?? (observed: 0, total: 0)
+        let locationText = item.locationDisplayName ?? item.location ?? ""
+        let dateRangeText = Self.formattedDateRange(start: item.startDate, end: item.endDate)
         var image: UIImage? = nil
         if let path = item.coverImagePath {
             image = UIImage(named: path)
@@ -206,8 +208,8 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
 
         cell.configure(
             title: item.title ?? "Shared Watchlist",
-            location: item.location ?? "Unknown",
-            dateRange: "Oct - Nov",
+            location: locationText,
+            dateRange: dateRangeText,
             mainImage: image,
             speciesCount: stats.total,
             observedCount: stats.observed,
@@ -235,6 +237,24 @@ extension SharedWatchlistsViewController: UICollectionViewDelegate, UICollection
         smartVC.currentWatchlistId = item.watchlist_id
 
         navigationController?.pushViewController(smartVC, animated: true)
+    }
+}
+
+private extension SharedWatchlistsViewController {
+    static func formattedDateRange(start: Date?, end: Date?) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+
+        switch (start, end) {
+        case let (start?, end?):
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        case let (start?, nil):
+            return formatter.string(from: start)
+        case let (nil, end?):
+            return formatter.string(from: end)
+        default:
+            return ""
+        }
     }
 }
 extension SharedWatchlistsViewController: UISearchBarDelegate {

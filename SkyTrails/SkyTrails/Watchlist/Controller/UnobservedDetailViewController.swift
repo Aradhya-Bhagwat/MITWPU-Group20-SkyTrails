@@ -127,7 +127,7 @@ class UnobservedDetailViewController: UIViewController {
 	private func configureView() {
 		guard let bird = bird else { return }
 		
-		navigationItem.title = "Discovery Details"
+		navigationItem.title = "\(bird.name) Details"
 		loadImage(for: bird)
 		
         if let entry = entry {

@@ -77,7 +77,12 @@ class SharedWatchlistCollectionViewCell: UICollectionViewCell {
         } else {
             locationLabel.isHidden = true
         }
-        dateLabel.addIcon(text: dateRange, iconName: "calendar")
+        if !dateRange.isEmpty {
+            dateLabel.addIcon(text: dateRange, iconName: "calendar")
+            dateLabel.isHidden = false
+        } else {
+            dateLabel.isHidden = true
+        }
 
         greenBadgeLabel.addIcon(text: "\(speciesCount)", iconName: "bird")
         blueBadgeLabel.addIcon(text: "\(observedCount)", iconName: "bird.fill")

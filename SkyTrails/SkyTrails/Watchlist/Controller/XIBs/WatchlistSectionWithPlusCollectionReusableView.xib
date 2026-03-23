@@ -29,7 +29,7 @@
                     </connections>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q8Y-Wb-1eo">
-                    <rect key="frame" x="754.66666666666663" y="126.00000000000001" width="37.333333333333371" height="24.666666666666671"/>
+                    <rect key="frame" x="754.66666666666663" y="124.33333333333333" width="37.333333333333371" height="24.666666666666671"/>
                     <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <state key="normal" title="Button"/>
                     <buttonConfiguration key="configuration" style="plain" image="custom.list.bullet.badge.plus"/>
@@ -40,12 +40,12 @@
             </subviews>
             <viewLayoutGuide key="safeArea" id="VXr-Tz-HHm"/>
             <constraints>
+                <constraint firstItem="VXr-Tz-HHm" firstAttribute="trailing" secondItem="q8Y-Wb-1eo" secondAttribute="trailing" constant="8" id="1JB-WI-DPg"/>
                 <constraint firstItem="RWJ-KH-s5B" firstAttribute="leading" secondItem="cAK-Rt-V97" secondAttribute="trailing" constant="8" id="7hd-9c-AhW"/>
+                <constraint firstItem="q8Y-Wb-1eo" firstAttribute="centerY" secondItem="cAK-Rt-V97" secondAttribute="centerY" id="MjZ-Am-uBw"/>
                 <constraint firstItem="cAK-Rt-V97" firstAttribute="leading" secondItem="VXr-Tz-HHm" secondAttribute="leading" constant="8" id="bYs-YP-0lz"/>
-                <constraint firstItem="VXr-Tz-HHm" firstAttribute="trailing" secondItem="q8Y-Wb-1eo" secondAttribute="trailing" constant="8" id="doH-lB-rVN"/>
                 <constraint firstItem="RWJ-KH-s5B" firstAttribute="centerY" secondItem="cAK-Rt-V97" secondAttribute="centerY" id="g9D-Yz-vhB"/>
                 <constraint firstItem="cAK-Rt-V97" firstAttribute="top" secondItem="VXr-Tz-HHm" secondAttribute="top" constant="8" id="jba-DT-WxG"/>
-                <constraint firstItem="q8Y-Wb-1eo" firstAttribute="top" secondItem="VXr-Tz-HHm" secondAttribute="top" constant="8" id="q5c-c7-mG7"/>
             </constraints>
             <connections>
                 <outlet property="chevronButton" destination="RWJ-KH-s5B" id="ghi-03-xyz"/>

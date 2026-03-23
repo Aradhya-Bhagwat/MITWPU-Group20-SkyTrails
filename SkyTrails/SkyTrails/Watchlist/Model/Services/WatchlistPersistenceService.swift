@@ -489,6 +489,7 @@ final class WatchlistPersistenceService {
         watchlistID: UUID,
         type: WatchlistRuleType,
         parameters: RuleParameters,
+        isActive: Bool = true,
         priority: Int = 0
     ) throws {
         let existingRule = try fetchRules(watchlistID: watchlistID).first {
@@ -498,7 +499,7 @@ final class WatchlistPersistenceService {
         if let existingRule {
             parameters.apply(to: existingRule)
             existingRule.priority = priority
-            existingRule.is_active = true
+            existingRule.is_active = isActive
             existingRule.syncStatus = .pendingUpdate
             existingRule.deleted_at = nil
             try saveContext()
@@ -520,7 +521,7 @@ final class WatchlistPersistenceService {
                 type: type,
                 parameters: parameters,
                 priority: priority,
-                isActive: true
+                isActive: isActive
             )
         }
     }

@@ -339,7 +339,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 					if actionIndex == 0 {
 						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Log Observation", color: .systemGreen)
 					} else {
-						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Add to Find List", color: .systemOrange)
+						return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Find new species List", color: .systemOrange)
 					}
 				}
 			case .customWatchlist:

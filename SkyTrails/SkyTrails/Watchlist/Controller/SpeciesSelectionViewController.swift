@@ -11,7 +11,6 @@ class SpeciesSelectionViewController: UIViewController {
         static let unobservedVCId = "UnobservedDetailViewController"
         static let observedVCId = "ObservedDetailViewController"
         static let checkmarkIcon = "checkmark"
-        static let plusIcon = "plus"
     }
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
@@ -76,10 +75,12 @@ class SpeciesSelectionViewController: UIViewController {
     }
     
     private func updateNextButton() {
-        let iconName = selectedBirds.isEmpty ? Constants.plusIcon : Constants.checkmarkIcon
-        let item = UIBarButtonItem(image: UIImage(systemName: iconName), style: .plain, target: self, action: #selector(didTapNext))
+        if selectedBirds.isEmpty {
+            navigationItem.rightBarButtonItem = nil
+            return
+        }
+        let item = UIBarButtonItem(image: UIImage(systemName: Constants.checkmarkIcon), style: .plain, target: self, action: #selector(didTapNext))
         navigationItem.rightBarButtonItem = item
-        navigationItem.rightBarButtonItem?.isEnabled = !selectedBirds.isEmpty
     }
 }
 extension SpeciesSelectionViewController {
