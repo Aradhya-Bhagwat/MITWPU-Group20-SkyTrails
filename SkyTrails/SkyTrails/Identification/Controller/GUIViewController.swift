@@ -39,7 +39,7 @@ class GUIViewController: UIViewController {
         categoriesCollectionView.register(categoryNib, forCellWithReuseIdentifier: "CategoryCell")
         
         loadData()
-        setupCanvas()
+        setupCanvasIfNeeded()
         updateNextButtonState()
         
         if !categories.isEmpty {
@@ -93,8 +93,9 @@ class GUIViewController: UIViewController {
         }
     }
 
-    private func setupCanvas() {
-        canvasContainerView.subviews.forEach { $0.removeFromSuperview() }
+    private func setupCanvasIfNeeded() {
+        guard canvasContainerView.subviews.isEmpty else { return }
+        
         layerLoadTasks.values.forEach { $0.cancel() }
         layerLoadTasks.removeAll()
         partLayers.removeAll()

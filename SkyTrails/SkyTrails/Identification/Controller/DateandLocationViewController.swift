@@ -71,7 +71,7 @@ class DateandLocationViewController: UIViewController {
         dateandlocationTableView.dataSource = self
         dateandlocationTableView.rowHeight = UITableView.automaticDimension
         dateandlocationTableView.estimatedRowHeight = 56
-        dateandlocationTableView.tableFooterView = UIView(frame: .zero)
+        dateandlocationTableView.tableFooterView = nil
     }
 
     private func applyTableAppearance() {
@@ -204,9 +204,6 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             cell.detailTextLabel?.textColor = .secondaryLabel
             cell.backgroundColor = rowColor
             cell.contentView.backgroundColor = rowColor
-            let selectedBackgroundView = UIView()
-            selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
-            cell.selectedBackgroundView = selectedBackgroundView
             return cell
         }
 
@@ -225,9 +222,6 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
             cell.backgroundColor = rowColor
             cell.contentView.backgroundColor = rowColor
             cell.selectionStyle = .none
-            let selectedBackgroundView = UIView()
-            selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
-            cell.selectedBackgroundView = selectedBackgroundView
             return cell
         }
         

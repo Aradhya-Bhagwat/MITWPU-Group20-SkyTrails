@@ -401,9 +401,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         cell.contentView.backgroundColor = rowColor
         cell.tintColor = .systemBlue
 
-        let selectedBackgroundView = UIView()
-        selectedBackgroundView.backgroundColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
-        cell.selectedBackgroundView = selectedBackgroundView
         if let img = UIImage(named: item.category.icon) {
             
             let targetSize = CGSize(width: 28, height: 28)
