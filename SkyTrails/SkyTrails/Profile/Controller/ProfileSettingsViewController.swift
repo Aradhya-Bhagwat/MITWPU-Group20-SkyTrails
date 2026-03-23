@@ -40,6 +40,7 @@ final class ProfileSettingsViewController: UIViewController {
         contentStack.addArrangedSubview(colorModeRow)
         contentStack.addArrangedSubview(makeActionRow(title: "Manage Permissions", systemImage: "lock.shield", action: #selector(managePermissionsTapped)))
         contentStack.addArrangedSubview(makeResetRow(title: "Clear All Watchlist", action: #selector(clearAllWatchlistTapped)))
+        contentStack.addArrangedSubview(makeResetRow(title: "Delete All Watchlists", action: #selector(deleteAllWatchlistsTapped)))
 
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("Save", for: .normal)
@@ -231,6 +232,15 @@ final class ProfileSettingsViewController: UIViewController {
         }
     }
 
+    @objc private func deleteAllWatchlistsTapped() {
+        presentResetConfirmation(
+            title: "Delete All Watchlists",
+            message: "Are you sure you want to delete all your Watchlists? This action cannot be undone."
+        ) { [weak self] in
+            self?.deleteAllWatchlists()
+        }
+    }
+
     @objc private func saveTapped() {
         UserDefaults.standard.set(selectedVisibility, forKey: Keys.profileVisibility)
         UserDefaults.standard.set(selectedColorMode, forKey: Keys.colorMode)
@@ -290,6 +300,27 @@ final class ProfileSettingsViewController: UIViewController {
                 self.showMessage("All Watchlists cleared.")
             } catch {
                 self.showMessage("Could not clear Watchlists.")
+            }
+        }
+    }
+
+    private func deleteAllWatchlists() {
+        Task { @MainActor in
+            do {
+                let manager = WatchlistManager.shared
+                let allWatchlists = try manager.fetchWatchlists()
+
+                if allWatchlists.isEmpty {
+                    self.showMessage("No watchlists found.")
+                    return
+                }
+
+                for watchlist in allWatchlists {
+                    try await manager.deleteWatchlist(id: watchlist.watchlist_id)
+                }
+                self.showMessage("All Watchlists deleted.")
+            } catch {
+                self.showMessage("Could not delete Watchlists.")
             }
         }
     }
