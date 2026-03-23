@@ -205,77 +205,43 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapSave() {
-        let notes = notesTextView.text
-        let startDate = startDatePicker.date
-        let endDate = endDatePicker.date
-        		if let existingEntry = entry {
-        
-        			existingEntry.toObserveStartDate = startDate
-        
-        			existingEntry.toObserveEndDate = endDate
-        
-        			
-                    do {
-                        try manager.updateEntry(entryId: existingEntry.id, notes: notes, observationDate: nil, lat: selectedLocation?.lat, lon: selectedLocation?.lon, locationDisplayName: selectedLocation?.displayName)
-                        navigationController?.popViewController(animated: true)
-                    } catch {
-                    }
-        
-        			
-        
-        			
-        
-			} else if let bird = bird {
-                    do {
-                        let location = selectedLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-                        
-                        if shouldUseRuleMatching {
-                            let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
-                                bird: bird,
-                                location: location,
-                                observationDate: startDatePicker.date,
-                                notes: notes,
-                                asObserved: false
-                            )
-                        } else {
-                            guard let targetWatchlistId = watchlistId else {
-                                return
-                            }
-                            try manager.addBirds([bird], to: targetWatchlistId, asObserved: false)
-                            
-                            if let newEntry = try? manager.findEntry(birdId: bird.bird_id, watchlistId: targetWatchlistId) {
-                                newEntry.toObserveStartDate = startDatePicker.date
-                                newEntry.toObserveEndDate = endDatePicker.date
-                                
-                                try manager.updateEntry(
-                                    entryId: newEntry.id,
-                                    notes: notes,
-                                    observationDate: nil,
-                                    lat: location?.latitude,
-                                    lon: location?.longitude,
-                                    locationDisplayName: selectedLocation?.displayName
-                                )
-                            }
-                        }
-                    } catch WatchlistError.noMatchingWatchlists {
-                        let alert = UIAlertController(
-                            title: "No Matching Watchlists",
-                            message: "Bird could not find any matching watchlists",
-                            preferredStyle: .alert
-                        )
-                        alert.addAction(UIAlertAction(title: "OK", style: .default))
-                        present(alert, animated: true)
-                        return
-                    } catch {
-                    }
-                    if let onSave {
-                        onSave(bird)
-                    } else {
-                        navigationController?.popViewController(animated: true)
-                    }
-        
-        		} else {
-            navigationController?.popViewController(animated: true)
+        Task {
+            let params = WatchlistEntryOrchestrationService.SaveParameters(
+                entry: entry,
+                bird: bird,
+                birdName: bird?.name,
+                watchlistId: watchlistId,
+                notes: notesTextView.text,
+                location: selectedLocation,
+                observationDate: startDatePicker.date,
+                endDate: endDatePicker.date,
+                photoName: nil,
+                asObserved: false,
+                shouldUseRuleMatching: shouldUseRuleMatching
+            )
+            
+            let result = await manager.orchestrationService.saveEntry(params: params)
+            
+            if result.noMatchingWatchlists {
+                let alert = UIAlertController(
+                    title: "No Matching Watchlists",
+                    message: "Bird could not find any matching watchlists",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
+                return
+            }
+            
+            if result.success, let callbackBird = result.bird {
+                if let onSave = onSave {
+                    onSave(callbackBird)
+                } else {
+                    navigationController?.popViewController(animated: true)
+                }
+            } else {
+                navigationController?.popViewController(animated: true)
+            }
         }
 	}
 	

@@ -17,16 +17,13 @@ class SpeciesSelectionViewController: UIViewController {
     var mode: WatchlistMode = .observed
     var targetWatchlistId: UUID?
     var shouldUseRuleMatching: Bool = false
+    
     private var allBirds: [Bird] = []
     private var filteredBirds: [Bird] = []
     private var selectedBirds: Set<UUID> = []
-    private var birdQueue: [Bird] = []
-    private var processedBirds: [Bird] = []
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-
+    
+    private var coordinator: SpeciesSelectionCoordinator?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -91,69 +88,18 @@ extension SpeciesSelectionViewController {
         }
         
         let birdsToProcess = allBirds.filter { selectedBirds.contains($0.bird_id) }
-        startDetailLoop(birds: birdsToProcess)
-    }
-    
-    private func startDetailLoop(birds: [Bird]) {
-        self.birdQueue = birds
-        self.processedBirds = []
-        showNextInLoop()
-    }
-    
-    private func showNextInLoop() {
-        guard !birdQueue.isEmpty else {
-            finalizeLoop()
-            return
-        }
-        let bird = birdQueue.removeFirst()
-        showBirdDetail(bird: bird)
-    }
-    
-    private func finalizeLoop() {
-        navigationController?.popToRootViewController(animated: true)
-    }
-    
-    private func showBirdDetail(bird: Bird) {
-        let storyboard = UIStoryboard(name: Constants.storyboardName, bundle: nil)
-        var nextVC: UIViewController?
-        if mode == .unobserved {
-            let vc = storyboard.instantiateViewController(withIdentifier: Constants.unobservedVCId) as! UnobservedDetailViewController
-            vc.bird = bird
-            vc.watchlistId = targetWatchlistId
-            vc.shouldUseRuleMatching = shouldUseRuleMatching
-            vc.onSave = { [weak self] savedBird in
-                self?.handleSave(bird: savedBird)
-            }
-            nextVC = vc
-        } else {
-            let vc = storyboard.instantiateViewController(withIdentifier: Constants.observedVCId) as! ObservedDetailViewController
-            vc.bird = bird
-            vc.watchlistId = targetWatchlistId
-            vc.shouldUseRuleMatching = shouldUseRuleMatching
-            vc.onSave = { [weak self] savedBird in
-                self?.handleSave(bird: savedBird)
-            }
-            nextVC = vc
+        
+        // Initialize coordinator if needed
+        if coordinator == nil {
+            coordinator = SpeciesSelectionCoordinator(
+                navigationController: self.navigationController,
+                targetWatchlistId: self.targetWatchlistId,
+                shouldUseRuleMatching: self.shouldUseRuleMatching,
+                mode: self.mode
+            )
         }
         
-        guard let vc = nextVC else { return }
-        updateNavigationStack(pushing: vc)
-    }
-    
-    private func handleSave(bird: Bird) {
-        processedBirds.append(bird)
-        showNextInLoop()
-    }
-    private func updateNavigationStack(pushing newVC: UIViewController) {
-        guard let navigationController = navigationController else { return }
-        
-        var vcs = navigationController.viewControllers
-        if let last = vcs.last, (last is ObservedDetailViewController || last is UnobservedDetailViewController) {
-            vcs.removeLast()
-        }
-        
-        vcs.append(newVC)
-        navigationController.setViewControllers(vcs, animated: true)
+        coordinator?.startDetailLoop(with: birdsToProcess)
     }
 }
 extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSource {

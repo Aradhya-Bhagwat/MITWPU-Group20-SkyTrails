@@ -35,6 +35,10 @@ final class WatchlistManager: WatchlistRepository {
     private let query: WatchlistQueryService
     private let rules: WatchlistRuleService
     private let photos: WatchlistPhotoService
+    private let sorting: WatchlistSortingService
+    private let ruleAssembly: WatchlistRuleAssemblyService
+    private let filtering: WatchlistFilteringService
+    private let orchestration: WatchlistEntryOrchestrationService
     
     private var isDataLoaded = false
     private var loadCompletionHandlers: [(Bool) -> Void] = []
@@ -89,6 +93,14 @@ final class WatchlistManager: WatchlistRepository {
         query = WatchlistQueryService(context: context, persistence: persistence)
         rules = WatchlistRuleService(context: context, persistence: persistence)
         photos = WatchlistPhotoService(context: context, persistence: persistence)
+        sorting = WatchlistSortingService()
+        ruleAssembly = WatchlistRuleAssemblyService()
+        filtering = WatchlistFilteringService()
+        orchestration = WatchlistEntryOrchestrationService()
+        
+        filtering.setManager(self)
+        orchestration.setManager(self)
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handlePhotoUploadNotification(_:)),
@@ -351,6 +363,23 @@ final class WatchlistManager: WatchlistRepository {
         if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
             refreshCoverImage(for: watchlist)
         }
+    }
+    
+    func updateEntryDates(
+        entryId: UUID,
+        startDate: Date?,
+        endDate: Date?
+    ) throws {
+        try persistence.updateEntry(
+            id: entryId,
+            notes: nil,
+            observationDate: nil,
+            lat: nil,
+            lon: nil,
+            locationDisplayName: nil,
+            toObserveStartDate: startDate,
+            toObserveEndDate: endDate
+        )
     }
     
     func deleteEntry(entryId: UUID) throws {
@@ -646,5 +675,27 @@ final class WatchlistManager: WatchlistRepository {
     
     func toDTO(_ model: Watchlist) -> WatchlistSummaryDTO {
         return model.toSummary()
+    }
+    
+    // MARK: - Service Accessors
+    
+    /// Public accessor for the sorting service
+    var sortingService: WatchlistSortingService {
+        return sorting
+    }
+    
+    /// Public accessor for the rule assembly service
+    var ruleAssemblyService: WatchlistRuleAssemblyService {
+        return ruleAssembly
+    }
+    
+    /// Public accessor for the filtering service
+    var filteringService: WatchlistFilteringService {
+        return filtering
+    }
+    
+    /// Public accessor for the orchestration service
+    var orchestrationService: WatchlistEntryOrchestrationService {
+        return orchestration
     }
 }
