@@ -927,6 +927,127 @@
                                                     </userDefinedRuntimeAttribute>
                                                 </userDefinedRuntimeAttributes>
                                             </view>
+                                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Header-Stack">
+                                                <rect key="frame" x="20" y="1358.3333333333333" width="362" height="31"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Species" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Title-Label">
+                                                        <rect key="frame" x="0.0" y="0.0" width="67" height="31"/>
+                                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Info-Button">
+                                                        <rect key="frame" x="75" y="0.0" width="31" height="31"/>
+                                                        <state key="normal" title="Button"/>
+                                                        <buttonConfiguration key="configuration" style="plain" image="info.circle" catalog="system"/>
+                                                        <connections>
+                                                            <action selector="didTapSpeciesInfo" destination="6Sg-aR-vKV" eventType="touchUpInside" id="species-info-action"/>
+                                                        </connections>
+                                                    </button>
+                                                    <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Header-Spacer">
+                                                        <rect key="frame" x="114" y="0.0" width="184" height="31"/>
+                                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    </view>
+                                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Toggle-Switch">
+                                                        <rect key="frame" x="306" y="0.0" width="51" height="31"/>
+                                                        <connections>
+                                                            <action selector="speciesRuleToggled" destination="6Sg-aR-vKV" eventType="valueChanged" id="species-toggle-action"/>
+                                                        </connections>
+                                                    </switch>
+                                                </subviews>
+                                            </stackView>
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Rules-Container" userLabel="Species Rules">
+                                                <rect key="frame" x="20" y="1413.3333333333333" width="362" height="132"/>
+                                                <subviews>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Rules-Stack">
+                                                        <rect key="frame" x="16" y="16" width="330" height="100"/>
+                                                        <subviews>
+                                                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Shape-Collection-View">
+                                                                <rect key="frame" x="0.0" y="0.0" width="330" height="100"/>
+                                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="height" constant="100" id="shape-collection-height"/>
+                                                                </constraints>
+                                                                <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" minimumLineSpacing="12" minimumInteritemSpacing="12" id="Shape-Flow-Layout">
+                                                                    <size key="itemSize" width="80" height="100"/>
+                                                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                                                </collectionViewFlowLayout>
+                                                                <cells>
+                                                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="ShapeCell" id="Shape-Cell-01" customClass="WatchlistShapeCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
+                                                                        <rect key="frame" x="0.0" y="0.0" width="80" height="100"/>
+                                                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" collectionViewCell="Shape-Cell-01" id="Shape-Cell-Content">
+                                                                            <rect key="frame" x="0.0" y="0.0" width="80" height="100"/>
+                                                                            <autoresizingMask key="autoresizingMask"/>
+                                                                            <subviews>
+                                                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Shape-Cell-Icon">
+                                                                                    <rect key="frame" x="20" y="8" width="40" height="40"/>
+                                                                                    <constraints>
+                                                                                        <constraint firstAttribute="width" constant="40" id="shape-icon-width"/>
+                                                                                        <constraint firstAttribute="height" constant="40" id="shape-icon-height"/>
+                                                                                    </constraints>
+                                                                                </imageView>
+                                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Shape-Cell-Title">
+                                                                                    <rect key="frame" x="4" y="52" width="72" height="29"/>
+                                                                                    <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
+                                                                                    <nil key="textColor"/>
+                                                                                    <nil key="highlightedColor"/>
+                                                                                </label>
+                                                                            </subviews>
+                                                                            <constraints>
+                                                                                <constraint firstItem="Shape-Cell-Icon" firstAttribute="top" secondItem="Shape-Cell-Content" secondAttribute="top" constant="8" id="shape-icon-top"/>
+                                                                                <constraint firstItem="Shape-Cell-Icon" firstAttribute="centerX" secondItem="Shape-Cell-Content" secondAttribute="centerX" id="shape-icon-center"/>
+                                                                                <constraint firstItem="Shape-Cell-Title" firstAttribute="top" secondItem="Shape-Cell-Icon" secondAttribute="bottom" constant="4" id="shape-title-top"/>
+                                                                                <constraint firstItem="Shape-Cell-Title" firstAttribute="leading" secondItem="Shape-Cell-Content" secondAttribute="leading" constant="4" id="shape-title-leading"/>
+                                                                                <constraint firstAttribute="trailing" secondItem="Shape-Cell-Title" secondAttribute="trailing" constant="4" id="shape-title-trailing"/>
+                                                                                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="Shape-Cell-Title" secondAttribute="bottom" constant="4" id="shape-title-bottom"/>
+                                                                            </constraints>
+                                                                        </collectionViewCellContentView>
+                                                                        <connections>
+                                                                            <outlet property="iconImageView" destination="Shape-Cell-Icon" id="shape-cell-icon-outlet"/>
+                                                                            <outlet property="titleLabel" destination="Shape-Cell-Title" id="shape-cell-title-outlet"/>
+                                                                        </connections>
+                                                                    </collectionViewCell>
+                                                                </cells>
+                                                            </collectionView>
+                                                        </subviews>
+                                                    </stackView>
+                                                </subviews>
+                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstItem="Species-Rules-Stack" firstAttribute="top" secondItem="Species-Rules-Container" secondAttribute="top" constant="16" id="species-rules-top"/>
+                                                    <constraint firstItem="Species-Rules-Stack" firstAttribute="leading" secondItem="Species-Rules-Container" secondAttribute="leading" constant="16" id="species-rules-leading"/>
+                                                    <constraint firstAttribute="trailing" secondItem="Species-Rules-Stack" secondAttribute="trailing" constant="16" id="species-rules-trailing"/>
+                                                    <constraint firstAttribute="bottom" secondItem="Species-Rules-Stack" secondAttribute="bottom" constant="16" id="species-rules-bottom"/>
+                                                </constraints>
+                                                <userDefinedRuntimeAttributes>
+                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                        <integer key="value" value="20"/>
+                                                    </userDefinedRuntimeAttribute>
+                                                </userDefinedRuntimeAttributes>
+                                            </view>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Clear-Watchlist-Button">
+                                                <rect key="frame" x="20" y="1569.3333333333333" width="362" height="50"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="50" id="clear-button-height"/>
+                                                </constraints>
+                                                <state key="normal" title="Clear Watchlist"/>
+                                                <connections>
+                                                    <action selector="didTapClearWatchlist" destination="6Sg-aR-vKV" eventType="touchUpInside" id="clear-watchlist-action"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Delete-Watchlist-Button">
+                                                <rect key="frame" x="20" y="1643.3333333333333" width="362" height="50"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="50" id="delete-button-height"/>
+                                                </constraints>
+                                                <state key="normal" title="Delete Watchlist"/>
+                                                <connections>
+                                                    <action selector="didTapDeleteWatchlist" destination="6Sg-aR-vKV" eventType="touchUpInside" id="delete-watchlist-action"/>
+                                                </connections>
+                                            </button>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WoM-F1-gCE" userLabel="InviteContactsView">
                                                 <rect key="frame" x="20" y="1358.3333333333333" width="362" height="216"/>
                                                 <subviews>
@@ -1042,13 +1163,20 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="8db-AZ-sI1"/>
-                    <connections>
+                        <connections>
+                        <outlet property="clearWatchlistButton" destination="Clear-Watchlist-Button" id="clear-watchlist-outlet"/>
                         <outlet property="dateCardView" destination="4lS-Lf-WR2" id="edit-date-card-id"/>
                         <outlet property="endDatePicker" destination="QWB-i9-M4X" id="G1o-Ad-iiR"/>
+                        <outlet property="deleteWatchlistButton" destination="Delete-Watchlist-Button" id="delete-watchlist-outlet"/>
                         <outlet property="inviteContactsView" destination="WoM-F1-gCE" id="kQY-2h-FIa"/>
                         <outlet property="locationOptionsContainer" destination="lpQ-BV-dJE" id="loc-opt-cont-id"/>
                         <outlet property="locationSearchBar" destination="EditLocationSearchBar" id="edit-loc-bar-id"/>
                         <outlet property="participantsTableView" destination="Inv-Tb-002" id="out-prt-tbl"/>
+                        <outlet property="rulesContainerView" destination="Species-Rules-Container" id="rules-container-outlet"/>
+                        <outlet property="shapeCollectionView" destination="Shape-Collection-View" id="shape-collection-outlet"/>
+                        <outlet property="speciesHeaderStack" destination="Species-Header-Stack" id="species-header-outlet"/>
+                        <outlet property="speciesInfoButton" destination="Species-Info-Button" id="species-info-outlet"/>
+                        <outlet property="speciesRuleToggle" destination="Species-Toggle-Switch" id="species-toggle-outlet"/>
                         <outlet property="startDatePicker" destination="HBs-re-bci" id="luv-yf-rgO"/>
                         <outlet property="suggestionsTableView" destination="Srg-Tb-004" id="out-srg-tbl"/>
                         <outlet property="titleTextField" destination="Vir-5J-XZr" id="3Ak-Ro-8Nc"/>
