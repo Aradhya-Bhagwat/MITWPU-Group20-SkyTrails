@@ -11,15 +11,6 @@ enum WatchlistPresentationMode {
 
 @MainActor
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
-	private enum SortOption {
-		case nameAZ
-		case nameZA
-		case newestFirst
-		case month
-		case startDate
-		case endDate
-		case rarity
-	}
 	
 	private let manager = WatchlistManager.shared
 	@IBOutlet weak var tableView: UITableView!
@@ -36,7 +27,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	public var toObserveEntries: [WatchlistEntry] = []
 	private var currentList: [WatchlistEntry] = []
     private var currentSegmentIndex: Int = 0
-	private var currentSortOption: SortOption = .nameAZ
+	private var currentSortOption: SmartWatchlistSortOption = .nameAZ
     
     private var isShowingRecommendations = false
     private var recommendedBirds: [Bird] = []
@@ -85,87 +76,29 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	private func refreshData() {
         do {
             isShowingRecommendations = false
-            switch watchlistType {
-                case .myWatchlist:
-                    self.navigationItem.title = "My Watchlists"
-                    self.tabBarItem.title = "Watchlist"
-                    self.currentWatchlistId = WatchlistConstants.myWatchlistID
-                    self.sourceWatchlists = try manager.fetchWatchlists()
-                    
-                    let allWls = try manager.fetchWatchlists()
-                    var uniqueObserved: [WatchlistEntry] = []
-                    var uniqueToObserve: [WatchlistEntry] = []
-                    var seenObs = Set<String>()
-                    var seenToObs = Set<String>()
-                    
-                    for wl in allWls {
-                        let obs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .observed)
-                        let toObs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .to_observe)
-                        
-                        for entry in obs {
-                            if let name = entry.bird?.name, !seenObs.contains(name) {
-                                seenObs.insert(name)
-                                uniqueObserved.append(entry)
-                            }
-                        }
-                        for entry in toObs {
-                            if let name = entry.bird?.name, !seenToObs.contains(name) {
-                                seenToObs.insert(name)
-                                uniqueToObserve.append(entry)
-                            }
-                        }
-                    }
-                    
-                    if uniqueObserved.isEmpty && uniqueToObserve.isEmpty {
-                        isShowingRecommendations = true
-                        recommendedBirds = Array(manager.fetchAllBirds().prefix(10))
-                    }
-                    
-                case .custom, .shared:
-                    guard let id = currentWatchlistId else { return }
-                    let observed = try manager.fetchEntries(watchlistID: id, status: .observed)
-                    let toObserve = try manager.fetchEntries(watchlistID: id, status: .to_observe)
-                    let title = (try? manager.getWatchlist(by: id))??.title ?? "Watchlist"
-                    updateSingleWatchlistData(observed: observed, toObserve: toObserve, title: title)
-                    
-                case .allSpecies:
-                    let allWls = try manager.fetchWatchlists()
-                    var uniqueObserved: [WatchlistEntry] = []
-                    var uniqueToObserve: [WatchlistEntry] = []
-                    var seenObs = Set<String>()
-                    var seenToObs = Set<String>()
-                    
-                    for wl in allWls {
-                        let obs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .observed)
-                        let toObs = try manager.fetchEntries(watchlistID: wl.watchlist_id, status: .to_observe)
-                        
-                        for entry in obs {
-                            if let name = entry.bird?.name, !seenObs.contains(name) {
-                                seenObs.insert(name)
-                                uniqueObserved.append(entry)
-                            }
-                        }
-                        for entry in toObs {
-                            if let name = entry.bird?.name, !seenToObs.contains(name) {
-                                seenToObs.insert(name)
-                                uniqueToObserve.append(entry)
-                            }
-                        }
-                    }
-                    
-                    updateSingleWatchlistData(observed: uniqueObserved, toObserve: uniqueToObserve, title: "Universal Index")
+            
+            // Use the filtering service to fetch entries based on mode
+            let result = try manager.filteringService.fetchEntriesForMode(
+                mode: watchlistType,
+                watchlistId: currentWatchlistId
+            )
+            
+            // Update properties from result
+            observedEntries = result.observed
+            toObserveEntries = result.toObserve
+            navigationItem.title = result.title
+            tabBarItem.title = "Watchlist"
+            isShowingRecommendations = result.shouldShowRecommendations
+            recommendedBirds = result.recommendedBirds
+            
+            // Special handling for myWatchlist mode - preserve sourceWatchlists assignment
+            if watchlistType == .myWatchlist {
+                sourceWatchlists = try manager.fetchWatchlists()
             }
         } catch {
         }
 		
 		applyFilters()
-	}
-	
-	private func updateSingleWatchlistData(observed: [WatchlistEntry], toObserve: [WatchlistEntry], title: String) {
-		self.observedEntries = observed
-		self.toObserveEntries = toObserve
-		self.navigationItem.title = title
-		self.tabBarItem.title = "Watchlist"
 	}
 	
 	private func setupUI() {
@@ -298,7 +231,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
 		guard #unavailable(iOS 14.0) else { return }
 		let alert = UIAlertController(title: "Filter", message: nil, preferredStyle: .actionSheet)
-		let options: [(String, SortOption)] = [
+		let options: [(String, SmartWatchlistSortOption)] = [
 			("Name (A to Z)", .nameAZ),
 			("Name (Z to A)", .nameZA),
 			("Month", .month),
@@ -358,7 +291,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 
 	@available(iOS 14.0, *)
-	private func makeSortAction(title: String, option: SortOption) -> UIAction {
+	private func makeSortAction(title: String, option: SmartWatchlistSortOption) -> UIAction {
 		UIAction(
 			title: title,
 			state: currentSortOption == option ? .on : .off
@@ -372,54 +305,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 
 	private func sortEntries(_ entries: [WatchlistEntry]) -> [WatchlistEntry] {
-		switch currentSortOption {
-		case .nameAZ:
-			return entries.sorted {
-				($0.bird?.name ?? "").localizedCaseInsensitiveCompare($1.bird?.name ?? "") == .orderedAscending
-			}
-		case .nameZA:
-			return entries.sorted {
-				($0.bird?.name ?? "").localizedCaseInsensitiveCompare($1.bird?.name ?? "") == .orderedDescending
-			}
-		case .newestFirst:
-			return entries.sorted { $0.addedDate > $1.addedDate }
-		case .month:
-			return entries.sorted { monthValue(for: $0) < monthValue(for: $1) }
-		case .startDate:
-			return entries.sorted {
-				($0.toObserveStartDate ?? $0.observationDate ?? Date.distantFuture) <
-				($1.toObserveStartDate ?? $1.observationDate ?? Date.distantFuture)
-			}
-		case .endDate:
-			return entries.sorted {
-				($0.toObserveEndDate ?? $0.observationDate ?? Date.distantFuture) <
-				($1.toObserveEndDate ?? $1.observationDate ?? Date.distantFuture)
-			}
-		case .rarity:
-			return entries.sorted { rarityRank(for: $0) < rarityRank(for: $1) }
-		}
-	}
-
-	private func monthValue(for entry: WatchlistEntry) -> Int {
-		if let observationDate = entry.observationDate {
-			return Calendar.current.component(.month, from: observationDate)
-		}
-		if let startDate = entry.toObserveStartDate {
-			return Calendar.current.component(.month, from: startDate)
-		}
-		return entry.bird?.validMonths?.min() ?? 13
-	}
-
-	private func rarityRank(for entry: WatchlistEntry) -> Int {
-		let rarity = entry.bird?.conservation_status?.lowercased() ?? ""
-		let order: [String: Int] = [
-			"critically endangered": 0,
-			"endangered": 1,
-			"vulnerable": 2,
-			"near threatened": 3,
-			"least concern": 4
-		]
-		return order[rarity] ?? 5
+		return manager.sortingService.sort(entries: entries, by: currentSortOption)
 	}
 	
 	private func configurePopover(for alert: UIAlertController, sender: Any) {

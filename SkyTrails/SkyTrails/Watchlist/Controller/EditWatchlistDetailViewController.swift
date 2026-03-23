@@ -474,52 +474,44 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
     
     private func saveRules(for watchlistId: UUID) throws {
-        let speciesShape = selectedShapeId ?? existingSpeciesShapeId
-        let speciesParams: RuleParameters? = speciesShape.map {
-            .speciesFamily(SpeciesFamilyRuleParams(shapeId: $0))
-        }
+        // Assemble species rule
+        let speciesResult = manager.ruleAssemblyService.assembleSpeciesRule(
+            selectedShapeId: selectedShapeId,
+            existingShapeId: existingSpeciesShapeId,
+            isActive: speciesRuleToggle.isOn
+        )
         try manager.upsertRule(
             watchlistId: watchlistId,
             type: .species_family,
-            parameters: speciesParams,
-            isActive: speciesRuleToggle.isOn
+            parameters: speciesResult.parameters,
+            isActive: speciesResult.isActive
         )
         
-        let locationParams: RuleParameters?
-        if let selectedLoc = selectedLocation {
-            locationParams = .location(
-                LocationRuleParams(
-                    lat: selectedLoc.lat,
-                    lon: selectedLoc.lon,
-                    radiusKm: selectedRuleRadius
-                )
-            )
-        } else if let existingLocationRuleData {
-            locationParams = .location(
-                LocationRuleParams(
-                    lat: existingLocationRuleData.lat,
-                    lon: existingLocationRuleData.lon,
-                    radiusKm: existingLocationRuleData.radiusKm
-                )
-            )
-        } else {
-            locationParams = nil
-        }
+        // Assemble location rule
+        let locationResult = manager.ruleAssemblyService.assembleLocationRule(
+            selectedLocation: selectedLocation,
+            existingData: existingLocationRuleData,
+            selectedRadius: selectedRuleRadius,
+            isActive: locationInputToggle.isOn
+        )
         try manager.upsertRule(
             watchlistId: watchlistId,
             type: .location,
-            parameters: locationParams,
-            isActive: locationInputToggle.isOn
+            parameters: locationResult.parameters,
+            isActive: locationResult.isActive
         )
         
-        let dateParams: RuleParameters? = .dateRange(
-            DateRangeRuleParams(startDate: startDatePicker.date, endDate: endDatePicker.date)
+        // Assemble date rule
+        let dateResult = manager.ruleAssemblyService.assembleDateRule(
+            startDate: startDatePicker.date,
+            endDate: endDatePicker.date,
+            isActive: dateInputToggle.isOn
         )
         try manager.upsertRule(
             watchlistId: watchlistId,
             type: .date_range,
-            parameters: dateParams,
-            isActive: dateInputToggle.isOn
+            parameters: dateResult.parameters,
+            isActive: dateResult.isActive
         )
     }
 	private func presentAlert(title: String, message: String) {

@@ -212,76 +212,25 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         guard let name = nameTextField.text, !name.isEmpty else {
             return
         }
-        var callbackBird: Bird?
-        if let existingEntry = entry {
-            do {
-                try manager.updateEntry(
-                    entryId: existingEntry.id,
-                    notes: notesTextView.text,
-                    observationDate: dateTimePicker.date,
-                    lat: selectedLocation?.lat,
-                    lon: selectedLocation?.lon,
-                    locationDisplayName: selectedLocation?.displayName
-                )
-                if let photoName = selectedImageName {
-                    try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
-                }
-                if let bird = existingEntry.bird {
-                    callbackBird = bird
-                }
-            } catch {
-            }
-        } else {
-            let birdToUse: Bird
-            if let existingBird = bird {
-                birdToUse = existingBird
-            } else if let found = manager.findBird(byName: name) {
-                birdToUse = found
-            } else {
-                birdToUse = manager.createBird(name: name)
-            }
-            do {
-                let location = selectedLocation.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
-                
-                if shouldUseRuleMatching {
-                    let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
-                        bird: birdToUse,
-                        location: location,
-                        observationDate: dateTimePicker.date,
-                        notes: notesTextView.text,
-                        asObserved: true
-                    )
-                    if let photoName = selectedImageName {
-                        for watchlistId in matchedWatchlistIds {
-                            if let entry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: watchlistId) {
-                                try manager.attachPhoto(entryId: entry.id, imageName: photoName)
-                            }
-                        }
-                    }
-                } else {
-                    guard let targetWatchlistId = watchlistId else {
-                        return
-                    }
-                    
-                    try manager.addBirds([birdToUse], to: targetWatchlistId, asObserved: true)
-                    
-                    if let newEntry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: targetWatchlistId) {
-                        try manager.updateEntry(
-                            entryId: newEntry.id,
-                            notes: notesTextView.text,
-                            observationDate: dateTimePicker.date,
-                            lat: location?.latitude,
-                            lon: location?.longitude,
-                            locationDisplayName: selectedLocation?.displayName
-                        )
-                        
-                        if let photoName = selectedImageName {
-                            try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
-                        }
-                    }
-                }
-                callbackBird = birdToUse
-            } catch WatchlistError.noMatchingWatchlists {
+        
+        Task {
+            let params = WatchlistEntryOrchestrationService.SaveParameters(
+                entry: entry,
+                bird: bird,
+                birdName: name,
+                watchlistId: watchlistId,
+                notes: notesTextView.text,
+                location: selectedLocation,
+                observationDate: dateTimePicker.date,
+                endDate: nil,
+                photoName: selectedImageName,
+                asObserved: true,
+                shouldUseRuleMatching: shouldUseRuleMatching
+            )
+            
+            let result = await manager.orchestrationService.saveEntry(params: params)
+            
+            if result.noMatchingWatchlists {
                 let alert = UIAlertController(
                     title: "No Matching Watchlists",
                     message: "Bird could not find any matching watchlists",
@@ -290,13 +239,17 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                 alert.addAction(UIAlertAction(title: "OK", style: .default))
                 present(alert, animated: true)
                 return
-            } catch {
             }
-        }
-        if let callbackBird, let onSave {
-            onSave(callbackBird)
-        } else {
-            navigationController?.popViewController(animated: true)
+            
+            if result.success, let callbackBird = result.bird {
+                if let onSave {
+                    onSave(callbackBird)
+                } else {
+                    navigationController?.popViewController(animated: true)
+                }
+            } else {
+                navigationController?.popViewController(animated: true)
+            }
         }
     }
     
