@@ -35,7 +35,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
             }
         }
         
-        setupCanvas()
+        setupCanvasIfNeeded()
         Categories.reloadData()
         updateNextButtonState()
     }
@@ -76,8 +76,9 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
             .replacingOccurrences(of: "-", with: "_")
     }
     
-    private func setupCanvas() {
-        CanvasView.subviews.forEach { $0.removeFromSuperview() }
+    private func setupCanvasIfNeeded() {
+        guard CanvasView.subviews.isEmpty else { return }
+        
         layerLoadTasks.values.forEach { $0.cancel() }
         layerLoadTasks.removeAll()
         partLayers.removeAll()
