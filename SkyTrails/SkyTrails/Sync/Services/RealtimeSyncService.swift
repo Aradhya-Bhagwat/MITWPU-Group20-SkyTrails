@@ -49,7 +49,10 @@ final class RealtimeSyncService: NSObject {
     private var maxReconnectAttempts: Int = 5
     private var reconnectDelay: TimeInterval = 1.0
     
-    private let tables: [String] = ["watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos", "users"]
+    private let tables: [String] = [
+        "watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos", "users",
+        "identification_sessions", "identification_results", "identification_candidates", "identification_session_marks"
+    ]
     private var subscribedTables: Set<String> = []
     var onConnectionStateChanged: ((RealtimeConnectionState) -> Void)?
     var onSyncEvent: ((RealtimePayload) -> Void)?
@@ -248,6 +251,14 @@ final class RealtimeSyncService: NSObject {
                     try await handlePhotoEvent(payload)
                 case "users":
                     try await handleUserEvent(payload)
+                case "identification_sessions":
+                    try await handleIdentificationSessionEvent(payload)
+                case "identification_results":
+                    try await handleIdentificationResultEvent(payload)
+                case "identification_candidates":
+                    try await handleIdentificationCandidateEvent(payload)
+                case "identification_session_marks":
+                    try await handleIdentificationSessionMarkEvent(payload)
                 default:
                     break
                 }
@@ -309,6 +320,62 @@ final class RealtimeSyncService: NSObject {
             guard let oldRecord = payload.oldRecord,
                   let deleteId = oldRecord.uuid(for: "observed_bird_photo_id") else { return }
             try await deletePhoto(id: deleteId)
+        }
+    }
+
+    private func handleIdentificationSessionEvent(_ payload: RealtimePayload) async throws {
+        guard let record = payload.record,
+              let id = record.uuid(for: "identification_session_id") else { return }
+        
+        switch payload.type {
+        case .insert, .update:
+            try await upsertIdentificationSession(from: record, id: id)
+        case .delete:
+            guard let oldRecord = payload.oldRecord,
+                  let deleteId = oldRecord.uuid(for: "identification_session_id") else { return }
+            try await deleteIdentificationSession(id: deleteId)
+        }
+    }
+
+    private func handleIdentificationResultEvent(_ payload: RealtimePayload) async throws {
+        guard let record = payload.record,
+              let id = record.uuid(for: "identification_result_id") else { return }
+        
+        switch payload.type {
+        case .insert, .update:
+            try await upsertIdentificationResult(from: record, id: id)
+        case .delete:
+            guard let oldRecord = payload.oldRecord,
+                  let deleteId = oldRecord.uuid(for: "identification_result_id") else { return }
+            try await deleteIdentificationResult(id: deleteId)
+        }
+    }
+
+    private func handleIdentificationCandidateEvent(_ payload: RealtimePayload) async throws {
+        guard let record = payload.record,
+              let id = record.uuid(for: "identification_candidate_id") else { return }
+        
+        switch payload.type {
+        case .insert, .update:
+            try await upsertIdentificationCandidate(from: record, id: id)
+        case .delete:
+            guard let oldRecord = payload.oldRecord,
+                  let deleteId = oldRecord.uuid(for: "identification_candidate_id") else { return }
+            try await deleteIdentificationCandidate(id: deleteId)
+        }
+    }
+
+    private func handleIdentificationSessionMarkEvent(_ payload: RealtimePayload) async throws {
+        guard let record = payload.record,
+              let id = record.uuid(for: "identification_session_mark_id") else { return }
+        
+        switch payload.type {
+        case .insert, .update:
+            try await upsertIdentificationSessionMark(from: record, id: id)
+        case .delete:
+            guard let oldRecord = payload.oldRecord,
+                  let deleteId = oldRecord.uuid(for: "identification_session_mark_id") else { return }
+            try await deleteIdentificationSessionMark(id: deleteId)
         }
     }
     
@@ -653,6 +720,225 @@ final class RealtimeSyncService: NSObject {
                     }
                 }
             }
+        }
+    }
+
+    private func upsertIdentificationSession(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        if let session = existing {
+            updateSessionFromRecord(session, record: record)
+            try? context.save()
+        } else {
+            let session = IdentificationSession(
+                identification_session_id: id,
+                user_id: record.uuid(for: "user_id"),
+                observationDate: record.date(for: "observation_date") ?? record.date(for: "created_at") ?? Date(),
+                createdAt: record.date(for: "created_at") ?? Date(),
+                status: record.string(for: "status").flatMap { SessionStatus(rawValue: $0) } ?? .completed
+            )
+            updateSessionFromRecord(session, record: record)
+            context.insert(session)
+            try? context.save()
+        }
+    }
+
+    private func updateSessionFromRecord(_ session: IdentificationSession, record: [String: JSONValue]) {
+        session.status = record.string(for: "status").flatMap { SessionStatus(rawValue: $0) } ?? .completed
+        session.locationLat = record.double(for: "location_lat")
+        session.locationLong = record.double(for: "location_long")
+        session.deviceInfo = record.string(for: "device_info")
+        session.notes = record.string(for: "notes")
+        session.isPublic = record.bool(for: "is_public") ?? false
+        session.weatherConditions = record.string(for: "weather_conditions")
+        session.created_at = record.date(for: "created_at") ?? session.created_at
+        session.updated_at = record.date(for: "updated_at")
+        session.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+        session.deletedAt = record.date(for: "deleted_at")
+        session.syncStatus = .synced
+        session.lastSyncedAt = Date()
+
+        // Handle Metadata
+        if let metadataObj = record["metadata"], case .object(let dict) = metadataObj {
+            var stringDict: [String: String] = [:]
+            for (k, v) in dict {
+                if let s = v.stringValue { stringDict[k] = s }
+            }
+            session.metadata = stringDict
+            
+            if let shapeId = stringDict["shapeId"] {
+                let shapeDescriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
+                session.shape = try? WatchlistManager.shared.context.fetch(shapeDescriptor).first
+            }
+            session.locationDisplayName = stringDict["locationDisplayName"]
+            if let sizeStr = stringDict["sizeCategory"], let size = Int(sizeStr) {
+                session.sizeCategory = size
+            }
+            if let filterStr = stringDict["filterCategories"] {
+                session.selectedFilterCategories = filterStr.components(separatedBy: ",")
+            }
+        }
+    }
+
+    private func deleteIdentificationSession(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == id })
+        if let session = try? context.fetch(descriptor).first {
+            session.deletedAt = Date()
+            session.syncStatus = .synced
+            try? context.save()
+        }
+    }
+
+    private func upsertIdentificationResult(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        guard let sessionId = record.uuid(for: "identification_session_id") else { return }
+        let sessionDescriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == sessionId })
+        let session = try? context.fetch(sessionDescriptor).first
+
+        if let result = existing {
+            result.session = session
+            result.user_id = record.uuid(for: "owner_id")
+            if let birdId = record.uuid(for: "bird_id") {
+                result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
+            }
+            result.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+            result.updated_at = record.date(for: "updated_at")
+            result.deletedAt = record.date(for: "deleted_at")
+            result.syncStatus = .synced
+            result.lastSyncedAt = Date()
+            try? context.save()
+        } else {
+            let result = IdentificationResult(
+                identification_result_id: id,
+                session: session,
+                user_id: record.uuid(for: "owner_id"),
+                createdAt: record.date(for: "created_at") ?? Date()
+            )
+            if let birdId = record.uuid(for: "bird_id") {
+                result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
+            }
+            result.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+            result.updated_at = record.date(for: "updated_at")
+            result.deletedAt = record.date(for: "deleted_at")
+            result.syncStatus = .synced
+            result.lastSyncedAt = Date()
+            context.insert(result)
+            try? context.save()
+        }
+    }
+
+    private func deleteIdentificationResult(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == id })
+        if let result = try? context.fetch(descriptor).first {
+            result.deletedAt = Date()
+            result.syncStatus = .synced
+            try? context.save()
+        }
+    }
+
+    private func upsertIdentificationCandidate(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        guard let resultId = record.uuid(for: "identification_result_id") else { return }
+        let resultDescriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == resultId })
+        let result = try? context.fetch(resultDescriptor).first
+
+        let birdId = record.uuid(for: "bird_id")
+        let bird = birdId.flatMap { try? WatchlistManager.shared.fetchBird(bird_id: $0) }
+
+        if let candidate = existing {
+            candidate.result = result
+            candidate.bird = bird
+            candidate.confidence = record.double(for: "confidence") ?? 0.0
+            candidate.rank = record.int(for: "confidence_rank")
+            candidate.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+            candidate.updated_at = record.date(for: "updated_at")
+            candidate.deletedAt = record.date(for: "deleted_at")
+            candidate.syncStatus = .synced
+            candidate.lastSyncedAt = Date()
+            try? context.save()
+        } else {
+            let candidate = IdentificationCandidate(
+                identification_candidate_id: id,
+                result: result,
+                bird: bird,
+                confidence: record.double(for: "confidence") ?? 0.0,
+                rank: record.int(for: "confidence_rank")
+            )
+            candidate.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+            candidate.updated_at = record.date(for: "updated_at")
+            candidate.deletedAt = record.date(for: "deleted_at")
+            candidate.syncStatus = .synced
+            candidate.lastSyncedAt = Date()
+            context.insert(candidate)
+            try? context.save()
+        }
+    }
+
+    private func deleteIdentificationCandidate(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == id })
+        if let candidate = try? context.fetch(descriptor).first {
+            candidate.deletedAt = Date()
+            candidate.syncStatus = .synced
+            try? context.save()
+        }
+    }
+
+    private func upsertIdentificationSessionMark(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        guard let sessionId = record.uuid(for: "identification_session_id") else { return }
+        let sessionDescriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == sessionId })
+        let session = try? context.fetch(sessionDescriptor).first
+
+        if let mark = existing {
+            mark.session = session
+            mark.area = record.string(for: "area") ?? ""
+            mark.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+            mark.updated_at = record.date(for: "updated_at")
+            mark.deletedAt = record.date(for: "deleted_at")
+            mark.syncStatus = .synced
+            mark.lastSyncedAt = Date()
+            try? context.save()
+        } else {
+            let mark = IdentificationSessionFieldMark(
+                identification_session_mark_id: id,
+                identification_session_id: sessionId,
+                session: session,
+                area: record.string(for: "area") ?? ""
+            )
+            if let markId = record.uuid(for: "field_mark_id") { mark.field_mark_id = markId }
+            if let varId = record.uuid(for: "variant_id") { mark.variant_id = varId }
+            
+            mark.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
+            mark.updated_at = record.date(for: "updated_at")
+            mark.deletedAt = record.date(for: "deleted_at")
+            mark.syncStatus = .synced
+            mark.lastSyncedAt = Date()
+            context.insert(mark)
+            try? context.save()
+        }
+    }
+
+    private func deleteIdentificationSessionMark(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == id })
+        if let mark = try? context.fetch(descriptor).first {
+            mark.deletedAt = Date()
+            mark.syncStatus = .synced
+            try? context.save()
         }
     }
     

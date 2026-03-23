@@ -56,16 +56,14 @@ class UserSession {
             // 1. Establish Realtime Connection
             await connectRealtimeAndSync()
             
-            // 2. Adopt any guest data created before login
-            do {
-                try await IdentificationSyncService.shared.adoptGuestSessions(to: user.user_id)
-            } catch {
-            }
+            // 2. Adopt any guest data created before login (Watchlists, Identification, etc.)
+            await WatchlistManager.shared.bindCurrentUserOwnership()
             
             // 3. Pull all data from Supabase that might have been created on other devices
             do {
                 _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
+                print("DEBUG: UserSession - Initial sync failed: \(error)")
             }
             
             // 4. Trigger Background Agent to push any newly adopted pending changes
@@ -163,10 +161,6 @@ class UserSession {
                 accessToken: authResult.accessToken ?? accessToken,
                 refreshToken: authResult.refreshToken ?? refreshToken
             )
-            do {
-                let summary = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
-            } catch {
-            }
             
             return true
         } catch {

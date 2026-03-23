@@ -36,15 +36,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
 
             let restored = await UserSession.shared.restoreSessionIfNeeded()
-            if restored, let user = UserSession.shared.currentUser {
-                // Ensure local data is bound to user and pulled from server before showing main UI
-                await WatchlistManager.shared.bindCurrentUserOwnership()
-                do {
-                    _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
-                } catch {
-                    print("DEBUG: SceneDelegate - Initial launch sync failed: \(error)")
-                }
-            }
             routeToCurrentSessionRoot()
         }
     }
@@ -135,20 +126,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 accessToken: authResult.accessToken,
                 refreshToken: authResult.refreshToken
             )
-            do {
-                _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
-            } catch {
-            }
-            do {
-                try await IdentificationSyncService.shared.performSync(userId: user.user_id)
-            } catch {
-            }
 
             Task {
                 try? await UserSyncService.shared.upsertUser(user)
             }
-
-            await WatchlistManager.shared.bindCurrentUserOwnership()
         } catch {
             showAlert(message: error.localizedDescription)
         }
