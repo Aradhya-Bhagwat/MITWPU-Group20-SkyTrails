@@ -23,16 +23,19 @@ class EditWatchlistDetailViewController: UIViewController {
 	@IBOutlet weak var inviteContactsView: UIView!
 	@IBOutlet weak var suggestionsTableView: UITableView!
 	@IBOutlet weak var participantsTableView: UITableView!
+	@IBOutlet private weak var speciesHeaderStack: UIStackView!
+	@IBOutlet private weak var speciesInfoButton: UIButton!
+	@IBOutlet private weak var rulesContainerView: UIView!
+	@IBOutlet private weak var speciesRuleToggle: UISwitch!
+	@IBOutlet private weak var shapeCollectionView: UICollectionView!
+	@IBOutlet private weak var clearWatchlistButton: UIButton!
+	@IBOutlet private weak var deleteWatchlistButton: UIButton!
 	var watchlistType: WatchlistType = .custom
     var watchlistIdToEdit: UUID?
     private var watchlistToEdit: Watchlist?
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
 	private var selectedLocation: LocationService.LocationData?
 	private var participants: [Participant] = []
-	private var rulesContainerView: UIView!
-	private var speciesRuleToggle: UISwitch!
-	private var speciesRuleLabel: UILabel!
-	private var shapeCollectionView: UICollectionView!
 	private var availableShapes: [BirdShape] = []
 	private var selectedShapeId: String?
     private var existingLocationRuleData: (lat: Double, lon: Double, radiusKm: Double)?
@@ -48,10 +51,8 @@ class EditWatchlistDetailViewController: UIViewController {
 		setupUI()
 		setupLocationServices()
 		configureInitialData()
-        DispatchQueue.main.async {
-            self.setupRulesUI()
-            self.populateRuleDataForEdit()
-        }
+		configureRulesSection()
+		populateRuleDataForEdit()
 	}
     
     @IBAction private func dateInputToggled() {
@@ -73,7 +74,7 @@ class EditWatchlistDetailViewController: UIViewController {
 	private func setupUI() {
 		let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(didTapSave))
 		navigationItem.rightBarButtonItem = saveButton
-		self.title = (watchlistToEdit == nil) ? "Create Watchlist" : "Watchlist Settings"
+		self.title = (watchlistIdToEdit == nil) ? "Create Watchlist" : "Watchlist Settings"
 		let isDarkMode = traitCollection.userInterfaceStyle == .dark
 		view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
 		titleTextField.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
@@ -96,6 +97,7 @@ class EditWatchlistDetailViewController: UIViewController {
 		suggestionsTableView.delegate = self
 		suggestionsTableView.dataSource = self
 		locationSearchBar.delegate = self
+		speciesInfoButton.tintColor = .systemBlue
 
 		wireInfoButtons()
 		
@@ -181,138 +183,36 @@ class EditWatchlistDetailViewController: UIViewController {
         let usedShapeIds = Set(allBirds.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
         availableShapes = allShapes.filter { usedShapeIds.contains($0.bird_shape_id) }
     }
-    
-    private func setupRulesUI() {
-        let isDarkMode = traitCollection.userInterfaceStyle == .dark
-        guard let scrollView = view.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView else {
-            return
-        }
-        let mainStackView: UIStackView
-        if let stackView = scrollView.subviews.compactMap({ $0 as? UIStackView }).first {
-            mainStackView = stackView
-        } else if let stackView = scrollView.subviews.flatMap({ $0.subviews }).compactMap({ $0 as? UIStackView }).first {
-            mainStackView = stackView
-        } else {
-            return
-        }
 
-        let headerStack = UIStackView()
-        headerStack.translatesAutoresizingMaskIntoConstraints = false
-        headerStack.axis = .horizontal
-        headerStack.alignment = .center
-        headerStack.spacing = 8
+	private func configureRulesSection() {
+		let isDarkMode = traitCollection.userInterfaceStyle == .dark
+		styleCard(rulesContainerView, isDarkMode: isDarkMode)
+		shapeCollectionView.delegate = self
+		shapeCollectionView.dataSource = self
+		shapeCollectionView.backgroundColor = .clear
+		shapeCollectionView.showsHorizontalScrollIndicator = false
+		if let layout = shapeCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
+			layout.scrollDirection = .horizontal
+			layout.minimumInteritemSpacing = 12
+			layout.minimumLineSpacing = 12
+			layout.itemSize = CGSize(width: 80, height: 100)
+		}
 
-        let titleLabel = UILabel()
-        titleLabel.text = "Species"
-        titleLabel.font = .boldSystemFont(ofSize: 20)
-        titleLabel.textColor = .label
-        headerStack.addArrangedSubview(titleLabel)
+		let actionButtons = [clearWatchlistButton, deleteWatchlistButton]
+		actionButtons.forEach { button in
+			button?.layer.cornerRadius = 12
+			button?.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+			button?.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+			button?.setTitleColor(.systemRed, for: .normal)
+		}
 
-        let infoButton = UIButton(type: .system)
-        infoButton.setImage(UIImage(systemName: "info.circle"), for: .normal)
-        infoButton.tintColor = .systemBlue
-        infoButton.addTarget(self, action: #selector(didTapSpeciesInfo), for: .touchUpInside)
-        headerStack.addArrangedSubview(infoButton)
-
-        let spacer = UIView()
-        spacer.translatesAutoresizingMaskIntoConstraints = false
-        headerStack.addArrangedSubview(spacer)
-
-        speciesRuleToggle = UISwitch()
-        speciesRuleToggle.addTarget(self, action: #selector(speciesRuleToggled), for: .valueChanged)
-        headerStack.addArrangedSubview(speciesRuleToggle)
-
-        rulesContainerView = UIView()
-        rulesContainerView.translatesAutoresizingMaskIntoConstraints = false
-        rulesContainerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .white
-        rulesContainerView.layer.cornerRadius = 20
-        rulesContainerView.layer.shadowColor = UIColor.black.cgColor
-        rulesContainerView.layer.shadowOpacity = isDarkMode ? 0 : 0.08
-        rulesContainerView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        rulesContainerView.layer.shadowRadius = 12
-        rulesContainerView.layer.masksToBounds = false
-
-        let rulesStack = UIStackView()
-        rulesStack.translatesAutoresizingMaskIntoConstraints = false
-        rulesStack.axis = .vertical
-        rulesStack.spacing = 20
-        rulesStack.alignment = .fill
-        rulesContainerView.addSubview(rulesStack)
-
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
-        layout.minimumInteritemSpacing = 12
-        layout.minimumLineSpacing = 12
-        layout.itemSize = CGSize(width: 80, height: 100)
-        
-        shapeCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        shapeCollectionView.translatesAutoresizingMaskIntoConstraints = false
-        shapeCollectionView.backgroundColor = .clear
-        shapeCollectionView.showsHorizontalScrollIndicator = false
-        shapeCollectionView.delegate = self
-        shapeCollectionView.dataSource = self
-        shapeCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "ShapeCell")
-        shapeCollectionView.heightAnchor.constraint(equalToConstant: 100).isActive = true
-        
-        rulesStack.addArrangedSubview(shapeCollectionView)
-        
-        NSLayoutConstraint.activate([
-            rulesStack.topAnchor.constraint(equalTo: rulesContainerView.topAnchor, constant: 16),
-            rulesStack.leadingAnchor.constraint(equalTo: rulesContainerView.leadingAnchor, constant: 16),
-            rulesStack.trailingAnchor.constraint(equalTo: rulesContainerView.trailingAnchor, constant: -16),
-            rulesStack.bottomAnchor.constraint(equalTo: rulesContainerView.bottomAnchor, constant: -16)
-        ])
-
-        if let locationSectionIndex = mainStackView.arrangedSubviews.firstIndex(where: { view -> Bool in
-            if view is UISearchBar {
-                return true
-            }
-            if view == self.locationOptionsContainer {
-                return true
-            }
-            return false
-        }) {
-            // Find the last view related to Location (the container)
-            var insertIndex = locationSectionIndex
-            for i in locationSectionIndex..<mainStackView.arrangedSubviews.count {
-                if mainStackView.arrangedSubviews[i] == self.locationOptionsContainer {
-                    insertIndex = i
-                    break
-                }
-            }
-            mainStackView.insertArrangedSubview(headerStack, at: insertIndex + 1)
-            mainStackView.insertArrangedSubview(rulesContainerView, at: insertIndex + 2)
-        } else {
-            mainStackView.addArrangedSubview(headerStack)
-            mainStackView.addArrangedSubview(rulesContainerView)
-        }
-        
-        if watchlistIdToEdit != nil {
-            let clearButton = UIButton(type: .system)
-            clearButton.translatesAutoresizingMaskIntoConstraints = false
-            clearButton.setTitle("Clear Watchlist", for: .normal)
-            clearButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-            clearButton.setTitleColor(.systemRed, for: .normal)
-            clearButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-            clearButton.layer.cornerRadius = 12
-            clearButton.addTarget(self, action: #selector(didTapClearWatchlist), for: .touchUpInside)
-            clearButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-            
-            mainStackView.addArrangedSubview(clearButton)
-
-			let deleteButton = UIButton(type: .system)
-			deleteButton.translatesAutoresizingMaskIntoConstraints = false
-			deleteButton.setTitle("Delete Watchlist", for: .normal)
-			deleteButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-			deleteButton.setTitleColor(.systemRed, for: .normal)
-			deleteButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-			deleteButton.layer.cornerRadius = 12
-			deleteButton.addTarget(self, action: #selector(didTapDeleteWatchlist), for: .touchUpInside)
-			deleteButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-
-			mainStackView.addArrangedSubview(deleteButton)
-        }
-    }
+		let isEditingWatchlist = (watchlistIdToEdit != nil)
+		clearWatchlistButton.isHidden = !isEditingWatchlist
+		deleteWatchlistButton.isHidden = !isEditingWatchlist
+		speciesRuleToggle.isOn = false
+		rulesContainerView.isHidden = true
+		rulesContainerView.alpha = 0.0
+	}
 
     @IBAction private func didTapDateInfo() {
         let message = "Temporal Bounds: Add birds typically seen during a specific time of year."
@@ -730,9 +630,13 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ShapeCell", for: indexPath)
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "ShapeCell",
+            for: indexPath
+        ) as? WatchlistShapeCollectionViewCell else {
+            return UICollectionViewCell()
+        }
         let shape = availableShapes[indexPath.item]
-        cell.contentView.subviews.forEach { $0.removeFromSuperview() }
         cell.contentView.layer.cornerRadius = 12
         cell.contentView.layer.masksToBounds = true
         
@@ -748,30 +652,7 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
             cell.contentView.layer.borderColor = (isDarkMode ? UIColor.systemGray3 : UIColor.systemGray4).cgColor
             cell.contentView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         }
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.image = UIImage(named: shape.icon)
-        cell.contentView.addSubview(imageView)
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = shape.name
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textAlignment = .center
-        label.numberOfLines = 2
-        cell.contentView.addSubview(label)
-        
-        NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: cell.contentView.topAnchor, constant: 8),
-            imageView.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor),
-            imageView.widthAnchor.constraint(equalToConstant: 40),
-            imageView.heightAnchor.constraint(equalToConstant: 40),
-            
-            label.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4),
-            label.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 4),
-            label.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -4),
-            label.bottomAnchor.constraint(lessThanOrEqualTo: cell.contentView.bottomAnchor, constant: -4)
-        ])
+        cell.configure(shape: shape)
         
         return cell
     }
