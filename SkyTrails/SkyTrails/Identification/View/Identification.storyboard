@@ -21,7 +21,7 @@
                                 <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4nx-pp-Ahc">
-                                        <rect key="frame" x="0.0" y="0.0" width="402" height="1540.3333333333333"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="402" height="687.66666666666663"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="How would you like to start Identification?" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rkK-99-Cad">
                                                 <rect key="frame" x="16" y="15.999999999999998" width="370" height="20.333333333333329"/>
@@ -72,7 +72,7 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
-                                                <rect key="frame" x="16" y="459.66666666666663" width="370" height="1072.666666666667"/>
+                                                <rect key="frame" x="16" y="459.66666666666663" width="370" height="220"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
                                                     <size key="itemSize" width="175" height="133"/>
@@ -159,7 +159,7 @@
                             <constraint firstItem="deH-Bp-JJV" firstAttribute="top" secondItem="sOI-JW-pbl" secondAttribute="top" id="meM-LO-huO"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Identification" id="h4S-7J-WvE"/>
+                    <navigationItem key="navigationItem" title="Identification" largeTitleDisplayMode="always" id="h4S-7J-WvE"/>
                     <connections>
                         <outlet property="containerView" destination="sz8-14-rMC" id="dpZ-1y-dAK"/>
                         <outlet property="historyCollectionHeightConstraint" destination="8xN-e5-MUo" id="AaW-IQ-44a"/>
@@ -680,7 +680,7 @@
                                 </collectionViewFlowLayout>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="ResultCollectionViewCell" id="XXk-Aw-zgB" customClass="ResultCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
-                                        <rect key="frame" x="8" y="8" width="170" height="240"/>
+                                        <rect key="frame" x="8" y="12" width="170" height="240"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="x5g-Vs-BEQ">
                                             <rect key="frame" x="0.0" y="0.0" width="170" height="240"/>
@@ -829,16 +829,16 @@
         <image name="chevron.left" catalog="system" width="97" height="128"/>
         <image name="info.circle" catalog="system" width="128" height="123"/>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemGray3Color">
-            <color red="0.78039215689999997" green="0.78039215689999997" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.7803921568627451" green="0.7803921568627451" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemGray4Color">
-            <color red="0.81960784310000001" green="0.81960784310000001" blue="0.83921568629999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.81960784313725488" green="0.81960784313725488" blue="0.83921568627450982" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
