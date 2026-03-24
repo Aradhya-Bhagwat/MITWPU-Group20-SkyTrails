@@ -197,11 +197,15 @@ extension AllSpotsViewController: UICollectionViewDelegate {
         inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
         
         Task {
-            let predictions = await HomeManager.shared.getLivePredictions(
-                for: lat,
-                lon: lon,
-                radiusKm: item.radius
-            )
+            let predictions = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
+                HomeManager.shared.predictionResults(from: edgeSpecies, lat: lat, lon: lon)
+            } else {
+                await HomeManager.shared.getLivePredictions(
+                    for: lat,
+                    lon: lon,
+                    radiusKm: item.radius
+                )
+            }
             
             await MainActor.run {
                 let storyboard = UIStoryboard(name: "Home", bundle: nil)
