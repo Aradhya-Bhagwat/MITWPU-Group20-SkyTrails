@@ -20,6 +20,12 @@
                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="X0N-NL-Wxr">
                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                     </imageView>
+                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="chevron-ib">
+                        <rect key="frame" x="12.5" y="12.5" width="25" height="25"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="chevron-ib" secondAttribute="height" multiplier="1:1" id="chevron-aspect"/>
+                        </constraints>
+                    </imageView>
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
@@ -29,9 +35,13 @@
                 <constraint firstItem="X0N-NL-Wxr" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="gqv-wx-mFZ"/>
                 <constraint firstAttribute="bottom" secondItem="X0N-NL-Wxr" secondAttribute="bottom" id="qNX-B1-9r1"/>
                 <constraint firstItem="X0N-NL-Wxr" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="rC8-du-lFy"/>
+                <constraint firstItem="chevron-ib" firstAttribute="centerX" secondItem="gTV-IL-0wX" secondAttribute="centerX" id="chevron-centerX"/>
+                <constraint firstItem="chevron-ib" firstAttribute="centerY" secondItem="gTV-IL-0wX" secondAttribute="centerY" id="chevron-centerY"/>
+                <constraint firstItem="chevron-ib" firstAttribute="width" secondItem="gTV-IL-0wX" secondAttribute="width" multiplier="0.5" id="chevron-width"/>
             </constraints>
             <connections>
                 <outlet property="variationImageView" destination="X0N-NL-Wxr" id="nZ9-hu-MTr"/>
+                <outlet property="chevronImageView" destination="chevron-ib" id="chevron-outlet"/>
             </connections>
             <point key="canvasLocation" x="-118" y="115"/>
         </collectionViewCell>
