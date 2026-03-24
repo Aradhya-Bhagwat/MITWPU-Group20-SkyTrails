@@ -95,11 +95,13 @@ class subcardViewCell: UICollectionViewCell {
             birdNameLabel.text = birdData.birdName
             compactBirdNameLabel?.text = birdData.statusBadge.title
             
-            if let image = UIImage(named: birdData.birdImageName) {
-                birdImageView.image = image
-                compactBirdImageView?.image = image
-            } else {
-                birdImageView.image = UIImage(systemName: "bird.fill")
+        if let image = UIImage(named: birdData.birdImageName) {
+            print("[Debug] Loading image name: \(birdData.birdImageName) for bird: \(birdData.birdName)")
+            birdImageView.image = image
+            compactBirdImageView?.image = image
+        } else {
+            print("[Debug] Image not found: \(birdData.birdImageName) for bird: \(birdData.birdName). Falling back to default.")
+            birdImageView.image = UIImage(systemName: "bird.fill")
                 birdImageView.tintColor = .systemGray4
                 compactBirdImageView?.image = UIImage(systemName: "bird.fill")
                 compactBirdImageView?.tintColor = .systemGray4
