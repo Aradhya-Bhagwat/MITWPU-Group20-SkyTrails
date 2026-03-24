@@ -23,13 +23,6 @@
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="TIj-ML-RLm">
                                 <rect key="frame" x="0.0" y="0.0" width="361" height="159"/>
                             </imageView>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ysj-Ay-1B6">
-                                <rect key="frame" x="16" y="16" width="60" height="60"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="60" id="AUU-l9-Dqe"/>
-                                    <constraint firstAttribute="height" constant="60" id="ehg-vU-0gE"/>
-                                </constraints>
-                            </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gJv-DV-0gG">
                                 <rect key="frame" x="84" y="36" width="42" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
@@ -60,16 +53,14 @@
                             <constraint firstItem="TIj-ML-RLm" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" id="4pn-zq-gCM"/>
                             <constraint firstItem="gaf-UC-WaJ" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="119" id="6EK-H8-wzw"/>
                             <constraint firstItem="Bx5-fr-Hvh" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="95" id="9N1-yg-ZrY"/>
-                            <constraint firstItem="gJv-DV-0gG" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="84" id="AQD-VN-KRh"/>
+                            <constraint firstItem="gJv-DV-0gG" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="AQD-VN-KRh"/>
                             <constraint firstAttribute="bottom" secondItem="TIj-ML-RLm" secondAttribute="bottom" id="Cwn-sl-vga"/>
-                            <constraint firstItem="ysj-Ay-1B6" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="Lq3-gl-s5G"/>
-                            <constraint firstItem="gJv-DV-0gG" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="36" id="Ra3-AK-SYN"/>
+                                                        <constraint firstItem="gJv-DV-0gG" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="16" id="Ra3-AK-SYN"/>
                             <constraint firstItem="gaf-UC-WaJ" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="Ywf-lS-q9H"/>
-                            <constraint firstItem="ysj-Ay-1B6" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="16" id="dTD-O8-O1O"/>
-                            <constraint firstItem="TIj-ML-RLm" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" id="f9J-gw-kH8"/>
+                                                        <constraint firstItem="TIj-ML-RLm" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" id="f9J-gw-kH8"/>
                             <constraint firstAttribute="trailing" secondItem="TIj-ML-RLm" secondAttribute="trailing" id="gDG-iH-Zyy"/>
-                            <constraint firstItem="dhX-r8-PAN" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="59" id="mar-Ux-jiu"/>
-                            <constraint firstItem="dhX-r8-PAN" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="84" id="vaO-nG-0dY"/>
+                            <constraint firstItem="dhX-r8-PAN" firstAttribute="top" secondItem="o8i-IO-1Nd" secondAttribute="top" constant="39" id="mar-Ux-jiu"/>
+                            <constraint firstItem="dhX-r8-PAN" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="vaO-nG-0dY"/>
                             <constraint firstItem="Bx5-fr-Hvh" firstAttribute="leading" secondItem="o8i-IO-1Nd" secondAttribute="leading" constant="16" id="xN5-LZ-jUI"/>
                         </constraints>
                     </view>
@@ -89,8 +80,7 @@
                 <outlet property="locationLabel" destination="gaf-UC-WaJ" id="un5-ln-215"/>
                 <outlet property="observationCountLabel" destination="dhX-r8-PAN" id="bsZ-Ap-dmY"/>
                 <outlet property="userNameLabel" destination="gJv-DV-0gG" id="o8g-IE-Hlx"/>
-                <outlet property="userProfileImageView" destination="ysj-Ay-1B6" id="i0e-JN-uNM"/>
-            </connections>
+                            </connections>
             <point key="canvasLocation" x="138.1679389312977" y="153.16901408450704"/>
         </collectionViewCell>
     </objects>

@@ -405,7 +405,6 @@ extension HomeViewController: UICollectionViewDataSource {
             let item = spots[indexPath.row]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
         } else if indexPath.section == 3 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CommunityObservationsCollectionViewCell.identifier, for: indexPath) as! CommunityObservationsCollectionViewCell
-            let item = observations[indexPath.row]; cell.configure(with: item, birdImage: UIImage(named: item.photoURL ?? "default_bird")); return cell
         } else if indexPath.section == 4 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewsCollectionViewCell", for: indexPath) as! NewsCollectionViewCell
             cell.configure(with: newsItem(at: indexPath.row)); return cell

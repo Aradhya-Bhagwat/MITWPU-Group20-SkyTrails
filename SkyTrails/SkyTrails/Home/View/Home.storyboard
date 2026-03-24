@@ -562,41 +562,35 @@
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="locationStackView">
                                                 <rect key="frame" x="20" y="216" width="362" height="174"/>
                                                 <subviews>
-                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="locationTitle">
-                                                        <rect key="frame" x="0.0" y="0.0" width="362" height="0.0"/>
-                                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
-                                                        <nil key="textColor"/>
-                                                    </label>
-                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Central Park, NY" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="locationNameLabel">
-                                                        <rect key="frame" x="0.0" y="12" width="362" height="0.0"/>
-                                                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
-                                                        <nil key="textColor"/>
-                                                    </label>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="LocLabelStack">
+                                                        <rect key="frame" x="0.0" y="0.0" width="362" height="25"/>
+                                                        <subviews>
+                                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="location.fill" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="locIcon">
+                                                                <rect key="frame" x="0.0" y="1" width="25" height="23"/>
+                                                                <color key="tintColor" systemColor="labelColor"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="height" constant="25" id="lc-h1"/>
+                                                                    <constraint firstAttribute="width" constant="25" id="lc-w1"/>
+                                                                </constraints>
+                                                            </imageView>
+                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Central Park, NY" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="locationNameLabel">
+                                                                <rect key="frame" x="33" y="0.0" width="329" height="25"/>
+                                                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                                                <nil key="textColor"/>
+                                                            </label>
+                                                        </subviews>
+                                                        <edgeInsets key="layoutMargins" top="0.0" left="16" bottom="0.0" right="16"/>
+                                                    </stackView>
                                                     <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MKMapView">
-                                                        <rect key="frame" x="0.0" y="24" width="362" height="150"/>
+                                                        <rect key="frame" x="0.0" y="37" width="362" height="150"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="width" constant="362" id="R7r-1k-89A"/>
                                                             <constraint firstAttribute="height" constant="150" id="mapHeight"/>
                                                         </constraints>
                                                         <standardMapConfiguration key="preferredConfiguration"/>
                                                     </mapView>
                                                 </subviews>
                                             </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="notesStackView">
-                                                <rect key="frame" x="20" y="414" width="362" height="8"/>
-                                                <subviews>
-                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Observation Notes" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="notesTitle">
-                                                        <rect key="frame" x="0.0" y="0.0" width="362" height="0.0"/>
-                                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
-                                                        <nil key="textColor"/>
-                                                    </label>
-                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Notes content goes here..." textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="notesLabel">
-                                                        <rect key="frame" x="0.0" y="8" width="362" height="0.0"/>
-                                                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
-                                                        <nil key="textColor"/>
-                                                    </label>
-                                                </subviews>
-                                            </stackView>
+                                            
                                         </subviews>
                                         <constraints>
                                             <constraint firstItem="locationStackView" firstAttribute="top" secondItem="MainContentStack" secondAttribute="top" constant="216" id="V6F-9X-ptJ"/>
@@ -630,11 +624,12 @@
                         <outlet property="birdImageView" destination="birdImageView" id="outBirdImage"/>
                         <outlet property="dateCardView" destination="dateCardView" id="outDateCard"/>
                         <outlet property="datePicker" destination="datePicker" id="outDatePicker"/>
+                        <outlet property="likeIconImageView" destination="LikeIcon" id="likeIcon-con"/>
+                        <outlet property="likesCountLabel" destination="likesCountLabel" id="likesLabel-con"/>
                         <outlet property="locationNameLabel" destination="locationNameLabel" id="outLocLabel"/>
+                        <outlet property="mapView" destination="MKMapView" id="outMapView"/>
                         <outlet property="locationStackView" destination="locationStackView" id="outLocStack"/>
-                        <outlet property="notesLabel" destination="notesLabel" id="outNotesLabel"/>
-                        <outlet property="notesStackView" destination="notesStackView" id="outNotesStack"/>
-                        <outlet property="timePicker" destination="timePicker" id="outTimePicker"/>
+                                                                        <outlet property="timePicker" destination="timePicker" id="outTimePicker"/>
                         <outlet property="userNameLabel" destination="userNameLabel" id="outUserLabel"/>
                     </connections>
                 </viewController>

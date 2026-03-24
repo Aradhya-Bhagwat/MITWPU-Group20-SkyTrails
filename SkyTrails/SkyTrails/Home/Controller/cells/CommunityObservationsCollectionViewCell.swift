@@ -7,7 +7,6 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
         
     @IBOutlet weak var cardContainerView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
-    @IBOutlet weak var userProfileImageView: UIImageView!
     @IBOutlet weak var userNameLabel: UILabel!
     @IBOutlet weak var observationCountLabel: UILabel!
     @IBOutlet weak var birdNameLabel: UILabel!
@@ -34,10 +33,9 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
             super.layoutSubviews()
         
-            guard userProfileImageView != nil, birdImageView != nil else { return }
+            guard birdImageView != nil else { return }
         
             applyGradientLayer()
-            userProfileImageView.layer.cornerRadius = userProfileImageView.frame.height / 2
             if traitCollection.userInterfaceStyle != .dark {
                 layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 16).cgPath
             }
@@ -64,20 +62,11 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             locationLabel.text = observation.location
             locationLabel.textColor = .white
             locationLabel.font = UIFont.systemFont(ofSize: 11.5, weight: .medium)
-        
-            if let profileImage = UIImage(named: displayUser.profileImageName) {
-                userProfileImageView.image = profileImage
-            } else {
-                userProfileImageView.image = UIImage(systemName: "person.circle.fill")
-                userProfileImageView.tintColor = .systemGray4
-               
-            }
              
             cardContainerView.bringSubviewToFront(userNameLabel)
             cardContainerView.bringSubviewToFront(observationCountLabel)
             cardContainerView.bringSubviewToFront(birdNameLabel)
             cardContainerView.bringSubviewToFront(locationLabel)
-            cardContainerView.bringSubviewToFront(userProfileImageView) 
         }
         
         private func applyGradientLayer() {

@@ -331,7 +331,10 @@ class HomeManager {
             ? [
                 BirdSpeciesDisplay(
                     birdName: "Recent Birds",
-                    birdImageName: "placeholder_image",
+                    birdImageName: {
+                        print("[Debug] Edge Response empty: Using placeholder for 'Recent Birds' card.")
+                        return "placeholder_image"
+                    }(),
                     statusBadge: BirdSpeciesDisplay.StatusBadge(
                         title: "Nearby",
                         subtitle: "Birding Spot",
@@ -586,14 +589,24 @@ class HomeManager {
         if let edgeSpecies = card.species, !edgeSpecies.isEmpty {
             return edgeSpecies.prefix(8).map { species in
                 let fallbackBird = watchlistManager.findBird(byName: species.commonName)
+                
+                // Construct a normalized image name from the common name as the ultimate fallback
+                let normalizedName = species.commonName.lowercased()
+                    .replacingOccurrences(of: " ", with: "_")
+                    .replacingOccurrences(of: "-", with: "_")
+                
                 let imageName = species.imageName
                     ?? fallbackBird?.staticImageName
-                    ?? "placeholder_image"
+                    ?? normalizedName
+                
+                print("[Debug] Edge Species '\(species.commonName)': species.imageName = '\(species.imageName ?? "nil")', fallbackBird.staticImageName = '\(fallbackBird?.staticImageName ?? "nil")', normalizedName = '\(normalizedName)'")
+                
+                let finalImageName = imageName.isEmpty ? "placeholder_image" : imageName
                 let statusText = species.residencyStatus ?? "Recently observed"
 
                 return BirdSpeciesDisplay(
                     birdName: species.commonName,
-                    birdImageName: imageName,
+                    birdImageName: finalImageName,
                     statusBadge: BirdSpeciesDisplay.StatusBadge(
                         title: "Present",
                         subtitle: statusText,
@@ -614,9 +627,12 @@ class HomeManager {
         )
 
         return Array(localBirds.prefix(8)).map { bird in
-            BirdSpeciesDisplay(
+            if bird.staticImageName.isEmpty || bird.staticImageName == "placeholder_image" {
+                print("[Debug] Local Fallback: Bird '\(bird.commonName)' has no staticImageName. Using default.")
+            }
+            return BirdSpeciesDisplay(
                 birdName: bird.commonName,
-                birdImageName: bird.staticImageName,
+                birdImageName: bird.staticImageName.isEmpty ? "placeholder_image" : bird.staticImageName,
                 statusBadge: BirdSpeciesDisplay.StatusBadge(
                     title: "Present",
                     subtitle: "Nearby",
