@@ -297,6 +297,8 @@ extension Watchlist {
             dateText: dateText,
             image: self.coverImagePath,
             previewImages: previewImages,
+            unobservedPreviewImages: [],
+            observedPreviewImages: [],
             stats: stats,
             type: self.type ?? .custom
         )

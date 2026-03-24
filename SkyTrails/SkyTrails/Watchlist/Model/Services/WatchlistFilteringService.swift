@@ -103,7 +103,7 @@ final class WatchlistFilteringService {
         return ModeBasedEntriesResult(
             observed: uniqueObserved,
             toObserve: uniqueToObserve,
-            title: "My Watchlists",
+            title: "Summary",
             shouldShowRecommendations: shouldShowRecommendations,
             recommendedBirds: recommendedBirds
         )

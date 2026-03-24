@@ -101,6 +101,8 @@ struct WatchlistSummaryDTO: Hashable {
     let dateText: String
     let image: String?
     let previewImages: [String]
+    let unobservedPreviewImages: [String]
+    let observedPreviewImages: [String]
     let stats: WatchlistStatsDTO
     let type: WatchlistType
     var legacyUUID: UUID {
