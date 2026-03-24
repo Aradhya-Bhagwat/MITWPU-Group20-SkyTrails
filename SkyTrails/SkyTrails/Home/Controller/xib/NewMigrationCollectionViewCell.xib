@@ -87,11 +87,12 @@
                                             <constraint firstItem="Yoz-UX-heY" firstAttribute="leading" secondItem="lfu-pa-rr1" secondAttribute="leading" constant="2" id="Axc-PO-cvo"/>
                                             <constraint firstItem="Yoz-UX-heY" firstAttribute="top" secondItem="lfu-pa-rr1" secondAttribute="top" constant="2" id="FDw-rQ-ia3"/>
                                             <constraint firstAttribute="bottom" secondItem="Yoz-UX-heY" secondAttribute="bottom" constant="2" id="FiZ-PT-91b"/>
-                                            <constraint firstItem="DZk-LP-N3j" firstAttribute="leading" secondItem="Yoz-UX-heY" secondAttribute="trailing" constant="8" id="Qk6-t0-dno"/>
+                                            <constraint firstItem="DZk-LP-N3j" firstAttribute="leading" secondItem="Yoz-UX-heY" secondAttribute="trailing" constant="10" id="Qk6-t0-dno"/>
                                             <constraint firstAttribute="width" relation="lessThanOrEqual" constant="200" id="URG-N9-MhT"/>
                                             <constraint firstAttribute="width" secondItem="lfu-pa-rr1" secondAttribute="height" multiplier="11:3" id="WCf-dA-V2o"/>
                                             <constraint firstItem="DZk-LP-N3j" firstAttribute="centerY" secondItem="lfu-pa-rr1" secondAttribute="centerY" id="edR-Pr-e2U"/>
-                                            <constraint firstAttribute="trailing" secondItem="DZk-LP-N3j" secondAttribute="trailing" constant="8" id="oAK-Lj-tqG"/>
+                                            <constraint firstAttribute="height" constant="45.329999999999998" id="terrain-tag-height"/>
+                                            <constraint firstAttribute="trailing" secondItem="DZk-LP-N3j" secondAttribute="trailing" constant="10" id="oAK-Lj-tqG"/>
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rZj-4x-jkf">
@@ -116,9 +117,9 @@
                                             <constraint firstAttribute="width" relation="lessThanOrEqual" constant="250" id="QDF-Hr-8Yz"/>
                                             <constraint firstItem="ZDb-gC-CYe" firstAttribute="leading" secondItem="rZj-4x-jkf" secondAttribute="leading" constant="2" id="THQ-Vm-lKh"/>
                                             <constraint firstItem="ZDb-gC-CYe" firstAttribute="top" secondItem="rZj-4x-jkf" secondAttribute="top" constant="2" id="U03-fO-Jhe"/>
-                                            <constraint firstItem="xft-rl-EKw" firstAttribute="leading" secondItem="ZDb-gC-CYe" secondAttribute="trailing" constant="8" id="XDd-gm-Ne9"/>
+                                            <constraint firstItem="xft-rl-EKw" firstAttribute="leading" secondItem="ZDb-gC-CYe" secondAttribute="trailing" constant="10" id="XDd-gm-Ne9"/>
                                             <constraint firstAttribute="bottom" secondItem="ZDb-gC-CYe" secondAttribute="bottom" constant="2" id="gmy-y9-Bff"/>
-                                            <constraint firstAttribute="trailing" secondItem="xft-rl-EKw" secondAttribute="trailing" constant="8" id="i7L-jw-cQP"/>
+                                            <constraint firstAttribute="trailing" secondItem="xft-rl-EKw" secondAttribute="trailing" constant="10" id="i7L-jw-cQP"/>
                                             <constraint firstAttribute="height" constant="45.329999999999998" id="xOF-7m-UOb"/>
                                         </constraints>
                                     </view>
@@ -164,12 +165,14 @@
                 <outlet property="distanceLabel" destination="73T-IU-Y8o" id="NbT-bq-1AZ"/>
                 <outlet property="mapView" destination="t2H-Jn-PyP" id="jef-UP-ADZ"/>
                 <outlet property="seasonTagImageView" destination="ZDb-gC-CYe" id="vAU-tS-g7g"/>
+                <outlet property="seasonTagHeightConstraint" destination="xOF-7m-UOb" id="season-height-outlet"/>
                 <outlet property="seasonTagLabel" destination="xft-rl-EKw" id="DAe-e9-Hx4"/>
                 <outlet property="subtitleLabel" destination="utf-ez-1hj" id="3tW-tT-c7W"/>
                 <outlet property="tag1View" destination="lfu-pa-rr1" id="ZNm-Cb-cqN"/>
                 <outlet property="tag2View" destination="rZj-4x-jkf" id="CzV-RP-IWw"/>
                 <outlet property="tagsStackView" destination="MAs-dr-jkn" id="3Gq-rX-tzz"/>
                 <outlet property="terrainTagImageView" destination="Yoz-UX-heY" id="NTR-Img-001"/>
+                <outlet property="terrainTagHeightConstraint" destination="terrain-tag-height" id="terrain-height-outlet"/>
                 <outlet property="terrainTagLabel" destination="DZk-LP-N3j" id="NTR-Lbl-001"/>
                 <outlet property="titleLabel" destination="s67-5B-vEC" id="0um-gm-BJc"/>
                 <outlet property="weekLabel" destination="rJF-Cr-V8b" id="WL-1"/>

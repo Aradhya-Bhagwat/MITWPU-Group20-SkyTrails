@@ -30,12 +30,17 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var seasonTagImageView: UIImageView!
     @IBOutlet weak var seasonTagLabel: UILabel!
     @IBOutlet weak var birdListCollectionView: UICollectionView!
+    @IBOutlet weak var terrainTagHeightConstraint: NSLayoutConstraint!
+    @IBOutlet weak var seasonTagHeightConstraint: NSLayoutConstraint!
     
     private var birdSpecies: [BirdSpeciesDisplay] = []
     private var selectedBirdIndex: Int = 0
     private let expandedWidthRatio: CGFloat = 25.0 / 9.0
     private let compactWidthRatio: CGFloat = 5.0 / 6.0
     private let nestedItemHeightRatio: CGFloat = 90.0 / 440.0
+    private let baseTagTextSize: CGFloat = 12
+    private let baseTagHeight: CGFloat = 45.33
+    private let baseTagSpacing: CGFloat = 12
 
     private final class BirdPinAnnotation: NSObject, MKAnnotation {
         let coordinate: CLLocationCoordinate2D
@@ -94,15 +99,19 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     // Updates font sizes and item dimensions based on card height
     private func updateNestedLayout() {
         let cardHeight = self.bounds.height
-        let heightRatio = cardHeight / 440.0
-        let titleSize = max(17, 17 * heightRatio)
-        titleLabel.font = .preferredFont(forTextStyle: .headline)
-        let otherSize = max(12, 12 * heightRatio)
-        subtitleLabel.font = .preferredFont(forTextStyle: .subheadline)
-        weekLabel.font = .preferredFont(forTextStyle: .caption1)
-        terrainTagLabel.font = .preferredFont(forTextStyle: .caption2)
-        seasonTagLabel.font = .preferredFont(forTextStyle: .caption2)
-        updateDistanceLabelFont(size: otherSize)
+        let currentWidth = self.bounds.width
+        let titleRatio: CGFloat = 17.0 / 200.0
+        let detailRatio: CGFloat = 12.0 / 200.0
+        let titleSize = min(currentWidth * titleRatio, 24)
+        let detailSize = min(currentWidth * detailRatio, 18)
+
+        titleLabel.font = .systemFont(ofSize: titleSize, weight: .semibold)
+        subtitleLabel.font = .systemFont(ofSize: detailSize, weight: .regular)
+        subtitleLabel.textColor = .black
+        weekLabel.font = .systemFont(ofSize: detailSize, weight: .semibold)
+        weekLabel.textColor = .black
+        updateTagSizing(detailSize: detailSize)
+        updateDistanceLabelFont(size: min(detailSize, 18))
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let itemHeight = nestedItemHeight(cardHeight: cardHeight)
             let compactItemWidth = compactItemWidth(itemHeight: itemHeight)
@@ -125,6 +134,41 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private func compactItemWidth(itemHeight: CGFloat) -> CGFloat {
         return itemHeight * compactWidthRatio
     }
+
+    private func resolvedBirdPins(
+        for species: [BirdSpeciesDisplay],
+        from rawPins: [HotspotBirdSpot],
+        fallbackCoordinate: CLLocationCoordinate2D
+    ) -> [HotspotBirdSpot] {
+        var pinsByImageName: [String: [HotspotBirdSpot]] = [:]
+        for pin in rawPins {
+            pinsByImageName[pin.birdImageName, default: []].append(pin)
+        }
+
+        return species.map { bird in
+            if var matchingPins = pinsByImageName[bird.birdImageName], !matchingPins.isEmpty {
+                let matchedPin = matchingPins.removeFirst()
+                pinsByImageName[bird.birdImageName] = matchingPins
+                return matchedPin
+            }
+
+            return HotspotBirdSpot(
+                coordinate: fallbackCoordinate,
+                birdImageName: bird.birdImageName
+            )
+        }
+    }
+
+    private func updateTagSizing(detailSize: CGFloat) {
+        let tagTextSize = min(detailSize, 18)
+        let scaleFactor = tagTextSize / baseTagTextSize
+
+        terrainTagLabel.font = .systemFont(ofSize: tagTextSize, weight: .regular)
+        seasonTagLabel.font = .systemFont(ofSize: tagTextSize, weight: .regular)
+        terrainTagHeightConstraint.constant = baseTagHeight * scaleFactor
+        seasonTagHeightConstraint.constant = baseTagHeight * scaleFactor
+        tagsStackView.spacing = baseTagSpacing * scaleFactor
+    }
     
     private func updateDistanceLabelFont(size: CGFloat) {
         guard let existingText = distanceLabel.attributedText?.string else { return }
@@ -140,7 +184,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         let attributedString = NSMutableAttributedString(attachment: attachment)
         let cleanText = existingText.contains(" - ") ? existingText.components(separatedBy: " - ").last ?? existingText : existingText
         
-        attributedString.append(NSAttributedString(string: " - \(cleanText)", attributes: [.font: UIFont.preferredFont(forTextStyle: .caption1)]))
+        attributedString.append(NSAttributedString(string: " - \(cleanText)", attributes: [.font: UIFont.systemFont(ofSize: size, weight: .regular)]))
         distanceLabel.attributedText = attributedString
     }
     
@@ -194,12 +238,18 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         birdListCollectionView.reloadData()
         birdListCollectionView.layoutIfNeeded()
         alignToSelectedCard(animated: false)
+
+        let birdPins = resolvedBirdPins(
+            for: hotspot.birdSpecies,
+            from: hotspot.hotspots,
+            fallbackCoordinate: hotspot.centerCoordinate
+        )
         
         setupMap(
             pathCoordinates: migration.pathCoordinates,
             hotspotCenter: hotspot.centerCoordinate,
             areaOverlay: hotspot.areaOverlay,
-            birdPins: hotspot.hotspots
+            birdPins: birdPins
         )
         fetchTerrain(for: hotspot.centerCoordinate)
     }
