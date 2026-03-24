@@ -86,7 +86,7 @@ class GUIViewController: UIViewController {
         
         if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             layout.estimatedItemSize = .zero
-            layout.scrollDirection = .horizontal
+            layout.scrollDirection = .vertical
         }
         if let layout = categoriesCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             layout.estimatedItemSize = .zero
