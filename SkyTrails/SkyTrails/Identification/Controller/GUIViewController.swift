@@ -76,6 +76,7 @@ class GUIViewController: UIViewController {
     
     private func setupUI() {
         title = "Identify field marks"
+        categoryLabel.isHidden = true
         variationsCollectionView.delegate = self
         variationsCollectionView.dataSource = self
         categoriesCollectionView.delegate = self

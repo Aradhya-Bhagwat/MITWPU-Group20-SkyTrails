@@ -731,12 +731,13 @@
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2bk-ez-Yin">
                                 <rect key="frame" x="0.0" y="124" width="402" height="21"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="O4L-s3-kva">
-                                <rect key="frame" x="0.0" y="686" width="402" height="120"/>
+                                <rect key="frame" x="8" y="124" width="386" height="120"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="120" id="LTy-u0-INe"/>
@@ -759,7 +760,7 @@
                                 </cells>
                             </collectionView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="irx-mu-IBT">
-                                <rect key="frame" x="0.0" y="606" width="402" height="80"/>
+                                <rect key="frame" x="8" y="718" width="386" height="80"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="80" id="B6h-jk-91o"/>
@@ -782,27 +783,29 @@
                                 </cells>
                             </collectionView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cww-ay-CWI">
-                                <rect key="frame" x="0.0" y="124" width="402" height="482"/>
+                                <rect key="frame" x="0.0" y="252" width="402" height="458"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="naV-bR-PqP"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="Cww-ay-CWI" firstAttribute="top" secondItem="naV-bR-PqP" secondAttribute="top" id="2mP-sm-UX2"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="2bk-ez-Yin" secondAttribute="trailing" id="51Q-4s-wxN"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="irx-mu-IBT" secondAttribute="trailing" id="5UM-6B-DaB"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="O4L-s3-kva" secondAttribute="trailing" id="Bdc-8e-Tlz"/>
-                            <constraint firstItem="2bk-ez-Yin" firstAttribute="top" secondItem="naV-bR-PqP" secondAttribute="top" id="DUK-fD-g5i"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="O4L-s3-kva" secondAttribute="bottom" id="G7s-19-Uab"/>
+                            <constraint firstItem="O4L-s3-kva" firstAttribute="top" secondItem="naV-bR-PqP" secondAttribute="top" id="2mP-sm-UX2"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="Cww-ay-CWI" secondAttribute="trailing" id="GCO-tl-Urx"/>
-                            <constraint firstItem="O4L-s3-kva" firstAttribute="top" secondItem="irx-mu-IBT" secondAttribute="bottom" id="QfR-Gx-ibl"/>
                             <constraint firstItem="Cww-ay-CWI" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" id="Y2N-54-aZU"/>
-                            <constraint firstItem="irx-mu-IBT" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" id="aV9-aT-ekX"/>
-                            <constraint firstItem="O4L-s3-kva" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" id="huQ-41-qwS"/>
-                            <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="Cww-ay-CWI" secondAttribute="bottom" id="icp-v3-ZQR"/>
-                            <constraint firstItem="2bk-ez-Yin" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" id="joa-Un-pdb"/>
+                            <constraint firstItem="irx-mu-IBT" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="8" id="aV9-aT-ekX"/>
+                            <constraint firstItem="Cww-ay-CWI" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="canvas-top"/>
+                            <constraint firstItem="O4L-s3-kva" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="8" id="cat-leading"/>
+                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="O4L-s3-kva" secondAttribute="trailing" constant="8" id="cat-trailing"/>
+                            <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="Cww-ay-CWI" secondAttribute="bottom" constant="8" id="icp-v3-ZQR"/>
+                            <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="irx-mu-IBT" secondAttribute="bottom" constant="8" id="var-bottom"/>
+                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="irx-mu-IBT" secondAttribute="trailing" constant="8" id="var-trailing"/>
                         </constraints>
+                        <variation key="default">
+                            <mask key="subviews">
+                                <exclude reference="2bk-ez-Yin"/>
+                            </mask>
+                        </variation>
                     </view>
                     <navigationItem key="navigationItem" id="TWe-qy-Kg6">
                         <barButtonItem key="rightBarButtonItem" image="checkmark" catalog="system" id="xz6-lB-Oqw">
