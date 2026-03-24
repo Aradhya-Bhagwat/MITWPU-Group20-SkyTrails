@@ -12,7 +12,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var homeTitleProfileImageConstraints: [NSLayoutConstraint] = []
     private var upcomingBirds: [UpcomingBirdUI] = []
     private var spots: [PopularSpotUI] = []
-    private var observations: [CommunityObservation] = []
     private var news: [NewsItem] = []
     private var migrationCards: [DynamicMapCard] = []
 
@@ -223,10 +222,8 @@ extension HomeViewController {
     func setupCollectionView() {
         homeCollectionView.delegate = self; homeCollectionView.dataSource = self
         
-        homeCollectionView.register(UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil), forSupplementaryViewOfKind: "CommunityPageControlFooter", withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier)
         homeCollectionView.register(UINib(nibName: "UpcomingBirdsCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "UpcomingBirdsCollectionViewCell")
         homeCollectionView.register(UINib(nibName: "SpotsToVisitCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "SpotsToVisitCollectionViewCell")
-        homeCollectionView.register(UINib(nibName: CommunityObservationsCollectionViewCell.identifier, bundle: nil), forCellWithReuseIdentifier: CommunityObservationsCollectionViewCell.identifier)
         homeCollectionView.register(UINib(nibName: NewMigrationCollectionViewCell.identifier, bundle: Bundle(for: NewMigrationCollectionViewCell.self)), forCellWithReuseIdentifier: NewMigrationCollectionViewCell.identifier)
         homeCollectionView.register(UINib(nibName: "NewsCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "NewsCollectionViewCell")
         homeCollectionView.register(UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil), forSupplementaryViewOfKind: "NewsPageControlFooter", withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier)
@@ -244,7 +241,7 @@ extension HomeViewController {
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
             self.upcomingBirds = data.displayableUpcomingBirds; self.spots = data.displayableSpots
-            self.observations = data.recentObservations; self.news = data.news
+            self.news = data.news
             self.migrationCards = data.migrationCards; self.loadingIndicator.stopAnimating()
             self.animatedIndexPaths.removeAll()
             UIView.transition(with: self.homeCollectionView, duration: 0.4, options: .transitionCrossDissolve, animations: { self.homeCollectionView.reloadData() })
@@ -258,7 +255,7 @@ extension HomeViewController {
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
             self.upcomingBirds = data.displayableUpcomingBirds; self.spots = data.displayableSpots
-            self.observations = data.recentObservations; self.news = data.news
+            self.news = data.news
             self.migrationCards = data.migrationCards; self.animatedIndexPaths.removeAll()
             UIView.transition(with: self.homeCollectionView, duration: 0.3, options: .transitionCrossDissolve, animations: { self.homeCollectionView.reloadData() })
         }
@@ -312,8 +309,7 @@ extension HomeViewController {
             case 0: return self.createMigrationCarouselSection()
             case 1: return self.createUpcomingBirdsSection()
             case 2: return self.createSpotsToVisitSection()
-            case 3: return self.createCommunityObservationsSection()
-            case 4: return self.createNewsSection()
+            case 3: return self.createNewsSection()
             default: return nil
             }
         }
@@ -349,18 +345,6 @@ extension HomeViewController {
         section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16); return section
     }
 
-    private func createCommunityObservationsSection() -> NSCollectionLayoutSection {
-        let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
-        let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let height: CGFloat = isPad ? 159 : 158
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(height)), subitems: [item])
-        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
-        let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .groupPagingCentered; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
-        let pageControl = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(30)), elementKind: "CommunityPageControlFooter", alignment: .bottom)
-        section.boundarySupplementaryItems = [createSectionHeaderLayout(), pageControl]; return section
-    }
-    
     private func createNewsSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(180)), subitems: [item])
@@ -381,12 +365,12 @@ extension HomeViewController {
 }
 
 extension HomeViewController: UICollectionViewDataSource {
-    func numberOfSections(in collectionView: UICollectionView) -> Int { return 5 }
+    func numberOfSections(in collectionView: UICollectionView) -> Int { return 4 }
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch section {
         case 0: return min(migrationCards.count, 1)
         case 1: return upcomingBirds.count; case 2: return min(spots.count, 5)
-        case 3: return observations.count; case 4: return max(min(news.count, 8), 1)
+        case 3: return max(min(news.count, 8), 1)
         default: return 0
         }
     }
@@ -404,8 +388,6 @@ extension HomeViewController: UICollectionViewDataSource {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SpotsToVisitCollectionViewCell", for: indexPath) as! SpotsToVisitCollectionViewCell
             let item = spots[indexPath.row]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
         } else if indexPath.section == 3 {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CommunityObservationsCollectionViewCell.identifier, for: indexPath) as! CommunityObservationsCollectionViewCell
-        } else if indexPath.section == 4 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewsCollectionViewCell", for: indexPath) as! NewsCollectionViewCell
             cell.configure(with: newsItem(at: indexPath.row)); return cell
         }
@@ -413,17 +395,16 @@ extension HomeViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-         if kind == "CommunityPageControlFooter" || kind == "NewsPageControlFooter" {
+         if kind == "NewsPageControlFooter" {
              let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier, for: indexPath) as! PageControlReusableViewCollectionReusableView
-             let count = kind == "CommunityPageControlFooter" ? observations.count : (news.isEmpty ? 0 : min(news.count, 8))
+             let count = news.isEmpty ? 0 : min(news.count, 8)
              footer.configure(numberOfPages: count, currentPage: 0); return footer
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
             if indexPath.section == 0 { header.configure(title: "Migration Forecast") }
             else if indexPath.section == 1 { header.configure(title: "Birding Highlights", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
             else if indexPath.section == 2 { header.configure(title: "Top Birding Spots", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllSpots", sender: nil) }) }
-            else if indexPath.section == 3 { header.configure(title: "Community Sightings") }
-            else if indexPath.section == 4 { header.configure(title: "Birders' Gossip") }
+            else if indexPath.section == 3 { header.configure(title: "Birders' Gossip") }
             return header
         }
          return UICollectionReusableView()
@@ -436,9 +417,7 @@ extension HomeViewController {
             cell.alpha = 0; cell.transform = CGAffineTransform(translationX: 0, y: 20)
             UIView.animate(withDuration: 0.5, delay: 0.02 * Double(indexPath.item), usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut, .allowUserInteraction], animations: { cell.alpha = 1; cell.transform = .identity }, completion: { _ in self.animatedIndexPaths.insert(indexPath) })
         }
-        if indexPath.section == 3, let footer = collectionView.supplementaryView(forElementKind: "CommunityPageControlFooter", at: IndexPath(item: 0, section: 3)) as? PageControlReusableViewCollectionReusableView {
-            footer.configure(numberOfPages: observations.count, currentPage: indexPath.row)
-        } else if indexPath.section == 4, let footer = collectionView.supplementaryView(forElementKind: "NewsPageControlFooter", at: IndexPath(item: 0, section: 4)) as? PageControlReusableViewCollectionReusableView {
+        if indexPath.section == 3, let footer = collectionView.supplementaryView(forElementKind: "NewsPageControlFooter", at: IndexPath(item: 0, section: 3)) as? PageControlReusableViewCollectionReusableView {
             footer.configure(numberOfPages: news.isEmpty ? 0 : min(news.count, 8), currentPage: indexPath.row)
         }
     }
@@ -468,9 +447,6 @@ extension HomeViewController {
                 }
             }
         case 3:
-            let detailVC = UIStoryboard(name: "Home", bundle: nil).instantiateViewController(withIdentifier: "CommunityObservationViewController") as! CommunityObservationViewController
-            detailVC.observation = observations[indexPath.row]; navigationController?.pushViewController(detailVC, animated: true)
-        case 4:
             let item = newsItem(at: indexPath.row); if let url = URL(string: item.link), UIApplication.shared.canOpenURL(url) { UIApplication.shared.open(url) }
         default: break
         }
