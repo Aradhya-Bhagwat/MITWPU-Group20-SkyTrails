@@ -1,22 +1,25 @@
 
 import UIKit
+import MapKit
 
 class CommunityObservationViewController: UIViewController {
 
     @IBOutlet weak var birdImageView: UIImageView!
     @IBOutlet weak var userNameLabel: UILabel!
+    @IBOutlet weak var likesCountLabel: UILabel!
+    @IBOutlet weak var likeIconImageView: UIImageView!
     @IBOutlet weak var locationNameLabel: UILabel!
-    @IBOutlet weak var notesLabel: UILabel!
+    @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var timePicker: UIDatePicker!
     @IBOutlet weak var dateCardView: UIView!
     @IBOutlet weak var locationStackView: UIStackView!
-    @IBOutlet weak var notesStackView: UIStackView!
     
     var observation: CommunityObservation?
     var observationId: String?
     private var locationBackgroundView: UIView?
-    private var notesBackgroundView: UIView?
+    private var isLiked: Bool = false
+    private var currentLikes: Int = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,11 +31,22 @@ class CommunityObservationViewController: UIViewController {
         birdImageView.clipsToBounds = true
         
         locationStackView.isLayoutMarginsRelativeArrangement = true
-        locationStackView.layoutMargins = UIEdgeInsets(top: 20, left: 16, bottom: 20, right: 16)
+        // Set layout margins so map goes edge to edge at the bottom and sides
+        locationStackView.layoutMargins = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
 
-        notesStackView.isLayoutMarginsRelativeArrangement = true
-        notesStackView.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        // Ensure the internal stack view for the label has horizontal padding
+        if let labelStack = locationStackView.arrangedSubviews.first as? UIStackView {
+            labelStack.isLayoutMarginsRelativeArrangement = true
+            labelStack.layoutMargins = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        }
+        
+        // Ensure map matches corner radius at the bottom
+        mapView.layer.cornerRadius = 20
+        mapView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        mapView.clipsToBounds = true
+
         setupStackBackgrounds()
+        setupLikeAction()
         applySemanticAppearance()
         
         if let obs = observation {
@@ -54,9 +68,43 @@ class CommunityObservationViewController: UIViewController {
     
     private func setupStackBackgrounds() {
         locationBackgroundView = locationStackView.ensureBackgroundView()
-        notesBackgroundView = notesStackView.ensureBackgroundView()
         locationBackgroundView?.layer.cornerRadius = 20
-        notesBackgroundView?.layer.cornerRadius = 20
+    }
+    
+    private func setupLikeAction() {
+        likeIconImageView.isUserInteractionEnabled = true
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(likeIconTapped))
+        likeIconImageView.addGestureRecognizer(tapGesture)
+        
+        // initialize values
+        currentLikes = 24
+        isLiked = true // Based on the storyboard showing "heart.fill"
+        updateLikeUI()
+    }
+    
+    @objc private func likeIconTapped() {
+        isLiked.toggle()
+        currentLikes += isLiked ? 1 : -1
+        
+        updateLikeUI()
+        animateLikeIcon()
+    }
+    
+    private func updateLikeUI() {
+        likesCountLabel.text = "\(currentLikes)"
+        let imageName = isLiked ? "heart.fill" : "heart"
+        likeIconImageView.image = UIImage(systemName: imageName)
+        likeIconImageView.tintColor = isLiked ? .systemRed : .secondaryLabel
+    }
+    
+    private func animateLikeIcon() {
+        UIView.animate(withDuration: 0.1, animations: {
+            self.likeIconImageView.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+        }) { _ in
+            UIView.animate(withDuration: 0.1, delay: 0, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.2, options: .curveEaseInOut, animations: {
+                self.likeIconImageView.transform = .identity
+            }, completion: nil)
+        }
     }
     
     func loadData(for id: String) {
@@ -74,13 +122,22 @@ class CommunityObservationViewController: UIViewController {
         userNameLabel.text = "by \(observation.username)"
         locationNameLabel.numberOfLines = 0
         locationNameLabel.text = observation.location
-        notesLabel.numberOfLines = 0
-        notesLabel.text = observation.observationDescription ?? "No description available."
         
         datePicker.date = observation.observedAt
         timePicker.date = observation.observedAt
         datePicker.isUserInteractionEnabled = false
         timePicker.isUserInteractionEnabled = false
+        
+        if let lat = observation.lat, let lon = observation.lon {
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 5000, longitudinalMeters: 5000)
+            mapView.setRegion(region, animated: false)
+            
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = coordinate
+            annotation.title = observation.location
+            mapView.addAnnotation(annotation)
+        }
     }
 
     private func applySemanticAppearance() {
@@ -94,24 +151,22 @@ class CommunityObservationViewController: UIViewController {
 
         locationBackgroundView?.backgroundColor = cardColor
         locationBackgroundView?.layer.masksToBounds = false
-        notesBackgroundView?.backgroundColor = cardColor
-        notesBackgroundView?.layer.masksToBounds = false
 
-        [userNameLabel, locationNameLabel, notesLabel].forEach { $0?.textColor = .label }
+        [userNameLabel, locationNameLabel].forEach { $0?.textColor = .label }
         datePicker.tintColor = .systemBlue
         timePicker.tintColor = .systemBlue
         datePicker.overrideUserInterfaceStyle = .unspecified
         timePicker.overrideUserInterfaceStyle = .unspecified
 
         if isDarkMode {
-            [dateCardView, locationBackgroundView, notesBackgroundView].forEach { view in
+            [dateCardView, locationBackgroundView].forEach { view in
                 view?.layer.shadowOpacity = 0
                 view?.layer.shadowRadius = 0
                 view?.layer.shadowOffset = .zero
                 view?.layer.shadowPath = nil
             }
         } else {
-            [dateCardView, locationBackgroundView, notesBackgroundView].forEach { view in
+            [dateCardView, locationBackgroundView].forEach { view in
                 view?.layer.shadowColor = UIColor.black.cgColor
                 view?.layer.shadowOpacity = 0.08
                 view?.layer.shadowOffset = CGSize(width: 0, height: 4)
