@@ -49,7 +49,7 @@ final class SpeciesSelectionCoordinator {
         var nextVC: UIViewController?
         
         if mode == .unobserved {
-            let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailVC") as! UnobservedDetailViewController
+            let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as! UnobservedDetailViewController
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
             vc.shouldUseRuleMatching = shouldUseRuleMatching
@@ -58,7 +58,7 @@ final class SpeciesSelectionCoordinator {
             }
             nextVC = vc
         } else {
-            let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailVC") as! ObservedDetailViewController
+            let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as! ObservedDetailViewController
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
             vc.shouldUseRuleMatching = shouldUseRuleMatching

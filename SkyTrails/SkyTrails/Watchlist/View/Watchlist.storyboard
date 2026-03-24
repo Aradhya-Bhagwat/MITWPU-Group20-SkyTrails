@@ -349,19 +349,19 @@
                                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="Stk-Vi-ew3">
                                                             <rect key="frame" x="96" y="21.000000000000004" width="266" height="58.333333333333343"/>
                                                             <subviews>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Ti-tle">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Ti-tle">
                                                                     <rect key="frame" x="0.0" y="0.0" width="266" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
                                                                     <nil key="textColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Da-te">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Da-te">
                                                                     <rect key="frame" x="0.0" y="25.666666666666661" width="266" height="14.333333333333332"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Lo-cat">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lbl-Lo-cat">
                                                                     <rect key="frame" x="0.0" y="44" width="266" height="14.333333333333336"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
@@ -558,19 +558,19 @@
                                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesStack">
                                                             <rect key="frame" x="96" y="21.000000000000004" width="266" height="58.333333333333343"/>
                                                             <subviews>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesTitle">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Bird Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesTitle">
                                                                     <rect key="frame" x="0.0" y="0.0" width="266" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
                                                                     <nil key="textColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesDate">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesDate">
                                                                     <rect key="frame" x="0.0" y="25.666666666666661" width="266" height="14.333333333333332"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesLocation">
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpeciesLocation">
                                                                     <rect key="frame" x="0.0" y="44" width="266" height="14.333333333333336"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                     <color key="textColor" systemColor="secondaryLabelColor"/>
@@ -708,7 +708,7 @@
                                 <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="1xb-Wh-bhx" userLabel="MainContentStack">
-                                        <rect key="frame" x="0.0" y="0.0" width="402" height="1614.3333333333333"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="402" height="1997.3333333333333"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Add Details" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pyM-sg-myh">
                                                 <rect key="frame" x="20" y="24" width="362" height="24"/>
@@ -731,36 +731,30 @@
                                                 </userDefinedRuntimeAttributes>
                                             </textField>
                                             <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Stack-Date-Header">
-                                                <rect key="frame" x="20" y="146" width="362" height="31"/>
+                                                <rect key="frame" x="20" y="146" width="362" height="34.333333333333343"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="XLa-fg-l3o">
-                                                        <rect key="frame" x="0.0" y="0.0" width="43.666666666666664" height="31"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="44.333333333333336" height="34.333333333333336"/>
                                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                                         <nil key="textColor"/>
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Date-Info-Btn-12748140-3">
-                                                        <rect key="frame" x="51.666666666666657" y="0.0" width="31" height="31"/>
+                                                        <rect key="frame" x="52.333333333333329" y="0.0" width="49.666666666666671" height="34.333333333333336"/>
                                                         <state key="normal" title="Button"/>
                                                         <buttonConfiguration key="configuration" style="plain" image="info.circle" catalog="system"/>
-                                                        <connections>
-                                                            <action selector="didTapDateInfo" destination="6Sg-aR-vKV" eventType="touchUpInside"/>
-                                                        </connections>
                                                     </button>
                                                     <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Spacer-Date-Header">
-                                                        <rect key="frame" x="51.666666666666657" y="0.0" width="245.33333333333334" height="31"/>
+                                                        <rect key="frame" x="110" y="0.0" width="183" height="34.333333333333336"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     </view>
                                                     <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Switch-Date">
-                                                        <rect key="frame" x="305" y="0.0" width="51" height="31"/>
-                                                        <connections>
-                                                            <action selector="dateInputToggled" destination="6Sg-aR-vKV" eventType="valueChanged"/>
-                                                        </connections>
+                                                        <rect key="frame" x="301" y="0.0" width="63" height="34.333333333333336"/>
                                                     </switch>
                                                 </subviews>
                                             </stackView>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4lS-Lf-WR2" userLabel="Date and notes">
-                                                <rect key="frame" x="20" y="194.00000000000006" width="362" height="844.33333333333348"/>
+                                                <rect key="frame" x="20" y="204.33333333333331" width="362" height="844.33333333333348"/>
                                                 <subviews>
                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="rxw-hN-7ee">
                                                         <rect key="frame" x="8" y="8" width="346" height="828.33333333333337"/>
@@ -780,14 +774,14 @@
                                                                 </subviews>
                                                             </stackView>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="UwY-Wy-xz3">
-                                                                <rect key="frame" x="0.0" y="572.33333333333337" width="346" height="2"/>
+                                                                <rect key="frame" x="0.0" y="572.33333333333326" width="346" height="2"/>
                                                                 <color key="backgroundColor" systemColor="separatorColor"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="height" constant="2" id="s6U-Rx-sLz"/>
                                                                 </constraints>
                                                             </view>
                                                             <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Be2-Wg-VGf" userLabel="End Date">
-                                                                <rect key="frame" x="0.0" y="590.33333333333337" width="346" height="238"/>
+                                                                <rect key="frame" x="0.0" y="590.33333333333326" width="346" height="238"/>
                                                                 <subviews>
                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="End Date" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aFn-VT-bjY">
                                                                         <rect key="frame" x="0.0" y="0.0" width="69.333333333333329" height="238"/>
@@ -817,43 +811,37 @@
                                                 </userDefinedRuntimeAttributes>
                                             </view>
                                             <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Stack-Location-Header">
-                                                <rect key="frame" x="20" y="1062.3333333333333" width="362" height="31"/>
+                                                <rect key="frame" x="20" y="1072.6666666666667" width="362" height="34.333333333333258"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Location" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bIb-zS-Dz6">
-                                                        <rect key="frame" x="0.0" y="0.0" width="79" height="31"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="81" height="34.333333333333336"/>
                                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                                         <nil key="textColor"/>
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Location-Info-Btn-0472fd72-e">
-                                                        <rect key="frame" x="87" y="0.0" width="31" height="31"/>
+                                                        <rect key="frame" x="89" y="0.0" width="49.666666666666657" height="34.333333333333336"/>
                                                         <state key="normal" title="Button"/>
                                                         <buttonConfiguration key="configuration" style="plain" image="info.circle" catalog="system"/>
-                                                        <connections>
-                                                            <action selector="didTapLocationInfo" destination="6Sg-aR-vKV" eventType="touchUpInside"/>
-                                                        </connections>
                                                     </button>
                                                     <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Spacer-Location-Header">
-                                                        <rect key="frame" x="87" y="0.0" width="210" height="31"/>
+                                                        <rect key="frame" x="146.66666666666663" y="0.0" width="146.33333333333337" height="34.333333333333336"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     </view>
                                                     <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Switch-Location">
-                                                        <rect key="frame" x="305" y="0.0" width="51" height="31"/>
-                                                        <connections>
-                                                            <action selector="locationInputToggled" destination="6Sg-aR-vKV" eventType="valueChanged"/>
-                                                        </connections>
+                                                        <rect key="frame" x="301" y="0.0" width="63" height="34.333333333333336"/>
                                                     </switch>
                                                 </subviews>
                                             </stackView>
                                             <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder="Search location" translatesAutoresizingMaskIntoConstraints="NO" id="EditLocationSearchBar">
-                                                <rect key="frame" x="20" y="1110.3333333333333" width="362" height="50"/>
+                                                <rect key="frame" x="20" y="1131" width="362" height="50"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="50" id="LiB-aC-V55"/>
                                                 </constraints>
                                                 <textInputTraits key="textInputTraits"/>
                                             </searchBar>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lpQ-BV-dJE" userLabel="Location">
-                                                <rect key="frame" x="20" y="1184.3333333333333" width="362" height="150"/>
+                                                <rect key="frame" x="20" y="1205" width="362" height="150"/>
                                                 <subviews>
                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="ka0-Fn-gQP">
                                                         <rect key="frame" x="8" y="8" width="346" height="134"/>
@@ -928,16 +916,16 @@
                                                 </userDefinedRuntimeAttributes>
                                             </view>
                                             <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Header-Stack">
-                                                <rect key="frame" x="20" y="1358.3333333333333" width="362" height="31"/>
+                                                <rect key="frame" x="20" y="1379" width="362" height="34.333333333333258"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Species" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Title-Label">
-                                                        <rect key="frame" x="0.0" y="0.0" width="67" height="31"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="74.666666666666671" height="34.333333333333336"/>
                                                         <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                                         <nil key="textColor"/>
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Info-Button">
-                                                        <rect key="frame" x="75" y="0.0" width="31" height="31"/>
+                                                        <rect key="frame" x="82.666666666666671" y="0.0" width="49.666666666666671" height="34.333333333333336"/>
                                                         <state key="normal" title="Button"/>
                                                         <buttonConfiguration key="configuration" style="plain" image="info.circle" catalog="system"/>
                                                         <connections>
@@ -945,11 +933,11 @@
                                                         </connections>
                                                     </button>
                                                     <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Header-Spacer">
-                                                        <rect key="frame" x="114" y="0.0" width="184" height="31"/>
+                                                        <rect key="frame" x="140.33333333333337" y="0.0" width="152.66666666666663" height="34.333333333333336"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     </view>
                                                     <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Toggle-Switch">
-                                                        <rect key="frame" x="306" y="0.0" width="51" height="31"/>
+                                                        <rect key="frame" x="301" y="0.0" width="63" height="34.333333333333336"/>
                                                         <connections>
                                                             <action selector="speciesRuleToggled" destination="6Sg-aR-vKV" eventType="valueChanged" id="species-toggle-action"/>
                                                         </connections>
@@ -957,7 +945,7 @@
                                                 </subviews>
                                             </stackView>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Rules-Container" userLabel="Species Rules">
-                                                <rect key="frame" x="20" y="1413.3333333333333" width="362" height="132"/>
+                                                <rect key="frame" x="20" y="1437.3333333333333" width="362" height="132"/>
                                                 <subviews>
                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="Species-Rules-Stack">
                                                         <rect key="frame" x="16" y="16" width="330" height="100"/>
@@ -978,31 +966,31 @@
                                                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="ShapeCell" id="Shape-Cell-01" customClass="WatchlistShapeCollectionViewCell" customModule="SkyTrails" customModuleProvider="target">
                                                                         <rect key="frame" x="0.0" y="0.0" width="80" height="100"/>
                                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" collectionViewCell="Shape-Cell-01" id="Shape-Cell-Content">
+                                                                        <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="Shape-Cell-Content">
                                                                             <rect key="frame" x="0.0" y="0.0" width="80" height="100"/>
                                                                             <autoresizingMask key="autoresizingMask"/>
                                                                             <subviews>
                                                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Shape-Cell-Icon">
                                                                                     <rect key="frame" x="20" y="8" width="40" height="40"/>
                                                                                     <constraints>
-                                                                                        <constraint firstAttribute="width" constant="40" id="shape-icon-width"/>
                                                                                         <constraint firstAttribute="height" constant="40" id="shape-icon-height"/>
+                                                                                        <constraint firstAttribute="width" constant="40" id="shape-icon-width"/>
                                                                                     </constraints>
                                                                                 </imageView>
                                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Shape-Cell-Title">
-                                                                                    <rect key="frame" x="4" y="52" width="72" height="29"/>
+                                                                                    <rect key="frame" x="4" y="52" width="72" height="0.0"/>
                                                                                     <fontDescription key="fontDescription" type="system" weight="medium" pointSize="12"/>
                                                                                     <nil key="textColor"/>
                                                                                     <nil key="highlightedColor"/>
                                                                                 </label>
                                                                             </subviews>
                                                                             <constraints>
-                                                                                <constraint firstItem="Shape-Cell-Icon" firstAttribute="top" secondItem="Shape-Cell-Content" secondAttribute="top" constant="8" id="shape-icon-top"/>
                                                                                 <constraint firstItem="Shape-Cell-Icon" firstAttribute="centerX" secondItem="Shape-Cell-Content" secondAttribute="centerX" id="shape-icon-center"/>
-                                                                                <constraint firstItem="Shape-Cell-Title" firstAttribute="top" secondItem="Shape-Cell-Icon" secondAttribute="bottom" constant="4" id="shape-title-top"/>
-                                                                                <constraint firstItem="Shape-Cell-Title" firstAttribute="leading" secondItem="Shape-Cell-Content" secondAttribute="leading" constant="4" id="shape-title-leading"/>
-                                                                                <constraint firstAttribute="trailing" secondItem="Shape-Cell-Title" secondAttribute="trailing" constant="4" id="shape-title-trailing"/>
+                                                                                <constraint firstItem="Shape-Cell-Icon" firstAttribute="top" secondItem="Shape-Cell-Content" secondAttribute="top" constant="8" id="shape-icon-top"/>
                                                                                 <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="Shape-Cell-Title" secondAttribute="bottom" constant="4" id="shape-title-bottom"/>
+                                                                                <constraint firstItem="Shape-Cell-Title" firstAttribute="leading" secondItem="Shape-Cell-Content" secondAttribute="leading" constant="4" id="shape-title-leading"/>
+                                                                                <constraint firstItem="Shape-Cell-Title" firstAttribute="top" secondItem="Shape-Cell-Icon" secondAttribute="bottom" constant="4" id="shape-title-top"/>
+                                                                                <constraint firstAttribute="trailing" secondItem="Shape-Cell-Title" secondAttribute="trailing" constant="4" id="shape-title-trailing"/>
                                                                             </constraints>
                                                                         </collectionViewCellContentView>
                                                                         <connections>
@@ -1017,10 +1005,10 @@
                                                 </subviews>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                 <constraints>
-                                                    <constraint firstItem="Species-Rules-Stack" firstAttribute="top" secondItem="Species-Rules-Container" secondAttribute="top" constant="16" id="species-rules-top"/>
-                                                    <constraint firstItem="Species-Rules-Stack" firstAttribute="leading" secondItem="Species-Rules-Container" secondAttribute="leading" constant="16" id="species-rules-leading"/>
-                                                    <constraint firstAttribute="trailing" secondItem="Species-Rules-Stack" secondAttribute="trailing" constant="16" id="species-rules-trailing"/>
                                                     <constraint firstAttribute="bottom" secondItem="Species-Rules-Stack" secondAttribute="bottom" constant="16" id="species-rules-bottom"/>
+                                                    <constraint firstItem="Species-Rules-Stack" firstAttribute="leading" secondItem="Species-Rules-Container" secondAttribute="leading" constant="16" id="species-rules-leading"/>
+                                                    <constraint firstItem="Species-Rules-Stack" firstAttribute="top" secondItem="Species-Rules-Container" secondAttribute="top" constant="16" id="species-rules-top"/>
+                                                    <constraint firstAttribute="trailing" secondItem="Species-Rules-Stack" secondAttribute="trailing" constant="16" id="species-rules-trailing"/>
                                                 </constraints>
                                                 <userDefinedRuntimeAttributes>
                                                     <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
@@ -1029,7 +1017,7 @@
                                                 </userDefinedRuntimeAttributes>
                                             </view>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Clear-Watchlist-Button">
-                                                <rect key="frame" x="20" y="1569.3333333333333" width="362" height="50"/>
+                                                <rect key="frame" x="20" y="1593.3333333333333" width="362" height="50"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="50" id="clear-button-height"/>
                                                 </constraints>
@@ -1039,7 +1027,7 @@
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Delete-Watchlist-Button">
-                                                <rect key="frame" x="20" y="1643.3333333333333" width="362" height="50"/>
+                                                <rect key="frame" x="20" y="1667.3333333333333" width="362" height="50"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="50" id="delete-button-height"/>
                                                 </constraints>
@@ -1049,7 +1037,7 @@
                                                 </connections>
                                             </button>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WoM-F1-gCE" userLabel="InviteContactsView">
-                                                <rect key="frame" x="20" y="1358.3333333333333" width="362" height="216"/>
+                                                <rect key="frame" x="20" y="1741.3333333333333" width="362" height="216"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Participants" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Inv-Lb-001">
                                                         <rect key="frame" x="16" y="12" width="330" height="16"/>
@@ -1084,7 +1072,7 @@
                                                         </prototypes>
                                                     </tableView>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Inv-Btn-003">
-                                                        <rect key="frame" x="16" y="164" width="330" height="40"/>
+                                                        <rect key="frame" x="16" y="164.00000000000023" width="330" height="40"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="40" id="btn-hgt-cst"/>
                                                         </constraints>
@@ -1124,7 +1112,7 @@
                                 <viewLayoutGuide key="frameLayoutGuide" id="upZ-ET-94n"/>
                             </scrollView>
                             <tableView hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Srg-Tb-004">
-                                <rect key="frame" x="20" y="1338.3333333333333" width="362" height="200"/>
+                                <rect key="frame" x="20" y="1359" width="362" height="200"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="200" id="srg-hgt-001"/>
@@ -1163,12 +1151,14 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="8db-AZ-sI1"/>
-                        <connections>
+                    <connections>
                         <outlet property="clearWatchlistButton" destination="Clear-Watchlist-Button" id="clear-watchlist-outlet"/>
                         <outlet property="dateCardView" destination="4lS-Lf-WR2" id="edit-date-card-id"/>
-                        <outlet property="endDatePicker" destination="QWB-i9-M4X" id="G1o-Ad-iiR"/>
+                        <outlet property="dateInputToggle" destination="Switch-Date" id="Outlet-Date-Switch"/>
                         <outlet property="deleteWatchlistButton" destination="Delete-Watchlist-Button" id="delete-watchlist-outlet"/>
+                        <outlet property="endDatePicker" destination="QWB-i9-M4X" id="G1o-Ad-iiR"/>
                         <outlet property="inviteContactsView" destination="WoM-F1-gCE" id="kQY-2h-FIa"/>
+                        <outlet property="locationInputToggle" destination="Switch-Location" id="Outlet-Location-Switch"/>
                         <outlet property="locationOptionsContainer" destination="lpQ-BV-dJE" id="loc-opt-cont-id"/>
                         <outlet property="locationSearchBar" destination="EditLocationSearchBar" id="edit-loc-bar-id"/>
                         <outlet property="participantsTableView" destination="Inv-Tb-002" id="out-prt-tbl"/>
@@ -1180,8 +1170,6 @@
                         <outlet property="startDatePicker" destination="HBs-re-bci" id="luv-yf-rgO"/>
                         <outlet property="suggestionsTableView" destination="Srg-Tb-004" id="out-srg-tbl"/>
                         <outlet property="titleTextField" destination="Vir-5J-XZr" id="3Ak-Ro-8Nc"/>
-                        <outlet property="dateInputToggle" destination="Switch-Date" id="Outlet-Date-Switch"/>
-                        <outlet property="locationInputToggle" destination="Switch-Location" id="Outlet-Location-Switch"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dEe-rT-R8Z" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -1220,8 +1208,8 @@
                                                 </subviews>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
-                                                    <constraint firstItem="1Bj-th-8bY" firstAttribute="centerY" secondItem="UnobsImgContainer" secondAttribute="centerY" id="UnobsImgCenterY"/>
                                                     <constraint firstItem="1Bj-th-8bY" firstAttribute="centerX" secondItem="UnobsImgContainer" secondAttribute="centerX" id="UnobsImgCenterX"/>
+                                                    <constraint firstItem="1Bj-th-8bY" firstAttribute="centerY" secondItem="UnobsImgContainer" secondAttribute="centerY" id="UnobsImgCenterY"/>
                                                     <constraint firstAttribute="height" constant="220" id="UnobsImgContainerH"/>
                                                 </constraints>
                                             </view>
@@ -1506,7 +1494,7 @@
                                                 <rect key="frame" x="20" y="24" width="362" height="220"/>
                                                 <subviews>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="glass-bg-placeholder">
-                                                        <rect key="frame" x="31" y="10" width="225" height="150"/>
+                                                        <rect key="frame" x="68.666666666666686" y="35" width="225" height="150"/>
                                                         <state key="normal" title="Button"/>
                                                         <buttonConfiguration key="configuration" style="plain"/>
                                                         <userDefinedRuntimeAttributes>
@@ -1516,7 +1504,7 @@
                                                         </userDefinedRuntimeAttributes>
                                                     </button>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2Pe-sK-fWr">
-                                                        <rect key="frame" x="31" y="10" width="225" height="150"/>
+                                                        <rect key="frame" x="68.666666666666686" y="35" width="225" height="150"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="150" id="Mss-7d-81P"/>
                                                             <constraint firstAttribute="width" constant="225" id="PHx-nb-Tyl"/>
@@ -1530,12 +1518,12 @@
                                                 </subviews>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <constraints>
-                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="centerX" secondItem="2Pe-sK-fWr" secondAttribute="centerX" id="glass-center-x"/>
-                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="centerY" secondItem="2Pe-sK-fWr" secondAttribute="centerY" id="glass-center-y"/>
-                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="width" secondItem="2Pe-sK-fWr" secondAttribute="width" id="glass-width"/>
-                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="height" secondItem="2Pe-sK-fWr" secondAttribute="height" id="glass-height"/>
                                                     <constraint firstItem="2Pe-sK-fWr" firstAttribute="centerY" secondItem="Yw6-TV-4fH" secondAttribute="centerY" id="4bV-eT-bOd"/>
                                                     <constraint firstItem="2Pe-sK-fWr" firstAttribute="centerX" secondItem="Yw6-TV-4fH" secondAttribute="centerX" id="cCG-ai-Kgp"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="centerX" secondItem="2Pe-sK-fWr" secondAttribute="centerX" id="glass-center-x"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="centerY" secondItem="2Pe-sK-fWr" secondAttribute="centerY" id="glass-center-y"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="height" secondItem="2Pe-sK-fWr" secondAttribute="height" id="glass-height"/>
+                                                    <constraint firstItem="glass-bg-placeholder" firstAttribute="width" secondItem="2Pe-sK-fWr" secondAttribute="width" id="glass-width"/>
                                                     <constraint firstAttribute="height" constant="220" id="l9i-e4-x3A"/>
                                                 </constraints>
                                             </view>
@@ -1770,10 +1758,10 @@
                     <connections>
                         <outlet property="birdImageContainerView" destination="Yw6-TV-4fH" id="bird-cont-id-01"/>
                         <outlet property="birdImageView" destination="2Pe-sK-fWr" id="oas-3Y-UT7"/>
-                        <outlet property="glassBackgroundPlaceholder" destination="glass-bg-placeholder" id="glass-outlet-id"/>
                         <outlet property="dateLabel" destination="8nZ-5d-hox" id="9zi-Rf-wh7"/>
                         <outlet property="dateTimePicker" destination="2dj-q9-RH4" id="b8J-zu-JSU"/>
                         <outlet property="detailsCardView" destination="Z2D-L9-Pra" id="8gO-2l-nH9"/>
+                        <outlet property="glassBackgroundPlaceholder" destination="glass-bg-placeholder" id="glass-outlet-id"/>
                         <outlet property="locationCardView" destination="y7J-jn-QDP" id="loc-card-view-id"/>
                         <outlet property="locationSearchBar" destination="ObservedLocationSearchBar" id="new-loc-bar-id"/>
                         <outlet property="nameTextField" destination="alD-NS-MOa" id="new-name-id"/>
@@ -1794,6 +1782,7 @@
     </inferredMetricsTieBreakers>
     <resources>
         <image name="chevron.right" catalog="system" width="97" height="128"/>
+        <image name="info.circle" catalog="system" width="128" height="123"/>
         <image name="line.3.horizontal.decrease" catalog="system" width="128" height="73"/>
         <image name="location.fill" catalog="system" width="128" height="119"/>
         <image name="map" catalog="system" width="128" height="112"/>
