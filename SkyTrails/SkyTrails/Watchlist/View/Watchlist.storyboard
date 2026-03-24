@@ -266,18 +266,8 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZaP-mE-nYF" userLabel="HeaderView">
                                 <rect key="frame" x="0.0" y="178" width="402" height="131"/>
                                 <subviews>
-                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="8qu-DE-Keg">
-                                        <rect key="frame" x="16" y="10" width="370" height="32"/>
-                                        <segments>
-                                            <segment title="Observed"/>
-                                            <segment title="To Observe"/>
-                                        </segments>
-                                        <connections>
-                                            <action selector="segmentChanged:" destination="zap-jy-tCo" eventType="valueChanged" id="seg-action-id"/>
-                                        </connections>
-                                    </segmentedControl>
                                     <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="E4j-Cd-9gw">
-                                        <rect key="frame" x="16" y="51" width="370" height="50"/>
+                                        <rect key="frame" x="16" y="10" width="370" height="50"/>
                                         <subviews>
                                             <searchBar contentMode="redraw" searchBarStyle="minimal" translatesAutoresizingMaskIntoConstraints="NO" id="htl-r6-KZI">
                                                 <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
@@ -313,13 +303,24 @@
                                             <constraint firstAttribute="height" constant="50" id="WD1-H8-K2g"/>
                                         </constraints>
                                     </stackView>
+                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="8qu-DE-Keg">
+                                        <rect key="frame" x="16" y="70" width="370" height="32"/>
+                                        <segments>
+                                            <segment title="All"/>
+                                            <segment title="Observed"/>
+                                            <segment title="Unobserved"/>
+                                        </segments>
+                                        <connections>
+                                            <action selector="segmentChanged:" destination="zap-jy-tCo" eventType="valueChanged" id="seg-action-id"/>
+                                        </connections>
+                                    </segmentedControl>
                                 </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstItem="E4j-Cd-9gw" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="6An-v1-aSP"/>
-                                    <constraint firstItem="8qu-DE-Keg" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="top" constant="10" id="8Vw-Vk-hYo"/>
-                                    <constraint firstAttribute="bottom" secondItem="E4j-Cd-9gw" secondAttribute="bottom" constant="30" id="CYc-wf-M4Z"/>
-                                    <constraint firstItem="E4j-Cd-9gw" firstAttribute="top" secondItem="8qu-DE-Keg" secondAttribute="bottom" constant="10" id="IfM-rD-Id3"/>
+                                    <constraint firstItem="E4j-Cd-9gw" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="top" constant="10" id="8Vw-Vk-hYo"/>
+                                    <constraint firstAttribute="bottom" secondItem="8qu-DE-Keg" secondAttribute="bottom" constant="29" id="CYc-wf-M4Z"/>
+                                    <constraint firstItem="8qu-DE-Keg" firstAttribute="top" secondItem="E4j-Cd-9gw" secondAttribute="bottom" constant="10" id="IfM-rD-Id3"/>
                                     <constraint firstAttribute="trailing" secondItem="E4j-Cd-9gw" secondAttribute="trailing" constant="16" id="UkN-9S-BPG"/>
                                     <constraint firstItem="8qu-DE-Keg" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="aEC-Md-Mh1"/>
                                     <constraint firstAttribute="trailing" secondItem="8qu-DE-Keg" secondAttribute="trailing" constant="16" id="eQx-Iy-yvI"/>

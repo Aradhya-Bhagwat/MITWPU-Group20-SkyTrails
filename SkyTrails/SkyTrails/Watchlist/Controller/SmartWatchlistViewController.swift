@@ -9,6 +9,12 @@ enum WatchlistPresentationMode {
 	case allSpecies
 }
 
+private enum SmartWatchlistFilterOption: Int {
+	case all = 0
+	case observed = 1
+	case unobserved = 2
+}
+
 @MainActor
 class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	
@@ -26,7 +32,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	public var observedEntries: [WatchlistEntry] = []
 	public var toObserveEntries: [WatchlistEntry] = []
 	private var currentList: [WatchlistEntry] = []
-    private var currentSegmentIndex: Int = 0
+	private var currentFilter: SmartWatchlistFilterOption = .all
 	private var currentSortOption: SmartWatchlistSortOption = .nameAZ
     
     private var isShowingRecommendations = false
@@ -124,9 +130,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		let searchIsDarkMode = traitCollection.userInterfaceStyle == .dark
 		searchBar.searchTextField.backgroundColor = searchIsDarkMode ? .secondarySystemBackground : .systemBackground
 		searchBar.delegate = self
-		segmentedControl.selectedSegmentIndex = 0
-		segmentedControl.setTitle("Sightings", forSegmentAt: 0)
-		segmentedControl.setTitle("To Discover", forSegmentAt: 1)
+		segmentedControl.selectedSegmentIndex = currentFilter.rawValue
 		if #available(iOS 14.0, *) {
 			configureFilterButtonMenusIfAvailable()
 		}
@@ -151,16 +155,15 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         })
         
         present(alert, animated: true)
-    }
+	}
 
 	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
-		currentSegmentIndex = sender.selectedSegmentIndex
+		currentFilter = SmartWatchlistFilterOption(rawValue: sender.selectedSegmentIndex) ?? .all
 		applyFilters()
 	}
 	
 	func applyFilters() {
 		let searchText = searchBar.text ?? ""
-		let isObserved = (currentSegmentIndex == 0)
 		
         if isShowingRecommendations {
             tableView.reloadData()
@@ -169,7 +172,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 
 		if watchlistType == .myWatchlist {
 			let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
-				let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: isObserved ? .observed : .to_observe)) ?? []
+				let status = statusForCurrentFilter()
+				let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)) ?? []
 				let matching = entries.filter { entry in
 					guard let bird = entry.bird else { return false }
 					return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
@@ -180,7 +184,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			allWatchlists = filteredResults.map { $0.0 }
 			filteredSections = filteredResults.map { sortEntries($0.1) }
 		} else {
-			let sourceList = isObserved ? observedEntries : toObserveEntries
+			let sourceList = entriesForCurrentFilter()
 			currentList = sourceList.filter { entry in
 				guard let bird = entry.bird else { return false }
 				return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
@@ -203,9 +207,12 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			return
 		}
 		
-		if currentSegmentIndex == 0 {
+		switch currentFilter {
+		case .all:
+			presentAddOptions(sender: sender)
+		case .observed:
 			showObservedDetail(bird: nil)
-		} else {
+		case .unobserved:
 			showSpeciesSelection(mode: .unobserved)
 		}
 	}
@@ -306,6 +313,45 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 
 	private func sortEntries(_ entries: [WatchlistEntry]) -> [WatchlistEntry] {
 		return manager.sortingService.sort(entries: entries, by: currentSortOption)
+	}
+
+	private func statusForCurrentFilter() -> WatchlistEntryStatus? {
+		switch currentFilter {
+		case .all:
+			return nil
+		case .observed:
+			return .observed
+		case .unobserved:
+			return .to_observe
+		}
+	}
+
+	private func entriesForCurrentFilter() -> [WatchlistEntry] {
+		switch currentFilter {
+		case .all:
+			return observedEntries + toObserveEntries
+		case .observed:
+			return observedEntries
+		case .unobserved:
+			return toObserveEntries
+		}
+	}
+
+	private func presentAddOptions(sender: Any) {
+		let alert = UIAlertController(title: "Add Bird", message: nil, preferredStyle: .actionSheet)
+		alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
+			self?.showObservedDetail(bird: nil)
+		})
+		alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default) { [weak self] _ in
+			self?.showSpeciesSelection(mode: .unobserved)
+		})
+		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+		configurePopover(for: alert, sender: sender)
+		present(alert, animated: true)
+	}
+
+	private func detailSegueIdentifier(for entry: WatchlistEntry) -> String {
+		entry.status == .to_observe ? "ShowUnobservedDetailFromWatchlist" : "ShowObservedDetail"
 	}
 	
 	private func configurePopover(for alert: UIAlertController, sender: Any) {
@@ -439,7 +485,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 			entry = currentList[indexPath.row]
 		}
 		
-		performSegue(withIdentifier: "ShowObservedDetail", sender: entry)
+		performSegue(withIdentifier: detailSegueIdentifier(for: entry), sender: entry)
 	}
 	
 		func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -463,11 +509,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
 		let editAction = UIContextualAction(style: .normal, title: "Edit") { [weak self] (_, _, completion) in
 			guard let self = self else { return }
-			if self.currentSegmentIndex == 1 {
-				self.performSegue(withIdentifier: "ShowUnobservedDetailFromWatchlist", sender: entry)
-			} else {
-				self.performSegue(withIdentifier: "ShowObservedDetail", sender: entry)
-			}
+			self.performSegue(withIdentifier: self.detailSegueIdentifier(for: entry), sender: entry)
 			completion(true)
 		}
 		editAction.image = UIImage(systemName: "pencil")
@@ -475,7 +517,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
 		var actions = [deleteAction, editAction]
 		
-		if currentSegmentIndex == 1, entry.bird != nil {
+		if entry.status == .to_observe, entry.bird != nil {
 			let reminderAction = UIContextualAction(style: .normal, title: "Remind") { [weak self] (_, _, completion) in
 				self?.addReminder(for: entry)
 				completion(true)

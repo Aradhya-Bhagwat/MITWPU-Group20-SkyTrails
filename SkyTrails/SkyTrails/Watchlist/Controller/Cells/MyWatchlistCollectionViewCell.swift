@@ -3,17 +3,17 @@ import UIKit
 
 struct WatchlistData {
 	let title: String
-	let images: [UIImage]
+	let unobservedImages: [UIImage]
+	let observedImages: [UIImage]
 	let totalCount: Int
 	let observedCount: Int
-	let totalImageCount: Int
 	
-	init(title: String, images: [UIImage], totalCount: Int, observedCount: Int, totalImageCount: Int? = nil) {
+	init(title: String, unobservedImages: [UIImage], observedImages: [UIImage], totalCount: Int, observedCount: Int) {
 		self.title = title
-		self.images = images
+		self.unobservedImages = unobservedImages
+		self.observedImages = observedImages
 		self.totalCount = totalCount
 		self.observedCount = observedCount
-		self.totalImageCount = totalImageCount ?? images.count
 	}
 }
 
@@ -39,24 +39,63 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
     
     private var emptyStateContainer: UIView!
     private var emptyMessageLabel: UILabel!
-    private var allImages: [UIImage] = []
-    private var slideshowTimer: Timer?
-    private var currentImageIndex = 0
-    private var activeSlot = 0 // 0 for image1, 1 for image2
+    
+    private var unobservedPlaceholderLabel: UILabel!
+    private var observedPlaceholderLabel: UILabel!
+    
+    private var unobservedImages: [UIImage] = []
+    private var observedImages: [UIImage] = []
+    
+    private var unobservedTimer: Timer?
+    private var observedTimer: Timer?
+    
+    private var currentUnobservedIndex = 0
+    private var currentObservedIndex = 0
 	
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		setupStyling()
         setupEmptyStateView()
+        setupSlotPlaceholders()
 	}
 	
 	override func prepareForReuse() {
 		super.prepareForReuse()
 		image1.image = nil
 		image2.image = nil
-        stopSlideshow()
-        allImages = []
+        stopSlideshows()
+        unobservedImages = []
+        observedImages = []
 	}
+    
+    private func setupSlotPlaceholders() {
+        unobservedPlaceholderLabel = createPlaceholderLabel(text: "Add species you want to see them here")
+        observedPlaceholderLabel = createPlaceholderLabel(text: "Log your sightings to build your observed gallery")
+        
+        insertPlaceholder(unobservedPlaceholderLabel, behind: image1)
+        insertPlaceholder(observedPlaceholderLabel, behind: image2)
+    }
+    
+    private func createPlaceholderLabel(text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }
+    
+    private func insertPlaceholder(_ label: UILabel, behind imageView: UIImageView) {
+        imageView.superview?.insertSubview(label, belowSubview: imageView)
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: 12),
+            label.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: -12),
+            label.centerYAnchor.constraint(equalTo: imageView.centerYAnchor)
+        ])
+    }
     
     private func setupEmptyStateView() {
         emptyStateContainer = UIView()
@@ -90,72 +129,91 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         speciesTitleLabel.text = "Unobserved"
 		observedCountLabel.text = "\(data.observedCount)"
 		
-		self.allImages = data.images
+		self.unobservedImages = data.unobservedImages
+        self.observedImages = data.observedImages
         
-        if allImages.isEmpty {
+        if unobservedImages.isEmpty && observedImages.isEmpty {
             imageStackView.isHidden = true
             emptyStateContainer.isHidden = false
-            stopSlideshow()
+            stopSlideshows()
         } else {
             imageStackView.isHidden = false
             emptyStateContainer.isHidden = true
             
-            if allImages.count == 1 {
-                // Show only one image, filling the entire stack view
-                image1.isHidden = false
-                image2.isHidden = true
-                image1.image = allImages[0]
-                alignImageTop(image1)
-                stopSlideshow()
-            } else {
-                // Initial setup for two images
-                image1.isHidden = false
-                image2.isHidden = false
-                image1.image = allImages[0]
-                image2.image = allImages[1]
-                alignImageTop(image1)
-                alignImageTop(image2)
-                
-                if allImages.count > 2 {
-                    currentImageIndex = 2
-                    startSlideshow()
-                } else {
-                    stopSlideshow()
-                }
-            }
+            configureSlot(imageView: image1, placeholder: unobservedPlaceholderLabel, images: unobservedImages)
+            configureSlot(imageView: image2, placeholder: observedPlaceholderLabel, images: observedImages)
+            
+            startSlideshows()
         }
 	}
+    
+    private func configureSlot(imageView: UIImageView, placeholder: UILabel, images: [UIImage]) {
+        imageView.isHidden = false
+        if images.isEmpty {
+            placeholder.isHidden = false
+            imageView.image = nil
+            imageView.backgroundColor = .secondarySystemFill.withAlphaComponent(0.05)
+        } else {
+            placeholder.isHidden = true
+            imageView.image = images[0]
+            imageView.backgroundColor = .clear
+            alignImageTop(imageView)
+        }
+    }
 
-    private func startSlideshow() {
-        stopSlideshow()
-        guard allImages.count > 2 else { return }
+    private func startSlideshows() {
+        stopSlideshows()
         
-        slideshowTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { [weak self] _ in
-            self?.cycleImage()
+        if unobservedImages.count > 1 {
+            currentUnobservedIndex = 1
+            unobservedTimer = Timer.scheduledTimer(withTimeInterval: 4.5, repeats: true) { [weak self] _ in
+                self?.cycleUnobserved()
+            }
+        }
+        
+        if observedImages.count > 1 {
+            currentObservedIndex = 1
+            observedTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+                self?.cycleObserved()
+            }
         }
     }
     
-    private func stopSlideshow() {
-        slideshowTimer?.invalidate()
-        slideshowTimer = nil
+    private func stopSlideshows() {
+        unobservedTimer?.invalidate()
+        unobservedTimer = nil
+        observedTimer?.invalidate()
+        observedTimer = nil
     }
     
-    private func cycleImage() {
-        guard allImages.count > 2 else { return }
-        if currentImageIndex >= allImages.count {
-            currentImageIndex = 0
+    private func cycleUnobserved() {
+        guard unobservedImages.count > 1 else { return }
+        if currentUnobservedIndex >= unobservedImages.count {
+            currentUnobservedIndex = 0
         }
         
-        let nextImage = allImages[currentImageIndex]
-        let slotToUpdate = activeSlot == 0 ? image1 : image2
-        
-        UIView.transition(with: slotToUpdate!, duration: 1.0, options: .transitionCrossDissolve, animations: {
-            slotToUpdate?.image = nextImage
-            self.alignImageTop(slotToUpdate!)
+        let nextImage = unobservedImages[currentUnobservedIndex]
+        UIView.transition(with: image1, duration: 1.0, options: .transitionCrossDissolve, animations: {
+            self.image1.image = nextImage
+            self.alignImageTop(self.image1)
         }, completion: nil)
         
-        activeSlot = (activeSlot + 1) % 2
-        currentImageIndex += 1
+        currentUnobservedIndex += 1
+    }
+    
+    private func cycleObserved() {
+        guard observedImages.count > 1 else { return }
+        if currentObservedIndex >= observedImages.count {
+            currentObservedIndex = 0
+        }
+        
+        let nextImage = observedImages[currentObservedIndex]
+        UIView.transition(with: image2, duration: 1.0, options: .transitionCrossDissolve, animations: {
+            self.image2.image = nextImage
+            self.alignImageTop(self.image2)
+        }, completion: nil)
+        
+        currentObservedIndex += 1
     }
 
 	private func alignImageTop(_ imageView: UIImageView) {

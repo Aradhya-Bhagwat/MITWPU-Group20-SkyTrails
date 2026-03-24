@@ -46,15 +46,30 @@ final class WatchlistQueryService {
         
         let uniqueEntriesArray = Array(uniqueEntries.values)
         let stats = calculateStats(from: uniqueEntriesArray)
-        let previewImages = uniqueEntriesArray
+        
+        let toObserveImages = uniqueEntriesArray
+            .filter { $0.status == .to_observe }
             .compactMap { entry -> String? in
                 if let photoPath = entry.photos?.first?.imagePath {
                     return photoPath
                 }
                 return entry.bird?.staticImageName
             }
-            .prefix(10)
+            .prefix(5)
             .map { String($0) }
+            
+        let observedImages = uniqueEntriesArray
+            .filter { $0.status == .observed }
+            .compactMap { entry -> String? in
+                if let photoPath = entry.photos?.first?.imagePath {
+                    return photoPath
+                }
+                return entry.bird?.staticImageName
+            }
+            .prefix(5)
+            .map { String($0) }
+            
+        let previewImages = Array(toObserveImages) + Array(observedImages)
         
         return WatchlistSummaryDTO(
             id: .virtual,
@@ -63,6 +78,8 @@ final class WatchlistQueryService {
             dateText: "",
             image: previewImages.first,
             previewImages: Array(previewImages),
+            unobservedPreviewImages: Array(toObserveImages),
+            observedPreviewImages: Array(observedImages),
             stats: stats,
             type: .my_watchlist
         )

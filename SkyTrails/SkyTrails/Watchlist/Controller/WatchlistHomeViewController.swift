@@ -16,7 +16,7 @@ class WatchlistHomeViewController: UIViewController {
 		
 		var title: String {
 			switch self {
-				case .myWatchlist: return "My Watchlists"
+				case .myWatchlist: return "Summary"
 				case .customWatchlist: return "Curated Watchlists"
 				case .sharedWatchlist: return "Shared Watchlists"
 			}
@@ -286,7 +286,7 @@ extension WatchlistHomeViewController {
 			} else if let dto = sender as? WatchlistSummaryDTO {
 				if dto.type == .my_watchlist {
 					destVC.watchlistType = .myWatchlist
-					destVC.watchlistTitle = "My Watchlists"
+					destVC.watchlistTitle = "Summary"
 				} else if dto.type == .shared {
 					destVC.watchlistType = .shared
 					destVC.watchlistTitle = dto.title
@@ -461,30 +461,37 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.reuseIdentifier, for: indexPath) as! MyWatchlistCollectionViewCell
+		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.identifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
 		if let watchlist = myWatchlist {
-			let images = watchlist.previewImages.compactMap { imagePath -> UIImage? in
-				let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-				let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
-				let fileURL = photoDir.appendingPathComponent(imagePath)
-				if let diskImage = UIImage(contentsOfFile: fileURL.path) {
-					return diskImage
-				}
-				return UIImage(named: imagePath)
+			let unobservedImages = watchlist.unobservedPreviewImages.compactMap { imagePath -> UIImage? in
+				loadImage(imagePath)
+			}
+			let observedImages = watchlist.observedPreviewImages.compactMap { imagePath -> UIImage? in
+				loadImage(imagePath)
 			}
 			
 			let data = WatchlistData(
 				title: watchlist.title,
-				images: images,
+				unobservedImages: unobservedImages,
+				observedImages: observedImages,
 				totalCount: watchlist.stats.totalCount,
-				observedCount: watchlist.stats.observedCount,
-				totalImageCount: watchlist.stats.totalCount
+				observedCount: watchlist.stats.observedCount
 			)
 			
 			cell.configure(with: data)
 		}
 		return cell
+	}
+	
+	private func loadImage(_ imagePath: String) -> UIImage? {
+		let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+		let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
+		let fileURL = photoDir.appendingPathComponent(imagePath)
+		if let diskImage = UIImage(contentsOfFile: fileURL.path) {
+			return diskImage
+		}
+		return UIImage(named: imagePath)
 	}
 	
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
