@@ -15,6 +15,7 @@ class SearchLocationViewController: UIViewController {
     private var searchResults = [MKLocalSearchCompletion]()
     private let locationManager = CLLocationManager()
     private var searchQuery: String = ""
+    private var isRequestingCurrentLocation = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -135,15 +136,18 @@ class SearchLocationViewController: UIViewController {
     }
     
     private func fetchCurrentLocation() {
+        isRequestingCurrentLocation = true
         let authStatus = locationManager.authorizationStatus
         switch authStatus {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
+            isRequestingCurrentLocation = false
             break
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
+            isRequestingCurrentLocation = false
             break
         }
     }
@@ -271,6 +275,7 @@ extension SearchLocationViewController: MKLocalSearchCompleterDelegate {
 
 extension SearchLocationViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard isRequestingCurrentLocation else { return }
         guard let location = locations.last else { return }
         
         let request = MKLocalSearch.Request()
@@ -279,6 +284,7 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
         let search = MKLocalSearch(request: request)
         search.start { [weak self] response, error in
             guard let self = self else { return }
+            self.isRequestingCurrentLocation = false
             
             let name = response?.mapItems.first?.name ?? "Current Location"
             let detail = self.cityState(from: response?.mapItems.first)
@@ -287,11 +293,15 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse {
+        guard isRequestingCurrentLocation else { return }
+        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
             manager.requestLocation()
+        } else if manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted {
+            isRequestingCurrentLocation = false
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        isRequestingCurrentLocation = false
     }
 }

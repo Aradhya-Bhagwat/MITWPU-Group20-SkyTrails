@@ -24,6 +24,7 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     var onEndDateChange: ((Date) -> Void)?
     
     private let locationManager = CLLocationManager()
+    private var isRequestingCurrentLocation = false
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -169,16 +170,19 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
     }
     
     private func fetchCurrentLocation() {
+        isRequestingCurrentLocation = true
         let authStatus = locationManager.authorizationStatus
         
         switch authStatus {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
+            isRequestingCurrentLocation = false
             break
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
+            isRequestingCurrentLocation = false
             break
         }
     }
@@ -199,6 +203,7 @@ extension PredictionInputCellCollectionViewCell: UISearchBarDelegate {
 
 extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard isRequestingCurrentLocation else { return }
         guard let location = locations.last else { return }
         
         let searchRequest = MKLocalSearch.Request()
@@ -207,6 +212,7 @@ extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
         let search = MKLocalSearch(request: searchRequest)
         search.start { [weak self] response, error in
             guard let self = self else { return }
+            self.isRequestingCurrentLocation = false
 
             let name = response?.mapItems.first?.name ?? "Current Location"
             
@@ -219,11 +225,15 @@ extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse {
+        guard isRequestingCurrentLocation else { return }
+        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
             manager.requestLocation()
+        } else if manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted {
+            isRequestingCurrentLocation = false
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        isRequestingCurrentLocation = false
     }
 }

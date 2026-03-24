@@ -215,7 +215,8 @@ class HomeManager {
                 speciesCount: birdCount,
                 observedCount: observedCount,
                 radius: radiusKm,
-                imageName: watchlist.coverImagePath
+                imageName: watchlist.coverImagePath,
+                edgeSpecies: nil
             )
             results.append(result)
         }
@@ -247,6 +248,7 @@ class HomeManager {
                     observedCount: 0,
                     radius: 5.0,
                     imageName: "placeholder_image",
+                    edgeSpecies: item.species,
                     distanceKm: item.distanceKm
                 )
             }
@@ -323,28 +325,7 @@ class HomeManager {
     ) async -> DynamicMapCard? {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         let coordinate = CLLocationCoordinate2D(latitude: card.center.lat, longitude: card.center.lng)
-        let localBirds = await hotspotManager.getBirdsPresent(
-            at: coordinate,
-            duringWeek: currentWeek,
-            radiusInKm: 10.0
-        )
-        let limitedBirds = Array(localBirds.prefix(8))
-
-        let displaySpecies: [BirdSpeciesDisplay] = limitedBirds.map { bird in
-            BirdSpeciesDisplay(
-                birdName: bird.commonName,
-                birdImageName: bird.staticImageName,
-                statusBadge: BirdSpeciesDisplay.StatusBadge(
-                    title: "Present",
-                    subtitle: "Nearby",
-                    iconName: "bird.circle.fill",
-                    backgroundColorName: "systemGreen"
-                ),
-                sightabilityPercent: 70,
-                weekNumber: card.weekNumber ?? formatWeekDescription(week: currentWeek),
-                residencyStatus: "Recently observed"
-            )
-        }
+        let displaySpecies = await edgeDisplaySpecies(for: card, coordinate: coordinate, currentWeek: currentWeek)
 
         let fallbackSpecies = displaySpecies.isEmpty
             ? [
@@ -375,6 +356,11 @@ class HomeManager {
         let primaryBird = fallbackSpecies.first?.birdName ?? "Nearby Birds"
         let primaryImage = fallbackSpecies.first?.birdImageName ?? "placeholder_image"
         let weekText = card.weekNumber ?? formatWeekDescription(week: currentWeek)
+        let areaOverlay = await resolveHotspotAreaOverlay(
+            hotspotName: card.placeName,
+            hotspotCoordinate: coordinate,
+            fallbackRadiusKm: 2.0
+        )
 
         let migrationPrediction = MigrationPrediction(
             birdName: primaryBird,
@@ -398,7 +384,7 @@ class HomeManager {
             seasonTag: seasonTag(for: [currentWeek]),
             centerCoordinate: coordinate,
             pinRadiusKm: 0.5,
-            areaOverlay: .circle(radiusKm: 2.0),
+            areaOverlay: areaOverlay,
             hotspots: fallbackSpecies.prefix(5).map {
                 HotspotBirdSpot(coordinate: coordinate, birdImageName: $0.birdImageName)
             },
@@ -592,6 +578,58 @@ class HomeManager {
         return [DynamicMapCard.combined(migration: migrationPrediction, hotspot: hotspotPrediction)]
     }
 
+    private func edgeDisplaySpecies(
+        for card: NearbyHotspotEdgeCard,
+        coordinate: CLLocationCoordinate2D,
+        currentWeek: Int
+    ) async -> [BirdSpeciesDisplay] {
+        if let edgeSpecies = card.species, !edgeSpecies.isEmpty {
+            return edgeSpecies.prefix(8).map { species in
+                let fallbackBird = watchlistManager.findBird(byName: species.commonName)
+                let imageName = species.imageName
+                    ?? fallbackBird?.staticImageName
+                    ?? "placeholder_image"
+                let statusText = species.residencyStatus ?? "Recently observed"
+
+                return BirdSpeciesDisplay(
+                    birdName: species.commonName,
+                    birdImageName: imageName,
+                    statusBadge: BirdSpeciesDisplay.StatusBadge(
+                        title: "Present",
+                        subtitle: statusText,
+                        iconName: "bird.circle.fill",
+                        backgroundColorName: "systemGreen"
+                    ),
+                    sightabilityPercent: species.probability ?? 70,
+                    weekNumber: species.weekNumber ?? card.weekNumber ?? formatWeekDescription(week: currentWeek),
+                    residencyStatus: statusText
+                )
+            }
+        }
+
+        let localBirds = await hotspotManager.getBirdsPresent(
+            at: coordinate,
+            duringWeek: currentWeek,
+            radiusInKm: 10.0
+        )
+
+        return Array(localBirds.prefix(8)).map { bird in
+            BirdSpeciesDisplay(
+                birdName: bird.commonName,
+                birdImageName: bird.staticImageName,
+                statusBadge: BirdSpeciesDisplay.StatusBadge(
+                    title: "Present",
+                    subtitle: "Nearby",
+                    iconName: "bird.circle.fill",
+                    backgroundColorName: "systemGreen"
+                ),
+                sightabilityPercent: 70,
+                weekNumber: card.weekNumber ?? formatWeekDescription(week: currentWeek),
+                residencyStatus: "Recently observed"
+            )
+        }
+    }
+
     func formatWeekDescription(week: Int) -> String {
         let calendar = Calendar.current
         let currentYear = calendar.component(.year, from: Date())
@@ -670,14 +708,6 @@ class HomeManager {
             let response = try await MKLocalSearch(request: request).start()
             let nearestItem = nearestMapItem(to: hotspotCoordinate, from: response.mapItems)
 
-            if let polygon = polygonCoordinates(
-                from: response.boundingRegion,
-                near: hotspotCoordinate,
-                nearestResultCoordinate: nearestItem?.location.coordinate
-            ) {
-                return .polygon(coordinates: polygon)
-            }
-
             if let mapItem = nearestItem,
                let circularRegion = mapItem.placemark.region as? CLCircularRegion {
                 let radiusKm = max(0.2, circularRegion.radius / 1000.0)
@@ -699,62 +729,6 @@ class HomeManager {
             let d2 = locationService.distance(from: coordinate, to: second.location.coordinate)
             return d1 < d2
         }
-    }
-
-    private func polygonCoordinates(
-        from region: MKCoordinateRegion,
-        near hotspotCoordinate: CLLocationCoordinate2D,
-        nearestResultCoordinate: CLLocationCoordinate2D?
-    ) -> [CLLocationCoordinate2D]? {
-        let span = region.span
-        guard span.latitudeDelta > 0.0001, span.longitudeDelta > 0.0001 else {
-            return nil
-        }
-
-        let regionCenterDistanceKm = locationService.distance(
-            from: hotspotCoordinate,
-            to: region.center
-        ) / 1000.0
-        guard regionCenterDistanceKm <= 1.0 else {
-            return nil
-        }
-
-        if let nearestResultCoordinate {
-            let nearestResultDistanceKm = locationService.distance(
-                from: hotspotCoordinate,
-                to: nearestResultCoordinate
-            ) / 1000.0
-            guard nearestResultDistanceKm <= 1.5 else {
-                return nil
-            }
-        }
-
-        let topLeft = CLLocationCoordinate2D(
-            latitude: region.center.latitude + span.latitudeDelta / 2,
-            longitude: region.center.longitude - span.longitudeDelta / 2
-        )
-        let topRight = CLLocationCoordinate2D(
-            latitude: region.center.latitude + span.latitudeDelta / 2,
-            longitude: region.center.longitude + span.longitudeDelta / 2
-        )
-        let bottomRight = CLLocationCoordinate2D(
-            latitude: region.center.latitude - span.latitudeDelta / 2,
-            longitude: region.center.longitude + span.longitudeDelta / 2
-        )
-        let bottomLeft = CLLocationCoordinate2D(
-            latitude: region.center.latitude - span.latitudeDelta / 2,
-            longitude: region.center.longitude - span.longitudeDelta / 2
-        )
-
-        let bboxCorners = [topLeft, topRight, bottomRight, bottomLeft]
-        let maxCornerDistanceKm = bboxCorners
-            .map { locationService.distance(from: hotspotCoordinate, to: $0) / 1000.0 }
-            .max() ?? .greatestFiniteMagnitude
-        guard maxCornerDistanceKm <= 8 else {
-            return nil
-        }
-
-        return [topLeft, topRight, bottomRight, bottomLeft]
     }
     
     private func seasonTag(for weeks: [Int]) -> String {
@@ -1105,6 +1079,7 @@ class HomeManager {
                     observedCount: 0,
                     radius: cardRadiusKm,
                     imageName: hotspot.imageName,
+                    edgeSpecies: nil,
                     distanceKm: distance / 1000.0
                 )
             )
@@ -1187,6 +1162,25 @@ class HomeManager {
                 spottingProbability: probability,
                 weekNumber: weekText,
                 residencyStatus: status
+            )
+        }
+    }
+
+    func predictionResults(
+        from edgeSpecies: [NearbyHotspotEdgeSpecies],
+        lat: Double,
+        lon: Double
+    ) -> [FinalPredictionResult] {
+        edgeSpecies.map { species in
+            FinalPredictionResult(
+                birdName: species.commonName,
+                imageName: species.imageName ?? WatchlistManager.shared.findBird(byName: species.commonName)?.staticImageName ?? "placeholder_image",
+                likelySpot: "Nearby hotspot",
+                matchedInputIndex: 0,
+                matchedLocation: (lat: lat, lon: lon),
+                spottingProbability: species.probability ?? 70,
+                weekNumber: species.weekNumber,
+                residencyStatus: species.residencyStatus
             )
         }
     }

@@ -420,11 +420,11 @@ extension HomeViewController: UICollectionViewDataSource {
              footer.configure(numberOfPages: count, currentPage: 0); return footer
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
-            if indexPath.section == 0 { header.configure(title: migrationCards.isEmpty ? "No Active Migrations" : "Migration Forecast") }
-            else if indexPath.section == 1 { header.configure(title: upcomingBirds.isEmpty ? "No Recent Sightings" : "Birding Highlights", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
-            else if indexPath.section == 2 { header.configure(title: spots.isEmpty ? "No Nearby Hotspots" : "Top Birding Spots", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllSpots", sender: nil) }) }
-            else if indexPath.section == 3 { header.configure(title: observations.isEmpty ? "No Recent Community Posts" : "Community Sightings") }
-            else if indexPath.section == 4 { header.configure(title: news.isEmpty ? "No Latest News" : "Birders' Gossip") }
+            if indexPath.section == 0 { header.configure(title: "Migration Forecast") }
+            else if indexPath.section == 1 { header.configure(title: "Birding Highlights", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
+            else if indexPath.section == 2 { header.configure(title: "Top Birding Spots", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllSpots", sender: nil) }) }
+            else if indexPath.section == 3 { header.configure(title: "Community Sightings") }
+            else if indexPath.section == 4 { header.configure(title: "Birders' Gossip") }
             return header
         }
          return UICollectionReusableView()
@@ -456,7 +456,18 @@ extension HomeViewController {
             if indexPath.row < wCount { if let res = homeScreenData?.myWatchlistBirds[safe: indexPath.row] { navigateToBirdPrediction(bird: res.bird, statusText: res.statusText) } }
             else { if let rec = homeScreenData?.recommendedBirds[safe: indexPath.row - wCount] { navigateToBirdPrediction(bird: rec.bird, statusText: rec.dateRange) } }
         case 2:
-            let item = spots[indexPath.row]; Task { let preds = await homeManager.getLivePredictions(for: item.latitude, lon: item.longitude, radiusKm: item.radius); await MainActor.run { navigateToSpotDetails(name: item.title, lat: item.latitude, lon: item.longitude, radius: item.radius, predictions: preds) } }
+            let item = spots[indexPath.row]
+            Task {
+                let preds = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
+                    homeManager.predictionResults(from: edgeSpecies, lat: item.latitude, lon: item.longitude)
+                } else {
+                    await homeManager.getLivePredictions(for: item.latitude, lon: item.longitude, radiusKm: item.radius)
+                }
+
+                await MainActor.run {
+                    navigateToSpotDetails(name: item.title, lat: item.latitude, lon: item.longitude, radius: item.radius, predictions: preds)
+                }
+            }
         case 3:
             let detailVC = UIStoryboard(name: "Home", bundle: nil).instantiateViewController(withIdentifier: "CommunityObservationViewController") as! CommunityObservationViewController
             detailVC.observation = observations[indexPath.row]; navigationController?.pushViewController(detailVC, animated: true)

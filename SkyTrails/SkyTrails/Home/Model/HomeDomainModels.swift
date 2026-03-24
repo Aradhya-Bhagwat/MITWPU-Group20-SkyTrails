@@ -85,7 +85,8 @@ struct HomeScreenData {
                 latitude: spot.latitude,
                 longitude: spot.longitude,
                 speciesCount: spot.speciesCount,
-                radius: spot.radius
+                radius: spot.radius,
+                edgeSpecies: spot.edgeSpecies
             )
         }
     }
@@ -107,6 +108,7 @@ struct PopularSpotResult: Identifiable {
     let observedCount: Int
     let radius: Double
     let imageName: String?
+    let edgeSpecies: [NearbyHotspotEdgeSpecies]?
     var distanceKm: Double?
     
     var coordinate: CLLocationCoordinate2D {
@@ -279,11 +281,21 @@ struct NearbyHotspotEdgeCard: Codable {
     let distanceKm: Double?
     let distanceString: String?
     let center: NearbyHotspotEdgeCenter
+    let species: [NearbyHotspotEdgeSpecies]?
 }
 
 struct NearbyHotspotEdgeCenter: Codable {
     let lat: Double
     let lng: Double
+}
+
+struct NearbyHotspotEdgeSpecies: Codable {
+    let commonName: String
+    let scientificName: String?
+    let imageName: String?
+    let probability: Int?
+    let weekNumber: String?
+    let residencyStatus: String?
 }
 
 struct NearbyHotspotEdgeMeta: Codable {
@@ -312,4 +324,5 @@ struct PopularSpotUI {
     let longitude: Double
     let speciesCount: Int
     let radius: Double
+    let edgeSpecies: [NearbyHotspotEdgeSpecies]?
 }
