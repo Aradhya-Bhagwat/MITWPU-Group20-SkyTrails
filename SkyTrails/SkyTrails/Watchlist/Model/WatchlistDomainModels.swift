@@ -2,6 +2,10 @@
 import Foundation
 import CoreLocation
 
+extension Notification.Name {
+    static let watchlistDataDidChange = Notification.Name("WatchlistDataDidChange")
+}
+
 enum WatchlistConstants {
     static let myWatchlistID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
     static let legacyDefaultOwnerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!

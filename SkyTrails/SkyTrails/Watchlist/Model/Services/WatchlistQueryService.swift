@@ -9,9 +9,17 @@ final class WatchlistQueryService {
     private let context: ModelContext
     private let persistence: WatchlistPersistenceService
     
+    // Caching for My Watchlist
+    private var myWatchlistCache: (dto: WatchlistSummaryDTO, timestamp: Date)?
+    private let cacheValidityDuration: TimeInterval = 2.0 // 2 seconds
+    
     init(context: ModelContext, persistence: WatchlistPersistenceService) {
         self.context = context
         self.persistence = persistence
+    }
+    
+    func invalidateMyWatchlistCache() {
+        myWatchlistCache = nil
     }
     
     func loadDashboardData() async throws -> (
@@ -30,12 +38,28 @@ final class WatchlistQueryService {
     }
     
     func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
+        // Check cache validity
+        if let cached = myWatchlistCache,
+           Date().timeIntervalSince(cached.timestamp) < cacheValidityDuration {
+            return cached.dto
+        }
+        
         let allEntries = allLists.flatMap { $0.entries ?? [] }
         var uniqueEntries: [UUID: WatchlistEntry] = [:]
         for entry in allEntries {
             if let birdId = entry.bird?.bird_id {
                 if let existing = uniqueEntries[birdId] {
-                    if entry.status == .observed && existing.status != .observed {
+                    // Priority rules:
+                    // 1. Observed status beats unobserved
+                    // 2. If same status, newer date wins
+                    let entryDate = entry.observationDate ?? entry.addedDate
+                    let existingDate = existing.observationDate ?? existing.addedDate
+                    
+                    let shouldReplace = 
+                        (entry.status == .observed && existing.status != .observed) ||
+                        (entry.status == existing.status && entryDate > existingDate)
+                    
+                    if shouldReplace {
                         uniqueEntries[birdId] = entry
                     }
                 } else {
@@ -71,7 +95,7 @@ final class WatchlistQueryService {
             
         let previewImages = Array(toObserveImages) + Array(observedImages)
         
-        return WatchlistSummaryDTO(
+        let dto = WatchlistSummaryDTO(
             id: .virtual,
             title: "My Watchlist",
             subtitle: "All Birds",
@@ -83,6 +107,11 @@ final class WatchlistQueryService {
             stats: stats,
             type: .my_watchlist
         )
+        
+        // Update cache
+        myWatchlistCache = (dto: dto, timestamp: Date())
+        
+        return dto
     }
     
     func fetchEntries(

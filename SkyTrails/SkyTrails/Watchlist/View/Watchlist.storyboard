@@ -303,27 +303,35 @@
                                             <constraint firstAttribute="height" constant="50" id="WD1-H8-K2g"/>
                                         </constraints>
                                     </stackView>
-                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="8qu-DE-Keg">
-                                        <rect key="frame" x="16" y="70" width="370" height="32"/>
-                                        <segments>
-                                            <segment title="All"/>
-                                            <segment title="Observed"/>
-                                            <segment title="Unobserved"/>
-                                        </segments>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8qu-DE-Keg" userLabel="FilterDropdownButton">
+                                        <rect key="frame" x="16" y="70" width="370" height="35"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="35" id="filter-dropdown-height"/>
+                                        </constraints>
+                                        <inset key="contentEdgeInsets" minX="16" minY="0.0" maxX="16" maxY="0.0"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="filled" title="Filter: All" image="chevron.down" catalog="system" imagePlacement="trailing" imagePadding="8" cornerStyle="capsule" titleAlignment="leading">
+                                            <backgroundConfiguration key="background">
+                                                <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                                            </backgroundConfiguration>
+                                            <color key="baseForegroundColor" systemColor="labelColor"/>
+                                        </buttonConfiguration>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="boolean" keyPath="shadow" value="YES"/>
+                                        </userDefinedRuntimeAttributes>
                                         <connections>
-                                            <action selector="segmentChanged:" destination="zap-jy-tCo" eventType="valueChanged" id="seg-action-id"/>
+                                            <action selector="filterDropdownTapped:" destination="zap-jy-tCo" eventType="touchUpInside" id="filter-dropdown-action-id"/>
                                         </connections>
-                                    </segmentedControl>
+                                    </button>
                                 </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstItem="E4j-Cd-9gw" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="6An-v1-aSP"/>
                                     <constraint firstItem="E4j-Cd-9gw" firstAttribute="top" secondItem="ZaP-mE-nYF" secondAttribute="top" constant="10" id="8Vw-Vk-hYo"/>
-                                    <constraint firstAttribute="bottom" secondItem="8qu-DE-Keg" secondAttribute="bottom" constant="29" id="CYc-wf-M4Z"/>
+                                    <constraint firstAttribute="bottom" secondItem="8qu-DE-Keg" secondAttribute="bottom" constant="26" id="CYc-wf-M4Z"/>
                                     <constraint firstItem="8qu-DE-Keg" firstAttribute="top" secondItem="E4j-Cd-9gw" secondAttribute="bottom" constant="10" id="IfM-rD-Id3"/>
                                     <constraint firstAttribute="trailing" secondItem="E4j-Cd-9gw" secondAttribute="trailing" constant="16" id="UkN-9S-BPG"/>
                                     <constraint firstItem="8qu-DE-Keg" firstAttribute="leading" secondItem="ZaP-mE-nYF" secondAttribute="leading" constant="16" id="aEC-Md-Mh1"/>
-                                    <constraint firstAttribute="trailing" secondItem="8qu-DE-Keg" secondAttribute="trailing" constant="16" id="eQx-Iy-yvI"/>
                                 </constraints>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="yez-to-lUt">
@@ -494,7 +502,7 @@
                     <connections>
                         <outlet property="headerView" destination="ZaP-mE-nYF" id="bP7-M0-MJ4"/>
                         <outlet property="searchBar" destination="htl-r6-KZI" id="dX7-rx-sLI"/>
-                        <outlet property="segmentedControl" destination="8qu-DE-Keg" id="3ak-rq-Tjb"/>
+                        <outlet property="filterDropdownButton" destination="8qu-DE-Keg" id="3ak-rq-Tjb"/>
                         <outlet property="tableView" destination="yez-to-lUt" id="YKE-Nn-i0H"/>
                         <segue destination="SpeciesSelectionVC" kind="show" identifier="ShowSpeciesSelection" id="WlZ-eO-mfp"/>
                         <segue destination="uAV-Lc-SQb" kind="show" identifier="ShowObservedDetail" id="Q3h-G3-Lju"/>

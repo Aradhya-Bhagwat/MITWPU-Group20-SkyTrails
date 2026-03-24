@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import SwiftData
 
 /// Service responsible for orchestrating the complex logic of saving or updating watchlist entries
 @MainActor
@@ -69,6 +70,10 @@ final class WatchlistEntryOrchestrationService {
                     try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
                 }
                 
+                // Invalidate cache and post notification for UI update
+                manager.invalidateMyWatchlistCache()
+                NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
+                
                 return SaveResult(success: true, bird: existingEntry.bird, error: nil, noMatchingWatchlists: false)
             } catch {
                 return SaveResult(success: false, bird: existingEntry.bird, error: error, noMatchingWatchlists: false)
@@ -115,6 +120,9 @@ final class WatchlistEntryOrchestrationService {
                         }
                     }
                 }
+                
+                // Ensure all changes are persisted
+                try? manager.context.save()
             } else {
                 guard let targetWatchlistId = params.watchlistId else {
                     return SaveResult(success: false, bird: birdToUse, error: NSError(domain: "WatchlistOrchestration", code: 2, userInfo: [NSLocalizedDescriptionKey: "No target watchlist ID"]), noMatchingWatchlists: false)
@@ -140,7 +148,14 @@ final class WatchlistEntryOrchestrationService {
                         try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
                     }
                 }
+                
+                // Ensure all changes are persisted
+                try? manager.context.save()
             }
+            
+            // Invalidate cache and post notification for UI update
+            manager.invalidateMyWatchlistCache()
+            NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
             
             return SaveResult(success: true, bird: birdToUse, error: nil, noMatchingWatchlists: false)
         } catch WatchlistError.noMatchingWatchlists {

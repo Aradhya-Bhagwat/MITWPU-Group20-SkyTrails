@@ -45,7 +45,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     @objc private func didTapLeftBadge() {
         showBadgeInfo(
             title: "Birds to Observe",
-            message: "The green icon shows the total number of species included in this watchlist for you to discover."
+            message: "The green icon shows how many species in this watchlist are still unobserved."
         )
     }
     
@@ -114,6 +114,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     }
     
     func configure(with dto: WatchlistSummaryDTO) {
+        let unobservedCount = max(dto.stats.totalCount - dto.stats.observedCount, 0)
         updateCardAppearance()
         titleLabel.text = dto.title
         if !dto.subtitle.isEmpty {
@@ -128,7 +129,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         } else {
             dateLabel.isHidden = true
         }
-        leftBadgeLabel.addIcon(text: "\(dto.stats.totalCount)", iconName: "bird")
+        leftBadgeLabel.addIcon(text: "\(unobservedCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
         if let imageName = dto.image {
             if let userPhoto = loadUserPhoto(named: imageName) {

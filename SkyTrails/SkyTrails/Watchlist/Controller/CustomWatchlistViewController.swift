@@ -26,9 +26,19 @@ class CustomWatchlistViewController: UIViewController {
             name: WatchlistManager.didLoadDataNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleWatchlistDataDidChange(_:)),
+            name: .watchlistDataDidChange,
+            object: nil
+        )
     }
 
     @objc private func handleDataLoaded(_ notification: Notification) {
+        loadData()
+    }
+    
+    @objc private func handleWatchlistDataDidChange(_ notification: Notification) {
         loadData()
     }
     
@@ -129,6 +139,10 @@ class CustomWatchlistViewController: UIViewController {
            let destVC = segue.destination as? EditWatchlistDetailViewController {
             destVC.watchlistType = .custom
         }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 extension CustomWatchlistViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {

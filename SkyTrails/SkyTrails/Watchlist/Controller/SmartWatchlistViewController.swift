@@ -21,7 +21,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	private let manager = WatchlistManager.shared
 	@IBOutlet weak var tableView: UITableView!
 	@IBOutlet weak var searchBar: UISearchBar!
-	@IBOutlet weak var segmentedControl: UISegmentedControl!
+	@IBOutlet weak var filterDropdownButton: UIButton!
 	@IBOutlet weak var headerView: UIView!
 	var watchlistType: WatchlistPresentationMode = .custom
 	var watchlistTitle: String = "Watchlist"
@@ -34,6 +34,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	private var currentList: [WatchlistEntry] = []
 	private var currentFilter: SmartWatchlistFilterOption = .all
 	private var currentSortOption: SmartWatchlistSortOption = .nameAZ
+	private var pendingRefreshWorkItem: DispatchWorkItem?
+	private var needsRefreshOnAppear = false
+	private let refreshDebounceDelay: TimeInterval = 0.1
     
     private var isShowingRecommendations = false
     private var recommendedBirds: [Bird] = []
@@ -52,10 +55,22 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			name: WatchlistManager.didLoadDataNotification,
 			object: nil
 		)
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(handleWatchlistDataDidChange(_:)),
+			name: .watchlistDataDidChange,
+			object: nil
+		)
 	}
 	
 	@objc private func handleDataLoaded(_ notification: Notification) {
-		refreshData()
+		print("[ObservedDebug] SmartWatchlistViewController: handleDataLoaded called")
+		scheduleRefresh(reason: "didLoadDataNotification")
+	}
+	
+	@objc private func handleWatchlistDataDidChange(_ notification: Notification) {
+		print("[ObservedDebug] SmartWatchlistViewController: handleWatchlistDataDidChange called")
+		scheduleRefresh(reason: "watchlistDataDidChange")
 	}
 	
 	@IBAction func didTapEdit(_ sender: Any) {
@@ -72,14 +87,52 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
+		print("[ObservedDebug] SmartWatchlistViewController: viewWillAppear")
 		manager.onDataLoaded { [weak self] _ in
 			DispatchQueue.main.async {
-				self?.refreshData()
+				print("[ObservedDebug] SmartWatchlistViewController: onDataLoaded callback")
+				self?.scheduleRefresh(reason: "onDataLoadedCallback", immediateWhenVisible: true)
 			}
 		}
 	}
 	
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		
+		if needsRefreshOnAppear {
+			scheduleRefresh(reason: "viewDidAppear", immediateWhenVisible: true)
+		}
+	}
+	
+	private func scheduleRefresh(reason: String, immediateWhenVisible: Bool = false) {
+		pendingRefreshWorkItem?.cancel()
+		
+		guard isViewLoaded, view.window != nil else {
+			needsRefreshOnAppear = true
+			print("[ObservedDebug] SmartWatchlistViewController: deferring refresh for \(reason) until visible")
+			return
+		}
+		
+		let workItem = DispatchWorkItem { [weak self] in
+			guard let self = self else { return }
+			self.pendingRefreshWorkItem = nil
+			self.needsRefreshOnAppear = false
+			print("[ObservedDebug] SmartWatchlistViewController: executing refresh for \(reason)")
+			self.refreshData()
+		}
+		
+		pendingRefreshWorkItem = workItem
+		
+		if immediateWhenVisible {
+			workItem.perform()
+			return
+		}
+		
+		DispatchQueue.main.asyncAfter(deadline: .now() + refreshDebounceDelay, execute: workItem)
+	}
+	
 	private func refreshData() {
+        print("[ObservedDebug] SmartWatchlistViewController: refreshData called")
         do {
             isShowingRecommendations = false
             
@@ -88,6 +141,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 mode: watchlistType,
                 watchlistId: currentWatchlistId
             )
+            print("[ObservedDebug] SmartWatchlistViewController: fetchEntriesForMode returned \(result.observed.count) observed, \(result.toObserve.count) unobserved")
             
             // Update properties from result
             observedEntries = result.observed
@@ -100,13 +154,20 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             // Special handling for myWatchlist mode - preserve sourceWatchlists assignment
             if watchlistType == .myWatchlist {
                 sourceWatchlists = try manager.fetchWatchlists()
+                print("[ObservedDebug] SmartWatchlistViewController: fetched \(sourceWatchlists.count) watchlists for myWatchlist")
             }
         } catch {
+            print("[ObservedDebug] SmartWatchlistViewController: Error in refreshData - \(error)")
         }
 		
 		applyFilters()
 	}
 	
+	deinit {
+		pendingRefreshWorkItem?.cancel()
+		NotificationCenter.default.removeObserver(self)
+	}
+		
 	private func setupUI() {
 		self.navigationItem.title = watchlistTitle
 		self.tabBarItem.title = "Watchlist"
@@ -130,7 +191,14 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		let searchIsDarkMode = traitCollection.userInterfaceStyle == .dark
 		searchBar.searchTextField.backgroundColor = searchIsDarkMode ? .secondarySystemBackground : .systemBackground
 		searchBar.delegate = self
-		segmentedControl.selectedSegmentIndex = currentFilter.rawValue
+		
+		// Configure filter dropdown button
+		updateFilterButtonTitle()
+		if #available(iOS 14.0, *) {
+			filterDropdownButton.menu = buildFilterOptionsMenu()
+			filterDropdownButton.showsMenuAsPrimaryAction = true
+		}
+		
 		if #available(iOS 14.0, *) {
 			configureFilterButtonMenusIfAvailable()
 		}
@@ -145,27 +213,28 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
-            do {
-                try self?.manager.clearWatchlist(id: id)
-                self?.refreshData()
-            } catch {
-            }
-        })
+	        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+	        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
+	            do {
+	                try self?.manager.clearWatchlist(id: id)
+	                self?.scheduleRefresh(reason: "clearWatchlist", immediateWhenVisible: true)
+	            } catch {
+	            }
+	        })
         
         present(alert, animated: true)
 	}
 
-	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
-		currentFilter = SmartWatchlistFilterOption(rawValue: sender.selectedSegmentIndex) ?? .all
-		applyFilters()
+	@IBAction func filterDropdownTapped(_ sender: UIButton) {
+		// UIMenu will be configured in setupUI for iOS 14+
 	}
 	
 	func applyFilters() {
+		print("[ObservedDebug] SmartWatchlistViewController: applyFilters called")
 		let searchText = searchBar.text ?? ""
 		
         if isShowingRecommendations {
+            print("[ObservedDebug] SmartWatchlistViewController: showing recommendations, skipping normal filters")
             tableView.reloadData()
             return
         }
@@ -183,6 +252,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			
 			allWatchlists = filteredResults.map { $0.0 }
 			filteredSections = filteredResults.map { sortEntries($0.1) }
+			print("[ObservedDebug] SmartWatchlistViewController: filteredResults count = \(filteredResults.count)")
 		} else {
 			let sourceList = entriesForCurrentFilter()
 			currentList = sourceList.filter { entry in
@@ -190,6 +260,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 				return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
 			}
 			currentList = sortEntries(currentList)
+			print("[ObservedDebug] SmartWatchlistViewController: currentList count = \(currentList.count)")
 		}
 		
         tableView.reloadData()
@@ -337,6 +408,66 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		}
 	}
 
+	private func updateFilterButtonTitle() {
+		let filterText: String
+		switch currentFilter {
+		case .all:
+			filterText = "All"
+		case .observed:
+			filterText = "Observed"
+		case .unobserved:
+			filterText = "Unobserved"
+		}
+		
+		var config = filterDropdownButton.configuration
+		config?.title = "Filter: \(filterText)"
+		filterDropdownButton.configuration = config
+	}
+
+	@available(iOS 14.0, *)
+	private func buildFilterOptionsMenu() -> UIMenu {
+		let allAction = UIAction(
+			title: "All",
+			image: nil,
+			state: currentFilter == .all ? .on : .off
+		) { [weak self] _ in
+			self?.currentFilter = .all
+			self?.updateFilterButtonTitle()
+			self?.applyFilters()
+			if #available(iOS 14.0, *) {
+				self?.filterDropdownButton.menu = self?.buildFilterOptionsMenu()
+			}
+		}
+		
+		let observedAction = UIAction(
+			title: "Observed",
+			image: nil,
+			state: currentFilter == .observed ? .on : .off
+		) { [weak self] _ in
+			self?.currentFilter = .observed
+			self?.updateFilterButtonTitle()
+			self?.applyFilters()
+			if #available(iOS 14.0, *) {
+				self?.filterDropdownButton.menu = self?.buildFilterOptionsMenu()
+			}
+		}
+		
+		let unobservedAction = UIAction(
+			title: "Unobserved",
+			image: nil,
+			state: currentFilter == .unobserved ? .on : .off
+		) { [weak self] _ in
+			self?.currentFilter = .unobserved
+			self?.updateFilterButtonTitle()
+			self?.applyFilters()
+			if #available(iOS 14.0, *) {
+				self?.filterDropdownButton.menu = self?.buildFilterOptionsMenu()
+			}
+		}
+		
+		return UIMenu(title: "", children: [allAction, observedAction, unobservedAction])
+	}
+
 	private func presentAddOptions(sender: Any) {
 		let alert = UIAlertController(title: "Add Bird", message: nil, preferredStyle: .actionSheet)
 		alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
@@ -378,8 +509,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	private func deleteEntry(_ entry: WatchlistEntry) {
+		print("[ObservedDebug] SmartWatchlistViewController: deleteEntry called for entry id \(entry.id)")
 		try? manager.deleteEntry(entryId: entry.id)
-		refreshData()
 	}
 	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -547,14 +678,17 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         present(alert, animated: true)
     }
     
-    private func addBirdToMyWatchlist(_ bird: Bird, observed: Bool) {
-        Task {
-            do {
-                let id = try await manager.ensureMyWatchlistExists()
-                try manager.addBirds([bird], to: id, asObserved: observed)
-                refreshData()
-            } catch {
-            }
-        }
-    }
+		    private func addBirdToMyWatchlist(_ bird: Bird, observed: Bool) {
+		        print("[ObservedDebug] SmartWatchlistViewController: addBirdToMyWatchlist called for bird \(bird.name), observed: \(observed)")
+		        Task {
+		            do {
+	                let id = try await manager.ensureMyWatchlistExists()
+	                print("[ObservedDebug] SmartWatchlistViewController: target watchlist id: \(id)")
+	                try manager.addBirds([bird], to: id, asObserved: observed)
+	                print("[ObservedDebug] SmartWatchlistViewController: addBirds successful")
+	            } catch {
+	                print("[ObservedDebug] SmartWatchlistViewController: error adding bird: \(error)")
+		            }
+		        }
+		    }
 }

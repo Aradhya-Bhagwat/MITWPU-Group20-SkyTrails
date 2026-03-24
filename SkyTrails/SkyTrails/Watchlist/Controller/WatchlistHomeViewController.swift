@@ -9,6 +9,10 @@ class WatchlistHomeViewController: UIViewController {
 	private var customWatchlists: [WatchlistSummaryDTO] = []
 	private var sharedWatchlists: [WatchlistSummaryDTO] = []
 	private var globalStats: WatchlistStatsDTO?
+	
+	// Debouncing for data reload
+	private var reloadWorkItem: DispatchWorkItem?
+	private let reloadDebounceDelay: TimeInterval = 0.1 // 100ms
 	enum WatchlistSection: Int, CaseIterable {
 		case myWatchlist
 		case customWatchlist
@@ -48,6 +52,13 @@ class WatchlistHomeViewController: UIViewController {
 		setupUI()
 		setupCollectionView()
 		
+		// Register for data change notifications
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(handleWatchlistDataChange),
+			name: .watchlistDataDidChange,
+			object: nil
+		)
 		
 		loadData()
 	}
@@ -74,8 +85,40 @@ class WatchlistHomeViewController: UIViewController {
 				}
 				self.summaryCardCollectionView.reloadData()
 			} catch {
+				// Show error alert to user
+				guard self.presentedViewController == nil else { return }
+				let alert = UIAlertController(
+					title: "Failed to Load Watchlists",
+					message: "Could not refresh your watchlist data. Please try again.",
+					preferredStyle: .alert
+				)
+				alert.addAction(UIAlertAction(title: "Retry", style: .default) { [weak self] _ in
+					self?.loadData()
+				})
+				alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+				self.present(alert, animated: true)
 			}
 		}
+	}
+	
+	@objc private func handleWatchlistDataChange() {
+		// Cancel pending reload if exists
+		reloadWorkItem?.cancel()
+		
+		// Create new work item
+		let workItem = DispatchWorkItem { [weak self] in
+			self?.loadData()
+		}
+		
+		reloadWorkItem = workItem
+		
+		// Schedule reload after debounce delay
+		DispatchQueue.main.asyncAfter(deadline: .now() + reloadDebounceDelay, execute: workItem)
+	}
+	
+	deinit {
+		reloadWorkItem?.cancel()
+		NotificationCenter.default.removeObserver(self)
 	}
 	
 	private func prefetchBirdImages() {
@@ -488,7 +531,8 @@ extension WatchlistHomeViewController {
 		let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 		let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 		let fileURL = photoDir.appendingPathComponent(imagePath)
-		if let diskImage = UIImage(contentsOfFile: fileURL.path) {
+		if FileManager.default.fileExists(atPath: fileURL.path),
+		   let diskImage = UIImage(contentsOfFile: fileURL.path) {
 			return diskImage
 		}
 		return UIImage(named: imagePath)

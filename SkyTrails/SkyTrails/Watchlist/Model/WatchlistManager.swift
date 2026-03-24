@@ -222,6 +222,8 @@ final class WatchlistManager: WatchlistRepository {
     
     func deleteWatchlist(id: UUID) async throws {
         try persistence.deleteWatchlist(id: id)
+        query.invalidateMyWatchlistCache()
+        NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
     }
     
     func clearWatchlist(id: UUID) throws {
@@ -299,28 +301,36 @@ final class WatchlistManager: WatchlistRepository {
         )
     }
     func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus? = nil) throws -> [WatchlistEntry] {
+        print("[ObservedDebug] WatchlistManager: fetchEntries for \(watchlistID), status: \(String(describing: status))")
         if watchlistID == WatchlistConstants.myWatchlistID {
             let identifier = WatchlistIdentifier.virtual
             let filter = WatchlistQueryFilter(status: status)
             let dtos = try query.fetchEntries(identifier: identifier, filter: filter)
+            print("[ObservedDebug] WatchlistManager: virtual watchlist query returned \(dtos.count) DTOs")
             return dtos.compactMap { dto in
                 try? persistence.fetchEntry(id: dto.id)
             }
         }
         
-        return try persistence.fetchEntries(watchlistID: watchlistID, status: status)
+        let result = try persistence.fetchEntries(watchlistID: watchlistID, status: status)
+        print("[ObservedDebug] WatchlistManager: persistence fetch returned \(result.count) entries")
+        return result
     }
     
     func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) throws {
+        print("[ObservedDebug] WatchlistManager: addBirds (\(birds.count)) to \(watchlistId), observed: \(asObserved)")
         var targetWatchlistId = watchlistId
         let myWatchlistId = WatchlistConstants.myWatchlistID
         if watchlistId == myWatchlistId {
             let customLists = try fetchWatchlists(type: .custom)
             if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
                 targetWatchlistId = existing.watchlist_id
+                print("[ObservedDebug] WatchlistManager: using existing My Watchlist id \(targetWatchlistId)")
             } else if let first = customLists.first {
                 targetWatchlistId = first.watchlist_id
+                print("[ObservedDebug] WatchlistManager: using first custom watchlist id \(targetWatchlistId)")
             } else {
+                print("[ObservedDebug] WatchlistManager: creating new My Watchlist")
                 _ = try addWatchlist(
                     title: "My Watchlist",
                     location: "General",
@@ -329,7 +339,9 @@ final class WatchlistManager: WatchlistRepository {
                 )
                 if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
                     targetWatchlistId = newWl.watchlist_id
+                    print("[ObservedDebug] WatchlistManager: new My Watchlist id \(targetWatchlistId)")
                 } else {
+                    print("[ObservedDebug] WatchlistManager: failed to create fallback watchlist")
                     throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
                 }
             }
@@ -340,6 +352,9 @@ final class WatchlistManager: WatchlistRepository {
         if let watchlist = try? persistence.fetchWatchlist(id: targetWatchlistId) {
             refreshCoverImage(for: watchlist)
         }
+        query.invalidateMyWatchlistCache()
+        NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
+        print("[ObservedDebug] WatchlistManager: addBirds finished for \(targetWatchlistId)")
     }
     
     func updateEntry(
@@ -383,11 +398,15 @@ final class WatchlistManager: WatchlistRepository {
     }
     
     func deleteEntry(entryId: UUID) throws {
+        print("[ObservedDebug] WatchlistManager: deleteEntry called for \(entryId)")
         let watchlist = (try? persistence.fetchEntry(id: entryId))?.watchlist
         try persistence.deleteEntry(id: entryId)
         if let watchlist = watchlist {
             refreshCoverImage(for: watchlist)
         }
+        query.invalidateMyWatchlistCache()
+        NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
+        print("[ObservedDebug] WatchlistManager: deleteEntry finished for \(entryId)")
     }
     
     func toggleObservationStatus(entryId: UUID) throws {
@@ -395,6 +414,8 @@ final class WatchlistManager: WatchlistRepository {
         if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
             refreshCoverImage(for: watchlist)
         }
+        query.invalidateMyWatchlistCache()
+        NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
     }
     
     func updateEntryNotifyUpcoming(entryId: UUID, notify: Bool) throws {
@@ -456,10 +477,8 @@ final class WatchlistManager: WatchlistRepository {
     }
     
     private func refreshCoverImage(for watchlist: Watchlist) {
-        Task {
-            watchlist.updateCoverImage()
-            try? context.save()
-        }
+        watchlist.updateCoverImage()
+        try? context.save()
     }
     func applyRules(to watchlistId: UUID) async throws {
         try await rules.applyRules(to: watchlistId)
@@ -671,6 +690,10 @@ final class WatchlistManager: WatchlistRepository {
     
     func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
         return query.buildMyWatchlistDTO(from: allLists)
+    }
+
+    func invalidateMyWatchlistCache() {
+        query.invalidateMyWatchlistCache()
     }
     
     func toDTO(_ model: Watchlist) -> WatchlistSummaryDTO {
