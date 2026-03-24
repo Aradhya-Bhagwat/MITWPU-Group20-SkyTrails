@@ -760,12 +760,12 @@
                                 </cells>
                             </collectionView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="irx-mu-IBT">
-                                <rect key="frame" x="8" y="718" width="386" height="80"/>
+                                <rect key="frame" x="8" y="252" width="80" height="458"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="80" id="B6h-jk-91o"/>
+                                    <constraint firstAttribute="width" constant="80" id="B6h-jk-91o"/>
                                 </constraints>
-                                <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="NqA-es-k4z">
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="NqA-es-k4z">
                                     <size key="itemSize" width="128" height="128"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
@@ -773,7 +773,7 @@
                                 </collectionViewFlowLayout>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="VariationCell" id="0yn-US-wc1" customClass="VariationCell" customModule="SkyTrails" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="-24" width="128" height="128"/>
+                                        <rect key="frame" x="-24" y="0.0" width="128" height="128"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="GGt-FF-m25">
                                             <rect key="frame" x="0.0" y="0.0" width="128" height="128"/>
@@ -783,7 +783,7 @@
                                 </cells>
                             </collectionView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cww-ay-CWI">
-                                <rect key="frame" x="0.0" y="252" width="402" height="458"/>
+                                <rect key="frame" x="96" y="252" width="298" height="546"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
                         </subviews>
@@ -791,15 +791,15 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="O4L-s3-kva" firstAttribute="top" secondItem="naV-bR-PqP" secondAttribute="top" id="2mP-sm-UX2"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="Cww-ay-CWI" secondAttribute="trailing" id="GCO-tl-Urx"/>
-                            <constraint firstItem="Cww-ay-CWI" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" id="Y2N-54-aZU"/>
+                            <constraint firstItem="Cww-ay-CWI" firstAttribute="leading" secondItem="irx-mu-IBT" secondAttribute="trailing" constant="8" id="Y2N-54-aZU"/>
                             <constraint firstItem="irx-mu-IBT" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="8" id="aV9-aT-ekX"/>
                             <constraint firstItem="Cww-ay-CWI" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="canvas-top"/>
                             <constraint firstItem="O4L-s3-kva" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="8" id="cat-leading"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="O4L-s3-kva" secondAttribute="trailing" constant="8" id="cat-trailing"/>
-                            <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="Cww-ay-CWI" secondAttribute="bottom" constant="8" id="icp-v3-ZQR"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="irx-mu-IBT" secondAttribute="bottom" constant="8" id="var-bottom"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="irx-mu-IBT" secondAttribute="trailing" constant="8" id="var-trailing"/>
+                            <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="Cww-ay-CWI" secondAttribute="bottom" constant="8" id="ccK-dl-Z0V"/>
+                            <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="icp-v3-ZQR"/>
+                            <constraint firstAttribute="bottom" secondItem="irx-mu-IBT" secondAttribute="bottom" constant="164" id="var-bottom"/>
+                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="Cww-ay-CWI" secondAttribute="trailing" constant="8" id="var-trailing"/>
                         </constraints>
                         <variation key="default">
                             <mask key="subviews">
