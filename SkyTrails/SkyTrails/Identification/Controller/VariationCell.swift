@@ -2,6 +2,7 @@ import UIKit
 
 class VariationCell: UICollectionViewCell {
 	@IBOutlet weak var variationImageView: UIImageView!
+    @IBOutlet weak var chevronImageView: UIImageView!
 
     private var isSelectedCell = false
 
@@ -21,9 +22,24 @@ class VariationCell: UICollectionViewCell {
             return
         }
 
+        variationImageView.isHidden = false
+        chevronImageView?.isHidden = true
+        
         imageView.image = image ?? UIImage(named: "id_icn_field_marks")
         imageView.tintColor = .label
         isSelectedCell = isSelected
+        updateAppearance()
+    }
+    
+    func configureAsChevron(isExpanded: Bool) {
+        variationImageView.isHidden = true
+        chevronImageView.isHidden = false
+        
+        let chevronImage = isExpanded ? "chevron.up" : "chevron.down"
+        chevronImageView.image = UIImage(systemName: chevronImage)
+        chevronImageView.tintColor = .systemGray
+        
+        isSelectedCell = false
         updateAppearance()
     }
 

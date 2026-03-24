@@ -13,6 +13,7 @@ class GUIViewController: UIViewController {
     private var categories: [BirdFieldMark] = []
     private var currentCategoryIndex: Int = 0
     private var selectedVariations: [String: String] = [:]
+    private var isVariationsExpanded: Bool = false
     
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
@@ -144,6 +145,7 @@ class GUIViewController: UIViewController {
     func selectCategory(at index: Int) {
         guard index < categories.count else { return }
         currentCategoryIndex = index
+        isVariationsExpanded = false
         let mark = categories[index]
         
         categoryLabel.text = mark.area
@@ -319,7 +321,15 @@ class GUIViewController: UIViewController {
 extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return collectionView == categoriesCollectionView ? categories.count : getVariantsForCurrentCategory().count
+        if collectionView == categoriesCollectionView {
+            return categories.count
+        } else {
+            let variants = getVariantsForCurrentCategory()
+            if variants.isEmpty {
+                return 0
+            }
+            return isVariationsExpanded ? variants.count + 1 : 2
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -331,24 +341,31 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
-            let variant = getVariantsForCurrentCategory()[indexPath.row]
+            let variants = getVariantsForCurrentCategory()
             let categoryName = categories[currentCategoryIndex].area
             
-            let isSelected = selectedVariations[categoryName] == variant.name
-            let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
-            let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
-            let thumb = variationThumbnailCache[cacheKey]
-                ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
-                ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
-            cell.configure(image: thumb, isSelected: isSelected)
-            loadVariationThumbnailRemotely(
-                for: cell,
-                at: indexPath,
-                shapeID: shapeID,
-                categoryName: categoryName,
-                variantName: variant.name,
-                isSelected: isSelected
-            )
+            let isChevronCell = isVariationsExpanded ? (indexPath.row == variants.count) : (indexPath.row == 1)
+            
+            if isChevronCell {
+                cell.configureAsChevron(isExpanded: isVariationsExpanded)
+            } else {
+                let variant = variants[indexPath.row]
+                let isSelected = selectedVariations[categoryName] == variant.name
+                let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
+                let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
+                let thumb = variationThumbnailCache[cacheKey]
+                    ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
+                    ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
+                cell.configure(image: thumb, isSelected: isSelected)
+                loadVariationThumbnailRemotely(
+                    for: cell,
+                    at: indexPath,
+                    shapeID: shapeID,
+                    categoryName: categoryName,
+                    variantName: variant.name,
+                    isSelected: isSelected
+                )
+            }
             return cell
         }
     }
@@ -357,21 +374,23 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         if collectionView == categoriesCollectionView {
             selectCategory(at: indexPath.row)
         } else {
-            let variant = getVariantsForCurrentCategory()[indexPath.row]
-            let currentMark = categories[currentCategoryIndex]
-            let previousVariantName = selectedVariations[currentMark.area]
+            let variants = getVariantsForCurrentCategory()
+            let isChevronCell = isVariationsExpanded ? (indexPath.row == variants.count) : (indexPath.row == 1)
             
-            selectedVariations[currentMark.area] = variant.name
-            viewModel.toggleVariant(variant, for: currentMark)
-            var indexPathsToReload: [IndexPath] = [indexPath]
-            if let previousVariantName,
-               let previousIndex = getVariantsForCurrentCategory().firstIndex(where: { $0.name == previousVariantName }),
-               previousIndex != indexPath.row {
-                indexPathsToReload.append(IndexPath(item: previousIndex, section: 0))
+            if isChevronCell {
+                isVariationsExpanded = !isVariationsExpanded
+                variationsCollectionView.reloadData()
+            } else {
+                let variant = variants[indexPath.row]
+                let currentMark = categories[currentCategoryIndex]
+                
+                selectedVariations[currentMark.area] = variant.name
+                viewModel.toggleVariant(variant, for: currentMark)
+                
+                variationsCollectionView.reloadData()
+                updateCanvas(category: currentMark.area, variant: variant.name)
+                updateNextButtonState()
             }
-            variationsCollectionView.reloadItems(at: indexPathsToReload)
-            updateCanvas(category: currentMark.area, variant: variant.name)
-            updateNextButtonState()
         }
     }
     
@@ -380,6 +399,6 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 15
+        return 8
     }
 }
