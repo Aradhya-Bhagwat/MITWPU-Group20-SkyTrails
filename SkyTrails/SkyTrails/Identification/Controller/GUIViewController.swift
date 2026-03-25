@@ -84,6 +84,8 @@ class GUIViewController: UIViewController {
         categoriesCollectionView.dataSource = self
         variationsCollectionView.backgroundColor = .clear
         categoriesCollectionView.backgroundColor = .clear
+        categoriesCollectionView.showsHorizontalScrollIndicator = false
+        categoriesCollectionView.isScrollEnabled = false
         
         if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             layout.estimatedItemSize = .zero
@@ -435,7 +437,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return collectionView == categoriesCollectionView ? CGSize(width: 78, height: 78) : CGSize(width: 78, height: 78)
+        return collectionView == categoriesCollectionView ? CGSize(width: 147, height: 100) : CGSize(width: 78, height: 78)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
