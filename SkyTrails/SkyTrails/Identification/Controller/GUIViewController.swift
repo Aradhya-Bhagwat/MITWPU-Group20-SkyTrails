@@ -316,14 +316,26 @@ class GUIViewController: UIViewController {
         let variants = getVariantsForCurrentCategory()
         guard currentCategoryIndex < categories.count else { return variants }
         let categoryName = categories[currentCategoryIndex].area
-        guard let selectedName = selectedVariations[categoryName],
-              let selectedIndex = variants.firstIndex(where: { $0.name == selectedName }) else {
-            return variants
+
+        if let selectedName = selectedVariations[categoryName],
+           let selectedIndex = variants.firstIndex(where: { $0.name == selectedName }) {
+            var ordered = variants
+            let selected = ordered.remove(at: selectedIndex)
+            ordered.insert(selected, at: 0)
+            return ordered
         }
-        var ordered = variants
-        let selected = ordered.remove(at: selectedIndex)
-        ordered.insert(selected, at: 0)
-        return ordered
+
+        let preferredNames = ["default", "plain", "solid"]
+        for preferred in preferredNames {
+            if let index = variants.firstIndex(where: { cleanForFilename($0.name) == preferred }) {
+                var ordered = variants
+                let preferredVariant = ordered.remove(at: index)
+                ordered.insert(preferredVariant, at: 0)
+                return ordered
+            }
+        }
+
+        return variants
     }
     
     @IBAction func nextTapped(_ sender: Any) {
@@ -362,49 +374,10 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             
             if isChevronCell {
                 cell.configureAsChevron(isExpanded: isVariationsExpanded)
-            } else if indexPath.row == 0 {
-                let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
-                let cleanCategory = cleanForFilename(categoryName)
-                let preferredNames = ["default", "plain", "solid"]
-                var displayVariant: FieldMarkVariant? = nil
-                var thumb: UIImage? = nil
-
-                for preferred in preferredNames {
-                    if let match = variants.first(where: { cleanForFilename($0.name) == preferred }) {
-                        let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: match.name)
-                        let candidate = variationThumbnailCache[cacheKey]
-                            ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
-                            ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: match.name)
-                        if candidate != nil {
-                            displayVariant = match
-                            thumb = candidate
-                            break
-                        }
-                    }
-                }
-
-                if displayVariant == nil {
-                    let fallbackName = "id_fieldmark_\(cleanCategory)"
-                    thumb = UIImage(named: fallbackName) ?? UIImage(named: "id_icn_field_marks")
-                }
-
-                let isSelected = displayVariant != nil && selectedVariations[categoryName] == displayVariant!.name
-                cell.configure(image: thumb, isSelected: isSelected)
-
-                if let variant = displayVariant {
-                    loadVariationThumbnailRemotely(
-                        for: cell,
-                        at: indexPath,
-                        shapeID: shapeID,
-                        categoryName: categoryName,
-                        variantName: variant.name,
-                        isSelected: isSelected
-                    )
-                }
             } else {
-                let variantIndex = indexPath.row - 1
+                let variantIndex = indexPath.row == 0 ? 0 : indexPath.row - 1
                 let variant = variants[variantIndex]
-                let isSelected = selectedVariations[categoryName] == variant.name
+                let isSelected = indexPath.row == 0 || selectedVariations[categoryName] == variant.name
                 let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
                 let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
                 let thumb = variationThumbnailCache[cacheKey]
