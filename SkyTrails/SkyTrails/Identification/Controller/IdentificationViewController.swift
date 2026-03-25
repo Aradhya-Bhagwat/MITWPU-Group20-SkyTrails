@@ -100,12 +100,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     private func attachProfileLocationHeaderViewIfNeeded() {
-        guard let navBar = navigationController?.navigationBar,
-              profileLocationHeaderView.superview == nil else { return }
-        navBar.addSubview(profileLocationHeaderView)
+        guard profileLocationHeaderView.superview == nil else { return }
+        view.addSubview(profileLocationHeaderView)
         profileLocationHeaderConstraints = [
-            profileLocationHeaderView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor, constant: -16),
-            profileLocationHeaderView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor, constant: -8)
+            profileLocationHeaderView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            profileLocationHeaderView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8)
         ]
         NSLayoutConstraint.activate(profileLocationHeaderConstraints)
     }
