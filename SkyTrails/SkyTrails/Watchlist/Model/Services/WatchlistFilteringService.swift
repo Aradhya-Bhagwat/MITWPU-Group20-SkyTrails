@@ -16,7 +16,99 @@ final class WatchlistFilteringService {
         self.manager = manager
     }
     
-    // MARK: - Unique Entry Fetching
+    // MARK: - Enhanced Filtering API
+    
+    /// Fetches, filters, searches, and sorts entries for a given mode
+    /// This is the primary API for ViewControllers - returns complete, ready-to-display data
+    /// - Parameters:
+    ///   - mode: The watchlist presentation mode
+    ///   - watchlistId: The watchlist ID (for single watchlist modes)
+    ///   - searchText: Optional search filter
+    ///   - sortOption: How to sort the results
+    /// - Returns: Complete result with observed, unobserved arrays and counts
+    func fetchFilteredEntries(
+        mode: WatchlistPresentationMode,
+        watchlistId: UUID?,
+        searchText: String?,
+        sortOption: SmartWatchlistSortOption,
+        status: WatchlistEntryStatus? = nil
+    ) throws -> WatchlistEntriesResult {
+        guard let manager = manager else {
+            return WatchlistEntriesResult(
+                observed: [],
+                unobserved: [],
+                observedCount: 0,
+                unobservedCount: 0,
+                totalCount: 0,
+                title: "Watchlist",
+                shouldShowRecommendations: false,
+                recommendedBirds: []
+            )
+        }
+        
+        // Fetch base data
+        let baseResult = try fetchEntriesForMode(mode: mode, watchlistId: watchlistId)
+        
+        // Apply search filter
+        let observed = applySearchFilter(entries: baseResult.observed, searchText: searchText)
+        let unobserved = applySearchFilter(entries: baseResult.toObserve, searchText: searchText)
+        
+        // Apply sorting
+        let sortedObserved = manager.sortingService.sort(entries: observed, by: sortOption)
+        let sortedUnobserved = manager.sortingService.sort(entries: unobserved, by: sortOption)
+        
+        return WatchlistEntriesResult(
+            observed: sortedObserved,
+            unobserved: sortedUnobserved,
+            observedCount: sortedObserved.count,
+            unobservedCount: sortedUnobserved.count,
+            totalCount: sortedObserved.count + sortedUnobserved.count,
+            title: baseResult.title,
+            shouldShowRecommendations: baseResult.shouldShowRecommendations,
+            recommendedBirds: baseResult.recommendedBirds
+        )
+    }
+    
+    /// Fetches entries for a watchlist grouped by status, with search and sort
+    /// Used for myWatchlist mode with section-based display
+    /// - Parameters:
+    ///   - watchlists: Source watchlists to fetch from
+    ///   - status: Filter by status
+    ///   - searchText: Optional search filter
+    ///   - sortOption: How to sort results
+    /// - Returns: Dictionary of watchlist to filtered entries
+    func fetchEntriesGroupedByWatchlist(
+        watchlists: [Watchlist],
+        status: WatchlistEntryStatus?,
+        searchText: String?,
+        sortOption: SmartWatchlistSortOption
+    ) throws -> [(Watchlist, [WatchlistEntry])] {
+        guard let manager = manager else { return [] }
+        
+        let filteredResults = watchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
+            let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)) ?? []
+            let filtered = applySearchFilter(entries: entries, searchText: searchText)
+            let sorted = manager.sortingService.sort(entries: filtered, by: sortOption)
+            return sorted.isEmpty ? nil : (watchlist, sorted)
+        }
+        
+        return filteredResults
+    }
+    
+    // MARK: - Private Helpers
+    
+    private func applySearchFilter(entries: [WatchlistEntry], searchText: String?) -> [WatchlistEntry] {
+        guard let searchText = searchText, !searchText.isEmpty else {
+            return entries
+        }
+        
+        return entries.filter { entry in
+            guard let bird = entry.bird else { return false }
+            return bird.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
+    // MARK: - Unique Entry Fetching (Legacy - kept for backward compatibility)
     
     /// Fetches unique entries from multiple watchlists, deduplicating by bird name
     /// - Parameters:

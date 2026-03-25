@@ -64,6 +64,38 @@ class BirdSmartCell: UITableViewCell {
 		overflowLabel.textAlignment = .center
 	}
 	
+    // MARK: - Enhanced Configuration (Uses ViewModel - NO LOGIC)
+    
+    /// Configure cell with pre-loaded ViewModel (pure display, no I/O, no logic)
+    func configure(with viewModel: BirdEntryCellViewModel) {
+        titleLabel.text = viewModel.birdName
+        birdImageView.image = viewModel.birdImage  // Pre-loaded image
+        
+        if let date = viewModel.observationDate {
+            dateLabel.text = date
+            dateLabel.isHidden = false
+        } else {
+            dateLabel.isHidden = true
+        }
+        
+        if let location = viewModel.location, !location.isEmpty {
+            locationLabel.text = location
+            locationLabel.isHidden = false
+        } else {
+            locationLabel.isHidden = true
+        }
+        
+        if viewModel.shouldShowAvatars {
+            setupAvatars(images: viewModel.avatarNames)
+        } else {
+            avatarStackView.isHidden = true
+            avatarImageViews.forEach { $0.isHidden = true }
+            overflowBadgeView.isHidden = true
+        }
+    }
+    
+    // MARK: - Legacy Configuration (Kept for backward compatibility)
+    
 	func configure(with entry: WatchlistEntry) {
 		guard let bird = entry.bird else { return }
 		titleLabel.text = bird.name
