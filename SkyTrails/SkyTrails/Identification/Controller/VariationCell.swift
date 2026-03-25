@@ -5,6 +5,7 @@ class VariationCell: UICollectionViewCell {
     @IBOutlet weak var chevronImageView: UIImageView!
 
     private var isSelectedCell = false
+    private var isChevronCell = false
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -22,23 +23,25 @@ class VariationCell: UICollectionViewCell {
             return
         }
 
+        isChevronCell = false
         variationImageView.isHidden = false
         chevronImageView?.isHidden = true
-        
+
         imageView.image = image ?? UIImage(named: "id_icn_field_marks")
         imageView.tintColor = .label
         isSelectedCell = isSelected
         updateAppearance()
     }
-    
+
     func configureAsChevron(isExpanded: Bool) {
+        isChevronCell = true
         variationImageView.isHidden = true
         chevronImageView.isHidden = false
-        
+
         let chevronImage = isExpanded ? "chevron.up" : "chevron.down"
         chevronImageView.image = UIImage(systemName: chevronImage)
         chevronImageView.tintColor = .systemGray
-        
+
         isSelectedCell = false
         updateAppearance()
     }
@@ -50,10 +53,26 @@ class VariationCell: UICollectionViewCell {
         let borderColor: UIColor = isDarkMode ? .systemGray3 : .systemGray
         let borderWidth: CGFloat = isDarkMode ? 1 : 1
 
-        layer.masksToBounds = true
-        backgroundColor = isSelectedCell ? selectedColor : unselectedColor
-        layer.borderWidth = isSelectedCell ? 2 : borderWidth
-        layer.borderColor = isSelectedCell ? UIColor.systemBlue.cgColor : borderColor.cgColor
+        if isChevronCell {
+            layer.masksToBounds = false
+            layer.borderWidth = 0
+            layer.borderColor = nil
+            backgroundColor = .clear
+            contentView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+            contentView.layer.cornerRadius = 12
+            contentView.clipsToBounds = true
+            layer.shadowColor = UIColor.black.cgColor
+            layer.shadowOpacity = 0.25
+            layer.shadowOffset = CGSize(width: 0, height: 3)
+            layer.shadowRadius = 6
+        } else {
+            layer.masksToBounds = true
+            backgroundColor = isSelectedCell ? selectedColor : unselectedColor
+            layer.borderWidth = isSelectedCell ? 2 : borderWidth
+            layer.borderColor = isSelectedCell ? UIColor.systemBlue.cgColor : borderColor.cgColor
+            contentView.backgroundColor = .clear
+            layer.shadowOpacity = 0
+        }
     }
 
     private func setupTraitChangeHandling() {
