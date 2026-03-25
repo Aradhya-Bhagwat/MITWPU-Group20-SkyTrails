@@ -16,6 +16,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     var birdResults: [IdentificationCandidate] = []
     private var imageLoadTasks: [IndexPath: Task<Void, Never>] = [:]
+    private let watchlistManager = WatchlistManager.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -275,13 +276,92 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     func didTapAddToWatchlist(for cell: ResultCollectionViewCell) {
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }
-        
-        let alert = UIAlertController(
-            title: "Added",
-            message: "\(bird.commonName) added to watchlist",
-            preferredStyle: .alert
+
+        let existingWatchlistIds = watchlistIdsContainingBird(birdId: bird.bird_id)
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let detailVC = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else { return }
+
+        detailVC.bird = bird
+        detailVC.shouldUseRuleMatching = true
+        detailVC.watchlistId = nil
+        detailVC.onSave = { [weak self] savedBird in
+            guard let self else { return }
+            let targetWatchlistId = self.resolveDestinationWatchlistId(
+                for: savedBird.bird_id,
+                existingWatchlistIds: existingWatchlistIds
+            )
+            self.dismiss(animated: true) { [weak self] in
+                self?.navigateToWatchlist(with: targetWatchlistId)
+            }
+        }
+
+        let modalNav = UINavigationController(rootViewController: detailVC)
+        detailVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .cancel,
+            target: self,
+            action: #selector(dismissPresentedDetail)
         )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        modalNav.modalPresentationStyle = .automatic
+        present(modalNav, animated: true)
+    }
+
+    @objc
+    private func dismissPresentedDetail() {
+        presentedViewController?.dismiss(animated: true)
+    }
+
+    private func watchlistIdsContainingBird(birdId: UUID) -> Set<UUID> {
+        guard let watchlists = try? watchlistManager.fetchWatchlists(type: .custom) else { return [] }
+        var ids = Set<UUID>()
+        for watchlist in watchlists {
+            if (try? watchlistManager.findEntry(birdId: birdId, watchlistId: watchlist.watchlist_id)) != nil {
+                ids.insert(watchlist.watchlist_id)
+            }
+        }
+        return ids
+    }
+
+    private func resolveDestinationWatchlistId(for birdId: UUID, existingWatchlistIds: Set<UUID>) -> UUID? {
+        let updatedWatchlistIds = watchlistIdsContainingBird(birdId: birdId)
+        if let newWatchlistId = updatedWatchlistIds.subtracting(existingWatchlistIds).first {
+            return newWatchlistId
+        }
+        return updatedWatchlistIds.first
+    }
+
+    private func navigateToWatchlist(with watchlistId: UUID?) {
+        guard
+            let tabBarController,
+            let watchlistNav = tabBarController.viewControllers?[safe: 1] as? UINavigationController
+        else { return }
+
+        tabBarController.selectedIndex = 1
+
+        guard
+            let watchlistId,
+            let watchlist = try? watchlistManager.getWatchlist(by: watchlistId)
+        else {
+            watchlistNav.popToRootViewController(animated: true)
+            return
+        }
+
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController else {
+            watchlistNav.popToRootViewController(animated: true)
+            return
+        }
+
+        smartVC.watchlistType = (watchlist.type == .shared) ? .shared : .custom
+        smartVC.watchlistTitle = watchlist.title ?? "Watchlist"
+        smartVC.currentWatchlistId = watchlistId
+
+        watchlistNav.popToRootViewController(animated: false)
+        watchlistNav.pushViewController(smartVC, animated: true)
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
     }
 }
