@@ -312,6 +312,20 @@ class GUIViewController: UIViewController {
         return variants
     }
     
+    private func getOrderedVariantsForCurrentCategory() -> [FieldMarkVariant] {
+        let variants = getVariantsForCurrentCategory()
+        guard currentCategoryIndex < categories.count else { return variants }
+        let categoryName = categories[currentCategoryIndex].area
+        guard let selectedName = selectedVariations[categoryName],
+              let selectedIndex = variants.firstIndex(where: { $0.name == selectedName }) else {
+            return variants
+        }
+        var ordered = variants
+        let selected = ordered.remove(at: selectedIndex)
+        ordered.insert(selected, at: 0)
+        return ordered
+    }
+    
     @IBAction func nextTapped(_ sender: Any) {
         guard !selectedVariations.isEmpty else { return }
         delegate?.didFinishStep()
@@ -341,7 +355,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
-            let variants = getVariantsForCurrentCategory()
+            let variants = getOrderedVariantsForCurrentCategory()
             let categoryName = categories[currentCategoryIndex].area
             
             let isChevronCell = indexPath.row == 1
@@ -375,7 +389,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         if collectionView == categoriesCollectionView {
             selectCategory(at: indexPath.row)
         } else {
-            let variants = getVariantsForCurrentCategory()
+            let variants = getOrderedVariantsForCurrentCategory()
             let isChevronCell = indexPath.row == 1
             
             if isChevronCell {
