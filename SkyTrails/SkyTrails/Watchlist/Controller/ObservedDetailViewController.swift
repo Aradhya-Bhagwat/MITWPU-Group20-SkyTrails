@@ -258,10 +258,9 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             return
         }
         nameTextField.text = bird.commonName
-        if let displayName = entry.locationDisplayName {
-            let lat = entry.lat
-            let lon = entry.lon
-            updateLocationSelection(displayName, lat: lat, lon: lon)
+        
+        if let displayName = entry.locationDisplayName, !displayName.isEmpty {
+            updateLocationSelection(displayName, lat: entry.lat, lon: entry.lon)
         } else if let lat = entry.lat, let lon = entry.lon {
             Task { [weak self] in
                 guard let self else { return }
@@ -270,31 +269,23 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                     self.updateLocationSelection(name, lat: lat, lon: lon)
                 }
             }
-        } else {
-            updateLocationSelection(bird.likelySpot ?? "")
+        } else if let likelySpot = bird.likelySpot, !likelySpot.isEmpty {
+            updateLocationSelection(likelySpot)
         }
-        birdImageView.image = ObservedDetailViewController.loadImage(for: entry)
+        
+        // Use consistent image loading via WatchlistManager (though here we display directly)
+        Task {
+            let image = await manager.loadImageForEntry(entry)
+            birdImageView.image = image
+            updateGlassVisibility()
+        }
         
         if let date = entry.observationDate {
             dateTimePicker.date = date
         }
         notesTextView.text = entry.notes
     }
-    private static func loadImage(for entry: WatchlistEntry) -> UIImage {
-        if let photoPath = entry.photos?.first?.imagePath {
-            let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
-            let fileURL = photoDir.appendingPathComponent(photoPath)
-            if let image = UIImage(contentsOfFile: fileURL.path) {
-                return image
-            }
-        }
-        if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
-            return asset
-        }
-        return UIImage(systemName: "photo")!
-    }
-    
+
     func setupStyling() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         view.backgroundColor = isDarkMode ? .systemBackground : .systemGray6
@@ -325,7 +316,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         birdImageView.isHidden = false
         didTapImage()
     }
-    
+
     private func updateGlassVisibility() {
         let isPlaceholder = isUsingPlaceholder()
         glassBackgroundPlaceholder.isHidden = !isPlaceholder

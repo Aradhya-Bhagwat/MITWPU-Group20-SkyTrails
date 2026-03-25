@@ -219,6 +219,18 @@ final class WatchlistFilteringService {
         let toObserve = try manager.fetchEntries(watchlistID: id, status: .to_observe)
         let title = (try? manager.getWatchlist(by: id))??.title ?? "Watchlist"
         
+        #if DEBUG
+        print("[WatchlistFilteringService] fetchForSingleWatchlist - Watchlist ID: \(id)")
+        print("[WatchlistFilteringService] fetchForSingleWatchlist - Observed count: \(observed.count)")
+        print("[WatchlistFilteringService] fetchForSingleWatchlist - ToObserve count: \(toObserve.count)")
+        for (index, entry) in observed.enumerated() {
+            print("[WatchlistFilteringService] Observed[\(index)] - ID: \(entry.id), bird: \(String(describing: entry.bird?.name)), photos: \(entry.photos?.count ?? 0)")
+        }
+        for (index, entry) in toObserve.enumerated() {
+            print("[WatchlistFilteringService] ToObserve[\(index)] - ID: \(entry.id), bird: \(String(describing: entry.bird?.name))")
+        }
+        #endif
+        
         return ModeBasedEntriesResult(
             observed: observed,
             toObserve: toObserve,

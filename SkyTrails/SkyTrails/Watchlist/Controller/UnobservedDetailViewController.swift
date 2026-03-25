@@ -128,7 +128,15 @@ class UnobservedDetailViewController: UIViewController {
 		guard let bird = bird else { return }
 		
 		navigationItem.title = "\(bird.name) Details"
-		loadImage(for: bird)
+		
+        // Use consistent image loading via WatchlistManager
+        Task {
+            if let entry = entry {
+                birdImageView.image = await manager.loadImageForEntry(entry)
+            } else {
+                birdImageView.image = await manager.loadImage(path: bird.staticImageName)
+            }
+        }
 		
         if let entry = entry {
             if let date = entry.toObserveStartDate { startDatePicker.date = date }
@@ -138,7 +146,7 @@ class UnobservedDetailViewController: UIViewController {
              notesTextView.text = ""
         }
 		
-		if let displayName = entry?.locationDisplayName {
+		if let displayName = entry?.locationDisplayName, !displayName.isEmpty {
 			updateLocationSelection(displayName, lat: entry?.lat, lon: entry?.lon)
 		} else if let lat = entry?.lat, let lon = entry?.lon {
 			Task { [weak self] in
@@ -146,35 +154,13 @@ class UnobservedDetailViewController: UIViewController {
 				let name = await self.locationService.reverseGeocode(lat: lat, lon: lon) ?? "Location"
 				await MainActor.run { self.updateLocationSelection(name, lat: lat, lon: lon) }
 			}
-		} else {
-			updateLocationSelection(bird.likelySpot ?? "")
+		} else if let likelySpot = bird.likelySpot, !likelySpot.isEmpty {
+			updateLocationSelection(likelySpot)
 		}
 	}
 	
 	private func loadImage(for bird: Bird) {
-		let imageName = bird.staticImageName
-#if DEBUG
-        print("[UnobservedDetail] Loading image for bird '\(bird.name)' with image '\(imageName)'")
-        if UIImage(named: imageName) == nil {
-            print("[UnobservedDetail] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
-        }
-#endif
-		if let assetImage = UIImage(named: imageName) {
-			birdImageView.image = assetImage
-		} else {
-			let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
-			if let docImage = UIImage(contentsOfFile: fileURL.path) {
-				birdImageView.image = docImage
-			} else {
-				birdImageView.image = UIImage(systemName: "photo")
-			}
-		}
-        
-        Task { @MainActor in
-            if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
-                self.birdImageView.image = image
-            }
-        }
+        // Method body removed as Task in configureView now handles this consistently
 	}
 	@objc private func dismissKeyboard() {
 		view.endEditing(true)
