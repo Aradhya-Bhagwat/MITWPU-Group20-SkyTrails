@@ -114,6 +114,7 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
                 switch result {
                 case .success(let location):
                     Task {
+                        // Sync updated location to shared state
                         await MainActor.run { self.currentLocation = location.coordinate }
 
                         let name = await self.reverseGeocode(
