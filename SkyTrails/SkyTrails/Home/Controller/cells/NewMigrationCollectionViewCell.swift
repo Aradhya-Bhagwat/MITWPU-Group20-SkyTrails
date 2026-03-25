@@ -21,26 +21,22 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var distanceLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
-    @IBOutlet weak var weekLabel: UILabel!
-    @IBOutlet weak var tagsStackView: UIStackView!
-    @IBOutlet weak var tag1View: UIView!
+    @IBOutlet weak var weekButton: UIButton!
     @IBOutlet weak var terrainTagImageView: UIImageView!
     @IBOutlet weak var terrainTagLabel: UILabel!
-    @IBOutlet weak var tag2View: UIView!
+    @IBOutlet weak var terrainTagIconSizeConstraint: NSLayoutConstraint!
     @IBOutlet weak var seasonTagImageView: UIImageView!
     @IBOutlet weak var seasonTagLabel: UILabel!
+    @IBOutlet weak var seasonTagIconSizeConstraint: NSLayoutConstraint!
     @IBOutlet weak var birdListCollectionView: UICollectionView!
-    @IBOutlet weak var terrainTagHeightConstraint: NSLayoutConstraint!
-    @IBOutlet weak var seasonTagHeightConstraint: NSLayoutConstraint!
     
+    private var fullBirdSpecies: [BirdSpeciesDisplay] = []
     private var birdSpecies: [BirdSpeciesDisplay] = []
+    private var currentHotspot: HotspotPrediction?
     private var selectedBirdIndex: Int = 0
     private let expandedWidthRatio: CGFloat = 25.0 / 9.0
     private let compactWidthRatio: CGFloat = 5.0 / 6.0
     private let nestedItemHeightRatio: CGFloat = 90.0 / 440.0
-    private let baseTagTextSize: CGFloat = 12
-    private let baseTagHeight: CGFloat = 45.33
-    private let baseTagSpacing: CGFloat = 12
 
     private final class BirdPinAnnotation: NSObject, MKAnnotation {
         let coordinate: CLLocationCoordinate2D
@@ -69,7 +65,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         geocodingTask = nil
         terrainTagLabel.text = "Loading..."
         terrainTagImageView.image = UIImage(named: "Terrain_Remote")
-        tag1View.backgroundColor = .systemGray5.withAlphaComponent(0.4)
     }
     
     private func setupCollectionView() {
@@ -90,9 +85,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         updateNestedLayout()
-        tag1View.layer.cornerRadius = tag1View.bounds.height / 2
-        tag2View.layer.cornerRadius = tag2View.bounds.height / 2
-        seasonTagImageView.layer.cornerRadius = seasonTagImageView.bounds.height / 2
         terrainTagImageView.layer.cornerRadius = terrainTagImageView.bounds.height / 2
     }
     
@@ -108,9 +100,21 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         titleLabel.font = .systemFont(ofSize: titleSize, weight: .semibold)
         subtitleLabel.font = .systemFont(ofSize: detailSize, weight: .regular)
         subtitleLabel.textColor = .black
-        weekLabel.font = .systemFont(ofSize: detailSize, weight: .semibold)
-        weekLabel.textColor = .black
-        updateTagSizing(detailSize: detailSize)
+        
+        if #available(iOS 15.0, *) {
+            weekButton.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = UIFont.systemFont(ofSize: detailSize, weight: .semibold)
+                return outgoing
+            }
+        } else {
+            weekButton.titleLabel?.font = .systemFont(ofSize: detailSize, weight: .semibold)
+        }
+
+        terrainTagLabel.font = .systemFont(ofSize: detailSize, weight: .bold)
+        seasonTagLabel.font = .systemFont(ofSize: detailSize, weight: .bold)
+        terrainTagIconSizeConstraint.constant = detailSize
+        seasonTagIconSizeConstraint.constant = detailSize
         updateDistanceLabelFont(size: min(detailSize, 18))
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let itemHeight = nestedItemHeight(cardHeight: cardHeight)
@@ -124,7 +128,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
     
     private func nestedItemHeight(cardHeight: CGFloat) -> CGFloat {
-        return cardHeight * nestedItemHeightRatio
+        return (cardHeight * nestedItemHeightRatio) + 27
     }
     
     private func expandedItemWidth(itemHeight: CGFloat) -> CGFloat {
@@ -159,17 +163,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         }
     }
 
-    private func updateTagSizing(detailSize: CGFloat) {
-        let tagTextSize = min(detailSize, 18)
-        let scaleFactor = tagTextSize / baseTagTextSize
-
-        terrainTagLabel.font = .systemFont(ofSize: tagTextSize, weight: .regular)
-        seasonTagLabel.font = .systemFont(ofSize: tagTextSize, weight: .regular)
-        terrainTagHeightConstraint.constant = baseTagHeight * scaleFactor
-        seasonTagHeightConstraint.constant = baseTagHeight * scaleFactor
-        tagsStackView.spacing = baseTagSpacing * scaleFactor
-    }
-    
     private func updateDistanceLabelFont(size: CGFloat) {
         guard let existingText = distanceLabel.attributedText?.string else { return }
         
@@ -196,11 +189,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         mapView.layer.cornerRadius = 12
         mapView.delegate = self
         
-        tag1View.layer.masksToBounds = true
         terrainTagImageView.contentMode = .scaleAspectFit
         terrainTagImageView.layer.masksToBounds = true
-        tag2View.layer.masksToBounds = true
-        seasonTagImageView.contentMode = .scaleAspectFill
+        seasonTagImageView.contentMode = .scaleAspectFit
         seasonTagImageView.layer.masksToBounds = true
         
         layer.shadowColor = UIColor.black.cgColor
@@ -212,14 +203,17 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     
     // populates UI with migration and hotspot data
     func configure(migration: MigrationPrediction, hotspot: HotspotPrediction) {
+        self.currentHotspot = hotspot
         titleLabel.text = hotspot.placeName
         subtitleLabel.text = hotspot.locationDetail
-        weekLabel.text = hotspot.weekNumber
+        
+        self.fullBirdSpecies = hotspot.birdSpecies
+        setupWeekButton(currentWeek: hotspot.weekNumber)
+        
         terrainTagLabel.text = hotspot.terrainTag
         
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
-        seasonTagImageView.image = UIImage(named: seasonAssetName(for: hotspot.seasonTag))
-        tag2View.backgroundColor = seasonTagBackgroundColor(for: hotspot.seasonTag)
+        applySeasonAppearance(for: hotspot.seasonTag)
         
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
         let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
@@ -233,14 +227,15 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         attributedString.append(NSAttributedString(string: " - \(hotspot.distanceString)"))
         distanceLabel.attributedText = attributedString
         
-        self.birdSpecies = hotspot.birdSpecies
-        selectedBirdIndex = 0
+        // Initial filter: All 3 weeks
+        filterBirds(for: nil)
+        
         birdListCollectionView.reloadData()
         birdListCollectionView.layoutIfNeeded()
         alignToSelectedCard(animated: false)
 
         let birdPins = resolvedBirdPins(
-            for: hotspot.birdSpecies,
+            for: self.birdSpecies,
             from: hotspot.hotspots,
             fallbackCoordinate: hotspot.centerCoordinate
         )
@@ -252,6 +247,77 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             birdPins: birdPins
         )
         fetchTerrain(for: hotspot.centerCoordinate)
+    }
+
+    private func setupWeekButton(currentWeek: String) {
+        let weekNumber = Int(currentWeek.replacingOccurrences(of: "Week ", with: "")) ?? 0
+        
+        let allWeeksAction = UIAction(title: "All Weeks") { [weak self] _ in
+            self?.filterBirds(for: nil)
+            self?.weekButton.setTitle("All Weeks", for: .normal)
+        }
+        
+        let currentWeekAction = UIAction(title: "Week \(weekNumber)") { [weak self] _ in
+            self?.filterBirds(for: weekNumber)
+            self?.weekButton.setTitle("Week \(weekNumber)", for: .normal)
+        }
+        
+        let nextWeekAction = UIAction(title: "Week \(weekNumber + 1)") { [weak self] _ in
+            self?.filterBirds(for: weekNumber + 1)
+            self?.weekButton.setTitle("Week \(weekNumber + 1)", for: .normal)
+        }
+        
+        let thirdWeekAction = UIAction(title: "Week \(weekNumber + 2)") { [weak self] _ in
+            self?.filterBirds(for: weekNumber + 2)
+            self?.weekButton.setTitle("Week \(weekNumber + 2)", for: .normal)
+        }
+        
+        weekButton.menu = UIMenu(title: "Select Week", children: [allWeeksAction, currentWeekAction, nextWeekAction, thirdWeekAction])
+        weekButton.showsMenuAsPrimaryAction = true
+        weekButton.setTitle("All Weeks", for: .normal)
+        
+        // Style the button to look more like a dropdown
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.gray()
+            config.image = UIImage(systemName: "chevron.down")
+            config.imagePlacement = .trailing
+            config.imagePadding = 8
+            config.baseForegroundColor = .black
+            config.cornerStyle = .capsule
+            config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12)
+            weekButton.configuration = config
+        } else {
+            weekButton.setTitleColor(.black, for: .normal)
+            weekButton.backgroundColor = .systemGray6
+            weekButton.layer.cornerRadius = 12
+        }
+    }
+
+    private func filterBirds(for week: Int?) {
+        if let week = week {
+            let weekString = "Week \(week)"
+            birdSpecies = fullBirdSpecies.filter { $0.weekNumber == weekString }
+        } else {
+            birdSpecies = fullBirdSpecies
+        }
+        selectedBirdIndex = 0
+        birdListCollectionView.reloadData()
+        
+        // Update map pins when filtered
+        if let hotspot = currentHotspot {
+            let birdPins = resolvedBirdPins(
+                for: self.birdSpecies,
+                from: hotspot.hotspots,
+                fallbackCoordinate: hotspot.centerCoordinate
+            )
+            
+            // Only update annotations to avoid full map reset
+            mapView.removeAnnotations(mapView.annotations)
+            for annotation in deconflictedAnnotations(from: birdPins) {
+                mapView.addAnnotation(annotation)
+            }
+            refreshPinSelectionState()
+        }
     }
     
     // Background task to resolve terrain information and scene snapshots
@@ -328,7 +394,39 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         terrainTagImageView.image = image
         terrainTagImageView.contentMode = .scaleAspectFill
         terrainTagImageView.clipsToBounds = true
-        tag1View.backgroundColor = info.color.withAlphaComponent(0.4)
+    
+    }
+
+    private func applySeasonAppearance(for season: String) {
+        let appearance = seasonSymbolAppearance(for: season)
+        let pointSize = seasonTagLabel.font.pointSize
+        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .bold)
+        seasonTagImageView.image = UIImage(systemName: appearance.symbolName, withConfiguration: config)?
+            .withTintColor(appearance.color, renderingMode: .alwaysOriginal)
+        seasonTagImageView.tintColor = appearance.color
+        seasonTagImageView.contentMode = .scaleAspectFit
+        seasonTagViewTransparency()
+    }
+
+    private func seasonTagViewTransparency() {
+        seasonTagLabel.textColor = .label
+    }
+
+    private func seasonSymbolAppearance(for season: String) -> (symbolName: String, color: UIColor) {
+        switch season {
+        case "Summer":
+            return ("sun.max.fill", UIColor(red: 0.95, green: 0.64, blue: 0.12, alpha: 1.0))
+        case "Winter":
+            return ("snowflake", UIColor(red: 0.20, green: 0.48, blue: 0.92, alpha: 1.0))
+        case "Rainy":
+            return ("cloud.rain.fill", UIColor(red: 0.28, green: 0.30, blue: 0.34, alpha: 1.0))
+        case "Autumn":
+            return ("leaf.fill", UIColor(red: 0.68, green: 0.38, blue: 0.12, alpha: 1.0))
+        case "Spring":
+            return ("camera.macro", UIColor(red: 0.86, green: 0.29, blue: 0.45, alpha: 1.0))
+        default:
+            return ("circle.fill", .systemGray)
+        }
     }
 
     private func setupMap(pathCoordinates: [CLLocationCoordinate2D], hotspotCenter: CLLocationCoordinate2D, areaOverlay: HotspotAreaOverlay, birdPins: [HotspotBirdSpot]) {
@@ -486,20 +584,6 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
         return max(-birdListCollectionView.contentInset.left, birdListCollectionView.contentSize.width - birdListCollectionView.bounds.width + birdListCollectionView.contentInset.right)
     }
     
-    private func seasonAssetName(for season: String) -> String {
-        return season == "Rainy" ? "Rainy " : season
-    }
-    
-    private func seasonTagBackgroundColor(for season: String) -> UIColor {
-        switch season {
-        case "Summer": return UIColor(red: 0.85, green: 0.95, blue: 0.45, alpha: 0.4)
-        case "Spring": return UIColor(red: 0.95, green: 0.60, blue: 0.80, alpha: 0.4)
-        case "Autumn": return UIColor(red: 1.00, green: 0.70, blue: 0.45, alpha: 0.4)
-        case "Winter": return UIColor.systemBlue.withAlphaComponent(0.4)
-        case "Rainy": return UIColor.systemGray.withAlphaComponent(0.4)
-        default: return UIColor.systemGray5.withAlphaComponent(0.4)
-        }
-    }
 }
 
 extension NewMigrationCollectionViewCell: MKMapViewDelegate {
