@@ -67,7 +67,15 @@ class BirdSmartCell: UITableViewCell {
 	func configure(with entry: WatchlistEntry) {
 		guard let bird = entry.bird else { return }
 		titleLabel.text = bird.name
+        
+#if DEBUG
+        print("[BirdSmartCell] Configuring for entry with bird '\(bird.name)', staticImageName: '\(bird.staticImageName)'")
+#endif
+
 		if let photoPath = entry.photos?.first?.imagePath {
+#if DEBUG
+            print("[BirdSmartCell] Found user photo path: \(photoPath)")
+#endif
 			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 			let fileURL = photoDir.appendingPathComponent(photoPath)
@@ -78,15 +86,36 @@ class BirdSmartCell: UITableViewCell {
 			} else {
 				birdImageView.image = UIImage(systemName: "photo")
 			}
-		} else if let assetImage = UIImage(named: bird.staticImageName) {
-			birdImageView.image = assetImage
-			Task { @MainActor in
-				if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
-					self.birdImageView.image = image
-				}
-			}
 		} else {
-			birdImageView.image = UIImage(systemName: "photo")
+#if DEBUG
+            print("[BirdSmartCell] No user photo, loading default/remote for '\(bird.staticImageName)'")
+#endif
+            // Try asset catalog first
+            if let assetImage = UIImage(named: bird.staticImageName) {
+                birdImageView.image = assetImage
+            } else {
+                // Try documents directory (similar to UnobservedDetailViewController)
+                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(bird.staticImageName)
+                if let docImage = UIImage(contentsOfFile: fileURL.path) {
+                    birdImageView.image = docImage
+                } else {
+                    birdImageView.image = UIImage(systemName: "photo")
+                }
+            }
+            
+            // Always try fetching remote
+            Task { @MainActor in
+                if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
+#if DEBUG
+                    print("[BirdSmartCell] Successfully loaded remote image for '\(bird.staticImageName)'")
+#endif
+                    self.birdImageView.image = image
+                } else {
+#if DEBUG
+                    print("[BirdSmartCell] Failed to load remote image for '\(bird.staticImageName)'")
+#endif
+                }
+            }
 		}
 		if let observationDate = entry.observationDate {
 			let formatter = DateFormatter()
