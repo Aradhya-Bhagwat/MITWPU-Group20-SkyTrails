@@ -136,7 +136,7 @@ class WatchlistHomeViewController: UIViewController {
 	private func setupUI() {
 		self.navigationItem.title = "Watchlist"
 		self.tabBarItem.title = "Watchlist"
-		self.navigationItem.largeTitleDisplayMode = .always
+		self.navigationItem.largeTitleDisplayMode = .automatic
 		navigationController?.navigationBar.prefersLargeTitles = true
 	}
 	
@@ -165,6 +165,8 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func setupCollectionView() {
+		view.sendSubviewToBack(summaryCardCollectionView)
+		summaryCardCollectionView.contentInsetAdjustmentBehavior = .always
 		summaryCardCollectionView.collectionViewLayout = createCompositionalLayout()
 		summaryCardCollectionView.dataSource = self
 		summaryCardCollectionView.delegate = self
