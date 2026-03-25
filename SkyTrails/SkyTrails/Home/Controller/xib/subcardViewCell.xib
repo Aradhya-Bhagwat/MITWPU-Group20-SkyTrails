@@ -50,14 +50,8 @@
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pfn-PH-IdR">
                                         <rect key="frame" x="90" y="22.333333333333332" width="156" height="45.333333333333343"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TdZ-76-PCZ">
-                                                <rect key="frame" x="45.333333333333343" y="4.0000000000000009" width="31" height="14.333333333333336"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                                                <nil key="textColor"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UL4-L4-Tmw">
-                                                <rect key="frame" x="45.333333333333343" y="22.333333333333332" width="31" height="14.333333333333332"/>
+                                                <rect key="frame" x="45.333333333333343" y="4" width="31" height="14.333333333333336"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
@@ -84,12 +78,10 @@
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
-                                            <constraint firstItem="UL4-L4-Tmw" firstAttribute="top" secondItem="TdZ-76-PCZ" secondAttribute="bottom" constant="4" id="9wt-6K-tMV"/>
                                             <constraint firstAttribute="bottom" secondItem="MPa-LV-NFH" secondAttribute="bottom" constant="4" id="Hqi-K1-V51"/>
                                             <constraint firstItem="MPa-LV-NFH" firstAttribute="leading" secondItem="pfn-PH-IdR" secondAttribute="leading" constant="4" id="L9g-8a-Iq0"/>
-                                            <constraint firstItem="TdZ-76-PCZ" firstAttribute="leading" secondItem="MPa-LV-NFH" secondAttribute="trailing" constant="4" id="OQ8-Y4-2qU"/>
                                             <constraint firstItem="UL4-L4-Tmw" firstAttribute="leading" secondItem="MPa-LV-NFH" secondAttribute="trailing" constant="4" id="dg0-AD-Odc"/>
-                                            <constraint firstItem="TdZ-76-PCZ" firstAttribute="top" secondItem="pfn-PH-IdR" secondAttribute="top" constant="4" id="l4G-Wr-ebf"/>
+                                            <constraint firstItem="UL4-L4-Tmw" firstAttribute="top" secondItem="pfn-PH-IdR" secondAttribute="top" constant="4" id="subtitle-top-only"/>
                                             <constraint firstItem="MPa-LV-NFH" firstAttribute="top" secondItem="pfn-PH-IdR" secondAttribute="top" constant="4" id="lYE-jQ-OIs"/>
                                         </constraints>
                                     </view>
@@ -163,7 +155,6 @@
             <connections>
                 <outlet property="badgeIconImageView" destination="vhB-yh-X9O" id="connection4"/>
                 <outlet property="badgeSubtitleLabel" destination="UL4-L4-Tmw" id="connection6"/>
-                <outlet property="badgeTitleLabel" destination="TdZ-76-PCZ" id="connection5"/>
                 <outlet property="birdImageView" destination="6qt-Nf-chJ" id="connection1"/>
                 <outlet property="birdNameLabel" destination="N8W-Es-Ebj" id="connection2"/>
                 <outlet property="compactBirdImageView" destination="bpl-KF-Dk0" id="fSC-Lk-Bxs"/>

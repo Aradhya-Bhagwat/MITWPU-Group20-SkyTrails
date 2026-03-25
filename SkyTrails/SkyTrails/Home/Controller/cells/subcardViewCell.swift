@@ -10,7 +10,6 @@ class subcardViewCell: UICollectionViewCell {
     @IBOutlet weak var birdNameLabel: UILabel!
     @IBOutlet weak var statusBadgeContainer: UIView!
     @IBOutlet weak var badgeIconImageView: UIImageView!
-    @IBOutlet weak var badgeTitleLabel: UILabel!
     @IBOutlet weak var badgeSubtitleLabel: UILabel!
     @IBOutlet weak var sightabilityIconLabel: UILabel!
     @IBOutlet weak var sightabilityTextLabel: UILabel!
@@ -54,7 +53,6 @@ class subcardViewCell: UICollectionViewCell {
         let fontSize = max(12, 12 * ratio)
         
         birdNameLabel.font = .systemFont(ofSize: fontSize, weight: .semibold)
-        badgeTitleLabel.font = .systemFont(ofSize: fontSize)
         badgeSubtitleLabel.font = .systemFont(ofSize: fontSize)
         sightabilityIconLabel.font = .systemFont(ofSize: fontSize)
         sightabilityTextLabel.font = .systemFont(ofSize: fontSize)
@@ -106,7 +104,6 @@ class subcardViewCell: UICollectionViewCell {
                 compactBirdImageView?.image = UIImage(systemName: "bird.fill")
                 compactBirdImageView?.tintColor = .systemGray4
             }
-            badgeTitleLabel.text = birdData.weekNumber ?? birdData.statusBadge.title
             badgeSubtitleLabel.text = birdData.residencyStatus ?? birdData.statusBadge.subtitle
             
             let badgeColor: UIColor
