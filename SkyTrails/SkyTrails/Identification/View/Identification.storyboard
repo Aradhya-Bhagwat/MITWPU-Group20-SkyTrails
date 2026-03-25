@@ -419,11 +419,11 @@
                                 <rect key="frame" x="8" y="124" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="f55-ih-Vav" userLabel="Canvas">
-                                <rect key="frame" x="0.0" y="128" width="402" height="598"/>
+                                <rect key="frame" x="0.0" y="224" width="402" height="582"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="IpW-uB-nwm">
-                                <rect key="frame" x="0.0" y="726" width="402" height="80"/>
+                                <rect key="frame" x="8" y="136" width="386" height="80"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="80" id="6XA-Il-foB"/>
@@ -461,15 +461,15 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="9Wj-ji-0gq" firstAttribute="top" secondItem="eSi-zt-0K5" secondAttribute="top" id="8iW-hr-Ywe"/>
-                            <constraint firstItem="eSi-zt-0K5" firstAttribute="bottom" secondItem="IpW-uB-nwm" secondAttribute="bottom" id="B0Y-Bc-q3b"/>
+                            <constraint firstItem="eSi-zt-0K5" firstAttribute="bottom" secondItem="f55-ih-Vav" secondAttribute="bottom" id="B0Y-Bc-q3b"/>
                             <constraint firstItem="f55-ih-Vav" firstAttribute="leading" secondItem="eSi-zt-0K5" secondAttribute="leading" id="B8P-tP-ktf"/>
                             <constraint firstAttribute="trailing" secondItem="9Wj-ji-0gq" secondAttribute="trailing" constant="8" id="S5F-If-ffj"/>
                             <constraint firstAttribute="trailing" secondItem="f55-ih-Vav" secondAttribute="trailing" id="WDL-El-yZd"/>
-                            <constraint firstItem="eSi-zt-0K5" firstAttribute="trailing" secondItem="IpW-uB-nwm" secondAttribute="trailing" id="ab3-zl-7Wi"/>
-                            <constraint firstItem="f55-ih-Vav" firstAttribute="top" secondItem="9Wj-ji-0gq" secondAttribute="bottom" id="du5-mB-oY9"/>
+                            <constraint firstItem="eSi-zt-0K5" firstAttribute="trailing" secondItem="IpW-uB-nwm" secondAttribute="trailing" constant="8" id="ab3-zl-7Wi"/>
+                            <constraint firstItem="IpW-uB-nwm" firstAttribute="top" secondItem="9Wj-ji-0gq" secondAttribute="bottom" constant="8" id="du5-mB-oY9"/>
                             <constraint firstItem="9Wj-ji-0gq" firstAttribute="leading" secondItem="edF-f2-COB" secondAttribute="leading" constant="8" id="nMv-jk-8zK"/>
-                            <constraint firstItem="IpW-uB-nwm" firstAttribute="top" secondItem="f55-ih-Vav" secondAttribute="bottom" id="ssA-dx-Bis"/>
-                            <constraint firstItem="IpW-uB-nwm" firstAttribute="leading" secondItem="eSi-zt-0K5" secondAttribute="leading" id="tmB-ah-jgw"/>
+                            <constraint firstItem="f55-ih-Vav" firstAttribute="top" secondItem="IpW-uB-nwm" secondAttribute="bottom" constant="8" id="ssA-dx-Bis"/>
+                            <constraint firstItem="IpW-uB-nwm" firstAttribute="leading" secondItem="eSi-zt-0K5" secondAttribute="leading" constant="8" id="tmB-ah-jgw"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Select 5 field marks to use" id="JGR-Vv-OcD">
