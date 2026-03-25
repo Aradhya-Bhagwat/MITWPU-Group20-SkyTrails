@@ -153,6 +153,12 @@ class UnobservedDetailViewController: UIViewController {
 	
 	private func loadImage(for bird: Bird) {
 		let imageName = bird.staticImageName
+#if DEBUG
+        print("[UnobservedDetail] Loading image for bird '\(bird.name)' with image '\(imageName)'")
+        if UIImage(named: imageName) == nil {
+            print("[UnobservedDetail] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
+        }
+#endif
 		if let assetImage = UIImage(named: imageName) {
 			birdImageView.image = assetImage
 		} else {
@@ -163,6 +169,12 @@ class UnobservedDetailViewController: UIViewController {
 				birdImageView.image = UIImage(systemName: "photo")
 			}
 		}
+        
+        Task { @MainActor in
+            if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
+                self.birdImageView.image = image
+            }
+        }
 	}
 	@objc private func dismissKeyboard() {
 		view.endEditing(true)

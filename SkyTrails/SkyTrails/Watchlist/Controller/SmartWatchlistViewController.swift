@@ -448,12 +448,28 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
         if isShowingRecommendations {
             let bird = recommendedBirds[indexPath.row]
+#if DEBUG
+            let imageName = bird.staticImageName
+            print("[SmartWatchlist] Loading table image for recommended bird '\(bird.name)' with image '\(imageName)'")
+            if UIImage(named: imageName) == nil {
+                print("[SmartWatchlist] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
+            }
+#endif
             cell.configure(with: bird)
             cell.shouldShowAvatars = false
             return cell
         }
 
 		let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
+#if DEBUG
+        if let bird = entry.bird {
+            let imageName = bird.staticImageName
+            print("[SmartWatchlist] Loading table image for watchlist entry bird '\(bird.name)' with image '\(imageName)'")
+            if UIImage(named: imageName) == nil {
+                print("[SmartWatchlist] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
+            }
+        }
+#endif
 		cell.shouldShowAvatars = (watchlistType == .shared)
 		cell.configure(with: entry)
 		if traitCollection.userInterfaceStyle == .dark {
