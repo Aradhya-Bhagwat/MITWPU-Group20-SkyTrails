@@ -761,6 +761,17 @@ final class WatchlistManager: WatchlistRepository {
         await withTaskGroup(of: (Int, BirdEntryCellViewModel).self) { group in
             for (index, entry) in entries.enumerated() {
                 group.addTask {
+                    #if DEBUG
+                    print("[WatchlistManager] loadBirdEntryViewModels - Entry[\(index)] ID: \(entry.id)")
+                    print("[WatchlistManager] loadBirdEntryViewModels - Entry[\(index)] bird: \(String(describing: entry.bird))")
+                    print("[WatchlistManager] loadBirdEntryViewModels - Entry[\(index)] bird?.name: \(String(describing: entry.bird?.name))")
+                    print("[WatchlistManager] loadBirdEntryViewModels - Entry[\(index)] bird?.staticImageName: \(String(describing: entry.bird?.staticImageName))")
+                    print("[WatchlistManager] loadBirdEntryViewModels - Entry[\(index)] photos count: \(entry.photos?.count ?? 0)")
+                    if let photoPath = entry.photos?.first?.imagePath {
+                        print("[WatchlistManager] loadBirdEntryViewModels - Entry[\(index)] first photo path: \(photoPath)")
+                    }
+                    #endif
+                    
                     let birdImage = await self.loadImageForEntry(entry)
                     return await (index, BirdEntryCellViewModel(
                         entryId: entry.id,
@@ -788,7 +799,7 @@ final class WatchlistManager: WatchlistRepository {
     /// Loads multiple images in parallel
     /// - Parameter paths: Array of image path strings
     /// - Returns: Array of loaded UIImages
-    private func loadImages(paths: [String]) async -> [UIImage] {
+    func loadImages(paths: [String]) async -> [UIImage] {
         await withTaskGroup(of: (Int, UIImage).self) { group in
             for (index, path) in paths.enumerated() {
                 group.addTask {
@@ -808,53 +819,104 @@ final class WatchlistManager: WatchlistRepository {
     /// Loads a single image from various sources
     /// - Parameter path: Image path (can be nil)
     /// - Returns: Loaded UIImage or placeholder
-    private func loadImage(path: String?) async -> UIImage {
+    func loadImage(path: String?) async -> UIImage {
+        #if DEBUG
+        print("[WatchlistManager] loadImage - path: \(String(describing: path))")
+        #endif
+        
         guard let path = path else {
+            #if DEBUG
+            print("[WatchlistManager] loadImage - path is nil, returning placeholder")
+            #endif
             return UIImage(systemName: "photo") ?? UIImage()
         }
         
         // 1. Check user photos directory
         if let userPhoto = loadUserPhoto(named: path) {
+            #if DEBUG
+            print("[WatchlistManager] loadImage - Found in user photos directory")
+            #endif
             return userPhoto
         }
         
         // 2. Check asset catalog
         if let assetImage = UIImage(named: path) {
+            #if DEBUG
+            print("[WatchlistManager] loadImage - Found in asset catalog")
+            #endif
             return assetImage
         }
         
         // 3. Fetch from remote service
+        #if DEBUG
+        print("[WatchlistManager] loadImage - Fetching from remote service for: \(path)")
+        #endif
         if let remoteImage = await IdentificationImageService.shared.image(for: path, shapeId: nil) {
+            #if DEBUG
+            print("[WatchlistManager] loadImage - Successfully loaded from remote")
+            #endif
             return remoteImage
         }
         
         // 4. Fallback to placeholder
+        #if DEBUG
+        print("[WatchlistManager] loadImage - All sources failed, returning placeholder")
+        #endif
         return UIImage(systemName: "photo") ?? UIImage()
     }
     
     /// Loads an image specifically for a watchlist entry
     /// - Parameter entry: The watchlist entry
     /// - Returns: Loaded UIImage
-    private func loadImageForEntry(_ entry: WatchlistEntry) async -> UIImage {
+    func loadImageForEntry(_ entry: WatchlistEntry) async -> UIImage {
+        #if DEBUG
+        print("[WatchlistManager] loadImageForEntry - Entry ID: \(entry.id)")
+        print("[WatchlistManager] loadImageForEntry - Entry bird: \(String(describing: entry.bird))")
+        print("[WatchlistManager] loadImageForEntry - Entry bird?.bird_id: \(String(describing: entry.bird?.bird_id))")
+        print("[WatchlistManager] loadImageForEntry - Entry bird?.name: \(String(describing: entry.bird?.name))")
+        print("[WatchlistManager] loadImageForEntry - Entry bird?.staticImageName: \(String(describing: entry.bird?.staticImageName))")
+        print("[WatchlistManager] loadImageForEntry - Entry photos count: \(entry.photos?.count ?? 0)")
+        #endif
+        
         // 1. Check if entry has a user photo
         if let photoPath = entry.photos?.first?.imagePath {
+            #if DEBUG
+            print("[WatchlistManager] loadImageForEntry - Trying to load user photo: \(photoPath)")
+            #endif
             if let userPhoto = loadUserPhoto(named: photoPath) {
+                #if DEBUG
+                print("[WatchlistManager] loadImageForEntry - Successfully loaded user photo")
+                #endif
                 return userPhoto
+            } else {
+                #if DEBUG
+                print("[WatchlistManager] loadImageForEntry - Failed to load user photo from disk")
+                #endif
             }
         }
         
         // 2. Fall back to bird's static image
         guard let bird = entry.bird else {
+            #if DEBUG
+            print("[WatchlistManager] loadImageForEntry - ERROR: entry.bird is nil!")
+            #endif
             return UIImage(systemName: "photo") ?? UIImage()
         }
         
-        return await loadImage(path: bird.staticImageName)
+        #if DEBUG
+        print("[WatchlistManager] loadImageForEntry - Loading bird static image: \(bird.staticImageName)")
+        #endif
+        let image = await loadImage(path: bird.staticImageName)
+        #if DEBUG
+        print("[WatchlistManager] loadImageForEntry - Loaded image size: \(image.size)")
+        #endif
+        return image
     }
     
     /// Loads a user photo from the documents directory
     /// - Parameter imageName: Name of the image file
     /// - Returns: UIImage if found, nil otherwise
-    private func loadUserPhoto(named imageName: String) -> UIImage? {
+    func loadUserPhoto(named imageName: String) -> UIImage? {
         let fileManager = FileManager.default
         let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
@@ -866,7 +928,7 @@ final class WatchlistManager: WatchlistRepository {
     /// Formats an observation date for display
     /// - Parameter date: The date to format
     /// - Returns: Formatted string or nil
-    private func formatObservationDate(_ date: Date?) -> String? {
+    func formatObservationDate(_ date: Date?) -> String? {
         guard let date = date else { return nil }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -876,7 +938,7 @@ final class WatchlistManager: WatchlistRepository {
     /// Determines the location string to display for an entry
     /// - Parameter entry: The watchlist entry
     /// - Returns: Location string or nil
-    private func determineLocation(for entry: WatchlistEntry) -> String? {
+    func determineLocation(for entry: WatchlistEntry) -> String? {
         if let userLocation = entry.locationDisplayName, !userLocation.isEmpty {
             return userLocation
         }

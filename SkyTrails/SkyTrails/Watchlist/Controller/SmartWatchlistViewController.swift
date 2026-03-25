@@ -40,6 +40,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     // ViewModels for pre-loaded data
     private var birdEntryViewModels: [BirdEntryCellViewModel] = []
+    private var groupedEntryViewModels: [[BirdEntryCellViewModel]] = []
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -186,9 +187,24 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 
                 allWatchlists = groupedResults.map { $0.0 }
                 filteredSections = groupedResults.map { $0.1 }
+                
+                // Pre-load ViewModels for all sections
+                Task {
+                    var allSectionViewModels: [[BirdEntryCellViewModel]] = []
+                    for sectionEntries in filteredSections {
+                        let viewModels = await manager.loadBirdEntryViewModels(
+                            from: sectionEntries,
+                            shouldShowAvatars: false
+                        )
+                        allSectionViewModels.append(viewModels)
+                    }
+                    self.groupedEntryViewModels = allSectionViewModels
+                    tableView.reloadData()
+                }
             } catch {
                 allWatchlists = []
                 filteredSections = []
+                groupedEntryViewModels = []
             }
 		} else {
             // Use enhanced filtering service for single list
@@ -446,7 +462,11 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if isShowingRecommendations { return recommendedBirds.count }
-		return watchlistType == .myWatchlist ? filteredSections[section].count : currentList.count
+        
+        if watchlistType == .myWatchlist {
+            return (section < groupedEntryViewModels.count) ? groupedEntryViewModels[section].count : filteredSections[section].count
+        }
+		return birdEntryViewModels.isEmpty ? currentList.count : birdEntryViewModels.count
 	}
 	
 	func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -467,37 +487,32 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 		
         if isShowingRecommendations {
             let bird = recommendedBirds[indexPath.row]
-#if DEBUG
-            let imageName = bird.staticImageName
-            print("[SmartWatchlist] Loading table image for recommended bird '\(bird.name)' with image '\(imageName)'")
-            if UIImage(named: imageName) == nil {
-                print("[SmartWatchlist] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
-            }
-#endif
             cell.configure(with: bird)
             cell.shouldShowAvatars = false
             return cell
         }
 
-		let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
-        
-        // Use ViewModel if available (for non-myWatchlist modes)
-        if watchlistType != .myWatchlist, !birdEntryViewModels.isEmpty, indexPath.row < birdEntryViewModels.count {
-            let viewModel = birdEntryViewModels[indexPath.row]
-            cell.configure(with: viewModel)
-        } else {
-            // Fallback to legacy configuration for myWatchlist mode
-#if DEBUG
-            if let bird = entry.bird {
-                let imageName = bird.staticImageName
-                print("[SmartWatchlist] Loading table image for watchlist entry bird '\(bird.name)' with image '\(imageName)'")
-                if UIImage(named: imageName) == nil {
-                    print("[SmartWatchlist] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
-                }
+        // Use ViewModels if available
+        if watchlistType == .myWatchlist {
+            if indexPath.section < groupedEntryViewModels.count, indexPath.row < groupedEntryViewModels[indexPath.section].count {
+                let viewModel = groupedEntryViewModels[indexPath.section][indexPath.row]
+                cell.configure(with: viewModel)
+            } else {
+                // Fallback to legacy configuration
+                let entry = filteredSections[indexPath.section][indexPath.row]
+                cell.shouldShowAvatars = false
+                cell.configure(with: entry)
             }
-#endif
-            cell.shouldShowAvatars = (watchlistType == .shared)
-            cell.configure(with: entry)
+        } else {
+            if !birdEntryViewModels.isEmpty, indexPath.row < birdEntryViewModels.count {
+                let viewModel = birdEntryViewModels[indexPath.row]
+                cell.configure(with: viewModel)
+            } else {
+                // Fallback to legacy configuration
+                let entry = currentList[indexPath.row]
+                cell.shouldShowAvatars = (watchlistType == .shared)
+                cell.configure(with: entry)
+            }
         }
         
 		if traitCollection.userInterfaceStyle == .dark {
