@@ -37,6 +37,9 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     
     private var isShowingRecommendations = false
     private var recommendedBirds: [Bird] = []
+    
+    // ViewModels for pre-loaded data
+    private var birdEntryViewModels: [BirdEntryCellViewModel] = []
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -171,25 +174,56 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         }
 
 		if watchlistType == .myWatchlist {
-			let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
-				let status = statusForCurrentFilter()
-				let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)) ?? []
-				let matching = entries.filter { entry in
-					guard let bird = entry.bird else { return false }
-					return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
-				}
-				return matching.isEmpty ? nil : (watchlist, matching)
-			}
-			
-			allWatchlists = filteredResults.map { $0.0 }
-			filteredSections = filteredResults.map { sortEntries($0.1) }
+            // Use enhanced filtering service for grouped results
+            do {
+                let status = statusForCurrentFilter()
+                let groupedResults = try manager.filteringService.fetchEntriesGroupedByWatchlist(
+                    watchlists: sourceWatchlists,
+                    status: status,
+                    searchText: searchText.isEmpty ? nil : searchText,
+                    sortOption: currentSortOption
+                )
+                
+                allWatchlists = groupedResults.map { $0.0 }
+                filteredSections = groupedResults.map { $0.1 }
+            } catch {
+                allWatchlists = []
+                filteredSections = []
+            }
 		} else {
-			let sourceList = entriesForCurrentFilter()
-			currentList = sourceList.filter { entry in
-				guard let bird = entry.bird else { return false }
-				return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
-			}
-			currentList = sortEntries(currentList)
+            // Use enhanced filtering service for single list
+            do {
+                let result = try manager.filteringService.fetchFilteredEntries(
+                    mode: watchlistType,
+                    watchlistId: currentWatchlistId,
+                    searchText: searchText.isEmpty ? nil : searchText,
+                    sortOption: currentSortOption,
+                    status: statusForCurrentFilter()
+                )
+                
+                // Update based on current filter
+                switch currentFilter {
+                case .all:
+                    currentList = result.observed + result.unobserved
+                case .observed:
+                    currentList = result.observed
+                case .unobserved:
+                    currentList = result.unobserved
+                }
+                
+                // Pre-load ViewModels for cells
+                Task {
+                    let shouldShowAvatars = (watchlistType == .shared)
+                    birdEntryViewModels = await manager.loadBirdEntryViewModels(
+                        from: currentList,
+                        shouldShowAvatars: shouldShowAvatars
+                    )
+                    tableView.reloadData()
+                }
+            } catch {
+                currentList = []
+                birdEntryViewModels = []
+            }
 		}
 		
         tableView.reloadData()
@@ -311,10 +345,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		}
 	}
 
-	private func sortEntries(_ entries: [WatchlistEntry]) -> [WatchlistEntry] {
-		return manager.sortingService.sort(entries: entries, by: currentSortOption)
-	}
-
 	private func statusForCurrentFilter() -> WatchlistEntryStatus? {
 		switch currentFilter {
 		case .all:
@@ -323,17 +353,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			return .observed
 		case .unobserved:
 			return .to_observe
-		}
-	}
-
-	private func entriesForCurrentFilter() -> [WatchlistEntry] {
-		switch currentFilter {
-		case .all:
-			return observedEntries + toObserveEntries
-		case .observed:
-			return observedEntries
-		case .unobserved:
-			return toObserveEntries
 		}
 	}
 
@@ -461,17 +480,26 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         }
 
 		let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
+        
+        // Use ViewModel if available (for non-myWatchlist modes)
+        if watchlistType != .myWatchlist, !birdEntryViewModels.isEmpty, indexPath.row < birdEntryViewModels.count {
+            let viewModel = birdEntryViewModels[indexPath.row]
+            cell.configure(with: viewModel)
+        } else {
+            // Fallback to legacy configuration for myWatchlist mode
 #if DEBUG
-        if let bird = entry.bird {
-            let imageName = bird.staticImageName
-            print("[SmartWatchlist] Loading table image for watchlist entry bird '\(bird.name)' with image '\(imageName)'")
-            if UIImage(named: imageName) == nil {
-                print("[SmartWatchlist] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
+            if let bird = entry.bird {
+                let imageName = bird.staticImageName
+                print("[SmartWatchlist] Loading table image for watchlist entry bird '\(bird.name)' with image '\(imageName)'")
+                if UIImage(named: imageName) == nil {
+                    print("[SmartWatchlist] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
+                }
             }
-        }
 #endif
-		cell.shouldShowAvatars = (watchlistType == .shared)
-		cell.configure(with: entry)
+            cell.shouldShowAvatars = (watchlistType == .shared)
+            cell.configure(with: entry)
+        }
+        
 		if traitCollection.userInterfaceStyle == .dark {
 			cell.backgroundColor = .secondarySystemBackground
 			cell.contentView.backgroundColor = .secondarySystemBackground

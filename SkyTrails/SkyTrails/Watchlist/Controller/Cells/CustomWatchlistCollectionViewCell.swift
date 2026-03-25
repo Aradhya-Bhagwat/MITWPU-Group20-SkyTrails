@@ -113,6 +113,44 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         label.font = .systemFont(ofSize: 12, weight: .bold)
     }
     
+    // MARK: - Enhanced Configuration (Uses ViewModel - NO LOGIC)
+    
+    /// Configure cell with pre-loaded ViewModel (pure display)
+    func configure(with viewModel: CustomWatchlistCellViewModel) {
+        updateCardAppearance()
+        titleLabel.text = viewModel.title
+        
+        if !viewModel.subtitle.isEmpty {
+            locationLabel.addIcon(text: viewModel.subtitle, iconName: "location.fill")
+            locationLabel.isHidden = false
+        } else {
+            locationLabel.isHidden = true
+        }
+        
+        if !viewModel.dateText.isEmpty {
+            dateLabel.addIcon(text: viewModel.dateText, iconName: "calendar")
+            dateLabel.isHidden = false
+        } else {
+            dateLabel.isHidden = true
+        }
+        
+        leftBadgeLabel.addIcon(text: "\(viewModel.totalCount)", iconName: "bird")
+        rightBadgeLabel.addIcon(text: "\(viewModel.observedCount)", iconName: "bird.fill")
+        
+        // Set pre-loaded cover image
+        if let coverImage = viewModel.coverImage {
+            coverImageView.image = coverImage
+            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+            alignImageTop()
+        } else {
+            coverImageView.image = nil
+            coverImageView.backgroundColor = .systemGray5
+            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+        }
+    }
+    
+    // MARK: - Legacy Configuration (Kept for backward compatibility)
+    
     func configure(with dto: WatchlistSummaryDTO) {
         updateCardAppearance()
         titleLabel.text = dto.title
