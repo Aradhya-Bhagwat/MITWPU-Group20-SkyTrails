@@ -768,6 +768,7 @@ final class WatchlistPersistenceService {
         var payload: [String: Any] = [
             "watchlist_entry_id": entry.id.uuidString,
             "watchlist_id": entry.watchlist?.watchlist_id.uuidString as Any,
+            "bird_id": entry.bird?.bird_id.uuidString as Any,  // CRITICAL FIX: Include bird_id in sync payload
             "nickname": entry.nickname as Any,
             "status": entry.status.rawValue,
             "notes": entry.notes as Any,
@@ -784,6 +785,13 @@ final class WatchlistPersistenceService {
             "added_date": ISO8601DateFormatter().string(from: entry.addedDate),
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
+        
+        #if DEBUG
+        print("[WatchlistPersistenceService] buildEntryPayloadData - entry.id: \(entry.id)")
+        print("[WatchlistPersistenceService] buildEntryPayloadData - entry.bird: \(String(describing: entry.bird))")
+        print("[WatchlistPersistenceService] buildEntryPayloadData - entry.bird?.bird_id: \(String(describing: entry.bird?.bird_id))")
+        print("[WatchlistPersistenceService] buildEntryPayloadData - bird_id in payload: \(payload["bird_id"] ?? "nil")")
+        #endif
         
         if operation == .delete {
             payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
