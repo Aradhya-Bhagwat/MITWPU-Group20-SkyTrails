@@ -8,8 +8,8 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     
     private let homeManager = HomeManager.shared
     private var homeScreenData: HomeScreenData?
-    private let homeTitleProfileImageView = UIImageView()
-    private var homeTitleProfileImageConstraints: [NSLayoutConstraint] = []
+    private let profileLocationHeaderView = ProfileLocationHeaderView()
+    private var profileLocationHeaderConstraints: [NSLayoutConstraint] = []
     private var upcomingBirds: [UpcomingBirdUI] = []
     private var spots: [PopularSpotUI] = []
     private var news: [NewsItem] = []
@@ -18,8 +18,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var animatedIndexPaths: Set<IndexPath> = []
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
-    private var authStateObserver: NSObjectProtocol?
-    private let avatarMaxPixelSize: CGFloat = 512
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
 
     private let emptyNewsItem = NewsItem(
@@ -38,12 +36,11 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         self.tabBarItem.title = "Home"
         self.navigationItem.largeTitleDisplayMode = .always
         navigationController?.navigationBar.prefersLargeTitles = true
-        setupHomeTitleProfileImageView()
+        setupProfileLocationHeaderView()
         setupLoadingIndicator()
         applySemanticAppearance()
         setupCollectionView()
         loadHomeData()
-        observeUserSessionChanges()
     }
 
     private func setupLoadingIndicator() {
@@ -69,106 +66,42 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        attachHomeTitleProfileImageViewIfNeeded()
+        attachProfileLocationHeaderViewIfNeeded()
         refreshHomeData()
-        loadUserProfileImage()
+        profileLocationHeaderView.refreshLocation()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        homeTitleProfileImageView.removeFromSuperview()
-        NSLayoutConstraint.deactivate(homeTitleProfileImageConstraints)
-        homeTitleProfileImageConstraints.removeAll()
+        profileLocationHeaderView.removeFromSuperview()
+        NSLayoutConstraint.deactivate(profileLocationHeaderConstraints)
+        profileLocationHeaderConstraints.removeAll()
     }
     
     @IBAction func profileTapped(_ sender: Any) {
         navigateToProfile()
     }
 
-    // Configures the profile image view in the navigation bar
-    private func setupHomeTitleProfileImageView() {
-        homeTitleProfileImageView.translatesAutoresizingMaskIntoConstraints = false
-        homeTitleProfileImageView.contentMode = .scaleAspectFill
-        homeTitleProfileImageView.clipsToBounds = true
-        homeTitleProfileImageView.layer.cornerRadius = 18
-        homeTitleProfileImageView.isUserInteractionEnabled = true
-        homeTitleProfileImageView.accessibilityLabel = "Profile"
-        loadUserProfileImage()
-
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapHomeTitleProfileImage))
-        homeTitleProfileImageView.addGestureRecognizer(tapGesture)
-    }
-    
-    // Fetches and displays the current user's profile photo
-    private func loadUserProfileImage() {
-        guard let user = UserSession.shared.getUser() else {
-            homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
-            return
-        }
-
-        let photo = user.profilePhoto
-        if photo.starts(with: "http") {
-            loadImage(from: photo)
-        } else if photo.starts(with: "file://") || FileManager.default.fileExists(atPath: photo) {
-            loadLocalImage(from: photo)
-        } else if !photo.isEmpty {
-            homeTitleProfileImageView.image = UIImage(named: photo) ?? UIImage(named: "defaultProfile")
-        } else {
-            homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
+    // Configures the profile location header view in the navigation bar
+    private func setupProfileLocationHeaderView() {
+        profileLocationHeaderView.onTap = { [weak self] in
+            self?.navigateToProfile()
         }
     }
     
-    private func loadImage(from urlString: String) {
-        guard let url = URL(string: urlString) else { return }
-        DispatchQueue.global(qos: .userInitiated).async {
-            if let data = try? Data(contentsOf: url),
-               let image = self.downsampledImage(from: data, maxPixelSize: self.avatarMaxPixelSize) {
-                DispatchQueue.main.async { self.homeTitleProfileImageView.image = image }
-            } else {
-                DispatchQueue.main.async { self.homeTitleProfileImageView.image = UIImage(named: "defaultProfile") }
-            }
-        }
-    }
-
-    private func loadLocalImage(from pathOrURLString: String) {
-        let fileURL = pathOrURLString.starts(with: "file://") ? URL(string: pathOrURLString) : URL(fileURLWithPath: pathOrURLString)
-        guard let fileURL,
-              let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe]),
-              let image = downsampledImage(from: data, maxPixelSize: avatarMaxPixelSize) else {
-            homeTitleProfileImageView.image = UIImage(named: "defaultProfile")
-            return
-        }
-        homeTitleProfileImageView.image = image
-    }
-
-    private func observeUserSessionChanges() {
-        authStateObserver = NotificationCenter.default.addObserver(forName: UserSession.authStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.loadUserProfileImage()
-        }
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(handleUserProfileChange), name: UserSession.userProfileDidChangeNotification, object: nil)
-    }
-    
-    @objc private func handleUserProfileChange() {
-        loadUserProfileImage()
-    }
-
-    // Places the profile image in the large title navigation bar area
-    private func attachHomeTitleProfileImageViewIfNeeded() {
-        guard let navBar = navigationController?.navigationBar, homeTitleProfileImageView.superview == nil else { return }
-        navBar.addSubview(homeTitleProfileImageView)
-        homeTitleProfileImageConstraints = [
-            homeTitleProfileImageView.widthAnchor.constraint(equalToConstant: 36),
-            homeTitleProfileImageView.heightAnchor.constraint(equalToConstant: 36),
-            homeTitleProfileImageView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor, constant: -16),
-            homeTitleProfileImageView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor, constant: -8)
+    // Places the profile location header in the large title navigation bar area
+    private func attachProfileLocationHeaderViewIfNeeded() {
+        guard let navBar = navigationController?.navigationBar,
+              profileLocationHeaderView.superview == nil else { return }
+        navBar.addSubview(profileLocationHeaderView)
+        profileLocationHeaderConstraints = [
+            profileLocationHeaderView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor, constant: -16),
+            profileLocationHeaderView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor, constant: -8)
         ]
-        NSLayoutConstraint.activate(homeTitleProfileImageConstraints)
+        NSLayoutConstraint.activate(profileLocationHeaderConstraints)
     }
 
-    @objc private func didTapHomeTitleProfileImage() {
-        navigateToProfile()
-    }
+
 
     private func navigateToProfile() {
         let storyboard = UIStoryboard(name: "Profile", bundle: nil)
@@ -177,24 +110,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         }
     }
 
-    deinit {
-        if let authStateObserver { NotificationCenter.default.removeObserver(authStateObserver) }
-    }
-
-    // Performance optimized image resizing for thumbnails
-    private func downsampledImage(from data: Data, maxPixelSize: CGFloat) -> UIImage? {
-        let options = [kCGImageSourceShouldCache: false] as CFDictionary
-        guard let source = CGImageSourceCreateWithData(data as CFData, options) else { return nil }
-        let downsampleOptions = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: false,
-            kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelSize)
-        ] as CFDictionary
-        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions) else { return nil }
-        return UIImage(cgImage: cgImage)
-    }
-    
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         cachedUpcomingBirdCardWidth = nil; cachedSpotsCardWidth = nil

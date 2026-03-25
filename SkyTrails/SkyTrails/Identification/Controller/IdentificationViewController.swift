@@ -17,6 +17,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private var histories: [IdentificationSession] = []
     private var hasRefreshedManifestThisSession = false
     
+    // Profile Location Header
+    private let profileLocationHeaderView = ProfileLocationHeaderView()
+    private var profileLocationHeaderConstraints: [NSLayoutConstraint] = []
+    
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var historyCollectionView: UICollectionView!
@@ -37,6 +41,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        attachProfileLocationHeaderViewIfNeeded()
+        profileLocationHeaderView.refreshLocation()
         triggerManifestRefreshIfNeeded()
         fetchHistory()
         updateHistoryInteraction()
@@ -45,14 +51,24 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         scheduleHistoryCollectionHeightUpdate()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        profileLocationHeaderView.removeFromSuperview()
+        NSLayoutConstraint.deactivate(profileLocationHeaderConstraints)
+        profileLocationHeaderConstraints.removeAll()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.title = "Identify Bird"
         self.tabBarItem.title = "Identification"
+        self.navigationItem.largeTitleDisplayMode = .always
+        navigationController?.navigationBar.prefersLargeTitles = true
         setupTraitChangeHandling()
         setupModel()
         setupOptions()
         fetchHistory()
+        setupProfileLocationHeaderView()
         
         let nib = UINib(nibName: "HistoryCollectionViewCell", bundle: nil)
         historyCollectionView.register(nib, forCellWithReuseIdentifier: "history_cell")
@@ -75,6 +91,30 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         updateSelectionState()
         triggerManifestRefreshIfNeeded()
         prefetchLikelyIdentificationImages()
+    }
+    
+    private func setupProfileLocationHeaderView() {
+        profileLocationHeaderView.onTap = { [weak self] in
+            self?.navigateToProfile()
+        }
+    }
+    
+    private func attachProfileLocationHeaderViewIfNeeded() {
+        guard let navBar = navigationController?.navigationBar,
+              profileLocationHeaderView.superview == nil else { return }
+        navBar.addSubview(profileLocationHeaderView)
+        profileLocationHeaderConstraints = [
+            profileLocationHeaderView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor, constant: -16),
+            profileLocationHeaderView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor, constant: -8)
+        ]
+        NSLayoutConstraint.activate(profileLocationHeaderConstraints)
+    }
+    
+    private func navigateToProfile() {
+        let storyboard = UIStoryboard(name: "Profile", bundle: nil)
+        if let profileVC = storyboard.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController {
+            navigationController?.pushViewController(profileVC, animated: true)
+        }
     }
 
     private func triggerManifestRefreshIfNeeded() {

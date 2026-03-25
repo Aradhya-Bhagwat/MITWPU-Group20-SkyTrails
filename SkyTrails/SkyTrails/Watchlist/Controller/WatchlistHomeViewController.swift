@@ -13,6 +13,10 @@ class WatchlistHomeViewController: UIViewController {
     // ViewModels with pre-loaded images
     private var myWatchlistViewModel: WatchlistCellViewModel?
     private var customWatchlistViewModels: [CustomWatchlistCellViewModel] = []
+    
+    // Profile Location Header
+    private let profileLocationHeaderView = ProfileLocationHeaderView()
+    private var profileLocationHeaderConstraints: [NSLayoutConstraint] = []
 	enum WatchlistSection: Int, CaseIterable {
 		case myWatchlist
 		case customWatchlist
@@ -51,14 +55,23 @@ class WatchlistHomeViewController: UIViewController {
 		super.viewDidLoad()
 		setupUI()
 		setupCollectionView()
-		
+		setupProfileLocationHeaderView()
 		
 		loadData()
 	}
 	
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
+		attachProfileLocationHeaderViewIfNeeded()
+		profileLocationHeaderView.refreshLocation()
 		loadData()
+	}
+	
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		profileLocationHeaderView.removeFromSuperview()
+		NSLayoutConstraint.deactivate(profileLocationHeaderConstraints)
+		profileLocationHeaderConstraints.removeAll()
 	}
 	
 	private func loadData() {
@@ -124,6 +137,31 @@ class WatchlistHomeViewController: UIViewController {
 		self.navigationItem.title = "Watchlist"
 		self.tabBarItem.title = "Watchlist"
 		self.navigationItem.largeTitleDisplayMode = .always
+		navigationController?.navigationBar.prefersLargeTitles = true
+	}
+	
+	private func setupProfileLocationHeaderView() {
+		profileLocationHeaderView.onTap = { [weak self] in
+			self?.navigateToProfile()
+		}
+	}
+	
+	private func attachProfileLocationHeaderViewIfNeeded() {
+		guard let navBar = navigationController?.navigationBar,
+		      profileLocationHeaderView.superview == nil else { return }
+		navBar.addSubview(profileLocationHeaderView)
+		profileLocationHeaderConstraints = [
+			profileLocationHeaderView.trailingAnchor.constraint(equalTo: navBar.trailingAnchor, constant: -16),
+			profileLocationHeaderView.bottomAnchor.constraint(equalTo: navBar.bottomAnchor, constant: -8)
+		]
+		NSLayoutConstraint.activate(profileLocationHeaderConstraints)
+	}
+	
+	private func navigateToProfile() {
+		let storyboard = UIStoryboard(name: "Profile", bundle: nil)
+		if let profileVC = storyboard.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController {
+			navigationController?.pushViewController(profileVC, animated: true)
+		}
 	}
 	
 	private func setupCollectionView() {
