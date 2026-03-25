@@ -5,7 +5,8 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var historyImageView: UIImageView!
     @IBOutlet weak var specieNameLabel: UILabel!
-    @IBOutlet weak var dateLabel: UILabel!
+    @IBOutlet weak var dateLabel: UILabel?
+    @IBOutlet weak var speciesCapsuleView: UIView!
     
     @IBOutlet weak var containeView: UIView!
     private var imageTask: Task<Void, Never>?
@@ -41,6 +42,8 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         }
 
         containeView.backgroundColor = contentView.backgroundColor
+        speciesCapsuleView.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.92)
+        speciesCapsuleView.layer.borderColor = UIColor.secondaryLabel.withAlphaComponent(0.2).cgColor
 
         if isDarkMode {
             layer.shadowOpacity = 0
@@ -65,8 +68,13 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         contentView.clipsToBounds = true
         specieNameLabel.font = .preferredFont(forTextStyle: .subheadline)
         specieNameLabel.adjustsFontForContentSizeCategory = true
-        dateLabel.font = .preferredFont(forTextStyle: .caption1)
-        dateLabel.adjustsFontForContentSizeCategory = true
+        specieNameLabel.textColor = .black
+        specieNameLabel.numberOfLines = 0
+        specieNameLabel.lineBreakMode = .byWordWrapping
+
+        speciesCapsuleView.layer.cornerRadius = 12
+        speciesCapsuleView.layer.borderWidth = 1
+        speciesCapsuleView.clipsToBounds = true
         applySelectionAppearance()
     }
 
@@ -77,7 +85,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         representedImageKey = nil
         historyImageView.image = nil
         specieNameLabel.text = nil
-        dateLabel.text = nil
+        dateLabel?.text = nil
        
         applySelectionAppearance()
     }
@@ -90,9 +98,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     func configureCell(historyItem: IdentificationSession) {
         applySelectionAppearance()
         specieNameLabel.textAlignment = .natural
-        specieNameLabel.textColor = .label
-        dateLabel.textAlignment = .natural
-        dateLabel.textColor = .secondaryLabel
+        specieNameLabel.textColor = .secondaryLabel
         
         if let bird = historyItem.result?.bird {
             specieNameLabel.text = bird.commonName
@@ -122,9 +128,9 @@ class HistoryCollectionViewCell: UICollectionViewCell {
             historyImageView.contentMode = .scaleAspectFit
         }
 
-        historyImageView.layer.cornerRadius = 10
+        historyImageView.layer.cornerRadius = 0
         historyImageView.clipsToBounds = true
-        dateLabel.text = formatDate(historyItem.observationDate)
+        dateLabel?.text = nil
     }
     
     func showEmptyState() {
@@ -136,9 +142,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         specieNameLabel.textAlignment = .center
         specieNameLabel.textColor = .secondaryLabel
 
-        dateLabel.text = "Start identifying birds"
-        dateLabel.textAlignment = .center
-        dateLabel.textColor = .tertiaryLabel
+        dateLabel?.text = nil
     }
 
     override var isSelected: Bool {
@@ -159,9 +163,4 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         applySelectionAppearance()
     }
 
-    private func formatDate(_ date: Date) -> String {
-        let outputFormatter = DateFormatter()
-        outputFormatter.dateFormat = "d MMM yyyy"
-        return outputFormatter.string(from: date)
-    }
 }
