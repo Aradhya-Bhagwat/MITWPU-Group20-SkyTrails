@@ -45,7 +45,7 @@
                         <constraints>
                             <constraint firstAttribute="bottom" secondItem="HW6-l3-VNR" secondAttribute="bottom" id="9MC-3Y-Cg6"/>
                             <constraint firstItem="HW6-l3-VNR" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="DMx-2w-18I"/>
-                            <constraint firstItem="HW6-l3-VNR" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" id="cSG-uR-d13"/>
+                            <constraint firstItem="HW6-l3-VNR" firstAttribute="top" secondItem="5EZ-qb-Rvc" secondAttribute="top" id="cSG-uR-d13"/>
                             <constraint firstItem="HW6-l3-VNR" firstAttribute="trailing" secondItem="vDu-zF-Fre" secondAttribute="trailing" id="wmX-Cg-eRQ"/>
                         </constraints>
                     </view>

@@ -10,10 +10,22 @@ enum WatchlistConstants {
 final class LocationPreferences {
     static let shared = LocationPreferences()
     
+    struct SavedAddress: Codable, Identifiable {
+        let id: UUID
+        let name: String
+        let latitude: Double
+        let longitude: Double
+        
+        var coordinate: CLLocationCoordinate2D {
+            CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        }
+    }
+    
     private let defaults = UserDefaults.standard
     private let homeLatKey = "kUserHomeLatitude"
     private let homeLonKey = "kUserHomeLongitude"
     private let homeNameKey = "kUserHomeLocationName"
+    private let savedAddressesKey = "kUserSavedAddresses"
     
     private init() {}
     
@@ -40,6 +52,34 @@ final class LocationPreferences {
         set { defaults.set(newValue, forKey: homeNameKey) }
     }
     
+    var savedAddresses: [SavedAddress] {
+        get {
+            guard let data = defaults.data(forKey: savedAddressesKey),
+                  let addresses = try? JSONDecoder().decode([SavedAddress].self, from: data) else {
+                return []
+            }
+            return addresses
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                defaults.set(data, forKey: savedAddressesKey)
+            }
+        }
+    }
+    
+    func saveAddress(name: String, coordinate: CLLocationCoordinate2D) {
+        var current = savedAddresses
+        let newAddress = SavedAddress(id: UUID(), name: name, latitude: coordinate.latitude, longitude: coordinate.longitude)
+        current.append(newAddress)
+        savedAddresses = current
+    }
+    
+    func removeSavedAddress(id: UUID) {
+        var current = savedAddresses
+        current.removeAll { $0.id == id }
+        savedAddresses = current
+    }
+    
     func setHomeLocation(_ coordinate: CLLocationCoordinate2D, name: String? = nil) async {
         homeLocation = coordinate
         
@@ -56,6 +96,7 @@ final class LocationPreferences {
     func clear() {
         homeLocation = nil
         homeLocationName = nil
+        savedAddresses = []
     }
 }
 

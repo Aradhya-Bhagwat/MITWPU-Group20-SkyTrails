@@ -34,8 +34,10 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         setupTraitChangeHandling()
         self.navigationItem.title = "Home"
         self.tabBarItem.title = "Home"
-        self.navigationItem.largeTitleDisplayMode = .always
+        self.navigationItem.largeTitleDisplayMode = .automatic
         navigationController?.navigationBar.prefersLargeTitles = true
+        view.sendSubviewToBack(homeCollectionView)
+        homeCollectionView.contentInsetAdjustmentBehavior = .always
         setupProfileLocationHeaderView()
         setupLoadingIndicator()
         applySemanticAppearance()
