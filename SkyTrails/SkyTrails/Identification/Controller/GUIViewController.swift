@@ -362,8 +362,47 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             
             if isChevronCell {
                 cell.configureAsChevron(isExpanded: isVariationsExpanded)
+            } else if indexPath.row == 0 {
+                let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
+                let cleanCategory = cleanForFilename(categoryName)
+                let preferredNames = ["default", "plain", "solid"]
+                var displayVariant: FieldMarkVariant? = nil
+                var thumb: UIImage? = nil
+
+                for preferred in preferredNames {
+                    if let match = variants.first(where: { cleanForFilename($0.name) == preferred }) {
+                        let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: match.name)
+                        let candidate = variationThumbnailCache[cacheKey]
+                            ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
+                            ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: match.name)
+                        if candidate != nil {
+                            displayVariant = match
+                            thumb = candidate
+                            break
+                        }
+                    }
+                }
+
+                if displayVariant == nil {
+                    let fallbackName = "id_fieldmark_\(cleanCategory)"
+                    thumb = UIImage(named: fallbackName) ?? UIImage(named: "id_icn_field_marks")
+                }
+
+                let isSelected = displayVariant != nil && selectedVariations[categoryName] == displayVariant!.name
+                cell.configure(image: thumb, isSelected: isSelected)
+
+                if let variant = displayVariant {
+                    loadVariationThumbnailRemotely(
+                        for: cell,
+                        at: indexPath,
+                        shapeID: shapeID,
+                        categoryName: categoryName,
+                        variantName: variant.name,
+                        isSelected: isSelected
+                    )
+                }
             } else {
-                let variantIndex = indexPath.row == 0 ? 0 : indexPath.row - 1
+                let variantIndex = indexPath.row - 1
                 let variant = variants[variantIndex]
                 let isSelected = selectedVariations[categoryName] == variant.name
                 let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
@@ -395,8 +434,20 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             if isChevronCell {
                 isVariationsExpanded = !isVariationsExpanded
                 variationsCollectionView.reloadData()
+            } else if indexPath.row == 0 {
+                let currentMark = categories[currentCategoryIndex]
+                let preferredNames = ["default", "plain", "solid"]
+                if let match = variants.first(where: { preferredNames.contains(cleanForFilename($0.name)) }) {
+                    selectedVariations[currentMark.area] = match.name
+                    viewModel.toggleVariant(match, for: currentMark)
+                    updateCanvas(category: currentMark.area, variant: match.name)
+                } else {
+                    selectedVariations.removeValue(forKey: currentMark.area)
+                }
+                variationsCollectionView.reloadData()
+                updateNextButtonState()
             } else {
-                let variantIndex = indexPath.row == 0 ? 0 : indexPath.row - 1
+                let variantIndex = indexPath.row - 1
                 let variant = variants[variantIndex]
                 let currentMark = categories[currentCategoryIndex]
                 
