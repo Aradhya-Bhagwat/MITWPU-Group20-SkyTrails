@@ -737,7 +737,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="O4L-s3-kva">
-                                <rect key="frame" x="40" y="124" width="354" height="108"/>
+                                <rect key="frame" x="16" y="124" width="370" height="108"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="108" id="LTy-u0-INe"/>
@@ -794,8 +794,8 @@
                             <constraint firstItem="Cww-ay-CWI" firstAttribute="leading" secondItem="irx-mu-IBT" secondAttribute="trailing" id="Y2N-54-aZU"/>
                             <constraint firstItem="irx-mu-IBT" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="32" id="aV9-aT-ekX"/>
                             <constraint firstItem="Cww-ay-CWI" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="canvas-top"/>
-                            <constraint firstItem="O4L-s3-kva" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="40" id="cat-leading"/>
-                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="O4L-s3-kva" secondAttribute="trailing" constant="8" id="cat-trailing"/>
+                            <constraint firstItem="O4L-s3-kva" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="16" id="cat-leading"/>
+                            <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="O4L-s3-kva" secondAttribute="trailing" constant="16" id="cat-trailing"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="Cww-ay-CWI" secondAttribute="bottom" constant="8" id="ccK-dl-Z0V"/>
                             <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="56" id="icp-v3-ZQR"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="irx-mu-IBT" secondAttribute="bottom" constant="8" id="var-bottom"/>
