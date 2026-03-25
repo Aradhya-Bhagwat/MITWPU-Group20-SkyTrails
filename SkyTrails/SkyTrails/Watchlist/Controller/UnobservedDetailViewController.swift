@@ -221,27 +221,91 @@ class UnobservedDetailViewController: UIViewController {
             let result = await manager.orchestrationService.saveEntry(params: params)
             
             if result.noMatchingWatchlists {
-                let alert = UIAlertController(
-                    title: "No Matching Watchlists",
-                    message: "Bird could not find any matching watchlists",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
-                present(alert, animated: true)
+                promptToCreateCurrentMonthWatchlist(using: params)
                 return
             }
-            
-            if result.success, let callbackBird = result.bird {
-                if let onSave = onSave {
-                    onSave(callbackBird)
-                } else {
-                    navigationController?.popViewController(animated: true)
-                }
+
+            finalizeSave(with: result)
+        }
+	}
+
+    private func finalizeSave(with result: WatchlistEntryOrchestrationService.SaveResult) {
+        if result.success, let callbackBird = result.bird {
+            if let onSave = onSave {
+                onSave(callbackBird)
             } else {
                 navigationController?.popViewController(animated: true)
             }
+        } else {
+            navigationController?.popViewController(animated: true)
         }
-	}
+    }
+
+    private func promptToCreateCurrentMonthWatchlist(using params: WatchlistEntryOrchestrationService.SaveParameters) {
+        let watchlistTitle = currentMonthWatchlistTitle()
+        let alert = UIAlertController(
+            title: "No Matching Watchlists",
+            message: "Create \"\(watchlistTitle)\" and add this bird there?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Create", style: .default) { [weak self] _ in
+            guard let self else { return }
+            Task {
+                let (startDate, endDate) = self.currentMonthDateRange()
+                do {
+                    let newWatchlistId = try self.manager.addWatchlist(
+                        title: watchlistTitle,
+                        location: "General",
+                        startDate: startDate,
+                        endDate: endDate,
+                        type: .custom,
+                        locationDisplayName: nil
+                    )
+
+                    let retryParams = WatchlistEntryOrchestrationService.SaveParameters(
+                        entry: params.entry,
+                        bird: params.bird,
+                        birdName: params.birdName,
+                        watchlistId: newWatchlistId,
+                        notes: params.notes,
+                        location: params.location,
+                        observationDate: params.observationDate,
+                        endDate: params.endDate,
+                        photoName: params.photoName,
+                        asObserved: params.asObserved,
+                        shouldUseRuleMatching: false
+                    )
+
+                    let retryResult = await self.manager.orchestrationService.saveEntry(params: retryParams)
+                    self.finalizeSave(with: retryResult)
+                } catch {
+                    let failureAlert = UIAlertController(
+                        title: "Unable to Create Watchlist",
+                        message: "Please try again.",
+                        preferredStyle: .alert
+                    )
+                    failureAlert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(failureAlert, animated: true)
+                }
+            }
+        })
+        present(alert, animated: true)
+    }
+
+    private func currentMonthWatchlistTitle() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "LLLL"
+        return "\(formatter.string(from: Date())) watchlist"
+    }
+
+    private func currentMonthDateRange() -> (Date, Date) {
+        let calendar = Calendar.current
+        let now = Date()
+        let start = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let end = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: start) ?? now
+        return (start, end)
+    }
 	
 	private func updateLocationSelection(_ location: LocationService.LocationData) {
 		locationSearchBar.text = location.displayName
