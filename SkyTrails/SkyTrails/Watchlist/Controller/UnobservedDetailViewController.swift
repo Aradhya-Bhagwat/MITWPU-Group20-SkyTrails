@@ -7,6 +7,7 @@ class UnobservedDetailViewController: UIViewController {
 
 	private let manager = WatchlistManager.shared
 	private let locationService = LocationService.shared
+    private var imageLoadTask: Task<Void, Never>?
 	var bird: Bird?
     var entry: WatchlistEntry?
 	var watchlistId: UUID?
@@ -153,16 +154,16 @@ class UnobservedDetailViewController: UIViewController {
 	
 	private func loadImage(for bird: Bird) {
 		let imageName = bird.staticImageName
-		if let assetImage = UIImage(named: imageName) {
-			birdImageView.image = assetImage
-		} else {
-			let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imageName)
-			if let docImage = UIImage(contentsOfFile: fileURL.path) {
-				birdImageView.image = docImage
-			} else {
-				birdImageView.image = UIImage(systemName: "photo")
-			}
-		}
+        imageLoadTask?.cancel()
+        birdImageView.image = WatchlistImageLoader.previewImage(named: imageName) ?? UIImage(systemName: "photo")
+
+        imageLoadTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            let image = await WatchlistImageLoader.image(named: imageName)
+            guard !Task.isCancelled else { return }
+
+            self.birdImageView.image = image ?? UIImage(systemName: "photo")
+        }
 	}
 	@objc private func dismissKeyboard() {
 		view.endEditing(true)

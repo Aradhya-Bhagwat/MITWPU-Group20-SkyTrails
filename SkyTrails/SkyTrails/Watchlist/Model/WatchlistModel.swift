@@ -253,8 +253,8 @@ extension Watchlist {
         
         let stats = WatchlistStatsDTO(
             observedCount: self.observedCount,
-            totalCount: self.speciesCount,
-            rareCount: 0
+            unobservedCount: max(self.speciesCount - self.observedCount, 0),
+            totalCount: self.speciesCount
         )
         
         return WatchlistDetailDTO(
@@ -286,8 +286,8 @@ extension Watchlist {
         
         let stats = WatchlistStatsDTO(
             observedCount: self.observedCount,
-            totalCount: self.speciesCount,
-            rareCount: 0
+            unobservedCount: max(self.speciesCount - self.observedCount, 0),
+            totalCount: self.speciesCount
         )
         
         return WatchlistSummaryDTO(

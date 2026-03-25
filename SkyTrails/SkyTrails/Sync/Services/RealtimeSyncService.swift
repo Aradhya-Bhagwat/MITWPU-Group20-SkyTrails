@@ -279,20 +279,25 @@ final class RealtimeSyncService: NSObject {
                   let deleteId = oldRecord.uuid(for: "watchlist_id") else { return }
             try await deleteWatchlist(id: deleteId)
         }
+
+        await reconcileWatchlistUI(for: id, refreshCoverImage: true)
     }
     
     private func handleEntryEvent(_ payload: RealtimePayload) async throws {
-        guard let record = payload.record,
-              let id = record.uuid(for: "watchlist_entry_id") else { return }
+        let record = payload.record
+        let oldRecord = payload.oldRecord
+        guard let id = record?.uuid(for: "watchlist_entry_id") ?? oldRecord?.uuid(for: "watchlist_entry_id") else { return }
+        let watchlistID = record?.uuid(for: "watchlist_id") ?? oldRecord?.uuid(for: "watchlist_id")
         
         switch payload.type {
         case .insert, .update:
+            guard let record else { return }
             try await upsertEntry(from: record, id: id)
         case .delete:
-            guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "watchlist_entry_id") else { return }
-            try await deleteEntry(id: deleteId)
+            try await deleteEntry(id: id)
         }
+
+        await reconcileWatchlistUI(for: watchlistID, refreshCoverImage: true)
     }
     
     private func handleRuleEvent(_ payload: RealtimePayload) async throws {
@@ -310,17 +315,26 @@ final class RealtimeSyncService: NSObject {
     }
     
     private func handlePhotoEvent(_ payload: RealtimePayload) async throws {
-        guard let record = payload.record,
-              let id = record.uuid(for: "observed_bird_photo_id") else { return }
+        let record = payload.record
+        let oldRecord = payload.oldRecord
+        guard let id = record?.uuid(for: "observed_bird_photo_id") ?? oldRecord?.uuid(for: "observed_bird_photo_id") else { return }
+        let entryID = record?.uuid(for: "watchlist_entry_id") ?? oldRecord?.uuid(for: "watchlist_entry_id")
         
         switch payload.type {
         case .insert, .update:
+            guard let record else { return }
             try await upsertPhoto(from: record, id: id)
         case .delete:
-            guard let oldRecord = payload.oldRecord,
-                  let deleteId = oldRecord.uuid(for: "observed_bird_photo_id") else { return }
-            try await deletePhoto(id: deleteId)
+            try await deletePhoto(id: id)
         }
+
+        let affectedWatchlistID: UUID?
+        if let entryID {
+            affectedWatchlistID = try? watchlistID(forEntryID: entryID)
+        } else {
+            affectedWatchlistID = nil
+        }
+        await reconcileWatchlistUI(for: affectedWatchlistID, refreshCoverImage: true)
     }
 
     private func handleIdentificationSessionEvent(_ payload: RealtimePayload) async throws {
@@ -721,6 +735,23 @@ final class RealtimeSyncService: NSObject {
                 }
             }
         }
+    }
+
+    private func watchlistID(forEntryID entryID: UUID) throws -> UUID? {
+        try WatchlistManager.shared.fetchAll(
+            WatchlistEntry.self,
+            descriptor: FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == entryID })
+        ).first?.watchlist?.watchlist_id
+    }
+
+    private func reconcileWatchlistUI(for watchlistID: UUID?, refreshCoverImage: Bool) async {
+        WatchlistManager.shared.invalidateMyWatchlistCache()
+
+        if refreshCoverImage, let watchlistID {
+            try? WatchlistManager.shared.refreshCoverImage(watchlistID: watchlistID)
+        }
+
+        NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
     }
 
     private func upsertIdentificationSession(from record: [String: JSONValue], id: UUID) async throws {

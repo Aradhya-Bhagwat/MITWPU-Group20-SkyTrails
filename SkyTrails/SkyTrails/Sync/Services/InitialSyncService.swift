@@ -242,6 +242,12 @@ actor InitialSyncService {
             marksSynced: counts.8,
             timestamp: Date()
         )
+
+        await MainActor.run {
+            WatchlistManager.shared.invalidateMyWatchlistCache()
+            NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
+        }
+
         return summary
     }
 

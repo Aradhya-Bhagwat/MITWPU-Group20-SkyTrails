@@ -1,10 +1,40 @@
 
 import UIKit
 
+enum WatchlistImageLoader {
+    static func previewImage(named imageName: String) -> UIImage? {
+        loadUserPhoto(named: imageName) ?? UIImage(named: imageName)
+    }
+
+    @MainActor
+    static func image(named imageName: String) async -> UIImage? {
+        if let userPhoto = loadUserPhoto(named: imageName) {
+            return userPhoto
+        }
+
+        if let assetImage = UIImage(named: imageName) {
+            return await IdentificationImageService.shared.image(for: imageName, shapeId: nil) ?? assetImage
+        }
+
+        return await IdentificationImageService.shared.image(for: imageName, shapeId: nil)
+    }
+
+    private static func loadUserPhoto(named imageName: String) -> UIImage? {
+        let fileManager = FileManager.default
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
+        let imagePath = photosDirectory.appendingPathComponent(imageName)
+
+        return UIImage(contentsOfFile: imagePath.path)
+    }
+}
+
 class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "CustomWatchlistCollectionViewCell"
     private var defaultCoverOverImageBackgroundColor: UIColor?
+    private var imageLoadTask: Task<Void, Never>?
+    private var currentImageName: String?
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var coverImageView: UIImageView!
     @IBOutlet weak var coverOverImageView: UIView!
@@ -29,6 +59,16 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         
         self.clipsToBounds = false
         self.contentView.clipsToBounds = false
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageLoadTask?.cancel()
+        imageLoadTask = nil
+        currentImageName = nil
+        coverImageView.image = nil
+        coverImageView.backgroundColor = .systemGray5
+        coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
     }
     
     private func setupInteractions() {
@@ -114,7 +154,6 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     }
     
     func configure(with dto: WatchlistSummaryDTO) {
-        let unobservedCount = max(dto.stats.totalCount - dto.stats.observedCount, 0)
         updateCardAppearance()
         titleLabel.text = dto.title
         if !dto.subtitle.isEmpty {
@@ -129,46 +168,41 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         } else {
             dateLabel.isHidden = true
         }
-        leftBadgeLabel.addIcon(text: "\(unobservedCount)", iconName: "bird")
+        leftBadgeLabel.addIcon(text: "\(dto.stats.unobservedCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
-        if let imageName = dto.image {
-            if let userPhoto = loadUserPhoto(named: imageName) {
-                coverImageView.image = userPhoto
-                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-                alignImageTop()
-            } 
-            else if let assetImage = UIImage(named: imageName) {
-                coverImageView.image = assetImage
-                coverImageView.backgroundColor = .systemGray5
-                Task { @MainActor in
-                    if let supabaseImage = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
-                        self.coverImageView.image = supabaseImage
-                    }
-                }
-            } else {
-                coverImageView.backgroundColor = .systemGray5
-                Task { @MainActor in
-                    if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
-                        self.coverImageView.image = image
-                        self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-                        self.alignImageTop()
-                    }
-                }
-            }
+        configureCoverImage(named: dto.image)
+    }
+
+    private func configureCoverImage(named imageName: String?) {
+        imageLoadTask?.cancel()
+        currentImageName = imageName
+        coverImageView.backgroundColor = .systemGray5
+        coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+
+        guard let imageName, !imageName.isEmpty else {
+            coverImageView.image = nil
+            return
+        }
+
+        if let previewImage = WatchlistImageLoader.previewImage(named: imageName) {
+            coverImageView.image = previewImage
+            alignImageTop()
         } else {
             coverImageView.image = nil
-            coverImageView.backgroundColor = .systemGray5
-            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
         }
-    }
-    
-    private func loadUserPhoto(named imageName: String) -> UIImage? {
-        let fileManager = FileManager.default
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
-        let imagePath = photosDirectory.appendingPathComponent(imageName)
-        
-        return UIImage(contentsOfFile: imagePath.path)
+
+        imageLoadTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            let resolvedImage = await WatchlistImageLoader.image(named: imageName)
+            guard !Task.isCancelled, self.currentImageName == imageName else { return }
+
+            self.coverImageView.image = resolvedImage
+            self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+
+            if resolvedImage != nil {
+                self.alignImageTop()
+            }
+        }
     }
     
     private func isDateValid(start: Date, end: Date) -> Bool {

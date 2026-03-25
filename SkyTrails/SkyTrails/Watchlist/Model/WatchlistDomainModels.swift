@@ -121,15 +121,15 @@ struct WatchlistSummaryDTO: Hashable {
 
 struct WatchlistStatsDTO: Hashable {
     let observedCount: Int
+    let unobservedCount: Int
     let totalCount: Int
-    let rareCount: Int
     
     var progressPercentage: Double {
         guard totalCount > 0 else { return 0 }
         return Double(observedCount) / Double(totalCount) * 100
     }
     
-    static let empty = WatchlistStatsDTO(observedCount: 0, totalCount: 0, rareCount: 0)
+    static let empty = WatchlistStatsDTO(observedCount: 0, unobservedCount: 0, totalCount: 0)
 }
 
 struct WatchlistDetailDTO {

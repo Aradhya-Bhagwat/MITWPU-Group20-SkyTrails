@@ -18,7 +18,7 @@ final class WatchlistFilteringService {
     
     // MARK: - Unique Entry Fetching
     
-    /// Fetches unique entries from multiple watchlists, deduplicating by bird name
+    /// Fetches unique entries from multiple watchlists, deduplicating by bird id
     /// - Parameters:
     ///   - watchlists: The watchlists to fetch from
     ///   - status: The entry status to filter by
@@ -29,21 +29,26 @@ final class WatchlistFilteringService {
     ) throws -> [WatchlistEntry] {
         guard let manager = manager else { return [] }
         
-        var uniqueEntries: [WatchlistEntry] = []
-        var seenBirdNames = Set<String>()
+        var uniqueEntriesByBirdID: [UUID: WatchlistEntry] = [:]
         
         for watchlist in watchlists {
             let entries = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)
             
             for entry in entries {
-                if let birdName = entry.bird?.name, !seenBirdNames.contains(birdName) {
-                    seenBirdNames.insert(birdName)
-                    uniqueEntries.append(entry)
+                guard let birdID = entry.bird?.bird_id else { continue }
+                if let existing = uniqueEntriesByBirdID[birdID] {
+                    let entryDate = entry.observationDate ?? entry.addedDate
+                    let existingDate = existing.observationDate ?? existing.addedDate
+                    if entryDate > existingDate {
+                        uniqueEntriesByBirdID[birdID] = entry
+                    }
+                } else {
+                    uniqueEntriesByBirdID[birdID] = entry
                 }
             }
         }
         
-        return uniqueEntries
+        return uniqueEntriesByBirdID.values.sorted { ($0.observationDate ?? $0.addedDate) > ($1.observationDate ?? $1.addedDate) }
     }
     
     /// Result structure for mode-based fetching
@@ -91,10 +96,8 @@ final class WatchlistFilteringService {
     // MARK: - Private Helpers
     
     private func fetchForMyWatchlist(manager: WatchlistManager) throws -> ModeBasedEntriesResult {
-        let allWatchlists = try manager.fetchWatchlists()
-        
-        let uniqueObserved = try fetchUniqueEntries(from: allWatchlists, status: .observed)
-        let uniqueToObserve = try fetchUniqueEntries(from: allWatchlists, status: .to_observe)
+        let uniqueObserved = try manager.fetchEntries(watchlistID: WatchlistConstants.myWatchlistID, status: .observed)
+        let uniqueToObserve = try manager.fetchEntries(watchlistID: WatchlistConstants.myWatchlistID, status: .to_observe)
         
         // Show recommendations if both lists are empty
         let shouldShowRecommendations = uniqueObserved.isEmpty && uniqueToObserve.isEmpty

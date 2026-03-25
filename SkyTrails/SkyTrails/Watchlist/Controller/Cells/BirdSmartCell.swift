@@ -5,6 +5,8 @@ class BirdSmartCell: UITableViewCell {
 	
 	static let identifier = "BirdSmartCell"
     private var defaultContainerBackgroundColor: UIColor?
+    private var imageLoadTask: Task<Void, Never>?
+    private var currentImageKey: String?
 	@IBOutlet weak var containerView: UIView!
 	@IBOutlet weak var birdImageView: UIImageView!
 	@IBOutlet weak var titleLabel: UILabel!
@@ -31,6 +33,15 @@ class BirdSmartCell: UITableViewCell {
 	override func setSelected(_ selected: Bool, animated: Bool) {
 		super.setSelected(selected, animated: animated)
 	}
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageLoadTask?.cancel()
+        imageLoadTask = nil
+        currentImageKey = nil
+        birdImageView.image = UIImage(systemName: "photo")
+        birdImageView.backgroundColor = .systemGray5
+    }
 	
 	private func setupUI() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
@@ -67,27 +78,7 @@ class BirdSmartCell: UITableViewCell {
 	func configure(with entry: WatchlistEntry) {
 		guard let bird = entry.bird else { return }
 		titleLabel.text = bird.name
-		if let photoPath = entry.photos?.first?.imagePath {
-			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
-			let fileURL = photoDir.appendingPathComponent(photoPath)
-			if let diskImage = UIImage(contentsOfFile: fileURL.path) {
-				birdImageView.image = diskImage
-			} else if let assetImage = UIImage(named: bird.staticImageName) {
-				birdImageView.image = assetImage
-			} else {
-				birdImageView.image = UIImage(systemName: "photo")
-			}
-		} else if let assetImage = UIImage(named: bird.staticImageName) {
-			birdImageView.image = assetImage
-			Task { @MainActor in
-				if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
-					self.birdImageView.image = image
-				}
-			}
-		} else {
-			birdImageView.image = UIImage(systemName: "photo")
-		}
+        configureBirdImage(primaryImageName: entry.photos?.first?.imagePath, fallbackImageName: bird.staticImageName)
 		if let observationDate = entry.observationDate {
 			let formatter = DateFormatter()
 			formatter.dateStyle = .medium
@@ -117,12 +108,7 @@ class BirdSmartCell: UITableViewCell {
 	
 	func configure(with bird: Bird) {
 		titleLabel.text = bird.name
-		birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
-		Task { @MainActor in
-			if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
-				self.birdImageView.image = image
-			}
-		}
+        configureBirdImage(primaryImageName: nil, fallbackImageName: bird.staticImageName)
 		
 		dateLabel.isHidden = true
 		
@@ -137,23 +123,35 @@ class BirdSmartCell: UITableViewCell {
 		avatarImageViews.forEach { $0.isHidden = true }
 		overflowBadgeView.isHidden = true
 	}
-	private func loadImage(for entry: WatchlistEntry) async -> UIImage {
-		if let photoPath = entry.photos?.first?.imagePath {
-			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
-			let fileURL = photoDir.appendingPathComponent(photoPath)
-			if let image = UIImage(contentsOfFile: fileURL.path) {
-				return image
-			}
-		}
-		if let bird = entry.bird, let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
-			return image
-		}
-		if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
-			return asset
-		}
-		return UIImage(systemName: "photo")!
-	}
+
+    private func configureBirdImage(primaryImageName: String?, fallbackImageName: String) {
+        imageLoadTask?.cancel()
+
+        let imageKey = primaryImageName ?? fallbackImageName
+        currentImageKey = imageKey
+        birdImageView.backgroundColor = .systemGray5
+        birdImageView.image = WatchlistImageLoader.previewImage(named: imageKey)
+            ?? WatchlistImageLoader.previewImage(named: fallbackImageName)
+            ?? UIImage(systemName: "photo")
+
+        imageLoadTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let resolvedImage = await self.resolveImage(primaryImageName: primaryImageName, fallbackImageName: fallbackImageName)
+            guard !Task.isCancelled, self.currentImageKey == imageKey else { return }
+
+            self.birdImageView.image = resolvedImage ?? UIImage(systemName: "photo")
+        }
+    }
+
+    private func resolveImage(primaryImageName: String?, fallbackImageName: String) async -> UIImage? {
+        if let primaryImageName,
+           let primaryImage = await WatchlistImageLoader.image(named: primaryImageName) {
+            return primaryImage
+        }
+
+        return await WatchlistImageLoader.image(named: fallbackImageName)
+    }
 	
 	private func setupAvatars(images: [String]) {
 		avatarImageViews.forEach { $0.isHidden = true }

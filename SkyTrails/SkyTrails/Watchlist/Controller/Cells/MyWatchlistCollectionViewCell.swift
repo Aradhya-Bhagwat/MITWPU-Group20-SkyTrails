@@ -5,14 +5,14 @@ struct WatchlistData {
 	let title: String
 	let unobservedImages: [UIImage]
 	let observedImages: [UIImage]
-	let totalCount: Int
+	let unobservedCount: Int
 	let observedCount: Int
 	
-	init(title: String, unobservedImages: [UIImage], observedImages: [UIImage], totalCount: Int, observedCount: Int) {
+	init(title: String, unobservedImages: [UIImage], observedImages: [UIImage], unobservedCount: Int, observedCount: Int) {
 		self.title = title
 		self.unobservedImages = unobservedImages
 		self.observedImages = observedImages
-		self.totalCount = totalCount
+		self.unobservedCount = unobservedCount
 		self.observedCount = observedCount
 	}
 }
@@ -63,7 +63,11 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 		super.prepareForReuse()
 		image1.image = nil
 		image2.image = nil
-        stopSlideshows()
+        image1.tintColor = nil
+        image2.tintColor = nil
+        image1.contentMode = .scaleAspectFill
+        image2.contentMode = .scaleAspectFill
+		stopSlideshows()
         unobservedImages = []
         observedImages = []
 	}
@@ -124,15 +128,15 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
     }
 	
 	func configure(with data: WatchlistData) {
-        let unobservedCount = data.totalCount - data.observedCount
-		speciesCountLabel.text = "\(unobservedCount)"
+		speciesCountLabel.text = "\(data.unobservedCount)"
         speciesTitleLabel.text = "Unobserved"
 		observedCountLabel.text = "\(data.observedCount)"
 		
 		self.unobservedImages = data.unobservedImages
         self.observedImages = data.observedImages
+        let totalCount = data.unobservedCount + data.observedCount
         
-        if unobservedImages.isEmpty && observedImages.isEmpty {
+        if totalCount == 0 {
             imageStackView.isHidden = true
             emptyStateContainer.isHidden = false
             stopSlideshows()
@@ -140,23 +144,49 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
             imageStackView.isHidden = false
             emptyStateContainer.isHidden = true
             
-            configureSlot(imageView: image1, placeholder: unobservedPlaceholderLabel, images: unobservedImages)
-            configureSlot(imageView: image2, placeholder: observedPlaceholderLabel, images: observedImages)
+            configureSlot(
+                imageView: image1,
+                placeholder: unobservedPlaceholderLabel,
+                images: unobservedImages,
+                count: data.unobservedCount,
+                fallbackSystemName: "bird"
+            )
+            configureSlot(
+                imageView: image2,
+                placeholder: observedPlaceholderLabel,
+                images: observedImages,
+                count: data.observedCount,
+                fallbackSystemName: "bird.fill"
+            )
             
             startSlideshows()
         }
 	}
     
-    private func configureSlot(imageView: UIImageView, placeholder: UILabel, images: [UIImage]) {
+    private func configureSlot(
+        imageView: UIImageView,
+        placeholder: UILabel,
+        images: [UIImage],
+        count: Int,
+        fallbackSystemName: String
+    ) {
         imageView.isHidden = false
-        if images.isEmpty {
+        if count == 0 {
             placeholder.isHidden = false
             imageView.image = nil
             imageView.backgroundColor = .secondarySystemFill.withAlphaComponent(0.05)
+        } else if images.isEmpty {
+            placeholder.isHidden = true
+            imageView.image = UIImage(systemName: fallbackSystemName)
+            imageView.tintColor = .secondaryLabel
+            imageView.backgroundColor = .secondarySystemFill.withAlphaComponent(0.05)
+            imageView.contentMode = .center
         } else {
             placeholder.isHidden = true
             imageView.image = images[0]
+            imageView.tintColor = nil
             imageView.backgroundColor = .clear
+            imageView.contentMode = .scaleAspectFill
             alignImageTop(imageView)
         }
     }

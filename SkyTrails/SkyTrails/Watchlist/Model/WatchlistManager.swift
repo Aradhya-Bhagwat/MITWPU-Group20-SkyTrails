@@ -319,42 +319,16 @@ final class WatchlistManager: WatchlistRepository {
     
     func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) throws {
         print("[ObservedDebug] WatchlistManager: addBirds (\(birds.count)) to \(watchlistId), observed: \(asObserved)")
-        var targetWatchlistId = watchlistId
-        let myWatchlistId = WatchlistConstants.myWatchlistID
-        if watchlistId == myWatchlistId {
-            let customLists = try fetchWatchlists(type: .custom)
-            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetWatchlistId = existing.watchlist_id
-                print("[ObservedDebug] WatchlistManager: using existing My Watchlist id \(targetWatchlistId)")
-            } else if let first = customLists.first {
-                targetWatchlistId = first.watchlist_id
-                print("[ObservedDebug] WatchlistManager: using first custom watchlist id \(targetWatchlistId)")
-            } else {
-                print("[ObservedDebug] WatchlistManager: creating new My Watchlist")
-                _ = try addWatchlist(
-                    title: "My Watchlist",
-                    location: "General",
-                    startDate: Date(),
-                    endDate: Date().addingTimeInterval(31536000)
-                )
-                if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
-                    targetWatchlistId = newWl.watchlist_id
-                    print("[ObservedDebug] WatchlistManager: new My Watchlist id \(targetWatchlistId)")
-                } else {
-                    print("[ObservedDebug] WatchlistManager: failed to create fallback watchlist")
-                    throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
-                }
-            }
+        if watchlistId == WatchlistConstants.myWatchlistID {
+            throw WatchlistError.invalidVirtualOperation("My Watchlist is a read-only aggregate")
         }
         
         let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
-        _ = try persistence.addBirdsToWatchlist(watchlistID: targetWatchlistId, birds: birds, status: status)
-        if let watchlist = try? persistence.fetchWatchlist(id: targetWatchlistId) {
-            refreshCoverImage(for: watchlist)
-        }
+        _ = try persistence.addBirdsToWatchlist(watchlistID: watchlistId, birds: birds, status: status)
+        try refreshCoverImage(watchlistID: watchlistId)
         query.invalidateMyWatchlistCache()
         NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
-        print("[ObservedDebug] WatchlistManager: addBirds finished for \(targetWatchlistId)")
+        print("[ObservedDebug] WatchlistManager: addBirds finished for \(watchlistId)")
     }
     
     func updateEntry(
@@ -375,8 +349,8 @@ final class WatchlistManager: WatchlistRepository {
             toObserveStartDate: nil,
             toObserveEndDate: nil
         )
-        if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
-            refreshCoverImage(for: watchlist)
+        if let entry = try? persistence.fetchEntry(id: entryId), let watchlistID = entry.watchlist?.watchlist_id {
+            try refreshCoverImage(watchlistID: watchlistID)
         }
     }
     
@@ -401,8 +375,8 @@ final class WatchlistManager: WatchlistRepository {
         print("[ObservedDebug] WatchlistManager: deleteEntry called for \(entryId)")
         let watchlist = (try? persistence.fetchEntry(id: entryId))?.watchlist
         try persistence.deleteEntry(id: entryId)
-        if let watchlist = watchlist {
-            refreshCoverImage(for: watchlist)
+        if let watchlistID = watchlist?.watchlist_id {
+            try refreshCoverImage(watchlistID: watchlistID)
         }
         query.invalidateMyWatchlistCache()
         NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
@@ -411,8 +385,8 @@ final class WatchlistManager: WatchlistRepository {
     
     func toggleObservationStatus(entryId: UUID) throws {
         try persistence.toggleEntryStatus(id: entryId)
-        if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
-            refreshCoverImage(for: watchlist)
+        if let entry = try? persistence.fetchEntry(id: entryId), let watchlistID = entry.watchlist?.watchlist_id {
+            try refreshCoverImage(watchlistID: watchlistID)
         }
         query.invalidateMyWatchlistCache()
         NotificationCenter.default.post(name: .watchlistDataDidChange, object: nil)
@@ -455,30 +429,23 @@ final class WatchlistManager: WatchlistRepository {
         return try query.getGlobalObservedCount()
     }
     func findEntry(birdId: UUID, watchlistId: UUID) throws -> WatchlistEntry? {
-        var targetId = watchlistId
         if watchlistId == WatchlistConstants.myWatchlistID {
-            let customLists = try fetchWatchlists(type: .custom)
-            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetId = existing.watchlist_id
-            } else if let first = customLists.first {
-                targetId = first.watchlist_id
-            }
+            throw WatchlistError.invalidVirtualOperation("My Watchlist is a read-only aggregate")
         }
         
-        guard let watchlist = try persistence.fetchWatchlist(id: targetId) else { return nil }
-        return watchlist.entries?.first(where: { $0.bird?.bird_id == birdId })
+        let entries = try persistence.fetchEntries(watchlistID: watchlistId)
+        return entries.first(where: { $0.bird?.bird_id == birdId })
     }
     
     func attachPhoto(entryId: UUID, imageName: String) throws {
         _ = try photos.attachExistingPhoto(to: entryId, imagePath: imageName)
-        if let entry = try? persistence.fetchEntry(id: entryId), let watchlist = entry.watchlist {
-            refreshCoverImage(for: watchlist)
+        if let entry = try? persistence.fetchEntry(id: entryId), let watchlistID = entry.watchlist?.watchlist_id {
+            try refreshCoverImage(watchlistID: watchlistID)
         }
     }
     
-    private func refreshCoverImage(for watchlist: Watchlist) {
-        watchlist.updateCoverImage()
-        try? context.save()
+    func refreshCoverImage(watchlistID: UUID) throws {
+        try persistence.refreshCoverImage(watchlistID: watchlistID)
     }
     func applyRules(to watchlistId: UUID) async throws {
         try await rules.applyRules(to: watchlistId)
@@ -578,7 +545,7 @@ final class WatchlistManager: WatchlistRepository {
             if isMatch {
                 let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
                 _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.watchlist_id, birds: [bird], status: status)
-                refreshCoverImage(for: watchlist)
+                try refreshCoverImage(watchlistID: watchlist.watchlist_id)
                 if let newEntry = try? findEntry(birdId: bird.bird_id, watchlistId: watchlist.watchlist_id) {
                     try persistence.updateEntry(
                         id: newEntry.id,

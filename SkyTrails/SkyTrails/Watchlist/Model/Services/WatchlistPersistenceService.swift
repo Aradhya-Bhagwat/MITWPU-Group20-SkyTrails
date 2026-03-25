@@ -155,7 +155,7 @@ final class WatchlistPersistenceService {
             throw WatchlistError.watchlistNotFound(.custom(id))
         }
         
-        let entries = watchlist.entries ?? []
+        let entries = try fetchEntries(watchlistID: id)
         for entry in entries {
             entry.syncStatus = .pendingDelete
         }
@@ -237,22 +237,37 @@ final class WatchlistPersistenceService {
     }
     
     func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus? = nil) throws -> [WatchlistEntry] {
-        guard let watchlist = try fetchWatchlist(id: watchlistID) else {
+        guard try fetchWatchlist(id: watchlistID) != nil else {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
-        var entries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
-        
-        if let status = status {
-            entries = entries.filter { $0.status == status }
-        }
-        
-        return entries.sorted { $0.addedDate < $1.addedDate }
+
+        let statuses = status.map { [$0] }
+        return try fetchEntries(watchlistIDs: [watchlistID], statuses: statuses)
     }
     
+    func fetchEntries(watchlistIDs: [UUID], statuses: [WatchlistEntryStatus]? = nil) throws -> [WatchlistEntry] {
+        let requestedIDs = Set(watchlistIDs)
+        guard !requestedIDs.isEmpty else { return [] }
+
+        let entries = try fetchActiveEntries()
+        return entries.filter { entry in
+            guard let watchlist = entry.watchlist, requestedIDs.contains(watchlist.watchlist_id) else {
+                return false
+            }
+
+            if let statuses, !statuses.contains(entry.status) {
+                return false
+            }
+
+            return isWatchlistAccessible(watchlist)
+        }
+    }
+
     func fetchAllEntries() throws -> [WatchlistEntry] {
-        return try fetchWatchlists()
-            .flatMap { ($0.entries ?? []).filter { $0.syncStatus != .pendingDelete } }
-            .sorted { $0.addedDate < $1.addedDate }
+        try fetchActiveEntries().filter { entry in
+            guard let watchlist = entry.watchlist else { return false }
+            return isWatchlistAccessible(watchlist)
+        }
     }
     
     func updateEntry(
@@ -404,7 +419,7 @@ final class WatchlistPersistenceService {
         }
         
         let userID = activeUserID ?? UserSession.shared.currentUser?.user_id
-        let existingBirdIDs = Set((watchlist.entries ?? []).compactMap { $0.bird?.bird_id })
+        let existingBirdIDs = Set(try fetchEntries(watchlistID: watchlistID).compactMap { $0.bird?.bird_id })
         var createdEntries: [WatchlistEntry] = []
         
         for bird in birds {
@@ -729,10 +744,46 @@ final class WatchlistPersistenceService {
         }
     }
     
+    func refreshCoverImage(watchlistID: UUID) throws {
+        guard let watchlist = try fetchWatchlist(id: watchlistID) else { return }
+        watchlist.coverImagePath = try liveCoverImagePath(for: watchlistID)
+        try saveContext()
+    }
+
+    func liveCoverImagePath(for watchlistID: UUID) throws -> String? {
+        let entries = try fetchEntries(watchlistID: watchlistID)
+        let mostRecentEntry = entries.max { lhs, rhs in
+            coverImageSortDate(for: lhs) < coverImageSortDate(for: rhs)
+        }
+
+        if let photoPath = mostRecentEntry?.photos?.first?.imagePath {
+            return photoPath
+        }
+
+        return mostRecentEntry?.bird?.staticImageName
+    }
+
+    private func fetchActiveEntries() throws -> [WatchlistEntry] {
+        let descriptor = FetchDescriptor<WatchlistEntry>(
+            predicate: #Predicate { $0.syncStatusRaw != "pendingDelete" },
+            sortBy: [SortDescriptor(\.addedDate)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    private func coverImageSortDate(for entry: WatchlistEntry) -> Date {
+        switch entry.status {
+        case .observed:
+            return entry.observationDate ?? entry.addedDate
+        case .to_observe:
+            return entry.addedDate
+        }
+    }
+
     private func recalculateWatchlistStats(watchlistID: UUID) throws {
         guard let watchlist = try fetchWatchlist(id: watchlistID) else { return }
         
-        let activeEntries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
+        let activeEntries = try fetchEntries(watchlistID: watchlistID)
         let observedCount = activeEntries.filter { $0.status == .observed }.count
         let speciesCount = Set(activeEntries.map { $0.bird?.bird_id ?? $0.id }).count
         

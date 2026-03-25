@@ -26,9 +26,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	var watchlistType: WatchlistPresentationMode = .custom
 	var watchlistTitle: String = "Watchlist"
 	var currentWatchlistId: UUID?
-	private var sourceWatchlists: [Watchlist] = []
-	public var allWatchlists: [Watchlist] = []
-	private var filteredSections: [[WatchlistEntry]] = []
 	public var observedEntries: [WatchlistEntry] = []
 	public var toObserveEntries: [WatchlistEntry] = []
 	private var currentList: [WatchlistEntry] = []
@@ -151,11 +148,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             isShowingRecommendations = result.shouldShowRecommendations
             recommendedBirds = result.recommendedBirds
             
-            // Special handling for myWatchlist mode - preserve sourceWatchlists assignment
-            if watchlistType == .myWatchlist {
-                sourceWatchlists = try manager.fetchWatchlists()
-                print("[ObservedDebug] SmartWatchlistViewController: fetched \(sourceWatchlists.count) watchlists for myWatchlist")
-            }
         } catch {
             print("[ObservedDebug] SmartWatchlistViewController: Error in refreshData - \(error)")
         }
@@ -239,29 +231,13 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
             return
         }
 
-		if watchlistType == .myWatchlist {
-			let filteredResults = sourceWatchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
-				let status = statusForCurrentFilter()
-				let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)) ?? []
-				let matching = entries.filter { entry in
-					guard let bird = entry.bird else { return false }
-					return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
-				}
-				return matching.isEmpty ? nil : (watchlist, matching)
-			}
-			
-			allWatchlists = filteredResults.map { $0.0 }
-			filteredSections = filteredResults.map { sortEntries($0.1) }
-			print("[ObservedDebug] SmartWatchlistViewController: filteredResults count = \(filteredResults.count)")
-		} else {
-			let sourceList = entriesForCurrentFilter()
-			currentList = sourceList.filter { entry in
-				guard let bird = entry.bird else { return false }
-				return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
-			}
-			currentList = sortEntries(currentList)
-			print("[ObservedDebug] SmartWatchlistViewController: currentList count = \(currentList.count)")
+		let sourceList = entriesForCurrentFilter()
+		currentList = sourceList.filter { entry in
+			guard let bird = entry.bird else { return false }
+			return searchText.isEmpty || bird.name.localizedCaseInsensitiveContains(searchText)
 		}
+		currentList = sortEntries(currentList)
+		print("[ObservedDebug] SmartWatchlistViewController: currentList count = \(currentList.count)")
 		
         tableView.reloadData()
 	}
@@ -293,7 +269,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else { return }
 		vc.bird = bird
 		vc.watchlistId = currentWatchlistId
-		vc.shouldUseRuleMatching = false
+		vc.shouldUseRuleMatching = (watchlistType == .myWatchlist)
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
@@ -302,9 +278,18 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		guard let vc = storyboard.instantiateViewController(withIdentifier: "SpeciesSelectionViewController") as? SpeciesSelectionViewController else { return }
 		vc.mode = mode
 		vc.targetWatchlistId = currentWatchlistId
-		vc.shouldUseRuleMatching = false
+		vc.shouldUseRuleMatching = (watchlistType == .myWatchlist)
 		navigationController?.pushViewController(vc, animated: true)
 	}
+
+    private func showUnobservedDetail(bird: Bird) {
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else { return }
+        vc.bird = bird
+        vc.watchlistId = currentWatchlistId
+        vc.shouldUseRuleMatching = (watchlistType == .myWatchlist)
+        navigationController?.pushViewController(vc, animated: true)
+    }
 	
 	@IBAction func filterButtonTapped(_ sender: UIButton) {
 		guard #unavailable(iOS 14.0) else { return }
@@ -519,7 +504,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		
 		if let entry = sender as? WatchlistEntry {
 			targetBird = entry.bird
-			targetId = self.currentWatchlistId
+			targetId = entry.watchlist?.watchlist_id ?? self.currentWatchlistId
 			
 			if segue.identifier == "ShowObservedDetail",
 			   let vc = segue.destination as? ObservedDetailViewController {
@@ -553,17 +538,17 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	
 	func numberOfSections(in tableView: UITableView) -> Int {
         if isShowingRecommendations { return 1 }
-		return watchlistType == .myWatchlist ? allWatchlists.count : 1
+		return 1
 	}
 	
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if isShowingRecommendations { return recommendedBirds.count }
-		return watchlistType == .myWatchlist ? filteredSections[section].count : currentList.count
+		return currentList.count
 	}
 	
 	func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if isShowingRecommendations { return "Recommended For You" }
-		return watchlistType == .myWatchlist ? allWatchlists[section].title : nil
+		return nil
 	}
 	
 	func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
@@ -584,7 +569,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             return cell
         }
 
-		let entry = (watchlistType == .myWatchlist) ? filteredSections[indexPath.section][indexPath.row] : currentList[indexPath.row]
+		let entry = currentList[indexPath.row]
 		cell.shouldShowAvatars = (watchlistType == .shared)
 		cell.configure(with: entry)
 		if traitCollection.userInterfaceStyle == .dark {
@@ -610,11 +595,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 
 		let entry: WatchlistEntry
 		
-		if watchlistType == .myWatchlist {
-			entry = filteredSections[indexPath.section][indexPath.row]
-		} else {
-			entry = currentList[indexPath.row]
-		}
+		entry = currentList[indexPath.row]
 		
 		performSegue(withIdentifier: detailSegueIdentifier(for: entry), sender: entry)
 	}
@@ -624,10 +605,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             
 			let entry: WatchlistEntry
 			
-			if watchlistType == .myWatchlist {			entry = filteredSections[indexPath.section][indexPath.row]
-		} else {
 			entry = currentList[indexPath.row]
-		}
 		
 		if watchlistType == .allSpecies { return nil }
 		
@@ -667,28 +645,14 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
         let alert = UIAlertController(title: bird.name, message: "Add this bird to your watchlist?", preferredStyle: .actionSheet)
         
         alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
-            self?.addBirdToMyWatchlist(bird, observed: true)
+            self?.showObservedDetail(bird: bird)
         })
         
         alert.addAction(UIAlertAction(title: "Add to Find List", style: .default) { [weak self] _ in
-            self?.addBirdToMyWatchlist(bird, observed: false)
+            self?.showUnobservedDetail(bird: bird)
         })
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
-    
-		    private func addBirdToMyWatchlist(_ bird: Bird, observed: Bool) {
-		        print("[ObservedDebug] SmartWatchlistViewController: addBirdToMyWatchlist called for bird \(bird.name), observed: \(observed)")
-		        Task {
-		            do {
-	                let id = try await manager.ensureMyWatchlistExists()
-	                print("[ObservedDebug] SmartWatchlistViewController: target watchlist id: \(id)")
-	                try manager.addBirds([bird], to: id, asObserved: observed)
-	                print("[ObservedDebug] SmartWatchlistViewController: addBirds successful")
-	            } catch {
-	                print("[ObservedDebug] SmartWatchlistViewController: error adding bird: \(error)")
-		            }
-		        }
-		    }
 }

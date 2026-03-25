@@ -1,4 +1,3 @@
-
 import Foundation
 import SwiftData
 import CoreLocation
@@ -6,12 +5,35 @@ import CoreLocation
 @MainActor
 final class WatchlistQueryService {
     
+    private struct EntryBucketKey: Hashable {
+        let birdID: UUID
+        let status: WatchlistEntryStatus
+    }
+
+    private struct EntryAggregation {
+        let observed: [WatchlistEntry]
+        let unobserved: [WatchlistEntry]
+
+        var allEntries: [WatchlistEntry] {
+            unobserved + observed
+        }
+
+        var stats: WatchlistStatsDTO {
+            let observedCount = observed.count
+            let unobservedCount = unobserved.count
+            return WatchlistStatsDTO(
+                observedCount: observedCount,
+                unobservedCount: unobservedCount,
+                totalCount: observedCount + unobservedCount
+            )
+        }
+    }
+    
     private let context: ModelContext
     private let persistence: WatchlistPersistenceService
     
-    // Caching for My Watchlist
     private var myWatchlistCache: (dto: WatchlistSummaryDTO, timestamp: Date)?
-    private let cacheValidityDuration: TimeInterval = 2.0 // 2 seconds
+    private let cacheValidityDuration: TimeInterval = 2.0
     
     init(context: ModelContext, persistence: WatchlistPersistenceService) {
         self.context = context
@@ -29,170 +51,73 @@ final class WatchlistQueryService {
         globalStats: WatchlistStatsDTO
     ) {
         let allLists = try persistence.fetchWatchlists()
-        let customLists = allLists.filter { $0.type == .custom }.map { $0.toSummary() }
-        let sharedLists = allLists.filter { $0.type == .shared }.map { $0.toSummary() }
-        let myWatchlist = buildMyWatchlistDTO(from: allLists)
-        let allEntries = allLists.flatMap { $0.entries ?? [] }
-        let globalStats = calculateStats(from: allEntries)
+        let watchlistIDs = allLists.map(\.watchlist_id)
+        let allEntries = try persistence.fetchEntries(watchlistIDs: watchlistIDs)
+        let entriesByWatchlist = allEntries.reduce(into: [UUID: [WatchlistEntry]]()) { partialResult, entry in
+            guard let watchlistID = entry.watchlist?.watchlist_id else { return }
+            partialResult[watchlistID, default: []].append(entry)
+        }
+
+        let customLists = allLists
+            .filter { $0.type == .custom }
+            .map { watchlist in
+                buildSummaryDTO(for: watchlist, entries: entriesByWatchlist[watchlist.watchlist_id] ?? [])
+            }
+
+        let sharedLists = allLists
+            .filter { $0.type == .shared }
+            .map { watchlist in
+                buildSummaryDTO(for: watchlist, entries: entriesByWatchlist[watchlist.watchlist_id] ?? [])
+            }
+
+        let myWatchlist = buildMyWatchlistDTO(from: allLists, entries: allEntries)
+        let globalStats = aggregateEntries(allEntries).stats
         return (myWatchlist, customLists, sharedLists, globalStats)
     }
     
     func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {
-        // Check cache validity
-        if let cached = myWatchlistCache,
-           Date().timeIntervalSince(cached.timestamp) < cacheValidityDuration {
-            return cached.dto
-        }
-        
-        let allEntries = allLists.flatMap { $0.entries ?? [] }
-        var uniqueEntries: [UUID: WatchlistEntry] = [:]
-        for entry in allEntries {
-            if let birdId = entry.bird?.bird_id {
-                if let existing = uniqueEntries[birdId] {
-                    // Priority rules:
-                    // 1. Observed status beats unobserved
-                    // 2. If same status, newer date wins
-                    let entryDate = entry.observationDate ?? entry.addedDate
-                    let existingDate = existing.observationDate ?? existing.addedDate
-                    
-                    let shouldReplace = 
-                        (entry.status == .observed && existing.status != .observed) ||
-                        (entry.status == existing.status && entryDate > existingDate)
-                    
-                    if shouldReplace {
-                        uniqueEntries[birdId] = entry
-                    }
-                } else {
-                    uniqueEntries[birdId] = entry
-                }
-            }
-        }
-        
-        let uniqueEntriesArray = Array(uniqueEntries.values)
-        let stats = calculateStats(from: uniqueEntriesArray)
-        
-        let toObserveImages = uniqueEntriesArray
-            .filter { $0.status == .to_observe }
-            .compactMap { entry -> String? in
-                if let photoPath = entry.photos?.first?.imagePath {
-                    return photoPath
-                }
-                return entry.bird?.staticImageName
-            }
-            .prefix(5)
-            .map { String($0) }
-            
-        let observedImages = uniqueEntriesArray
-            .filter { $0.status == .observed }
-            .compactMap { entry -> String? in
-                if let photoPath = entry.photos?.first?.imagePath {
-                    return photoPath
-                }
-                return entry.bird?.staticImageName
-            }
-            .prefix(5)
-            .map { String($0) }
-            
-        let previewImages = Array(toObserveImages) + Array(observedImages)
-        
-        let dto = WatchlistSummaryDTO(
-            id: .virtual,
-            title: "My Watchlist",
-            subtitle: "All Birds",
-            dateText: "",
-            image: previewImages.first,
-            previewImages: Array(previewImages),
-            unobservedPreviewImages: Array(toObserveImages),
-            observedPreviewImages: Array(observedImages),
-            stats: stats,
-            type: .my_watchlist
-        )
-        
-        // Update cache
-        myWatchlistCache = (dto: dto, timestamp: Date())
-        
-        return dto
+        let watchlistIDs = allLists.map(\.watchlist_id)
+        let allEntries = (try? persistence.fetchEntries(watchlistIDs: watchlistIDs)) ?? []
+        return buildMyWatchlistDTO(from: allLists, entries: allEntries)
     }
-    
+
     func fetchEntries(
         identifier: WatchlistIdentifier,
         filter: WatchlistQueryFilter = WatchlistQueryFilter(),
         sort: WatchlistSortOption = .addedDateNewest
     ) throws -> [WatchlistEntryDTO] {
         let entries: [WatchlistEntry]
-        
+
         if identifier.isVirtual {
             let allLists = try persistence.fetchWatchlists()
-            entries = allLists.flatMap { $0.entries ?? [] }
+            let watchlistIDs = allLists.map(\.watchlist_id)
+            entries = aggregateEntries(try persistence.fetchEntries(watchlistIDs: watchlistIDs), status: filter.status).allEntries
         } else if let uuid = identifier.uuid {
-            entries = try persistence.fetchEntries(watchlistID: uuid)
+            entries = aggregateEntries(try persistence.fetchEntries(watchlistID: uuid, status: filter.status)).allEntries
         } else {
             return []
         }
-        var filtered = entries
-        
-        if let status = filter.status {
-            filtered = filtered.filter { $0.status == status }
-        }
-        
-        if let searchText = filter.searchText, !searchText.isEmpty {
-            let lowercased = searchText.lowercased()
-            filtered = filtered.filter { entry in
-                entry.bird?.commonName.lowercased().contains(lowercased) ?? false ||
-                entry.bird?.scientificName.lowercased().contains(lowercased) ?? false
-            }
-        }
-        
-        if let families = filter.families, !families.isEmpty {
-            filtered = filtered.filter { entry in
-                guard let family = entry.bird?.family else { return false }
-                return families.contains(family)
-            }
-        }
-        
-        if let hasPhotos = filter.hasPhotos {
-            filtered = filtered.filter { entry in
-                let photoCount = entry.photos?.count ?? 0
-                return hasPhotos ? photoCount > 0 : photoCount == 0
-            }
-        }
-        
-        if let dateRange = filter.dateRange {
-            filtered = filtered.filter { entry in
-                guard let observationDate = entry.observationDate else { return false }
-                return observationDate >= dateRange.start && observationDate <= dateRange.end
-            }
-        }
-        return filtered.compactMap { $0.toDomain() }
+
+        let filtered = apply(filter: filter, to: entries)
+        return sortEntries(filtered, by: sort).compactMap { $0.toDomain() }
     }
     
     func getStats(for identifier: WatchlistIdentifier) throws -> WatchlistStatsDTO {
         if identifier.isVirtual {
             let allLists = try persistence.fetchWatchlists()
-            let allEntries = allLists.flatMap { $0.entries ?? [] }
-            return calculateStats(from: allEntries)
-        } else if let uuid = identifier.uuid {
-            let entries = try persistence.fetchEntries(watchlistID: uuid)
-            return calculateStats(from: entries)
+            let allEntries = try persistence.fetchEntries(watchlistIDs: allLists.map(\.watchlist_id))
+            return aggregateEntries(allEntries).stats
+        }
+
+        if let uuid = identifier.uuid {
+            return aggregateEntries(try persistence.fetchEntries(watchlistID: uuid)).stats
         }
         
         return .empty
     }
     
     func getGlobalObservedCount() throws -> Int {
-        let allEntries = try persistence.fetchAllEntries()
-        return allEntries.filter { $0.status == .observed }.count
-    }
-    
-    private func calculateStats(from entries: [WatchlistEntry]) -> WatchlistStatsDTO {
-        let observedCount = entries.filter { $0.status == .observed }.count
-        let rareCount = 0
-        
-        return WatchlistStatsDTO(
-            observedCount: observedCount,
-            totalCount: entries.count,
-            rareCount: rareCount
-        )
+        try aggregateEntries(try persistence.fetchAllEntries()).stats.observedCount
     }
     
     func getEntriesObservedNear(
@@ -201,13 +126,14 @@ final class WatchlistQueryService {
         watchlistID: WatchlistIdentifier? = nil
     ) throws -> [WatchlistEntryDTO] {
         
-        var allEntries: [WatchlistEntry]
+        let allEntries: [WatchlistEntry]
         
         if let identifier = watchlistID, !identifier.isVirtual, let uuid = identifier.uuid {
-            allEntries = try persistence.fetchEntries(watchlistID: uuid, status: .observed)
+            allEntries = aggregateEntries(try persistence.fetchEntries(watchlistID: uuid, status: .observed)).observed
         } else {
-            allEntries = try persistence.fetchAllEntries().filter { $0.status == .observed }
+            allEntries = aggregateEntries(try persistence.fetchAllEntries(), status: .observed).observed
         }
+
         let withLocation = allEntries.filter { $0.lat != nil && $0.lon != nil }
         let queryLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
         let nearby = withLocation.filter { entry in
@@ -225,13 +151,14 @@ final class WatchlistQueryService {
         watchlistID: WatchlistIdentifier? = nil
     ) throws -> [WatchlistEntryDTO] {
         
-        var entries: [WatchlistEntry]
+        let entries: [WatchlistEntry]
         
         if let identifier = watchlistID, !identifier.isVirtual, let uuid = identifier.uuid {
-            entries = try persistence.fetchEntries(watchlistID: uuid, status: .to_observe)
+            entries = aggregateEntries(try persistence.fetchEntries(watchlistID: uuid, status: .to_observe)).unobserved
         } else {
-            entries = try persistence.fetchAllEntries().filter { $0.status == .to_observe }
+            entries = aggregateEntries(try persistence.fetchAllEntries(), status: .to_observe).unobserved
         }
+
         let filtered = entries.filter { entry in
             guard let rangeStart = entry.toObserveStartDate,
                   let rangeEnd = entry.toObserveEndDate else {
@@ -291,6 +218,188 @@ final class WatchlistQueryService {
         }
         
         return results.sorted { $0.daysUntil < $1.daysUntil }
+    }
+
+    private func buildMyWatchlistDTO(from _: [Watchlist], entries: [WatchlistEntry]) -> WatchlistSummaryDTO {
+        if let cached = myWatchlistCache,
+           Date().timeIntervalSince(cached.timestamp) < cacheValidityDuration {
+            return cached.dto
+        }
+
+        let dto = buildSummaryDTO(
+            id: .virtual,
+            title: "My Watchlist",
+            subtitle: "All Birds",
+            dateText: "",
+            type: .my_watchlist,
+            entries: entries
+        )
+
+        myWatchlistCache = (dto: dto, timestamp: Date())
+        return dto
+    }
+
+    private func buildSummaryDTO(for watchlist: Watchlist, entries: [WatchlistEntry]) -> WatchlistSummaryDTO {
+        let subtitle = watchlist.locationDisplayName ?? watchlist.location ?? "No location"
+
+        let dateText: String
+        if let start = watchlist.startDate, let end = watchlist.endDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            dateText = "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        } else {
+            dateText = "Season pending"
+        }
+
+        return buildSummaryDTO(
+            id: WatchlistIdentifier.from(uuid: watchlist.watchlist_id, type: watchlist.type),
+            title: watchlist.title ?? "Unnamed Watchlist",
+            subtitle: subtitle,
+            dateText: dateText,
+            type: watchlist.type ?? .custom,
+            entries: entries
+        )
+    }
+
+    private func buildSummaryDTO(
+        id: WatchlistIdentifier,
+        title: String,
+        subtitle: String,
+        dateText: String,
+        type: WatchlistType,
+        entries: [WatchlistEntry]
+    ) -> WatchlistSummaryDTO {
+        let aggregation = aggregateEntries(entries)
+        let unobservedPreviewImages = previewImages(from: aggregation.unobserved)
+        let observedPreviewImages = previewImages(from: aggregation.observed)
+        let previewImages = unobservedPreviewImages + observedPreviewImages
+
+        return WatchlistSummaryDTO(
+            id: id,
+            title: title,
+            subtitle: subtitle,
+            dateText: dateText,
+            image: previewImages.first,
+            previewImages: previewImages,
+            unobservedPreviewImages: unobservedPreviewImages,
+            observedPreviewImages: observedPreviewImages,
+            stats: aggregation.stats,
+            type: type
+        )
+    }
+
+    private func aggregateEntries(
+        _ entries: [WatchlistEntry],
+        status: WatchlistEntryStatus? = nil
+    ) -> EntryAggregation {
+        var buckets: [EntryBucketKey: WatchlistEntry] = [:]
+
+        for entry in entries {
+            guard let birdID = entry.bird?.bird_id else { continue }
+            if let status, entry.status != status {
+                continue
+            }
+
+            let key = EntryBucketKey(birdID: birdID, status: entry.status)
+            if let existing = buckets[key] {
+                if bucketDate(for: entry) > bucketDate(for: existing) {
+                    buckets[key] = entry
+                }
+            } else {
+                buckets[key] = entry
+            }
+        }
+
+        let observed = buckets
+            .filter { $0.key.status == .observed }
+            .map(\.value)
+            .sorted { bucketDate(for: $0) > bucketDate(for: $1) }
+
+        let unobserved = buckets
+            .filter { $0.key.status == .to_observe }
+            .map(\.value)
+            .sorted { bucketDate(for: $0) > bucketDate(for: $1) }
+
+        return EntryAggregation(observed: observed, unobserved: unobserved)
+    }
+
+    private func previewImages(from entries: [WatchlistEntry]) -> [String] {
+        Array(entries.compactMap(previewImageName(for:)).prefix(5))
+    }
+
+    private func previewImageName(for entry: WatchlistEntry) -> String? {
+        if let photoPath = entry.photos?.first?.imagePath, !photoPath.isEmpty {
+            return photoPath
+        }
+
+        guard let staticImageName = entry.bird?.staticImageName, !staticImageName.isEmpty else {
+            return nil
+        }
+
+        return staticImageName
+    }
+
+    private func bucketDate(for entry: WatchlistEntry) -> Date {
+        switch entry.status {
+        case .observed:
+            return entry.observationDate ?? entry.addedDate
+        case .to_observe:
+            return entry.addedDate
+        }
+    }
+
+    private func apply(filter: WatchlistQueryFilter, to entries: [WatchlistEntry]) -> [WatchlistEntry] {
+        var filtered = entries
+
+        if let searchText = filter.searchText, !searchText.isEmpty {
+            let lowercased = searchText.lowercased()
+            filtered = filtered.filter { entry in
+                entry.bird?.commonName.lowercased().contains(lowercased) ?? false ||
+                entry.bird?.scientificName.lowercased().contains(lowercased) ?? false
+            }
+        }
+
+        if let families = filter.families, !families.isEmpty {
+            filtered = filtered.filter { entry in
+                guard let family = entry.bird?.family else { return false }
+                return families.contains(family)
+            }
+        }
+
+        if let hasPhotos = filter.hasPhotos {
+            filtered = filtered.filter { entry in
+                let photoCount = entry.photos?.count ?? 0
+                return hasPhotos ? photoCount > 0 : photoCount == 0
+            }
+        }
+
+        if let dateRange = filter.dateRange {
+            filtered = filtered.filter { entry in
+                guard let observationDate = entry.observationDate else { return false }
+                return observationDate >= dateRange.start && observationDate <= dateRange.end
+            }
+        }
+
+        return filtered
+    }
+
+    private func sortEntries(_ entries: [WatchlistEntry], by option: WatchlistSortOption) -> [WatchlistEntry] {
+        switch option {
+        case .addedDateNewest:
+            return entries.sorted { $0.addedDate > $1.addedDate }
+        case .addedDateOldest:
+            return entries.sorted { $0.addedDate < $1.addedDate }
+        case .birdNameAZ:
+            return entries.sorted { ($0.bird?.commonName ?? "") < ($1.bird?.commonName ?? "") }
+        case .birdNameZA:
+            return entries.sorted { ($0.bird?.commonName ?? "") > ($1.bird?.commonName ?? "") }
+        case .observationDateNewest:
+            return entries.sorted { ($0.observationDate ?? .distantPast) > ($1.observationDate ?? .distantPast) }
+        case .observationDateOldest:
+            return entries.sorted { ($0.observationDate ?? .distantFuture) < ($1.observationDate ?? .distantFuture) }
+        case .priority:
+            return entries.sorted { $0.priority > $1.priority }
+        }
     }
 }
 

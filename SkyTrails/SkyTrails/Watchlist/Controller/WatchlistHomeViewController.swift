@@ -508,34 +508,23 @@ extension WatchlistHomeViewController {
 		
 		if let watchlist = myWatchlist {
 			let unobservedImages = watchlist.unobservedPreviewImages.compactMap { imagePath -> UIImage? in
-				loadImage(imagePath)
+				WatchlistImageLoader.previewImage(named: imagePath)
 			}
 			let observedImages = watchlist.observedPreviewImages.compactMap { imagePath -> UIImage? in
-				loadImage(imagePath)
+				WatchlistImageLoader.previewImage(named: imagePath)
 			}
 			
 			let data = WatchlistData(
 				title: watchlist.title,
 				unobservedImages: unobservedImages,
 				observedImages: observedImages,
-				totalCount: watchlist.stats.totalCount,
+				unobservedCount: watchlist.stats.unobservedCount,
 				observedCount: watchlist.stats.observedCount
 			)
 			
 			cell.configure(with: data)
 		}
 		return cell
-	}
-	
-	private func loadImage(_ imagePath: String) -> UIImage? {
-		let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-		let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
-		let fileURL = photoDir.appendingPathComponent(imagePath)
-		if FileManager.default.fileExists(atPath: fileURL.path),
-		   let diskImage = UIImage(contentsOfFile: fileURL.path) {
-			return diskImage
-		}
-		return UIImage(named: imagePath)
 	}
 	
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {

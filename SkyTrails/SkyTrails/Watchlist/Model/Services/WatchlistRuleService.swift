@@ -14,7 +14,7 @@ final class WatchlistRuleService {
         self.persistence = persistence
     }
     func applyRules(to watchlistID: UUID) async throws {
-        guard let watchlist = try persistence.fetchWatchlist(id: watchlistID) else {
+        guard try persistence.fetchWatchlist(id: watchlistID) != nil else {
             throw WatchlistError.watchlistNotFound(.custom(watchlistID))
         }
         
@@ -35,8 +35,7 @@ final class WatchlistRuleService {
                 birds: Array(candidateBirds),
                 status: .to_observe
             )
-            watchlist.updateCoverImage()
-            try? context.save()
+            try persistence.refreshCoverImage(watchlistID: watchlistID)
         }
     }
     
