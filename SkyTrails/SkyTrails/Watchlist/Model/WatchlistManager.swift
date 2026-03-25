@@ -698,4 +698,191 @@ final class WatchlistManager: WatchlistRepository {
     var orchestrationService: WatchlistEntryOrchestrationService {
         return orchestration
     }
+    
+    // MARK: - ViewModel Creation (New Centralized APIs)
+    
+    /// Loads a complete ViewModel for MyWatchlist cell with pre-loaded images
+    /// - Returns: Ready-to-display ViewModel with all images loaded
+    func loadMyWatchlistViewModel() async throws -> WatchlistCellViewModel {
+        let allLists = try fetchWatchlists()
+        let dto = query.buildMyWatchlistDTO(from: allLists)
+        
+        // Load all images in parallel
+        async let unobservedImages = loadImages(paths: dto.unobservedPreviewImages)
+        async let observedImages = loadImages(paths: dto.observedPreviewImages)
+        
+        let (unobservedImgs, observedImgs) = await (unobservedImages, observedImages)
+        
+        return WatchlistCellViewModel(
+            title: dto.title,
+            unobservedCount: dto.stats.totalCount - dto.stats.observedCount,
+            observedCount: dto.stats.observedCount,
+            totalCount: dto.stats.totalCount,
+            unobservedImages: unobservedImgs,
+            observedImages: observedImgs
+        )
+    }
+    
+    /// Loads ViewModels for custom watchlist cells with pre-loaded cover images
+    /// - Parameter dtos: Array of WatchlistSummaryDTOs
+    /// - Returns: Array of ViewModels ready for cells
+    func loadCustomWatchlistViewModels(from dtos: [WatchlistSummaryDTO]) async -> [CustomWatchlistCellViewModel] {
+        await withTaskGroup(of: (Int, CustomWatchlistCellViewModel).self) { group in
+            for (index, dto) in dtos.enumerated() {
+                group.addTask {
+                    let coverImage = await self.loadImage(path: dto.image)
+                    return (index, CustomWatchlistCellViewModel(
+                        watchlistId: dto.legacyUUID,
+                        title: dto.title,
+                        subtitle: dto.subtitle,
+                        dateText: dto.dateText,
+                        coverImage: coverImage,
+                        totalCount: dto.stats.totalCount,
+                        observedCount: dto.stats.observedCount,
+                        type: dto.type
+                    ))
+                }
+            }
+            
+            var results: [(Int, CustomWatchlistCellViewModel)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
+        }
+    }
+    
+    /// Loads ViewModels for bird entry cells with pre-loaded images
+    /// - Parameters:
+    ///   - entries: Array of WatchlistEntry objects
+    ///   - shouldShowAvatars: Whether to show avatar images
+    /// - Returns: Array of ViewModels ready for cells
+    func loadBirdEntryViewModels(from entries: [WatchlistEntry], shouldShowAvatars: Bool) async -> [BirdEntryCellViewModel] {
+        await withTaskGroup(of: (Int, BirdEntryCellViewModel).self) { group in
+            for (index, entry) in entries.enumerated() {
+                group.addTask {
+                    let birdImage = await self.loadImageForEntry(entry)
+                    return await (index, BirdEntryCellViewModel(
+                        entryId: entry.id,
+                        birdName: entry.bird?.name ?? "Unknown",
+                        birdImage: birdImage,
+                        observationDate: self.formatObservationDate(entry.observationDate),
+                        location: self.determineLocation(for: entry),
+                        shouldShowAvatars: shouldShowAvatars,
+                        avatarNames: entry.observedBy != nil ? [entry.observedBy!] : [],
+                        status: entry.status
+                    ))
+                }
+            }
+            
+            var results: [(Int, BirdEntryCellViewModel)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
+        }
+    }
+    
+    // MARK: - Image Loading Helpers
+    
+    /// Loads multiple images in parallel
+    /// - Parameter paths: Array of image path strings
+    /// - Returns: Array of loaded UIImages
+    private func loadImages(paths: [String]) async -> [UIImage] {
+        await withTaskGroup(of: (Int, UIImage).self) { group in
+            for (index, path) in paths.enumerated() {
+                group.addTask {
+                    let image = await self.loadImage(path: path)
+                    return (index, image)
+                }
+            }
+            
+            var results: [(Int, UIImage)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
+        }
+    }
+    
+    /// Loads a single image from various sources
+    /// - Parameter path: Image path (can be nil)
+    /// - Returns: Loaded UIImage or placeholder
+    private func loadImage(path: String?) async -> UIImage {
+        guard let path = path else {
+            return UIImage(systemName: "photo") ?? UIImage()
+        }
+        
+        // 1. Check user photos directory
+        if let userPhoto = loadUserPhoto(named: path) {
+            return userPhoto
+        }
+        
+        // 2. Check asset catalog
+        if let assetImage = UIImage(named: path) {
+            return assetImage
+        }
+        
+        // 3. Fetch from remote service
+        if let remoteImage = await IdentificationImageService.shared.image(for: path, shapeId: nil) {
+            return remoteImage
+        }
+        
+        // 4. Fallback to placeholder
+        return UIImage(systemName: "photo") ?? UIImage()
+    }
+    
+    /// Loads an image specifically for a watchlist entry
+    /// - Parameter entry: The watchlist entry
+    /// - Returns: Loaded UIImage
+    private func loadImageForEntry(_ entry: WatchlistEntry) async -> UIImage {
+        // 1. Check if entry has a user photo
+        if let photoPath = entry.photos?.first?.imagePath {
+            if let userPhoto = loadUserPhoto(named: photoPath) {
+                return userPhoto
+            }
+        }
+        
+        // 2. Fall back to bird's static image
+        guard let bird = entry.bird else {
+            return UIImage(systemName: "photo") ?? UIImage()
+        }
+        
+        return await loadImage(path: bird.staticImageName)
+    }
+    
+    /// Loads a user photo from the documents directory
+    /// - Parameter imageName: Name of the image file
+    /// - Returns: UIImage if found, nil otherwise
+    private func loadUserPhoto(named imageName: String) -> UIImage? {
+        let fileManager = FileManager.default
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
+        let imagePath = photosDirectory.appendingPathComponent(imageName)
+        
+        return UIImage(contentsOfFile: imagePath.path)
+    }
+    
+    /// Formats an observation date for display
+    /// - Parameter date: The date to format
+    /// - Returns: Formatted string or nil
+    private func formatObservationDate(_ date: Date?) -> String? {
+        guard let date = date else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
+    }
+    
+    /// Determines the location string to display for an entry
+    /// - Parameter entry: The watchlist entry
+    /// - Returns: Location string or nil
+    private func determineLocation(for entry: WatchlistEntry) -> String? {
+        if let userLocation = entry.locationDisplayName, !userLocation.isEmpty {
+            return userLocation
+        }
+        if let likelySpot = entry.bird?.likelySpot {
+            return likelySpot
+        }
+        return nil
+    }
 }
