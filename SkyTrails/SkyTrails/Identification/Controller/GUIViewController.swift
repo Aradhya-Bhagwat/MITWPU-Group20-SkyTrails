@@ -344,12 +344,13 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let variants = getVariantsForCurrentCategory()
             let categoryName = categories[currentCategoryIndex].area
             
-            let isChevronCell = isVariationsExpanded ? (indexPath.row == variants.count) : (indexPath.row == 1)
+            let isChevronCell = indexPath.row == 1
             
             if isChevronCell {
                 cell.configureAsChevron(isExpanded: isVariationsExpanded)
             } else {
-                let variant = variants[indexPath.row]
+                let variantIndex = indexPath.row == 0 ? 0 : indexPath.row - 1
+                let variant = variants[variantIndex]
                 let isSelected = selectedVariations[categoryName] == variant.name
                 let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
                 let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
@@ -375,13 +376,14 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             selectCategory(at: indexPath.row)
         } else {
             let variants = getVariantsForCurrentCategory()
-            let isChevronCell = isVariationsExpanded ? (indexPath.row == variants.count) : (indexPath.row == 1)
+            let isChevronCell = indexPath.row == 1
             
             if isChevronCell {
                 isVariationsExpanded = !isVariationsExpanded
                 variationsCollectionView.reloadData()
             } else {
-                let variant = variants[indexPath.row]
+                let variantIndex = indexPath.row == 0 ? 0 : indexPath.row - 1
+                let variant = variants[variantIndex]
                 let currentMark = categories[currentCategoryIndex]
                 
                 selectedVariations[currentMark.area] = variant.name
