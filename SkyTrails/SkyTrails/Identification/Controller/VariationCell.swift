@@ -13,7 +13,7 @@ class VariationCell: UICollectionViewCell {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        layer.cornerRadius = frame.width / 2
+        layer.cornerRadius = 12
         updateAppearance()
     }
 
