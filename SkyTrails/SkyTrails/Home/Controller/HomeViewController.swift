@@ -224,6 +224,7 @@ extension HomeViewController {
         
         homeCollectionView.register(UINib(nibName: "UpcomingBirdsCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "UpcomingBirdsCollectionViewCell")
         homeCollectionView.register(UINib(nibName: "SpotsToVisitCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "SpotsToVisitCollectionViewCell")
+        homeCollectionView.register(UINib(nibName: "PredictionButtonCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: PredictionButtonCollectionViewCell.identifier)
         homeCollectionView.register(UINib(nibName: NewMigrationCollectionViewCell.identifier, bundle: Bundle(for: NewMigrationCollectionViewCell.self)), forCellWithReuseIdentifier: NewMigrationCollectionViewCell.identifier)
         homeCollectionView.register(UINib(nibName: "NewsCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "NewsCollectionViewCell")
         homeCollectionView.register(UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil), forSupplementaryViewOfKind: "NewsPageControlFooter", withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier)
@@ -330,7 +331,21 @@ extension HomeViewController {
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(cardWidth), heightDimension: .absolute(cardWidth * 1.034)), subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16); return section
+        section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
+        
+        section.visibleItemsInvalidationHandler = { visibleItems, offset, environment in
+            visibleItems.forEach { item in
+                if item.representedElementKind == nil && item.indexPath.item == 0 {
+                    item.zIndex = 100
+                    let xOffset = max(0, offset.x)
+                    item.transform = CGAffineTransform(translationX: xOffset, y: 0)
+                } else if item.representedElementKind == nil {
+                    item.zIndex = 0
+                }
+            }
+        }
+        
+        return section
     }
 
     private func createSpotsToVisitSection() -> NSCollectionLayoutSection {
@@ -342,7 +357,21 @@ extension HomeViewController {
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(cardWidth), heightDimension: .absolute(cardWidth * 1.034)), subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16); return section
+        section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
+        
+        section.visibleItemsInvalidationHandler = { visibleItems, offset, environment in
+            visibleItems.forEach { item in
+                if item.representedElementKind == nil && item.indexPath.item == 0 {
+                    item.zIndex = 100
+                    let xOffset = max(0, offset.x)
+                    item.transform = CGAffineTransform(translationX: xOffset, y: 0)
+                } else if item.representedElementKind == nil {
+                    item.zIndex = 0
+                }
+            }
+        }
+        
+        return section
     }
 
     private func createNewsSection() -> NSCollectionLayoutSection {
@@ -358,7 +387,7 @@ extension HomeViewController {
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
         let absoluteWidth = view.bounds.width - 32
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(absoluteWidth), heightDimension: .absolute(min(absoluteWidth * (440.0 / 361.0), 650))), subitems: [item])
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(absoluteWidth), heightDimension: .absolute(min(absoluteWidth * (440.0 / 361.0), 550))), subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered; section.interGroupSpacing = 40; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16); return section
     }
@@ -369,7 +398,8 @@ extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch section {
         case 0: return min(migrationCards.count, 1)
-        case 1: return upcomingBirds.count; case 2: return min(spots.count, 5)
+        case 1: return upcomingBirds.count + 1
+        case 2: return min(spots.count, 5) + 1
         case 3: return max(min(news.count, 8), 1)
         default: return 0
         }
@@ -382,11 +412,19 @@ extension HomeViewController: UICollectionViewDataSource {
                 cell.configure(migration: migration, hotspot: hotspot); return cell
             }
         } else if indexPath.section == 1 {
+            if indexPath.row == 0 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
+                cell.configure(with: UIImage(named: "PredicBirdButton")); return cell
+            }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "UpcomingBirdsCollectionViewCell", for: indexPath) as! UpcomingBirdsCollectionViewCell
-            let item = upcomingBirds[indexPath.row]; cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date); return cell
+            let item = upcomingBirds[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date); return cell
         } else if indexPath.section == 2 {
+            if indexPath.row == 0 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
+                cell.configure(with: UIImage(named: "PredictSpotButton")); return cell
+            }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SpotsToVisitCollectionViewCell", for: indexPath) as! SpotsToVisitCollectionViewCell
-            let item = spots[indexPath.row]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
+            let item = spots[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
         } else if indexPath.section == 3 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewsCollectionViewCell", for: indexPath) as! NewsCollectionViewCell
             cell.configure(with: newsItem(at: indexPath.row)); return cell
@@ -430,11 +468,20 @@ extension HomeViewController {
                 navigateToSpotDetails(name: hotspot.placeName, lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude, radius: radius, predictions: preds)
             }
         case 1:
+            if indexPath.row == 0 {
+                didTapPredictBird()
+                return
+            }
             let wCount = homeScreenData?.myWatchlistBirds.count ?? 0
-            if indexPath.row < wCount { if let res = homeScreenData?.myWatchlistBirds[safe: indexPath.row] { navigateToBirdPrediction(bird: res.bird, statusText: res.statusText) } }
-            else { if let rec = homeScreenData?.recommendedBirds[safe: indexPath.row - wCount] { navigateToBirdPrediction(bird: rec.bird, statusText: rec.dateRange) } }
+            let adjustedRow = indexPath.row - 1
+            if adjustedRow < wCount { if let res = homeScreenData?.myWatchlistBirds[safe: adjustedRow] { navigateToBirdPrediction(bird: res.bird, statusText: res.statusText) } }
+            else { if let rec = homeScreenData?.recommendedBirds[safe: adjustedRow - wCount] { navigateToBirdPrediction(bird: rec.bird, statusText: rec.dateRange) } }
         case 2:
-            let item = spots[indexPath.row]
+            if indexPath.row == 0 {
+                didTapPredictSpot()
+                return
+            }
+            let item = spots[indexPath.row - 1]
             Task {
                 let preds = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
                     homeManager.predictionResults(from: edgeSpecies, lat: item.latitude, lon: item.longitude)
@@ -450,6 +497,26 @@ extension HomeViewController {
             let item = newsItem(at: indexPath.row); if let url = URL(string: item.link), UIApplication.shared.canOpenURL(url) { UIApplication.shared.open(url) }
         default: break
         }
+    }
+
+    private func didTapPredictBird() {
+        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else {
+            return
+        }
+        
+        let allSpeciesData = WatchlistManager.shared.fetchAllBirds()
+        selectionVC.allSpecies = allSpeciesData.map {
+            SpeciesData(id: $0.bird_id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+        }
+        let watchlistTitles = upcomingBirds.map { $0.title }
+        let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.commonName) }.map { $0.bird_id.uuidString }
+        selectionVC.selectedSpecies = Set(preSelectedIDs)
+        navigationController?.pushViewController(selectionVC, animated: true)
+    }
+
+    private func didTapPredictSpot() {
+        self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
     }
 
     private func newsItem(at index: Int) -> NewsItem {

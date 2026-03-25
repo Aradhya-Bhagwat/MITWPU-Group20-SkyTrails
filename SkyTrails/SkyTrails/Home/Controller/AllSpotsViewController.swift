@@ -44,6 +44,11 @@ class AllSpotsViewController: UIViewController {
         )
         
         collectionView.register(
+            UINib(nibName: "PredictionButtonCollectionViewCell", bundle: nil),
+            forCellWithReuseIdentifier: PredictionButtonCollectionViewCell.identifier
+        )
+        
+        collectionView.register(
             UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil),
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
@@ -139,10 +144,22 @@ extension AllSpotsViewController: UICollectionViewDataSource {
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return (section == 0) ? watchlistData.count : recommendationsData.count
+        if section == 0 { return watchlistData.count + 1 }
+        else { return recommendationsData.count }
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.section == 0 && indexPath.row == 0 {
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: PredictionButtonCollectionViewCell.identifier,
+                for: indexPath
+            ) as? PredictionButtonCollectionViewCell else {
+                return UICollectionViewCell()
+            }
+            cell.configure(with: UIImage(named: "PredictSpotButton"))
+            return cell
+        }
+
         guard let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: GridSpotsToVisitCollectionViewCell.identifier,
             for: indexPath
@@ -150,7 +167,7 @@ extension AllSpotsViewController: UICollectionViewDataSource {
             return UICollectionViewCell()
         }
 
-        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
+        let item = (indexPath.section == 0) ? watchlistData[indexPath.row - 1] : recommendationsData[indexPath.row]
         let activeCount = HomeManager.shared.spotSpeciesCountCache.object(forKey: item.title as NSString)?.intValue ?? item.speciesCount
         
         cell.configure(
@@ -183,7 +200,12 @@ extension AllSpotsViewController: UICollectionViewDataSource {
 
 extension AllSpotsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = (indexPath.section == 0) ? watchlistData[indexPath.row] : recommendationsData[indexPath.row]
+        if indexPath.section == 0 && indexPath.row == 0 {
+            didTapPredict()
+            return
+        }
+
+        let item = (indexPath.section == 0) ? watchlistData[indexPath.row - 1] : recommendationsData[indexPath.row]
 
         let lat = item.latitude
         let lon = item.longitude
