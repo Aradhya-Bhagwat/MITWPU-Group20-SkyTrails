@@ -47,22 +47,6 @@ class ProfileLocationHeaderView: UIView {
     private func setupView() {
         translatesAutoresizingMaskIntoConstraints = false
         
-        // Profile Container setup
-        profileContainer.translatesAutoresizingMaskIntoConstraints = false
-        profileContainer.backgroundColor = .systemBackground
-        profileContainer.layer.cornerRadius = 22
-        profileContainer.layer.borderWidth = 1
-        profileContainer.layer.borderColor = UIColor.secondaryLabel.withAlphaComponent(0.2).cgColor
-        addSubview(profileContainer)
-        
-        // Profile image setup
-        profileImageView.translatesAutoresizingMaskIntoConstraints = false
-        profileImageView.contentMode = .scaleAspectFill
-        profileImageView.clipsToBounds = true
-        profileImageView.layer.cornerRadius = 18
-        profileImageView.image = UIImage(named: "defaultProfile")
-        profileContainer.addSubview(profileImageView)
-        
         // Location Container setup
         locationContainer.translatesAutoresizingMaskIntoConstraints = false
         locationContainer.backgroundColor = .systemBackground
@@ -86,26 +70,28 @@ class ProfileLocationHeaderView: UIView {
         locationLabel.text = "Loading..."
         locationLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         locationContainer.addSubview(locationLabel)
+
+        // Profile Container setup
+        profileContainer.translatesAutoresizingMaskIntoConstraints = false
+        profileContainer.backgroundColor = .systemBackground
+        profileContainer.layer.cornerRadius = 22
+        profileContainer.layer.borderWidth = 1
+        profileContainer.layer.borderColor = UIColor.secondaryLabel.withAlphaComponent(0.2).cgColor
+        addSubview(profileContainer)
+
+        // Profile image setup
+        profileImageView.translatesAutoresizingMaskIntoConstraints = false
+        profileImageView.contentMode = .scaleAspectFill
+        profileImageView.clipsToBounds = true
+        profileImageView.layer.cornerRadius = 18
+        profileImageView.image = UIImage(named: "defaultProfile")
+        profileContainer.addSubview(profileImageView)
         
         // Constraints
         NSLayoutConstraint.activate([
-            // Profile Container
-            profileContainer.topAnchor.constraint(equalTo: topAnchor),
-            profileContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
-            profileContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
-            profileContainer.widthAnchor.constraint(equalToConstant: 44),
-            profileContainer.heightAnchor.constraint(equalToConstant: 44),
-            
-            // Profile image
-            profileImageView.centerXAnchor.constraint(equalTo: profileContainer.centerXAnchor),
-            profileImageView.centerYAnchor.constraint(equalTo: profileContainer.centerYAnchor),
-            profileImageView.widthAnchor.constraint(equalToConstant: 36),
-            profileImageView.heightAnchor.constraint(equalToConstant: 36),
-            
             // Location Container
             locationContainer.topAnchor.constraint(equalTo: topAnchor),
-            locationContainer.leadingAnchor.constraint(equalTo: profileContainer.trailingAnchor, constant: 8),
-            locationContainer.trailingAnchor.constraint(equalTo: trailingAnchor),
+            locationContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
             locationContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
             locationContainer.heightAnchor.constraint(equalToConstant: 44),
             
@@ -118,7 +104,21 @@ class ProfileLocationHeaderView: UIView {
             // Location label
             locationLabel.leadingAnchor.constraint(equalTo: locationIconView.trailingAnchor, constant: 6),
             locationLabel.trailingAnchor.constraint(equalTo: locationContainer.trailingAnchor, constant: -16),
-            locationLabel.centerYAnchor.constraint(equalTo: locationContainer.centerYAnchor)
+            locationLabel.centerYAnchor.constraint(equalTo: locationContainer.centerYAnchor),
+
+            // Profile Container
+            profileContainer.topAnchor.constraint(equalTo: topAnchor),
+            profileContainer.leadingAnchor.constraint(equalTo: locationContainer.trailingAnchor, constant: 8),
+            profileContainer.trailingAnchor.constraint(equalTo: trailingAnchor),
+            profileContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
+            profileContainer.widthAnchor.constraint(equalToConstant: 44),
+            profileContainer.heightAnchor.constraint(equalToConstant: 44),
+
+            // Profile image
+            profileImageView.centerXAnchor.constraint(equalTo: profileContainer.centerXAnchor),
+            profileImageView.centerYAnchor.constraint(equalTo: profileContainer.centerYAnchor),
+            profileImageView.widthAnchor.constraint(equalToConstant: 36),
+            profileImageView.heightAnchor.constraint(equalToConstant: 36)
         ])
         
         // Tap gestures
