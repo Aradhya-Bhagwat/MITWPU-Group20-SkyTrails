@@ -9,6 +9,10 @@ class WatchlistHomeViewController: UIViewController {
 	private var customWatchlists: [WatchlistSummaryDTO] = []
 	private var sharedWatchlists: [WatchlistSummaryDTO] = []
 	private var globalStats: WatchlistStatsDTO?
+    
+    // ViewModels with pre-loaded images
+    private var myWatchlistViewModel: WatchlistCellViewModel?
+    private var customWatchlistViewModels: [CustomWatchlistCellViewModel] = []
 	enum WatchlistSection: Int, CaseIterable {
 		case myWatchlist
 		case customWatchlist
@@ -66,6 +70,21 @@ class WatchlistHomeViewController: UIViewController {
 				self.customWatchlists = data.custom
 				self.sharedWatchlists = data.shared
 				self.globalStats = data.globalStats
+				
+                // Load ViewModels with pre-loaded images
+                if let manager = repository as? WatchlistManager {
+                    async let myVM = manager.loadMyWatchlistViewModel()
+                    async let customVMs = manager.loadCustomWatchlistViewModels(from: data.custom)
+                    
+                    let (myWatchlistVM, customWatchlistVMs) = await (
+                        try? myVM,
+                        customVMs
+                    )
+                    
+                    self.myWatchlistViewModel = myWatchlistVM
+                    self.customWatchlistViewModels = customWatchlistVMs
+                }
+                
 				self.prefetchBirdImages()
 
 				let isNowEmptyState = self.isMyWatchlistEmptyState
@@ -463,23 +482,9 @@ extension WatchlistHomeViewController {
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.identifier, for: indexPath) as! MyWatchlistCollectionViewCell
 		
-		if let watchlist = myWatchlist {
-			let unobservedImages = watchlist.unobservedPreviewImages.compactMap { imagePath -> UIImage? in
-				loadImage(imagePath)
-			}
-			let observedImages = watchlist.observedPreviewImages.compactMap { imagePath -> UIImage? in
-				loadImage(imagePath)
-			}
-			
-			let data = WatchlistData(
-				title: watchlist.title,
-				unobservedImages: unobservedImages,
-				observedImages: observedImages,
-				totalCount: watchlist.stats.totalCount,
-				observedCount: watchlist.stats.observedCount
-			)
-			
-			cell.configure(with: data)
+		if let viewModel = myWatchlistViewModel {
+            // Use pre-loaded ViewModel with images already loaded
+			cell.configure(with: viewModel)
 		}
 		return cell
 	}
@@ -497,7 +502,12 @@ extension WatchlistHomeViewController {
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = cv.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath) as! CustomWatchlistCollectionViewCell
 		
-		if indexPath.item < customWatchlists.count {
+		if indexPath.item < customWatchlistViewModels.count {
+            // Use pre-loaded ViewModel with cover image already loaded
+			let viewModel = customWatchlistViewModels[indexPath.item]
+			cell.configure(with: viewModel)
+		} else if indexPath.item < customWatchlists.count {
+            // Fallback to DTO-based configuration if ViewModel not yet loaded
 			let dto = customWatchlists[indexPath.item]
 			cell.configure(with: dto)
 		}

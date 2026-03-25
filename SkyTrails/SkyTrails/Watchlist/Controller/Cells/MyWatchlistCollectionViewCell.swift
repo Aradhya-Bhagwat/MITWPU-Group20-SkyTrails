@@ -1,6 +1,7 @@
 
 import UIKit
 
+// Legacy struct kept for backward compatibility
 struct WatchlistData {
 	let title: String
 	let unobservedImages: [UIImage]
@@ -123,6 +124,34 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         contentStackView.insertArrangedSubview(emptyStateContainer, at: 0)
     }
 	
+    // MARK: - Enhanced Configuration (Uses ViewModel)
+    
+    /// Configure cell with pre-loaded ViewModel (NO BUSINESS LOGIC)
+    func configure(with viewModel: WatchlistCellViewModel) {
+        speciesCountLabel.text = "\(viewModel.unobservedCount)"
+        speciesTitleLabel.text = "Unobserved"
+        observedCountLabel.text = "\(viewModel.observedCount)"
+        
+        self.unobservedImages = viewModel.unobservedImages
+        self.observedImages = viewModel.observedImages
+        
+        if unobservedImages.isEmpty && observedImages.isEmpty {
+            imageStackView.isHidden = true
+            emptyStateContainer.isHidden = false
+            stopSlideshows()
+        } else {
+            imageStackView.isHidden = false
+            emptyStateContainer.isHidden = true
+            
+            configureSlot(imageView: image1, placeholder: unobservedPlaceholderLabel, images: unobservedImages)
+            configureSlot(imageView: image2, placeholder: observedPlaceholderLabel, images: observedImages)
+            
+            startSlideshows()
+        }
+    }
+    
+    // MARK: - Legacy Configuration (Kept for backward compatibility)
+    
 	func configure(with data: WatchlistData) {
         let unobservedCount = data.totalCount - data.observedCount
 		speciesCountLabel.text = "\(unobservedCount)"
