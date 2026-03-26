@@ -98,7 +98,7 @@ class HistoryCollectionViewCell: UICollectionViewCell {
     func configureCell(historyItem: IdentificationSession) {
         applySelectionAppearance()
         specieNameLabel.textAlignment = .natural
-        specieNameLabel.textColor = .secondaryLabel
+        specieNameLabel.textColor = .label
         
         if let bird = historyItem.result?.bird {
             specieNameLabel.text = bird.commonName
