@@ -7,7 +7,7 @@ struct IdentificationOption {
     var isSelected: Bool
 }
 
-class IdentificationViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UINavigationControllerDelegate {
+class IdentificationViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDataSource, UICollectionViewDelegate, UINavigationControllerDelegate {
     
     private var flowSteps: [IdentificationStep] = []
     private var currentStepIndex: Int = 0
@@ -15,6 +15,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private var isSeeding = false
     private var options: [IdentificationOption] = []
     private var histories: [IdentificationSession] = []
+    private var historySections: [(date: String, items: [IdentificationSession])] = []
     private var hasRefreshedManifestThisSession = false
     
     // Profile Location Header
@@ -73,6 +74,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         let nib = UINib(nibName: "HistoryCollectionViewCell", bundle: nil)
         historyCollectionView.register(nib, forCellWithReuseIdentifier: "history_cell")
         
+        let headerNib = UINib(nibName: "HistorySectionHeaderView", bundle: nil)
+        historyCollectionView.register(headerNib, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "HistorySectionHeaderView")
+        
         updateHistoryInteraction()
         
         navigationController?.delegate = self
@@ -83,7 +87,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         historyCollectionView.isScrollEnabled = false
         
         applyTableAppearance()
-        setupHistoryFlowLayout()
+        setupHistoryCompositionalLayout()
         
         tableView.reloadData()
         historyCollectionView.reloadData()
@@ -256,9 +260,29 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             self.histories = sessions.filter {
                 $0.status == .completed && (currentUserId == nil ? $0.user_id == nil : $0.user_id == currentUserId)
             }
+            self.historySections = self.groupHistoriesByDate(self.histories)
         } catch {
             self.histories = []
+            self.historySections = []
         }
+    }
+    
+    private func groupHistoriesByDate(_ histories: [IdentificationSession]) -> [(date: String, items: [IdentificationSession])] {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd MM yyyy"
+        
+        var grouped: [String: [IdentificationSession]] = [:]
+        
+        for history in histories {
+            let dateKey = dateFormatter.string(from: history.observationDate)
+            if grouped[dateKey] != nil {
+                grouped[dateKey]?.append(history)
+            } else {
+                grouped[dateKey] = [history]
+            }
+        }
+        
+        return grouped.map { (date: $0.key, items: $0.value) }
     }
     
     func updateSelectionState() {
@@ -299,8 +323,15 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         }
     }
     
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return max(historySections.count, 1)
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return max(histories.count, 1)
+        if historySections.isEmpty {
+            return 1
+        }
+        return historySections[section].items.count
     }
     
     func collectionView(_ collectionView: UICollectionView,
@@ -311,10 +342,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             for: indexPath
         ) as! HistoryCollectionViewCell
         
-        if histories.isEmpty {
+        if historySections.isEmpty {
             historyCell.showEmptyState()
         } else {
-            let historyItem = histories[indexPath.row]
+            let historyItem = historySections[indexPath.section].items[indexPath.item]
             historyCell.configureCell(historyItem: historyItem)
         }
         applyHistoryCardAppearance(to: historyCell)
@@ -322,8 +353,26 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         return historyCell
     }
     
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard kind == UICollectionView.elementKindSectionHeader else {
+            return UICollectionReusableView()
+        }
+        
+        let headerView = collectionView.dequeueReusableSupplementaryView(
+            ofKind: kind,
+            withReuseIdentifier: "HistorySectionHeaderView",
+            for: indexPath
+        ) as! HistorySectionHeaderView
+        
+        if !historySections.isEmpty {
+            headerView.configure(date: historySections[indexPath.section].date)
+        }
+        
+        return headerView
+    }
+    
     private func updateHistoryInteraction() {
-        let isEmpty = histories.isEmpty
+        let isEmpty = historySections.isEmpty
         
         historyCollectionView.isUserInteractionEnabled = !isEmpty
         historyCollectionView.alpha = isEmpty ? 0.6 : 1.0
@@ -473,15 +522,71 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         tableView.reloadData()
         updateSelectionState()
     }
-    private func setupHistoryFlowLayout() {
-        guard let layout = historyCollectionView.collectionViewLayout as? UICollectionViewFlowLayout else {
-            return
+    private func setupHistoryCompositionalLayout() {
+        let layout = UICollectionViewCompositionalLayout { [weak self] (sectionIndex, environment) -> NSCollectionLayoutSection? in
+            guard let self = self else { return nil }
+            
+            let containerWidth = environment.container.effectiveContentSize.width
+            let minItemWidth: CGFloat = 160
+            let maxItemsPerRow: CGFloat = 3
+            let interItemSpacing: CGFloat = 16
+            let sectionInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
+            
+            let availableWidth = containerWidth - sectionInsets.leading - sectionInsets.trailing
+            
+            var itemsPerRow: CGFloat = 1
+            while true {
+                let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
+                let potentialWidth = (availableWidth - potentialTotalSpacing) / itemsPerRow
+                if potentialWidth >= minItemWidth {
+                    itemsPerRow += 1
+                } else {
+                    itemsPerRow -= 1
+                    break
+                }
+                if itemsPerRow == 0 {
+                    itemsPerRow = 1
+                    break
+                }
+            }
+            
+            if itemsPerRow < 1 { itemsPerRow = 1 }
+            if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
+            
+            let itemWidth = (availableWidth - (interItemSpacing * (itemsPerRow - 1))) / itemsPerRow
+            let fixedHeight: CGFloat = 300
+            
+            let itemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0 / itemsPerRow),
+                heightDimension: .absolute(fixedHeight)
+            )
+            let item = NSCollectionLayoutItem(layoutSize: itemSize)
+            item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: interItemSpacing / 2, bottom: 0, trailing: interItemSpacing / 2)
+            
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .absolute(fixedHeight)
+            )
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+            
+            let section = NSCollectionLayoutSection(group: group)
+            section.contentInsets = sectionInsets
+            
+            let headerSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .estimated(50)
+            )
+            let header = NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: headerSize,
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )
+            section.boundarySupplementaryItems = [header]
+            
+            return section
         }
         
-        layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 16
-        layout.minimumLineSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        historyCollectionView.collectionViewLayout = layout
     }
 
     private func scheduleHistoryCollectionHeightUpdate() {
@@ -500,79 +605,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         if abs(historyCollectionHeightConstraint.constant - newHeight) > 0.5 {
             historyCollectionHeightConstraint.constant = newHeight
         }
-    }
-
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        sizeForItemAt indexPath: IndexPath) -> CGSize {
-        
-        let minItemWidth: CGFloat = 160
-        let maxItemsPerRow: CGFloat = 4
-        let interItemSpacing: CGFloat = 16
-        let sectionInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        
-        let availableWidth = collectionView.bounds.width - sectionInsets.left - sectionInsets.right
-        
-
-        var itemsPerRow: CGFloat = 1
-        while true {
-            let potentialTotalSpacing = interItemSpacing * (itemsPerRow - 1)
-            let potentialWidth = (availableWidth - potentialTotalSpacing) / itemsPerRow
-            if potentialWidth >= minItemWidth {
-                itemsPerRow += 1
-            } else {
-                itemsPerRow -= 1
-                break
-            }
-            if itemsPerRow == 0 {
-                itemsPerRow = 1
-                break
-            }
-        }
-        
-        if itemsPerRow < 1 { itemsPerRow = 1 }
-        if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
-        
-        let actualTotalSpacing = interItemSpacing * (itemsPerRow - 1)
-        let itemWidth = (availableWidth - actualTotalSpacing) / itemsPerRow
-      
-        let imageHorizontalMargins: CGFloat = 16
-        let imageWidth = itemWidth - imageHorizontalMargins
-        let imageHeight = imageWidth * (3.0 / 4.0)
-        let topMargin: CGFloat = 8
-        let imageToLabelSpacing: CGFloat = 6
-        let labelSpacing: CGFloat = 2
-        let bottomMargin: CGFloat = 8
-
-        let speciesText: String
-        if histories.isEmpty {
-            speciesText = "No history yet"
-        } else {
-            speciesText = histories[indexPath.row].result?.bird?.commonName ?? "Unknown Species"
-        }
-
-        let speciesFont = UIFont.preferredFont(forTextStyle: .subheadline)
-        let maxSpeciesLabelHeight = ceil(speciesFont.lineHeight * 2)
-        let measuredSpeciesHeight = ceil(
-            (speciesText as NSString).boundingRect(
-                with: CGSize(width: imageWidth, height: .greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                attributes: [.font: speciesFont],
-                context: nil
-            ).height
-        )
-        let speciesLabelHeight = min(maxSpeciesLabelHeight, measuredSpeciesHeight)
-        let dateLabelHeight = ceil(UIFont.preferredFont(forTextStyle: .caption1).lineHeight)
-
-        let totalHeight = topMargin +
-                         imageHeight +
-                         imageToLabelSpacing +
-                         speciesLabelHeight +
-                         labelSpacing +
-                         dateLabelHeight +
-                         bottomMargin
-        
-        return CGSize(width: itemWidth, height: totalHeight)
     }
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -596,8 +628,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard !histories.isEmpty else { return }
-        let selectedSession = histories[indexPath.row]
+        guard !historySections.isEmpty else { return }
+        let selectedSession = historySections[indexPath.section].items[indexPath.item]
         
         applyOptionsFromSession(selectedSession)
         model.selectedMenuOptionRawValues = options
