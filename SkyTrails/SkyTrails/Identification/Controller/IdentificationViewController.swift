@@ -269,7 +269,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     private func groupHistoriesByDate(_ histories: [IdentificationSession]) -> [(date: String, items: [IdentificationSession])] {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd MM yyyy"
+        dateFormatter.dateFormat = "dd-MM-yyyy"
         
         var grouped: [String: [IdentificationSession]] = [:]
         
@@ -530,7 +530,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let minItemWidth: CGFloat = 160
             let maxItemsPerRow: CGFloat = 3
             let interItemSpacing: CGFloat = 24
-            let sectionInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 24, trailing: 16)
+            let sectionInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 24, trailing: 16)
             
             let availableWidth = containerWidth - sectionInsets.leading - sectionInsets.trailing
             
