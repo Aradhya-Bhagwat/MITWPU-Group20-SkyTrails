@@ -217,6 +217,16 @@ extension HomeViewController {
             mapVC.predictionInputs = [input]; navigationController?.pushViewController(mapVC, animated: true)
         }
     }
+
+    private func navigateToNewsArticle(_ item: NewsItem) {
+        guard let url = URL(string: item.link) else {
+            showErrorAlert(message: "This article link is unavailable right now.")
+            return
+        }
+
+        let browserViewController = InAppBrowserViewController(url: url, title: item.sourceName ?? item.title)
+        navigationController?.pushViewController(browserViewController, animated: true)
+    }
     
     // Defines the complex compositional layout for the home screen sections
     private func createLayout() -> UICollectionViewLayout {
@@ -363,7 +373,7 @@ extension HomeViewController {
                 }
             }
         case 3:
-            let item = newsItem(at: indexPath.row); if let url = URL(string: item.link), UIApplication.shared.canOpenURL(url) { UIApplication.shared.open(url) }
+            navigateToNewsArticle(newsItem(at: indexPath.row))
         default: break
         }
     }
