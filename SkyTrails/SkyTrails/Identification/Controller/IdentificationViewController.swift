@@ -529,8 +529,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let containerWidth = environment.container.effectiveContentSize.width
             let minItemWidth: CGFloat = 160
             let maxItemsPerRow: CGFloat = 3
-            let interItemSpacing: CGFloat = 16
-            let sectionInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
+            let interItemSpacing: CGFloat = 24
+            let sectionInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 24, trailing: 16)
             
             let availableWidth = containerWidth - sectionInsets.leading - sectionInsets.trailing
             
@@ -571,6 +571,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             
             let section = NSCollectionLayoutSection(group: group)
             section.contentInsets = sectionInsets
+            section.interGroupSpacing = 24
             
             let headerSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
