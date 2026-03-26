@@ -464,7 +464,7 @@ class IdentificationManager {
             let resultPayload: [String: Any] = [
                 "identification_result_id": result.identification_result_id.uuidString,
                 "identification_session_id": session.identification_session_id.uuidString,
-                "user_id": result.user_id?.uuidString ?? userId.uuidString,
+                "owner_id": result.user_id?.uuidString ?? userId.uuidString,
                 "bird_id": result.bird?.bird_id.uuidString ?? NSNull(),
                 "created_at": ISO8601DateFormatter().string(from: result.created_at),
                 "updated_at": ISO8601DateFormatter().string(from: result.updated_at ?? Date())

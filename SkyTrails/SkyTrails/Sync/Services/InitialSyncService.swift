@@ -120,7 +120,7 @@ actor InitialSyncService {
             table: "watchlist_entries",
             column: "watchlist_id",
             ids: allWatchlistIDs,
-            baseQuery: "select=*",
+            baseQuery: "select=*&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )
@@ -131,7 +131,7 @@ actor InitialSyncService {
             table: "watchlist_rules",
             column: "watchlist_id",
             ids: allWatchlistIDs,
-            baseQuery: "select=*",
+            baseQuery: "select=*&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )
@@ -170,7 +170,7 @@ actor InitialSyncService {
             table: "identification_results",
             column: "identification_session_id",
             ids: sessionIDs,
-            baseQuery: "select=*",
+            baseQuery: "select=*&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )
@@ -181,7 +181,7 @@ actor InitialSyncService {
             table: "identification_candidates",
             column: "identification_result_id",
             ids: resultIDs,
-            baseQuery: "select=*",
+            baseQuery: "select=*&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )
@@ -190,7 +190,7 @@ actor InitialSyncService {
             table: "identification_session_marks",
             column: "identification_session_id",
             ids: sessionIDs,
-            baseQuery: "select=*",
+            baseQuery: "select=*&deleted_at=is.null",
             config: config,
             accessToken: accessToken
         )

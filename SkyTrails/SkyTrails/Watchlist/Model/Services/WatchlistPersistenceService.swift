@@ -25,7 +25,11 @@ final class WatchlistPersistenceService {
     }
 
     private func scoped(_ watchlists: [Watchlist]) -> [Watchlist] {
-        watchlists.filter { isWatchlistAccessible($0) }
+        watchlists.filter {
+            isWatchlistAccessible($0)
+                && $0.deleted_at == nil
+                && $0.syncStatus != .pendingDelete
+        }
     }
     private func queueSync(_ operation: @escaping @Sendable () async -> Void) {
         guard activeUserID != nil else {
@@ -76,7 +80,7 @@ final class WatchlistPersistenceService {
             predicate: #Predicate { $0.watchlist_id == id }
         )
         guard let watchlist = try context.fetch(descriptor).first else { return nil }
-        return isWatchlistAccessible(watchlist) ? watchlist : nil
+        return scoped([watchlist]).first
     }
     
     func fetchWatchlists(type: WatchlistType? = nil) throws -> [Watchlist] {

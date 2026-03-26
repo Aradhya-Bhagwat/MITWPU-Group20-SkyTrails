@@ -159,10 +159,12 @@ class SignUpViewController: UIViewController {
             do {
                 _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
+                print("DEBUG: Sign up initial sync failed: \(error)")
             }
             do {
                 try await IdentificationSyncService.shared.performSync(userId: user.user_id)
             } catch {
+                print("DEBUG: Sign up identification sync failed: \(error)")
             }
 
             Task {

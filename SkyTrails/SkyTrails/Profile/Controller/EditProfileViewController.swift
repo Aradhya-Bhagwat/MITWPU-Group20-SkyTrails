@@ -15,6 +15,7 @@ final class EditProfileViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        configureKeyboardDismissal()
         loadCurrentUser()
     }
 
@@ -165,7 +166,18 @@ final class EditProfileViewController: UIViewController {
         genderValueLabel.text = selectedGender
     }
 
+    private func configureKeyboardDismissal() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+
     @objc private func genderTapped() {
+        dismissKeyboard()
         presentGenderChoice()
     }
 
@@ -192,6 +204,7 @@ final class EditProfileViewController: UIViewController {
     }
 
     @objc private func saveTapped() {
+        dismissKeyboard()
         guard var user = UserSession.shared.getUser() else { return }
 
         let firstName = (firstNameField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)

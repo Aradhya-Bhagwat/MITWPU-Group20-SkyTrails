@@ -1,5 +1,14 @@
 import UIKit
 
+private final class OTPDigitTextField: UITextField {
+    var onDeleteBackward: (() -> Void)?
+
+    override func deleteBackward() {
+        onDeleteBackward?()
+        super.deleteBackward()
+    }
+}
+
 class OTPInputView: UIView {
     private let stackView = UIStackView()
     var digitCount: Int = 8 {
@@ -64,7 +73,7 @@ class OTPInputView: UIView {
     }
     
     private func createTextField(tag: Int) -> UITextField {
-        let field = UITextField()
+        let field = OTPDigitTextField()
         field.tag = tag
         field.textAlignment = .center
         field.font = .boldSystemFont(ofSize: 24)
@@ -74,6 +83,10 @@ class OTPInputView: UIView {
         field.backgroundColor = .systemGray6
         field.delegate = self
         field.addTarget(self, action: #selector(textChanged(_:)), for: .editingChanged)
+        field.onDeleteBackward = { [weak self, weak field] in
+            guard let self, let field else { return }
+            self.handleDeleteBackward(in: field)
+        }
         return field
     }
     
@@ -100,6 +113,21 @@ class OTPInputView: UIView {
         textFields.forEach { $0.text = "" }
         textFields.first?.becomeFirstResponder()
     }
+
+    private func handleDeleteBackward(in textField: UITextField) {
+        guard textField.text?.isEmpty == true else { return }
+
+        let previousTag = textField.tag - 1
+        guard previousTag >= 0 else {
+            onOTPEntered?(self.text)
+            return
+        }
+
+        let previousField = textFields[previousTag]
+        previousField.text = ""
+        previousField.becomeFirstResponder()
+        onOTPEntered?(self.text)
+    }
 }
 
 extension OTPInputView: UITextFieldDelegate {
@@ -114,17 +142,7 @@ extension OTPInputView: UITextFieldDelegate {
         }
 
         if string.isEmpty {
-            if textField.text?.isEmpty == true {
-                let prevTag = textField.tag - 1
-                if prevTag >= 0 {
-                    textFields[prevTag].text = ""
-                    textFields[prevTag].becomeFirstResponder()
-                }
-            } else {
-                textField.text = ""
-            }
-            onOTPEntered?(self.text)
-            return false
+            return true
         }
         return true
     }

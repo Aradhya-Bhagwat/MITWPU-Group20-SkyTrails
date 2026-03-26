@@ -65,6 +65,12 @@ class UserSession {
             } catch {
                 print("DEBUG: UserSession - Initial sync failed: \(error)")
             }
+
+            do {
+                try await IdentificationSyncService.shared.performSync(userId: user.user_id)
+            } catch {
+                print("DEBUG: UserSession - Identification sync failed: \(error)")
+            }
             
             // 4. Trigger Background Agent to push any newly adopted pending changes
             await BackgroundSyncAgent.shared.syncAll()

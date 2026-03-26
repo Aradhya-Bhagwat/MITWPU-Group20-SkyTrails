@@ -145,10 +145,12 @@ class LoginViewController: UIViewController {
             do {
                 _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
+                print("DEBUG: Login initial sync failed: \(error)")
             }
             do {
                 try await IdentificationSyncService.shared.performSync(userId: user.user_id)
             } catch {
+                print("DEBUG: Login identification sync failed: \(error)")
             }
 
             Task {
