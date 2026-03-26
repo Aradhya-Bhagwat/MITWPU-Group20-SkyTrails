@@ -18,36 +18,38 @@
                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 <subviews>
                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="LaN-X3-c9G">
-                        <rect key="frame" x="0.0" y="0.0" width="200" height="250"/>
+                        <rect key="frame" x="0.0" y="0.0" width="250" height="300"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7a1-04-YJM">
-                                <rect key="frame" x="0.0" y="0.0" width="200" height="250"/>
+                                <rect key="frame" x="0.0" y="0.0" width="250" height="300"/>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="W8r-hY-R6K">
-                                <rect key="frame" x="12" y="198" width="130" height="44"/>
+                                <rect key="frame" x="12.000000000000004" y="260" width="61.333333333333343" height="32"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1jK-Ka-RvL">
-                                        <rect key="frame" x="12" y="7" width="106" height="30"/>
+                                        <rect key="frame" x="12" y="7" width="37.333333333333336" height="18"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                        <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                 </subviews>
+                                <color key="backgroundColor" systemColor="systemGray4Color"/>
                                 <constraints>
-                                    <constraint firstItem="1jK-Ka-RvL" firstAttribute="leading" secondItem="W8r-hY-R6K" secondAttribute="leading" constant="12" id="label-leading"/>
-                                    <constraint firstAttribute="trailing" secondItem="1jK-Ka-RvL" secondAttribute="trailing" constant="12" id="label-trailing"/>
-                                    <constraint firstItem="1jK-Ka-RvL" firstAttribute="top" secondItem="W8r-hY-R6K" secondAttribute="top" constant="7" id="label-top"/>
                                     <constraint firstAttribute="bottom" secondItem="1jK-Ka-RvL" secondAttribute="bottom" constant="7" id="label-bottom"/>
+                                    <constraint firstItem="1jK-Ka-RvL" firstAttribute="leading" secondItem="W8r-hY-R6K" secondAttribute="leading" constant="12" id="label-leading"/>
+                                    <constraint firstItem="1jK-Ka-RvL" firstAttribute="top" secondItem="W8r-hY-R6K" secondAttribute="top" constant="7" id="label-top"/>
+                                    <constraint firstAttribute="trailing" secondItem="1jK-Ka-RvL" secondAttribute="trailing" constant="12" id="label-trailing"/>
                                 </constraints>
                             </view>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="7a1-04-YJM" firstAttribute="top" secondItem="LaN-X3-c9G" secondAttribute="top" id="img-top"/>
-                            <constraint firstItem="7a1-04-YJM" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" id="img-leading"/>
-                            <constraint firstAttribute="trailing" secondItem="7a1-04-YJM" secondAttribute="trailing" id="img-trailing"/>
-                            <constraint firstAttribute="bottom" secondItem="7a1-04-YJM" secondAttribute="bottom" id="img-bottom"/>
-                            <constraint firstItem="W8r-hY-R6K" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" constant="12" id="capsule-leading"/>
                             <constraint firstAttribute="bottom" secondItem="W8r-hY-R6K" secondAttribute="bottom" constant="8" id="capsule-bottom"/>
+                            <constraint firstItem="W8r-hY-R6K" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" constant="12" id="capsule-leading"/>
+                            <constraint firstAttribute="bottom" secondItem="7a1-04-YJM" secondAttribute="bottom" id="img-bottom"/>
+                            <constraint firstItem="7a1-04-YJM" firstAttribute="leading" secondItem="LaN-X3-c9G" secondAttribute="leading" id="img-leading"/>
+                            <constraint firstItem="7a1-04-YJM" firstAttribute="top" secondItem="LaN-X3-c9G" secondAttribute="top" id="img-top"/>
+                            <constraint firstAttribute="trailing" secondItem="7a1-04-YJM" secondAttribute="trailing" id="img-trailing"/>
                         </constraints>
                     </view>
                 </subviews>
@@ -73,6 +75,9 @@
     <resources>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGray4Color">
+            <color red="0.81960784313725488" green="0.81960784313725488" blue="0.83921568627450982" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
