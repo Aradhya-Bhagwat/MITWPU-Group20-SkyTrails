@@ -321,6 +321,122 @@ actor IdentificationSyncService {
         }
         try await performSync(userId: userId)
     }
+
+    func deleteAllHistory() async throws {
+        await BackgroundSyncAgent.shared.purgeIdentificationOperations()
+
+        let userId = await MainActor.run { UserSession.shared.getUser()?.user_id }
+        let accessToken = await MainActor.run { UserSession.shared.getAccessToken() }
+
+        if let userId, let accessToken {
+            if config == nil {
+                config = try SupabaseConfig.load()
+            }
+
+            guard let config else {
+                throw IdentificationSyncError.configNotLoaded
+            }
+
+            try await deleteHistoryFromSupabase(userId: userId, config: config, accessToken: accessToken)
+        }
+
+        await clearLocalData()
+    }
+
+    private func deleteHistoryFromSupabase(userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
+        let sessionRows: [IdentificationSessionDeleteRow] = try await fetchFromSupabase(
+            table: "identification_sessions",
+            query: "select=identification_session_id&user_id=eq.\(userId.uuidString)&limit=10000",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let sessionIDs = sessionRows.map(\.id)
+        guard !sessionIDs.isEmpty else { return }
+
+        let resultRows: [IdentificationResultDeleteRow] = try await fetchFromSupabase(
+            table: "identification_results",
+            query: "select=identification_result_id&identification_session_id=in.\(supabaseInList(sessionIDs))&limit=10000",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let resultIDs = resultRows.map(\.id)
+
+        if !resultIDs.isEmpty {
+            try await deleteFromSupabase(
+                table: "identification_candidates",
+                filter: "identification_result_id=in.\(supabaseInList(resultIDs))",
+                config: config,
+                accessToken: accessToken
+            )
+        }
+
+        try await deleteFromSupabase(
+            table: "identification_session_marks",
+            filter: "identification_session_id=in.\(supabaseInList(sessionIDs))",
+            config: config,
+            accessToken: accessToken
+        )
+
+        if !resultIDs.isEmpty {
+            try await deleteFromSupabase(
+                table: "identification_results",
+                filter: "identification_result_id=in.\(supabaseInList(resultIDs))",
+                config: config,
+                accessToken: accessToken
+            )
+        }
+
+        try await deleteFromSupabase(
+            table: "identification_sessions",
+            filter: "identification_session_id=in.\(supabaseInList(sessionIDs))",
+            config: config,
+            accessToken: accessToken
+        )
+    }
+
+    private func deleteFromSupabase(
+        table: String,
+        filter: String,
+        config: SupabaseConfig,
+        accessToken: String
+    ) async throws {
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
+            throw IdentificationSyncError.networkError("Invalid URL")
+        }
+
+        components.path = "/rest/v1/\(table)"
+        components.percentEncodedQuery = filter
+
+        guard let url = components.url else {
+            throw IdentificationSyncError.networkError("Invalid URL")
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+                throw IdentificationSyncError.networkError("HTTP \(statusCode) while deleting \(table)")
+            }
+        } catch let error as IdentificationSyncError {
+            throw error
+        } catch {
+            throw IdentificationSyncError.networkError(error.localizedDescription)
+        }
+    }
+
+    private func supabaseInList(_ ids: [UUID]) -> String {
+        let joined = ids.map(\.uuidString).joined(separator: ",")
+        return "(\(joined))"
+    }
     
     func clearLocalData() async {
         await MainActor.run {
@@ -330,6 +446,13 @@ actor IdentificationSyncService {
                 
                 for session in sessions {
                     WatchlistManager.shared.context.delete(session)
+                }
+
+                let markDescriptor = FetchDescriptor<IdentificationSessionFieldMark>()
+                let marks = try WatchlistManager.shared.context.fetch(markDescriptor)
+
+                for mark in marks {
+                    WatchlistManager.shared.context.delete(mark)
                 }
                 
                 let resultDescriptor = FetchDescriptor<IdentificationResult>()
@@ -350,5 +473,21 @@ actor IdentificationSyncService {
             } catch {
             }
         }
+    }
+}
+
+private struct IdentificationResultDeleteRow: Decodable {
+    let id: UUID
+
+    enum CodingKeys: String, CodingKey {
+        case id = "identification_result_id"
+    }
+}
+
+private struct IdentificationSessionDeleteRow: Decodable {
+    let id: UUID
+
+    enum CodingKeys: String, CodingKey {
+        case id = "identification_session_id"
     }
 }

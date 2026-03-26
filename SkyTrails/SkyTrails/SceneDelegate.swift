@@ -168,7 +168,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Pull latest profile and data changes from other devices (like iPad)
         await UserSession.shared.syncProfileWithServer()
-        _ = try? await InitialSyncService.shared.performInitialSync(userId: user.user_id)
+        do {
+            _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
+        } catch {
+            print("DEBUG: SceneDelegate initial sync failed: \(error)")
+        }
+        do {
+            try await IdentificationSyncService.shared.performSync(userId: user.user_id)
+        } catch {
+            print("DEBUG: SceneDelegate identification sync failed: \(error)")
+        }
 
         if RealtimeSyncService.shared.connectionState == .disconnected {
             do {

@@ -54,12 +54,12 @@ class NewsCollectionViewCell: UICollectionViewCell {
         titleLabel.text = news.title
         titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
         titleLabel.textColor = .white
-        titleLabel.numberOfLines = 0
+        titleLabel.numberOfLines = 3
         
         summaryLabel.text = news.summary
         summaryLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         summaryLabel.textColor = .white.withAlphaComponent(0.9)
-        summaryLabel.numberOfLines = 2
+        summaryLabel.numberOfLines = 3
         sourceLabel.text = makeSourceText(news: news)
         
         if news.imageName.starts(with: "http"), let url = URL(string: news.imageName) {

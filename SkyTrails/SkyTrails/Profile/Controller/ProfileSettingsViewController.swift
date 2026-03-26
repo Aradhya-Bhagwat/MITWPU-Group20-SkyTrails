@@ -13,6 +13,9 @@ final class ProfileSettingsViewController: UIViewController {
     private let saveButton = UIButton(type: .system)
     private weak var profileRowView: UIView?
     private weak var colorModeRowView: UIView?
+    private weak var clearWatchlistsRowView: UIView?
+    private weak var deleteWatchlistsRowView: UIView?
+    private weak var deleteIdentificationHistoryRowView: UIView?
 
     private var selectedVisibility: String = "Public"
     private var selectedColorMode: String = "System Default"
@@ -39,8 +42,18 @@ final class ProfileSettingsViewController: UIViewController {
         contentStack.addArrangedSubview(profileRow)
         contentStack.addArrangedSubview(colorModeRow)
         contentStack.addArrangedSubview(makeActionRow(title: "Manage Permissions", systemImage: "lock.shield", action: #selector(managePermissionsTapped)))
-        contentStack.addArrangedSubview(makeResetRow(title: "Clear All Watchlist", action: #selector(clearAllWatchlistTapped)))
-        contentStack.addArrangedSubview(makeResetRow(title: "Delete All Watchlists", action: #selector(deleteAllWatchlistsTapped)))
+
+        let clearWatchlistsRow = makeResetRow(title: "Clear All Watchlists", action: #selector(clearAllWatchlistTapped))
+        let deleteWatchlistsRow = makeResetRow(title: "Delete All Watchlists", action: #selector(deleteAllWatchlistsTapped))
+        let deleteIdentificationHistoryRow = makeResetRow(title: "Delete Identification History", action: #selector(deleteIdentificationHistoryTapped))
+
+        clearWatchlistsRowView = clearWatchlistsRow
+        deleteWatchlistsRowView = deleteWatchlistsRow
+        deleteIdentificationHistoryRowView = deleteIdentificationHistoryRow
+
+        contentStack.addArrangedSubview(clearWatchlistsRow)
+        contentStack.addArrangedSubview(deleteWatchlistsRow)
+        contentStack.addArrangedSubview(deleteIdentificationHistoryRow)
 
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("Save", for: .normal)
@@ -224,20 +237,32 @@ final class ProfileSettingsViewController: UIViewController {
     }
 
     @objc private func clearAllWatchlistTapped() {
-        presentResetConfirmation(
-            title: "Clear All Watchlist",
-            message: "Are you sure you want to clear all your Watchlists? This action cannot be undone."
+        presentDestructiveConfirmation(
+            title: "Clear All Watchlists",
+            message: "Remove all observed and to-observe entries from your watchlists. The watchlists themselves will stay.",
+            actionTitle: "Clear Entries"
         ) { [weak self] in
             self?.clearAllWatchlists()
         }
     }
 
     @objc private func deleteAllWatchlistsTapped() {
-        presentResetConfirmation(
+        presentDestructiveConfirmation(
             title: "Delete All Watchlists",
-            message: "Are you sure you want to delete all your Watchlists? This action cannot be undone."
+            message: "Delete your custom watchlists completely. This does not remove shared watchlists.",
+            actionTitle: "Delete Watchlists"
         ) { [weak self] in
             self?.deleteAllWatchlists()
+        }
+    }
+
+    @objc private func deleteIdentificationHistoryTapped() {
+        presentDestructiveConfirmation(
+            title: "Delete Identification History",
+            message: "Are you sure you want to delete your full identification history? This will remove the records from this device and your Supabase account.",
+            actionTitle: "Delete History"
+        ) { [weak self] in
+            self?.deleteAllIdentificationHistory()
         }
     }
 
@@ -270,12 +295,17 @@ final class ProfileSettingsViewController: UIViewController {
         present(sheet, animated: true)
     }
 
-    private func presentResetConfirmation(title: String, message: String, onConfirm: @escaping () -> Void) {
+    private func presentDestructiveConfirmation(
+        title: String,
+        message: String,
+        actionTitle: String,
+        onConfirm: @escaping () -> Void
+    ) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: actionTitle, style: .destructive) { _ in
             onConfirm()
         })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
 
@@ -283,23 +313,22 @@ final class ProfileSettingsViewController: UIViewController {
         Task { @MainActor in
             do {
                 let manager = WatchlistManager.shared
-                let allWatchlists = try manager.fetchWatchlists()
+                let allWatchlists = try personalWatchlistsForClearing()
                 
                 if allWatchlists.isEmpty {
-                    self.showMessage("No watchlists found.")
+                    self.showMessage(title: "Nothing to Clear", message: "No personal watchlists were found.")
                     return
                 }
 
                 for watchlist in allWatchlists {
-                    let observed = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .observed)
-                    let toObserve = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: .to_observe)
-                    for entry in observed + toObserve {
+                    let entries = try manager.fetchEntries(watchlistID: watchlist.watchlist_id)
+                    for entry in entries {
                         try manager.deleteEntry(entryId: entry.id)
                     }
                 }
-                self.showMessage("All Watchlists cleared.")
+                self.showMessage(title: "Watchlists Cleared", message: "All observed and to-observe items were removed from your personal watchlists.")
             } catch {
-                self.showMessage("Could not clear Watchlists.")
+                self.showMessage(title: "Unable to Clear Watchlists", message: "Please try again.")
             }
         }
     }
@@ -308,21 +337,40 @@ final class ProfileSettingsViewController: UIViewController {
         Task { @MainActor in
             do {
                 let manager = WatchlistManager.shared
-                let allWatchlists = try manager.fetchWatchlists()
+                let allWatchlists = try deletableWatchlists()
 
                 if allWatchlists.isEmpty {
-                    self.showMessage("No watchlists found.")
+                    self.showMessage(title: "Nothing to Delete", message: "No custom watchlists were found.")
                     return
                 }
 
                 for watchlist in allWatchlists {
                     try await manager.deleteWatchlist(id: watchlist.watchlist_id)
                 }
-                self.showMessage("All Watchlists deleted.")
+                self.showMessage(title: "Watchlists Deleted", message: "Your custom watchlists were deleted.")
             } catch {
-                self.showMessage("Could not delete Watchlists.")
+                self.showMessage(title: "Unable to Delete Watchlists", message: "Please try again.")
             }
         }
+    }
+
+    private func deleteAllIdentificationHistory() {
+        Task { @MainActor in
+            do {
+                try await IdentificationSyncService.shared.deleteAllHistory()
+                self.showMessage(title: "History Deleted", message: "Your identification history was removed from this device and Supabase.")
+            } catch {
+                self.showMessage(title: "Unable to Delete History", message: "Please try again.")
+            }
+        }
+    }
+
+    private func personalWatchlistsForClearing() throws -> [Watchlist] {
+        try WatchlistManager.shared.fetchWatchlists().filter { $0.type != .shared }
+    }
+
+    private func deletableWatchlists() throws -> [Watchlist] {
+        try WatchlistManager.shared.fetchWatchlists().filter { $0.type == .custom }
     }
 
     private func openSystemSettings() {
@@ -331,8 +379,8 @@ final class ProfileSettingsViewController: UIViewController {
         UIApplication.shared.open(url)
     }
 
-    private func showMessage(_ message: String) {
-        let alert = UIAlertController(title: "Settings", message: message, preferredStyle: .alert)
+    private func showMessage(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }

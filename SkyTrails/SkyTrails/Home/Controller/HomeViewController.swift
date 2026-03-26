@@ -14,6 +14,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var spots: [PopularSpotUI] = []
     private var news: [NewsItem] = []
     private var migrationCards: [DynamicMapCard] = []
+    private var currentNewsPage = 0
 
     private var animatedIndexPaths: Set<IndexPath> = []
     private var cachedUpcomingBirdCardWidth: CGFloat?
@@ -158,6 +159,7 @@ extension HomeViewController {
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
             self.upcomingBirds = data.displayableUpcomingBirds; self.spots = data.displayableSpots
             self.news = data.news
+            self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
             self.migrationCards = data.migrationCards; self.loadingIndicator.stopAnimating()
             self.animatedIndexPaths.removeAll()
             UIView.transition(with: self.homeCollectionView, duration: 0.4, options: .transitionCrossDissolve, animations: { self.homeCollectionView.reloadData() })
@@ -172,6 +174,7 @@ extension HomeViewController {
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
             self.upcomingBirds = data.displayableUpcomingBirds; self.spots = data.displayableSpots
             self.news = data.news
+            self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
             self.migrationCards = data.migrationCards; self.animatedIndexPaths.removeAll()
             UIView.transition(with: self.homeCollectionView, duration: 0.3, options: .transitionCrossDissolve, animations: { self.homeCollectionView.reloadData() })
         }
@@ -272,11 +275,24 @@ extension HomeViewController {
     }
 
     private func createNewsSection() -> NSCollectionLayoutSection {
+        let newsCardHeight: CGFloat = traitCollection.userInterfaceIdiom == .phone ? 230 : 200
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(180)), subitems: [item])
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(newsCardHeight)), subitems: [item])
         group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
+        section.visibleItemsInvalidationHandler = { [weak self] visibleItems, contentOffset, environment in
+            guard let self else { return }
+            let centerX = contentOffset.x + (environment.container.contentSize.width / 2)
+            let currentPage = visibleItems
+                .filter { $0.representedElementCategory == .cell }
+                .min { abs($0.frame.midX - centerX) < abs($1.frame.midX - centerX) }?
+                .indexPath.item ?? 0
+
+            Task { @MainActor [weak self] in
+                self?.updateNewsPage(to: currentPage)
+            }
+        }
         let pageControl = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(30)), elementKind: "NewsPageControlFooter", alignment: .bottom)
         section.boundarySupplementaryItems = [createSectionHeaderLayout(), pageControl]; return section
     }
@@ -324,7 +340,7 @@ extension HomeViewController: UICollectionViewDataSource {
          if kind == "NewsPageControlFooter" {
              let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier, for: indexPath) as! PageControlReusableViewCollectionReusableView
              let count = news.isEmpty ? 0 : min(news.count, 8)
-             footer.configure(numberOfPages: count, currentPage: 0); return footer
+             footer.configure(numberOfPages: count, currentPage: clampedNewsPage(currentNewsPage)); return footer
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
             if indexPath.section == 0 { header.configure(title: "Migration Forecast") }
@@ -342,9 +358,6 @@ extension HomeViewController {
         if !animatedIndexPaths.contains(indexPath) {
             cell.alpha = 0; cell.transform = CGAffineTransform(translationX: 0, y: 20)
             UIView.animate(withDuration: 0.5, delay: 0.02 * Double(indexPath.item), usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut, .allowUserInteraction], animations: { cell.alpha = 1; cell.transform = .identity }, completion: { _ in self.animatedIndexPaths.insert(indexPath) })
-        }
-        if indexPath.section == 3, let footer = collectionView.supplementaryView(forElementKind: "NewsPageControlFooter", at: IndexPath(item: 0, section: 3)) as? PageControlReusableViewCollectionReusableView {
-            footer.configure(numberOfPages: news.isEmpty ? 0 : min(news.count, 8), currentPage: indexPath.row)
         }
     }
     
@@ -380,5 +393,27 @@ extension HomeViewController {
 
     private func newsItem(at index: Int) -> NewsItem {
         return (!news.isEmpty && index >= 0 && index < news.count) ? news[index] : emptyNewsItem
+    }
+
+    @MainActor
+    private func updateNewsPage(to page: Int) {
+        let clampedPage = clampedNewsPage(page)
+        guard currentNewsPage != clampedPage else { return }
+        currentNewsPage = clampedPage
+
+        if let footer = homeCollectionView.supplementaryView(
+            forElementKind: "NewsPageControlFooter",
+            at: IndexPath(item: 0, section: 3)
+        ) as? PageControlReusableViewCollectionReusableView {
+            footer.configure(
+                numberOfPages: news.isEmpty ? 0 : min(news.count, 8),
+                currentPage: currentNewsPage
+            )
+        }
+    }
+
+    private func clampedNewsPage(_ page: Int) -> Int {
+        let maxPage = max((news.isEmpty ? 1 : min(news.count, 8)) - 1, 0)
+        return min(max(page, 0), maxPage)
     }
 }

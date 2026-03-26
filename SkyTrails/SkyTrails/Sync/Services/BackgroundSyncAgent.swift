@@ -130,6 +130,19 @@ actor BackgroundSyncAgent {
         addToQueue(syncOp)
     }
 
+    func purgeIdentificationOperations() {
+        let identificationTables: Set<String> = [
+            "identification_sessions",
+            "identification_results",
+            "identification_candidates",
+            "identification_session_marks"
+        ]
+        queue.removeAll { identificationTables.contains($0.table) }
+        deadLetterQueue.removeAll { identificationTables.contains($0.table) }
+        Self.saveQueueToDisk(queue)
+        Self.saveDeadLetterToDisk(deadLetterQueue)
+    }
+
     private func addToQueue(_ op: SyncOperation) {
         queue.append(op)
         Self.saveQueueToDisk(queue)
