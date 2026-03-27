@@ -226,6 +226,11 @@ actor InitialSyncService {
             
             let markCount = try mergeIdentificationSessionMarks(markRows, context: context)
             try? context.save()
+
+            // Refresh derived watchlist fields after children are merged.
+            // Custom watchlist cards read observed/species counts and cover image from Watchlist.
+            try refreshDerivedWatchlistFields(context: context)
+            try? context.save()
             
             return (wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
         }
@@ -443,6 +448,18 @@ actor InitialSyncService {
             syncedCount += 1
         }
         return syncedCount
+    }
+
+    private nonisolated func refreshDerivedWatchlistFields(context: ModelContext) throws {
+        let descriptor = FetchDescriptor<Watchlist>()
+        let watchlists = try context.fetch(descriptor)
+
+        for watchlist in watchlists {
+            let activeEntries = (watchlist.entries ?? []).filter { $0.syncStatus != .pendingDelete }
+            watchlist.observedCount = activeEntries.filter { $0.status == .observed }.count
+            watchlist.speciesCount = Set(activeEntries.map { $0.bird?.bird_id ?? $0.id }).count
+            watchlist.updateCoverImage()
+        }
     }
 
     private nonisolated func mergeIdentificationSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
