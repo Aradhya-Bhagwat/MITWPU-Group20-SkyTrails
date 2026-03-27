@@ -66,13 +66,15 @@ class HistoryCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
         setupTraitChangeHandling()
         contentView.clipsToBounds = true
-        specieNameLabel.font = .preferredFont(forTextStyle: .subheadline)
+        specieNameLabel.font = .preferredFont(forTextStyle: .footnote)
         specieNameLabel.adjustsFontForContentSizeCategory = true
         specieNameLabel.textColor = .black
-        specieNameLabel.numberOfLines = 0
-        specieNameLabel.lineBreakMode = .byWordWrapping
+        specieNameLabel.numberOfLines = 1
+        specieNameLabel.lineBreakMode = .byTruncatingTail
+        specieNameLabel.adjustsFontSizeToFitWidth = true
+        specieNameLabel.minimumScaleFactor = 0.8
 
-        speciesCapsuleView.layer.cornerRadius = 12
+        speciesCapsuleView.layer.cornerRadius = 10
         speciesCapsuleView.layer.borderWidth = 1
         speciesCapsuleView.clipsToBounds = true
         applySelectionAppearance()

@@ -529,9 +529,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             guard let self = self else { return nil }
             
             let containerWidth = environment.container.effectiveContentSize.width
-            let minItemWidth: CGFloat = 160
-            let maxItemsPerRow: CGFloat = 3
-            let interItemSpacing: CGFloat = 24
+            let isPhone = environment.traitCollection.userInterfaceIdiom == .phone
+            let minItemWidth: CGFloat = isPhone ? 132 : 160
+            let maxItemsPerRow: CGFloat = isPhone ? 2 : 3
+            let interItemSpacing: CGFloat = isPhone ? 16 : 24
             let sectionInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 24, trailing: 16)
             
             let availableWidth = containerWidth - sectionInsets.leading - sectionInsets.trailing
@@ -556,7 +557,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
             
             let itemWidth = (availableWidth - (interItemSpacing * (itemsPerRow - 1))) / itemsPerRow
-            let fixedHeight: CGFloat = 300
+            let fixedHeight: CGFloat = isPhone ? 220 : 300
             
             let itemSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0 / itemsPerRow),
