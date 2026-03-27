@@ -1,6 +1,45 @@
 import Foundation
 import SwiftData
 
+private enum MetadataScalarValue: Decodable {
+    case string(String)
+    case number(Double)
+    case bool(Bool)
+    case null
+
+    var stringValue: String? {
+        switch self {
+        case .string(let value):
+            return value
+        case .number(let value):
+            if value.rounded() == value {
+                return String(Int(value))
+            }
+            return String(value)
+        case .bool(let value):
+            return String(value)
+        case .null:
+            return nil
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+
+        if container.decodeNil() {
+            self = .null
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .number(value)
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else {
+            self = .null
+        }
+    }
+}
+
 enum SyncStatus: String, Codable {
     case pendingOwner
     case pendingCreate
@@ -406,7 +445,16 @@ struct IdentificationSessionRow: Codable, Sendable {
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         isPublic = try container.decodeIfPresent(Bool.self, forKey: .isPublic)
         weatherConditions = try container.decodeIfPresent(String.self, forKey: .weatherConditions)
-        metadata = try container.decodeIfPresent([String: String].self, forKey: .metadata)
+        if let rawMetadata = try container.decodeIfPresent([String: MetadataScalarValue].self, forKey: .metadata) {
+            let normalizedMetadata = rawMetadata.reduce(into: [String: String]()) { result, item in
+                if let value = item.value.stringValue {
+                    result[item.key] = value
+                }
+            }
+            metadata = normalizedMetadata.isEmpty ? nil : normalizedMetadata
+        } else {
+            metadata = nil
+        }
         created_at = try container.decodeIfPresent(Date.self, forKey: .created_at) ?? Date()
         updated_at = try container.decodeIfPresent(Date.self, forKey: .updated_at)
     }
