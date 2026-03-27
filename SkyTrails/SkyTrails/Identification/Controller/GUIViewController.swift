@@ -26,6 +26,7 @@ class GUIViewController: UIViewController {
     private var variationThumbnailTasks: [IndexPath: Task<Void, Never>] = [:]
     private var headerThumbnailTask: Task<Void, Never>?
     private var variationThumbnailCache: [String: UIImage] = [:]
+    private var lastLayoutSize: CGSize = .zero
     
     private let layerOrder = [
         "Tail", "Leg", "Thigh", "Head", "Neck", "Back", "Underparts",
@@ -66,6 +67,11 @@ class GUIViewController: UIViewController {
         for layer in partLayers.values {
             layer.frame = bounds
         }
+
+        guard view.bounds.size != lastLayoutSize else { return }
+        lastLayoutSize = view.bounds.size
+        categoriesCollectionView.collectionViewLayout.invalidateLayout()
+        variationsCollectionView.collectionViewLayout.invalidateLayout()
     }
     
     private func loadData() {
@@ -540,11 +546,18 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == categoriesCollectionView {
-            let isPad = traitCollection.userInterfaceIdiom == .pad
-            return isPad ? CGSize(width: 180, height: 120) : CGSize(width: 147, height: 100)
+            let layout = (collectionViewLayout as? UICollectionViewFlowLayout) ?? UICollectionViewFlowLayout()
+            let verticalInsets = layout.sectionInset.top + layout.sectionInset.bottom
+            let usableHeight = max(collectionView.bounds.height - verticalInsets, 0)
+            let height = floor(usableHeight * (5.0 / 6.0))
+            let width = floor(height * 1.47)
+            return CGSize(width: width, height: height)
         }
 
-        return CGSize(width: 110, height: 110)
+        let layout = (collectionViewLayout as? UICollectionViewFlowLayout) ?? UICollectionViewFlowLayout()
+        let horizontalInsets = layout.sectionInset.left + layout.sectionInset.right
+        let side = max(collectionView.bounds.width - horizontalInsets, 0)
+        return CGSize(width: side, height: side)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
