@@ -539,7 +539,12 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return collectionView == categoriesCollectionView ? CGSize(width: 147, height: 100) : CGSize(width: 95, height: 95)
+        if collectionView == categoriesCollectionView {
+            let isPad = traitCollection.userInterfaceIdiom == .pad
+            return isPad ? CGSize(width: 180, height: 120) : CGSize(width: 147, height: 100)
+        }
+
+        return CGSize(width: 95, height: 95)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {

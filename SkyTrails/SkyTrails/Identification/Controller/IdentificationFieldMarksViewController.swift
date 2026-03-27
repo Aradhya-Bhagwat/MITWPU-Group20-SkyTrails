@@ -233,7 +233,8 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 147, height: 100)
+        let isPad = traitCollection.userInterfaceIdiom == .pad
+        return isPad ? CGSize(width: 180, height: 120) : CGSize(width: 147, height: 100)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
