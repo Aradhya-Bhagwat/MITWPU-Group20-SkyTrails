@@ -92,7 +92,7 @@ class GUIViewController: UIViewController {
         variationsCollectionView.backgroundColor = .clear
         categoriesCollectionView.backgroundColor = .clear
         categoriesCollectionView.showsHorizontalScrollIndicator = false
-        categoriesCollectionView.isScrollEnabled = false
+        categoriesCollectionView.isScrollEnabled = true
         
         if let layout = variationsCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             layout.estimatedItemSize = .zero
