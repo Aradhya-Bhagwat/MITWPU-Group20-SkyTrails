@@ -792,10 +792,10 @@
                                                 <rect key="frame" x="0.0" y="0.0" width="95" height="95"/>
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vAN-kc-T5m">
-                                                        <rect key="frame" x="17.5" y="17.5" width="60" height="60"/>
+                                                        <rect key="frame" x="7.5" y="7.5" width="80" height="80"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="60" id="V7t-Eg-UyJ"/>
-                                                            <constraint firstAttribute="width" constant="60" id="mqo-C4-UkU"/>
+                                                            <constraint firstAttribute="height" constant="80" id="V7t-Eg-UyJ"/>
+                                                            <constraint firstAttribute="width" constant="80" id="mqo-C4-UkU"/>
                                                         </constraints>
                                                     </imageView>
                                                 </subviews>
@@ -809,10 +809,10 @@
                                                 <rect key="frame" x="0.0" y="103" width="95" height="95"/>
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="nri-D3-iCQ">
-                                                        <rect key="frame" x="35.5" y="35.5" width="24" height="24"/>
+                                                        <rect key="frame" x="17.5" y="17.5" width="60" height="60"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="24" id="62F-T1-RG4"/>
-                                                            <constraint firstAttribute="width" constant="24" id="I1W-qn-ZYo"/>
+                                                            <constraint firstAttribute="height" constant="60" id="62F-T1-RG4"/>
+                                                            <constraint firstAttribute="width" constant="60" id="I1W-qn-ZYo"/>
                                                         </constraints>
                                                     </imageView>
                                                 </subviews>
