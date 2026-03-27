@@ -544,7 +544,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             return isPad ? CGSize(width: 180, height: 120) : CGSize(width: 147, height: 100)
         }
 
-        return CGSize(width: 95, height: 95)
+        return CGSize(width: 110, height: 110)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
