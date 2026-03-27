@@ -20,8 +20,7 @@
                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="X0N-NL-Wxr">
                         <rect key="frame" x="10" y="10" width="90" height="90"/>
                         <constraints>
-                            <constraint firstAttribute="height" constant="90" id="variant-image-height"/>
-                            <constraint firstAttribute="width" constant="90" id="variant-image-width"/>
+                            <constraint firstAttribute="width" secondItem="X0N-NL-Wxr" secondAttribute="height" multiplier="1:1" id="variant-image-square"/>
                         </constraints>
                     </imageView>
                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="chevron-ib">
@@ -37,6 +36,7 @@
             <constraints>
                 <constraint firstItem="X0N-NL-Wxr" firstAttribute="centerX" secondItem="gTV-IL-0wX" secondAttribute="centerX" id="variant-image-centerX"/>
                 <constraint firstItem="X0N-NL-Wxr" firstAttribute="centerY" secondItem="gTV-IL-0wX" secondAttribute="centerY" id="variant-image-centerY"/>
+                <constraint firstItem="X0N-NL-Wxr" firstAttribute="width" secondItem="gTV-IL-0wX" secondAttribute="width" multiplier="0.82" id="variant-image-width"/>
                 <constraint firstItem="chevron-ib" firstAttribute="centerX" secondItem="gTV-IL-0wX" secondAttribute="centerX" id="chevron-centerX"/>
                 <constraint firstItem="chevron-ib" firstAttribute="centerY" secondItem="gTV-IL-0wX" secondAttribute="centerY" id="chevron-centerY"/>
                 <constraint firstItem="chevron-ib" firstAttribute="width" secondItem="gTV-IL-0wX" secondAttribute="width" multiplier="0.5" id="chevron-width"/>
