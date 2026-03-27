@@ -438,7 +438,7 @@ struct IdentificationSessionRow: Codable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         userId = try container.decode(UUID.self, forKey: .userId)
-        status = try container.decodeIfPresent(String.self, forKey: .status) ?? SessionStatus.completed.rawValue
+        status = try container.decode(String.self, forKey: .status)
         locationLat = try container.decodeIfPresent(Double.self, forKey: .locationLat)
         locationLong = try container.decodeIfPresent(Double.self, forKey: .locationLong)
         deviceInfo = try container.decodeIfPresent(String.self, forKey: .deviceInfo)

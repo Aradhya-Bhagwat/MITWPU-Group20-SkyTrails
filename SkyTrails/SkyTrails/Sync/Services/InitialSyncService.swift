@@ -629,16 +629,70 @@ actor InitialSyncService {
         
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("DEBUG: InitialSyncService fetch failed - table: \(table), query: \(query), status: \(httpResponse.statusCode)")
+            print("DEBUG: InitialSyncService fetch body: \(message)")
             throw InitialSyncError.networkError("HTTP \(httpResponse.statusCode): \(message)")
         }
         
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let raw = try container.decode(String.self)
+
+                if let parsed = Self.parseSupabaseDate(raw) {
+                    return parsed
+                }
+
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Invalid date format: \(raw)"
+                )
+            }
             return try decoder.decode([T].self, from: data)
         } catch {
+            let responseBody = String(data: data, encoding: .utf8) ?? "(non-utf8 body, \(data.count) bytes)"
+            print("DEBUG: InitialSyncService decode failed - table: \(table), query: \(query)")
+            print("DEBUG: InitialSyncService decode error: \(error)")
+            print("DEBUG: InitialSyncService decode body: \(String(responseBody.prefix(4000)))")
+
+            if let json = try? JSONSerialization.jsonObject(with: data),
+               let rows = json as? [[String: Any]],
+               let first = rows.first {
+                let keys = first.keys.sorted().joined(separator: ", ")
+                print("DEBUG: InitialSyncService decode first-row keys [\(table)]: \(keys)")
+
+                let typedValues = first
+                    .sorted { $0.key < $1.key }
+                    .map { key, value in "\(key)=\(type(of: value))" }
+                    .joined(separator: ", ")
+                print("DEBUG: InitialSyncService decode first-row value types [\(table)]: \(typedValues)")
+            }
+
             throw InitialSyncError.decodingError(error.localizedDescription)
         }
+    }
+
+    private nonisolated static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private nonisolated static let iso8601WithoutFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    private nonisolated static func parseSupabaseDate(_ value: String) -> Date? {
+        if let date = iso8601WithFractionalSeconds.date(from: value) {
+            return date
+        }
+        if let date = iso8601WithoutFractionalSeconds.date(from: value) {
+            return date
+        }
+        return nil
     }
     
     private nonisolated func createWatchlist(from row: WatchlistRow) -> Watchlist {
