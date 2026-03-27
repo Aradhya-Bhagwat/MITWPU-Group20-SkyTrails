@@ -653,6 +653,7 @@ actor BackgroundSyncAgent {
                 
             } catch {
                 var failedOp = operation
+                print("DEBUG: BackgroundSyncAgent operation failed - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId), error: \(error.localizedDescription)")
                 
                 // Special handling for 409 (Conflict/Foreign Key violation)
                 if let nsError = error as NSError?, nsError.code == 409 {
@@ -669,6 +670,8 @@ actor BackgroundSyncAgent {
                 failedOp.lastError = error.localizedDescription
                 
                 if failedOp.attempts >= maxRetries {
+                    let lastError = failedOp.lastError ?? "none"
+                    print("DEBUG: BackgroundSyncAgent moving to dead-letter - table: \(failedOp.table), op: \(failedOp.type.rawValue), recordId: \(failedOp.recordId), attempts: \(failedOp.attempts), lastError: \(lastError)")
                     deadLetterQueue.append(failedOp)
                     queue.remove(at: 0)
                     Self.saveDeadLetterToDisk(deadLetterQueue)
@@ -694,10 +697,17 @@ actor BackgroundSyncAgent {
         if operation.type == .create { return true }
         
         let serverRecord = try await fetchServerRecord(table: operation.table, recordId: operation.recordId, config: config)
+        print("DEBUG: ConflictCheck - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId), hasServerRecord: \(serverRecord != nil)")
         
         if operation.type == .delete {
-            if serverRecord == nil { return false }
-            if let deletedAt = serverRecord?["deleted_at"] as? String, !deletedAt.isEmpty { return false }
+            if serverRecord == nil {
+                print("DEBUG: ConflictCheck - delete skipped (server row missing): \(operation.table) \(operation.recordId)")
+                return false
+            }
+            if let deletedAt = serverRecord?["deleted_at"] as? String, !deletedAt.isEmpty {
+                print("DEBUG: ConflictCheck - delete skipped (already deleted on server): \(operation.table) \(operation.recordId), deleted_at: \(deletedAt)")
+                return false
+            }
             return true
         }
         
@@ -708,7 +718,9 @@ actor BackgroundSyncAgent {
             return true
         }
         
-        return localUpdatedAt >= serverUpdatedAt
+        let shouldProceed = localUpdatedAt >= serverUpdatedAt
+        print("DEBUG: ConflictCheck - update decision table: \(operation.table), recordId: \(operation.recordId), localUpdatedAt: \(String(describing: operation.localUpdatedAt)), serverUpdatedAt: \(String(describing: serverRecord["updated_at"])), shouldProceed: \(shouldProceed)")
+        return shouldProceed
     }
     
     private func fetchServerRecord(table: String, recordId: UUID, config: SupabaseConfig) async throws -> [String: Any]? {
@@ -730,6 +742,10 @@ actor BackgroundSyncAgent {
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         
         let (data, response) = try await URLSession.shared.data(for: request)
+        if let httpResponse = response as? HTTPURLResponse {
+            let body = String(data: data, encoding: .utf8) ?? "(non-utf8 body, \(data.count) bytes)"
+            print("DEBUG: ConflictCheck fetch - table: \(table), recordId: \(recordId), status: \(httpResponse.statusCode), body: \(String(body.prefix(500)))")
+        }
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
               let firstRecord = jsonArray.first else { return nil }
@@ -763,6 +779,7 @@ actor BackgroundSyncAgent {
         case .update: try await updateRecord(table: operation.table, recordId: operation.recordId, payload: payload, config: config, token: token)
         case .delete: try await deleteRecord(table: operation.table, recordId: operation.recordId, config: config, token: token)
         }
+        print("DEBUG: BackgroundSyncAgent operation success - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId)")
     }
     
     private func createRecord(table: String, payload: [String: Any], config: SupabaseConfig, token: String?) async throws {
@@ -791,10 +808,12 @@ actor BackgroundSyncAgent {
         
         var request = try buildRequest(path: path, method: method, config: config, token: token)
         request.setValue("return=representation", forHTTPHeaderField: "Prefer")
+        print("DEBUG: BackgroundSyncAgent delete request - table: \(table), recordId: \(recordId), method: \(method), path: \(path)")
         
         if method == "PATCH" {
             let payload: [String: Any] = ["deleted_at": ISO8601DateFormatter().string(from: Date())]
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            print("DEBUG: BackgroundSyncAgent delete payload - table: \(table), recordId: \(recordId), payload: \(payload)")
         }
         
         try await executeRequest(request)

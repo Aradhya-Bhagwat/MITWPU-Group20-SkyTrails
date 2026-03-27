@@ -5,6 +5,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "CustomWatchlistCollectionViewCell"
     private var defaultCoverOverImageBackgroundColor: UIColor?
+    private var hasCoverImage = false
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var coverImageView: UIImageView!
     @IBOutlet weak var coverOverImageView: UIView!
@@ -98,7 +99,11 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     private func updateCardAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
-        coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultCoverOverImageBackgroundColor
+        if hasCoverImage {
+            coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultCoverOverImageBackgroundColor
+        } else {
+            coverOverImageView.backgroundColor = .clear
+        }
         containerView.layer.shadowColor = UIColor.black.cgColor
         containerView.layer.shadowOpacity = isDarkMode ? 0 : 0.1
         containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -139,14 +144,18 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         
         // Set pre-loaded cover image
         if let coverImage = viewModel.coverImage {
+            hasCoverImage = true
             coverImageView.image = coverImage
+            coverImageView.backgroundColor = .clear
             coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
             alignImageTop()
         } else {
+            hasCoverImage = false
             coverImageView.image = nil
-            coverImageView.backgroundColor = .systemGray5
+            coverImageView.backgroundColor = .clear
             coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
         }
+        updateCardAppearance()
     }
     
     // MARK: - Legacy Configuration (Kept for backward compatibility)
@@ -170,33 +179,57 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
         if let imageName = dto.image {
             if let userPhoto = loadUserPhoto(named: imageName) {
+                hasCoverImage = true
                 coverImageView.image = userPhoto
+                coverImageView.backgroundColor = .clear
                 coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
                 alignImageTop()
             } 
             else if let assetImage = UIImage(named: imageName) {
+                hasCoverImage = true
                 coverImageView.image = assetImage
-                coverImageView.backgroundColor = .systemGray5
+                coverImageView.backgroundColor = .clear
                 Task { @MainActor in
                     if let supabaseImage = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
+                        self.hasCoverImage = true
                         self.coverImageView.image = supabaseImage
+                        self.coverImageView.backgroundColor = .clear
+                        self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+                        self.alignImageTop()
+                        self.updateCardAppearance()
                     }
                 }
             } else {
-                coverImageView.backgroundColor = .systemGray5
+                hasCoverImage = false
+                coverImageView.image = nil
+                coverImageView.backgroundColor = .clear
                 Task { @MainActor in
                     if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
+                        self.hasCoverImage = true
                         self.coverImageView.image = image
+                        self.coverImageView.backgroundColor = .clear
                         self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
                         self.alignImageTop()
+                        self.updateCardAppearance()
                     }
                 }
             }
         } else {
+            hasCoverImage = false
             coverImageView.image = nil
-            coverImageView.backgroundColor = .systemGray5
+            coverImageView.backgroundColor = .clear
             coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
         }
+        updateCardAppearance()
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        hasCoverImage = false
+        coverImageView.image = nil
+        coverImageView.backgroundColor = .clear
+        coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+        updateCardAppearance()
     }
     
     private func loadUserPhoto(named imageName: String) -> UIImage? {
