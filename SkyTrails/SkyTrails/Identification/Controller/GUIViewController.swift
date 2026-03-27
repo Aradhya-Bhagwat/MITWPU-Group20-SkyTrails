@@ -7,6 +7,11 @@ class GUIViewController: UIViewController {
     @IBOutlet weak var canvasContainerView: UIView!
     @IBOutlet weak var categoryLabel: UILabel!
     @IBOutlet weak var categoriesCollectionView: UICollectionView!
+    @IBOutlet weak var variationHeaderView: UIView!
+    @IBOutlet weak var selectedImageView: UIImageView!
+    @IBOutlet weak var chevronImageView: UIImageView!
+    @IBOutlet weak var selectedContainerView: UIView!
+    @IBOutlet weak var chevronContainerView: UIView!
     
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
@@ -19,6 +24,7 @@ class GUIViewController: UIViewController {
     private var partLayers: [String: UIImageView] = [:]
     private var layerLoadTasks: [String: Task<Void, Never>] = [:]
     private var variationThumbnailTasks: [IndexPath: Task<Void, Never>] = [:]
+    private var headerThumbnailTask: Task<Void, Never>?
     private var variationThumbnailCache: [String: UIImage] = [:]
     
     private let layerOrder = [
@@ -28,6 +34,7 @@ class GUIViewController: UIViewController {
 
     deinit {
         cancelVariationThumbnailTasks()
+        headerThumbnailTask?.cancel()
     }
 
     override func viewDidLoad() {
@@ -95,6 +102,29 @@ class GUIViewController: UIViewController {
             layout.estimatedItemSize = .zero
             layout.scrollDirection = .horizontal
         }
+
+        setupVariationHeader()
+    }
+
+    private func setupVariationHeader() {
+        [selectedContainerView, chevronContainerView].forEach { view in
+            view?.layer.cornerRadius = 12
+            view?.layer.borderWidth = 1
+            view?.layer.borderColor = UIColor.systemGray.cgColor
+            view?.backgroundColor = .systemBackground
+            view?.isUserInteractionEnabled = true
+        }
+
+        selectedContainerView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(selectedTapped))
+        )
+        chevronContainerView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(chevronTapped))
+        )
+
+        selectedImageView.contentMode = .scaleAspectFit
+        chevronImageView.contentMode = .center
+        updateVariationHeader()
     }
 
     private func setupCanvasIfNeeded() {
@@ -153,6 +183,7 @@ class GUIViewController: UIViewController {
         categoryLabel.text = mark.area
         cancelVariationThumbnailTasks()
         variationsCollectionView.reloadData()
+        updateVariationHeader()
         categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
     }
 
@@ -296,6 +327,88 @@ class GUIViewController: UIViewController {
     private func cancelVariationThumbnailTasks() {
         variationThumbnailTasks.values.forEach { $0.cancel() }
         variationThumbnailTasks.removeAll()
+        headerThumbnailTask?.cancel()
+    }
+
+    private func updateVariationHeader() {
+        let variants = getOrderedVariantsForCurrentCategory()
+        let hasVariants = !variants.isEmpty
+        variationHeaderView.isHidden = !hasVariants
+
+        guard hasVariants, currentCategoryIndex < categories.count else {
+            selectedImageView.image = nil
+            chevronImageView.image = nil
+            return
+        }
+
+        let firstVariant = variants[0]
+        let categoryName = categories[currentCategoryIndex].area
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
+        let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: firstVariant.name)
+        let thumb = variationThumbnailCache[cacheKey]
+            ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
+            ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: firstVariant.name)
+        selectedImageView.image = thumb ?? UIImage(named: "id_icn_field_marks")
+
+        let selectedName = selectedVariations[categoryName]
+        let isHeaderSelected = selectedName == nil || selectedName == firstVariant.name
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        selectedContainerView.layer.borderWidth = isHeaderSelected ? 2 : 1
+        selectedContainerView.layer.borderColor = isHeaderSelected ? UIColor.systemBlue.cgColor : UIColor.systemGray.cgColor
+        selectedContainerView.backgroundColor = isHeaderSelected
+            ? UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+            : .systemBackground
+
+        chevronImageView.image = UIImage(systemName: isVariationsExpanded ? "chevron.up" : "chevron.down")
+        chevronImageView.tintColor = .systemGray
+
+        loadHeaderThumbnailRemotely(
+            shapeID: shapeID,
+            categoryName: categoryName,
+            variantName: firstVariant.name,
+            isSelected: isHeaderSelected
+        )
+    }
+
+    private func loadHeaderThumbnailRemotely(
+        shapeID: String,
+        categoryName: String,
+        variantName: String,
+        isSelected: Bool
+    ) {
+        headerThumbnailTask?.cancel()
+
+        let cleanCategory = cleanForFilename(categoryName)
+        let cleanVariant = cleanForFilename(variantName)
+        let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
+        let baseName = "id_shape_\(shapeID)_base"
+        let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
+
+        if let cached = variationThumbnailCache[cacheKey] {
+            selectedImageView.image = cached
+            return
+        }
+
+        headerThumbnailTask = Task { [weak self] in
+            guard let self else { return }
+            let remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
+            let remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
+            guard !Task.isCancelled else { return }
+            guard let base = remoteBase, let canvas = remoteCanvas else { return }
+
+            let thumb = self.composeThumbnail(base: base, canvas: canvas)
+            self.variationThumbnailCache[cacheKey] = thumb
+            IdentificationImageService.shared.saveComposedThumbnail(thumb, cacheKey: cacheKey)
+
+            guard self.currentCategoryIndex < self.categories.count else { return }
+            let currentCategoryName = self.categories[self.currentCategoryIndex].area
+            let currentSelectedName = self.selectedVariations[currentCategoryName]
+            let isCurrentHeaderSelection = currentSelectedName == nil || currentSelectedName == variantName
+            let shouldStillShow = currentCategoryName == categoryName && isCurrentHeaderSelection == isSelected
+            guard shouldStillShow else { return }
+
+            self.selectedImageView.image = thumb
+        }
     }
     
     func getVariantsForCurrentCategory() -> [FieldMarkVariant] {
@@ -339,6 +452,25 @@ class GUIViewController: UIViewController {
 
         return variants
     }
+
+    @objc private func selectedTapped() {
+        let variants = getOrderedVariantsForCurrentCategory()
+        guard let first = variants.first, currentCategoryIndex < categories.count else { return }
+
+        let currentMark = categories[currentCategoryIndex]
+        selectedVariations[currentMark.area] = first.name
+        viewModel.toggleVariant(first, for: currentMark)
+        updateCanvas(category: currentMark.area, variant: first.name)
+        updateVariationHeader()
+        variationsCollectionView.reloadData()
+        updateNextButtonState()
+    }
+
+    @objc private func chevronTapped() {
+        isVariationsExpanded.toggle()
+        updateVariationHeader()
+        variationsCollectionView.reloadData()
+    }
     
     @IBAction func nextTapped(_ sender: Any) {
         guard !selectedVariations.isEmpty else { return }
@@ -352,11 +484,8 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         if collectionView == categoriesCollectionView {
             return categories.count
         } else {
-            let variants = getVariantsForCurrentCategory()
-            if variants.isEmpty {
-                return 0
-            }
-            return isVariationsExpanded ? variants.count + 1 : 2
+            let variants = getOrderedVariantsForCurrentCategory()
+            return isVariationsExpanded ? max(0, variants.count - 1) : 0
         }
     }
     
@@ -371,30 +500,22 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
             let variants = getOrderedVariantsForCurrentCategory()
             let categoryName = categories[currentCategoryIndex].area
-            
-            let isChevronCell = indexPath.row == 1
-            
-            if isChevronCell {
-                cell.configureAsChevron(isExpanded: isVariationsExpanded)
-            } else {
-                let variantIndex = indexPath.row == 0 ? 0 : indexPath.row - 1
-                let variant = variants[variantIndex]
-                let isSelected = indexPath.row == 0 || selectedVariations[categoryName] == variant.name
-                let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
-                let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
-                let thumb = variationThumbnailCache[cacheKey]
-                    ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
-                    ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
-                cell.configure(image: thumb, isSelected: isSelected)
-                loadVariationThumbnailRemotely(
-                    for: cell,
-                    at: indexPath,
-                    shapeID: shapeID,
-                    categoryName: categoryName,
-                    variantName: variant.name,
-                    isSelected: isSelected
-                )
-            }
+            let variant = variants[indexPath.row + 1]
+            let isSelected = selectedVariations[categoryName] == variant.name
+            let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
+            let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
+            let thumb = variationThumbnailCache[cacheKey]
+                ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
+                ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
+            cell.configure(image: thumb, isSelected: isSelected)
+            loadVariationThumbnailRemotely(
+                for: cell,
+                at: indexPath,
+                shapeID: shapeID,
+                categoryName: categoryName,
+                variantName: variant.name,
+                isSelected: isSelected
+            )
             return cell
         }
     }
@@ -404,40 +525,21 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             selectCategory(at: indexPath.row)
         } else {
             let variants = getOrderedVariantsForCurrentCategory()
-            let isChevronCell = indexPath.row == 1
-            
-            if isChevronCell {
-                isVariationsExpanded = !isVariationsExpanded
-                variationsCollectionView.reloadData()
-            } else if indexPath.row == 0 {
-                let currentMark = categories[currentCategoryIndex]
-                let preferredNames = ["default", "plain", "solid"]
-                if let match = variants.first(where: { preferredNames.contains(cleanForFilename($0.name)) }) {
-                    selectedVariations[currentMark.area] = match.name
-                    viewModel.toggleVariant(match, for: currentMark)
-                    updateCanvas(category: currentMark.area, variant: match.name)
-                } else {
-                    selectedVariations.removeValue(forKey: currentMark.area)
-                }
-                variationsCollectionView.reloadData()
-                updateNextButtonState()
-            } else {
-                let variantIndex = indexPath.row - 1
-                let variant = variants[variantIndex]
-                let currentMark = categories[currentCategoryIndex]
-                
-                selectedVariations[currentMark.area] = variant.name
-                viewModel.toggleVariant(variant, for: currentMark)
-                
-                variationsCollectionView.reloadData()
-                updateCanvas(category: currentMark.area, variant: variant.name)
-                updateNextButtonState()
-            }
+            let variant = variants[indexPath.row + 1]
+            let currentMark = categories[currentCategoryIndex]
+
+            selectedVariations[currentMark.area] = variant.name
+            viewModel.toggleVariant(variant, for: currentMark)
+
+            variationsCollectionView.reloadData()
+            updateVariationHeader()
+            updateCanvas(category: currentMark.area, variant: variant.name)
+            updateNextButtonState()
         }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return collectionView == categoriesCollectionView ? CGSize(width: 147, height: 100) : CGSize(width: 78, height: 78)
+        return collectionView == categoriesCollectionView ? CGSize(width: 147, height: 100) : CGSize(width: 95, height: 95)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
