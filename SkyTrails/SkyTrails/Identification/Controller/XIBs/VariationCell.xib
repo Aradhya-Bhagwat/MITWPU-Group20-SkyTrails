@@ -11,17 +11,17 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="gTV-IL-0wX" customClass="VariationCell" customModule="SkyTrails" customModuleProvider="target">
-            <rect key="frame" x="0.0" y="0.0" width="95" height="95"/>
+            <rect key="frame" x="0.0" y="0.0" width="110" height="110"/>
             <autoresizingMask key="autoresizingMask"/>
             <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                <rect key="frame" x="0.0" y="0.0" width="95" height="95"/>
+                <rect key="frame" x="0.0" y="0.0" width="110" height="110"/>
                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 <subviews>
                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="X0N-NL-Wxr">
-                        <rect key="frame" x="7.5" y="7.5" width="80" height="80"/>
+                        <rect key="frame" x="10" y="10" width="90" height="90"/>
                         <constraints>
-                            <constraint firstAttribute="height" constant="80" id="variant-image-height"/>
-                            <constraint firstAttribute="width" constant="80" id="variant-image-width"/>
+                            <constraint firstAttribute="height" constant="90" id="variant-image-height"/>
+                            <constraint firstAttribute="width" constant="90" id="variant-image-width"/>
                         </constraints>
                     </imageView>
                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="chevron-ib">
