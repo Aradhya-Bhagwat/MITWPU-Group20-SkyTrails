@@ -95,10 +95,12 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     // Places the profile location header in the large title navigation bar area
     private func attachProfileLocationHeaderViewIfNeeded() {
         guard profileLocationHeaderView.superview == nil else { return }
-        view.addSubview(profileLocationHeaderView)
+        guard let navigationBar = navigationController?.navigationBar else { return }
+
+        navigationBar.addSubview(profileLocationHeaderView)
         profileLocationHeaderConstraints = [
-            profileLocationHeaderView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            profileLocationHeaderView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8)
+            profileLocationHeaderView.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor, constant: -16),
+            profileLocationHeaderView.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor, constant: -8)
         ]
         NSLayoutConstraint.activate(profileLocationHeaderConstraints)
     }
