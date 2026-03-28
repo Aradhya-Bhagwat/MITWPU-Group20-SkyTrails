@@ -72,7 +72,10 @@ class AllSpotsViewController: UIViewController {
     }
         
     @objc private func didTapPredict() {
-        self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+            navigationController?.pushViewController(predictMapVC, animated: true)
+        }
     }
     
     private func createLayout() -> UICollectionViewLayout {
