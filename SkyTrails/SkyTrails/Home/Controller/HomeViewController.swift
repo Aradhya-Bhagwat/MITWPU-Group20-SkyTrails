@@ -486,7 +486,7 @@ extension HomeViewController {
         switch indexPath.section {
         case 0:
             if case .combined(_, let hotspot) = migrationCards[indexPath.row] {
-                let radius = max(2.0, hotspot.pinRadiusKm); let preds = hotspot.birdSpecies.map { FinalPredictionResult(birdName: $0.birdName, imageName: $0.birdImageName, likelySpot: WatchlistManager.shared.findBird(byName: $0.birdName)?.likelySpot ?? "Sky", matchedInputIndex: 0, matchedLocation: (lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude), spottingProbability: $0.sightabilityPercent, weekNumber: $0.weekNumber, residencyStatus: $0.residencyStatus, ebirdSpeciesCode: nil) }
+                let radius = max(2.0, hotspot.pinRadiusKm); let preds = hotspot.birdSpecies.map { FinalPredictionResult(birdName: $0.birdName, imageName: $0.birdImageName, likelySpot: WatchlistManager.shared.findBird(byName: $0.birdName)?.likelySpot ?? "Sky", matchedInputIndex: 0, matchedLocation: (lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude), spottingProbability: $0.sightabilityPercent, weekNumber: $0.weekNumber, residencyStatus: $0.residencyStatus, ebirdSpeciesCode: $0.ebirdSpeciesCode) }
                 navigateToSpotDetails(name: hotspot.placeName, lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude, radius: radius, predictions: preds)
             }
         case 1:
@@ -504,39 +504,15 @@ extension HomeViewController {
                 return
             }
             let item = spots[indexPath.row - 1]
-            Task {
-                var preds: [FinalPredictionResult] = []
-                
-                do {
-                    // Attempt to fetch fresh data from Supabase API (R script cache)
-                    let response = try await SkyTrailsAPIService.shared.fetchPredictions(lat: item.latitude, lng: item.longitude)
-                    preds = response.card?.species?.map { species in
-                        FinalPredictionResult(
-                            birdName: species.commonName,
-                            imageName: species.imageName ?? "placeholder_image",
-                            likelySpot: item.title,
-                            matchedInputIndex: 0,
-                            matchedLocation: (lat: item.latitude, lon: item.longitude),
-                            spottingProbability: species.likelihood,
-                            weekNumber: species.weekNumber,
-                            residencyStatus: species.residencyStatus.rawValue,
-                            ebirdSpeciesCode: species.ebirdSpeciesCode
-                        )
-                    } ?? []
-                } catch {
-                    print("DEBUG: API fetch failed for hotspot detail, falling back: \(error)")
-                    // Fallback to existing logic if API fails
-                    preds = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
-                        homeManager.predictionResults(from: edgeSpecies, lat: item.latitude, lon: item.longitude)
-                    } else {
-                        await homeManager.getLivePredictions(for: item.latitude, lon: item.longitude, radiusKm: item.radius)
-                    }
-                }
-
-                await MainActor.run {
-                    navigateToSpotDetails(name: item.title, lat: item.latitude, lon: item.longitude, radius: item.radius, predictions: preds)
-                }
+            
+            // Use already-fetched edge species for instant navigation
+            let preds: [FinalPredictionResult] = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
+                homeManager.predictionResults(from: edgeSpecies, lat: item.latitude, lon: item.longitude)
+            } else {
+                []
             }
+            
+            navigateToSpotDetails(name: item.title, lat: item.latitude, lon: item.longitude, radius: item.radius, predictions: preds)
         case 3:
             let item = newsItem(at: indexPath.row); if let url = URL(string: item.link), UIApplication.shared.canOpenURL(url) { UIApplication.shared.open(url) }
         default: break

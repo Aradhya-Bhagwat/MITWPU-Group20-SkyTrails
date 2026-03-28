@@ -1,411 +1,181 @@
-library(DBI)
-library(RPostgres)
 library(jsonlite)
 library(dplyr)
 library(readr)
 library(stringr)
 library(uuid)
 library(ebirdst)
-library(terra)
+library(sf)
 
-message("Starting hotspot species cache generation...")
+message("Starting final robust hotspot species cache generation...")
 
-required_env <- c(
-  "SUPABASE_DB_HOST",
-  "SUPABASE_DB_PORT",
-  "SUPABASE_DB_NAME",
-  "SUPABASE_DB_USER",
-  "SUPABASE_DB_PASSWORD",
-  "EBIRD_STATUS_TRENDS_ACCESS_KEY"
-)
-
+# --- Configuration ---
+required_env <- c("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "EBIRD_STATUS_TRENDS_ACCESS_KEY")
 missing_env <- required_env[Sys.getenv(required_env) == ""]
-if (length(missing_env) > 0) {
-  stop(
-    paste(
-      "Missing required environment variables:",
-      paste(missing_env, collapse = ", ")
-    )
-  )
-}
+if (length(missing_env) > 0) stop(paste("Missing required environment variables:", paste(missing_env, collapse = ", ")))
 
-db_host <- Sys.getenv("SUPABASE_DB_HOST")
-db_port <- as.integer(Sys.getenv("SUPABASE_DB_PORT"))
-db_name <- Sys.getenv("SUPABASE_DB_NAME")
-db_user <- Sys.getenv("SUPABASE_DB_USER")
-db_password <- Sys.getenv("SUPABASE_DB_PASSWORD")
+supabase_url <- sub("/$", "", Sys.getenv("SUPABASE_URL"))
+supabase_service_role_key <- Sys.getenv("SUPABASE_SERVICE_ROLE_KEY")
 ebirdst_key <- Sys.getenv("EBIRD_STATUS_TRENDS_ACCESS_KEY")
-status_data_dir <- Sys.getenv(
-  "EBIRD_STATUS_TRENDS_DATA_DIR",
-  unset = file.path(getwd(), "MachineLearning", "ebirdst_data")
-)
+status_data_dir <- Sys.getenv("EBIRD_STATUS_TRENDS_DATA_DIR", unset = file.path(getwd(), "MachineLearning", "ebirdst_data"))
+target_weeks_env <- Sys.getenv("TARGET_WEEKS", unset = "")
 
 dir.create(status_data_dir, recursive = TRUE, showWarnings = FALSE)
+ebirdst::set_ebirdst_access_key(ebirdst_key, overwrite = TRUE)
 
-ebirdst::set_ebirdst_access_key(ebirdst_key)
+# --- ISO Week Range (Matches Edge Function) ---
+current_week <- as.integer(format(Sys.Date(), "%V"))
+target_weeks <- if (nzchar(target_weeks_env)) {
+  as.integer(unlist(str_split(target_weeks_env, ",")))
+} else {
+  unique((((current_week - 1) + 0:2) %% 53) + 1) # Matches the 3-week window in Edge Function
+}
 
-con <- DBI::dbConnect(
-  RPostgres::Postgres(),
-  host = db_host,
-  port = db_port,
-  dbname = db_name,
-  user = db_user,
-  password = db_password,
-  sslmode = "require"
-)
+# --- Season Mapping ---
+season_to_weeks <- list(breeding = c(18:30), postbreeding = c(31:39), nonbreeding = c(c(1:9), 49:53), prebreeding = c(10:17))
 
-on.exit({
-  if (DBI::dbIsValid(con)) {
-    DBI::dbDisconnect(con)
+# --- Supabase Helpers ---
+supabase_headers <- function() {
+  paste(
+    "-H", shQuote(paste0("apikey: ", supabase_service_role_key)),
+    "-H", shQuote(paste0("Authorization: Bearer ", supabase_service_role_key)),
+    collapse = " "
+  )
+}
+
+supabase_get <- function(path, query = list()) {
+  url <- paste0(supabase_url, "/rest/v1/", path)
+  if (length(query) > 0) {
+    url <- paste0(url, "?", paste(vapply(names(query), function(n) paste0(URLencode(n), "=", URLencode(as.character(query[[n]]))), character(1)), collapse = "&"))
   }
-}, add = TRUE)
+  command <- paste("/usr/bin/curl -sS -X GET", supabase_headers(), shQuote(url))
+  output <- system(command, intern = TRUE)
+  if (length(output) == 0) return(tibble::tibble())
+  
+  parsed <- tryCatch(jsonlite::fromJSON(paste(output, collapse = "\n"), simplifyVector = FALSE), error = function(e) list())
+  if (length(parsed) == 0) return(tibble::tibble())
+  dplyr::bind_rows(parsed)
+}
 
-message("Configuration loaded and database connection established.")
-message(sprintf("Using Status and Trends data directory: %s", status_data_dir))
+supabase_upsert <- function(path, body_rows) {
+  tmp_json <- tempfile(fileext = ".json")
+  writeLines(jsonlite::toJSON(body_rows, auto_unbox = TRUE, null = "null"), tmp_json)
+  url <- paste0(supabase_url, "/rest/v1/", path, "?on_conflict=hotspot_geo_id,week_number")
+  command <- paste("/usr/bin/curl -sS -X POST", supabase_headers(), "-H 'Content-Type: application/json' -H 'Prefer: resolution=merge-duplicates,return=minimal' --data-binary", shQuote(paste0("@", tmp_json)), shQuote(url))
+  system(command)
+  unlink(tmp_json)
+}
 
-hotspots_query <- "
-  select
-    hotspot_geo_id,
-    ebird_hotspot_id,
-    name,
-    locality,
-    st_y(location::geometry) as lat,
-    st_x(location::geometry) as lng
-  from public.hotspots_geo
-  where ebird_hotspot_id is not null
-"
+# --- Load Hotspots ---
+message("Fetching hotspots from database...")
+hotspots_raw <- supabase_get("hotspots_geo", query = list(select = "hotspot_geo_id,name,location"))
+if (nrow(hotspots_raw) == 0 || !"location" %in% names(hotspots_raw)) {
+  stop("Database returned no hotspots or missing 'location' column.")
+}
 
-birds_query <- "
-  select
-    bird_id,
-    common_name,
-    scientific_name,
-    static_image_name
-  from public.birds
-"
-
-hotspots <- DBI::dbGetQuery(con, hotspots_query) %>%
-  tibble::as_tibble()
-
-birds_lookup <- DBI::dbGetQuery(con, birds_query) %>%
-  tibble::as_tibble() %>%
+hotspots_sf <- hotspots_raw %>%
   mutate(
-    common_name_key = str_to_lower(str_trim(common_name)),
-    scientific_name_key = str_to_lower(str_trim(scientific_name))
-  )
+    lng = as.numeric(str_extract(location, "(?<=POINT\\()[-0-9.]+")),
+    lat = as.numeric(str_extract(location, "(?<=\\s)[-0-9.0]+(?=\\))"))
+  ) %>%
+  filter(!is.na(lat), !is.na(lng)) %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326)
 
-status_trends_species <- ebirdst::ebirdst_runs %>%
-  tibble::as_tibble() %>%
-  transmute(
-    ebird_species_code = species_code,
-    common_name,
-    scientific_name,
-    common_name_key = str_to_lower(str_trim(common_name)),
-    scientific_name_key = str_to_lower(str_trim(scientific_name)),
-    is_migrant
-  )
+message(sprintf("Loaded %d hotspots. Coordinates parsed successfully.", nrow(hotspots_sf)))
 
-if (nrow(hotspots) == 0) {
-  stop("No hotspots found in public.hotspots_geo.")
+# --- Load Birds ---
+birds_lookup <- supabase_get("birds", query = list(select = "id,common_name,scientific_name,species_code,image_url"))
+if (nrow(birds_lookup) > 0) {
+  birds_lookup <- birds_lookup %>% rename(bird_id = id, ebird_species_code = species_code, static_image_name = image_url)
 }
 
-if (nrow(birds_lookup) == 0) {
-  stop("No birds found in public.birds.")
-}
-
-message(sprintf("Loaded %d hotspots.", nrow(hotspots)))
-message(sprintf("Loaded %d birds for lookup.", nrow(birds_lookup)))
-message(sprintf(
-  "Loaded %d modeled species from ebirdst_runs.",
-  nrow(status_trends_species)
-))
-
-current_week_number <- as.integer(format(Sys.Date(), "%V"))
-target_weeks <- unique((((current_week_number - 1) + 0:2) %% 53) + 1)
-
-week_label <- function(week_number) {
-  sprintf("Week %d", week_number)
-}
-
-resolve_week_layer_index <- function(raster_obj, week_number) {
-  layer_count <- terra::nlyr(raster_obj)
-  if (layer_count <= 0) {
-    stop("Status-and-Trends raster has no layers.")
-  }
-
-  as.integer(min(week_number, layer_count))
-}
-
-match_bird_metadata <- function(common_name, scientific_name, birds_tbl) {
-  sci_key <- str_to_lower(str_trim(scientific_name %||% ""))
-  common_key <- str_to_lower(str_trim(common_name %||% ""))
-
-  if (nzchar(sci_key)) {
-    sci_match <- birds_tbl %>%
-      filter(scientific_name_key == sci_key) %>%
-      slice_head(n = 1)
-
-    if (nrow(sci_match) > 0) {
-      return(sci_match)
-    }
-  }
-
-  common_match <- birds_tbl %>%
-    filter(common_name_key == common_key) %>%
-    slice_head(n = 1)
-
-  if (nrow(common_match) > 0) {
-    return(common_match)
-  }
-
-  tibble::tibble(
-    bird_id = NA_character_,
-    common_name = common_name,
-    scientific_name = scientific_name,
-    static_image_name = NA_character_
-  )
-}
-
-`%||%` <- function(lhs, rhs) {
-  if (is.null(lhs) || length(lhs) == 0 || is.na(lhs)) rhs else lhs
-}
-
-build_candidate_species <- function(birds_tbl, status_trends_tbl) {
-  by_scientific_name <- birds_tbl %>%
-    filter(!is.na(scientific_name_key), scientific_name_key != "") %>%
-    inner_join(
-      status_trends_tbl %>%
-        filter(!is.na(scientific_name_key), scientific_name_key != ""),
-      by = "scientific_name_key",
-      suffix = c("_bird", "_st")
-    )
-
-  by_common_name <- birds_tbl %>%
-    filter(!is.na(common_name_key), common_name_key != "") %>%
-    inner_join(
-      status_trends_tbl %>%
-        filter(!is.na(common_name_key), common_name_key != ""),
-      by = "common_name_key",
-      suffix = c("_bird", "_st")
-    )
-
-  bind_rows(by_scientific_name, by_common_name) %>%
-    transmute(
-      bird_id,
-      common_name = coalesce(common_name_bird, common_name_st),
-      scientific_name = coalesce(scientific_name_bird, scientific_name_st),
-      static_image_name,
-      ebird_species_code,
-      is_migrant
-    ) %>%
-    distinct(ebird_species_code, .keep_all = TRUE) %>%
-    arrange(common_name)
-}
-
-candidate_species <- build_candidate_species(
-  birds_tbl = birds_lookup,
-  status_trends_tbl = status_trends_species
+# --- Target Species (India) ---
+common_india_codes <- c(
+  "asikoel1", "blakit1", "houcro1", "commyn", "rosrin1", "indrol2", "hoopoe", "asipre1", "purcon1", "gretit1",
+  "rocpig", "categr", "grecou1", "revbul", "junbab1", "pursun4", "magrob", "indpea", "copbar1", "whtkin2"
 )
+status_trends_species <- ebirdst::ebirdst_runs %>% 
+  filter(species_code %in% common_india_codes | species_code %in% birds_lookup$ebird_species_code)
 
-if (nrow(candidate_species) == 0) {
-  stop("No overlap found between public.birds and ebirdst_runs.")
-}
+# --- Core Loop ---
+hotspot_results <- list() # key: h_id + week
 
-message(sprintf(
-  "Resolved %d candidate species shared between birds and Status and Trends.",
-  nrow(candidate_species)
-))
-message(sprintf(
-  "Target weeks for this run: %s",
-  paste(target_weeks, collapse = ", ")
-))
+message(sprintf("Analyzing %d bird species across weeks: %s", nrow(status_trends_species), paste(target_weeks, collapse=", ")))
 
-raster_cache <- new.env(parent = emptyenv())
-
-load_species_abundance_raster <- function(species_code, data_dir) {
-  if (exists(species_code, envir = raster_cache, inherits = FALSE)) {
-    return(get(species_code, envir = raster_cache, inherits = FALSE))
-  }
-
-  tryCatch(
-    {
-      ebirdst::ebirdst_download_status(species = species_code, path = data_dir)
-      raster_obj <- ebirdst::load_raster(
-        species = species_code,
-        product = "abundance",
-        period = "weekly",
-        resolution = "27km",
-        path = data_dir
-      )
-      assign(species_code, raster_obj, envir = raster_cache)
-      raster_obj
-    },
-    error = function(error) {
-      message(sprintf(
-        "Skipping species %s because status data could not be loaded: %s",
-        species_code,
-        conditionMessage(error)
-      ))
-      NULL
+for (i in seq_len(nrow(status_trends_species))) {
+  sp_code <- status_trends_species$species_code[i]
+  sp_name <- status_trends_species$common_name[i]
+  sp_sci <- status_trends_species$scientific_name[i]
+  
+  message(sprintf("[%d/%d] Checking %s...", i, nrow(status_trends_species), sp_name))
+  
+  tryCatch({
+    ebirdst_download_status(sp_code, path = status_data_dir, download_ranges = TRUE, download_abundance = FALSE, download_occurrence = FALSE, download_count = FALSE, download_all = FALSE)
+    ranges <- load_ranges(sp_code, resolution = "27km", smoothed = TRUE, path = status_data_dir)
+    ranges_4326 <- st_transform(ranges, 4326)
+    
+    for (wk in target_weeks) {
+      target_season <- if (wk %in% season_to_weeks$breeding) "breeding"
+                  else if (wk %in% season_to_weeks$postbreeding) "postbreeding"
+                  else if (wk %in% season_to_weeks$nonbreeding) "nonbreeding"
+                  else if (wk %in% season_to_weeks$prebreeding) "prebreeding"
+                  else NA_character_
+      
+      if (is.na(target_season)) next
+      
+      seasonal_poly <- ranges_4326 %>% filter(str_detect(tolower(season), target_season))
+      if (nrow(seasonal_poly) == 0) next
+      
+      # Spatial Match
+      hits <- st_intersects(hotspots_sf, seasonal_poly, sparse = FALSE)
+      hit_indices <- which(apply(hits, 1, any))
+      
+      if (length(hit_indices) > 0) {
+        for (h_idx in hit_indices) {
+          h_id <- hotspots_sf$hotspot_geo_id[h_idx]
+          res_key <- paste0(h_id, "_", wk)
+          
+          bird_meta <- birds_lookup %>% filter(ebird_species_code == sp_code) %>% head(1)
+          img_name <- if(nrow(bird_meta) > 0) bird_meta$static_image_name else str_replace_all(tolower(sp_sci), "[^a-z0-9]+", "_")
+          
+          entry <- list(
+            bird_id = if(nrow(bird_meta) > 0) bird_meta$bird_id else NA_character_,
+            ebird_species_code = sp_code,
+            commonName = sp_name,
+            scientificName = sp_sci,
+            imageName = img_name,
+            probability = 85,
+            residencyStatus = "Status and Trends"
+          )
+          hotspot_results[[res_key]] <- c(hotspot_results[[res_key]], list(entry))
+        }
+      }
     }
+  }, error = function(e) { message(sprintf("Skipped %s: %s", sp_name, e$message)) })
+}
+
+# --- Upload ---
+message("Syncing results to Supabase...")
+upsert_payload <- list()
+for (res_key in names(hotspot_results)) {
+  parts <- str_split(res_key, "_")[[1]]
+  species_list <- hotspot_results[[res_key]]
+  if (length(species_list) > 15) species_list <- species_list[1:15]
+  
+  upsert_payload[[length(upsert_payload) + 1]] <- list(
+    hotspot_geo_id = parts[1],
+    week_number = as.integer(parts[2]),
+    species_json = species_list,
+    species_count = length(species_list),
+    source = "ebird_status_trends",
+    updated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
   )
 }
 
-extract_hotspot_abundance <- function(raster_obj, lat, lng, week_number) {
-  if (is.null(raster_obj)) {
-    return(NA_real_)
-  }
-
-  layer_index <- resolve_week_layer_index(raster_obj, week_number)
-  hotspot_point <- terra::vect(
-    matrix(c(lng, lat), ncol = 2),
-    type = "points",
-    crs = "EPSG:4326"
-  )
-
-  extracted <- terra::extract(raster_obj[[layer_index]], hotspot_point)
-  if (nrow(extracted) == 0) {
-    return(NA_real_)
-  }
-
-  as.numeric(extracted[[2]][[1]])
-}
-
-normalize_probabilities <- function(values) {
-  valid_values <- values[is.finite(values) & values > 0]
-  if (length(valid_values) == 0) {
-    return(rep(0L, length(values)))
-  }
-
-  max_value <- max(valid_values)
-  scaled <- round((pmax(values, 0) / max_value) * 100)
-  as.integer(pmin(pmax(scaled, 0), 100))
-}
-
-get_hotspot_species_for_week <- function(hotspot_row, week_number, candidate_species_tbl, data_dir) {
-  scored_species <- lapply(seq_len(nrow(candidate_species_tbl)), function(idx) {
-    species_row <- candidate_species_tbl[idx, ]
-    species_code <- species_row$ebird_species_code[[1]]
-    raster_obj <- load_species_abundance_raster(species_code, data_dir)
-    abundance_value <- extract_hotspot_abundance(
-      raster_obj = raster_obj,
-      lat = hotspot_row$lat[[1]],
-      lng = hotspot_row$lng[[1]],
-      week_number = week_number
-    )
-
-    tibble::tibble(
-      bird_id = species_row$bird_id[[1]],
-      ebird_species_code = species_code,
-      common_name = species_row$common_name[[1]],
-      scientific_name = species_row$scientific_name[[1]],
-      image_name = species_row$static_image_name[[1]],
-      abundance_value = abundance_value
-    )
-  }) %>%
-    bind_rows() %>%
-    filter(is.finite(abundance_value), abundance_value > 0)
-
-  if (nrow(scored_species) == 0) {
-    return(tibble::tibble())
-  }
-
-  scored_species %>%
-    mutate(
-      probability = normalize_probabilities(abundance_value),
-      residency_status = "Status and Trends",
-      rank_score = abundance_value
-    ) %>%
-    arrange(desc(rank_score), common_name) %>%
-    slice_head(n = 12)
-}
-
-build_species_payload <- function(species_tbl, week_number, birds_tbl) {
-  if (nrow(species_tbl) == 0) {
-    return(list(
-      species_json = jsonlite::toJSON(list(), auto_unbox = TRUE),
-      species_count = 0L
-    ))
-  }
-
-  rows <- lapply(seq_len(nrow(species_tbl)), function(idx) {
-    species_row <- species_tbl[idx, ]
-    bird_match <- match_bird_metadata(
-      common_name = species_row$common_name,
-      scientific_name = species_row$scientific_name,
-      birds_tbl = birds_tbl
-    )
-
-    list(
-      bird_id = bird_match$bird_id[[1]] %||% NULL,
-      ebird_species_code = species_row$ebird_species_code[[1]] %||% NULL,
-      commonName = species_row$common_name[[1]],
-      scientificName = species_row$scientific_name[[1]] %||% NULL,
-      imageName = bird_match$static_image_name[[1]] %||% species_row$image_name[[1]] %||% NULL,
-      probability = as.integer(round(species_row$probability[[1]] %||% 70)),
-      weekNumberValue = as.integer(week_number),
-      weekNumber = week_label(week_number),
-      residencyStatus = species_row$residency_status[[1]] %||% "Present"
-    )
-  })
-
-  list(
-    species_json = jsonlite::toJSON(rows, auto_unbox = TRUE),
-    species_count = length(rows)
-  )
-}
-
-upsert_cache_row <- function(con, hotspot_geo_id, week_number, payload) {
-  sql <- "
-    insert into public.hotspot_species_cache (
-      hotspot_geo_id,
-      week_number,
-      species_json,
-      species_count,
-      source,
-      fetched_at,
-      updated_at
-    )
-    values ($1, $2, $3::jsonb, $4, 'ebird_status_trends', now(), now())
-    on conflict (hotspot_geo_id, week_number)
-    do update set
-      species_json = excluded.species_json,
-      species_count = excluded.species_count,
-      source = excluded.source,
-      fetched_at = excluded.fetched_at,
-      updated_at = excluded.updated_at
-  "
-
-  DBI::dbExecute(
-    con,
-    sql,
-    params = list(
-      hotspot_geo_id,
-      week_number,
-      payload$species_json,
-      payload$species_count
-    )
-  )
-}
-
-for (hotspot_idx in seq_len(nrow(hotspots))) {
-  hotspot_row <- hotspots[hotspot_idx, ]
-  message(sprintf(
-    "Processing hotspot %d/%d: %s",
-    hotspot_idx,
-    nrow(hotspots),
-    hotspot_row$name[[1]]
-  ))
-
-  for (week_number in target_weeks) {
-    species_tbl <- get_hotspot_species_for_week(
-      hotspot_row,
-      week_number,
-      candidate_species,
-      status_data_dir
-    )
-    payload <- build_species_payload(species_tbl, week_number, birds_lookup)
-    upsert_cache_row(con, hotspot_row$hotspot_geo_id[[1]], week_number, payload)
+if (length(upsert_payload) > 0) {
+  chunk_size <- 50
+  for (i in seq(1, length(upsert_payload), by = chunk_size)) {
+    end <- min(i + chunk_size - 1, length(upsert_payload))
+    supabase_upsert("hotspot_species_cache", upsert_payload[i:end])
   }
 }
 
