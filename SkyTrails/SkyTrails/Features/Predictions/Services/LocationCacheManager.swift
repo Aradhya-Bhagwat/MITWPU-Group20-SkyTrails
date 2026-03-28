@@ -13,6 +13,11 @@ final class LocationCacheManager: NSObject, CLLocationManagerDelegate {
     private let lastLngKey = "com.skytrails.lastFetchedLng"
     private let lastTimestampKey = "com.skytrails.lastFetchedTimestamp"
     
+    private let fiveKilometers: Double = 5000
+    private let sixHours: TimeInterval = 6 * 60 * 60
+    
+    static let shared = LocationCacheManager()
+    
     override init() {
         super.init()
         locationManager.delegate = self
@@ -21,12 +26,13 @@ final class LocationCacheManager: NSObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
+    /// Implements the 5km / 6-Hour Rule
     func shouldRefreshData(currentLocation: CLLocation) -> Bool {
         let lastLat = defaults.double(forKey: lastLatKey)
         let lastLng = defaults.double(forKey: lastLngKey)
         let lastTimestampValue = defaults.double(forKey: lastTimestampKey)
         
-        // Return true if we have no previous fetch data
+        // Return true if no previous data exists (first launch)
         guard lastTimestampValue != 0 else { return true }
         
         let lastLocation = CLLocation(latitude: lastLat, longitude: lastLng)
@@ -35,13 +41,10 @@ final class LocationCacheManager: NSObject, CLLocationManagerDelegate {
         let distance = currentLocation.distance(from: lastLocation) // meters
         let timeElapsed = Date().timeIntervalSince(lastDate) // seconds
         
-        let fiveKilometers: Double = 5000
-        let sixHours: Double = 6 * 60 * 60
-        
         return distance > fiveKilometers || timeElapsed > sixHours
     }
     
-    func updateCache(location: CLLocation) {
+    func updateCacheMetadata(location: CLLocation) {
         defaults.set(location.coordinate.latitude, forKey: lastLatKey)
         defaults.set(location.coordinate.longitude, forKey: lastLngKey)
         defaults.set(Date().timeIntervalSince1970, forKey: lastTimestampKey)

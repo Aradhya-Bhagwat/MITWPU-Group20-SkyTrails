@@ -1,0 +1,12 @@
+# Supabase Database Credentials
+SUPABASE_DB_HOST=your_project_ref.supabase.co
+SUPABASE_DB_PORT=5432
+SUPABASE_DB_NAME=postgres
+SUPABASE_DB_USER=postgres
+SUPABASE_DB_PASSWORD=your_actual_db_password
+
+# eBird Status and Trends API Key
+EBIRD_STATUS_TRENDS_ACCESS_KEY=fts18n17iar7
+
+# Optional: Data directory for eBird models
+EBIRD_STATUS_TRENDS_DATA_DIR=./MachineLearning/ebirdst_data

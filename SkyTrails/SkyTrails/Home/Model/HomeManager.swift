@@ -16,13 +16,20 @@ class HomeManager {
     private let newsService: NewsServiceProtocol
     private let locationService: LocationServiceProtocol
     private let logger: LoggingServiceProtocol
-    private let recommendationCacheStore = RecommendationCacheStore()
-    let spotSpeciesCountCache: NSCache<NSString, NSNumber> = {
-        let cache = NSCache<NSString, NSNumber>()
-        cache.countLimit = 100
-        cache.totalCostLimit = 50_000_000
+    
+    // Wrapper class because NSCache requires class types
+    private final class SpeciesCacheItem {
+        let response: HotspotPredictionResponse
+        init(response: HotspotPredictionResponse) { self.response = response }
+    }
+
+    // App-Side Memory Cache: Makes hotspot card clicks instant within one session
+    private let speciesMemoryCache: NSCache<NSString, SpeciesCacheItem> = {
+        let cache = NSCache<NSString, SpeciesCacheItem>()
+        cache.countLimit = 50 
         return cache
     }()
+
     init(
         watchlistManager: WatchlistManager? = nil,
         hotspotManager: HotspotManager? = nil,
@@ -204,7 +211,6 @@ class HomeManager {
                 radiusInKm: radiusKm
             )
             let observedCount = watchlist.entries?.filter { $0.status == .observed }.count ?? 0
-            spotSpeciesCountCache.setObject(NSNumber(value: birdCount), forKey: (watchlist.title ?? "Unknown") as NSString)
 
             let result = PopularSpotResult(
                 id: watchlist.watchlist_id,
@@ -230,36 +236,45 @@ class HomeManager {
         limit: Int = 5
     ) async -> [PopularSpotResult] {
         do {
-            let response = try await fetchNearbyHotspotCardFromEdge(near: location)
-            let candidates = Array((response.nearbyHotspots ?? []).dropFirst().prefix(max(0, limit)))
-
-            guard !candidates.isEmpty else {
-                return []
+            // Priority: Fetch locations from Supabase hotspots_geo table
+            let supabaseHotspots = try await SkyTrailsAPIService.shared.fetchLocationsFromSupabase(near: location)
+            
+            guard !supabaseHotspots.isEmpty else {
+                // Fallback to discovery via Edge Function if table is empty
+                let response = try await fetchNearbyHotspotCardFromEdge(near: location)
+                return response.nearbyHotspots.map { mapHotspotToPopularSpot($0) }
             }
 
-            return candidates.map { item in
-                PopularSpotResult(
-                    id: UUID(uuidString: item.hotspotId) ?? UUID(),
-                    title: item.placeName,
-                    location: item.locationDetail,
-                    latitude: item.center.lat,
-                    longitude: item.center.lng,
-                    speciesCount: max(0, item.speciesCount ?? 0),
-                    observedCount: 0,
-                    radius: 5.0,
-                    imageName: "placeholder_image",
-                    edgeSpecies: item.species,
-                    distanceKm: item.distanceKm
-                )
-            }
+            return supabaseHotspots.map { mapHotspotToPopularSpot($0) }
         } catch {
-            logger.log(error: error, context: "HomeManager.getRecommendedSpots.edge")
-            return await getRecommendedSpotsFromLocalStore(
-                near: location,
-                radiusInKm: radiusInKm,
-                limit: limit
-            )
+            logger.log(error: error, context: "HomeManager.getRecommendedSpots.direct")
+            return await getRecommendedSpotsFromLocalStore(near: location, radiusInKm: radiusInKm, limit: limit)
         }
+    }
+
+    private func mapHotspotToPopularSpot(_ item: HotspotModel) -> PopularSpotResult {
+        return PopularSpotResult(
+            id: UUID(uuidString: item.hotspotId) ?? UUID(),
+            title: item.placeName,
+            location: item.locationDetail,
+            latitude: item.center.lat,
+            longitude: item.center.lng,
+            speciesCount: item.speciesCount,
+            observedCount: 0,
+            radius: 5.0,
+            imageName: "placeholder_image",
+            edgeSpecies: item.species?.map { 
+                NearbyHotspotEdgeSpecies(
+                    commonName: $0.commonName, 
+                    scientificName: $0.scientificName, 
+                    imageName: $0.imageName, 
+                    probability: $0.likelihood, 
+                    weekNumber: $0.weekNumber ?? "Current Week", 
+                    residencyStatus: $0.residencyStatus.rawValue
+                ) 
+            },
+            distanceKm: item.distanceKm
+        )
     }
 
     private func getActiveSpeciesCount(
@@ -320,21 +335,45 @@ class HomeManager {
     }
 
     private func mapEdgeCardToDynamicMapCard(
-        _ card: NearbyHotspotEdgeCard,
+        _ card: HotspotModel,
         userLocation: CLLocationCoordinate2D
     ) async -> DynamicMapCard? {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         let coordinate = CLLocationCoordinate2D(latitude: card.center.lat, longitude: card.center.lng)
-        let displaySpecies = await edgeDisplaySpecies(for: card, coordinate: coordinate, currentWeek: currentWeek)
+        
+        let displaySpecies: [BirdSpeciesDisplay] = (card.species ?? []).prefix(8).map { species in
+            let fallbackBird = watchlistManager.findBird(byName: species.commonName)
+            let normalizedName = species.commonName.lowercased()
+                .replacingOccurrences(of: " ", with: "_")
+                .replacingOccurrences(of: "-", with: "_")
+            
+            let imageName = species.imageName
+                ?? fallbackBird?.staticImageName
+                ?? normalizedName
+            
+            let finalImageName = imageName.isEmpty ? "placeholder_image" : imageName
+            let statusText = species.residencyStatus.rawValue
+
+            return BirdSpeciesDisplay(
+                birdName: species.commonName,
+                birdImageName: finalImageName,
+                statusBadge: BirdSpeciesDisplay.StatusBadge(
+                    title: "Present",
+                    subtitle: statusText,
+                    iconName: "bird.circle.fill",
+                    backgroundColorName: "systemGreen"
+                ),
+                sightabilityPercent: species.likelihood,
+                weekNumber: species.weekNumber ?? card.weekNumber ?? "Current Week",
+                residencyStatus: statusText
+            )
+        }
 
         let fallbackSpecies = displaySpecies.isEmpty
             ? [
                 BirdSpeciesDisplay(
                     birdName: "Recent Birds",
-                    birdImageName: {
-                        print("[Debug] Edge Response empty: Using placeholder for 'Recent Birds' card.")
-                        return "placeholder_image"
-                    }(),
+                    birdImageName: "placeholder_image",
                     statusBadge: BirdSpeciesDisplay.StatusBadge(
                         title: "Nearby",
                         subtitle: "Birding Spot",
@@ -349,8 +388,8 @@ class HomeManager {
             : displaySpecies
 
         let resolvedDistanceString: String = {
-            if let value = card.distanceString, !value.isEmpty {
-                return value
+            if !card.distanceString.isEmpty {
+                return card.distanceString
             }
             let distanceKm = Int(locationService.distance(from: userLocation, to: coordinate) / 1000.0)
             return distanceKm == 0 ? "Nearby" : "\(distanceKm) km"
@@ -1021,28 +1060,27 @@ class HomeManager {
 
     private func fetchNearbyHotspotCardFromEdge(
         near location: CLLocationCoordinate2D
-    ) async throws -> NearbyHotspotEdgeResponse {
-        if let cached = recommendationCacheStore.load(),
-           !recommendationCacheStore.shouldRefresh(
-            cachedRecord: cached,
-            currentLocation: location,
-            distanceService: locationService
-           ) {
+    ) async throws -> HotspotPredictionResponse {
+        let cacheKey = "\(String(format: "%.4f", location.latitude)),\(String(format: "%.4f", location.longitude))" as NSString
+        
+        // Check Memory Cache first (Session-based "Memory")
+        if let cached = speciesMemoryCache.object(forKey: cacheKey) {
+            print("DEBUG: Using App-Side Memory Cache for hotspot at \(cacheKey)")
             return cached.response
         }
 
-        let bearerToken: String? = (try? SupabaseConfig.load().anonKey) ?? UserSession.shared.getAccessToken()
+        // Check Location Cache Metadata (The 5km / 6-Hour Rule)
+        let clLoc = CLLocation(latitude: location.latitude, longitude: location.longitude)
+        if !LocationCacheManager.shared.shouldRefreshData(currentLocation: clLoc) {
+            // Logic for potential disk cache could go here
+        }
 
-        let response: NearbyHotspotEdgeResponse = try await SupabaseClient.shared.post(
-            path: "/functions/v1/get-nearby-birds",
-            body: NearbyHotspotEdgeRequest(lat: location.latitude, lng: location.longitude),
-            options: SupabaseRequestOptions(bearerTokenOverride: bearerToken),
-            responseType: NearbyHotspotEdgeResponse.self
-        )
-        recommendationCacheStore.save(
-            response: response,
-            fetchLocation: location
-        )
+        let response = try await SkyTrailsAPIService.shared.fetchPredictions(lat: location.latitude, lng: location.longitude)
+        
+        // Save to Memory Cache (Wrap in class)
+        speciesMemoryCache.setObject(SpeciesCacheItem(response: response), forKey: cacheKey)
+        LocationCacheManager.shared.updateCacheMetadata(location: clLoc)
+        
         return response
     }
 
@@ -1082,7 +1120,6 @@ class HomeManager {
                 radiusInKm: cardRadiusKm
             )
             let distance = locationService.distance(from: location, to: hotspotLoc)
-            spotSpeciesCountCache.setObject(NSNumber(value: speciesCount), forKey: hotspot.name as NSString)
 
             results.append(
                 PopularSpotResult(
@@ -1177,7 +1214,8 @@ class HomeManager {
                 matchedLocation: (lat: lat, lon: lon),
                 spottingProbability: probability,
                 weekNumber: weekText,
-                residencyStatus: status
+                residencyStatus: status,
+                ebirdSpeciesCode: nil // Local data might not have the code yet
             )
         }
     }
@@ -1196,7 +1234,8 @@ class HomeManager {
                 matchedLocation: (lat: lat, lon: lon),
                 spottingProbability: species.probability ?? 70,
                 weekNumber: species.weekNumber,
-                residencyStatus: species.residencyStatus
+                residencyStatus: species.residencyStatus,
+                ebirdSpeciesCode: species.scientificName // Using scientificName as fallback for code if needed, but scientific name is often the ebird code base or similar
             )
         }
     }
@@ -1207,6 +1246,59 @@ class HomeManager {
             return []
         }
 
+        // 1. Sync this location to Supabase 'hotspots_geo' so the R script can see it
+        // and so we can fetch existing scientific predictions if available.
+        Task {
+            do {
+                let config = try SupabaseConfig.load()
+                let body: [String: Any] = [
+                    "ebird_hotspot_id": "USER_\(lat)_\(lon)", // Tagged as user-selected
+                    "name": input.locationName ?? "User Selected Spot",
+                    "locality": input.locationDetail ?? "Manual selection",
+                    "location": "SRID=4326;POINT(\(lon) \(lat))"
+                ]
+                
+                // Use the anonymous key for simple upsert
+                var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
+                components?.path = "/rest/v1/hotspots_geo"
+                
+                guard let url = components?.url else { return }
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+                request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
+                request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+                
+                let _ = try await URLSession.shared.data(for: request)
+            } catch {
+                print("DEBUG: Failed to sync manual location to Supabase: \(error)")
+            }
+        }
+
+        // 2. Fetch Scientific Predictions from the Supabase/R script Cache
+        do {
+            let response = try await SkyTrailsAPIService.shared.fetchPredictions(lat: lat, lng: lon)
+            let results = (response.card?.species ?? []).map { species in
+                FinalPredictionResult(
+                    birdName: species.commonName,
+                    imageName: species.imageName ?? "placeholder_image",
+                    likelySpot: input.locationName ?? "Nearby",
+                    matchedInputIndex: inputIndex,
+                    matchedLocation: (lat: lat, lon: lon),
+                    spottingProbability: species.likelihood,
+                    weekNumber: species.weekNumber,
+                    residencyStatus: species.residencyStatus.rawValue,
+                    ebirdSpeciesCode: species.ebirdSpeciesCode
+                )
+            }
+            if !results.isEmpty { return results }
+        } catch {
+            print("DEBUG: API prediction fetch failed, falling back to local: \(error)")
+        }
+
+        // Fallback to local live predictions if cache is empty
         return await getLivePredictions(for: lat, lon: lon, radiusKm: Double(input.areaValue))
             .map { result in
                 FinalPredictionResult(
@@ -1217,7 +1309,8 @@ class HomeManager {
                     matchedLocation: result.matchedLocation,
                     spottingProbability: result.spottingProbability,
                     weekNumber: result.weekNumber,
-                    residencyStatus: result.residencyStatus
+                    residencyStatus: result.residencyStatus,
+                    ebirdSpeciesCode: result.ebirdSpeciesCode
                 )
             }
     }
