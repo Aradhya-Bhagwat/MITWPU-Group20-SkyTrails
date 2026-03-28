@@ -225,8 +225,6 @@ extension HomeViewController {
         homeCollectionView.register(UINib(nibName: "UpcomingBirdsCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "UpcomingBirdsCollectionViewCell")
         homeCollectionView.register(UINib(nibName: "SpotsToVisitCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "SpotsToVisitCollectionViewCell")
         homeCollectionView.register(UINib(nibName: "PredictionButtonCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: PredictionButtonCollectionViewCell.identifier)
-        homeCollectionView.register(UINib(nibName: "PredictionButtonCollectionViewCell", bundle: nil), forSupplementaryViewOfKind: "sticky-bird-button", withReuseIdentifier: "StickyBirdButton")
-        homeCollectionView.register(UINib(nibName: "PredictionButtonCollectionViewCell", bundle: nil), forSupplementaryViewOfKind: "sticky-spot-button", withReuseIdentifier: "StickySpotButton")
         homeCollectionView.register(UINib(nibName: NewMigrationCollectionViewCell.identifier, bundle: Bundle(for: NewMigrationCollectionViewCell.self)), forCellWithReuseIdentifier: NewMigrationCollectionViewCell.identifier)
         homeCollectionView.register(UINib(nibName: "NewsCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "NewsCollectionViewCell")
         homeCollectionView.register(UINib(nibName: PageControlReusableViewCollectionReusableView.identifier, bundle: nil), forSupplementaryViewOfKind: "NewsPageControlFooter", withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier)
@@ -335,16 +333,7 @@ extension HomeViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16
         
-        let stickyButton = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(cardWidth), heightDimension: .absolute(cardWidth * 1.034)),
-            elementKind: "sticky-bird-button",
-            alignment: .leading
-        )
-        stickyButton.pinToVisibleBounds = true
-        stickyButton.zIndex = 1000
-        stickyButton.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 0)
-        
-        section.boundarySupplementaryItems = [createSectionHeaderLayout(), stickyButton]
+        section.boundarySupplementaryItems = [createSectionHeaderLayout()]
         section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
         
         return section
@@ -361,16 +350,7 @@ extension HomeViewController {
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .continuous; section.interGroupSpacing = 16
         
-        let stickyButton = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(cardWidth), heightDimension: .absolute(cardWidth * 1.034)),
-            elementKind: "sticky-spot-button",
-            alignment: .leading
-        )
-        stickyButton.pinToVisibleBounds = true
-        stickyButton.zIndex = 1000
-        stickyButton.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 0)
-        
-        section.boundarySupplementaryItems = [createSectionHeaderLayout(), stickyButton]
+        section.boundarySupplementaryItems = [createSectionHeaderLayout()]
         section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
         
         return section
@@ -416,14 +396,20 @@ extension HomeViewController: UICollectionViewDataSource {
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
-                cell.configure(with: nil); cell.contentView.alpha = 0; return cell
+                cell.configure(with: UIImage(named: "PredictBirdButton"))
+                cell.contentView.alpha = 1.0
+                cell.isHidden = false
+                return cell
             }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "UpcomingBirdsCollectionViewCell", for: indexPath) as! UpcomingBirdsCollectionViewCell
             let item = upcomingBirds[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date); return cell
         } else if indexPath.section == 2 {
             if indexPath.row == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
-                cell.configure(with: nil); cell.contentView.alpha = 0; return cell
+                cell.configure(with: UIImage(named: "PredictSpotButton"))
+                cell.contentView.alpha = 1.0
+                cell.isHidden = false
+                return cell
             }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SpotsToVisitCollectionViewCell", for: indexPath) as! SpotsToVisitCollectionViewCell
             let item = spots[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
@@ -439,20 +425,6 @@ extension HomeViewController: UICollectionViewDataSource {
              let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier, for: indexPath) as! PageControlReusableViewCollectionReusableView
              let count = news.isEmpty ? 0 : min(news.count, 8)
              footer.configure(numberOfPages: count, currentPage: 0); return footer
-         } else if kind == "sticky-bird-button" {
-             let button = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "StickyBirdButton", for: indexPath) as! PredictionButtonCollectionViewCell
-             button.configure(with: UIImage(named: "PredicBirdButton"))
-             button.contentView.alpha = 1.0
-             let tap = UITapGestureRecognizer(target: self, action: #selector(stickyBirdButtonTapped))
-             button.addGestureRecognizer(tap)
-             return button
-         } else if kind == "sticky-spot-button" {
-             let button = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "StickySpotButton", for: indexPath) as! PredictionButtonCollectionViewCell
-             button.configure(with: UIImage(named: "PredictSpotButton"))
-             button.contentView.alpha = 1.0
-             let tap = UITapGestureRecognizer(target: self, action: #selector(stickySpotButtonTapped))
-             button.addGestureRecognizer(tap)
-             return button
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
             if indexPath.section == 0 { header.configure(title: "Migration Forecast") }
@@ -467,14 +439,7 @@ extension HomeViewController: UICollectionViewDataSource {
 
 extension HomeViewController {
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        // Skip animation for the invisible dummy cells at index 0 in sections 1 and 2
-        if (indexPath.section == 1 || indexPath.section == 2) && indexPath.row == 0 {
-            cell.contentView.alpha = 0
-            return
-        }
-        
-        if !animatedIndexPaths.contains(indexPath) {
-            cell.alpha = 0; cell.transform = CGAffineTransform(translationX: 0, y: 20)
+        if !animatedIndexPaths.contains(indexPath) {            cell.alpha = 0; cell.transform = CGAffineTransform(translationX: 0, y: 20)
             UIView.animate(withDuration: 0.5, delay: 0.02 * Double(indexPath.item), usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut, .allowUserInteraction], animations: { cell.alpha = 1; cell.transform = .identity }, completion: { _ in self.animatedIndexPaths.insert(indexPath) })
         }
         if indexPath.section == 3, let footer = collectionView.supplementaryView(forElementKind: "NewsPageControlFooter", at: IndexPath(item: 0, section: 3)) as? PageControlReusableViewCollectionReusableView {
@@ -544,7 +509,10 @@ extension HomeViewController {
     }
 
     private func didTapPredictSpot() {
-        self.performSegue(withIdentifier: "ShowPredictMap", sender: self)
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+            navigationController?.pushViewController(predictMapVC, animated: true)
+        }
     }
 
     private func newsItem(at index: Int) -> NewsItem {
