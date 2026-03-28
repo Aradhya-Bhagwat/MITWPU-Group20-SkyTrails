@@ -4,15 +4,22 @@ enum ResidencyStatus: String, Codable {
     case recentlySpotted = "Recently spotted"
     case present = "Present"
     case migrating = "Migrating"
-    case statusAndTrends = "Status and Trends" // Added to support R script source
+    case statusAndTrends = "Status and Trends"
+    case unknown = "Unknown"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = ResidencyStatus(rawValue: rawValue) ?? .unknown
+    }
 }
 
-struct PredictionResponse: Codable {
-    let card: Hotspot
-    let nearbyHotspots: [Hotspot]
+struct HotspotPredictionResponse: Codable {
+    let card: HotspotModel? 
+    let nearbyHotspots: [HotspotModel]
 }
 
-struct Hotspot: Codable, Identifiable {
+struct HotspotModel: Codable, Identifiable {
     var id: String { hotspotId }
     let hotspotId: String
     let placeName: String
@@ -20,25 +27,37 @@ struct Hotspot: Codable, Identifiable {
     let speciesCount: Int
     let distanceKm: Double
     let distanceString: String
-    let center: Coordinates
-    let species: [Species]?
-    let weekNumber: String
+    let center: HotspotCoordinates
+    let species: [SpeciesModel]?
+    let weekNumber: String? 
 }
 
-struct Coordinates: Codable {
+struct HotspotCoordinates: Codable {
     let lat: Double
     let lng: Double
 }
 
-struct Species: Codable, Identifiable {
+struct SpeciesModel: Codable, Identifiable {
     var id: String { ebirdSpeciesCode ?? UUID().uuidString }
     let birdId: String?
     let ebirdSpeciesCode: String?
     let commonName: String
     let scientificName: String?
     let imageName: String?
-    let probability: Int
+    let likelihood: Int 
     let weekNumberValue: Int?
-    let weekNumber: String
+    let weekNumber: String? 
     let residencyStatus: ResidencyStatus
+    
+    enum CodingKeys: String, CodingKey {
+        case birdId = "bird_id"
+        case ebirdSpeciesCode = "ebird_species_code"
+        case commonName = "commonName"
+        case scientificName = "scientificName"
+        case imageName = "imageName"
+        case likelihood = "probability"
+        case weekNumberValue = "weekNumberValue"
+        case weekNumber = "weekNumber"
+        case residencyStatus = "residencyStatus"
+    }
 }

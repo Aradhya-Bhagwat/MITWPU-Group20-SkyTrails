@@ -168,12 +168,11 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         }
 
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row - 1] : recommendationsData[indexPath.row]
-        let activeCount = HomeManager.shared.spotSpeciesCountCache.object(forKey: item.title as NSString)?.intValue ?? item.speciesCount
         
         cell.configure(
             image: UIImage(named: item.imageName ?? "placeholder_image"),
             title: item.title,
-            speciesCount: activeCount,
+            speciesCount: item.speciesCount,
             latitude: item.latitude,
             longitude: item.longitude
         )
