@@ -250,6 +250,7 @@ struct BirdSpeciesDisplay: Hashable {
     let sightabilityPercent: Int
     let weekNumber: String?
     let residencyStatus: String?
+    let ebirdSpeciesCode: String?
     
     struct StatusBadge: Hashable {
         let title: String
@@ -305,6 +306,7 @@ struct NearbyHotspotEdgeSpecies: Codable {
     let probability: Int?
     let weekNumber: String?
     let residencyStatus: String?
+    let ebirdSpeciesCode: String?
 }
 
 struct NearbyHotspotEdgeMeta: Codable {

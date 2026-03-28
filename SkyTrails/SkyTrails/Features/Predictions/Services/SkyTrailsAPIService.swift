@@ -67,23 +67,40 @@ final class SkyTrailsAPIService {
     func fetchGeoJSON(ebirdSpeciesCode: String, weekNumber: Int) async throws -> Data {
         let config = try SupabaseConfig.load()
         var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
-        components?.path = "/rest/v1/species_ranges"
-        components?.queryItems = [
-            URLQueryItem(name: "ebird_species_code", value: "eq.\(ebirdSpeciesCode)"),
-            URLQueryItem(name: "week_number", value: "eq.\(weekNumber)"),
-            URLQueryItem(name: "select", value: "range_geojson")
-        ]
+        components?.path = "/functions/v1/get-species-range"
         
         guard let url = components?.url else { throw APIError.invalidURL }
         
         var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "ebirdSpeciesCode": ebirdSpeciesCode,
+            "weekNumber": weekNumber
+        ])
         
-        let (data, _) = try await URLSession.shared.data(for: request)
-        struct GeoJSONResponse: Codable { let range_geojson: String }
-        let results = try JSONDecoder().decode([GeoJSONResponse].self, from: data)
-        guard let geoString = results.first?.range_geojson, let geoData = geoString.data(using: .utf8) else {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        if httpResponse.statusCode == 202 {
+            throw APIError.serverError("Range is being prepared")
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Range fetch failed"
+            throw APIError.serverError(errorMsg)
+        }
+
+        struct GeoJSONResponse: Codable {
+            let rangeGeoJSON: String
+        }
+
+        let result = try JSONDecoder().decode(GeoJSONResponse.self, from: data)
+        guard let geoData = result.rangeGeoJSON.data(using: .utf8) else {
             throw APIError.decodingError
         }
         return geoData

@@ -141,8 +141,33 @@ class HomeManager {
         radiusInKm: Double = 50.0,
         limit: Int = 10
     ) async -> [RecommendedBirdResult] {
+        do {
+            let response = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
+            let predictions = response.card?.species ?? []
+            
+            if predictions.isEmpty {
+                return await getRecommendedBirdsFromLocal(userLocation: userLocation, currentWeek: currentWeek, radiusInKm: radiusInKm, limit: limit)
+            }
+            
+            return predictions.prefix(limit).compactMap { species in
+                guard let bird = watchlistManager.findBird(byName: species.commonName) else { return nil }
+                return RecommendedBirdResult(
+                    bird: bird,
+                    dateRange: species.weekNumber ?? formatWeekDescription(week: currentWeek ?? Calendar.current.component(.weekOfYear, from: Date()))
+                )
+            }
+        } catch {
+            return await getRecommendedBirdsFromLocal(userLocation: userLocation, currentWeek: currentWeek, radiusInKm: radiusInKm, limit: limit)
+        }
+    }
+
+    private func getRecommendedBirdsFromLocal(
+        userLocation: CLLocationCoordinate2D,
+        currentWeek: Int? = nil,
+        radiusInKm: Double = 50.0,
+        limit: Int = 10
+    ) async -> [RecommendedBirdResult] {
         let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
-        
         let birdsAtLocation = await hotspotManager.getBirdsPresent(
             at: userLocation,
             duringWeek: week,
@@ -236,23 +261,26 @@ class HomeManager {
         limit: Int = 5
     ) async -> [PopularSpotResult] {
         do {
-            // Priority: Fetch locations from Supabase hotspots_geo table
-            let supabaseHotspots = try await SkyTrailsAPIService.shared.fetchLocationsFromSupabase(near: location)
+            // Priority: Fetch locations from Edge Function to get enriched species data
+            let response = try await fetchNearbyHotspotCardFromEdge(near: location)
             
-            guard !supabaseHotspots.isEmpty else {
-                // Fallback to discovery via Edge Function if table is empty
-                let response = try await fetchNearbyHotspotCardFromEdge(near: location)
+            if !response.nearbyHotspots.isEmpty {
                 return response.nearbyHotspots.map { mapHotspotToPopularSpot($0) }
             }
 
+            // Fallback: Fetch raw locations from Supabase hotspots_geo table if Edge Function returns nothing
+            let supabaseHotspots = try await SkyTrailsAPIService.shared.fetchLocationsFromSupabase(near: location)
             return supabaseHotspots.map { mapHotspotToPopularSpot($0) }
         } catch {
-            logger.log(error: error, context: "HomeManager.getRecommendedSpots.direct")
+            logger.log(error: error, context: "HomeManager.getRecommendedSpots.hybrid")
             return await getRecommendedSpotsFromLocalStore(near: location, radiusInKm: radiusInKm, limit: limit)
         }
     }
 
     private func mapHotspotToPopularSpot(_ item: HotspotModel) -> PopularSpotResult {
+        // Find the first available bird image from the species list to use as the card thumbnail
+        let topBirdImage = item.species?.first(where: { !($0.imageName ?? "").isEmpty })?.imageName
+        
         return PopularSpotResult(
             id: UUID(uuidString: item.hotspotId) ?? UUID(),
             title: item.placeName,
@@ -262,7 +290,7 @@ class HomeManager {
             speciesCount: item.speciesCount,
             observedCount: 0,
             radius: 5.0,
-            imageName: "placeholder_image",
+            imageName: topBirdImage ?? "placeholder_image",
             edgeSpecies: item.species?.map { 
                 NearbyHotspotEdgeSpecies(
                     commonName: $0.commonName, 
@@ -270,7 +298,8 @@ class HomeManager {
                     imageName: $0.imageName, 
                     probability: $0.likelihood, 
                     weekNumber: $0.weekNumber ?? "Current Week", 
-                    residencyStatus: $0.residencyStatus.rawValue
+                    residencyStatus: $0.residencyStatus.rawValue,
+                    ebirdSpeciesCode: $0.ebirdSpeciesCode
                 ) 
             },
             distanceKm: item.distanceKm
@@ -365,7 +394,8 @@ class HomeManager {
                 ),
                 sightabilityPercent: species.likelihood,
                 weekNumber: species.weekNumber ?? card.weekNumber ?? "Current Week",
-                residencyStatus: statusText
+                residencyStatus: statusText,
+                ebirdSpeciesCode: species.ebirdSpeciesCode
             )
         }
 
@@ -382,7 +412,8 @@ class HomeManager {
                     ),
                     sightabilityPercent: 60,
                     weekNumber: card.weekNumber ?? formatWeekDescription(week: currentWeek),
-                    residencyStatus: "Check nearby sightings"
+                    residencyStatus: "Check nearby sightings",
+                    ebirdSpeciesCode: nil
                 )
             ]
             : displaySpecies
@@ -534,7 +565,8 @@ class HomeManager {
                 statusBadge: badge,
                 sightabilityPercent: probability,
                 weekNumber: weekText,
-                residencyStatus: status
+                residencyStatus: status,
+                ebirdSpeciesCode: nil
             )
         }
         let primaryBird = top.migratingBirds.max { a, b in
@@ -654,9 +686,9 @@ class HomeManager {
                     ),
                     sightabilityPercent: species.probability ?? 70,
                     weekNumber: species.weekNumber ?? card.weekNumber ?? formatWeekDescription(week: currentWeek),
-                    residencyStatus: statusText
-                )
-            }
+                    residencyStatus: statusText,
+                    ebirdSpeciesCode: species.ebirdSpeciesCode
+                    )            }
         }
 
         let localBirds = await hotspotManager.getBirdsPresent(
@@ -680,7 +712,8 @@ class HomeManager {
                 ),
                 sightabilityPercent: 70,
                 weekNumber: card.weekNumber ?? formatWeekDescription(week: currentWeek),
-                residencyStatus: "Recently observed"
+                residencyStatus: "Recently observed",
+                ebirdSpeciesCode: nil
             )
         }
     }
@@ -1235,7 +1268,7 @@ class HomeManager {
                 spottingProbability: species.probability ?? 70,
                 weekNumber: species.weekNumber,
                 residencyStatus: species.residencyStatus,
-                ebirdSpeciesCode: species.scientificName // Using scientificName as fallback for code if needed, but scientific name is often the ebird code base or similar
+                ebirdSpeciesCode: species.ebirdSpeciesCode ?? species.scientificName
             )
         }
     }

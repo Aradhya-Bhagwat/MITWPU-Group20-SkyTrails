@@ -144,7 +144,10 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
             self.titleLabel2.text = title
             self.currentSpeciesCount = speciesCount
 
-            if let latitude, let longitude {
+            // Prioritize the bird image if it's not the generic placeholder
+            let hasValidBirdImage = image != nil && image != UIImage(named: "placeholder_image")
+            
+            if !hasValidBirdImage, let latitude, let longitude {
                 let key = Self.snapshotKey(lat: latitude, lon: longitude)
                 representedSnapshotKey = key
                 if let cached = Self.snapshotCache.object(forKey: key as NSString) {
