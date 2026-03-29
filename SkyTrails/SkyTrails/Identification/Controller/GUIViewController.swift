@@ -227,30 +227,51 @@ class GUIViewController: UIViewController {
         let cleanCategory = cleanForFilename(categoryName)
         let cleanVariant = cleanForFilename(variantName)
         
+        let isKiteShape = shapeID == "Accipitridae" || shapeID.lowercased().contains("kite")
         let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
         let baseName = "id_shape_\(shapeID)_base"
         
-        if let cachedBase = IdentificationImageService.shared.cachedImage(for: baseName, shapeId: shapeID),
-           let cachedCanvas = IdentificationImageService.shared.cachedImage(for: canvasName, shapeId: shapeID) {
-            return composeThumbnail(base: cachedBase, canvas: cachedCanvas)
+        if !isKiteShape {
+            if let cachedBase = IdentificationImageService.shared.cachedImage(for: baseName, shapeId: shapeID),
+               let cachedCanvas = IdentificationImageService.shared.cachedImage(for: canvasName, shapeId: shapeID) {
+                return composeThumbnail(base: cachedBase, canvas: cachedCanvas)
+            }
+            
+            if let canvas = UIImage(named: canvasName), let base = UIImage(named: baseName) {
+                let renderer = UIGraphicsImageRenderer(size: base.size)
+                return renderer.image { _ in
+                    base.draw(in: CGRect(origin: .zero, size: base.size))
+                    canvas.draw(in: CGRect(origin: .zero, size: base.size))
+                }
+            }
         }
         
-        if let canvas = UIImage(named: canvasName), let base = UIImage(named: baseName) {
-            let renderer = UIGraphicsImageRenderer(size: base.size)
-            return renderer.image { _ in
-                base.draw(in: CGRect(origin: .zero, size: base.size))
-                canvas.draw(in: CGRect(origin: .zero, size: base.size))
+        let capitalizedShape = shapeID.prefix(1).uppercased() + shapeID.dropFirst()
+        let alternateCanvasName = "canvas_\(capitalizedShape)_\(cleanCategory)_\(cleanVariant)"
+        let alternateBaseName = "shape_\(capitalizedShape)_base"
+        
+        if let canvas = UIImage(named: alternateCanvasName) {
+            if !isKiteShape, let base = UIImage(named: alternateBaseName) {
+                let renderer = UIGraphicsImageRenderer(size: base.size)
+                return renderer.image { _ in
+                    base.draw(in: CGRect(origin: .zero, size: base.size))
+                    canvas.draw(in: CGRect(origin: .zero, size: base.size))
+                }
             }
+            return canvas
         }
         
         let bundleCanvas = UIImage(named: canvasName)
         let bundleBase = UIImage(named: baseName)
         let bundleIcon = UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
         
-        print("[DEBUG] KITE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
-        print("        canvasName: \(canvasName) - exists: \(bundleCanvas != nil)")
-        print("        baseName: \(baseName) - exists: \(bundleBase != nil)")
-        print("        fallback icon: id_icon_\(cleanCategory)_\(cleanVariant) - exists: \(bundleIcon != nil)")
+        if !isKiteShape {
+            print("[DEBUG] KITE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
+            print("        canvasName: \(canvasName) - exists: \(bundleCanvas != nil)")
+            print("        alternateCanvasName: \(alternateCanvasName) - exists: \(UIImage(named: alternateCanvasName) != nil)")
+            print("        baseName: \(baseName) - exists: \(bundleBase != nil)")
+            print("        fallback icon: id_icon_\(cleanCategory)_\(cleanVariant) - exists: \(bundleIcon != nil)")
+        }
         
         return bundleIcon
     }
@@ -279,8 +300,14 @@ class GUIViewController: UIViewController {
 
         let cleanCategory = cleanForFilename(categoryName)
         let cleanVariant = cleanForFilename(variantName)
+        let isKiteShape = shapeID == "Accipitridae" || shapeID.lowercased().contains("kite")
         let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
         let baseName = "id_shape_\(shapeID)_base"
+        
+        let capitalizedShape = shapeID.prefix(1).uppercased() + shapeID.dropFirst()
+        let altCanvasName = "canvas_\(capitalizedShape)_\(cleanCategory)_\(cleanVariant)"
+        let altBaseName = "shape_\(capitalizedShape)_base"
+        
         let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
 
         if let cached = variationThumbnailCache[cacheKey] {
@@ -288,7 +315,7 @@ class GUIViewController: UIViewController {
             return
         }
 
-        if let diskCached = IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey) {
+        if !isKiteShape, let diskCached = IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey) {
             variationThumbnailCache[cacheKey] = diskCached
             cell.configure(image: diskCached, isSelected: isSelected)
             return
@@ -296,32 +323,53 @@ class GUIViewController: UIViewController {
 
         variationThumbnailTasks[indexPath] = Task { [weak self, weak cell] in
             guard let self else { return }
-            let remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
-            let remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
+            
+            var remoteBase: UIImage?
+            var remoteCanvas: UIImage?
+            
+            if !isKiteShape {
+                remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
+                if remoteBase == nil {
+                    remoteBase = await IdentificationImageService.shared.image(for: altBaseName, shapeId: shapeID)
+                }
+            }
+            
+            remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
+            if remoteCanvas == nil {
+                remoteCanvas = await IdentificationImageService.shared.image(for: altCanvasName, shapeId: shapeID)
+            }
+            
             guard !Task.isCancelled else { return }
 
-            if remoteBase == nil || remoteCanvas == nil {
+            if !isKiteShape && (remoteBase == nil || remoteCanvas == nil) {
                 print("[DEBUG] KITE REMOTE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
                 print("        canvasName: \(canvasName) - remote: \(remoteCanvas != nil)")
+                print("        altCanvasName: \(altCanvasName) - remote: \(UIImage(named: altCanvasName) != nil)")
                 print("        baseName: \(baseName) - remote: \(remoteBase != nil)")
             }
 
             let composed: UIImage? = {
-                guard let base = remoteBase, let canvas = remoteCanvas else { return nil }
-                let renderer = UIGraphicsImageRenderer(size: base.size)
-                return renderer.image { _ in
-                    base.draw(in: CGRect(origin: .zero, size: base.size))
-                    canvas.draw(in: CGRect(origin: .zero, size: base.size))
+                if !isKiteShape, let base = remoteBase, let canvas = remoteCanvas {
+                    let renderer = UIGraphicsImageRenderer(size: base.size)
+                    return renderer.image { _ in
+                        base.draw(in: CGRect(origin: .zero, size: base.size))
+                        canvas.draw(in: CGRect(origin: .zero, size: base.size))
+                    }
+                } else if let canvas = remoteCanvas {
+                    return canvas
                 }
+                return nil
             }()
 
-            if composed == nil {
+            if composed == nil && !isKiteShape {
                 print("[DEBUG] KITE THUMBNAIL COMPOSE FAILED - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
             }
 
             guard let thumb = composed else { return }
             self.variationThumbnailCache[cacheKey] = thumb
-            IdentificationImageService.shared.saveComposedThumbnail(thumb, cacheKey: cacheKey)
+            if !isKiteShape {
+                IdentificationImageService.shared.saveComposedThumbnail(thumb, cacheKey: cacheKey)
+            }
             guard let cell else { return }
             guard let currentIndexPath = self.variationsCollectionView.indexPath(for: cell),
                   currentIndexPath == indexPath else { return }
@@ -388,6 +436,11 @@ class GUIViewController: UIViewController {
         let cleanVariant = cleanForFilename(variantName)
         let canvasName = "id_canvas_\(shapeID)_\(cleanCategory)_\(cleanVariant)"
         let baseName = "id_shape_\(shapeID)_base"
+        
+        let capitalizedShape = shapeID.prefix(1).uppercased() + shapeID.dropFirst()
+        let altCanvasName = "canvas_\(capitalizedShape)_\(cleanCategory)_\(cleanVariant)"
+        let altBaseName = "shape_\(capitalizedShape)_base"
+        
         let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
 
         if let cached = variationThumbnailCache[cacheKey] {
@@ -397,14 +450,31 @@ class GUIViewController: UIViewController {
 
         headerThumbnailTask = Task { [weak self] in
             guard let self else { return }
-            let remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
-            let remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
+            
+            var remoteBase = await IdentificationImageService.shared.image(for: baseName, shapeId: shapeID)
+            var remoteCanvas = await IdentificationImageService.shared.image(for: canvasName, shapeId: shapeID)
+            
+            if remoteBase == nil {
+                remoteBase = await IdentificationImageService.shared.image(for: altBaseName, shapeId: shapeID)
+            }
+            if remoteCanvas == nil {
+                remoteCanvas = await IdentificationImageService.shared.image(for: altCanvasName, shapeId: shapeID)
+            }
+            
             guard !Task.isCancelled else { return }
-            guard let base = remoteBase, let canvas = remoteCanvas else { return }
+            
+            let thumb: UIImage? = {
+                if let base = remoteBase, let canvas = remoteCanvas {
+                    return self.composeThumbnail(base: base, canvas: canvas)
+                } else if let canvas = remoteCanvas {
+                    return canvas
+                }
+                return nil
+            }()
 
-            let thumb = self.composeThumbnail(base: base, canvas: canvas)
-            self.variationThumbnailCache[cacheKey] = thumb
-            IdentificationImageService.shared.saveComposedThumbnail(thumb, cacheKey: cacheKey)
+            guard let finalThumb = thumb else { return }
+            self.variationThumbnailCache[cacheKey] = finalThumb
+            IdentificationImageService.shared.saveComposedThumbnail(finalThumb, cacheKey: cacheKey)
 
             guard self.currentCategoryIndex < self.categories.count else { return }
             let currentCategoryName = self.categories[self.currentCategoryIndex].area
@@ -413,7 +483,7 @@ class GUIViewController: UIViewController {
             let shouldStillShow = currentCategoryName == categoryName && isCurrentHeaderSelection == isSelected
             guard shouldStillShow else { return }
 
-            self.selectedImageView.image = thumb
+            self.selectedImageView.image = finalThumb
         }
     }
     
