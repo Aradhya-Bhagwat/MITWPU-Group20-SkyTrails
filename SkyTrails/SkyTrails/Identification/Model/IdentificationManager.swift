@@ -21,6 +21,21 @@ class IdentificationManager {
             runFilter()
         }
     }
+    
+    var selectedShapeRepresentativeImageName: String? {
+        guard let shape = selectedShape else { return nil }
+        let targetShapeId = shape.bird_shape_id
+        do {
+            let predicate = #Predicate<Bird> { bird in
+                bird.shape_id == targetShapeId
+            }
+            let descriptor = FetchDescriptor<Bird>(predicate: predicate)
+            let birds = try modelContext.fetch(descriptor)
+            return birds.first?.staticImageName
+        } catch {
+            return nil
+        }
+    }
     func filterBirds(shape: String?, size: Int?, location: String?, fieldMarks: [Any]) {
             
             runFilter()
