@@ -378,6 +378,7 @@ struct ObservedBirdPhotoRow: Codable, Sendable {
 }
 
 struct BirdShapeRow: Decodable, Sendable {
+    let serverId: UUID?
     let birdShapeId: String
     let name: String
     let icon: String?
@@ -392,6 +393,7 @@ struct BirdShapeRow: Decodable, Sendable {
 
     nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        serverId = try container.decodeIfPresent(UUID.self, forKey: .id)
         if let explicitId = try container.decodeIfPresent(String.self, forKey: .birdShapeId) {
             birdShapeId = explicitId
         } else if let legacyUUID = try container.decodeIfPresent(UUID.self, forKey: .id) {
@@ -409,6 +411,59 @@ struct BirdShapeRow: Decodable, Sendable {
             container.decodeIfPresent(String.self, forKey: .icon)
             ?? container.decodeIfPresent(String.self, forKey: .iconURL)
         )
+    }
+}
+
+struct BirdRow: Decodable, Sendable {
+    let id: UUID
+    let commonName: String
+    let scientificName: String
+    let imageURL: String?
+    let family: String?
+    let orderName: String?
+    let description: String?
+    let conservationStatus: String?
+    let migrationStrategy: String?
+    let shapeServerId: UUID?
+    let shapeCode: String?
+    let sizeCategory: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case birdId = "bird_id"
+        case commonName = "common_name"
+        case scientificName = "scientific_name"
+        case imageURL = "image_url"
+        case family
+        case orderName = "order_name"
+        case description
+        case conservationStatus = "conservation_status"
+        case migrationStrategy = "migration_strategy"
+        case shapeId = "shape_id"
+        case sizeCategory = "size_category"
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .birdId)
+            ?? container.decode(UUID.self, forKey: .id)
+        commonName = try container.decode(String.self, forKey: .commonName)
+        scientificName = try container.decode(String.self, forKey: .scientificName)
+        imageURL = try container.decodeIfPresent(String.self, forKey: .imageURL)
+        family = try container.decodeIfPresent(String.self, forKey: .family)
+        orderName = try container.decodeIfPresent(String.self, forKey: .orderName)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        conservationStatus = try container.decodeIfPresent(String.self, forKey: .conservationStatus)
+        migrationStrategy = try container.decodeIfPresent(String.self, forKey: .migrationStrategy)
+        sizeCategory = try container.decodeIfPresent(Int.self, forKey: .sizeCategory)
+
+        if let shapeUUID = try container.decodeIfPresent(UUID.self, forKey: .shapeId) {
+            shapeServerId = shapeUUID
+            shapeCode = nil
+        } else {
+            shapeServerId = nil
+            shapeCode = try container.decodeIfPresent(String.self, forKey: .shapeId)
+        }
     }
 }
 

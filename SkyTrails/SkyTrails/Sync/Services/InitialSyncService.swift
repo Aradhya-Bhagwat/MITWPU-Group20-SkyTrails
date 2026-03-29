@@ -26,6 +26,7 @@ enum InitialSyncError: Error, LocalizedError {
 
 struct InitialSyncSummary: Sendable {
     let shapesSynced: Int
+    let birdsSynced: Int
     let fieldMarksSynced: Int
     let variantsSynced: Int
     let birdLinksSynced: Int
@@ -41,7 +42,7 @@ struct InitialSyncSummary: Sendable {
     let timestamp: Date
     
     nonisolated var totalSynced: Int {
-        shapesSynced + fieldMarksSynced + variantsSynced + birdLinksSynced +
+        shapesSynced + birdsSynced + fieldMarksSynced + variantsSynced + birdLinksSynced +
         watchlistsSynced + entriesSynced + rulesSynced + sharesSynced + photosSynced +
         sessionsSynced + resultsSynced + candidatesSynced + marksSynced
     }
@@ -90,6 +91,13 @@ actor InitialSyncService {
 
         let shapeRows: [BirdShapeRow] = try await fetchFromSupabase(
             table: "bird_shapes",
+            query: "select=*",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let birdRows: [BirdRow] = try await fetchFromSupabase(
+            table: "birds",
             query: "select=*",
             config: config,
             accessToken: accessToken
@@ -235,6 +243,9 @@ actor InitialSyncService {
             let shapeCount = try mergeBirdShapes(shapeRows, context: context)
             try? context.save()
 
+            let birdCount = try mergeBirds(birdRows, shapeRows: shapeRows, context: context)
+            try? context.save()
+
             let fieldMarkCount = try mergeBirdFieldMarks(fieldMarkRows, context: context)
             try? context.save()
 
@@ -277,23 +288,24 @@ actor InitialSyncService {
             try refreshDerivedWatchlistFields(context: context)
             try? context.save()
             
-            return (shapeCount, fieldMarkCount, variantCount, linkCount, wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
+            return (shapeCount, birdCount, fieldMarkCount, variantCount, linkCount, wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
         }
         
         let summary = InitialSyncSummary(
             shapesSynced: counts.0,
-            fieldMarksSynced: counts.1,
-            variantsSynced: counts.2,
-            birdLinksSynced: counts.3,
-            watchlistsSynced: counts.4,
-            entriesSynced: counts.5,
-            rulesSynced: counts.6,
-            sharesSynced: counts.7,
-            photosSynced: counts.8,
-            sessionsSynced: counts.9,
-            resultsSynced: counts.10,
-            candidatesSynced: counts.11,
-            marksSynced: counts.12,
+            birdsSynced: counts.1,
+            fieldMarksSynced: counts.2,
+            variantsSynced: counts.3,
+            birdLinksSynced: counts.4,
+            watchlistsSynced: counts.5,
+            entriesSynced: counts.6,
+            rulesSynced: counts.7,
+            sharesSynced: counts.8,
+            photosSynced: counts.9,
+            sessionsSynced: counts.10,
+            resultsSynced: counts.11,
+            candidatesSynced: counts.12,
+            marksSynced: counts.13,
             timestamp: Date()
         )
         return summary
@@ -367,6 +379,59 @@ actor InitialSyncService {
                 for bird in linkedBirds where bird.shape == nil || bird.shape?.bird_shape_id != row.birdShapeId {
                     bird.shape = shape
                 }
+            }
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeBirds(_ rows: [BirdRow], shapeRows: [BirdShapeRow], context: ModelContext) throws -> Int {
+        let existingBirds = try context.fetch(FetchDescriptor<Bird>())
+        var birdById = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.bird_id, $0) })
+
+        let shapes = try context.fetch(FetchDescriptor<BirdShape>())
+        let shapeByCode = Dictionary(uniqueKeysWithValues: shapes.map { ($0.bird_shape_id, $0) })
+        let shapeCodeByServerId = Dictionary(uniqueKeysWithValues: shapeRows.compactMap { row in
+            row.serverId.map { ($0, row.birdShapeId) }
+        })
+
+        var syncedCount = 0
+        for row in rows {
+            let resolvedShapeCode = row.shapeCode ?? row.shapeServerId.flatMap { shapeCodeByServerId[$0] }
+            let resolvedShape = resolvedShapeCode.flatMap { shapeByCode[$0] }
+            let staticImageName = row.imageURL ?? row.commonName
+
+            if let existing = birdById[row.id] {
+                existing.commonName = row.commonName
+                existing.scientificName = row.scientificName
+                existing.staticImageName = staticImageName
+                existing.family = row.family
+                existing.order_name = row.orderName
+                existing.descriptionText = row.description
+                existing.conservation_status = row.conservationStatus
+                existing.migration_strategy = row.migrationStrategy
+                existing.shape_id = resolvedShapeCode
+                existing.size_category = row.sizeCategory
+                existing.shape = resolvedShape
+            } else {
+                let bird = Bird(
+                    bird_id: row.id,
+                    commonName: row.commonName,
+                    scientificName: row.scientificName,
+                    staticImageName: staticImageName,
+                    family: row.family,
+                    order_name: row.orderName,
+                    descriptionText: row.description,
+                    conservation_status: row.conservationStatus,
+                    migration_strategy: row.migrationStrategy,
+                    validMonths: nil,
+                    likelySpot: nil,
+                    shape_id: resolvedShapeCode,
+                    size_category: row.sizeCategory,
+                    shape: resolvedShape
+                )
+                context.insert(bird)
+                birdById[row.id] = bird
             }
             syncedCount += 1
         }

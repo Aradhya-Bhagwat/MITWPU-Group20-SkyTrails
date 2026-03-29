@@ -51,7 +51,7 @@ final class RealtimeSyncService: NSObject {
     
     private let tables: [String] = [
         "watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos", "users",
-        "bird_shapes", "bird_field_marks", "field_mark_variants", "bird_field_mark_variant_links",
+        "bird_shapes", "birds", "bird_field_marks", "field_mark_variants", "bird_field_mark_variant_links",
         "identification_sessions", "identification_results", "identification_candidates", "identification_session_marks"
     ]
     private var subscribedTables: Set<String> = []
@@ -254,6 +254,8 @@ final class RealtimeSyncService: NSObject {
                     try await handleUserEvent(payload)
                 case "bird_shapes":
                     try await handleBirdShapeEvent(payload)
+                case "birds":
+                    try await handleBirdEvent(payload)
                 case "bird_field_marks":
                     try await handleBirdFieldMarkEvent(payload)
                 case "field_mark_variants":
@@ -372,6 +374,22 @@ final class RealtimeSyncService: NSObject {
             try await upsertBirdFieldMark(from: record, id: id)
         case .delete:
             try await deleteBirdFieldMark(id: id)
+        }
+    }
+
+    private func handleBirdEvent(_ payload: RealtimePayload) async throws {
+        let id = payload.record?.uuid(for: "bird_id")
+            ?? payload.record?.uuid(for: "id")
+            ?? payload.oldRecord?.uuid(for: "bird_id")
+            ?? payload.oldRecord?.uuid(for: "id")
+        guard let id else { return }
+
+        switch payload.type {
+        case .insert, .update:
+            guard let record = payload.record else { return }
+            try await upsertBird(from: record, id: id)
+        case .delete:
+            try await deleteBird(id: id)
         }
     }
 
@@ -1054,6 +1072,76 @@ final class RealtimeSyncService: NSObject {
         let descriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
         if let shape = try? context.fetch(descriptor).first {
             context.delete(shape)
+            try? context.save()
+        }
+    }
+
+    private func upsertBird(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.bird_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        let shapeCode: String?
+        if let explicitShapeCode = record.string(for: "bird_shape_id") {
+            shapeCode = explicitShapeCode
+        } else if let shapeServerId = record.uuid(for: "shape_id") {
+            shapeCode = nil
+            let shapeRows = try? context.fetch(FetchDescriptor<BirdShape>())
+            let _ = shapeRows // keep compile-friendly local scope for future server-id mapping
+            _ = shapeServerId
+        } else {
+            shapeCode = record.string(for: "shape_id")
+        }
+
+        let resolvedShape: BirdShape?
+        if let shapeCode {
+            let shapeDescriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeCode })
+            resolvedShape = try? context.fetch(shapeDescriptor).first
+        } else {
+            resolvedShape = nil
+        }
+
+        let staticImageName = record.string(for: "image_url") ?? record.string(for: "common_name") ?? "bird"
+
+        if let bird = existing {
+            bird.commonName = record.string(for: "common_name") ?? bird.commonName
+            bird.scientificName = record.string(for: "scientific_name") ?? bird.scientificName
+            bird.staticImageName = staticImageName
+            bird.family = record.string(for: "family")
+            bird.order_name = record.string(for: "order_name")
+            bird.descriptionText = record.string(for: "description")
+            bird.conservation_status = record.string(for: "conservation_status")
+            bird.migration_strategy = record.string(for: "migration_strategy")
+            bird.shape_id = shapeCode
+            bird.size_category = record.int(for: "size_category")
+            bird.shape = resolvedShape
+        } else {
+            let bird = Bird(
+                bird_id: id,
+                commonName: record.string(for: "common_name") ?? "Unknown Bird",
+                scientificName: record.string(for: "scientific_name") ?? "",
+                staticImageName: staticImageName,
+                family: record.string(for: "family"),
+                order_name: record.string(for: "order_name"),
+                descriptionText: record.string(for: "description"),
+                conservation_status: record.string(for: "conservation_status"),
+                migration_strategy: record.string(for: "migration_strategy"),
+                validMonths: nil,
+                likelySpot: nil,
+                shape_id: shapeCode,
+                size_category: record.int(for: "size_category"),
+                shape: resolvedShape
+            )
+            context.insert(bird)
+        }
+        try? context.save()
+    }
+
+    private func deleteBird(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.bird_id == id })
+        if let bird = try? context.fetch(descriptor).first {
+            context.delete(bird)
             try? context.save()
         }
     }
