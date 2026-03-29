@@ -51,6 +51,7 @@ final class RealtimeSyncService: NSObject {
     
     private let tables: [String] = [
         "watchlists", "watchlist_entries", "watchlist_rules", "watchlist_shares", "observed_bird_photos", "users",
+        "bird_shapes", "bird_field_marks", "field_mark_variants", "bird_field_mark_variant_links",
         "identification_sessions", "identification_results", "identification_candidates", "identification_session_marks"
     ]
     private var subscribedTables: Set<String> = []
@@ -251,6 +252,14 @@ final class RealtimeSyncService: NSObject {
                     try await handlePhotoEvent(payload)
                 case "users":
                     try await handleUserEvent(payload)
+                case "bird_shapes":
+                    try await handleBirdShapeEvent(payload)
+                case "bird_field_marks":
+                    try await handleBirdFieldMarkEvent(payload)
+                case "field_mark_variants":
+                    try await handleFieldMarkVariantEvent(payload)
+                case "bird_field_mark_variant_links":
+                    try await handleBirdFieldMarkVariantLinkEvent(payload)
                 case "identification_sessions":
                     try await handleIdentificationSessionEvent(payload)
                 case "identification_results":
@@ -334,6 +343,61 @@ final class RealtimeSyncService: NSObject {
             guard let oldRecord = payload.oldRecord,
                   let deleteId = oldRecord.uuid(for: "identification_session_id") else { return }
             try await deleteIdentificationSession(id: deleteId)
+        }
+    }
+
+    private func handleBirdShapeEvent(_ payload: RealtimePayload) async throws {
+        let shapeId = payload.record?.string(for: "bird_shape_id")
+            ?? payload.record?.string(for: "id")
+            ?? payload.oldRecord?.string(for: "bird_shape_id")
+            ?? payload.oldRecord?.string(for: "id")
+        guard let shapeId else { return }
+
+        switch payload.type {
+        case .insert, .update:
+            guard let record = payload.record else { return }
+            try await upsertBirdShape(from: record, shapeId: shapeId)
+        case .delete:
+            try await deleteBirdShape(shapeId: shapeId)
+        }
+    }
+
+    private func handleBirdFieldMarkEvent(_ payload: RealtimePayload) async throws {
+        let id = payload.record?.uuid(for: "bird_field_mark_id") ?? payload.oldRecord?.uuid(for: "bird_field_mark_id")
+        guard let id else { return }
+
+        switch payload.type {
+        case .insert, .update:
+            guard let record = payload.record else { return }
+            try await upsertBirdFieldMark(from: record, id: id)
+        case .delete:
+            try await deleteBirdFieldMark(id: id)
+        }
+    }
+
+    private func handleFieldMarkVariantEvent(_ payload: RealtimePayload) async throws {
+        let id = payload.record?.uuid(for: "field_mark_variant_id") ?? payload.oldRecord?.uuid(for: "field_mark_variant_id")
+        guard let id else { return }
+
+        switch payload.type {
+        case .insert, .update:
+            guard let record = payload.record else { return }
+            try await upsertFieldMarkVariant(from: record, id: id)
+        case .delete:
+            try await deleteFieldMarkVariant(id: id)
+        }
+    }
+
+    private func handleBirdFieldMarkVariantLinkEvent(_ payload: RealtimePayload) async throws {
+        let id = payload.record?.uuid(for: "bird_field_mark_variant_link_id") ?? payload.oldRecord?.uuid(for: "bird_field_mark_variant_link_id")
+        guard let id else { return }
+
+        switch payload.type {
+        case .insert, .update:
+            guard let record = payload.record else { return }
+            try await upsertBirdFieldMarkVariantLink(from: record, id: id)
+        case .delete:
+            try await deleteBirdFieldMarkVariantLink(id: id)
         }
     }
 
@@ -906,6 +970,16 @@ final class RealtimeSyncService: NSObject {
         if let mark = existing {
             mark.session = session
             mark.area = record.string(for: "area") ?? ""
+            if let markId = record.uuid(for: "field_mark_id") {
+                mark.field_mark_id = markId
+                let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })
+                mark.fieldMark = try? context.fetch(fieldMarkDescriptor).first
+            }
+            if let varId = record.uuid(for: "variant_id") {
+                mark.variant_id = varId
+                let variantDescriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == varId })
+                mark.variant = try? context.fetch(variantDescriptor).first
+            }
             mark.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             mark.updated_at = record.date(for: "updated_at")
             mark.deletedAt = record.date(for: "deleted_at")
@@ -919,8 +993,16 @@ final class RealtimeSyncService: NSObject {
                 session: session,
                 area: record.string(for: "area") ?? ""
             )
-            if let markId = record.uuid(for: "field_mark_id") { mark.field_mark_id = markId }
-            if let varId = record.uuid(for: "variant_id") { mark.variant_id = varId }
+            if let markId = record.uuid(for: "field_mark_id") {
+                mark.field_mark_id = markId
+                let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })
+                mark.fieldMark = try? context.fetch(fieldMarkDescriptor).first
+            }
+            if let varId = record.uuid(for: "variant_id") {
+                mark.variant_id = varId
+                let variantDescriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == varId })
+                mark.variant = try? context.fetch(variantDescriptor).first
+            }
             
             mark.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             mark.updated_at = record.date(for: "updated_at")
@@ -938,6 +1020,155 @@ final class RealtimeSyncService: NSObject {
         if let mark = try? context.fetch(descriptor).first {
             mark.deletedAt = Date()
             mark.syncStatus = .synced
+            try? context.save()
+        }
+    }
+
+    private func upsertBirdShape(from record: [String: JSONValue], shapeId: String) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
+        let existing = try? context.fetch(descriptor).first
+
+        let name = record.string(for: "name") ?? shapeId
+        let icon = record.string(for: "icon") ?? record.string(for: "icon_url") ?? ""
+
+        if let shape = existing {
+            shape.name = name
+            if !icon.isEmpty {
+                shape.icon = icon
+            }
+        } else {
+            let shape = BirdShape(bird_shape_id: shapeId, name: name, icon: icon)
+            context.insert(shape)
+        }
+
+        let birds = try? context.fetch(FetchDescriptor<Bird>(predicate: #Predicate { $0.shape_id == shapeId }))
+        if let targetShape = try? context.fetch(descriptor).first {
+            birds?.forEach { $0.shape = targetShape }
+        }
+        try? context.save()
+    }
+
+    private func deleteBirdShape(shapeId: String) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
+        if let shape = try? context.fetch(descriptor).first {
+            context.delete(shape)
+            try? context.save()
+        }
+    }
+
+    private func upsertBirdFieldMark(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        let shapeId = record.string(for: "shape_id")
+        let shape = shapeId.flatMap { value in
+            let shapeDescriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == value })
+            return try? context.fetch(shapeDescriptor).first
+        }
+
+        if let mark = existing {
+            mark.area = record.string(for: "area") ?? mark.area
+            mark.shape = shape
+        } else {
+            let mark = BirdFieldMark(area: record.string(for: "area") ?? "")
+            mark.bird_field_mark_id = id
+            mark.shape = shape
+            context.insert(mark)
+        }
+        try? context.save()
+    }
+
+    private func deleteBirdFieldMark(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == id })
+        if let mark = try? context.fetch(descriptor).first {
+            context.delete(mark)
+            try? context.save()
+        }
+    }
+
+    private func upsertFieldMarkVariant(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        let fieldMark = record.uuid(for: "field_mark_id").flatMap { fieldMarkId in
+            try? context.fetch(FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == fieldMarkId })).first
+        }
+
+        if let variant = existing {
+            variant.name = record.string(for: "name") ?? variant.name
+            variant.fieldMark = fieldMark
+        } else {
+            let variant = FieldMarkVariant(name: record.string(for: "name") ?? "")
+            variant.field_mark_variant_id = id
+            variant.fieldMark = fieldMark
+            context.insert(variant)
+        }
+        try? context.save()
+    }
+
+    private func deleteFieldMarkVariant(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == id })
+        if let variant = try? context.fetch(descriptor).first {
+            context.delete(variant)
+            try? context.save()
+        }
+    }
+
+    private func upsertBirdFieldMarkVariantLink(from record: [String: JSONValue], id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<BirdFieldMarkVariantLink>(predicate: #Predicate { $0.bird_field_mark_variant_link_id == id })
+        let existing = try? context.fetch(descriptor).first
+
+        guard let birdId = record.uuid(for: "bird_id"),
+              let bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId) else { return }
+
+        let area = record.string(for: "area") ?? ""
+        let variantId = record.uuid(for: "variant_id")
+        let fieldMarkId = record.uuid(for: "field_mark_id")
+        let fieldMark = fieldMarkId.flatMap { markId in
+            try? context.fetch(FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })).first
+        }
+        let variant = variantId.flatMap { value in
+            try? context.fetch(FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == value })).first
+        }
+
+        let logicalMatches = try? context.fetch(FetchDescriptor<BirdFieldMarkVariantLink>())
+        let logicalExisting = logicalMatches?.first {
+            $0.bird?.bird_id == birdId &&
+            $0.area.caseInsensitiveCompare(area) == .orderedSame &&
+            $0.variant?.field_mark_variant_id == variantId
+        }
+
+        if let link = existing ?? logicalExisting {
+            link.bird_field_mark_variant_link_id = id
+            link.bird = bird
+            link.fieldMark = fieldMark
+            link.variant = variant
+            link.area = area
+        } else {
+            let link = BirdFieldMarkVariantLink(
+                bird_field_mark_variant_link_id: id,
+                bird: bird,
+                fieldMark: fieldMark,
+                variant: variant,
+                area: area
+            )
+            context.insert(link)
+        }
+        try? context.save()
+    }
+
+    private func deleteBirdFieldMarkVariantLink(id: UUID) async throws {
+        let context = WatchlistManager.shared.context
+        let descriptor = FetchDescriptor<BirdFieldMarkVariantLink>(predicate: #Predicate { $0.bird_field_mark_variant_link_id == id })
+        if let link = try? context.fetch(descriptor).first {
+            context.delete(link)
             try? context.save()
         }
     }

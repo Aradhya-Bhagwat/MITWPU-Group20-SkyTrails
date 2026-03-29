@@ -213,33 +213,44 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let candidate = birdResults[indexPath.item]
-        guard let bird = candidate.bird else { return UICollectionViewCell() }
-        
         let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: "ResultCollectionViewCell",
             for: indexPath
         ) as! ResultCollectionViewCell
-        
+
         let confidencePercent = String(Int(candidate.confidence * 100))
-        cell.configure(
-            image: UIImage(named: bird.staticImageName),
-            name: bird.commonName,
-            percentage: confidencePercent
-        )
+
+        if let bird = candidate.bird {
+            cell.configure(
+                image: UIImage(named: bird.staticImageName),
+                name: bird.commonName,
+                percentage: confidencePercent
+            )
+
+            imageLoadTasks[indexPath]?.cancel()
+            imageLoadTasks[indexPath] = Task { [weak self, weak collectionView] in
+                let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil)
+                guard !Task.isCancelled else { return }
+                guard let self, let collectionView else { return }
+                guard let liveCell = collectionView.cellForItem(at: indexPath) as? ResultCollectionViewCell else { return }
+                guard liveCell.indexPath == indexPath else { return }
+                liveCell.resultImageView.image = loaded ?? UIImage(named: bird.staticImageName)
+            }
+        } else {
+            cell.configure(
+                image: UIImage(systemName: "questionmark.circle.fill"),
+                name: "Unknown Species",
+                percentage: confidencePercent
+            )
+            cell.resultImageView.tintColor = .secondaryLabel
+            imageLoadTasks[indexPath]?.cancel()
+            imageLoadTasks[indexPath] = nil
+        }
+
         cell.isSelectedCell = (selectedIndexPath == indexPath)
 
         cell.delegate = self
         cell.indexPath = indexPath
-
-        imageLoadTasks[indexPath]?.cancel()
-        imageLoadTasks[indexPath] = Task { [weak self, weak collectionView] in
-            let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil)
-            guard !Task.isCancelled else { return }
-            guard let self, let collectionView else { return }
-            guard let liveCell = collectionView.cellForItem(at: indexPath) as? ResultCollectionViewCell else { return }
-            guard liveCell.indexPath == indexPath else { return }
-            liveCell.resultImageView.image = loaded ?? UIImage(named: bird.staticImageName)
-        }
         
         return cell
     }

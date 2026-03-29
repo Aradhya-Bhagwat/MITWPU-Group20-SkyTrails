@@ -377,6 +377,81 @@ struct ObservedBirdPhotoRow: Codable, Sendable {
     }
 }
 
+struct BirdShapeRow: Decodable, Sendable {
+    let birdShapeId: String
+    let name: String
+    let icon: String?
+
+    enum CodingKeys: String, CodingKey {
+        case birdShapeId = "bird_shape_id"
+        case id
+        case name
+        case icon
+        case iconURL = "icon_url"
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let explicitId = try container.decodeIfPresent(String.self, forKey: .birdShapeId) {
+            birdShapeId = explicitId
+        } else if let legacyUUID = try container.decodeIfPresent(UUID.self, forKey: .id) {
+            birdShapeId = legacyUUID.uuidString
+        } else if let legacyString = try container.decodeIfPresent(String.self, forKey: .id) {
+            birdShapeId = legacyString
+        } else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.birdShapeId,
+                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Missing bird shape identifier")
+            )
+        }
+        name = try container.decode(String.self, forKey: .name)
+        icon = try (
+            container.decodeIfPresent(String.self, forKey: .icon)
+            ?? container.decodeIfPresent(String.self, forKey: .iconURL)
+        )
+    }
+}
+
+struct BirdFieldMarkRow: Decodable, Sendable {
+    let id: UUID
+    let shapeId: String
+    let area: String
+
+    enum CodingKeys: String, CodingKey {
+        case id = "bird_field_mark_id"
+        case shapeId = "shape_id"
+        case area
+    }
+}
+
+struct FieldMarkVariantRow: Decodable, Sendable {
+    let id: UUID
+    let fieldMarkId: UUID?
+    let name: String
+
+    enum CodingKeys: String, CodingKey {
+        case id = "field_mark_variant_id"
+        case fieldMarkId = "field_mark_id"
+        case name
+    }
+}
+
+struct BirdFieldMarkVariantLinkRow: Decodable, Sendable {
+    let id: UUID
+    let birdId: UUID
+    let fieldMarkId: UUID?
+    let variantId: UUID?
+    let area: String
+
+    enum CodingKeys: String, CodingKey {
+        case id = "bird_field_mark_variant_link_id"
+        case birdId = "bird_id"
+        case fieldMarkId = "field_mark_id"
+        case variantId = "variant_id"
+        case area
+    }
+}
+
 struct IdentificationSessionRow: Codable, Sendable {
     let id: UUID
     let userId: UUID

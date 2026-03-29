@@ -25,6 +25,10 @@ enum InitialSyncError: Error, LocalizedError {
 }
 
 struct InitialSyncSummary: Sendable {
+    let shapesSynced: Int
+    let fieldMarksSynced: Int
+    let variantsSynced: Int
+    let birdLinksSynced: Int
     let watchlistsSynced: Int
     let entriesSynced: Int
     let rulesSynced: Int
@@ -37,6 +41,7 @@ struct InitialSyncSummary: Sendable {
     let timestamp: Date
     
     nonisolated var totalSynced: Int {
+        shapesSynced + fieldMarksSynced + variantsSynced + birdLinksSynced +
         watchlistsSynced + entriesSynced + rulesSynced + sharesSynced + photosSynced +
         sessionsSynced + resultsSynced + candidatesSynced + marksSynced
     }
@@ -82,6 +87,34 @@ actor InitialSyncService {
             print("DEBUG: InitialSyncService - Failed to restore user profile: \(error)")
         }
         // ---------------------------------
+
+        let shapeRows: [BirdShapeRow] = try await fetchFromSupabase(
+            table: "bird_shapes",
+            query: "select=*",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let fieldMarkRows: [BirdFieldMarkRow] = try await fetchFromSupabase(
+            table: "bird_field_marks",
+            query: "select=*",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let variantRows: [FieldMarkVariantRow] = try await fetchFromSupabase(
+            table: "field_mark_variants",
+            query: "select=*",
+            config: config,
+            accessToken: accessToken
+        )
+
+        let birdLinkRows: [BirdFieldMarkVariantLinkRow] = try await fetchFromSupabase(
+            table: "bird_field_mark_variant_links",
+            query: "select=*",
+            config: config,
+            accessToken: accessToken
+        )
 
         let ownedWatchlistRows: [WatchlistRow] = try await fetchFromSupabase(
             table: "watchlists",
@@ -199,6 +232,18 @@ actor InitialSyncService {
             let context = WatchlistManager.shared.context
             
             // 1. Identify and Merge Parent Objects first
+            let shapeCount = try mergeBirdShapes(shapeRows, context: context)
+            try? context.save()
+
+            let fieldMarkCount = try mergeBirdFieldMarks(fieldMarkRows, context: context)
+            try? context.save()
+
+            let variantCount = try mergeFieldMarkVariants(variantRows, context: context)
+            try? context.save()
+
+            let linkCount = try mergeBirdFieldMarkVariantLinks(birdLinkRows, context: context)
+            try? context.save()
+
             let wCount = try mergeWatchlists(watchlistRows, context: context)
             try? context.save()
             
@@ -232,19 +277,23 @@ actor InitialSyncService {
             try refreshDerivedWatchlistFields(context: context)
             try? context.save()
             
-            return (wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
+            return (shapeCount, fieldMarkCount, variantCount, linkCount, wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
         }
         
         let summary = InitialSyncSummary(
-            watchlistsSynced: counts.0,
-            entriesSynced: counts.1,
-            rulesSynced: counts.2,
-            sharesSynced: counts.3,
-            photosSynced: counts.4,
-            sessionsSynced: counts.5,
-            resultsSynced: counts.6,
-            candidatesSynced: counts.7,
-            marksSynced: counts.8,
+            shapesSynced: counts.0,
+            fieldMarksSynced: counts.1,
+            variantsSynced: counts.2,
+            birdLinksSynced: counts.3,
+            watchlistsSynced: counts.4,
+            entriesSynced: counts.5,
+            rulesSynced: counts.6,
+            sharesSynced: counts.7,
+            photosSynced: counts.8,
+            sessionsSynced: counts.9,
+            resultsSynced: counts.10,
+            candidatesSynced: counts.11,
+            marksSynced: counts.12,
             timestamp: Date()
         )
         return summary
@@ -284,7 +333,147 @@ actor InitialSyncService {
 
         return result
     }
-    
+
+    private nonisolated func mergeBirdShapes(_ rows: [BirdShapeRow], context: ModelContext) throws -> Int {
+        let existingShapes = try context.fetch(FetchDescriptor<BirdShape>())
+        var shapeById = Dictionary(uniqueKeysWithValues: existingShapes.map { ($0.bird_shape_id, $0) })
+
+        let birds = try context.fetch(FetchDescriptor<Bird>())
+        let birdsByShapeId = Dictionary(grouping: birds.compactMap { bird -> (String, Bird)? in
+            guard let shapeId = bird.shape_id else { return nil }
+            return (shapeId, bird)
+        }, by: \.0).mapValues { $0.map(\.1) }
+
+        var syncedCount = 0
+        for row in rows {
+            let shape: BirdShape
+            if let existing = shapeById[row.birdShapeId] {
+                existing.name = row.name
+                if let icon = row.icon, !icon.isEmpty {
+                    existing.icon = icon
+                }
+                shape = existing
+            } else {
+                shape = BirdShape(
+                    bird_shape_id: row.birdShapeId,
+                    name: row.name,
+                    icon: row.icon ?? ""
+                )
+                context.insert(shape)
+                shapeById[row.birdShapeId] = shape
+            }
+
+            if let linkedBirds = birdsByShapeId[row.birdShapeId] {
+                for bird in linkedBirds where bird.shape == nil || bird.shape?.bird_shape_id != row.birdShapeId {
+                    bird.shape = shape
+                }
+            }
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeBirdFieldMarks(_ rows: [BirdFieldMarkRow], context: ModelContext) throws -> Int {
+        let existingMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
+        var markById = Dictionary(uniqueKeysWithValues: existingMarks.map { ($0.bird_field_mark_id, $0) })
+
+        let shapes = try context.fetch(FetchDescriptor<BirdShape>())
+        let shapeById = Dictionary(uniqueKeysWithValues: shapes.map { ($0.bird_shape_id, $0) })
+
+        var syncedCount = 0
+        for row in rows {
+            let mark: BirdFieldMark
+            if let existing = markById[row.id] {
+                existing.area = row.area
+                existing.shape = shapeById[row.shapeId]
+                mark = existing
+            } else {
+                mark = BirdFieldMark(area: row.area)
+                mark.bird_field_mark_id = row.id
+                mark.shape = shapeById[row.shapeId]
+                context.insert(mark)
+                markById[row.id] = mark
+            }
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeFieldMarkVariants(_ rows: [FieldMarkVariantRow], context: ModelContext) throws -> Int {
+        let existingVariants = try context.fetch(FetchDescriptor<FieldMarkVariant>())
+        var variantById = Dictionary(uniqueKeysWithValues: existingVariants.map { ($0.field_mark_variant_id, $0) })
+
+        let fieldMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
+        let fieldMarkById = Dictionary(uniqueKeysWithValues: fieldMarks.map { ($0.bird_field_mark_id, $0) })
+
+        var syncedCount = 0
+        for row in rows {
+            let variant: FieldMarkVariant
+            if let existing = variantById[row.id] {
+                existing.name = row.name
+                existing.fieldMark = row.fieldMarkId.flatMap { fieldMarkById[$0] }
+                variant = existing
+            } else {
+                variant = FieldMarkVariant(name: row.name)
+                variant.field_mark_variant_id = row.id
+                variant.fieldMark = row.fieldMarkId.flatMap { fieldMarkById[$0] }
+                context.insert(variant)
+                variantById[row.id] = variant
+            }
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
+    private nonisolated func mergeBirdFieldMarkVariantLinks(_ rows: [BirdFieldMarkVariantLinkRow], context: ModelContext) throws -> Int {
+        let existingLinks = try context.fetch(FetchDescriptor<BirdFieldMarkVariantLink>())
+        var linkById = Dictionary(uniqueKeysWithValues: existingLinks.map { ($0.bird_field_mark_variant_link_id, $0) })
+        var linkByLogicalKey: [String: BirdFieldMarkVariantLink] = [:]
+        for link in existingLinks {
+            let birdId = link.bird?.bird_id.uuidString.lowercased() ?? ""
+            let variantId = link.variant?.field_mark_variant_id.uuidString.lowercased() ?? ""
+            let key = "\(birdId)|\(link.area.lowercased())|\(variantId)"
+            linkByLogicalKey[key] = link
+        }
+
+        let birds = try context.fetch(FetchDescriptor<Bird>())
+        let birdById = Dictionary(uniqueKeysWithValues: birds.map { ($0.bird_id, $0) })
+        let fieldMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
+        let fieldMarkById = Dictionary(uniqueKeysWithValues: fieldMarks.map { ($0.bird_field_mark_id, $0) })
+        let variants = try context.fetch(FetchDescriptor<FieldMarkVariant>())
+        let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.field_mark_variant_id, $0) })
+
+        var syncedCount = 0
+        for row in rows {
+            guard let bird = birdById[row.birdId] else { continue }
+            let logicalKey = "\(row.birdId.uuidString.lowercased())|\(row.area.lowercased())|\((row.variantId?.uuidString.lowercased()) ?? "")"
+
+            let link: BirdFieldMarkVariantLink
+            if let existing = linkById[row.id] ?? linkByLogicalKey[logicalKey] {
+                existing.bird_field_mark_variant_link_id = row.id
+                existing.bird = bird
+                existing.fieldMark = row.fieldMarkId.flatMap { fieldMarkById[$0] }
+                existing.variant = row.variantId.flatMap { variantById[$0] }
+                existing.area = row.area
+                link = existing
+            } else {
+                link = BirdFieldMarkVariantLink(
+                    bird_field_mark_variant_link_id: row.id,
+                    bird: bird,
+                    fieldMark: row.fieldMarkId.flatMap { fieldMarkById[$0] },
+                    variant: row.variantId.flatMap { variantById[$0] },
+                    area: row.area
+                )
+                context.insert(link)
+            }
+
+            linkById[row.id] = link
+            linkByLogicalKey[logicalKey] = link
+            syncedCount += 1
+        }
+        return syncedCount
+    }
+
     private nonisolated func mergeWatchlists(_ rows: [WatchlistRow], context: ModelContext) throws -> Int {
         let existingWatchlists = try context.fetch(FetchDescriptor<Watchlist>())
         var existingById: [UUID: Watchlist] = [:]
@@ -560,8 +749,9 @@ actor InitialSyncService {
 
         var syncedCount = 0
         for row in rows {
-            // Safer check: only merge if parent result and target bird exist locally
-            guard resultById[row.resultId] != nil, birdById[row.birdId] != nil else { continue }
+            // Merge candidates even if the related bird is temporarily missing locally.
+            // That keeps synced result sets visible instead of dropping rows entirely.
+            guard resultById[row.resultId] != nil else { continue }
             
             let candidate: IdentificationCandidate
             if let existing = existingById[row.id] {
@@ -593,6 +783,12 @@ actor InitialSyncService {
             sessionById[session.identification_session_id] = session
         }
 
+        let fieldMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
+        let fieldMarkById = Dictionary(uniqueKeysWithValues: fieldMarks.map { ($0.bird_field_mark_id, $0) })
+
+        let variants = try context.fetch(FetchDescriptor<FieldMarkVariant>())
+        let variantById = Dictionary(uniqueKeysWithValues: variants.map { ($0.field_mark_variant_id, $0) })
+
         var syncedCount = 0
         for row in rows {
             // Safer check: only merge if parent session exists locally
@@ -600,10 +796,10 @@ actor InitialSyncService {
             
             let mark: IdentificationSessionFieldMark
             if let existing = existingById[row.id] {
-                updateIdentificationSessionMark(existing, from: row, sessionById: sessionById)
+                updateIdentificationSessionMark(existing, from: row, sessionById: sessionById, fieldMarkById: fieldMarkById, variantById: variantById)
                 mark = existing
             } else {
-                mark = createIdentificationSessionMark(from: row, sessionById: sessionById)
+                mark = createIdentificationSessionMark(from: row, sessionById: sessionById, fieldMarkById: fieldMarkById, variantById: variantById)
                 context.insert(mark)
             }
             mark.syncStatus = .synced
@@ -979,7 +1175,12 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
         candidate.updated_at = row.updated_at
     }
 
-    private nonisolated func createIdentificationSessionMark(from row: IdentificationSessionFieldMarkRow, sessionById: [UUID: IdentificationSession]) -> IdentificationSessionFieldMark {
+    private nonisolated func createIdentificationSessionMark(
+        from row: IdentificationSessionFieldMarkRow,
+        sessionById: [UUID: IdentificationSession],
+        fieldMarkById: [UUID: BirdFieldMark],
+        variantById: [UUID: FieldMarkVariant]
+    ) -> IdentificationSessionFieldMark {
         let mark = IdentificationSessionFieldMark(
             identification_session_mark_id: row.id,
             identification_session_id: row.sessionId,
@@ -987,17 +1188,25 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
             variant_id: row.variantId,
             area: row.area
         )
-        updateIdentificationSessionMark(mark, from: row, sessionById: sessionById)
+        updateIdentificationSessionMark(mark, from: row, sessionById: sessionById, fieldMarkById: fieldMarkById, variantById: variantById)
         return mark
     }
 
-    private nonisolated func updateIdentificationSessionMark(_ mark: IdentificationSessionFieldMark, from row: IdentificationSessionFieldMarkRow, sessionById: [UUID: IdentificationSession]) {
+    private nonisolated func updateIdentificationSessionMark(
+        _ mark: IdentificationSessionFieldMark,
+        from row: IdentificationSessionFieldMarkRow,
+        sessionById: [UUID: IdentificationSession],
+        fieldMarkById: [UUID: BirdFieldMark],
+        variantById: [UUID: FieldMarkVariant]
+    ) {
         mark.identification_session_id = row.sessionId
         if let session = sessionById[row.sessionId] {
             mark.session = session
         }
         mark.field_mark_id = row.fieldMarkId
+        mark.fieldMark = fieldMarkById[row.fieldMarkId]
         mark.variant_id = row.variantId
+        mark.variant = variantById[row.variantId]
         mark.area = row.area
         mark.serverRowVersion = Int64(row.rowVersion)
         mark.deletedAt = row.deletedAt
