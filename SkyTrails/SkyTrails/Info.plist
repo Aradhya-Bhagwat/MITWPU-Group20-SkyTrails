@@ -25,8 +25,14 @@
 	<string>bird</string>
 	<key>SUPABASE_IDENTIFICATION_BUCKET</key>
 	<string>identification-assets</string>
+	<key>SUPABASE_IDENTIFICATION_CATEGORY_MANIFEST_PATH</key>
+	<string>identification_categories_manifest.json</string>
 	<key>SUPABASE_IDENTIFICATION_MANIFEST_PATH</key>
 	<string>identification_manifest.json</string>
+	<key>SUPABASE_IDENTIFICATION_SHAPES_BUCKET</key>
+	<string>identification-shapes</string>
+	<key>SUPABASE_IDENTIFICATION_SHAPES_MANIFEST_PATH</key>
+	<string>identification_shapes_manifest.json</string>
 	<key>SUPABASE_OTP_LENGTH</key>
 	<integer>6</integer>
 	<key>SUPABASE_OTP_RESEND_SECONDS</key>

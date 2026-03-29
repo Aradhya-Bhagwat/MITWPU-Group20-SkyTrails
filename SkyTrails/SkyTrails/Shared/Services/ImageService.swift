@@ -14,6 +14,23 @@ struct IdentificationManifest: Codable {
     let items: [String: ManifestItem]
 }
 
+private enum IdentificationManifestSource: String {
+    case main
+    case categories
+    case shapes
+
+    var refreshKey: String {
+        switch self {
+        case .main:
+            return "identification_manifest_last_refresh"
+        case .categories:
+            return "identification_categories_manifest_last_refresh"
+        case .shapes:
+            return "identification_shapes_manifest_last_refresh"
+        }
+    }
+}
+
 protocol ImageProviding {
     func image(for key: String, shapeId: String?) async -> UIImage?
     func prefetch(keys: [String]) async
@@ -28,11 +45,10 @@ final class ImageService: ImageProviding {
 
     private let memoryCache = NSCache<NSString, UIImage>()
     private let cacheTTL: TimeInterval = 24 * 60 * 60
-    private let refreshKey = "identification_manifest_last_refresh"
     private let fileManager = FileManager.default
     private let manifestDecoder = JSONDecoder()
 
-    private var manifest: IdentificationManifest?
+    private var manifests: [IdentificationManifestSource: IdentificationManifest] = [:]
     private var failedRemoteKeys: Set<String> = []
     private let allowedDefaultProfileKeys: Set<String> = [
         "id_canvas_finch_beak_default",
@@ -40,23 +56,6 @@ final class ImageService: ImageProviding {
         "id_canvas_finch_leg_default",
         "id_canvas_finch_tail_default",
     ]
-    private let localOnlyKeys: Set<String> = [
-        "id_bird_underparts",
-        "id_bird_throat",
-        "id_bird_thigh",
-        "id_bird_wings",
-        "id_bird_neck",
-        "id_bird_eye",
-        "id_bird_facemask",
-        "id_bird_nape",
-        "id_bird_tail",
-        "id_bird_crown",
-        "id_bird_beak",
-        "id_bird_chest",
-        "id_bird_back",
-        "id_bird_leg",
-    ]
-
     private init() {
         memoryCache.countLimit = 500
     }
@@ -93,16 +92,12 @@ final class ImageService: ImageProviding {
         
         if normalizedKey.isEmpty { return nil }
         
-        if localOnlyKeys.contains(normalizedKey) {
-            return nil
-        }
-        
         let memKey = normalizedKey as NSString
         if let cached = memoryCache.object(forKey: memKey) {
             return cached
         }
         
-        let diskKey = diskCacheKey(for: normalizedKey)
+        let diskKey = diskCacheKey(for: normalizedKey, source: manifestSource(for: normalizedKey))
         if let diskImage = loadFromDisk(cacheKey: diskKey) {
             memoryCache.setObject(diskImage, forKey: memKey)
             return diskImage
@@ -145,23 +140,20 @@ final class ImageService: ImageProviding {
             mappedShapeId = "finch"
         }
         let normalizedShapeId = mappedShapeId
+        let manifestSource = manifestSource(for: normalizedKey)
 
         let memKey = normalizedKey as NSString
         if let cached = memoryCache.object(forKey: memKey) {
             return cached
         }
 
-        if localOnlyKeys.contains(normalizedKey) {
-            return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
-        }
-
         if isDisallowedDefaultProfileKey(normalizedKey) {
             return nil
         }
 
-        await refreshManifestIfNeeded(force: false)
+        await refreshManifestIfNeeded(force: false, source: manifestSource)
 
-        let diskKey = diskCacheKey(for: normalizedKey)
+        let diskKey = diskCacheKey(for: normalizedKey, source: manifestSource)
         if let diskImage = loadFromDisk(cacheKey: diskKey) {
             memoryCache.setObject(diskImage, forKey: memKey)
             return diskImage
@@ -171,7 +163,7 @@ final class ImageService: ImageProviding {
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
-        guard let itemLookup = lookupManifestItem(for: manifestKeyCandidates) else {
+        guard let itemLookup = lookupManifestItem(for: manifestKeyCandidates, source: manifestSource) else {
             if shouldTryBirdBucketFallback(for: normalizedKey),
                let birdImage = await loadFromBirdBucket(
                    keyCandidates: keyCandidates,
@@ -183,7 +175,11 @@ final class ImageService: ImageProviding {
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
         
-        guard let remoteURL = remoteURL(for: itemLookup.item.path, shapeId: normalizedShapeId) else {
+        guard let remoteURL = remoteURL(
+            for: itemLookup.item.path,
+            source: manifestSource,
+            shapeId: normalizedShapeId
+        ) else {
             failedRemoteKeys.insert(normalizedKey)
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
@@ -217,14 +213,20 @@ final class ImageService: ImageProviding {
     }
 
     func refreshManifestIfNeeded(force: Bool) async {
+        await refreshManifestIfNeeded(force: force, source: .main)
+        await refreshManifestIfNeeded(force: force, source: .categories)
+        await refreshManifestIfNeeded(force: force, source: .shapes)
+    }
+
+    private func refreshManifestIfNeeded(force: Bool, source: IdentificationManifestSource) async {
         if !force,
-           let lastRefresh = UserDefaults.standard.object(forKey: refreshKey) as? Date,
+           let lastRefresh = UserDefaults.standard.object(forKey: source.refreshKey) as? Date,
            Date().timeIntervalSince(lastRefresh) < cacheTTL,
-           manifest != nil {
+           manifests[source] != nil {
             return
         }
 
-        guard let manifestURL = manifestURL() else {
+        guard let manifestURL = manifestURL(for: source) else {
             return
         }
 
@@ -234,38 +236,74 @@ final class ImageService: ImageProviding {
                 return
             }
             let decoded = try manifestDecoder.decode(IdentificationManifest.self, from: data)
-            manifest = decoded
+            manifests[source] = decoded
             failedRemoteKeys.removeAll()
-            UserDefaults.standard.set(Date(), forKey: refreshKey)
+            UserDefaults.standard.set(Date(), forKey: source.refreshKey)
         } catch {
         }
     }
 
-    private func manifestURL() -> URL? {
+    private func manifestURL(for source: IdentificationManifestSource) -> URL? {
         guard let config = try? SupabaseConfig.load() else { return nil }
-        let bucket = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_IDENTIFICATION_BUCKET") as? String)?
+        let bucketKey: String
+        let manifestPathKey: String
+        let fallbackBucket: String
+        let fallbackPath: String
+        switch source {
+        case .main:
+            bucketKey = "SUPABASE_IDENTIFICATION_BUCKET"
+            manifestPathKey = "SUPABASE_IDENTIFICATION_MANIFEST_PATH"
+            fallbackBucket = "identification-assets"
+            fallbackPath = "identification_manifest.json"
+        case .categories:
+            bucketKey = "SUPABASE_IDENTIFICATION_BUCKET"
+            manifestPathKey = "SUPABASE_IDENTIFICATION_CATEGORY_MANIFEST_PATH"
+            fallbackBucket = "identification-assets"
+            fallbackPath = "identification_categories_manifest.json"
+        case .shapes:
+            bucketKey = "SUPABASE_IDENTIFICATION_SHAPES_BUCKET"
+            manifestPathKey = "SUPABASE_IDENTIFICATION_SHAPES_MANIFEST_PATH"
+            fallbackBucket = "identification-shapes"
+            fallbackPath = "identification_shapes_manifest.json"
+        }
+        let bucket = (Bundle.main.object(forInfoDictionaryKey: bucketKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let manifestPath = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_IDENTIFICATION_MANIFEST_PATH") as? String)?
+        let manifestPath = (Bundle.main.object(forInfoDictionaryKey: manifestPathKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let safeBucket = (bucket?.isEmpty == false) ? bucket! : "identification-assets"
-        let safeManifestPath = (manifestPath?.isEmpty == false) ? manifestPath! : "identification_manifest.json"
+        let safeBucket = (bucket?.isEmpty == false) ? bucket! : fallbackBucket
+        let safeManifestPath = (manifestPath?.isEmpty == false) ? manifestPath! : fallbackPath
 
         return config.projectURL.appendingPathComponent("storage/v1/object/public/\(safeBucket)/\(safeManifestPath)")
     }
 
-    private func remoteURL(for objectPath: String, bucketOverride: String? = nil, shapeId: String? = nil) -> URL? {
+    private func remoteURL(
+        for objectPath: String,
+        source: IdentificationManifestSource = .main,
+        bucketOverride: String? = nil,
+        shapeId: String? = nil
+    ) -> URL? {
         guard let config = try? SupabaseConfig.load() else { return nil }
-        let configuredBucket = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_IDENTIFICATION_BUCKET") as? String)?
+        let configuredBucketKey: String
+        let fallbackBucket: String
+        switch source {
+        case .main, .categories:
+            configuredBucketKey = "SUPABASE_IDENTIFICATION_BUCKET"
+            fallbackBucket = "identification-assets"
+        case .shapes:
+            configuredBucketKey = "SUPABASE_IDENTIFICATION_SHAPES_BUCKET"
+            fallbackBucket = "identification-shapes"
+        }
+        let configuredBucket = (Bundle.main.object(forInfoDictionaryKey: configuredBucketKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let safeBucket = (bucketOverride?.isEmpty == false)
             ? bucketOverride!
-            : ((configuredBucket?.isEmpty == false) ? configuredBucket! : "identification-assets")
+            : ((configuredBucket?.isEmpty == false) ? configuredBucket! : fallbackBucket)
         
         var cleanedPath = objectPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard !cleanedPath.isEmpty else { return nil }
 
-        if let shapeId = shapeId, !shapeId.isEmpty {
+        if source == .main, let shapeId = shapeId, !shapeId.isEmpty {
             let shapePrefix = "canvas/\(shapeId)/"
             if !cleanedPath.hasPrefix(shapePrefix) {
                 cleanedPath = shapePrefix + cleanedPath
@@ -286,9 +324,10 @@ final class ImageService: ImageProviding {
         return dir
     }
 
-    private func diskCacheKey(for key: String) -> String {
+    private func diskCacheKey(for key: String, source: IdentificationManifestSource) -> String {
+        let manifest = manifests[source]
         let fingerprint = manifest?.items[key]?.checksum ?? manifest?.items[key]?.path ?? key
-        let payload = "\(key)|\(fingerprint)"
+        let payload = "\(source.rawValue)|\(key)|\(fingerprint)"
         let hash = SHA256.hash(data: Data(payload.utf8))
         return hash.map { String(format: "%02x", $0) }.joined()
     }
@@ -325,14 +364,28 @@ final class ImageService: ImageProviding {
         return candidates
     }
 
-    private func lookupManifestItem(for candidates: [String]) -> (key: String, item: ManifestItem)? {
-        guard let items = manifest?.items else { return nil }
+    private func lookupManifestItem(
+        for candidates: [String],
+        source: IdentificationManifestSource
+    ) -> (key: String, item: ManifestItem)? {
+        guard let items = manifests[source]?.items else { return nil }
         for candidate in candidates {
             if let item = items[candidate] {
                 return (candidate, item)
             }
         }
         return nil
+    }
+
+    private func manifestSource(for key: String) -> IdentificationManifestSource {
+        if key.hasPrefix("id_bird_") {
+            return .categories
+        }
+        if key.hasPrefix("id_shape_"),
+           !key.contains("_base") {
+            return .shapes
+        }
+        return .main
     }
 
     private func fallbackAssetImage(for candidates: [String], originalKey: String) -> UIImage? {
