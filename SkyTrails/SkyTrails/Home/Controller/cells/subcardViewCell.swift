@@ -81,6 +81,10 @@ class subcardViewCell: UICollectionViewCell {
             layer.shadowOpacity = 0.12
             layer.shadowOffset = CGSize(width: 0, height: 3)
             layer.shadowRadius = 6
+
+            birdNameLabel.textAlignment = .left
+            badgeSubtitleLabel.textAlignment = .left
+            sightabilityTextLabel.textAlignment = .left
         
             updateSightabilityIcon(pointSize: 12, color: .systemBlue)
             updateExpandedBadgeIcon()
@@ -122,7 +126,7 @@ class subcardViewCell: UICollectionViewCell {
             updateExpandedBadgeIcon()
             let sightabilityPointSize = sightabilityTextLabel.font.pointSize
             updateSightabilityIcon(pointSize: sightabilityPointSize, color: effectiveBadgeColor.withAlphaComponent(1.0))
-            sightabilityTextLabel.text = "Sightability - \(birdData.sightabilityPercent)%"
+            sightabilityTextLabel.text = "Sightability \(birdData.sightabilityPercent)%"
         }
     
     func setExpanded(_ expanded: Bool) {
