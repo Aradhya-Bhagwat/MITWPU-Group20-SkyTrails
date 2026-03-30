@@ -38,9 +38,12 @@ class PredictMapViewController: UIViewController {
     private var initialLoadY: CGFloat = 0
     private var mapRenderToken: Int = 0
     private var predictionProbabilityByBirdName: [String: Int] = [:]
+    private var currentGeoJSONOverlays: [MKOverlay] = []
+
     private enum OverlayMode {
         case mapItemArea
         case inputRadius
+        case none
     }
         
     override func viewDidLoad() {
@@ -48,6 +51,21 @@ class PredictMapViewController: UIViewController {
         setupMap()
         setupCustomModal()
         mapView.delegate = self
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        // 3-Second Janitor: Clear memory after 3 seconds to prevent RAM bloat
+        Task {
+            try? await Task.sleep(nanoseconds: 3 * 1_000_000_000)
+            await MainActor.run {
+                if !self.currentGeoJSONOverlays.isEmpty {
+                    self.mapView.removeOverlays(self.currentGeoJSONOverlays)
+                    self.currentGeoJSONOverlays.removeAll()
+                }
+            }
+        }
     }
         
     private func updateMap(
@@ -64,6 +82,7 @@ class PredictMapViewController: UIViewController {
 
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
+        currentGeoJSONOverlays.removeAll()
 
         var annotations: [MKAnnotation] = []
         var locationCoordinates: [CLLocationCoordinate2D] = []
@@ -85,6 +104,8 @@ class PredictMapViewController: UIViewController {
                 subtitle: nil
             )
             annotations.append(annotation)
+
+            if overlayMode == .none { continue }
 
             if overlayMode == .inputRadius {
                 let radiusKm = max(0.2, Double(input.areaValue))
@@ -282,7 +303,7 @@ class PredictMapViewController: UIViewController {
         useInputRadiusOverlay: Bool = false
     ) {
             
-        let overlayMode: OverlayMode = useInputRadiusOverlay ? .inputRadius : .mapItemArea
+        let overlayMode: OverlayMode = .none
         updateMap(with: inputs, predictions: predictions, overlayMode: overlayMode)
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
@@ -381,6 +402,11 @@ class PredictMapViewController: UIViewController {
             return annotation.subtitle??.contains("Predicted near") ?? false
         }
         mapView.removeAnnotations(birdAnnotations)
+        
+        // Remove ALL existing GeoJSON overlays
+        mapView.removeOverlays(currentGeoJSONOverlays)
+        currentGeoJSONOverlays.removeAll()
+
         let coord = CLLocationCoordinate2D(latitude: prediction.matchedLocation.lat, longitude: prediction.matchedLocation.lon)
         let birdPin = PredictionAnnotation(
             kind: .bird,
@@ -390,6 +416,38 @@ class PredictMapViewController: UIViewController {
             probability: prediction.spottingProbability
         )
         mapView.addAnnotation(birdPin)
+
+        // Fetch and Render GeoJSON Patch Map
+        if let speciesCode = prediction.ebirdSpeciesCode {
+            Task {
+                do {
+                    let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+                    let geoJSONData = try await SkyTrailsAPIService.shared.fetchGeoJSON(ebirdSpeciesCode: speciesCode, weekNumber: currentWeek)
+                    
+                    let decoder = MKGeoJSONDecoder()
+                    let objects = try decoder.decode(geoJSONData)
+                    
+                    await MainActor.run {
+                        for object in objects {
+                            if let feature = object as? MKGeoJSONFeature {
+                                for geometry in feature.geometry {
+                                    if let polygon = geometry as? MKPolygon {
+                                        self.mapView.addOverlay(polygon)
+                                        self.currentGeoJSONOverlays.append(polygon)
+                                    } else if let multiPolygon = geometry as? MKMultiPolygon {
+                                        self.mapView.addOverlay(multiPolygon)
+                                        self.currentGeoJSONOverlays.append(multiPolygon)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch {
+                    print("DEBUG: Failed to fetch/decode GeoJSON for \(prediction.birdName): \(error)")
+                }
+            }
+        }
+
         applyResultMapViewport(anchorCoordinates: [coord], animated: true)
     }
 
@@ -468,13 +526,36 @@ class PredictMapViewController: UIViewController {
 
 extension PredictMapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        let isBirdRange = currentGeoJSONOverlays.contains { $0 === overlay }
+        
         if let polygon = overlay as? MKPolygon {
             let renderer = MKPolygonRenderer(polygon: polygon)
-            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
-            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
-            renderer.lineWidth = 1.6
+            if isBirdRange {
+                renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
+                renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+                renderer.lineWidth = 2.0
+            } else {
+                renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+                renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
+                renderer.lineWidth = 1.6
+            }
             return renderer
         }
+        
+        if let multiPolygon = overlay as? MKMultiPolygon {
+            let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
+            if isBirdRange {
+                renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
+                renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+                renderer.lineWidth = 2.0
+            } else {
+                renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+                renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
+                renderer.lineWidth = 1.6
+            }
+            return renderer
+        }
+        
         if let circle = overlay as? MKCircle {
             let renderer = MKCircleRenderer(circle: circle)
             renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08)

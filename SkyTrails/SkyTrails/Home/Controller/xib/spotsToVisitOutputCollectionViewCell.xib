@@ -177,12 +177,6 @@
                                             <constraint firstItem="nQi-jR-aza" firstAttribute="top" secondItem="fJx-x4-GjB" secondAttribute="bottom" constant="4" id="mkJ-FT-lUu"/>
                                         </constraints>
                                     </view>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="S5X-9z-Lk4">
-                                        <rect key="frame" x="8" y="8" width="110" height="110"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" secondItem="S5X-9z-Lk4" secondAttribute="height" multiplier="1:1" id="9rm-C0-TAI"/>
-                                        </constraints>
-                                    </imageView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5tZ-Vv-X3j">
                                         <rect key="frame" x="126" y="8" width="48" height="24"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="20"/>
@@ -201,6 +195,12 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="S5X-9z-Lk4">
+                                        <rect key="frame" x="8" y="8" width="110" height="110"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" secondItem="S5X-9z-Lk4" secondAttribute="height" multiplier="1:1" id="9rm-C0-TAI"/>
+                                        </constraints>
+                                    </imageView>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>

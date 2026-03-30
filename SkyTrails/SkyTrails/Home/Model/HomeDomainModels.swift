@@ -188,13 +188,22 @@ struct FinalPredictionResult: Hashable {
     let spottingProbability: Int
     let weekNumber: String?
     let residencyStatus: String?
+    let ebirdSpeciesCode: String?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(birdName)
+        hasher.combine(ebirdSpeciesCode)
+        hasher.combine(matchedInputIndex)
+        hasher.combine(matchedLocation.lat)
+        hasher.combine(matchedLocation.lon)
     }
     
     static func == (lhs: FinalPredictionResult, rhs: FinalPredictionResult) -> Bool {
-        return lhs.birdName == rhs.birdName
+        return lhs.birdName == rhs.birdName &&
+               lhs.ebirdSpeciesCode == rhs.ebirdSpeciesCode &&
+               lhs.matchedInputIndex == rhs.matchedInputIndex &&
+               lhs.matchedLocation.lat == rhs.matchedLocation.lat &&
+               lhs.matchedLocation.lon == rhs.matchedLocation.lon
     }
 }
 
@@ -241,6 +250,7 @@ struct BirdSpeciesDisplay: Hashable {
     let sightabilityPercent: Int
     let weekNumber: String?
     let residencyStatus: String?
+    let ebirdSpeciesCode: String?
     
     struct StatusBadge: Hashable {
         let title: String
@@ -296,6 +306,7 @@ struct NearbyHotspotEdgeSpecies: Codable {
     let probability: Int?
     let weekNumber: String?
     let residencyStatus: String?
+    let ebirdSpeciesCode: String?
 }
 
 struct NearbyHotspotEdgeMeta: Codable {

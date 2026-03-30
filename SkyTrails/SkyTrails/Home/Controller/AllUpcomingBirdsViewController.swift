@@ -39,6 +39,11 @@ class AllUpcomingBirdsViewController: UIViewController {
         )
         
         collectionView.register(
+            UINib(nibName: "PredictionButtonCollectionViewCell", bundle: nil),
+            forCellWithReuseIdentifier: PredictionButtonCollectionViewCell.identifier
+        )
+        
+        collectionView.register(
             UINib(nibName: "SectionHeaderCollectionReusableView", bundle: nil),
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
@@ -147,11 +152,21 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if section == 0 { return watchlistData.count }
+        if section == 0 { return watchlistData.count + 1 }
         else { return recommendationsData.count }
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.section == 0 && indexPath.row == 0 {
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: PredictionButtonCollectionViewCell.identifier,
+                for: indexPath
+            ) as? PredictionButtonCollectionViewCell else {
+                return UICollectionViewCell()
+            }
+            cell.configure(with: UIImage(named: "PredicBirdButton"))
+            return cell
+        }
             
         guard let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier,
@@ -161,7 +176,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
         }
 
         if indexPath.section == 0 {
-            let item = watchlistData[indexPath.row]
+            let item = watchlistData[indexPath.row - 1]
             let upcomingBird = UpcomingBird(
                 imageName: item.bird.staticImageName,
                 title: item.bird.commonName,
@@ -200,12 +215,17 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
 
 extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if indexPath.section == 0 && indexPath.row == 0 {
+            didTapPredict()
+            return
+        }
+
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         let bird: Bird
         let dateString: String
 
         if indexPath.section == 0 {
-            let item = watchlistData[indexPath.row]
+            let item = watchlistData[indexPath.row - 1]
             bird = item.bird
             dateString = item.statusText
         } else {

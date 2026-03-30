@@ -40,6 +40,17 @@ class PredictOutputViewController: UIViewController {
         updateHeaderLabelTypography()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Auto-select and show the map for the first bird
+        if let first = displayedPredictions.first {
+            if let mapVC = navigationController?.parent as? PredictMapViewController {
+                mapVC.filterMapForBird(first)
+            }
+        }
+    }
+
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
             self.handleUserInterfaceStyleChange()
