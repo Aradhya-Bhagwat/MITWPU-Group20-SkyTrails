@@ -2,6 +2,22 @@
 import UIKit
 import MapKit
 
+private final class MigrationPointAnnotation: MKPointAnnotation {
+    enum PointType {
+        case start
+        case end
+    }
+
+    let pointType: PointType
+
+    init(coordinate: CLLocationCoordinate2D, pointType: PointType) {
+        self.pointType = pointType
+        super.init()
+        self.coordinate = coordinate
+        self.title = pointType == .start ? "Start Point" : "End Point"
+    }
+}
+
 class birdspredViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
@@ -23,6 +39,17 @@ class birdspredViewController: UIViewController {
     private var sightingsCache: [Int: [RelevantSighting]] = [:]
     private var previousPillBounds: CGRect = .zero
     private var previousCardBounds: CGRect = .zero
+
+    private struct MLDataSnapshot: Decodable {
+        let birdId: String
+        let trajectoryPaths: [Path]
+
+        struct Path: Decodable {
+            let week: Int
+            let lat: Double
+            let lon: Double
+        }
+    }
     
     private var currentSpeciesIndex: Int = 0 {
         didSet {
@@ -229,12 +256,24 @@ class birdspredViewController: UIViewController {
         if let cached = sightingsCache[currentSpeciesIndex] {
             relevantSightings = cached
         } else {
-            relevantSightings = HomeManager.shared.getRelevantSightings(for: input)
+            let dbSightings = HomeManager.shared.getRelevantSightings(for: input)
+            if dbSightings.isEmpty {
+                relevantSightings = loadMLSightingsIfNeeded(for: input)
+            } else {
+                relevantSightings = dbSightings
+            }
             sightingsCache[currentSpeciesIndex] = relevantSightings
         }
         
         let coordinates = relevantSightings.map {
             CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
+        }
+
+        if let startCoordinate = coordinates.first {
+            mapView.addAnnotation(MigrationPointAnnotation(coordinate: startCoordinate, pointType: .start))
+        }
+        if coordinates.count > 1, let endCoordinate = coordinates.last {
+            mapView.addAnnotation(MigrationPointAnnotation(coordinate: endCoordinate, pointType: .end))
         }
         
         if coordinates.count > 1 {
@@ -244,6 +283,20 @@ class birdspredViewController: UIViewController {
             mapView.setVisibleMapRect(polylineRect, edgePadding: UIEdgeInsets(top: 50, left: 50, bottom: 250, right: 50), animated: true)
         }
     }
+
+    private func loadMLSightingsIfNeeded(for input: BirdDateInput) -> [RelevantSighting] {
+        guard let url = Bundle.main.url(forResource: "MLdata", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let snapshot = try? JSONDecoder().decode(MLDataSnapshot.self, from: data),
+              snapshot.birdId.caseInsensitiveCompare(input.species.id) == .orderedSame else {
+            return []
+        }
+
+        return snapshot.trajectoryPaths
+            .map { RelevantSighting(lat: $0.lat, lon: $0.lon, week: $0.week) }
+            .sorted { $0.week < $1.week }
+    }
+
     private func updateCardForCurrentIndex() {
         guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
         
@@ -359,7 +412,24 @@ extension birdspredViewController: MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard !(annotation is MKUserLocation) else { return nil }
-        return nil
+        guard let migrationPoint = annotation as? MigrationPointAnnotation else { return nil }
+
+        let reuseIdentifier = "MigrationPointMarker"
+        let view = (mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier) as? MKMarkerAnnotationView) ?? MKMarkerAnnotationView(annotation: migrationPoint, reuseIdentifier: reuseIdentifier)
+        view.annotation = migrationPoint
+        view.canShowCallout = true
+        view.displayPriority = .required
+
+        switch migrationPoint.pointType {
+        case .start:
+            view.markerTintColor = .systemGreen
+            view.glyphText = "S"
+        case .end:
+            view.markerTintColor = .systemRed
+            view.glyphText = "E"
+        }
+
+        return view
     }
 }
 
