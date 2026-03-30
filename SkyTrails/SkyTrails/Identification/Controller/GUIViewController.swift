@@ -264,15 +264,7 @@ class GUIViewController: UIViewController {
         let bundleCanvas = UIImage(named: canvasName)
         let bundleBase = UIImage(named: baseName)
         let bundleIcon = UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
-        
-        if !isKiteShape {
-            print("[DEBUG] KITE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
-            print("        canvasName: \(canvasName) - exists: \(bundleCanvas != nil)")
-            print("        alternateCanvasName: \(alternateCanvasName) - exists: \(UIImage(named: alternateCanvasName) != nil)")
-            print("        baseName: \(baseName) - exists: \(bundleBase != nil)")
-            print("        fallback icon: id_icon_\(cleanCategory)_\(cleanVariant) - exists: \(bundleIcon != nil)")
-        }
-        
+
         return bundleIcon
     }
     
@@ -341,13 +333,6 @@ class GUIViewController: UIViewController {
             
             guard !Task.isCancelled else { return }
 
-            if !isKiteShape && (remoteBase == nil || remoteCanvas == nil) {
-                print("[DEBUG] KITE REMOTE IMAGE MISSING - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
-                print("        canvasName: \(canvasName) - remote: \(remoteCanvas != nil)")
-                print("        altCanvasName: \(altCanvasName) - remote: \(UIImage(named: altCanvasName) != nil)")
-                print("        baseName: \(baseName) - remote: \(remoteBase != nil)")
-            }
-
             let composed: UIImage? = {
                 if !isKiteShape, let base = remoteBase, let canvas = remoteCanvas {
                     let renderer = UIGraphicsImageRenderer(size: base.size)
@@ -360,10 +345,6 @@ class GUIViewController: UIViewController {
                 }
                 return nil
             }()
-
-            if composed == nil && !isKiteShape {
-                print("[DEBUG] KITE THUMBNAIL COMPOSE FAILED - shape: \(shapeID), category: \(categoryName), variant: \(variantName)")
-            }
 
             guard let thumb = composed else { return }
             self.variationThumbnailCache[cacheKey] = thumb
@@ -490,16 +471,7 @@ class GUIViewController: UIViewController {
     func getVariantsForCurrentCategory() -> [FieldMarkVariant] {
         guard currentCategoryIndex < categories.count else { return [] }
         let variants = categories[currentCategoryIndex].variants ?? []
-        
-        let names = variants.map { $0.name }
-        let uniqueNames = Set(names)
-        if names.count != uniqueNames.count {
-            print("[DEBUG] DUPLICATE VARIANTS FOUND for \(categories[currentCategoryIndex].area):")
-            for variant in variants {
-                print("       - \(variant.name) (id: \(variant.field_mark_variant_id))")
-            }
-        }
-        
+
         return variants
     }
     

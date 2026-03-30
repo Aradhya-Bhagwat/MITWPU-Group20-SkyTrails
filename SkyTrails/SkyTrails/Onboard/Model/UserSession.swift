@@ -262,16 +262,14 @@ class UserSession {
             let (data, response) = try await URLSession.shared.data(for: request)
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
-                    print("DEBUG: User created successfully in database")
                 } else if httpResponse.statusCode == 409 {
-                    print("DEBUG: User already exists in database")
                 } else {
                     let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown"
-                    print("DEBUG: User creation failed with status: \(httpResponse.statusCode), error: \(errorMsg)")
+                    print("User creation failed with status: \(httpResponse.statusCode), error: \(errorMsg)")
                 }
             }
         } catch {
-            print("DEBUG: User creation error: \(error)")
+            print("User creation error: \(error)")
         }
     }
 }

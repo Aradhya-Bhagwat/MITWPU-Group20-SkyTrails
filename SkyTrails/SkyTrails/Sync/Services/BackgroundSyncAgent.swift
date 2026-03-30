@@ -742,10 +742,6 @@ actor BackgroundSyncAgent {
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        if let httpResponse = response as? HTTPURLResponse {
-            let body = String(data: data, encoding: .utf8) ?? "(non-utf8 body, \(data.count) bytes)"
-            print("DEBUG: ConflictCheck fetch - table: \(table), recordId: \(recordId), status: \(httpResponse.statusCode), body: \(String(body.prefix(500)))")
-        }
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
               let firstRecord = jsonArray.first else { return nil }
@@ -760,12 +756,6 @@ actor BackgroundSyncAgent {
             payload = (try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any]) ?? [:]
         }
         
-        // Log the payload for debugging
-        if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            print("DEBUG: BackgroundSyncAgent - Sending payload to table '\(operation.table)':\n\(jsonString)")
-        }
-
         if operation.table == "observed_bird_photos" {
             if operation.type == .create || operation.type == .update {
                 try await uploadPhotoIfNeeded(payload: &payload, config: config, token: token)
@@ -779,7 +769,6 @@ actor BackgroundSyncAgent {
         case .update: try await updateRecord(table: operation.table, recordId: operation.recordId, payload: payload, config: config, token: token)
         case .delete: try await deleteRecord(table: operation.table, recordId: operation.recordId, config: config, token: token)
         }
-        print("DEBUG: BackgroundSyncAgent operation success - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId)")
     }
     
     private func createRecord(table: String, payload: [String: Any], config: SupabaseConfig, token: String?) async throws {
@@ -804,16 +793,14 @@ actor BackgroundSyncAgent {
     private func deleteRecord(table: String, recordId: UUID, config: SupabaseConfig, token: String?) async throws {
         let pk = primaryKeyColumn(for: table)
         let method = (table == "observed_bird_photos") ? "DELETE" : "PATCH"
-        var path = "/rest/v1/\(table)?\(pk)=eq.\(recordId.uuidString)"
+        let path = "/rest/v1/\(table)?\(pk)=eq.\(recordId.uuidString)"
         
         var request = try buildRequest(path: path, method: method, config: config, token: token)
         request.setValue("return=representation", forHTTPHeaderField: "Prefer")
-        print("DEBUG: BackgroundSyncAgent delete request - table: \(table), recordId: \(recordId), method: \(method), path: \(path)")
         
         if method == "PATCH" {
             let payload: [String: Any] = ["deleted_at": ISO8601DateFormatter().string(from: Date())]
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-            print("DEBUG: BackgroundSyncAgent delete payload - table: \(table), recordId: \(recordId), payload: \(payload)")
         }
         
         try await executeRequest(request)
@@ -887,15 +874,12 @@ actor BackgroundSyncAgent {
         guard let httpResponse = response as? HTTPURLResponse else { throw NSError(domain: "SyncAgent", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]) }
         
         let responseBody = String(data: data, encoding: .utf8) ?? "(empty)"
-        print("DEBUG: BackgroundSyncAgent response - Status: \(httpResponse.statusCode)")
-        print("DEBUG: Response Body: \(responseBody)")
         
         if !(200...299).contains(httpResponse.statusCode) {
             var errorInfo: [String: Any] = [NSLocalizedDescriptionKey: responseBody]
             if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 let message = errorJson["message"] as? String ?? "No message"
                 let details = errorJson["details"] as? String ?? "No details"
-                print("DEBUG: Supabase Sync Error - Message: \(message), Details: \(details)")
                 errorInfo["supabase_message"] = message
                 errorInfo["supabase_details"] = details
             }
