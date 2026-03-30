@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEF-mB-p5A">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24765" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="SEF-mB-p5A">
     <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24743"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
@@ -72,7 +72,7 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
-                                                <rect key="frame" x="16" y="459.66666666666663" width="370" height="220"/>
+                                                <rect key="frame" x="8" y="459.66666666666663" width="386" height="220"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
                                                     <size key="itemSize" width="175" height="133"/>
@@ -120,11 +120,11 @@
                                             <constraint firstItem="sz8-14-rMC" firstAttribute="top" secondItem="juo-Tr-9OM" secondAttribute="bottom" constant="16" id="6W8-7q-tLy"/>
                                             <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="8" id="7ke-bu-vMc"/>
                                             <constraint firstItem="FQA-lr-sA1" firstAttribute="top" secondItem="sz8-14-rMC" secondAttribute="bottom" constant="8" id="8sD-A8-nod"/>
-                                            <constraint firstItem="vFz-1I-rOM" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="9Ar-hk-zce"/>
+                                            <constraint firstItem="vFz-1I-rOM" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="8" id="9Ar-hk-zce"/>
                                             <constraint firstAttribute="trailing" secondItem="juo-Tr-9OM" secondAttribute="trailing" constant="16" id="9Q3-VZ-UJa"/>
                                             <constraint firstAttribute="trailing" secondItem="sz8-14-rMC" secondAttribute="trailing" constant="16" id="DVY-34-vjk"/>
                                             <constraint firstAttribute="trailing" secondItem="rkK-99-Cad" secondAttribute="trailing" constant="16" id="E3q-kV-ycR"/>
-                                            <constraint firstAttribute="trailing" secondItem="vFz-1I-rOM" secondAttribute="trailing" constant="16" id="GXg-dc-xQW"/>
+                                            <constraint firstAttribute="trailing" secondItem="vFz-1I-rOM" secondAttribute="trailing" constant="8" id="GXg-dc-xQW"/>
                                             <constraint firstItem="mPg-zb-PDo" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="Hdf-nd-jLS"/>
                                             <constraint firstItem="rkK-99-Cad" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="Kmi-qm-PE5"/>
                                             <constraint firstItem="FQA-lr-sA1" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="Ora-Va-w6L"/>
@@ -419,7 +419,7 @@
                                 <rect key="frame" x="8" y="124" width="386" height="4"/>
                             </progressView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="f55-ih-Vav" userLabel="Canvas">
-                                <rect key="frame" x="0.0" y="277" width="402" height="529"/>
+                                <rect key="frame" x="0.0" y="288" width="402" height="518"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="IpW-uB-nwm">
@@ -737,7 +737,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="O4L-s3-kva">
-                                <rect key="frame" x="16" y="124" width="370" height="136"/>
+                                <rect key="frame" x="8" y="124" width="386" height="136"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="136" id="LTy-u0-INe">
@@ -752,7 +752,7 @@
                                 </collectionViewFlowLayout>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="CategoryCell" id="11V-33-mfw" customClass="CategoryCell" customModule="SkyTrails" customModuleProvider="target">
-                                        <rect key="frame" x="8" y="15" width="78" height="78"/>
+                                        <rect key="frame" x="8" y="29" width="78" height="78"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="pK0-n6-9N2">
                                             <rect key="frame" x="0.0" y="0.0" width="78" height="78"/>
@@ -762,7 +762,7 @@
                                 </cells>
                             </collectionView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="irx-mu-IBT">
-                                <rect key="frame" x="8" y="460" width="92" height="338"/>
+                                <rect key="frame" x="8" y="436" width="92" height="362"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="92" id="B6h-jk-91o">
@@ -777,7 +777,7 @@
                                 </collectionViewFlowLayout>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="VariationCell" id="0yn-US-wc1" customClass="VariationCell" customModule="SkyTrails" customModuleProvider="target">
-                                        <rect key="frame" x="8" y="8" width="110" height="110"/>
+                                        <rect key="frame" x="-9" y="8" width="110" height="110"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="GGt-FF-m25">
                                             <rect key="frame" x="0.0" y="0.0" width="110" height="110"/>
@@ -787,7 +787,7 @@
                                 </cells>
                             </collectionView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="P6i-kf-zne">
-                                <rect key="frame" x="8" y="284" width="92" height="160"/>
+                                <rect key="frame" x="8" y="268" width="92" height="160"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Wpr-T9-HsK">
                                         <rect key="frame" x="8" y="0.0" width="76" height="160"/>
@@ -796,7 +796,7 @@
                                                 <rect key="frame" x="0.0" y="0.0" width="76" height="76"/>
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vAN-kc-T5m">
-                                                        <rect key="frame" x="7.5" y="7.5" width="72.5" height="72.5"/>
+                                                        <rect key="frame" x="7" y="7" width="62" height="62"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" secondItem="vAN-kc-T5m" secondAttribute="height" multiplier="1:1" id="mqo-C4-UkU"/>
                                                         </constraints>
@@ -813,7 +813,7 @@
                                                 <rect key="frame" x="0.0" y="84" width="76" height="76"/>
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="nri-D3-iCQ">
-                                                        <rect key="frame" x="19.5" y="19.5" width="49" height="49"/>
+                                                        <rect key="frame" x="17" y="17" width="42" height="42"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" secondItem="nri-D3-iCQ" secondAttribute="height" multiplier="1:1" id="I1W-qn-ZYo"/>
                                                         </constraints>
@@ -821,8 +821,8 @@
                                                 </subviews>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                 <constraints>
-                                                    <constraint firstItem="nri-D3-iCQ" firstAttribute="centerY" secondItem="6P8-Yu-5CA" secondAttribute="centerY" id="8or-U0-X86"/>
                                                     <constraint firstItem="nri-D3-iCQ" firstAttribute="width" secondItem="6P8-Yu-5CA" secondAttribute="width" multiplier="0.55" id="62F-T1-RG4"/>
+                                                    <constraint firstItem="nri-D3-iCQ" firstAttribute="centerY" secondItem="6P8-Yu-5CA" secondAttribute="centerY" id="8or-U0-X86"/>
                                                     <constraint firstItem="nri-D3-iCQ" firstAttribute="centerX" secondItem="6P8-Yu-5CA" secondAttribute="centerX" id="jjy-67-4ZU"/>
                                                 </constraints>
                                             </view>
@@ -837,7 +837,7 @@
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Cww-ay-CWI">
-                                <rect key="frame" x="130" y="240" width="264" height="558"/>
+                                <rect key="frame" x="100" y="268" width="294" height="530"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
                         </subviews>
@@ -845,21 +845,21 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="O4L-s3-kva" firstAttribute="top" secondItem="naV-bR-PqP" secondAttribute="top" id="2mP-sm-UX2"/>
+                            <constraint firstItem="P6i-kf-zne" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="GJY-zA-FaT"/>
+                            <constraint firstItem="P6i-kf-zne" firstAttribute="leading" secondItem="irx-mu-IBT" secondAttribute="leading" id="R0i-7y-piD"/>
+                            <constraint firstItem="P6i-kf-zne" firstAttribute="width" constant="92" id="S5r-Ih-gFi">
+                                <variation key="widthClass=regular" constant="134"/>
+                            </constraint>
                             <constraint firstItem="Cww-ay-CWI" firstAttribute="leading" secondItem="irx-mu-IBT" secondAttribute="trailing" id="Y2N-54-aZU"/>
                             <constraint firstItem="irx-mu-IBT" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="8" id="aV9-aT-ekX"/>
                             <constraint firstItem="Cww-ay-CWI" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="canvas-top"/>
                             <constraint firstItem="O4L-s3-kva" firstAttribute="leading" secondItem="naV-bR-PqP" secondAttribute="leading" constant="8" id="cat-leading"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="O4L-s3-kva" secondAttribute="trailing" constant="8" id="cat-trailing"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="Cww-ay-CWI" secondAttribute="bottom" constant="8" id="ccK-dl-Z0V"/>
-                            <constraint firstItem="P6i-kf-zne" firstAttribute="top" secondItem="O4L-s3-kva" secondAttribute="bottom" constant="8" id="GJY-zA-FaT"/>
-                            <constraint firstItem="P6i-kf-zne" firstAttribute="leading" secondItem="irx-mu-IBT" secondAttribute="leading" id="R0i-7y-piD"/>
-                            <constraint firstItem="P6i-kf-zne" firstAttribute="width" constant="92" id="S5r-Ih-gFi">
-                                <variation key="widthClass=regular" constant="134"/>
-                            </constraint>
+                            <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="P6i-kf-zne" secondAttribute="bottom" constant="8" id="icp-v3-ZQR"/>
                             <constraint firstItem="P6i-kf-zne" firstAttribute="height" constant="160" id="t2q-vu-SD0">
                                 <variation key="widthClass=regular" constant="244"/>
                             </constraint>
-                            <constraint firstItem="irx-mu-IBT" firstAttribute="top" secondItem="P6i-kf-zne" secondAttribute="bottom" constant="8" id="icp-v3-ZQR"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="bottom" secondItem="irx-mu-IBT" secondAttribute="bottom" constant="8" id="var-bottom"/>
                             <constraint firstItem="naV-bR-PqP" firstAttribute="trailing" secondItem="Cww-ay-CWI" secondAttribute="trailing" constant="8" id="var-trailing"/>
                         </constraints>
@@ -899,16 +899,16 @@
         <image name="chevron.left" catalog="system" width="97" height="128"/>
         <image name="info.circle" catalog="system" width="128" height="123"/>
         <systemColor name="secondaryLabelColor">
-            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemGray3Color">
-            <color red="0.7803921568627451" green="0.7803921568627451" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.78039215689999997" green="0.78039215689999997" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemGray4Color">
-            <color red="0.81960784313725488" green="0.81960784313725488" blue="0.83921568627450982" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.81960784310000001" green="0.81960784310000001" blue="0.83921568629999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
