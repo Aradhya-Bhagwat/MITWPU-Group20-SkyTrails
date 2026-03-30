@@ -535,7 +535,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             let minItemWidth: CGFloat = isPhone ? 132 : 160
             let maxItemsPerRow: CGFloat = isPhone ? 2 : 3
             let interItemSpacing: CGFloat = isPhone ? 16 : 24
-            let sectionInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 24, trailing: 16)
+            let sectionInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 24, trailing: 8)
             
             let availableWidth = containerWidth - sectionInsets.leading - sectionInsets.trailing
             
@@ -576,7 +576,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             
             let section = NSCollectionLayoutSection(group: group)
             section.contentInsets = sectionInsets
-            section.interGroupSpacing = 24
+            section.interGroupSpacing = 12
             
             let headerSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),

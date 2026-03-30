@@ -6,7 +6,7 @@ class HistorySectionHeaderView: UICollectionReusableView {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        dateLabel.font = .preferredFont(forTextStyle: .title2)
+		dateLabel.font = .preferredFont(forTextStyle: .body)
         dateLabel.textColor = .label
     }
     
