@@ -21,7 +21,7 @@
                                 <rect key="frame" x="0.0" y="178" width="402" height="696"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4nx-pp-Ahc">
-                                        <rect key="frame" x="0.0" y="0.0" width="402" height="687.66666666666663"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="402" height="679.66666666666663"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="How would you like to start Identification?" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rkK-99-Cad">
                                                 <rect key="frame" x="16" y="15.999999999999998" width="370" height="20.333333333333329"/>
@@ -72,7 +72,7 @@
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
-                                                <rect key="frame" x="8" y="459.66666666666663" width="386" height="220"/>
+                                                <rect key="frame" x="8" y="451.66666666666663" width="378" height="220"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Edw-r9-hK3">
                                                     <size key="itemSize" width="175" height="133"/>
@@ -124,7 +124,7 @@
                                             <constraint firstAttribute="trailing" secondItem="juo-Tr-9OM" secondAttribute="trailing" constant="16" id="9Q3-VZ-UJa"/>
                                             <constraint firstAttribute="trailing" secondItem="sz8-14-rMC" secondAttribute="trailing" constant="16" id="DVY-34-vjk"/>
                                             <constraint firstAttribute="trailing" secondItem="rkK-99-Cad" secondAttribute="trailing" constant="16" id="E3q-kV-ycR"/>
-                                            <constraint firstAttribute="trailing" secondItem="vFz-1I-rOM" secondAttribute="trailing" constant="8" id="GXg-dc-xQW"/>
+                                            <constraint firstAttribute="trailing" secondItem="vFz-1I-rOM" secondAttribute="trailing" constant="16" id="GXg-dc-xQW"/>
                                             <constraint firstItem="mPg-zb-PDo" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="Hdf-nd-jLS"/>
                                             <constraint firstItem="rkK-99-Cad" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="Kmi-qm-PE5"/>
                                             <constraint firstItem="FQA-lr-sA1" firstAttribute="leading" secondItem="4nx-pp-Ahc" secondAttribute="leading" constant="16" id="Ora-Va-w6L"/>
