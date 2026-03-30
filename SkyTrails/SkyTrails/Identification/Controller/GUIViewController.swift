@@ -586,14 +586,14 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         }
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+
         if collectionView == categoriesCollectionView {
-            let layout = (collectionViewLayout as? UICollectionViewFlowLayout) ?? UICollectionViewFlowLayout()
-            let verticalInsets = layout.sectionInset.top + layout.sectionInset.bottom
-            let usableHeight = max(collectionView.bounds.height - verticalInsets, 0)
-            let height = floor(usableHeight * (5.0 / 6.0))
-            let width = floor(height * 1.47)
-            return CGSize(width: width, height: height)
+            let isPad = traitCollection.userInterfaceIdiom == .pad
+            return isPad ? CGSize(width: 180, height: 120)
+                         : CGSize(width: 147, height: 100)
         }
 
         let layout = (collectionViewLayout as? UICollectionViewFlowLayout) ?? UICollectionViewFlowLayout()
