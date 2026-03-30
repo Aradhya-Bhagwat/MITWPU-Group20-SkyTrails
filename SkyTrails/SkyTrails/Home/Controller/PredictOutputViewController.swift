@@ -22,6 +22,7 @@ class PredictOutputViewController: UIViewController {
     private var dynamicCollectionHeightConstraint: NSLayoutConstraint?
     private var fixedCollectionHeightConstraint: NSLayoutConstraint?
     private var latestVisibleSheetHeight: CGFloat?
+    private let watchlistManager = WatchlistManager.shared
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -250,23 +251,97 @@ class PredictOutputViewController: UIViewController {
     }
 
     private func addToWatchlist(_ prediction: FinalPredictionResult) {
-        guard let bird = WatchlistManager.shared.findBird(byName: prediction.birdName) else {
+        guard let bird = watchlistManager.findBird(byName: prediction.birdName) else {
             let alert = UIAlertController(title: "Error", message: "Could not find bird in database.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
             return
         }
-        
-        do {
-            try WatchlistManager.shared.addBirds([bird], to: WatchlistConstants.myWatchlistID, asObserved: false)
-            let alert = UIAlertController(title: "Success", message: "\(prediction.birdName) added to your watchlist.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-        } catch {
-            let alert = UIAlertController(title: "Error", message: "Failed to add bird to watchlist: \(error.localizedDescription)", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
+
+        let existingWatchlistIds = watchlistIdsContainingBird(birdId: bird.bird_id)
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let detailVC = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else {
+            return
         }
+
+        detailVC.bird = bird
+        detailVC.shouldUseRuleMatching = true
+        detailVC.watchlistId = nil
+        detailVC.onSave = { [weak self] savedBird in
+            guard let self else { return }
+            let targetWatchlistId = self.resolveDestinationWatchlistId(
+                for: savedBird.bird_id,
+                existingWatchlistIds: existingWatchlistIds
+            )
+            self.dismiss(animated: true) { [weak self] in
+                self?.navigateToWatchlist(with: targetWatchlistId)
+            }
+        }
+
+        let modalNav = UINavigationController(rootViewController: detailVC)
+        detailVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .cancel,
+            target: self,
+            action: #selector(dismissPresentedDetail)
+        )
+        modalNav.modalPresentationStyle = .automatic
+        present(modalNav, animated: true)
+    }
+
+    @objc
+    private func dismissPresentedDetail() {
+        presentedViewController?.dismiss(animated: true)
+    }
+
+    private func watchlistIdsContainingBird(birdId: UUID) -> Set<UUID> {
+        guard let watchlists = try? watchlistManager.fetchWatchlists(type: .custom) else { return [] }
+        var ids = Set<UUID>()
+        for watchlist in watchlists {
+            if (try? watchlistManager.findEntry(birdId: birdId, watchlistId: watchlist.watchlist_id)) != nil {
+                ids.insert(watchlist.watchlist_id)
+            }
+        }
+        return ids
+    }
+
+    private func resolveDestinationWatchlistId(for birdId: UUID, existingWatchlistIds: Set<UUID>) -> UUID? {
+        let updatedWatchlistIds = watchlistIdsContainingBird(birdId: birdId)
+        if let newWatchlistId = updatedWatchlistIds.subtracting(existingWatchlistIds).first {
+            return newWatchlistId
+        }
+        return updatedWatchlistIds.first
+    }
+
+    private func navigateToWatchlist(with watchlistId: UUID?) {
+        guard
+            let tabBarController,
+            let viewControllers = tabBarController.viewControllers,
+            viewControllers.indices.contains(1),
+            let watchlistNav = viewControllers[1] as? UINavigationController
+        else { return }
+
+        tabBarController.selectedIndex = 1
+
+        guard
+            let watchlistId,
+            let watchlist = try? watchlistManager.getWatchlist(by: watchlistId)
+        else {
+            watchlistNav.popToRootViewController(animated: true)
+            return
+        }
+
+        let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
+        guard let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController else {
+            watchlistNav.popToRootViewController(animated: true)
+            return
+        }
+
+        smartVC.watchlistType = (watchlist.type == .shared) ? .shared : .custom
+        smartVC.watchlistTitle = watchlist.title ?? "Watchlist"
+        smartVC.currentWatchlistId = watchlistId
+
+        watchlistNav.popToRootViewController(animated: false)
+        watchlistNav.pushViewController(smartVC, animated: true)
     }
 }
 
