@@ -593,7 +593,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 elementKind: UICollectionView.elementKindSectionHeader,
                 alignment: .top
             )
-            if !self.historySections.isEmpty {
+            if ((self?.historySections.isEmpty) != nil) {
                 section.boundarySupplementaryItems = [header]
             } else {
                 section.boundarySupplementaryItems = []
