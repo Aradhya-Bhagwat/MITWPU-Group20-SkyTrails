@@ -98,9 +98,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.isHidden = true
 
-        let watchlistBtn = createActionButton(imageName: "SF_addToWatchlist")
+        let watchlistBtn = createActionButton(title: "Add to Watchlist", imageName: "SF_addToWatchlist")
         watchlistBtn.addTarget(self, action: #selector(didTapWatchlist), for: .touchUpInside)
-        let pathBtn = createActionButton(imageName: "SF_birdPath")
+        let pathBtn = createActionButton(title: "Predict Species", imageName: "SF_birdPath")
         pathBtn.addTarget(self, action: #selector(didTapPath), for: .touchUpInside)
 
         stack.addArrangedSubview(watchlistBtn)
@@ -125,7 +125,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         self.actionButtonsContainer = stack
     }
 
-    private func createActionButton(systemName: String? = nil, imageName: String? = nil) -> UIButton {
+    private func createActionButton(title: String, systemName: String? = nil, imageName: String? = nil) -> UIButton {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
 
@@ -135,13 +135,19 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
             button.setImage(UIImage(named: imageName)?.withRenderingMode(.alwaysTemplate), for: .normal)
         }
 
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        button.semanticContentAttribute = .forceLeftToRight
+        button.contentHorizontalAlignment = .center
+        button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
         button.tintColor = .systemBlue
         button.backgroundColor = .systemBackground
         
         button.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 44),
-            button.heightAnchor.constraint(equalToConstant: 44)
+            button.heightAnchor.constraint(equalToConstant: 44),
+            button.widthAnchor.constraint(greaterThanOrEqualToConstant: 140)
         ])
         button.layer.cornerRadius = 22
         
@@ -150,6 +156,8 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         button.layer.shadowOffset = CGSize(width: 0, height: 2)
         button.layer.shadowRadius = 4
         button.layer.masksToBounds = false
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         return button
     }
