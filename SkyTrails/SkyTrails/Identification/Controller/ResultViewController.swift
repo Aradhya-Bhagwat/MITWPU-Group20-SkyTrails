@@ -345,29 +345,49 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             let tabBarController,
             let watchlistNav = tabBarController.viewControllers?[safe: 1] as? UINavigationController
         else { return }
-
-        tabBarController.selectedIndex = 1
+        let isCurrentlyOnWatchlistTab = tabBarController.selectedIndex == 1
 
         guard
             let watchlistId,
             let watchlist = try? watchlistManager.getWatchlist(by: watchlistId)
         else {
-            watchlistNav.popToRootViewController(animated: true)
+            if isCurrentlyOnWatchlistTab {
+                watchlistNav.popToRootViewController(animated: true)
+            }
             return
         }
 
         let storyboard = UIStoryboard(name: "Watchlist", bundle: nil)
         guard let smartVC = storyboard.instantiateViewController(withIdentifier: "SmartWatchlistViewController") as? SmartWatchlistViewController else {
-            watchlistNav.popToRootViewController(animated: true)
+            if isCurrentlyOnWatchlistTab {
+                watchlistNav.popToRootViewController(animated: true)
+            }
             return
         }
 
         smartVC.watchlistType = (watchlist.type == .shared) ? .shared : .custom
         smartVC.watchlistTitle = watchlist.title ?? "Watchlist"
         smartVC.currentWatchlistId = watchlistId
-
-        watchlistNav.popToRootViewController(animated: false)
-        watchlistNav.pushViewController(smartVC, animated: true)
+        
+        if isCurrentlyOnWatchlistTab {
+            tabBarController.selectedIndex = 1
+            watchlistNav.popToRootViewController(animated: false)
+            watchlistNav.pushViewController(smartVC, animated: true)
+        } else {
+            smartVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .close,
+                target: self,
+                action: #selector(dismissPresentedWatchlist)
+            )
+            let modalNav = UINavigationController(rootViewController: smartVC)
+            modalNav.modalPresentationStyle = .automatic
+            present(modalNav, animated: true)
+        }
+    }
+    
+    @objc
+    private func dismissPresentedWatchlist() {
+        presentedViewController?.dismiss(animated: true)
     }
 }
 
