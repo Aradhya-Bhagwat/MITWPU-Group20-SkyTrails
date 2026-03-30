@@ -104,7 +104,7 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
             dateLabel2.attributedText = createIconString(
                 text: text,
                 iconName: "bird.fill",
-                color: .systemGreen,
+                color: .systemGray,
                 fontSize: fontSize
             )
         }

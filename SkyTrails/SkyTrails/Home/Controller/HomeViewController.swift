@@ -427,8 +427,8 @@ extension HomeViewController: UICollectionViewDataSource {
              footer.configure(numberOfPages: count, currentPage: 0); return footer
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
-            if indexPath.section == 0 { header.configure(title: "Migration Forecast") }
-            else if indexPath.section == 1 { header.configure(title: "Birding Highlights", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
+            if indexPath.section == 0 { header.configure(title: "Your Area") }
+            else if indexPath.section == 1 { header.configure(title: "Migrations near you", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
             else if indexPath.section == 2 { header.configure(title: "Top Birding Spots", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllSpots", sender: nil) }) }
             else if indexPath.section == 3 { header.configure(title: "Birders' Gossip") }
             return header
