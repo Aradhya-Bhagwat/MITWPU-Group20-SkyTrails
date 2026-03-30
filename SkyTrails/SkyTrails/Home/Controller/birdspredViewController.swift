@@ -1,6 +1,7 @@
 
 import UIKit
 import MapKit
+import CoreLocation
 
 private final class MigrationPointAnnotation: MKPointAnnotation {
     enum PointType {
@@ -16,6 +17,11 @@ private final class MigrationPointAnnotation: MKPointAnnotation {
         self.coordinate = coordinate
         self.title = pointType == .start ? "Start Point" : "End Point"
     }
+}
+
+private enum MigrationRouteStyle {
+    static let startColor = UIColor.systemGreen.withAlphaComponent(0.6)
+    static let endColor = UIColor.systemRed.withAlphaComponent(0.6)
 }
 
 class birdspredViewController: UIViewController {
@@ -37,8 +43,10 @@ class birdspredViewController: UIViewController {
         return formatter
     }()
     private var sightingsCache: [Int: [RelevantSighting]] = [:]
+    private var routeLocationNamesCache: [Int: (start: String, end: String)] = [:]
     private var previousPillBounds: CGRect = .zero
     private var previousCardBounds: CGRect = .zero
+    private var locationLookupToken: UUID?
 
     private struct MLDataSnapshot: Decodable {
         let birdId: String
@@ -137,6 +145,7 @@ class birdspredViewController: UIViewController {
         birdImageView.layer.cornerRadius = 16
         birdImageView.clipsToBounds = true
         birdImageView.contentMode = .scaleAspectFill
+        subtitleLabel.numberOfLines = 0
         
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
         swipeLeft.direction = .left
@@ -269,6 +278,8 @@ class birdspredViewController: UIViewController {
             CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
         }
 
+        resolveRouteLocationNames(for: currentSpeciesIndex, coordinates: coordinates)
+
         if let startCoordinate = coordinates.first {
             mapView.addAnnotation(MigrationPointAnnotation(coordinate: startCoordinate, pointType: .start))
         }
@@ -304,17 +315,107 @@ class birdspredViewController: UIViewController {
         
         birdImageView.image = UIImage(named: input.species.imageName)
         titleLabel.text = input.species.name
-        
+
+        let dateRangeText: String
         if let start = input.startDate, let end = input.endDate {
-            subtitleLabel.text = "\(dateFormatter.string(from: start)) - \(dateFormatter.string(from: end))"
+            dateRangeText = "\(dateFormatter.string(from: start)) - \(dateFormatter.string(from: end))"
         } else {
-            subtitleLabel.text = "Date range not set"
+            dateRangeText = "Date range not set"
         }
+        subtitleLabel.attributedText = buildSubtitleAttributedText(dateRangeText: dateRangeText, speciesIndex: currentSpeciesIndex)
         
         pageControl.numberOfPages = predictionInputs.count
         pageControl.currentPage = currentSpeciesIndex
         
         pillLabel.text = "\(predictionInputs.count) Species"
+    }
+
+    private func buildSubtitleAttributedText(dateRangeText: String, speciesIndex: Int) -> NSAttributedString {
+        guard let locations = routeLocationNamesCache[speciesIndex] else {
+            return NSAttributedString(
+                string: dateRangeText,
+                attributes: [.foregroundColor: subtitleLabel.textColor ?? .secondaryLabel]
+            )
+        }
+
+        let dateColor = subtitleLabel.textColor ?? .secondaryLabel
+        let routeText = NSMutableAttributedString(
+            string: "\(dateRangeText)\n",
+            attributes: [.foregroundColor: dateColor]
+        )
+
+        routeText.append(NSAttributedString(
+            string: locations.start,
+            attributes: [.foregroundColor: dateColor]
+        ))
+        routeText.append(NSAttributedString(
+            string: "  -  ",
+            attributes: [.foregroundColor: dateColor]
+        ))
+        routeText.append(NSAttributedString(
+            string: locations.end,
+            attributes: [.foregroundColor: dateColor]
+        ))
+
+        return routeText
+    }
+
+    private func resolveRouteLocationNames(for speciesIndex: Int, coordinates: [CLLocationCoordinate2D]) {
+        guard routeLocationNamesCache[speciesIndex] == nil,
+              let startCoordinate = coordinates.first,
+              let endCoordinate = coordinates.last else {
+            return
+        }
+
+        let token = UUID()
+        locationLookupToken = token
+
+        reverseGeocodeDisplayName(for: startCoordinate) { [weak self] startName in
+            guard let self = self else { return }
+
+            let finish: (String) -> Void = { endName in
+                self.routeLocationNamesCache[speciesIndex] = (start: startName, end: endName)
+                guard self.currentSpeciesIndex == speciesIndex,
+                      self.locationLookupToken == token else { return }
+                self.updateCardForCurrentIndex()
+            }
+
+            let samePoint = abs(startCoordinate.latitude - endCoordinate.latitude) < 0.000_001 &&
+                abs(startCoordinate.longitude - endCoordinate.longitude) < 0.000_001
+
+            if samePoint {
+                finish(startName)
+                return
+            }
+
+            self.reverseGeocodeDisplayName(for: endCoordinate) { endName in
+                finish(endName)
+            }
+        }
+    }
+
+    private func reverseGeocodeDisplayName(for coordinate: CLLocationCoordinate2D, completion: @escaping (String) -> Void) {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ in
+            let fallback = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
+            guard let placemark = placemarks?.first else {
+                completion(fallback)
+                return
+            }
+
+            let city = placemark.locality ?? placemark.subLocality ?? placemark.name
+            let region = placemark.administrativeArea ?? placemark.country
+
+            if let city, let region, !city.isEmpty, !region.isEmpty, city != region {
+                completion("\(city), \(region)")
+            } else if let city, !city.isEmpty {
+                completion(city)
+            } else if let region, !region.isEmpty {
+                completion(region)
+            } else {
+                completion(fallback)
+            }
+        }
     }
     
     @objc private func didTapPill() {
@@ -422,10 +523,10 @@ extension birdspredViewController: MKMapViewDelegate {
 
         switch migrationPoint.pointType {
         case .start:
-            view.markerTintColor = .systemGreen
+            view.markerTintColor = MigrationRouteStyle.startColor
             view.glyphText = "S"
         case .end:
-            view.markerTintColor = .systemRed
+            view.markerTintColor = MigrationRouteStyle.endColor
             view.glyphText = "E"
         }
 
