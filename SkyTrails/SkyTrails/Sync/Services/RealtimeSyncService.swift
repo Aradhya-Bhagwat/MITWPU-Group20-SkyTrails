@@ -179,7 +179,7 @@ final class RealtimeSyncService: NSObject {
         let data = try encoder.encode(channel)
         
         webSocket.send(.data(data)) { error in
-            if let error {
+            if error != nil {
             } else {
             }
         }
@@ -197,7 +197,7 @@ final class RealtimeSyncService: NSObject {
                     self.handleMessage(message)
                     self.receiveMessage()
                     
-                case .failure(let error):
+                case .failure(_):
                     if self.connectionState == .connected {
                         await self.reconnect()
                     }
@@ -224,7 +224,7 @@ final class RealtimeSyncService: NSObject {
         }
         guard let _ = json["type"] as? String,
               let payload = json["payload"] as? [String: Any] else {
-            if let event = json["event"] as? String {
+            if json["event"] is String {
             }
             return
         }
@@ -1286,7 +1286,7 @@ final class RealtimeSyncService: NSObject {
         guard let data = try? JSONEncoder().encode(heartbeat) else { return }
         
         webSocket.send(.data(data)) { error in
-            if let error {
+            if error != nil {
             }
         }
     }

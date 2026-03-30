@@ -261,8 +261,8 @@ class GUIViewController: UIViewController {
             return canvas
         }
         
-        let bundleCanvas = UIImage(named: canvasName)
-        let bundleBase = UIImage(named: baseName)
+        _ = UIImage(named: canvasName)
+        _ = UIImage(named: baseName)
         let bundleIcon = UIImage(named: "id_icon_\(cleanCategory)_\(cleanVariant)")
 
         return bundleIcon

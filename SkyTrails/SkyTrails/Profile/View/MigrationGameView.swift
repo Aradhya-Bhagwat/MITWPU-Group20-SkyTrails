@@ -9,6 +9,7 @@ struct MigrationGameView: View {
     @State private var gameActive = false
     @State private var showGameOver = false
     @State private var showExplanation = true
+    @State private var playAreaSize: CGSize = .zero
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     let spawnTimer = Timer.publish(every: 0.8, on: .main, in: .common).autoconnect()
@@ -29,77 +30,81 @@ struct MigrationGameView: View {
     }
     
     var body: some View {
-        ZStack {
-            // Background Gradient
-            LinearGradient(gradient: Gradient(colors: [Color(red: 0.4, green: 0.7, blue: 0.9), Color(red: 0.1, green: 0.4, blue: 0.7)]),
-                           startPoint: .top,
-                           endPoint: .bottom)
-                .ignoresSafeArea()
-            
-            // Clouds/Atmosphere
-            ForEach(0..<5) { i in
-                Circle()
-                    .fill(Color.white.opacity(0.2))
-                    .frame(width: 200, height: 100)
-                    .offset(x: CGFloat(i * 100) - 200, y: CGFloat(i * 150) - 300)
-                    .blur(radius: 50)
-            }
-            
-            // Birds
-            ForEach(birds) { bird in
-                Image(bird.assetName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .scaleEffect(bird.scale)
-                    .opacity(bird.opacity)
-                    .position(x: bird.x, y: bird.y)
-                    .onTapGesture {
-                        tapBird(bird)
+        GeometryReader { geometry in
+            ZStack {
+                // Background Gradient
+                LinearGradient(gradient: Gradient(colors: [Color(red: 0.4, green: 0.7, blue: 0.9), Color(red: 0.1, green: 0.4, blue: 0.7)]),
+                               startPoint: .top,
+                               endPoint: .bottom)
+                    .ignoresSafeArea()
+                
+                // Clouds/Atmosphere
+                ForEach(0..<5) { i in
+                    Circle()
+                        .fill(Color.white.opacity(0.2))
+                        .frame(width: 200, height: 100)
+                        .offset(x: CGFloat(i * 100) - 200, y: CGFloat(i * 150) - 300)
+                        .blur(radius: 50)
+                }
+                
+                // Birds
+                ForEach(birds) { bird in
+                    Image(bird.assetName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .scaleEffect(bird.scale)
+                        .opacity(bird.opacity)
+                        .position(x: bird.x, y: bird.y)
+                        .onTapGesture {
+                            tapBird(bird)
+                        }
+                }
+                
+                // HUD
+                VStack {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("SCORE")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                            Text("\(score)")
+                                .font(.system(.title, design: .rounded))
+                                .fontWeight(.black)
+                        }
+                        .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing) {
+                            Text("TIME")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                            Text("\(timeRemaining)s")
+                                .font(.system(.title, design: .rounded))
+                                .fontWeight(.black)
+                                .foregroundColor(timeRemaining < 10 ? .red : .white)
+                        }
+                        .foregroundColor(.white)
                     }
-            }
-            
-            // HUD
-            VStack {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("SCORE")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                        Text("\(score)")
-                            .font(.system(.title, design: .rounded))
-                            .fontWeight(.black)
-                    }
-                    .foregroundColor(.white)
+                    .padding(.horizontal, 30)
+                    .padding(.top, 50)
                     
                     Spacer()
                     
-                    VStack(alignment: .trailing) {
-                        Text("TIME")
-                            .font(.caption)
+                    Button(action: { dismiss() }) {
+                        Text("EXIT")
                             .fontWeight(.bold)
-                        Text("\(timeRemaining)s")
-                            .font(.system(.title, design: .rounded))
-                            .fontWeight(.black)
-                            .foregroundColor(timeRemaining < 10 ? .red : .white)
+                            .padding(.horizontal, 30)
+                            .padding(.vertical, 10)
+                            .background(Capsule().fill(Color.white.opacity(0.3)))
+                            .foregroundColor(.white)
                     }
-                    .foregroundColor(.white)
+                    .padding(.bottom, 20)
                 }
-                .padding(.horizontal, 30)
-                .padding(.top, 50)
-                
-                Spacer()
-                
-                Button(action: { dismiss() }) {
-                    Text("EXIT")
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 30)
-                        .padding(.vertical, 10)
-                        .background(Capsule().fill(Color.white.opacity(0.3)))
-                        .foregroundColor(.white)
-                }
-                .padding(.bottom, 20)
             }
+            .onAppear { playAreaSize = geometry.size }
+            .onChange(of: geometry.size) { _, newSize in playAreaSize = newSize }
         }
         .onReceive(timer) { _ in
             if gameActive {
@@ -226,8 +231,8 @@ struct MigrationGameView: View {
     }
     
     func spawnBird() {
-        let screenWidth = UIScreen.main.bounds.width
-        let screenHeight = UIScreen.main.bounds.height
+        let screenWidth = max(playAreaSize.width, 320)
+        let screenHeight = max(playAreaSize.height, 480)
         
         let newBird = BirdInstance(
             assetName: birdAssets.randomElement() ?? "amur_falcon",

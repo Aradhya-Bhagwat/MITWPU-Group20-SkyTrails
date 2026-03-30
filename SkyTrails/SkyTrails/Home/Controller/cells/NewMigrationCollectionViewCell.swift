@@ -296,14 +296,14 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         }
         
         geocodingTask = Task {
-            let geocoder = CLGeocoder()
             let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
             
             do {
-                let placemarks = try await geocoder.reverseGeocodeLocation(location)
+                guard let request = MKReverseGeocodingRequest(location: location) else { return }
+                let mapItems = try await request.mapItems
                 guard !Task.isCancelled else { return }
                 
-                let info = placemarks.first.map { classifyTerrain(from: $0) } 
+                let info = mapItems.first.map { classifyTerrain(from: $0) }
                            ?? TerrainInfo(name: "Remote Area", symbolName: "mappin.circle", color: .systemGray, defaultImageName: "Terrain_Remote")
                 
                 Self.terrainCache[cacheKey] = info
@@ -331,23 +331,33 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         }
     }
     
-    private func classifyTerrain(from placemark: CLPlacemark) -> TerrainInfo {
+    private func classifyTerrain(from mapItem: MKMapItem) -> TerrainInfo {
         let skyBlue = UIColor(red: 0.53, green: 0.81, blue: 0.98, alpha: 1.0)
-        let name = placemark.name ?? ""
-        
-        if let areas = placemark.areasOfInterest, !areas.isEmpty {
-            let waterKeywords = ["ocean", "sea", "bay", "gulf", "lake", "river", "water"]
-            if areas.contains(where: { area in waterKeywords.contains(where: { area.lowercased().contains($0) }) }) {
-                return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
-            }
-            
-            let forestKeywords = ["park", "forest", "nature", "reserve", "wilderness", "mountain", "wildlife", "rainforest"]
-            if areas.contains(where: { area in forestKeywords.contains(where: { area.lowercased().contains($0) }) }) {
-                return TerrainInfo(name: "Rainforest", symbolName: "tree.fill", color: UIColor(red: 0.0, green: 0.6, blue: 0.45, alpha: 1.0), defaultImageName: "Terrain_Wilderness")
-            }
+        let name = mapItem.name ?? ""
+        let addressText = [
+            mapItem.address?.shortAddress,
+            mapItem.address?.fullAddress,
+            mapItem.addressRepresentations?.cityWithContext,
+            mapItem.addressRepresentations?.regionName
+        ]
+        .compactMap { $0?.lowercased() }
+        .joined(separator: " ")
+        let searchableText = "\(name.lowercased()) \(addressText)"
+
+        let waterKeywords = ["ocean", "sea", "bay", "gulf", "lake", "river", "water", "coast", "beach"]
+        if waterKeywords.contains(where: { searchableText.contains($0) }) {
+            return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
         }
-        
-        if placemark.locality != nil || name.contains("St") || name.contains("Rd") || name.contains("Ave") {
+
+        let forestKeywords = ["park", "forest", "nature", "reserve", "wilderness", "mountain", "wildlife", "rainforest"]
+        if forestKeywords.contains(where: { searchableText.contains($0) }) {
+            return TerrainInfo(name: "Rainforest", symbolName: "tree.fill", color: UIColor(red: 0.0, green: 0.6, blue: 0.45, alpha: 1.0), defaultImageName: "Terrain_Wilderness")
+        }
+
+        if mapItem.addressRepresentations?.cityName != nil
+            || searchableText.contains(" st")
+            || searchableText.contains(" rd")
+            || searchableText.contains(" ave") {
             return TerrainInfo(name: "Residential", symbolName: "building.2.fill", color: skyBlue, defaultImageName: "Terrain_Residential")
         }
         

@@ -98,76 +98,34 @@ class BirdSmartCell: UITableViewCell {
     
 	func configure(with entry: WatchlistEntry) {
 		guard let bird = entry.bird else {
-            #if DEBUG
-            print("[BirdSmartCell] configure - ERROR: entry.bird is nil for entry ID: \(entry.id)")
-            print("[BirdSmartCell] configure - Entry status: \(entry.status)")
-            print("[BirdSmartCell] configure - Entry photos count: \(entry.photos?.count ?? 0)")
-            #endif
             titleLabel.text = "Unknown"
             birdImageView.image = UIImage(systemName: "photo")
             return
         }
         
-        #if DEBUG
-        print("[BirdSmartCell] configure - Entry ID: \(entry.id)")
-        print("[BirdSmartCell] configure - Bird name: '\(bird.name)'")
-        print("[BirdSmartCell] configure - Bird staticImageName: '\(bird.staticImageName)'")
-        print("[BirdSmartCell] configure - Bird bird_id: \(bird.bird_id)")
-        print("[BirdSmartCell] configure - Entry status: \(entry.status)")
-        print("[BirdSmartCell] configure - Entry photos count: \(entry.photos?.count ?? 0)")
-        #endif
-        
 		titleLabel.text = bird.name
-        
-#if DEBUG
-        print("[BirdSmartCell] Configuring for entry with bird '\(bird.name)', staticImageName: '\(bird.staticImageName)'")
-#endif
 
 		if let photoPath = entry.photos?.first?.imagePath {
-#if DEBUG
-            print("[BirdSmartCell] Found user photo path: \(photoPath)")
-#endif
 			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 			let fileURL = photoDir.appendingPathComponent(photoPath)
 			if let diskImage = UIImage(contentsOfFile: fileURL.path) {
-                #if DEBUG
-                print("[BirdSmartCell] Successfully loaded user photo from disk")
-                #endif
 				birdImageView.image = diskImage
 			} else if let assetImage = UIImage(named: bird.staticImageName) {
-                #if DEBUG
-                print("[BirdSmartCell] User photo not on disk, loaded from assets")
-                #endif
 				birdImageView.image = assetImage
 			} else {
-                #if DEBUG
-                print("[BirdSmartCell] User photo not on disk, assets not found, using placeholder")
-                #endif
 				birdImageView.image = UIImage(systemName: "photo")
 			}
 		} else {
-#if DEBUG
-            print("[BirdSmartCell] No user photo, loading default/remote for '\(bird.staticImageName)'")
-#endif
             // Try asset catalog first
             if let assetImage = UIImage(named: bird.staticImageName) {
-                #if DEBUG
-                print("[BirdSmartCell] Loaded bird image from assets")
-                #endif
                 birdImageView.image = assetImage
             } else {
                 // Try documents directory (similar to UnobservedDetailViewController)
                 let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(bird.staticImageName)
                 if let docImage = UIImage(contentsOfFile: fileURL.path) {
-                    #if DEBUG
-                    print("[BirdSmartCell] Loaded bird image from documents directory")
-                    #endif
                     birdImageView.image = docImage
                 } else {
-                    #if DEBUG
-                    print("[BirdSmartCell] No local bird image found, using placeholder temporarily")
-                    #endif
                     birdImageView.image = UIImage(systemName: "photo")
                 }
             }
@@ -175,14 +133,7 @@ class BirdSmartCell: UITableViewCell {
             // Always try fetching remote
             Task { @MainActor in
                 if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
-#if DEBUG
-                    print("[BirdSmartCell] Successfully loaded remote image for '\(bird.staticImageName)'")
-#endif
                     self.birdImageView.image = image
-                } else {
-#if DEBUG
-                    print("[BirdSmartCell] Failed to load remote image for '\(bird.staticImageName)'")
-#endif
                 }
             }
 		}

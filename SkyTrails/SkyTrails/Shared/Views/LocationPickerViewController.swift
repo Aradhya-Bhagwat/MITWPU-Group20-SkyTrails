@@ -40,7 +40,13 @@ class LocationPickerViewController: UIViewController {
     private func setupUI() {
         title = "Pick Location"
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancelTapped))
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(saveButtonTapped))
+        let saveStyle: UIBarButtonItem.Style
+        if #available(iOS 26.0, *) {
+            saveStyle = .prominent
+        } else {
+            saveStyle = .done
+        }
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: saveStyle, target: self, action: #selector(saveButtonTapped))
         
         searchBar.delegate = self
 

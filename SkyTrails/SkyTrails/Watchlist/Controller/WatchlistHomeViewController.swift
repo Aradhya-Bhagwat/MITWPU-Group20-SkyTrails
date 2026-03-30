@@ -464,7 +464,8 @@ extension WatchlistHomeViewController {
 	}
 
 	private func configureMyWatchlistEmptyStateCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
+		let dequeuedCell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath)
+		guard let cell = dequeuedCell as? WatchlistActionCell else { return dequeuedCell }
 		let actions = myWatchlistEmptyStateActions()
 		guard actions.indices.contains(indexPath.item) else { return cell }
 		let action = actions[indexPath.item]
@@ -490,7 +491,8 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureAddBirdActionCell(in cv: UICollectionView, at indexPath: IndexPath, title: String, color: UIColor, icon: String) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath) as! WatchlistActionCell
+		let dequeuedCell = cv.dequeueReusableCell(withReuseIdentifier: WatchlistActionCell.identifier, for: indexPath)
+		guard let cell = dequeuedCell as? WatchlistActionCell else { return dequeuedCell }
 		cell.configure(
 			icon: icon,
 			title: title,
@@ -507,10 +509,11 @@ extension WatchlistHomeViewController {
 		title: String,
 		subtitle: String
 	) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(
+		let dequeuedCell = cv.dequeueReusableCell(
 			withReuseIdentifier: WatchlistEmptyCollectionViewCell.identifier,
 			for: indexPath
-		) as! WatchlistEmptyCollectionViewCell
+		)
+		guard let cell = dequeuedCell as? WatchlistEmptyCollectionViewCell else { return dequeuedCell }
 		cell.configure(
 			imageName: "watchlist_empty_bird",
 			title: title,
@@ -521,7 +524,8 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureMyWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.identifier, for: indexPath) as! MyWatchlistCollectionViewCell
+		let dequeuedCell = cv.dequeueReusableCell(withReuseIdentifier: MyWatchlistCollectionViewCell.identifier, for: indexPath)
+		guard let cell = dequeuedCell as? MyWatchlistCollectionViewCell else { return dequeuedCell }
 		
 		if let viewModel = myWatchlistViewModel {
             // Use pre-loaded ViewModel with images already loaded
@@ -541,7 +545,8 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureCustomWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath) as! CustomWatchlistCollectionViewCell
+		let dequeuedCell = cv.dequeueReusableCell(withReuseIdentifier: CustomWatchlistCollectionViewCell.identifier, for: indexPath)
+		guard let cell = dequeuedCell as? CustomWatchlistCollectionViewCell else { return dequeuedCell }
 		
 		if indexPath.item < customWatchlistViewModels.count {
             // Use pre-loaded ViewModel with cover image already loaded
@@ -556,7 +561,8 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func configureSharedWatchlistCell(in cv: UICollectionView, at indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = cv.dequeueReusableCell(withReuseIdentifier: SharedWatchlistCollectionViewCell.identifier, for: indexPath) as! SharedWatchlistCollectionViewCell
+		let dequeuedCell = cv.dequeueReusableCell(withReuseIdentifier: SharedWatchlistCollectionViewCell.identifier, for: indexPath)
+		guard let cell = dequeuedCell as? SharedWatchlistCollectionViewCell else { return dequeuedCell }
 		
 		if indexPath.item < sharedWatchlists.count {
 			let dto = sharedWatchlists[indexPath.item]
@@ -584,11 +590,12 @@ extension WatchlistHomeViewController: SectionHeaderDelegate {
 	func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
 		guard kind == UICollectionView.elementKindSectionHeader else { return UICollectionReusableView() }
 		
-		let header = collectionView.dequeueReusableSupplementaryView(
+		let headerView = collectionView.dequeueReusableSupplementaryView(
 			ofKind: kind,
 			withReuseIdentifier: WatchlistSectionWithPlusCollectionReusableView.identifier,
 			for: indexPath
-		) as! WatchlistSectionWithPlusCollectionReusableView
+		)
+		guard let header = headerView as? WatchlistSectionWithPlusCollectionReusableView else { return headerView }
 		
 		if let sectionType = WatchlistSection(rawValue: indexPath.section) {
 			var showChevron = false
@@ -807,7 +814,10 @@ extension WatchlistHomeViewController {
 		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 6, bottom: 12, trailing: 6)
 
 		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(cardHeight))
-		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: columns)
+		let group = NSCollectionLayoutGroup.horizontal(
+			layoutSize: groupSize,
+			subitems: Array(repeating: item, count: columns)
+		)
 
 		let section = NSCollectionLayoutSection(group: group)
 		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 20, trailing: 10)

@@ -135,9 +135,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		searchBar.searchTextField.backgroundColor = searchIsDarkMode ? .secondarySystemBackground : .systemBackground
 		searchBar.delegate = self
 		segmentedControl.selectedSegmentIndex = currentFilter.rawValue
-		if #available(iOS 14.0, *) {
-			configureFilterButtonMenusIfAvailable()
-		}
+		configureFilterButtonMenusIfAvailable()
 	}
 
     @objc private func didTapClear() {
@@ -355,7 +353,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		) { [weak self] _ in
 			self?.currentSortOption = option
 			self?.applyFilters()
-			if #available(iOS 14.0, *), let self = self {
+			if let self = self {
 				self.configureFilterButtonMenusIfAvailable()
 			}
 		}

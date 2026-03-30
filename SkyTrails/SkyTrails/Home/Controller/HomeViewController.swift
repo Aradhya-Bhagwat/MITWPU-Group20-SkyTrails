@@ -256,7 +256,10 @@ extension HomeViewController {
     private func createUpcomingBirdsSection() -> NSCollectionLayoutSection {
         let cardWidth: CGFloat
         if let cached = cachedUpcomingBirdCardWidth { cardWidth = cached } else {
-            let portraitWidth = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+            let collectionBounds = homeCollectionView?.bounds ?? .zero
+            let referenceWidth = max(collectionBounds.width, view.bounds.width)
+            let referenceHeight = max(collectionBounds.height, view.bounds.height)
+            let portraitWidth = min(referenceWidth, referenceHeight)
             cardWidth = min((portraitWidth - 64) / 2.1, 230); cachedUpcomingBirdCardWidth = cardWidth
         }
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
@@ -273,7 +276,10 @@ extension HomeViewController {
     private func createSpotsToVisitSection() -> NSCollectionLayoutSection {
         let cardWidth: CGFloat
         if let cached = cachedSpotsCardWidth { cardWidth = cached } else {
-            let portraitWidth = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+            let collectionBounds = homeCollectionView?.bounds ?? .zero
+            let referenceWidth = max(collectionBounds.width, view.bounds.width)
+            let referenceHeight = max(collectionBounds.height, view.bounds.height)
+            let portraitWidth = min(referenceWidth, referenceHeight)
             cardWidth = min((portraitWidth - 64) / 2.1, 230); cachedSpotsCardWidth = cardWidth
         }
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))

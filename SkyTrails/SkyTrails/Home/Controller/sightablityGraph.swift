@@ -169,11 +169,7 @@ final class SightabilityGraphView: UIView {
         textLayer.fontSize = fontSize
         textLayer.alignmentMode = alignment
         textLayer.foregroundColor = UIColor.secondaryLabel.cgColor
-        if #available(iOS 26.0, *) {
-            textLayer.contentsScale = self.traitCollection.displayScale
-        } else {
-            textLayer.contentsScale = UIScreen.main.scale
-        }
+        textLayer.contentsScale = window?.windowScene?.screen.scale ?? traitCollection.displayScale
         layer.addSublayer(textLayer)
         labelLayers.append(textLayer)
     }
@@ -190,11 +186,7 @@ final class SightabilityGraphView: UIView {
         textLayer.isWrapped = true
         textLayer.alignmentMode = .center
         textLayer.foregroundColor = UIColor.secondaryLabel.cgColor
-        if #available(iOS 26.0, *) {
-            textLayer.contentsScale = self.traitCollection.displayScale
-        } else {
-            textLayer.contentsScale = UIScreen.main.scale
-        }
+        textLayer.contentsScale = window?.windowScene?.screen.scale ?? traitCollection.displayScale
         textLayer.setAffineTransform(CGAffineTransform(rotationAngle: -.pi / 2))
         layer.addSublayer(textLayer)
         labelLayers.append(textLayer)

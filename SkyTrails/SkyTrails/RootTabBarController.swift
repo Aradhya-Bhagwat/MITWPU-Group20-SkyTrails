@@ -24,9 +24,17 @@ class RootTabBarController: UITabBarController {
 	private func loadFeature(storyboard: String,
 							 title: String,
 							 systemImage: String) -> UIViewController {
-		
-		let nav = UIStoryboard(name: storyboard, bundle: nil)
-			.instantiateInitialViewController() as! UINavigationController
+
+        let storyboard = UIStoryboard(name: storyboard, bundle: nil)
+        guard let nav = storyboard.instantiateInitialViewController() as? UINavigationController else {
+            let fallback = UINavigationController(rootViewController: UIViewController())
+            fallback.tabBarItem = UITabBarItem(
+                title: title,
+                image: UIImage(systemName: systemImage),
+                selectedImage: nil
+            )
+            return fallback
+        }
 		
 		nav.tabBarItem = UITabBarItem(
 			title: title,

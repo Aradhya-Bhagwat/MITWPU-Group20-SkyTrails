@@ -385,7 +385,7 @@ actor IdentificationSyncService {
     
     func pushSession(sessionID: UUID, userId: UUID, config: SupabaseConfig, accessToken: String) async throws {
         
-        let (row, data) = try await MainActor.run { () -> (IdentificationSessionRow, Data) in
+        let (_, data) = try await MainActor.run { () -> (IdentificationSessionRow, Data) in
             let descriptor = FetchDescriptor<IdentificationSession>(
                 predicate: #Predicate { $0.identification_session_id == sessionID }
             )
@@ -538,23 +538,16 @@ actor IdentificationSyncService {
         )
     }
 
-    private nonisolated static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private nonisolated static let iso8601WithoutFractionalSeconds: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-
     private nonisolated static func parseSupabaseDate(_ value: String) -> Date? {
-        if let date = iso8601WithFractionalSeconds.date(from: value) {
+        let fractionalSecondsFormatter = ISO8601DateFormatter()
+        fractionalSecondsFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractionalSecondsFormatter.date(from: value) {
             return date
         }
-        return iso8601WithoutFractionalSeconds.date(from: value)
+
+        let standardFormatter = ISO8601DateFormatter()
+        standardFormatter.formatOptions = [.withInternetDateTime]
+        return standardFormatter.date(from: value)
     }
     
     func adoptGuestSessions(to userId: UUID) async throws {
@@ -852,23 +845,33 @@ actor IdentificationSyncService {
     }
 }
 
-private struct IdentificationResultDeleteRow: Decodable {
+private struct IdentificationResultDeleteRow: Decodable, Sendable {
     let id: UUID
 
     enum CodingKeys: String, CodingKey {
         case id = "identification_result_id"
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+    }
 }
 
-private struct IdentificationSessionDeleteRow: Decodable {
+private struct IdentificationSessionDeleteRow: Decodable, Sendable {
     let id: UUID
 
     enum CodingKeys: String, CodingKey {
         case id = "identification_session_id"
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+    }
 }
 
-private struct PulledIdentificationResultRow: Decodable {
+private struct PulledIdentificationResultRow: Decodable, Sendable {
     let id: UUID
     let sessionId: UUID
     let ownerId: UUID?
@@ -890,7 +893,7 @@ private struct PulledIdentificationResultRow: Decodable {
         case updated_at = "updated_at"
     }
 
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         sessionId = try container.decode(UUID.self, forKey: .sessionId)
@@ -904,7 +907,7 @@ private struct PulledIdentificationResultRow: Decodable {
     }
 }
 
-private struct PulledIdentificationCandidateRow: Decodable {
+private struct PulledIdentificationCandidateRow: Decodable, Sendable {
     let id: UUID
     let resultId: UUID
     let birdId: UUID?
@@ -932,7 +935,7 @@ private struct PulledIdentificationCandidateRow: Decodable {
         case updated_at = "updated_at"
     }
 
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         resultId = try container.decode(UUID.self, forKey: .resultId)
@@ -949,7 +952,7 @@ private struct PulledIdentificationCandidateRow: Decodable {
     }
 }
 
-private struct PulledIdentificationSessionMarkRow: Decodable {
+private struct PulledIdentificationSessionMarkRow: Decodable, Sendable {
     let id: UUID
     let sessionId: UUID
     let fieldMarkId: UUID?
@@ -972,7 +975,7 @@ private struct PulledIdentificationSessionMarkRow: Decodable {
         case updated_at = "updated_at"
     }
 
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         sessionId = try container.decode(UUID.self, forKey: .sessionId)

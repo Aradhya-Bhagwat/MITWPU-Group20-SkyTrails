@@ -951,23 +951,16 @@ actor InitialSyncService {
         }
     }
 
-    private nonisolated static let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private nonisolated static let iso8601WithoutFractionalSeconds: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-
     private nonisolated static func parseSupabaseDate(_ value: String) -> Date? {
-        if let date = iso8601WithFractionalSeconds.date(from: value) {
+        let fractionalSecondsFormatter = ISO8601DateFormatter()
+        fractionalSecondsFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractionalSecondsFormatter.date(from: value) {
             return date
         }
-        if let date = iso8601WithoutFractionalSeconds.date(from: value) {
+
+        let standardFormatter = ISO8601DateFormatter()
+        standardFormatter.formatOptions = [.withInternetDateTime]
+        if let date = standardFormatter.date(from: value) {
             return date
         }
         return nil

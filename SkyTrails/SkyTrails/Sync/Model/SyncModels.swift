@@ -1,13 +1,13 @@
 import Foundation
 import SwiftData
 
-private enum MetadataScalarValue: Decodable {
+private enum MetadataScalarValue: Decodable, Sendable {
     case string(String)
     case number(Double)
     case bool(Bool)
     case null
 
-    var stringValue: String? {
+    nonisolated var stringValue: String? {
         switch self {
         case .string(let value):
             return value
@@ -477,6 +477,13 @@ struct BirdFieldMarkRow: Decodable, Sendable {
         case shapeId = "shape_id"
         case area
     }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        shapeId = try container.decode(String.self, forKey: .shapeId)
+        area = try container.decode(String.self, forKey: .area)
+    }
 }
 
 struct FieldMarkVariantRow: Decodable, Sendable {
@@ -488,6 +495,13 @@ struct FieldMarkVariantRow: Decodable, Sendable {
         case id = "field_mark_variant_id"
         case fieldMarkId = "field_mark_id"
         case name
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        fieldMarkId = try container.decodeIfPresent(UUID.self, forKey: .fieldMarkId)
+        name = try container.decode(String.self, forKey: .name)
     }
 }
 
@@ -504,6 +518,15 @@ struct BirdFieldMarkVariantLinkRow: Decodable, Sendable {
         case fieldMarkId = "field_mark_id"
         case variantId = "variant_id"
         case area
+    }
+
+    nonisolated init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        birdId = try container.decode(UUID.self, forKey: .birdId)
+        fieldMarkId = try container.decodeIfPresent(UUID.self, forKey: .fieldMarkId)
+        variantId = try container.decodeIfPresent(UUID.self, forKey: .variantId)
+        area = try container.decode(String.self, forKey: .area)
     }
 }
 

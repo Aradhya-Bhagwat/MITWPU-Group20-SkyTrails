@@ -77,7 +77,7 @@ class HomeManager {
             do {
                 return try await getRecentObservations(near: location)
             } catch {
-                logger.log(error: error, context: "HomeManager.getHomeScreenData.observations")
+                await logger.log(error: error, context: "HomeManager.getHomeScreenData.observations")
                 return []
             }
         }()
@@ -669,9 +669,7 @@ class HomeManager {
                 let imageName = species.imageName
                     ?? fallbackBird?.staticImageName
                     ?? normalizedName
-                
-                print("[Debug] Edge Species '\(species.commonName)': species.imageName = '\(species.imageName ?? "nil")', fallbackBird.staticImageName = '\(fallbackBird?.staticImageName ?? "nil")', normalizedName = '\(normalizedName)'")
-                
+
                 let finalImageName = imageName.isEmpty ? "placeholder_image" : imageName
                 let statusText = species.residencyStatus ?? "Recently observed"
 
@@ -698,9 +696,6 @@ class HomeManager {
         )
 
         return Array(localBirds.prefix(8)).map { bird in
-            if bird.staticImageName.isEmpty || bird.staticImageName == "placeholder_image" {
-                print("[Debug] Local Fallback: Bird '\(bird.commonName)' has no staticImageName. Using default.")
-            }
             return BirdSpeciesDisplay(
                 birdName: bird.commonName,
                 birdImageName: bird.staticImageName.isEmpty ? "placeholder_image" : bird.staticImageName,
@@ -796,9 +791,10 @@ class HomeManager {
             let response = try await MKLocalSearch(request: request).start()
             let nearestItem = nearestMapItem(to: hotspotCoordinate, from: response.mapItems)
 
-            if let mapItem = nearestItem,
-               let circularRegion = mapItem.placemark.region as? CLCircularRegion {
-                let radiusKm = max(0.2, circularRegion.radius / 1000.0)
+            if let mapItem = nearestItem {
+                let distanceMeters = CLLocation(latitude: hotspotCoordinate.latitude, longitude: hotspotCoordinate.longitude)
+                    .distance(from: mapItem.location)
+                let radiusKm = max(0.2, min(5.0, distanceMeters / 1000.0))
                 return .circle(radiusKm: radiusKm)
             }
         } catch {
@@ -1558,8 +1554,6 @@ final class MigrationManager {
         )
         do {
             let sessions = try modelContext.fetch(descriptor)
-            for session in sessions {
-            }
             return sessions
         } catch {
             logger.log(error: error, context: "MigrationManager.getActiveMigrations")
@@ -1574,10 +1568,6 @@ final class MigrationManager {
         
         let currentPaths = allPaths.filter { $0.week == week }
         let bestPath = currentPaths.max(by: { ($0.probability ?? 0) < ($1.probability ?? 0) })
-        
-        if let best = bestPath {
-        } else {
-        }
         
         let position: CLLocationCoordinate2D?
         if let lat = bestPath?.lat, let lon = bestPath?.lon {
