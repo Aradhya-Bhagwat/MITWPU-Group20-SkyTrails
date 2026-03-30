@@ -176,8 +176,10 @@ class PredictMapViewController: UIViewController {
             let response = try await MKLocalSearch(request: request).start()
 
             let nearest = nearestMapItem(to: coordinate, from: response.mapItems)
-            if let circularRegion = nearest?.placemark.region as? CLCircularRegion {
-                let radiusKm = max(0.2, circularRegion.radius / 1000.0)
+            if let nearest {
+                let distanceMeters = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                    .distance(from: nearest.location)
+                let radiusKm = max(0.2, min(5.0, distanceMeters / 1000.0))
                 return .circle(radiusKm: radiusKm)
             }
         } catch {

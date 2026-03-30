@@ -114,13 +114,6 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
         }
         
         let bird = filteredBirds[indexPath.row]
-#if DEBUG
-        let imageName = bird.staticImageName
-        print("[SpeciesSelection] Loading table image for bird '\(bird.name)' with image '\(imageName)'")
-        if UIImage(named: imageName) == nil {
-            print("[SpeciesSelection] Failed to load image asset '\(imageName)' for bird '\(bird.name)' (id: \(bird.bird_id))")
-        }
-#endif
         
         cell.configure(with: bird)
         cell.shouldShowAvatars = false

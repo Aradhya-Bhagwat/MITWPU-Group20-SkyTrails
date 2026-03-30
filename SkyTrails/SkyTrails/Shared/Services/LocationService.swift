@@ -64,6 +64,23 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         case locationNotFound
         case serviceUnavailable
     }
+
+    func primeAuthorizationIfNeeded() async {
+        let status = locationManager.authorizationStatus
+        switch status {
+        case .notDetermined:
+            _ = await withCheckedContinuation { continuation in
+                AuthorizationRequestDelegate.requestAuthorization(manager: locationManager) { _ in
+                    continuation.resume(returning: ())
+                }
+            }
+        case .authorizedAlways, .authorizedWhenInUse:
+            locationManager.startUpdatingLocation()
+        default:
+            break
+        }
+    }
+
     func geocode(query: String) async throws -> LocationData {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
@@ -89,15 +106,17 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
     }
     func reverseGeocode(lat: Double, lon: Double) async -> String? {
         let location = CLLocation(latitude: lat, longitude: lon)
-        
-        let geocoder = CLGeocoder()
+
         do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
-            guard let placemark = placemarks.first else { return nil }
-            
-            // In iOS 26+ CLPlacemark might be deprecated or its properties changed
-            // Using a resilient strategy: locality -> name -> subLocality -> country
-            return placemark.locality ?? placemark.name ?? placemark.subLocality ?? placemark.country
+            guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+            let mapItems = try await request.mapItems
+            guard let mapItem = mapItems.first else { return nil }
+
+            return mapItem.addressRepresentations?.cityName
+                ?? mapItem.name
+                ?? mapItem.address?.shortAddress
+                ?? mapItem.address?.fullAddress
+                ?? mapItem.addressRepresentations?.regionName
         } catch {
             logger.log(error: error, context: "LocationService.reverseGeocode")
             return nil

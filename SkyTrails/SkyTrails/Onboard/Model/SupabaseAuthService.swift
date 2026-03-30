@@ -331,7 +331,7 @@ final class SupabaseAuthService {
         if let body {
             request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
             if let bodyString = String(data: request.httpBody ?? Data(), encoding: .utf8) {
-                let logBody = bodyString.replacingOccurrences(of: "\"password\":\"[^\"]*\"", with: "\"password\":\"***\"", options: String.CompareOptions.regularExpression)
+                _ = bodyString.replacingOccurrences(of: "\"password\":\"[^\"]*\"", with: "\"password\":\"***\"", options: String.CompareOptions.regularExpression)
             }
         }
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -346,15 +346,15 @@ final class SupabaseAuthService {
             throw SupabaseAuthError.requestFailed(message)
         }
 
-        if Response.self == EmptyResponse.self, data.isEmpty {
-            return EmptyResponse() as! Response
+        if Response.self == EmptyResponse.self, data.isEmpty, let emptyResponse = EmptyResponse() as? Response {
+            return emptyResponse
         }
 
         do {
             return try JSONDecoder().decode(Response.self, from: data)
         } catch {
-            if Response.self == EmptyResponse.self {
-                return EmptyResponse() as! Response
+            if Response.self == EmptyResponse.self, let emptyResponse = EmptyResponse() as? Response {
+                return emptyResponse
             }
             throw SupabaseAuthError.invalidResponse
         }

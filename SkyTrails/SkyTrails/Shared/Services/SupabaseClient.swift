@@ -203,15 +203,15 @@ final class SupabaseClient {
             throw SupabaseClientError.requestFailed(http.statusCode, message)
         }
 
-        if T.self == EmptyResponse.self, data.isEmpty {
-            return EmptyResponse() as! T
+        if T.self == EmptyResponse.self, data.isEmpty, let emptyResponse = EmptyResponse() as? T {
+            return emptyResponse
         }
 
         do {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
-            if T.self == EmptyResponse.self {
-                return EmptyResponse() as! T
+            if T.self == EmptyResponse.self, let emptyResponse = EmptyResponse() as? T {
+                return emptyResponse
             }
             throw SupabaseClientError.invalidResponse
         }
@@ -224,4 +224,3 @@ final class SupabaseClient {
         return UserSession.shared.getAccessToken()
     }
 }
-

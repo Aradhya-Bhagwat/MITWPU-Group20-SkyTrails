@@ -241,7 +241,7 @@ class ProfileLocationHeaderView: UIView {
     
     private func updateLocation() async {
         // Prefer user's explicitly saved home location over GPS
-        if let savedName = await LocationPreferences.shared.homeLocationName {
+        if let savedName = LocationPreferences.shared.homeLocationName {
             await MainActor.run {
                 self.locationLabel.text = savedName
             }
@@ -249,7 +249,7 @@ class ProfileLocationHeaderView: UIView {
         }
         
         // Fall back to GPS location
-        if let currentLocation = await LocationService.shared.currentLocation {
+        if let currentLocation = LocationService.shared.currentLocation {
             let locationName = await LocationService.shared.reverseGeocode(
                 lat: currentLocation.latitude,
                 lon: currentLocation.longitude

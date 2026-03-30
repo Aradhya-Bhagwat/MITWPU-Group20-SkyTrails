@@ -194,19 +194,21 @@ class PredictOutputViewController: UIViewController {
                     guard self.headerLocationRequestID == requestID else { return }
                     guard let mapItem = mapItems.first else { return }
                     
-                    // Resilient extraction strategy: Using addressRepresentations for city, but sticking to placemark for state/country for now.
-                    let city = mapItem.addressRepresentations?.cityName ?? mapItem.placemark.locality ?? mapItem.placemark.subLocality
-                    let state = mapItem.placemark.administrativeArea
+                    let city = mapItem.addressRepresentations?.cityName
+                    let cityWithContext = mapItem.addressRepresentations?.cityWithContext
+                    let region = mapItem.addressRepresentations?.regionName
                     let name = mapItem.name ?? ""
                     
-                    if let city, let state, !city.isEmpty, !state.isEmpty {
-                        self.selectedLocationDetailLabel.text = "\(city), \(state)"
+                    if let cityWithContext, !cityWithContext.isEmpty {
+                        self.selectedLocationDetailLabel.text = cityWithContext
                     } else if let city, !city.isEmpty {
                         self.selectedLocationDetailLabel.text = city
+                    } else if let region, !region.isEmpty {
+                        self.selectedLocationDetailLabel.text = region
                     } else if !name.isEmpty {
                         self.selectedLocationDetailLabel.text = name
                     } else {
-                        self.selectedLocationDetailLabel.text = mapItem.placemark.country
+                        self.selectedLocationDetailLabel.text = mapItem.address?.shortAddress ?? mapItem.address?.fullAddress
                     }
                 }
             } catch {

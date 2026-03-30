@@ -341,10 +341,13 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
-        let historyCell = collectionView.dequeueReusableCell(
+        let dequeuedCell = collectionView.dequeueReusableCell(
             withReuseIdentifier: "history_cell",
             for: indexPath
-        ) as! HistoryCollectionViewCell
+        )
+        guard let historyCell = dequeuedCell as? HistoryCollectionViewCell else {
+            return dequeuedCell
+        }
         
         if historySections.isEmpty {
             historyCell.showEmptyState()
@@ -362,11 +365,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             return UICollectionReusableView()
         }
         
-        let headerView = collectionView.dequeueReusableSupplementaryView(
+        let dequeuedHeader = collectionView.dequeueReusableSupplementaryView(
             ofKind: kind,
             withReuseIdentifier: "HistorySectionHeaderView",
             for: indexPath
-        ) as! HistorySectionHeaderView
+        )
+        guard let headerView = dequeuedHeader as? HistorySectionHeaderView else {
+            return dequeuedHeader
+        }
         
         if !historySections.isEmpty {
             headerView.configure(date: historySections[indexPath.section].date)
@@ -528,7 +534,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
     private func setupHistoryCompositionalLayout() {
         let layout = UICollectionViewCompositionalLayout { [weak self] (sectionIndex, environment) -> NSCollectionLayoutSection? in
-            guard let self = self else { return nil }
+            guard self != nil else { return nil }
             
             let containerWidth = environment.container.effectiveContentSize.width
             let isPhone = environment.traitCollection.userInterfaceIdiom == .phone
@@ -558,7 +564,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             if itemsPerRow < 1 { itemsPerRow = 1 }
             if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
             
-            let itemWidth = (availableWidth - (interItemSpacing * (itemsPerRow - 1))) / itemsPerRow
+            _ = (availableWidth - (interItemSpacing * (itemsPerRow - 1))) / itemsPerRow
             let fixedHeight: CGFloat = isPhone ? 228 : 308
             
             let itemSize = NSCollectionLayoutSize(
@@ -695,19 +701,25 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         
         switch step {
         case .dateLocation:
-            let nextVC = storyboard.instantiateViewController(withIdentifier: "DateandLocationViewController") as! DateandLocationViewController
+            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "DateandLocationViewController") as? DateandLocationViewController else {
+                return
+            }
             nextVC.viewModel = self.model
             nextVC.delegate = self
             vc = nextVC
             
         case .size:
-            let nextVC = storyboard.instantiateViewController(withIdentifier: "IdentificationSizeViewController") as! IdentificationSizeViewController
+            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "IdentificationSizeViewController") as? IdentificationSizeViewController else {
+                return
+            }
             nextVC.viewModel = self.model
             nextVC.delegate = self
             vc = nextVC
             
         case .shape:
-            let nextVC = storyboard.instantiateViewController(withIdentifier: "IdentificationShapeViewController") as! IdentificationShapeViewController
+            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "IdentificationShapeViewController") as? IdentificationShapeViewController else {
+                return
+            }
             nextVC.viewModel = self.model
             nextVC.delegate = self
             nextVC.selectedSizeIndex = model.selectedSizeCategory
@@ -715,19 +727,25 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             vc = nextVC
             
         case .fieldMarks:
-            let nextVC = storyboard.instantiateViewController(withIdentifier: "IdentificationFieldMarksViewController") as! IdentificationFieldMarksViewController
+            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "IdentificationFieldMarksViewController") as? IdentificationFieldMarksViewController else {
+                return
+            }
             nextVC.viewModel = self.model
             nextVC.delegate = self
             vc = nextVC
             
         case .gui:
-            let nextVC = storyboard.instantiateViewController(withIdentifier: "GUIViewController") as! GUIViewController
+            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "GUIViewController") as? GUIViewController else {
+                return
+            }
             nextVC.viewModel = self.model
             nextVC.delegate = self
             vc = nextVC
             
         case .result:
-            let nextVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as! ResultViewController
+            guard let nextVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController else {
+                return
+            }
             nextVC.viewModel = self.model
             nextVC.delegate = self
             vc = nextVC

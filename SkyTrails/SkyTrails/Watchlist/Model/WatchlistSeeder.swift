@@ -82,7 +82,7 @@ struct WatchlistSeeder {
 		}
 		let data = try Data(contentsOf: url)
 		let dtos = try JSONDecoder().decode([JSONWatchlistDTO].self, from: data)
-		for (index, dto) in dtos.enumerated() {
+        for (_, dto) in dtos.enumerated() {
 			let type: WatchlistType = .custom
 			
 			let watchlist = Watchlist(
@@ -113,7 +113,7 @@ struct WatchlistSeeder {
 		}
 		let data = try Data(contentsOf: url)
 		let dtos = try JSONDecoder().decode([JSONSharedWatchlistDTO].self, from: data)
-		for (index, dto) in dtos.enumerated() {
+        for (_, dto) in dtos.enumerated() {
 			let watchlist = Watchlist(
 				watchlist_id: dto.id,
 				type: .shared,

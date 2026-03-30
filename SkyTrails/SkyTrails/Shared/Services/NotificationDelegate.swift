@@ -41,7 +41,6 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         }
         
         let birdName = userInfo["birdName"] as? String ?? "Bird"
-        let triggerRaw = userInfo["trigger"] as? String ?? ""
         DispatchQueue.main.async {
             NotificationCenter.default.post(
                 name: .showWatchlistEntry,

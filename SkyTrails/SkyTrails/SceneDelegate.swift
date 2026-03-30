@@ -16,8 +16,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window = UIWindow(windowScene: windowScene)
         ThemeService.applySavedTheme()
-        window?.rootViewController = makeLaunchPlaceholder()
-        window?.makeKeyAndVisible()
 
         authObserver = NotificationCenter.default.addObserver(
             forName: UserSession.authStateDidChangeNotification,
@@ -27,17 +25,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self?.routeToCurrentSessionRoot()
         }
 
-        Task { @MainActor in
-            if let callbackURL = connectionOptions.urlContexts.first?.url,
-               SupabaseAuthService.shared.isOAuthRedirectURL(callbackURL) {
-                await handleOAuthCallback(callbackURL)
-                routeToCurrentSessionRoot()
-                return
-            }
-
-            let restored = await UserSession.shared.restoreSessionIfNeeded()
-            routeToCurrentSessionRoot()
-        }
+        let launchController = makeLaunchPlaceholder(connectionOptions: connectionOptions)
+        window?.rootViewController = launchController
+        window?.makeKeyAndVisible()
     }
 
     func scene(
@@ -83,21 +73,41 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = rootVC
     }
 
-    private func makeLaunchPlaceholder() -> UIViewController {
-        let controller = UIViewController()
-        controller.view.backgroundColor = .systemBackground
-
-        let indicator = UIActivityIndicatorView(style: .large)
-        indicator.translatesAutoresizingMaskIntoConstraints = false
-        indicator.startAnimating()
-
-        controller.view.addSubview(indicator)
-        NSLayoutConstraint.activate([
-            indicator.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
-            indicator.centerYAnchor.constraint(equalTo: controller.view.centerYAnchor)
-        ])
-
+    private func makeLaunchPlaceholder(connectionOptions: UIScene.ConnectionOptions) -> UIViewController {
+        let controller = LaunchLoadingViewController()
+        controller.onStart = { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                await self.runStartupFlow(connectionOptions: connectionOptions)
+            }
+        }
         return controller
+    }
+
+    @MainActor
+    private func runStartupFlow(connectionOptions: UIScene.ConnectionOptions) async {
+        let center = UNUserNotificationCenter.current()
+        center.delegate = NotificationDelegate.shared
+
+        do {
+            let granted = try await NotificationService.shared.requestAuthorization()
+            if granted {
+                await NotificationService.shared.registerCategories()
+            }
+        } catch {
+        }
+
+        await LocationService.shared.primeAuthorizationIfNeeded()
+
+        if let callbackURL = connectionOptions.urlContexts.first?.url,
+           SupabaseAuthService.shared.isOAuthRedirectURL(callbackURL) {
+            await handleOAuthCallback(callbackURL)
+            routeToCurrentSessionRoot()
+            return
+        }
+
+        _ = await UserSession.shared.restoreSessionIfNeeded()
+        routeToCurrentSessionRoot()
     }
 
     private func handleOAuthCallback(_ url: URL) async {
