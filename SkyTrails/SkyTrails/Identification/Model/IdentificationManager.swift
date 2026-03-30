@@ -498,7 +498,7 @@ class IdentificationManager {
                         "identification_result_id": result.identification_result_id.uuidString,
                         "bird_id": candidate.bird?.bird_id.uuidString ?? NSNull(),
                         "confidence": candidate.confidence,
-                        "rank": candidate.rank ?? NSNull(),
+                        "confidence_rank": candidate.rank ?? NSNull(),
                         "matched_features": candidate.matchScore?.matchedFeatures ?? [],
                         "mismatched_features": candidate.matchScore?.mismatchedFeatures ?? [],
                         "created_at": ISO8601DateFormatter().string(from: candidate.created_at),

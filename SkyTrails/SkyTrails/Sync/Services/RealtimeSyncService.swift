@@ -888,6 +888,8 @@ final class RealtimeSyncService: NSObject {
             result.user_id = record.uuid(for: "owner_id")
             if let birdId = record.uuid(for: "bird_id") {
                 result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
+            } else {
+                result.bird = nil
             }
             result.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             result.updated_at = record.date(for: "updated_at")
@@ -904,6 +906,8 @@ final class RealtimeSyncService: NSObject {
             )
             if let birdId = record.uuid(for: "bird_id") {
                 result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
+            } else {
+                result.bird = nil
             }
             result.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             result.updated_at = record.date(for: "updated_at")
@@ -992,11 +996,15 @@ final class RealtimeSyncService: NSObject {
                 mark.field_mark_id = markId
                 let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })
                 mark.fieldMark = try? context.fetch(fieldMarkDescriptor).first
+            } else {
+                mark.fieldMark = nil
             }
             if let varId = record.uuid(for: "variant_id") {
                 mark.variant_id = varId
                 let variantDescriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == varId })
                 mark.variant = try? context.fetch(variantDescriptor).first
+            } else {
+                mark.variant = nil
             }
             mark.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             mark.updated_at = record.date(for: "updated_at")
