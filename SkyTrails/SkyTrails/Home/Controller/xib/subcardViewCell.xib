@@ -50,7 +50,7 @@
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pfn-PH-IdR">
                                         <rect key="frame" x="90" y="6" width="156" height="45.333333333333336"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N8W-Es-Ebj">
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N8W-Es-Ebj">
                                                 <rect key="frame" x="49.333333333333343" y="15.666666666666668" width="32.333333333333343" height="14.333333333333332"/>
                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="12"/>
                                                 <nil key="textColor"/>
@@ -79,6 +79,7 @@
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
                                             <constraint firstItem="N8W-Es-Ebj" firstAttribute="centerY" secondItem="pfn-PH-IdR" secondAttribute="centerY" id="C89-un-HRU"/>
+                                            <constraint firstAttribute="trailing" secondItem="N8W-Es-Ebj" secondAttribute="trailing" constant="8" id="E7a-Rx-jA0"/>
                                             <constraint firstItem="N8W-Es-Ebj" firstAttribute="leading" secondItem="MPa-LV-NFH" secondAttribute="trailing" constant="8" id="Eqk-Rx-jA0"/>
                                             <constraint firstAttribute="bottom" secondItem="MPa-LV-NFH" secondAttribute="bottom" constant="4" id="Hqi-K1-V51"/>
                                             <constraint firstItem="MPa-LV-NFH" firstAttribute="leading" secondItem="pfn-PH-IdR" secondAttribute="leading" constant="4" id="L9g-8a-Iq0"/>

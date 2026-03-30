@@ -19,7 +19,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var titleLabel: UILabel!
-    @IBOutlet weak var distanceLabel: UILabel!
     @IBOutlet weak var subtitleLabel: UILabel!
     @IBOutlet weak var weekButton: UIButton!
     @IBOutlet weak var terrainTagImageView: UIImageView!
@@ -27,7 +26,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var terrainTagIconSizeConstraint: NSLayoutConstraint!
     @IBOutlet weak var seasonTagImageView: UIImageView!
     @IBOutlet weak var seasonTagLabel: UILabel!
-    @IBOutlet weak var seasonTagIconSizeConstraint: NSLayoutConstraint!
     @IBOutlet weak var birdListCollectionView: UICollectionView!
     
     private var fullBirdSpecies: [BirdSpeciesDisplay] = []
@@ -114,8 +112,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         terrainTagLabel.font = .systemFont(ofSize: detailSize, weight: .bold)
         seasonTagLabel.font = .systemFont(ofSize: detailSize, weight: .bold)
         terrainTagIconSizeConstraint.constant = detailSize
-        seasonTagIconSizeConstraint.constant = detailSize
-        updateDistanceLabelFont(size: min(detailSize, 18))
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let itemHeight = nestedItemHeight(cardHeight: cardHeight)
             let compactItemWidth = compactItemWidth(itemHeight: itemHeight)
@@ -163,24 +159,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         }
     }
 
-    private func updateDistanceLabelFont(size: CGFloat) {
-        guard let existingText = distanceLabel.attributedText?.string else { return }
-        
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: size, weight: .semibold)
-        let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
-            .withTintColor(.systemGray, renderingMode: .alwaysOriginal)
-        
-        let attachment = NSTextAttachment()
-        attachment.image = symbolImage
-        attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
-        
-        let attributedString = NSMutableAttributedString(attachment: attachment)
-        let cleanText = existingText.contains(" - ") ? existingText.components(separatedBy: " - ").last ?? existingText : existingText
-        
-        attributedString.append(NSAttributedString(string: " - \(cleanText)", attributes: [.font: UIFont.systemFont(ofSize: size, weight: .regular)]))
-        distanceLabel.attributedText = attributedString
-    }
-    
     private func setupAppearance() {
         contentView.backgroundColor = .systemBackground
         contentView.layer.cornerRadius = 16
@@ -214,18 +192,6 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
         applySeasonAppearance(for: hotspot.seasonTag)
-        
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
-        let symbolImage = UIImage(systemName: "mappin.and.ellipse", withConfiguration: symbolConfig)?
-            .withTintColor(.systemGray, renderingMode: .alwaysOriginal)
-        
-        let attachment = NSTextAttachment()
-        attachment.image = symbolImage
-        attachment.bounds = CGRect(x: 0, y: -2, width: symbolImage?.size.width ?? 0, height: symbolImage?.size.height ?? 0)
-        
-        let attributedString = NSMutableAttributedString(attachment: attachment)
-        attributedString.append(NSAttributedString(string: " - \(hotspot.distanceString)"))
-        distanceLabel.attributedText = attributedString
         
         // Initial filter: All 3 weeks
         filterBirds(for: nil)
