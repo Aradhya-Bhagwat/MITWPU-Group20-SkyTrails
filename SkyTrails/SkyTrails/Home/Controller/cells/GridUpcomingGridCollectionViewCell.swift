@@ -17,6 +17,14 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         applySemanticAppearance()
     }
 
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        birImage.image = nil
+        titleLabel.text = nil
+        DateLabel.text = nil
+        DateLabel.isHidden = false
+    }
+
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
             self.handleUserInterfaceStyleChange()
@@ -98,7 +106,9 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
     func configure(with spot: UpcomingBird) {
         birImage.image = UIImage(named: spot.imageName)
         titleLabel.text = spot.title
-        DateLabel.text = spot.date
+        let trimmedDate = spot.date.trimmingCharacters(in: .whitespacesAndNewlines)
+        DateLabel.text = trimmedDate
+        DateLabel.isHidden = trimmedDate.isEmpty
     }
 
 }
