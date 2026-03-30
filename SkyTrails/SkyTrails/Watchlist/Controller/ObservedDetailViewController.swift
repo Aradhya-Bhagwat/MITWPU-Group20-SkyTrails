@@ -4,7 +4,7 @@ import CoreLocation
 import SwiftData
 
 @MainActor
-class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource,  MKLocalSearchCompleterDelegate,  CLLocationManagerDelegate, UIGestureRecognizerDelegate {
+class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate, MKLocalSearchCompleterDelegate, CLLocationManagerDelegate, UIGestureRecognizerDelegate {
     
     
     private let manager = WatchlistManager.shared
@@ -41,7 +41,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         } else {
             self.title = bird?.commonName ?? "Log Sighting"
         }
-        
+		self.navigationItem.largeTitleDisplayMode = .automatic
         setupStyling()
         setupSearch()
         setupInteractions()
@@ -140,34 +140,22 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         locationSearchBar.resignFirstResponder()
     }
     private func setupKeyboardHandling() {
+        nameTextField.delegate = self
+        nameTextField.returnKeyType = .done
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         tap.delegate = self
         view.addGestureRecognizer(tap)
-        addDoneButtonOnKeyboard()
     }
     
     @objc func dismissKeyboard() {
         view.endEditing(true)
         suggestionsTableView.isHidden = true
     }
-    
-    private func addDoneButtonOnKeyboard() {
-        let doneToolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 50))
-        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        if #available(iOS 26.0, *) {
-            let done = UIBarButtonItem(title: "Done", style: .prominent, target: self, action: #selector(doneButtonAction))
-            doneToolbar.items = [flexSpace, done]
-            doneToolbar.sizeToFit()
-            nameTextField.inputAccessoryView = doneToolbar
-            notesTextView.inputAccessoryView = doneToolbar
-        } else {
-        }
 
-    }
-    
-    @objc func doneButtonAction() {
-        view.endEditing(true)
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
     
     private func setupRightBarButtons() {

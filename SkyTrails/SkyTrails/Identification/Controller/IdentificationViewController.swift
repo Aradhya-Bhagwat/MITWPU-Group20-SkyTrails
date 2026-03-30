@@ -559,7 +559,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
             if itemsPerRow > maxItemsPerRow { itemsPerRow = maxItemsPerRow }
             
             let itemWidth = (availableWidth - (interItemSpacing * (itemsPerRow - 1))) / itemsPerRow
-            let fixedHeight: CGFloat = isPhone ? 220 : 300
+            let fixedHeight: CGFloat = isPhone ? 228 : 308
             
             let itemSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0 / itemsPerRow),

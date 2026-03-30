@@ -11,25 +11,37 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <collectionReusableView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="HistorySectionHeaderView" id="Ucf-7H-dqx" customClass="HistorySectionHeaderView" customModule="SkyTrails" customModuleProvider="target">
-            <rect key="frame" x="0.0" y="0.0" width="375" height="41"/>
+            <rect key="frame" x="0.0" y="0.0" width="375" height="52"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
-                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8Wh-Km-2Lk">
-                    <rect key="frame" x="8" y="10" width="359" height="15"/>
-                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                    <color key="textColor" systemColor="secondaryLabelColor"/>
-                    <nil key="highlightedColor"/>
-                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="WgJ-c9-8K3">
+                    <rect key="frame" x="8" y="10" width="48.666666666666664" height="32"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8Wh-Km-2Lk">
+                            <rect key="frame" x="8" y="6" width="32.666666666666664" height="20"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                            <color key="textColor" systemColor="secondaryLabelColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                    <constraints>
+                        <constraint firstAttribute="bottom" secondItem="8Wh-Km-2Lk" secondAttribute="bottom" constant="6" id="4SI-nk-TbM"/>
+                        <constraint firstItem="8Wh-Km-2Lk" firstAttribute="leading" secondItem="WgJ-c9-8K3" secondAttribute="leading" constant="8" id="Hh7-zB-ZHp"/>
+                        <constraint firstItem="8Wh-Km-2Lk" firstAttribute="top" secondItem="WgJ-c9-8K3" secondAttribute="top" constant="6" id="dkU-4D-K1y"/>
+                        <constraint firstAttribute="trailing" secondItem="8Wh-Km-2Lk" secondAttribute="trailing" constant="8" id="rE6-yg-Nu3"/>
+                    </constraints>
+                </view>
             </subviews>
             <viewLayoutGuide key="safeArea" id="mIH-5k-b7W"/>
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
-                <constraint firstItem="8Wh-Km-2Lk" firstAttribute="leading" secondItem="Ucf-7H-dqx" secondAttribute="leading" constant="8" id="5Hk-m2-nXz"/>
-                <constraint firstAttribute="trailing" secondItem="8Wh-Km-2Lk" secondAttribute="trailing" constant="8" id="7Fg-Lm-9Qz"/>
-                <constraint firstAttribute="bottom" secondItem="8Wh-Km-2Lk" secondAttribute="bottom" constant="6" id="Kdm-8H-3Lk"/>
-                <constraint firstItem="8Wh-Km-2Lk" firstAttribute="top" secondItem="Ucf-7H-dqx" secondAttribute="top" constant="10" id="top-constraint"/>
+                <constraint firstAttribute="bottom" secondItem="WgJ-c9-8K3" secondAttribute="bottom" constant="10" id="92N-bS-fZx"/>
+                <constraint firstItem="WgJ-c9-8K3" firstAttribute="leading" secondItem="Ucf-7H-dqx" secondAttribute="leading" constant="8" id="XLV-wu-U0W"/>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="WgJ-c9-8K3" secondAttribute="trailing" constant="8" id="dTg-NQ-bUd"/>
+                <constraint firstItem="WgJ-c9-8K3" firstAttribute="top" secondItem="Ucf-7H-dqx" secondAttribute="top" constant="10" id="top-constraint"/>
             </constraints>
             <connections>
+                <outlet property="dateCapsuleView" destination="WgJ-c9-8K3" id="kT1-gL-UeG"/>
                 <outlet property="dateLabel" destination="8Wh-Km-2Lk" id="Lkj-2H-mNp"/>
             </connections>
             <point key="canvasLocation" x="139.69465648854961" y="91.197183098591552"/>
