@@ -164,7 +164,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
             ) as? PredictionButtonCollectionViewCell else {
                 return UICollectionViewCell()
             }
-            cell.configure(with: UIImage(named: "PredicBirdButton"))
+            cell.configure(with: UIImage(named: "PredictBirdButton"))
             return cell
         }
             
