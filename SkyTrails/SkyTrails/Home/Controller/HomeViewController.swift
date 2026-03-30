@@ -14,6 +14,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var spots: [PopularSpotUI] = []
     private var news: [NewsItem] = []
     private var migrationCards: [DynamicMapCard] = []
+    private var forcedAmurInput: BirdDateInput?
     private var currentNewsPage = 0
 
     private var animatedIndexPaths: Set<IndexPath> = []
@@ -29,6 +30,16 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         sourceName: "SkyTrails Nature Desk",
         publishedAt: nil
     )
+
+    private enum HomeMLDataError: Error {
+        case fileNotFound
+    }
+
+    private struct HomeMLDataSnapshot: Decodable {
+        let birdId: String
+        let startWeek: Int
+        let endWeek: Int
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -160,7 +171,8 @@ extension HomeViewController {
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            self.upcomingBirds = data.displayableUpcomingBirds; self.spots = data.displayableSpots
+            self.applyTemporaryAmurFalconOverride()
+            self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
             self.migrationCards = data.migrationCards; self.loadingIndicator.stopAnimating()
@@ -175,7 +187,8 @@ extension HomeViewController {
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            self.upcomingBirds = data.displayableUpcomingBirds; self.spots = data.displayableSpots
+            self.applyTemporaryAmurFalconOverride()
+            self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
             self.migrationCards = data.migrationCards; self.animatedIndexPaths.removeAll()
@@ -218,10 +231,61 @@ extension HomeViewController {
         let (start, end) = homeManager.parseDateRange(statusText)
         let sDate = start ?? Date(); let eDate = end ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: sDate) ?? sDate
         let input = BirdDateInput(species: SpeciesData(id: bird.bird_id.uuidString, name: bird.commonName, imageName: bird.staticImageName), startDate: sDate, endDate: eDate)
+        navigateToBirdPrediction(input: input)
+    }
+
+    private func navigateToBirdPrediction(input: BirdDateInput) {
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
-            mapVC.predictionInputs = [input]; navigationController?.pushViewController(mapVC, animated: true)
+            mapVC.predictionInputs = [input]
+            navigationController?.pushViewController(mapVC, animated: true)
         }
+    }
+
+    private func applyTemporaryAmurFalconOverride() {
+        let fallback = buildDefaultAmurFalconContent()
+        let snapshot = (try? loadMLDataSnapshot()) ?? fallback.snapshot
+        let startDate = weekDate(snapshot.startWeek) ?? fallback.startDate
+        let endDate = weekDate(snapshot.endWeek) ?? fallback.endDate
+        let dateText = formatWeekRange(startWeek: snapshot.startWeek, endWeek: snapshot.endWeek)
+
+        forcedAmurInput = BirdDateInput(
+            species: SpeciesData(id: snapshot.birdId, name: fallback.speciesName, imageName: fallback.imageName),
+            startDate: startDate,
+            endDate: endDate
+        )
+        upcomingBirds = [UpcomingBirdUI(imageName: fallback.imageName, title: fallback.speciesName, date: dateText)]
+    }
+
+    private func buildDefaultAmurFalconContent() -> (snapshot: HomeMLDataSnapshot, speciesName: String, imageName: String, startDate: Date, endDate: Date) {
+        let start = weekDate(40) ?? Date()
+        let end = weekDate(52) ?? Calendar.current.date(byAdding: .weekOfYear, value: 12, to: start) ?? start
+        let fallbackSnapshot = HomeMLDataSnapshot(
+            birdId: "550e8400-e29b-41d4-a716-446655440007",
+            startWeek: 40,
+            endWeek: 52
+        )
+        return (fallbackSnapshot, "Amur Falcon", "amur_falcon", start, end)
+    }
+
+    private func loadMLDataSnapshot() throws -> HomeMLDataSnapshot {
+        guard let url = Bundle.main.url(forResource: "MLdata", withExtension: "json") else {
+            throw HomeMLDataError.fileNotFound
+        }
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(HomeMLDataSnapshot.self, from: data)
+    }
+
+    private func weekDate(_ week: Int) -> Date? {
+        var components = DateComponents()
+        components.weekOfYear = week
+        components.yearForWeekOfYear = Calendar.current.component(.yearForWeekOfYear, from: Date())
+        components.weekday = 2
+        return Calendar.current.date(from: components)
+    }
+
+    private func formatWeekRange(startWeek: Int, endWeek: Int) -> String {
+        return "Week \(startWeek) - Week \(endWeek)"
     }
 
     private func navigateToNewsArticle(_ item: NewsItem) {
@@ -406,8 +470,14 @@ extension HomeViewController {
                 didTapPredictBird()
                 return
             }
-            let wCount = homeScreenData?.myWatchlistBirds.count ?? 0
             let adjustedRow = indexPath.row - 1
+            if upcomingBirds.indices.contains(adjustedRow),
+               upcomingBirds[adjustedRow].title.caseInsensitiveCompare("Amur Falcon") == .orderedSame,
+               let forcedInput = forcedAmurInput {
+                navigateToBirdPrediction(input: forcedInput)
+                return
+            }
+            let wCount = homeScreenData?.myWatchlistBirds.count ?? 0
             if adjustedRow < wCount { if let res = homeScreenData?.myWatchlistBirds[safe: adjustedRow] { navigateToBirdPrediction(bird: res.bird, statusText: res.statusText) } }
             else { if let rec = homeScreenData?.recommendedBirds[safe: adjustedRow - wCount] { navigateToBirdPrediction(bird: rec.bird, statusText: rec.dateRange) } }
         case 2:
