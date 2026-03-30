@@ -789,7 +789,7 @@ final class WatchlistManager: WatchlistRepository {
     /// - Parameter paths: Array of image path strings
     /// - Returns: Array of loaded UIImages
     func loadImages(paths: [String]) async -> [UIImage] {
-        await withTaskGroup(of: (Int, UIImage).self) { group in
+        await withTaskGroup(of: (Int, UIImage?).self) { group in
             for (index, path) in paths.enumerated() {
                 group.addTask {
                     let image = await self.loadImage(path: path)
@@ -799,7 +799,9 @@ final class WatchlistManager: WatchlistRepository {
             
             var results: [(Int, UIImage)] = []
             for await result in group {
-                results.append(result)
+                if let image = result.1 {
+                    results.append((result.0, image))
+                }
             }
             return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
         }
@@ -807,10 +809,10 @@ final class WatchlistManager: WatchlistRepository {
     
     /// Loads a single image from various sources
     /// - Parameter path: Image path (can be nil)
-    /// - Returns: Loaded UIImage or placeholder
-    func loadImage(path: String?) async -> UIImage {
-        guard let path = path else {
-            return UIImage(systemName: "photo") ?? UIImage()
+    /// - Returns: Loaded UIImage or nil
+    func loadImage(path: String?) async -> UIImage? {
+        guard let path = path, !path.isEmpty else {
+            return nil
         }
         
         // 1. Check user photos directory
@@ -828,8 +830,8 @@ final class WatchlistManager: WatchlistRepository {
             return remoteImage
         }
         
-        // 4. Fallback to placeholder
-        return UIImage(systemName: "photo") ?? UIImage()
+        // 4. Return nil instead of photo placeholder
+        return nil
     }
     
     /// Loads an image specifically for a watchlist entry
@@ -848,7 +850,7 @@ final class WatchlistManager: WatchlistRepository {
             return UIImage(systemName: "photo") ?? UIImage()
         }
         
-        return await loadImage(path: bird.staticImageName)
+        return await loadImage(path: bird.staticImageName) ?? UIImage(systemName: "photo") ?? UIImage()
     }
     
     /// Loads a user photo from the documents directory
