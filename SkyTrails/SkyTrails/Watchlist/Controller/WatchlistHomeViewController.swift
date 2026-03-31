@@ -814,10 +814,7 @@ extension WatchlistHomeViewController {
 		item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 6, bottom: 12, trailing: 6)
 
 		let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(cardHeight))
-		let group = NSCollectionLayoutGroup.horizontal(
-			layoutSize: groupSize,
-			subitems: Array(repeating: item, count: columns)
-		)
+		let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: columns)
 
 		let section = NSCollectionLayoutSection(group: group)
 		section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 20, trailing: 10)

@@ -27,10 +27,12 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Add birds to watchlist"
         label.textAlignment = .center
-        label.numberOfLines = 2
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
+        label.numberOfLines = 0
+        label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = .secondaryLabel
         label.isHidden = true
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }()
     
@@ -111,8 +113,8 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         NSLayoutConstraint.activate([
             noImageLabel.centerXAnchor.constraint(equalTo: coverImageView.centerXAnchor),
             noImageLabel.centerYAnchor.constraint(equalTo: coverImageView.centerYAnchor),
-            noImageLabel.leadingAnchor.constraint(greaterThanOrEqualTo: coverImageView.leadingAnchor, constant: 12),
-            noImageLabel.trailingAnchor.constraint(lessThanOrEqualTo: coverImageView.trailingAnchor, constant: -12)
+            noImageLabel.leadingAnchor.constraint(equalTo: coverImageView.leadingAnchor, constant: 16),
+            noImageLabel.trailingAnchor.constraint(equalTo: coverImageView.trailingAnchor, constant: -16)
         ])
     }
 
