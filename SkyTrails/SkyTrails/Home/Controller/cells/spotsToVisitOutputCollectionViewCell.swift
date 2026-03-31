@@ -261,7 +261,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         let maxRatio: CGFloat = isWide ? 1.12 : 1.0
         let heightRatio = min(maxRatio, max(0.85, cardHeight / baseCardHeight))
         let titleSize = max(17, 17 * heightRatio)
-        let bodySize = max(12, 12 * heightRatio)
+        let bodySize = max(15.6, 12 * heightRatio * 1.3)
 
         compactBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .regular)
         wideBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .regular)
