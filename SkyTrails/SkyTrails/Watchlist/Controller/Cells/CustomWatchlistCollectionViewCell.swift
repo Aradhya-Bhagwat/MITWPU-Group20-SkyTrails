@@ -4,6 +4,7 @@ import UIKit
 class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     static let identifier = "CustomWatchlistCollectionViewCell"
+    private var defaultContainerBackgroundColor: UIColor = .white
     private var defaultCoverOverImageBackgroundColor: UIColor?
     private var hasCoverImage = false
     @IBOutlet weak var containerView: UIView!
@@ -38,6 +39,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        defaultContainerBackgroundColor = containerView.backgroundColor ?? .white
         defaultCoverOverImageBackgroundColor = coverOverImageView.backgroundColor
         setupUI()
         setupInteractions()
@@ -121,10 +123,11 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
 
     private func updateCardAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
-        containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
-        
-        // Update shadow opacity based on dark mode
-        contentView.layer.shadowOpacity = isDarkMode ? 0 : 0.1
+        containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultContainerBackgroundColor
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOpacity = isDarkMode ? 0 : 0.08
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        containerView.layer.shadowRadius = 8
         
         if hasCoverImage {
             coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultCoverOverImageBackgroundColor
@@ -271,7 +274,13 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
 	}
 	override func layoutSubviews() {
 		super.layoutSubviews()
+        contentView.layoutIfNeeded()
+        containerView.layoutIfNeeded()
         updateCardAppearance()
+        containerView.layer.shadowPath = UIBezierPath(
+            roundedRect: containerView.bounds,
+            cornerRadius: containerView.layer.cornerRadius
+        ).cgPath
 		alignImageTop()
 	}
 	
