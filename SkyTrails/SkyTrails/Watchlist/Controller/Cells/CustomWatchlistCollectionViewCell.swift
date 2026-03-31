@@ -101,6 +101,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         coverImageView.clipsToBounds = true
         coverImageView.contentMode = .scaleAspectFill
         coverOverImageView.layer.cornerRadius = 16
+        coverOverImageView.clipsToBounds = true
         setupBadge(leftBadgeView, label: leftBadgeLabel, color: .systemGreen, cornerRadius: 8)
         setupBadge(rightBadgeView, label: rightBadgeLabel, color: .systemBlue, cornerRadius: 8)
         titleLabel.textColor = .label
@@ -121,15 +122,16 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     private func updateCardAppearance() {
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         containerView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        
+        // Update shadow opacity based on dark mode
+        contentView.layer.shadowOpacity = isDarkMode ? 0 : 0.1
+        
         if hasCoverImage {
             coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultCoverOverImageBackgroundColor
         } else {
-            coverOverImageView.backgroundColor = .clear
+            // When no image, the overlay becomes the visible card background
+            coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         }
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOpacity = isDarkMode ? 0 : 0.1
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
-        containerView.layer.shadowRadius = 6
     }
 
     private func setupBadge(_ view: UIView, label: UILabel, color: UIColor, cornerRadius: CGFloat) {
