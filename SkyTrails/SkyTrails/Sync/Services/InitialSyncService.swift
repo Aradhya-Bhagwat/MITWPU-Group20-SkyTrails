@@ -308,6 +308,9 @@ actor InitialSyncService {
             marksSynced: counts.13,
             timestamp: Date()
         )
+        await MainActor.run {
+            WatchlistManager.shared.notifyDataDidChange()
+        }
         return summary
     }
 

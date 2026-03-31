@@ -254,6 +254,15 @@ final class WatchlistManager: WatchlistRepository {
         loadCompletionHandlers.forEach { $0(success) }
         loadCompletionHandlers.removeAll()
     }
+
+    func notifyDataDidChange() {
+        NotificationCenter.default.post(
+            name: WatchlistManager.didLoadDataNotification,
+            object: self,
+            userInfo: ["success": true]
+        )
+    }
+
     func fetchWatchlists(type: WatchlistType? = nil) throws -> [Watchlist] {
         return try persistence.fetchWatchlists(type: type)
     }
