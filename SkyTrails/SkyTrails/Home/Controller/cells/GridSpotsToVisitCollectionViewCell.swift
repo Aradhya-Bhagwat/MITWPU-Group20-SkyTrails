@@ -171,7 +171,7 @@ import MapKit
             }
 
             private func updateSpeciesLabel(count: Int, fontSize: CGFloat) {
-                let text = "\(count) Species active now"
+                let text = "\(count) Species recently spotted"
                 locationLabel.attributedText = createIconString(
                     text: text,
                     iconName: "bird.fill",
