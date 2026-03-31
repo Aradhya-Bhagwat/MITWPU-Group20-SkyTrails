@@ -139,8 +139,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.semanticContentAttribute = .forceLeftToRight
         button.contentHorizontalAlignment = .center
-        button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
-        button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+   
         button.tintColor = .systemBlue
         button.backgroundColor = .systemBackground
         
