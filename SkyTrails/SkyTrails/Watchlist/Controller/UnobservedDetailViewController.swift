@@ -12,6 +12,7 @@ class UnobservedDetailViewController: UIViewController {
 	var watchlistId: UUID?
 	var shouldUseRuleMatching: Bool = false
 	var onSave: ((Bird) -> Void)?
+    var onWatchlistCreated: ((UUID) -> Void)?
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
 	private var selectedLocation: LocationService.LocationData?
 	@IBOutlet weak var suggestionsTableView: UITableView!
@@ -242,7 +243,8 @@ class UnobservedDetailViewController: UIViewController {
     }
 
     private func promptToCreateCurrentMonthWatchlist(using params: WatchlistEntryOrchestrationService.SaveParameters) {
-        let watchlistTitle = currentMonthWatchlistTitle()
+        let observationDate = params.observationDate ?? Date()
+        let watchlistTitle = currentMonthWatchlistTitle(for: observationDate)
         let alert = UIAlertController(
             title: "No Matching Watchlists",
             message: "Create \"\(watchlistTitle)\" and add this bird there?",
@@ -252,7 +254,8 @@ class UnobservedDetailViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Create", style: .default) { [weak self] _ in
             guard let self else { return }
             Task {
-                let (startDate, endDate) = self.currentMonthDateRange()
+                let (startDate, endDate) = self.currentMonthDateRange(for: observationDate)
+                let watchlistTitle = self.currentMonthWatchlistTitle(for: observationDate)
                 do {
                     let newWatchlistId = try self.manager.addWatchlist(
                         title: watchlistTitle,
@@ -262,6 +265,17 @@ class UnobservedDetailViewController: UIViewController {
                         type: .custom,
                         locationDisplayName: nil
                     )
+                    try self.manager.upsertRule(
+                        watchlistId: newWatchlistId,
+                        type: .date_range,
+                        parameters: .dateRange(
+                            DateRangeRuleParams(startDate: startDate, endDate: endDate)
+                        ),
+                        isActive: true
+                    )
+                    self.watchlistId = newWatchlistId
+                    self.shouldUseRuleMatching = false
+                    self.onWatchlistCreated?(newWatchlistId)
 
                     let retryParams = WatchlistEntryOrchestrationService.SaveParameters(
                         entry: params.entry,
@@ -293,17 +307,16 @@ class UnobservedDetailViewController: UIViewController {
         present(alert, animated: true)
     }
 
-    private func currentMonthWatchlistTitle() -> String {
+    private func currentMonthWatchlistTitle(for date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "LLLL"
-        return "\(formatter.string(from: Date())) watchlist"
+        return "\(formatter.string(from: date)) watchlist"
     }
 
-    private func currentMonthDateRange() -> (Date, Date) {
+    private func currentMonthDateRange(for date: Date) -> (Date, Date) {
         let calendar = Calendar.current
-        let now = Date()
-        let start = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-        let end = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: start) ?? now
+        let start = calendar.date(from: calendar.dateComponents([.year, .month], from: date)) ?? date
+        let end = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: start) ?? date
         return (start, end)
     }
 	
