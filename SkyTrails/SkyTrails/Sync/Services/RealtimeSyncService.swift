@@ -61,6 +61,11 @@ final class RealtimeSyncService: NSObject {
     private override init() {
         super.init()
     }
+
+    private func notifyWatchlistDataChanged() {
+        WatchlistManager.shared.notifyDataDidChange()
+    }
+
     func connect() async throws {
         guard UserSession.shared.isAuthenticatedWithSupabase() else {
             throw RealtimeSyncError.authRequired
@@ -528,6 +533,7 @@ final class RealtimeSyncService: NSObject {
             watchlist.updated_at = record.date(for: "updated_at")
             
             try? context.save()
+            notifyWatchlistDataChanged()
         } else {
             let watchlist = Watchlist(
                 watchlist_id: id,
@@ -550,6 +556,7 @@ final class RealtimeSyncService: NSObject {
             
             context.insert(watchlist)
             try? context.save()
+            notifyWatchlistDataChanged()
         }
     }
     
@@ -558,6 +565,7 @@ final class RealtimeSyncService: NSObject {
         watchlist.syncStatus = .synced
         watchlist.deleted_at = Date()
         try? WatchlistManager.shared.context.save()
+        notifyWatchlistDataChanged()
     }
     
     private func upsertEntry(from record: [String: JSONValue], id: UUID) async throws {
@@ -591,6 +599,7 @@ final class RealtimeSyncService: NSObject {
             entry.lastSyncedAt = Date()
             
             try? WatchlistManager.shared.context.save()
+            notifyWatchlistDataChanged()
         } else {
             let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(bird_id: $0) }
             let entry = WatchlistEntry(
@@ -618,6 +627,7 @@ final class RealtimeSyncService: NSObject {
             
             WatchlistManager.shared.context.insert(entry)
             try? WatchlistManager.shared.context.save()
+            notifyWatchlistDataChanged()
         }
     }
     
@@ -628,6 +638,7 @@ final class RealtimeSyncService: NSObject {
                 for entry in entries where entry.id == id {
                     WatchlistManager.shared.context.delete(entry)
                     try? WatchlistManager.shared.context.save()
+                    notifyWatchlistDataChanged()
                     return
                 }
             }
@@ -658,6 +669,7 @@ final class RealtimeSyncService: NSObject {
             rule.lastSyncedAt = Date()
             
             try? WatchlistManager.shared.context.save()
+            notifyWatchlistDataChanged()
         } else {
             let ruleTypeString = record.string(for: "rule_type") ?? "location"
             let ruleType = WatchlistRuleType(rawValue: ruleTypeString) ?? .location
@@ -683,6 +695,7 @@ final class RealtimeSyncService: NSObject {
             
             WatchlistManager.shared.context.insert(rule)
             try? WatchlistManager.shared.context.save()
+            notifyWatchlistDataChanged()
         }
     }
     
@@ -693,6 +706,7 @@ final class RealtimeSyncService: NSObject {
                 for rule in rules where rule.id == id {
                     WatchlistManager.shared.context.delete(rule)
                     try? WatchlistManager.shared.context.save()
+                    notifyWatchlistDataChanged()
                     return
                 }
             }
@@ -716,6 +730,7 @@ final class RealtimeSyncService: NSObject {
             share.syncStatus = .synced
             share.lastSyncedAt = Date()
             try? WatchlistManager.shared.context.save()
+            notifyWatchlistDataChanged()
         } else {
             let share = WatchlistShare(
                 id: id,
@@ -731,6 +746,7 @@ final class RealtimeSyncService: NSObject {
             share.lastSyncedAt = Date()
             WatchlistManager.shared.context.insert(share)
             try? WatchlistManager.shared.context.save()
+            notifyWatchlistDataChanged()
         }
     }
     
@@ -741,6 +757,7 @@ final class RealtimeSyncService: NSObject {
                 for share in shares where share.id == id {
                     WatchlistManager.shared.context.delete(share)
                     try? WatchlistManager.shared.context.save()
+                    notifyWatchlistDataChanged()
                     return
                 }
             }

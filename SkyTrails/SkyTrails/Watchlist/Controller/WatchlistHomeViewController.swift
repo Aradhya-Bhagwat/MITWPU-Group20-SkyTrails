@@ -56,8 +56,13 @@ class WatchlistHomeViewController: UIViewController {
 		setupUI()
 		setupCollectionView()
 		setupProfileLocationHeaderView()
+		setupDataObservers()
 		
 		loadData()
+	}
+
+	deinit {
+		NotificationCenter.default.removeObserver(self)
 	}
 	
 	override func viewWillAppear(_ animated: Bool) {
@@ -108,6 +113,19 @@ class WatchlistHomeViewController: UIViewController {
 			} catch {
 			}
 		}
+	}
+
+	private func setupDataObservers() {
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(handleDataLoaded(_:)),
+			name: WatchlistManager.didLoadDataNotification,
+			object: nil
+		)
+	}
+
+	@objc private func handleDataLoaded(_ notification: Notification) {
+		loadData()
 	}
 	
 	private func prefetchBirdImages() {
