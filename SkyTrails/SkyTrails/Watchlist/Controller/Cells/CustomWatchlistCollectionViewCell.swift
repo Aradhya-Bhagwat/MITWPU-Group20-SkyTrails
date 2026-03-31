@@ -21,6 +21,18 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var rightBadgeView: UIView!
     @IBOutlet weak var rightBadgeLabel: UILabel!
+
+    private lazy var noImageLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Add birds to watchlist"
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        label.font = .systemFont(ofSize: 16, weight: .semibold)
+        label.textColor = .secondaryLabel
+        label.isHidden = true
+        return label
+    }()
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -94,6 +106,14 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
             $0?.font = .systemFont(ofSize: 13, weight: .medium)
             $0?.textColor = .secondaryLabel
         }
+
+        coverImageView.addSubview(noImageLabel)
+        NSLayoutConstraint.activate([
+            noImageLabel.centerXAnchor.constraint(equalTo: coverImageView.centerXAnchor),
+            noImageLabel.centerYAnchor.constraint(equalTo: coverImageView.centerYAnchor),
+            noImageLabel.leadingAnchor.constraint(greaterThanOrEqualTo: coverImageView.leadingAnchor, constant: 12),
+            noImageLabel.trailingAnchor.constraint(lessThanOrEqualTo: coverImageView.trailingAnchor, constant: -12)
+        ])
     }
 
     private func updateCardAppearance() {
@@ -142,19 +162,7 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         leftBadgeLabel.addIcon(text: "\(viewModel.totalCount)", iconName: "bird")
         rightBadgeLabel.addIcon(text: "\(viewModel.observedCount)", iconName: "bird.fill")
         
-        // Set pre-loaded cover image
-        if let coverImage = viewModel.coverImage {
-            hasCoverImage = true
-            coverImageView.image = coverImage
-            coverImageView.backgroundColor = .clear
-            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-            alignImageTop()
-        } else {
-            hasCoverImage = false
-            coverImageView.image = nil
-            coverImageView.backgroundColor = .clear
-            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-        }
+        setCoverImage(viewModel.coverImage)
         updateCardAppearance()
     }
     
@@ -179,57 +187,49 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         rightBadgeLabel.addIcon(text: "\(dto.stats.observedCount)", iconName: "bird.fill")
         if let imageName = dto.image {
             if let userPhoto = loadUserPhoto(named: imageName) {
-                hasCoverImage = true
-                coverImageView.image = userPhoto
-                coverImageView.backgroundColor = .clear
-                coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-                alignImageTop()
+                setCoverImage(userPhoto)
             } 
             else if let assetImage = UIImage(named: imageName) {
-                hasCoverImage = true
-                coverImageView.image = assetImage
-                coverImageView.backgroundColor = .clear
+                setCoverImage(assetImage)
                 Task { @MainActor in
                     if let supabaseImage = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
-                        self.hasCoverImage = true
-                        self.coverImageView.image = supabaseImage
-                        self.coverImageView.backgroundColor = .clear
-                        self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-                        self.alignImageTop()
+                        self.setCoverImage(supabaseImage)
                         self.updateCardAppearance()
                     }
                 }
             } else {
-                hasCoverImage = false
-                coverImageView.image = nil
-                coverImageView.backgroundColor = .clear
+                setCoverImage(nil)
                 Task { @MainActor in
                     if let image = await IdentificationImageService.shared.image(for: imageName, shapeId: nil) {
-                        self.hasCoverImage = true
-                        self.coverImageView.image = image
-                        self.coverImageView.backgroundColor = .clear
-                        self.coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
-                        self.alignImageTop()
+                        self.setCoverImage(image)
                         self.updateCardAppearance()
                     }
                 }
             }
         } else {
-            hasCoverImage = false
-            coverImageView.image = nil
-            coverImageView.backgroundColor = .clear
-            coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+            setCoverImage(nil)
         }
         updateCardAppearance()
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        hasCoverImage = false
-        coverImageView.image = nil
-        coverImageView.backgroundColor = .clear
-        coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+        setCoverImage(nil)
         updateCardAppearance()
+    }
+
+    private func setCoverImage(_ image: UIImage?) {
+        hasCoverImage = (image != nil)
+        coverImageView.image = image
+        coverImageView.layer.contentsRect = CGRect(x: 0, y: 0, width: 1, height: 1)
+        noImageLabel.isHidden = (image != nil)
+
+        if image != nil {
+            coverImageView.backgroundColor = .clear
+            alignImageTop()
+        } else {
+            coverImageView.backgroundColor = .tertiarySystemFill
+        }
     }
     
     private func loadUserPhoto(named imageName: String) -> UIImage? {
