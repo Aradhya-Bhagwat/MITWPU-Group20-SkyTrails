@@ -1,103 +1,159 @@
-{
-	"birdId": "550e8400-e29b-41d4-a716-446655440007",
-	"startWeek": 40,
-	"endWeek": 52,
-	"trajectoryPaths": [
-		{
-			"week": 40,
-			"lat": 26.3137,
-			"lon": 94.5143,
-			"probability": 85
-		},
-		{
-			"week": 41,
-			"lat": 26.1522,
-			"lon": 94.2678,
-			"probability": 95
-		},
-		{
-			"week": 42,
-			"lat": 25.8011,
-			"lon": 93.9123,
-			"probability": 80
-		},
-		{
-			"week": 43,
-			"lat": 24.8174,
-			"lon": 92.5372,
-			"probability": 45
-		},
-		{
-			"week": 44,
-			"lat": 23.9758,
-			"lon": 90.8780,
-			"probability": 30
-		},
-		{
-			"week": 45,
-			"lat": 22.5897,
-			"lon": 87.2125,
-			"probability": 25
-		},
-		{
-			"week": 46,
-			"lat": 21.0713,
-			"lon": 83.4814,
-			"probability": 25
-		},
-		{
-			"week": 47,
-			"lat": 19.9531,
-			"lon": 79.2134,
-			"probability": 40
-		},
-		{
-			"week": 48,
-			"lat": 19.3183,
-			"lon": 75.8987,
-			"probability": 65
-		},
-		{
-			"week": 49,
-			"lat": 18.8339,
-			"lon": 73.4175,
-			"probability": 85
-		},
-		{
-			"week": 50,
-			"lat": 18.7501,
-			"lon": 73.3812,
-			"probability": 90
-		},
-		{
-			"week": 51,
-			"lat": 18.6823,
-			"lon": 73.3456,
-			"probability": 90
-		},
-		{
-			"week": 52,
-			"lat": 18.6010,
-			"lon": 73.2910,
-			"probability": 90
-		}
-	],
-	"hotspotScores": [
-		{
-			"hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678",
-			"probability": 95
-		},
-		{
-			"hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890",
-			"probability": 98
-		},
-		{
-			"hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012",
-			"probability": 90
-		},
-		{
-			"hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234",
-			"probability": 75
-		}
-	]
-}
+[
+  {
+    "birdId": "550e8400-e29b-41d4-a716-446655440007",
+    "commonName": "Amur Falcon",
+    "startWeek": 40,
+    "endWeek": 52,
+    "trajectoryPaths": [
+      { "week": 40, "lat": 26.3137, "lon": 94.5143, "probability": 85 },
+      { "week": 41, "lat": 26.1522, "lon": 94.2678, "probability": 95 },
+      { "week": 42, "lat": 25.8011, "lon": 93.9123, "probability": 80 },
+      { "week": 43, "lat": 24.8174, "lon": 92.5372, "probability": 45 },
+      { "week": 44, "lat": 23.9758, "lon": 90.878, "probability": 30 },
+      { "week": 45, "lat": 22.5897, "lon": 87.2125, "probability": 25 },
+      { "week": 46, "lat": 21.0713, "lon": 83.4814, "probability": 25 },
+      { "week": 47, "lat": 19.9531, "lon": 79.2134, "probability": 40 },
+      { "week": 48, "lat": 19.3183, "lon": 75.8987, "probability": 65 },
+      { "week": 49, "lat": 18.8339, "lon": 73.4175, "probability": 85 },
+      { "week": 50, "lat": 18.7501, "lon": 73.3812, "probability": 90 },
+      { "week": 51, "lat": 18.6823, "lon": 73.3456, "probability": 90 },
+      { "week": 52, "lat": 18.601, "lon": 73.291, "probability": 90 }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678", "probability": 95 },
+      { "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890", "probability": 98 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 90 },
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 75 }
+    ]
+  },
+  {
+    "birdId": "76d4c5b6-a7b8-4901-23de-f45678905678",
+    "commonName": "Booted Eagle",
+    "startWeek": 38,
+    "endWeek": 52,
+    "trajectoryPaths": [
+      { "week": 38, "lat": 34.0122, "lon": 71.5321, "probability": 45 },
+      { "week": 40, "lat": 30.7333, "lon": 76.7794, "probability": 60 },
+      { "week": 42, "lat": 26.9124, "lon": 75.7873, "probability": 75 },
+      { "week": 44, "lat": 23.2599, "lon": 77.4126, "probability": 80 },
+      { "week": 46, "lat": 21.1458, "lon": 79.0882, "probability": 85 },
+      { "week": 48, "lat": 19.076, "lon": 72.8777, "probability": 90 },
+      { "week": 50, "lat": 18.5204, "lon": 73.8567, "probability": 95 },
+      { "week": 52, "lat": 15.2993, "lon": 74.124, "probability": 92 }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 94 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 15 },
+      { "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678", "probability": 10 }
+    ]
+  },
+  {
+    "birdId": "87d4c5b6-a7b8-4901-23de-f45678901234",
+    "commonName": "Eurasian Wryneck",
+    "startWeek": 39,
+    "endWeek": 52,
+    "trajectoryPaths": [
+      { "week": 39, "lat": 31.1048, "lon": 77.1734, "probability": 40 },
+      { "week": 41, "lat": 28.6139, "lon": 77.209, "probability": 65 },
+      { "week": 43, "lat": 25.3176, "lon": 82.9739, "probability": 70 },
+      { "week": 45, "lat": 22.5726, "lon": 88.3639, "probability": 75 },
+      { "week": 47, "lat": 19.076, "lon": 72.8777, "probability": 80 },
+      { "week": 49, "lat": 17.385, "lon": 78.4867, "probability": 85 },
+      { "week": 51, "lat": 12.9716, "lon": 77.5946, "probability": 90 },
+      { "week": 52, "lat": 11.0168, "lon": 76.9558, "probability": 92 }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 82 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 45 },
+      { "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890", "probability": 30 }
+    ]
+  },
+  {
+    "birdId": "98d4c5b6-a7b8-4901-23de-f45678909012",
+    "commonName": "Blue-throated Flycatcher",
+    "startWeek": 41,
+    "endWeek": 52,
+    "trajectoryPaths": [
+      { "week": 41, "lat": 27.533, "lon": 94.621, "probability": 90 },
+      { "week": 43, "lat": 25.5788, "lon": 91.8933, "probability": 85 },
+      { "week": 45, "lat": 22.9868, "lon": 87.855, "probability": 60 },
+      { "week": 47, "lat": 18.4312, "lon": 83.9744, "probability": 55 },
+      { "week": 49, "lat": 15.3173, "lon": 75.7139, "probability": 75 },
+      { "week": 51, "lat": 13.0, "lon": 75.25, "probability": 95 },
+      { "week": 52, "lat": 11.6754, "lon": 76.2511, "probability": 98 }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678", "probability": 95 },
+      { "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890", "probability": 92 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 88 },
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 70 }
+    ]
+  },
+  {
+    "birdId": "b976977e-3280-40e2-8572-6158f475dd71",
+    "commonName": "Blyth's Reed Warbler",
+    "startWeek": 36,
+    "endWeek": 52,
+    "hemisphere": "Northern",
+    "trajectoryPaths": [
+      { "week": 36, "lat": 34.0, "lon": 75.0, "probability": 30, "id": "472302aa-e2c8-4649-bced-cff5d4fc1632" },
+      { "week": 38, "lat": 30.5, "lon": 77.0, "probability": 50, "id": "a94a5151-841c-4396-ba6c-193b51b4c332" },
+      { "week": 40, "lat": 26.5, "lon": 82.0, "probability": 65, "id": "4b865590-9dbd-4416-b77d-7b0454eb8e59" },
+      { "week": 42, "lat": 25.8, "lon": 91.5, "probability": 85, "id": "027546a7-306c-41e7-a3a7-941132d37582" },
+      { "week": 44, "lat": 22.0, "lon": 85.0, "probability": 75, "id": "be4a933a-dbd7-431c-8b54-dc244e0f4d30" },
+      { "week": 46, "lat": 19.5, "lon": 78.0, "probability": 80, "id": "47510b37-55fa-4157-8c27-63dc60a820ca" },
+      { "week": 48, "lat": 18.7, "lon": 74.0, "probability": 90, "id": "d04c1fde-f5d3-40bc-b3e8-54af1440160d" },
+      { "week": 50, "lat": 15.0, "lon": 75.5, "probability": 95, "id": "42bedca6-cff7-4cdc-baaa-f4fc88c641ba" },
+      { "week": 52, "lat": 12.0, "lon": 77.0, "probability": 92, "id": "f1f89c27-ac49-4dd3-9cab-5cebee0c9ab8" }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 92 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 84 },
+      { "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890", "probability": 80 },
+      { "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678", "probability": 78 }
+    ]
+  },
+  {
+    "birdId": "dca27c8b-0d19-4255-8c38-ffc20492e813",
+    "commonName": "Common Kestrel",
+    "startWeek": 38,
+    "endWeek": 52,
+    "hemisphere": "Northern",
+    "trajectoryPaths": [
+      { "week": 38, "lat": 32.5, "lon": 72.0, "probability": 40, "id": "75e99fb4-2f45-4395-9f71-0000cdcb42d9" },
+      { "week": 40, "lat": 28.2, "lon": 74.5, "probability": 60, "id": "7c52dafb-38f9-4c9d-bb55-c7db3c13d792" },
+      { "week": 42, "lat": 24.5, "lon": 76.0, "probability": 75, "id": "cd509a4d-9bfa-4d50-b315-bbe615d34d1c" },
+      { "week": 44, "lat": 21.0, "lon": 75.5, "probability": 85, "id": "9baa2ae1-9e9d-45c0-a9f8-0ab504072dc3" },
+      { "week": 46, "lat": 18.9, "lon": 74.2, "probability": 90, "id": "133dd841-6b6b-40fa-8a6f-ba86f2112c2b" },
+      { "week": 48, "lat": 17.5, "lon": 75.0, "probability": 92, "id": "5099eaad-1824-41e3-91a8-4248e4a47efd" },
+      { "week": 50, "lat": 16.2, "lon": 76.0, "probability": 95, "id": "4a52849f-5fbb-423c-bf84-c1967253accc" },
+      { "week": 52, "lat": 14.8, "lon": 77.5, "probability": 94, "id": "c32943bc-7e46-4c79-b024-0131093134b3" }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 88 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 40 },
+      { "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890", "probability": 35 },
+      { "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678", "probability": 30 }
+    ]
+  },
+  {
+    "birdId": "ff75ef86-e79d-465f-aa8a-274a8959cc1c",
+    "commonName": "Greater Whitethroat",
+    "startWeek": 34,
+    "endWeek": 42,
+    "hemisphere": "Northern",
+    "trajectoryPaths": [
+      { "week": 34, "lat": 34.5, "lon": 69.5, "probability": 30, "id": "08894304-eddf-4659-86d1-2389e46a3fc9" },
+      { "week": 36, "lat": 30.2, "lon": 71.0, "probability": 55, "id": "be7fe55f-c57f-49e6-b2fc-344fd90b2877" },
+      { "week": 38, "lat": 25.5, "lon": 70.0, "probability": 75, "id": "faaf28e0-f613-48c6-b5bd-7d6bbecfaa78" },
+      { "week": 40, "lat": 22.0, "lon": 68.5, "probability": 80, "id": "9810c03b-49af-46db-96ee-af105e81cebf" },
+      { "week": 42, "lat": 18.0, "lon": 65.0, "probability": 45, "id": "e8da7463-4023-4780-bf5c-a6a7da332de1" }
+    ],
+    "hotspotScores": [
+      { "hotspotId": "E3D4C5B6-A7B8-4901-23DE-F45678901234", "probability": 25 },
+      { "hotspotId": "D2C3B4A5-F6E7-4890-12CD-EF3456789012", "probability": 5 },
+      { "hotspotId": "C1B2A3D4-E5F6-4789-01BC-DEF234567890", "probability": 5 },
+      { "hotspotId": "B0A1C2D3-E4F5-4678-90AB-CDEF12345678", "probability": 5 }
+    ]
+  }
+]
