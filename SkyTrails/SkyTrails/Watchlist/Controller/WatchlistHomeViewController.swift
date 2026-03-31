@@ -16,7 +16,6 @@ class WatchlistHomeViewController: UIViewController {
     
     // Profile Location Header
     private let profileLocationHeaderView = ProfileLocationHeaderView()
-    private var profileLocationHeaderConstraints: [NSLayoutConstraint] = []
 	enum WatchlistSection: Int, CaseIterable {
 		case myWatchlist
 		case customWatchlist
@@ -67,16 +66,13 @@ class WatchlistHomeViewController: UIViewController {
 	
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
-		attachProfileLocationHeaderViewIfNeeded()
+		configureNavigationBar()
 		profileLocationHeaderView.refreshLocation()
 		loadData()
 	}
 	
 	override func viewWillDisappear(_ animated: Bool) {
 		super.viewWillDisappear(animated)
-		profileLocationHeaderView.removeFromSuperview()
-		NSLayoutConstraint.deactivate(profileLocationHeaderConstraints)
-		profileLocationHeaderConstraints.removeAll()
 	}
 	
 	private func loadData() {
@@ -154,26 +150,19 @@ class WatchlistHomeViewController: UIViewController {
 	private func setupUI() {
 		self.navigationItem.title = "Watchlist"
 		self.tabBarItem.title = "Watchlist"
-		self.navigationItem.largeTitleDisplayMode = .automatic
-		navigationController?.navigationBar.prefersLargeTitles = true
 	}
 	
 	private func setupProfileLocationHeaderView() {
 		profileLocationHeaderView.onTap = { [weak self] in
 			self?.navigateToProfile()
 		}
+		profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44).isActive = true
 	}
 	
-	private func attachProfileLocationHeaderViewIfNeeded() {
-		guard profileLocationHeaderView.superview == nil else { return }
-		guard let navigationBar = navigationController?.navigationBar else { return }
-
-		navigationBar.addSubview(profileLocationHeaderView)
-		profileLocationHeaderConstraints = [
-			profileLocationHeaderView.trailingAnchor.constraint(equalTo: navigationBar.trailingAnchor, constant: -16),
-			profileLocationHeaderView.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor, constant: -8)
-		]
-		NSLayoutConstraint.activate(profileLocationHeaderConstraints)
+	private func configureNavigationBar() {
+		navigationItem.largeTitleDisplayMode = .always
+		navigationController?.navigationBar.prefersLargeTitles = true
+		navigationItem.rightBarButtonItem = UIBarButtonItem(customView: profileLocationHeaderView)
 	}
 	
 	private func navigateToProfile() {

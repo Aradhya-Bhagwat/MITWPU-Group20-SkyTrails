@@ -477,7 +477,7 @@
                             <constraint firstItem="0NY-hU-HEx" firstAttribute="trailing" secondItem="yez-to-lUt" secondAttribute="trailing" id="pLQ-39-bkk"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Watchlist" largeTitleDisplayMode="never" id="eWu-qa-gFF">
+                    <navigationItem key="navigationItem" title="Watchlist" largeTitleDisplayMode="always" id="eWu-qa-gFF">
                         <rightBarButtonItems>
                             <barButtonItem image="pencil" catalog="system" id="Btn-Edit-Smart">
                                 <connections>
