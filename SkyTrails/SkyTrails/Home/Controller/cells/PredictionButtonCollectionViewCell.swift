@@ -13,6 +13,24 @@ class PredictionButtonCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var imageView: UIImageView!
+    
+    private let symbolImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .center
+        iv.tintColor = .systemTeal
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .systemTeal
+        label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -44,9 +62,27 @@ class PredictionButtonCollectionViewCell: UICollectionViewCell {
         containerView.layer.cornerRadius = 16
         containerView.layer.masksToBounds = true
         
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .center
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
+        imageView.backgroundColor = UIColor.systemTeal.withAlphaComponent(0.1)
+        imageView.tintColor = .systemTeal
+        imageView.image = nil // Background only
+        
+        containerView.addSubview(symbolImageView)
+        containerView.addSubview(titleLabel)
+        containerView.bringSubviewToFront(titleLabel)
+        containerView.bringSubviewToFront(symbolImageView)
+        
+        NSLayoutConstraint.activate([
+            symbolImageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            symbolImageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            
+            titleLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12)
+        ])
     }
     
     private func applySemanticAppearance() {
@@ -81,8 +117,9 @@ class PredictionButtonCollectionViewCell: UICollectionViewCell {
         }
     }
     
-    func configure(with image: UIImage?) {
-        imageView.image = image
+    func configure(with image: UIImage?, title: String) {
+        let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .bold)
+        symbolImageView.image = image?.withConfiguration(config).withRenderingMode(.alwaysTemplate)
+        titleLabel.text = title
     }
-
 }

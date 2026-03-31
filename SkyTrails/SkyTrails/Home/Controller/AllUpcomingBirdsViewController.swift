@@ -164,7 +164,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
             ) as? PredictionButtonCollectionViewCell else {
                 return UICollectionViewCell()
             }
-            cell.configure(with: UIImage(named: "PredicBirdButton"))
+            cell.configure(with: UIImage(systemName: "custom.point.bottomleft.forward.to.arrow.triangle.scurvepath"), title: "Predict Migrations")
             return cell
         }
             

@@ -204,30 +204,24 @@ if (nzchar(species_code_filter)) {
   status_trends_species <- status_trends_species %>%
     filter(ebird_species_code == species_code_filter)
 } else {
-  pending_requests <- supabase_get(
-    "species_range_requests",
-    query = list(
-      select = "ebird_species_code,week_number,status",
-      status = "eq.pending",
-      order = "updated_at.asc"
-    ),
-    error_context = "Loading species_range_requests"
+  # Fetch every bird currently in your master birds table
+  all_birds <- supabase_get(
+    "birds",
+    query = list(select = "species_code"),
+    error_context = "Loading master bird list"
   )
 
-  if (nrow(pending_requests) == 0) {
-    message("No pending species range requests found.")
+  if (nrow(all_birds) == 0) {
+    message("No birds found in the master table.")
     quit(save = "no", status = 0)
   }
 
-  requested_species_codes <- unique(pending_requests$ebird_species_code)
-  requested_weeks <- unique(as.integer(pending_requests$week_number))
-
+  # Filter status_trends_species to match your database
   status_trends_species <- status_trends_species %>%
-    filter(ebird_species_code %in% requested_species_codes)
+    filter(ebird_species_code %in% all_birds$species_code)
 
-  if (length(requested_weeks) > 0) {
-    target_weeks <- unique(requested_weeks)
-  }
+  # We want maps for ALL weeks for these birds, not just a 3-week window
+  target_weeks <- 1:52
 }
 
 if (nrow(status_trends_species) == 0) {
@@ -354,25 +348,6 @@ for (species_idx in seq_len(nrow(status_trends_species))) {
     on_conflict = "ebird_species_code,week_number",
     error_context = sprintf("Upserting species_ranges for %s", species_code)
   )
-
-  for (week_number in unique(vapply(upsert_rows, function(row) row$week_number, integer(1)))) {
-    supabase_patch(
-      "species_range_requests",
-      body_rows = list(
-        status = "completed",
-        updated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
-      ),
-      query = list(
-        ebird_species_code = paste0("eq.", species_code),
-        week_number = paste0("eq.", week_number)
-      ),
-      error_context = sprintf(
-        "Updating species_range_requests for %s week %s",
-        species_code,
-        week_number
-      )
-    )
-  }
 }
 
 message("Species range generation completed.")
