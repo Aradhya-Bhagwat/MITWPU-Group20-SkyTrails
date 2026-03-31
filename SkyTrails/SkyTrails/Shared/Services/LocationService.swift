@@ -123,6 +123,21 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         }
     }
     func getCurrentLocation() async throws -> LocationData {
+        if let savedHomeLocation = LocationPreferences.shared.homeLocation {
+            let savedHomeLocationName = LocationPreferences.shared.homeLocationName
+            let reverseGeocodedName = await reverseGeocode(
+                lat: savedHomeLocation.latitude,
+                lon: savedHomeLocation.longitude
+            )
+            let displayName = savedHomeLocationName ?? reverseGeocodedName ?? "Current Location"
+
+            return LocationData(
+                displayName: displayName,
+                lat: savedHomeLocation.latitude,
+                lon: savedHomeLocation.longitude
+            )
+        }
+
         try await ensureLocationAuthorization()
         
         return try await withCheckedThrowingContinuation { continuation in
