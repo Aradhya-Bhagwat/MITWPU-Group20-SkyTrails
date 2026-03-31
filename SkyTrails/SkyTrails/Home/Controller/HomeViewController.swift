@@ -14,7 +14,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var spots: [PopularSpotUI] = []
     private var news: [NewsItem] = []
     private var migrationCards: [DynamicMapCard] = []
-    private var forcedAmurInput: BirdDateInput?
+    private var mlPredictionInputsByBirdName: [String: BirdDateInput] = [:]
     private var currentNewsPage = 0
 
     private var animatedIndexPaths: Set<IndexPath> = []
@@ -37,6 +37,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
 
     private struct HomeMLDataSnapshot: Decodable {
         let birdId: String
+        let commonName: String
         let startWeek: Int
         let endWeek: Int
     }
@@ -171,7 +172,7 @@ extension HomeViewController {
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            self.applyTemporaryAmurFalconOverride()
+            self.applyMLDataOverride()
             self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
@@ -187,7 +188,7 @@ extension HomeViewController {
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            self.applyTemporaryAmurFalconOverride()
+            self.applyMLDataOverride()
             self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
@@ -242,38 +243,50 @@ extension HomeViewController {
         }
     }
 
-    private func applyTemporaryAmurFalconOverride() {
-        let fallback = buildDefaultAmurFalconContent()
-        let snapshot = (try? loadMLDataSnapshot()) ?? fallback.snapshot
-        let startDate = weekDate(snapshot.startWeek) ?? fallback.startDate
-        let endDate = weekDate(snapshot.endWeek) ?? fallback.endDate
-        let dateText = formatWeekRange(startWeek: snapshot.startWeek, endWeek: snapshot.endWeek)
+    private func applyMLDataOverride() {
+        guard let snapshots = try? loadMLDataSnapshots(), !snapshots.isEmpty else {
+            mlPredictionInputsByBirdName = [:]
+            upcomingBirds = homeScreenData?.displayableUpcomingBirds ?? []
+            return
+        }
 
-        forcedAmurInput = BirdDateInput(
-            species: SpeciesData(id: snapshot.birdId, name: fallback.speciesName, imageName: fallback.imageName),
-            startDate: startDate,
-            endDate: endDate
-        )
-        upcomingBirds = [UpcomingBirdUI(imageName: fallback.imageName, title: fallback.speciesName, date: dateText)]
+        let fallbackUpcomingBirds = homeScreenData?.displayableUpcomingBirds ?? []
+        var inputsByBirdName: [String: BirdDateInput] = [:]
+
+        upcomingBirds = snapshots.map { snapshot in
+            let fallbackImageName = snapshot.commonName
+                .lowercased()
+                .replacingOccurrences(of: "'", with: "")
+                .replacingOccurrences(of: "-", with: "_")
+                .replacingOccurrences(of: " ", with: "_")
+            let imageName = WatchlistManager.shared.findBird(byName: snapshot.commonName)?.staticImageName
+                ?? fallbackUpcomingBirds.first(where: { $0.title.caseInsensitiveCompare(snapshot.commonName) == .orderedSame })?.imageName
+                ?? fallbackImageName
+            let startDate = weekDate(snapshot.startWeek) ?? Date()
+            let endDate = weekDate(snapshot.endWeek) ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
+
+            inputsByBirdName[snapshot.commonName.lowercased()] = BirdDateInput(
+                species: SpeciesData(id: snapshot.birdId, name: snapshot.commonName, imageName: imageName),
+                startDate: startDate,
+                endDate: endDate
+            )
+
+            return UpcomingBirdUI(
+                imageName: imageName,
+                title: snapshot.commonName,
+                date: formatWeekRange(startWeek: snapshot.startWeek, endWeek: snapshot.endWeek)
+            )
+        }
+
+        mlPredictionInputsByBirdName = inputsByBirdName
     }
 
-    private func buildDefaultAmurFalconContent() -> (snapshot: HomeMLDataSnapshot, speciesName: String, imageName: String, startDate: Date, endDate: Date) {
-        let start = weekDate(40) ?? Date()
-        let end = weekDate(52) ?? Calendar.current.date(byAdding: .weekOfYear, value: 12, to: start) ?? start
-        let fallbackSnapshot = HomeMLDataSnapshot(
-            birdId: "550e8400-e29b-41d4-a716-446655440007",
-            startWeek: 40,
-            endWeek: 52
-        )
-        return (fallbackSnapshot, "Amur Falcon", "amur_falcon", start, end)
-    }
-
-    private func loadMLDataSnapshot() throws -> HomeMLDataSnapshot {
+    private func loadMLDataSnapshots() throws -> [HomeMLDataSnapshot] {
         guard let url = Bundle.main.url(forResource: "MLdata", withExtension: "json") else {
             throw HomeMLDataError.fileNotFound
         }
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(HomeMLDataSnapshot.self, from: data)
+        return try JSONDecoder().decode([HomeMLDataSnapshot].self, from: data)
     }
 
     private func weekDate(_ week: Int) -> Date? {
@@ -472,8 +485,7 @@ extension HomeViewController {
             }
             let adjustedRow = indexPath.row - 1
             if upcomingBirds.indices.contains(adjustedRow),
-               upcomingBirds[adjustedRow].title.caseInsensitiveCompare("Amur Falcon") == .orderedSame,
-               let forcedInput = forcedAmurInput {
+               let forcedInput = mlPredictionInputsByBirdName[upcomingBirds[adjustedRow].title.lowercased()] {
                 navigateToBirdPrediction(input: forcedInput)
                 return
             }
