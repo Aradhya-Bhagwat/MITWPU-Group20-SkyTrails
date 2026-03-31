@@ -5,8 +5,8 @@ import UIKit
 final class SpeciesSelectionCoordinator {
     
     private weak var navigationController: UINavigationController?
-    private let targetWatchlistId: UUID?
-    private let shouldUseRuleMatching: Bool
+    private var targetWatchlistId: UUID?
+    private var shouldUseRuleMatching: Bool
     private let mode: WatchlistMode
     
     private var birdQueue: [Bird] = []
@@ -53,6 +53,10 @@ final class SpeciesSelectionCoordinator {
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
             vc.shouldUseRuleMatching = shouldUseRuleMatching
+            vc.onWatchlistCreated = { [weak self] newWatchlistId in
+                self?.targetWatchlistId = newWatchlistId
+                self?.shouldUseRuleMatching = false
+            }
             vc.onSave = { [weak self] savedBird in
                 self?.handleSave(bird: savedBird)
             }
