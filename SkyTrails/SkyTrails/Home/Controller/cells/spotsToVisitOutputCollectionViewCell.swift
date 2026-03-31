@@ -13,7 +13,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var compactBadgeIconImageView: UIImageView!
     @IBOutlet weak var compactBadgeTitleLabel: UILabel!
     @IBOutlet weak var compactBadgeSubtitleLabel: UILabel!
-    @IBOutlet weak var compactLikelySpotLabel: UILabel!
     @IBOutlet weak var compactSightabilityLabel: UILabel!
 
     @IBOutlet weak var wideBirdImageView: UIImageView!
@@ -21,9 +20,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var wideBadgeIconImageView: UIImageView!
     @IBOutlet weak var wideBadgeTitleLabel: UILabel!
     @IBOutlet weak var wideBadgeSubtitleLabel: UILabel!
-    @IBOutlet weak var wideLikelySpotLabel: UILabel!
     @IBOutlet weak var wideSightabilityLabel: UILabel!
-    @IBOutlet weak var graphView: SightabilityGraphView!
 
     private var showsWideCard: Bool?
     private var isCardSelected = false
@@ -31,7 +28,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     private var currentStatusColor: UIColor = .systemBlue
     private var currentStatusTitle: String = ""
     private var currentStatusSubtitle: String = ""
-    private var currentLikelySpotText: String = ""
     private var currentProbability: Int = 0
 
     private var actionButtonsContainer: UIStackView?
@@ -174,6 +170,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     func configure(prediction: FinalPredictionResult, yearlyProbabilities: [Int]) {
+        _ = yearlyProbabilities
         self.currentPrediction = prediction
         let image = UIImage(named: prediction.imageName) ?? UIImage(systemName: "bird.fill")
         compactBirdImageView.image = image
@@ -182,16 +179,13 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactBirdNameLabel.text = prediction.birdName
         wideBirdNameLabel.text = prediction.birdName
 
-        let status = statusText(for: prediction.spottingProbability)
         currentStatusTitle = prediction.weekNumber ?? "N/A"
         currentStatusSubtitle = prediction.residencyStatus ?? "N/A"
-        currentLikelySpotText = "Likely Spot: \(prediction.likelySpot)"
-        currentStatusColor = status.color
+        currentStatusColor = statusText(for: prediction.spottingProbability).color
         currentProbability = prediction.spottingProbability
         applyScaledTexts()
         applyBadgeIconStyle()
 
-        graphView.setProbabilities(yearlyProbabilities)
         applySelectionStyle()
     }
 
@@ -276,8 +270,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
         wideBadgeTitleLabel.font = .systemFont(ofSize: bodySize)
         wideBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
-        compactLikelySpotLabel.font = .systemFont(ofSize: bodySize)
-        wideLikelySpotLabel.font = .systemFont(ofSize: bodySize)
         compactSightabilityLabel.font = .systemFont(ofSize: bodySize)
         wideSightabilityLabel.font = .systemFont(ofSize: bodySize)
 
@@ -289,8 +281,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactBadgeSubtitleLabel.text = currentStatusSubtitle
         wideBadgeTitleLabel.text = currentStatusTitle
         wideBadgeSubtitleLabel.text = currentStatusSubtitle
-        compactLikelySpotLabel.text = currentLikelySpotText
-        wideLikelySpotLabel.text = currentLikelySpotText
         
         let sightabilityAttr = attributedSightabilityText(
             probability: currentProbability,
