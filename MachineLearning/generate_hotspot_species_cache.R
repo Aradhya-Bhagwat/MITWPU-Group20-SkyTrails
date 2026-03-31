@@ -66,8 +66,21 @@ supabase_upsert <- function(path, body_rows) {
 }
 
 # --- Load Hotspots ---
-message("Fetching hotspots from database...")
-hotspots_raw <- supabase_get("hotspots_geo", query = list(select = "hotspot_geo_id,name,location"))
+message("Fetching hotspots...")
+hot_lat <- Sys.getenv("HOTSPOT_LAT")
+hot_lng <- Sys.getenv("HOTSPOT_LNG")
+
+if (hot_lat != "" && hot_lng != "") {
+  # This creates a dummy row so the rest of the script has data to work with
+  hotspots_raw <- tibble::tibble(
+    hotspot_geo_id = "test_manual_location",
+    name = "Terminal Test Point",
+    location = sprintf("POINT(%s %s)", hot_lng, hot_lat)
+  )
+  message(sprintf("Using manual test coordinates: %s, %s", hot_lat, hot_lng))
+} else {
+  hotspots_raw <- supabase_get("hotspots_geo", query = list(select = "hotspot_geo_id,name,location"))
+}
 if (nrow(hotspots_raw) == 0 || !"location" %in% names(hotspots_raw)) {
   stop("Database returned no hotspots or missing 'location' column.")
 }
@@ -83,9 +96,27 @@ hotspots_sf <- hotspots_raw %>%
 message(sprintf("Loaded %d hotspots. Coordinates parsed successfully.", nrow(hotspots_sf)))
 
 # --- Load Birds ---
+message("Fetching bird metadata from database...")
 birds_lookup <- supabase_get("birds", query = list(select = "id,common_name,scientific_name,species_code,image_url"))
+
+# SAFETY CHECK: Only rename if the table actually returned data
 if (nrow(birds_lookup) > 0) {
-  birds_lookup <- birds_lookup %>% rename(bird_id = id, ebird_species_code = species_code, static_image_name = image_url)
+  birds_lookup <- birds_lookup %>%
+    rename(
+      bird_id = id,
+      ebird_species_code = species_code,
+      static_image_name = image_url
+    )
+} else {
+  message("Notice: The 'birds' table is currently empty. Using default naming logic for this run.")
+  # Create an empty tibble with the expected columns so the script doesn't crash later
+  birds_lookup <- tibble::tibble(
+    bird_id = character(),
+    common_name = character(),
+    scientific_name = character(),
+    ebird_species_code = character(),
+    static_image_name = character()
+  )
 }
 
 # --- Target Species (India) ---
