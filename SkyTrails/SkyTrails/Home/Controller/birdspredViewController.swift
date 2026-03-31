@@ -49,6 +49,7 @@ class birdspredViewController: UIViewController {
 	
 	private struct MLDataSnapshot: Decodable {
 		let birdId: String
+		let commonName: String
 		let trajectoryPaths: [Path]
 		
 		struct Path: Decodable {
@@ -297,8 +298,20 @@ class birdspredViewController: UIViewController {
 	private func loadMLSightingsIfNeeded(for input: BirdDateInput) -> [RelevantSighting] {
 		guard let url = Bundle.main.url(forResource: "MLdata", withExtension: "json"),
 			  let data = try? Data(contentsOf: url),
-			  let snapshot = try? JSONDecoder().decode(MLDataSnapshot.self, from: data),
-			  snapshot.birdId.caseInsensitiveCompare(input.species.id) == .orderedSame else {
+			  let snapshots = try? JSONDecoder().decode([MLDataSnapshot].self, from: data) else {
+			return []
+		}
+
+		let normalizedSpeciesName = input.species.name
+			.trimmingCharacters(in: .whitespacesAndNewlines)
+			.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+
+		guard let snapshot = snapshots.first(where: {
+			$0.birdId.caseInsensitiveCompare(input.species.id) == .orderedSame ||
+			$0.commonName
+				.trimmingCharacters(in: .whitespacesAndNewlines)
+				.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current) == normalizedSpeciesName
+		}) else {
 			return []
 		}
 		
