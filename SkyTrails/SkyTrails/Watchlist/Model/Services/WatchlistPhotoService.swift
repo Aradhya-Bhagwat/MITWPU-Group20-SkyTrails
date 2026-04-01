@@ -47,7 +47,11 @@ final class WatchlistPhotoService {
                 )
             }
         } catch {
-            try? deleteImageFromDisk(filename: filename)
+            do {
+                try deleteImageFromDisk(filename: filename)
+            } catch {
+                WatchlistLog.warn("Failed to delete photo file after upload failure: \(filename)")
+            }
             throw WatchlistError.persistenceFailed(underlying: error)
         }
         return photo
@@ -125,7 +129,11 @@ final class WatchlistPhotoService {
         } catch {
             throw WatchlistError.persistenceFailed(underlying: error)
         }
-        try? deleteImageFromDisk(filename: imagePath)
+        do {
+            try deleteImageFromDisk(filename: imagePath)
+        } catch {
+            WatchlistLog.warn("Failed to delete photo file: \(imagePath)")
+        }
     }
     
     func deleteAllPhotos(for entryID: UUID) throws {
@@ -159,7 +167,11 @@ final class WatchlistPhotoService {
             throw WatchlistError.persistenceFailed(underlying: error)
         }
         for imagePath in imagePaths {
-            try? deleteImageFromDisk(filename: imagePath)
+            do {
+                try deleteImageFromDisk(filename: imagePath)
+            } catch {
+                WatchlistLog.warn("Failed to delete photo file: \(imagePath)")
+            }
         }
     }
     
