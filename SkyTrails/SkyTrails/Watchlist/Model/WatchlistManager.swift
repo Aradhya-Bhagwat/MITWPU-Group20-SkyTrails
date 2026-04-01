@@ -37,8 +37,10 @@ final class WatchlistManager: WatchlistRepository {
     private let photos: WatchlistPhotoService
     private let sorting: WatchlistSortingService
     private let ruleAssembly: WatchlistRuleAssemblyService
-    private let filtering: WatchlistFilteringService
-    private let orchestration: WatchlistEntryOrchestrationService
+    private lazy var filtering: WatchlistFilteringService = WatchlistFilteringService(query: self, sorting: sorting)
+    private lazy var orchestration: WatchlistEntryOrchestrationService = WatchlistEntryOrchestrationService(mutator: self)
+    private let presentation: WatchlistPresentationService
+    private let bootstrap: WatchlistBootstrapService
     
     private var isDataLoaded = false
     private var loadCompletionHandlers: [(Bool) -> Void] = []
@@ -78,12 +80,12 @@ final class WatchlistManager: WatchlistRepository {
 
             container = try ModelContainer(for: schema, configurations: [config])
         } catch {
-            // If the existing on-device store is incompatible with the current schema,
-            // clear only SwiftData default store files and recreate the container.
+            WatchlistLog.error("Failed to init ModelContainer, resetting store", error: error)
             Self.resetDefaultSwiftDataStoreFiles()
             do {
                 container = try ModelContainer(for: schema, configurations: [config])
             } catch {
+                WatchlistLog.error("Failed to init ModelContainer after reset", error: error)
                 fatalError("Failed to init SwiftData after reset: \(error)")
             }
         }
@@ -95,11 +97,10 @@ final class WatchlistManager: WatchlistRepository {
         photos = WatchlistPhotoService(context: context, persistence: persistence)
         sorting = WatchlistSortingService()
         ruleAssembly = WatchlistRuleAssemblyService()
-        filtering = WatchlistFilteringService()
-        orchestration = WatchlistEntryOrchestrationService()
+        bootstrap = WatchlistBootstrapService(context: context)
         
-        filtering.setManager(self)
-        orchestration.setManager(self)
+        // Initialize presentation service first (doesn't depend on self)
+        presentation = WatchlistPresentationService(query: query, persistence: persistence, photoService: photos)
         
         NotificationCenter.default.addObserver(
             self,
@@ -135,16 +136,7 @@ final class WatchlistManager: WatchlistRepository {
 
     @MainActor
     func clearUserDataOnLogout() async {
-        do {
-            let watchlists = try context.fetch(FetchDescriptor<Watchlist>())
-            for watchlist in watchlists {
-                context.delete(watchlist)
-            }
-            try context.save()
-            try? photos.deleteAllLocalPhotos()
-            LocationPreferences.shared.clear()
-        } catch {
-        }
+        await bootstrap.clearUserDataOnLogout(photos: photos)
     }
 
     @objc
@@ -168,29 +160,11 @@ final class WatchlistManager: WatchlistRepository {
     
     @MainActor
     func seedIfNeeded() {
-        let hasSeededKey = "kAppHasSeededData_v1"
-        guard !UserDefaults.standard.bool(forKey: hasSeededKey) else {
-            return
-        }
-        let descriptor = FetchDescriptor<Watchlist>()
-        if let existing = try? context.fetch(descriptor) {
-            existing.forEach { context.delete($0) }
-        }
-        try? context.save()
-        do {
-            try WatchlistSeeder.seed(context: context)
-            UserDefaults.standard.set(true, forKey: hasSeededKey)
-        } catch {
-        }
+        bootstrap.seedIfNeeded()
     }
     @MainActor
     func performGlobalSeeding() async {
-        do {
-            try BirdDatabaseSeeder.shared.seed(modelContext: context)
-            seedIfNeeded()
-            try await HomeDataSeeder.shared.seed(modelContext: context)
-        } catch {
-        }
+        await bootstrap.performGlobalSeeding()
     }
     
     func loadDashboardData() async throws -> (
@@ -217,6 +191,7 @@ final class WatchlistManager: WatchlistRepository {
                 )
             }
         } catch {
+            WatchlistLog.error("Failed to bind current user ownership", error: error)
         }
     }
     
@@ -309,40 +284,20 @@ final class WatchlistManager: WatchlistRepository {
     }
     func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus? = nil) throws -> [WatchlistEntry] {
         if watchlistID == WatchlistConstants.myWatchlistID {
-            let identifier = WatchlistIdentifier.virtual
-            let filter = WatchlistQueryFilter(status: status)
-            let dtos = try query.fetchEntries(identifier: identifier, filter: filter)
-            return dtos.compactMap { dto in
-                try? persistence.fetchEntry(id: dto.id)
-            }
+            let allLists = try persistence.fetchWatchlists()
+            return allLists.flatMap { watchlist in
+                (watchlist.entries ?? []).filter { entry in
+                    entry.syncStatus != .pendingDelete &&
+                    (status == nil || entry.status == status)
+                }
+            }.sorted { $0.addedDate < $1.addedDate }
         }
         
         return try persistence.fetchEntries(watchlistID: watchlistID, status: status)
     }
     
     func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) throws {
-        var targetWatchlistId = watchlistId
-        let myWatchlistId = WatchlistConstants.myWatchlistID
-        if watchlistId == myWatchlistId {
-            let customLists = try fetchWatchlists(type: .custom)
-            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetWatchlistId = existing.watchlist_id
-            } else if let first = customLists.first {
-                targetWatchlistId = first.watchlist_id
-            } else {
-                _ = try addWatchlist(
-                    title: "My Watchlist",
-                    location: "General",
-                    startDate: Date(),
-                    endDate: Date().addingTimeInterval(31536000)
-                )
-                if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
-                    targetWatchlistId = newWl.watchlist_id
-                } else {
-                    throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
-                }
-            }
-        }
+        let targetWatchlistId = try resolveTargetWatchlistId(watchlistId)
         
         let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
         _ = try persistence.addBirdsToWatchlist(watchlistID: targetWatchlistId, birds: birds, status: status)
@@ -443,15 +398,7 @@ final class WatchlistManager: WatchlistRepository {
         return try query.getGlobalObservedCount()
     }
     func findEntry(birdId: UUID, watchlistId: UUID) throws -> WatchlistEntry? {
-        var targetId = watchlistId
-        if watchlistId == WatchlistConstants.myWatchlistID {
-            let customLists = try fetchWatchlists(type: .custom)
-            if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
-                targetId = existing.watchlist_id
-            } else if let first = customLists.first {
-                targetId = first.watchlist_id
-            }
-        }
+        let targetId = try resolveTargetWatchlistId(watchlistId)
         
         guard let watchlist = try persistence.fetchWatchlist(id: targetId) else { return nil }
         return watchlist.entries?.first(where: { $0.bird?.bird_id == birdId })
@@ -468,6 +415,35 @@ final class WatchlistManager: WatchlistRepository {
         Task {
             watchlist.updateCoverImage()
             try? context.save()
+        }
+    }
+    
+    // MARK: - Private Helpers
+    
+    /// Resolves a target watchlist ID, creating a fallback "My Watchlist" if needed.
+    /// This centralizes the virtual-to-actual watchlist resolution logic.
+    private func resolveTargetWatchlistId(_ watchlistId: UUID) throws -> UUID {
+        guard watchlistId == WatchlistConstants.myWatchlistID else {
+            return watchlistId
+        }
+        
+        let customLists = try fetchWatchlists(type: .custom)
+        if let existing = customLists.first(where: { $0.title == "My Watchlist" }) {
+            return existing.watchlist_id
+        } else if let first = customLists.first {
+            return first.watchlist_id
+        } else {
+            _ = try addWatchlist(
+                title: "My Watchlist",
+                location: "General",
+                startDate: Date(),
+                endDate: Date().addingTimeInterval(31536000)
+            )
+            if let newWl = try fetchWatchlists(type: .custom).first(where: { $0.title == "My Watchlist" }) {
+                return newWl.watchlist_id
+            } else {
+                throw WatchlistError.persistenceFailed(underlying: NSError(domain: "WatchlistManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create fallback watchlist"]))
+            }
         }
     }
     func applyRules(to watchlistId: UUID) async throws {
@@ -708,192 +684,35 @@ final class WatchlistManager: WatchlistRepository {
         return orchestration
     }
     
-    // MARK: - ViewModel Creation (New Centralized APIs)
+    /// Public accessor for the presentation service
+    var presentationService: WatchlistPresentationService {
+        return presentation
+    }
+    
+    // MARK: - ViewModel Creation (Delegated to PresentationService)
     
     /// Loads a complete ViewModel for MyWatchlist cell with pre-loaded images
-    /// - Returns: Ready-to-display ViewModel with all images loaded
     func loadMyWatchlistViewModel() async throws -> WatchlistCellViewModel {
-        let allLists = try fetchWatchlists()
-        let dto = query.buildMyWatchlistDTO(from: allLists)
-        
-        // Load all images in parallel
-        async let unobservedImages = loadImages(paths: dto.unobservedPreviewImages)
-        async let observedImages = loadImages(paths: dto.observedPreviewImages)
-        
-        let (unobservedImgs, observedImgs) = await (unobservedImages, observedImages)
-        
-        return WatchlistCellViewModel(
-            title: dto.title,
-            unobservedCount: dto.stats.totalCount - dto.stats.observedCount,
-            observedCount: dto.stats.observedCount,
-            totalCount: dto.stats.totalCount,
-            unobservedImages: unobservedImgs,
-            observedImages: observedImgs
-        )
+        return try await presentation.loadMyWatchlistViewModel(fetchWatchlists: { try self.fetchWatchlists() })
     }
     
     /// Loads ViewModels for custom watchlist cells with pre-loaded cover images
-    /// - Parameter dtos: Array of WatchlistSummaryDTOs
-    /// - Returns: Array of ViewModels ready for cells
     func loadCustomWatchlistViewModels(from dtos: [WatchlistSummaryDTO]) async -> [CustomWatchlistCellViewModel] {
-        await withTaskGroup(of: (Int, CustomWatchlistCellViewModel).self) { group in
-            for (index, dto) in dtos.enumerated() {
-                group.addTask {
-                    let coverImage = await self.loadImage(path: dto.image)
-                    return await (index, CustomWatchlistCellViewModel(
-                        watchlistId: dto.legacyUUID,
-                        title: dto.title,
-                        subtitle: dto.subtitle,
-                        dateText: dto.dateText,
-                        coverImage: coverImage,
-                        totalCount: dto.stats.totalCount,
-                        observedCount: dto.stats.observedCount,
-                        type: dto.type
-                    ))
-                }
-            }
-            
-            var results: [(Int, CustomWatchlistCellViewModel)] = []
-            for await result in group {
-                results.append(result)
-            }
-            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
-        }
+        return await presentation.loadCustomWatchlistViewModels(from: dtos)
     }
     
     /// Loads ViewModels for bird entry cells with pre-loaded images
-    /// - Parameters:
-    ///   - entries: Array of WatchlistEntry objects
-    ///   - shouldShowAvatars: Whether to show avatar images
-    /// - Returns: Array of ViewModels ready for cells
     func loadBirdEntryViewModels(from entries: [WatchlistEntry], shouldShowAvatars: Bool) async -> [BirdEntryCellViewModel] {
-        await withTaskGroup(of: (Int, BirdEntryCellViewModel).self) { group in
-            for (index, entry) in entries.enumerated() {
-                group.addTask {
-                    let birdImage = await self.loadImageForEntry(entry)
-                    return await (index, BirdEntryCellViewModel(
-                        entryId: entry.id,
-                        birdName: entry.bird?.name ?? "Unknown",
-                        birdImage: birdImage,
-                        observationDate: self.formatObservationDate(entry.observationDate),
-                        location: self.determineLocation(for: entry),
-                        shouldShowAvatars: shouldShowAvatars,
-                        avatarNames: entry.observedBy != nil ? [entry.observedBy!] : [],
-                        status: entry.status
-                    ))
-                }
-            }
-            
-            var results: [(Int, BirdEntryCellViewModel)] = []
-            for await result in group {
-                results.append(result)
-            }
-            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
-        }
+        return await presentation.loadBirdEntryViewModels(from: entries, shouldShowAvatars: shouldShowAvatars)
     }
     
-    // MARK: - Image Loading Helpers
+    // MARK: - Convenience Image Loading (Delegated to PresentationService)
     
-    /// Loads multiple images in parallel
-    /// - Parameter paths: Array of image path strings
-    /// - Returns: Array of loaded UIImages
-    func loadImages(paths: [String]) async -> [UIImage] {
-        await withTaskGroup(of: (Int, UIImage?).self) { group in
-            for (index, path) in paths.enumerated() {
-                group.addTask {
-                    let image = await self.loadImage(path: path)
-                    return (index, image)
-                }
-            }
-            
-            var results: [(Int, UIImage)] = []
-            for await result in group {
-                if let image = result.1 {
-                    results.append((result.0, image))
-                }
-            }
-            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
-        }
-    }
-    
-    /// Loads a single image from various sources
-    /// - Parameter path: Image path (can be nil)
-    /// - Returns: Loaded UIImage or nil
     func loadImage(path: String?) async -> UIImage? {
-        guard let path = path, !path.isEmpty else {
-            return nil
-        }
-        
-        // 1. Check user photos directory
-        if let userPhoto = loadUserPhoto(named: path) {
-            return userPhoto
-        }
-        
-        // 2. Check asset catalog
-        if let assetImage = UIImage(named: path) {
-            return assetImage
-        }
-        
-        // 3. Fetch from remote service
-        if let remoteImage = await IdentificationImageService.shared.image(for: path, shapeId: nil) {
-            return remoteImage
-        }
-        
-        // 4. Return nil instead of photo placeholder
-        return nil
+        return await presentation.loadImage(path: path)
     }
     
-    /// Loads an image specifically for a watchlist entry
-    /// - Parameter entry: The watchlist entry
-    /// - Returns: Loaded UIImage
     func loadImageForEntry(_ entry: WatchlistEntry) async -> UIImage {
-        // 1. Check if entry has a user photo
-        if let photoPath = entry.photos?.first?.imagePath {
-            if let userPhoto = loadUserPhoto(named: photoPath) {
-                return userPhoto
-            }
-        }
-        
-        // 2. Fall back to bird's static image
-        guard let bird = entry.bird else {
-            return UIImage(systemName: "photo") ?? UIImage()
-        }
-        
-        return await loadImage(path: bird.staticImageName) ?? UIImage(systemName: "photo") ?? UIImage()
-    }
-    
-    /// Loads a user photo from the documents directory
-    /// - Parameter imageName: Name of the image file
-    /// - Returns: UIImage if found, nil otherwise
-    func loadUserPhoto(named imageName: String) -> UIImage? {
-        let fileManager = FileManager.default
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let photosDirectory = documentsPath.appendingPathComponent("ObservedBirdPhotos")
-        let imagePath = photosDirectory.appendingPathComponent(imageName)
-        
-        return UIImage(contentsOfFile: imagePath.path)
-    }
-    
-    /// Formats an observation date for display
-    /// - Parameter date: The date to format
-    /// - Returns: Formatted string or nil
-    func formatObservationDate(_ date: Date?) -> String? {
-        guard let date = date else { return nil }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
-    }
-    
-    /// Determines the location string to display for an entry
-    /// - Parameter entry: The watchlist entry
-    /// - Returns: Location string or nil
-    func determineLocation(for entry: WatchlistEntry) -> String? {
-        if let userLocation = entry.locationDisplayName, !userLocation.isEmpty {
-            return userLocation
-        }
-        if let likelySpot = entry.bird?.likelySpot {
-            return likelySpot
-        }
-        return nil
+        return await presentation.loadImageForEntry(entry)
     }
 }
