@@ -107,6 +107,7 @@ class WatchlistHomeViewController: UIViewController {
 				}
 				self.summaryCardCollectionView.reloadData()
 			} catch {
+                WatchlistLog.error("Failed to load watchlist dashboard data", error: error)
 			}
 		}
 	}
@@ -288,6 +289,7 @@ extension WatchlistHomeViewController {
 				let id = try await repository.ensureMyWatchlistExists()
 				navigateToObserved(watchlistId: id)
 			} catch {
+                WatchlistLog.error("Failed to resolve My Watchlist ID", error: error)
 			}
 		}
 	}

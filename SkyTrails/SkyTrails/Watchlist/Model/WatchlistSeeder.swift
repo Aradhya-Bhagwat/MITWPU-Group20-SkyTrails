@@ -66,6 +66,7 @@ struct WatchlistSeeder {
             let descriptor = FetchDescriptor<Watchlist>()
             let _ = try context.fetch(descriptor)
         } catch {
+            WatchlistLog.error("Failed to fetch seeded watchlists for verification", error: error)
         }
 		do {
 			try context.save()

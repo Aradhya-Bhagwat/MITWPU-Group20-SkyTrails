@@ -119,6 +119,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             mapVC.delegate = self
             navigationController?.pushViewController(mapVC, animated: true)
         } else {
+            WatchlistLog.warn("Failed to instantiate MapViewController from SharedStoryboard")
         }
     }
     
@@ -174,6 +175,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                     try self?.manager.deleteEntry(entryId: entry.id)
                     self?.navigationController?.popViewController(animated: true)
                 } catch {
+                    WatchlistLog.error("Failed to delete observed entry", error: error)
                 }
             }))
             present(alert, animated: true)
@@ -460,6 +462,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
                     try data.write(to: fileURL)
                     selectedImageName = filename
                 } catch {
+                    WatchlistLog.error("Failed to persist selected observation photo", error: error)
                 }
             }
         }

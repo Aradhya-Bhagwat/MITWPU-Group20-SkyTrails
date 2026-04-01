@@ -141,4 +141,63 @@ final class WatchlistRuleService {
             throw WatchlistError.ruleValidationFailed("Rule type and parameters mismatch")
         }
     }
+    
+    func addBirdWithRuleMatching(
+        bird: Bird,
+        location: CLLocationCoordinate2D?,
+        observationDate: Date?,
+        notes: String?,
+        asObserved: Bool
+    ) throws -> [UUID] {
+        let allWatchlists = try persistence.fetchWatchlists(type: .custom)
+        var matchedWatchlistIds: [UUID] = []
+        
+        for watchlist in allWatchlists {
+            let activeRules = (watchlist.rules ?? []).filter { $0.is_active && $0.deleted_at == nil }
+            let isMatch = matcher.matchesAnyRule(
+                bird: bird,
+                rules: activeRules,
+                location: location,
+                observationDate: observationDate
+            )
+            
+            guard isMatch else { continue }
+            
+            let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
+            _ = try persistence.addBirdsToWatchlist(
+                watchlistID: watchlist.watchlist_id,
+                birds: [bird],
+                status: status
+            )
+            
+            if let updatedWatchlist = try persistence.fetchWatchlist(id: watchlist.watchlist_id) {
+                updatedWatchlist.updateCoverImage()
+                do {
+                    try context.save()
+                } catch {
+                    WatchlistLog.error("Failed to save cover update after rule match", error: error)
+                }
+                
+                if let newEntry = (updatedWatchlist.entries ?? []).first(where: { $0.bird?.bird_id == bird.bird_id }) {
+                    try persistence.updateEntry(
+                        id: newEntry.id,
+                        notes: notes,
+                        observationDate: asObserved ? observationDate : nil,
+                        lat: location?.latitude,
+                        lon: location?.longitude,
+                        locationDisplayName: nil,
+                        toObserveStartDate: asObserved ? nil : observationDate,
+                        toObserveEndDate: asObserved ? nil : observationDate
+                    )
+                }
+            }
+            
+            matchedWatchlistIds.append(watchlist.watchlist_id)
+        }
+        
+        if matchedWatchlistIds.isEmpty {
+            throw WatchlistError.noMatchingWatchlists
+        }
+        return matchedWatchlistIds
+    }
 }
