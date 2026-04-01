@@ -19,8 +19,12 @@ final class WatchlistBootstrapService {
         let descriptor = FetchDescriptor<Watchlist>()
         if let existing = try? context.fetch(descriptor) {
             existing.forEach { context.delete($0) }
+            do {
+                try context.save()
+            } catch {
+                WatchlistLog.error("Failed to clear watchlists during seeding", error: error)
+            }
         }
-        try? context.save()
         
         do {
             try WatchlistSeeder.seed(context: context)

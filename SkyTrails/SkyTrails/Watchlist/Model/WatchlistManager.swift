@@ -41,6 +41,7 @@ final class WatchlistManager: WatchlistRepository {
     private lazy var orchestration: WatchlistEntryOrchestrationService = WatchlistEntryOrchestrationService(mutator: self)
     private let presentation: WatchlistPresentationService
     private let bootstrap: WatchlistBootstrapService
+    private let ruleMatchingService = RuleMatchingService()
     
     private var isDataLoaded = false
     private var loadCompletionHandlers: [(Bool) -> Void] = []
@@ -154,7 +155,11 @@ final class WatchlistManager: WatchlistRepository {
             photo.storageUrl = storageUrl
             photo.syncStatus = .synced
             photo.lastSyncedAt = Date()
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                WatchlistLog.error("Failed to save photo sync update", error: error)
+            }
         }
     }
     
@@ -414,7 +419,11 @@ final class WatchlistManager: WatchlistRepository {
     private func refreshCoverImage(for watchlist: Watchlist) {
         Task {
             watchlist.updateCoverImage()
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                WatchlistLog.error("Failed to save cover image update", error: error)
+            }
         }
     }
     
@@ -505,42 +514,12 @@ final class WatchlistManager: WatchlistRepository {
         
         for watchlist in allWatchlists {
             let activeRules = (watchlist.rules ?? []).filter { $0.is_active && $0.deleted_at == nil }
-            var isMatch = false
-
-            for rule in activeRules {
-                guard let ruleParams = RuleParameters.from(rule: rule) else { continue }
-                
-                switch ruleParams {
-                case .speciesFamily(let params):
-                    if bird.shape_id == params.shapeId {
-                        isMatch = true
-                    }
-                    
-                case .location(let params):
-                    guard let birdLocation = location else { continue }
-                    let watchlistLocation = CLLocation(latitude: params.lat, longitude: params.lon)
-                    let birdCLLocation = CLLocation(latitude: birdLocation.latitude, longitude: birdLocation.longitude)
-                    let distance = watchlistLocation.distance(from: birdCLLocation) / 1000.0
-                    if distance <= params.radiusKm {
-                        isMatch = true
-                    }
-                    
-                case .dateRange(let params):
-                    guard let birdDate = observationDate else { continue }
-                    if birdDate >= params.startDate && birdDate <= params.endDate {
-                        isMatch = true
-                    }
-                    
-                case .migration(let params):
-                    if bird.migration_strategy == params.patternKey {
-                        isMatch = true
-                    }
-                }
-                
-                if isMatch {
-                    break
-                }
-            }
+            let isMatch = ruleMatchingService.matchesAnyRule(
+                bird: bird,
+                rules: activeRules,
+                location: location,
+                observationDate: observationDate
+            )
             if isMatch {
                 let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
                 _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.watchlist_id, birds: [bird], status: status)
@@ -651,7 +630,11 @@ final class WatchlistManager: WatchlistRepository {
     
     @available(*, deprecated, message: "Direct context save is discouraged. Use service methods.")
     func saveContext() {
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            WatchlistLog.error("Failed to save context", error: error)
+        }
     }
     
     func buildMyWatchlistDTO(from allLists: [Watchlist]) -> WatchlistSummaryDTO {

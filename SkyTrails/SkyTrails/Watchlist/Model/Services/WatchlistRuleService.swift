@@ -8,6 +8,7 @@ final class WatchlistRuleService {
     
     private let context: ModelContext
     private let persistence: WatchlistPersistenceService
+    private let matcher = RuleMatchingService()
     
     init(context: ModelContext, persistence: WatchlistPersistenceService) {
         self.context = context
@@ -36,7 +37,11 @@ final class WatchlistRuleService {
                 status: .to_observe
             )
             watchlist.updateCoverImage()
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                WatchlistLog.error("Failed to save after applying rules", error: error)
+            }
         }
     }
     
@@ -93,7 +98,7 @@ final class WatchlistRuleService {
         let allBirds = try persistence.fetchAllBirds()
         
         let matchingBirds = allBirds.filter { bird in
-            bird.shape_id == params.shapeId
+            matcher.matches(bird: bird, ruleParams: .speciesFamily(params), location: nil, observationDate: nil)
         }
         return Set(matchingBirds)
     }
@@ -102,7 +107,7 @@ final class WatchlistRuleService {
         let allBirds = try persistence.fetchAllBirds()
         
         let matchingBirds = allBirds.filter { bird in
-            bird.migration_strategy == params.patternKey
+            matcher.matches(bird: bird, ruleParams: .migration(params), location: nil, observationDate: nil)
         }
         return Set(matchingBirds)
     }
