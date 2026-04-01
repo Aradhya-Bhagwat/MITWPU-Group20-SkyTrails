@@ -1,14 +1,6 @@
 import Foundation
 import SwiftData
 
-/// Protocol for querying watchlist data - enables unit testing of filtering logic
-protocol WatchlistQuerying {
-    func fetchWatchlists(type: WatchlistType?) throws -> [Watchlist]
-    func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus?) throws -> [WatchlistEntry]
-    func getWatchlist(by id: UUID) throws -> Watchlist?
-    func fetchAllBirds() -> [Bird]
-}
-
 /// Service responsible for filtering and deduplicating watchlist entries
 @MainActor
 final class WatchlistFilteringService {
@@ -195,7 +187,3 @@ final class WatchlistFilteringService {
         )
     }
 }
-
-// MARK: - WatchlistManager conformance to WatchlistQuerying
-
-extension WatchlistManager: WatchlistQuerying {}

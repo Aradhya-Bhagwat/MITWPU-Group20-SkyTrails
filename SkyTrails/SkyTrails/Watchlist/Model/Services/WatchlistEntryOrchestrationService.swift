@@ -1,18 +1,6 @@
 import Foundation
 import CoreLocation
 
-/// Protocol for mutating watchlist entries - enables unit testing of orchestration logic
-protocol WatchlistEntryMutating {
-    func updateEntry(entryId: UUID, notes: String?, observationDate: Date?, lat: Double?, lon: Double?, locationDisplayName: String?) throws
-    func updateEntryDates(entryId: UUID, startDate: Date?, endDate: Date?) throws
-    func attachPhoto(entryId: UUID, imageName: String) throws
-    func findBird(byName name: String) -> Bird?
-    func createBird(name: String) -> Bird
-    func addBirdWithRuleMatching(bird: Bird, location: CLLocationCoordinate2D?, observationDate: Date?, notes: String?, asObserved: Bool) throws -> [UUID]
-    func findEntry(birdId: UUID, watchlistId: UUID) throws -> WatchlistEntry?
-    func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) throws
-}
-
 /// Service responsible for orchestrating the complex logic of saving or updating watchlist entries
 @MainActor
 final class WatchlistEntryOrchestrationService {
@@ -152,7 +140,3 @@ final class WatchlistEntryOrchestrationService {
         }
     }
 }
-
-// MARK: - WatchlistManager conformance to WatchlistEntryMutating
-
-extension WatchlistManager: WatchlistEntryMutating {}
