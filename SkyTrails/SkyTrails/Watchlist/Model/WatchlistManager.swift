@@ -41,7 +41,6 @@ final class WatchlistManager: WatchlistRepository {
     private lazy var orchestration: WatchlistEntryOrchestrationService = WatchlistEntryOrchestrationService(mutator: self)
     private let presentation: WatchlistPresentationService
     private let bootstrap: WatchlistBootstrapService
-    private let ruleMatchingService = RuleMatchingService()
     
     private var isDataLoaded = false
     private var loadCompletionHandlers: [(Bool) -> Void] = []
@@ -509,42 +508,13 @@ final class WatchlistManager: WatchlistRepository {
         notes: String?,
         asObserved: Bool
     ) throws -> [UUID] {
-        let allWatchlists = try persistence.fetchWatchlists(type: .custom)
-        var matchedWatchlistIds: [UUID] = []
-        
-        for watchlist in allWatchlists {
-            let activeRules = (watchlist.rules ?? []).filter { $0.is_active && $0.deleted_at == nil }
-            let isMatch = ruleMatchingService.matchesAnyRule(
-                bird: bird,
-                rules: activeRules,
-                location: location,
-                observationDate: observationDate
-            )
-            if isMatch {
-                let status: WatchlistEntryStatus = asObserved ? .observed : .to_observe
-                _ = try persistence.addBirdsToWatchlist(watchlistID: watchlist.watchlist_id, birds: [bird], status: status)
-                refreshCoverImage(for: watchlist)
-                if let newEntry = try? findEntry(birdId: bird.bird_id, watchlistId: watchlist.watchlist_id) {
-                    try persistence.updateEntry(
-                        id: newEntry.id,
-                        notes: notes,
-                        observationDate: asObserved ? observationDate : nil,
-                        lat: location?.latitude,
-                        lon: location?.longitude,
-                        locationDisplayName: nil,
-                        toObserveStartDate: asObserved ? nil : observationDate,
-                        toObserveEndDate: asObserved ? nil : observationDate
-                    )
-                }
-                
-                matchedWatchlistIds.append(watchlist.watchlist_id)
-            }
-        }
-        
-        if matchedWatchlistIds.isEmpty {
-            throw WatchlistError.noMatchingWatchlists
-        }
-        return matchedWatchlistIds
+        return try rules.addBirdWithRuleMatching(
+            bird: bird,
+            location: location,
+            observationDate: observationDate,
+            notes: notes,
+            asObserved: asObserved
+        )
     }
     func getUpcomingBirds(
         userLocation: CLLocationCoordinate2D,

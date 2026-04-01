@@ -67,6 +67,7 @@ class CustomWatchlistViewController: UIViewController {
                 self.allWatchlistsDTOs = data.custom
                 self.updateData()
             } catch {
+                WatchlistLog.error("Failed to load custom watchlists", error: error)
             }
         }
     }
@@ -235,6 +236,7 @@ extension CustomWatchlistViewController {
 					try await self?.repository.deleteWatchlist(id: dto.legacyUUID)
                     self?.loadData()
                 } catch {
+                    WatchlistLog.error("Failed to delete custom watchlist", error: error)
                 }
             }
         }))

@@ -106,6 +106,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 sourceWatchlists = try manager.fetchWatchlists()
             }
         } catch {
+            WatchlistLog.error("Failed to refresh smart watchlist data", error: error)
         }
 		
 		applyFilters()
@@ -153,6 +154,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 try self?.manager.clearWatchlist(id: id)
                 self?.refreshData()
             } catch {
+                WatchlistLog.error("Failed to clear watchlist", error: error)
             }
         })
         
@@ -611,6 +613,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
                 try manager.addBirds([bird], to: id, asObserved: observed)
                 refreshData()
             } catch {
+                WatchlistLog.error("Failed to add recommended bird to watchlist", error: error)
             }
         }
     }
