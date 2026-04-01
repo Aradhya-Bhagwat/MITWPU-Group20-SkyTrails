@@ -1,31 +1,29 @@
-
 import Foundation
 import SwiftData
+
+/// Protocol for querying watchlist data - enables unit testing of filtering logic
+protocol WatchlistQuerying {
+    func fetchWatchlists(type: WatchlistType?) throws -> [Watchlist]
+    func fetchEntries(watchlistID: UUID, status: WatchlistEntryStatus?) throws -> [WatchlistEntry]
+    func getWatchlist(by id: UUID) throws -> Watchlist?
+    func fetchAllBirds() -> [Bird]
+}
 
 /// Service responsible for filtering and deduplicating watchlist entries
 @MainActor
 final class WatchlistFilteringService {
     
-    private weak var manager: WatchlistManager?
+    private let query: WatchlistQuerying
+    private let sorting: WatchlistSortingService
     
-    init(manager: WatchlistManager? = nil) {
-        self.manager = manager
-    }
-    
-    func setManager(_ manager: WatchlistManager) {
-        self.manager = manager
+    init(query: WatchlistQuerying, sorting: WatchlistSortingService) {
+        self.query = query
+        self.sorting = sorting
     }
     
     // MARK: - Enhanced Filtering API
     
     /// Fetches, filters, searches, and sorts entries for a given mode
-    /// This is the primary API for ViewControllers - returns complete, ready-to-display data
-    /// - Parameters:
-    ///   - mode: The watchlist presentation mode
-    ///   - watchlistId: The watchlist ID (for single watchlist modes)
-    ///   - searchText: Optional search filter
-    ///   - sortOption: How to sort the results
-    /// - Returns: Complete result with observed, unobserved arrays and counts
     func fetchFilteredEntries(
         mode: WatchlistPresentationMode,
         watchlistId: UUID?,
@@ -33,19 +31,6 @@ final class WatchlistFilteringService {
         sortOption: SmartWatchlistSortOption,
         status: WatchlistEntryStatus? = nil
     ) throws -> WatchlistEntriesResult {
-        guard let manager = manager else {
-            return WatchlistEntriesResult(
-                observed: [],
-                unobserved: [],
-                observedCount: 0,
-                unobservedCount: 0,
-                totalCount: 0,
-                title: "Watchlist",
-                shouldShowRecommendations: false,
-                recommendedBirds: []
-            )
-        }
-        
         // Fetch base data
         let baseResult = try fetchEntriesForMode(mode: mode, watchlistId: watchlistId)
         
@@ -54,8 +39,8 @@ final class WatchlistFilteringService {
         let unobserved = applySearchFilter(entries: baseResult.toObserve, searchText: searchText)
         
         // Apply sorting
-        let sortedObserved = manager.sortingService.sort(entries: observed, by: sortOption)
-        let sortedUnobserved = manager.sortingService.sort(entries: unobserved, by: sortOption)
+        let sortedObserved = sorting.sort(entries: observed, by: sortOption)
+        let sortedUnobserved = sorting.sort(entries: unobserved, by: sortOption)
         
         return WatchlistEntriesResult(
             observed: sortedObserved,
@@ -70,25 +55,16 @@ final class WatchlistFilteringService {
     }
     
     /// Fetches entries for a watchlist grouped by status, with search and sort
-    /// Used for myWatchlist mode with section-based display
-    /// - Parameters:
-    ///   - watchlists: Source watchlists to fetch from
-    ///   - status: Filter by status
-    ///   - searchText: Optional search filter
-    ///   - sortOption: How to sort results
-    /// - Returns: Dictionary of watchlist to filtered entries
     func fetchEntriesGroupedByWatchlist(
         watchlists: [Watchlist],
         status: WatchlistEntryStatus?,
         searchText: String?,
         sortOption: SmartWatchlistSortOption
     ) throws -> [(Watchlist, [WatchlistEntry])] {
-        guard let manager = manager else { return [] }
-        
         let filteredResults = watchlists.compactMap { watchlist -> (Watchlist, [WatchlistEntry])? in
-            let entries = (try? manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)) ?? []
+            let entries = (try? query.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)) ?? []
             let filtered = applySearchFilter(entries: entries, searchText: searchText)
-            let sorted = manager.sortingService.sort(entries: filtered, by: sortOption)
+            let sorted = sorting.sort(entries: filtered, by: sortOption)
             return sorted.isEmpty ? nil : (watchlist, sorted)
         }
         
@@ -108,24 +84,18 @@ final class WatchlistFilteringService {
         }
     }
     
-    // MARK: - Unique Entry Fetching (Legacy - kept for backward compatibility)
+    // MARK: - Unique Entry Fetching
     
     /// Fetches unique entries from multiple watchlists, deduplicating by bird name
-    /// - Parameters:
-    ///   - watchlists: The watchlists to fetch from
-    ///   - status: The entry status to filter by
-    /// - Returns: An array of unique watchlist entries
     func fetchUniqueEntries(
         from watchlists: [Watchlist],
         status: WatchlistEntryStatus
     ) throws -> [WatchlistEntry] {
-        guard let manager = manager else { return [] }
-        
         var uniqueEntries: [WatchlistEntry] = []
         var seenBirdNames = Set<String>()
         
         for watchlist in watchlists {
-            let entries = try manager.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)
+            let entries = try query.fetchEntries(watchlistID: watchlist.watchlist_id, status: status)
             
             for entry in entries {
                 if let birdName = entry.bird?.name, !seenBirdNames.contains(birdName) {
@@ -150,47 +120,32 @@ final class WatchlistFilteringService {
     // MARK: - Mode-Based Fetching
     
     /// Fetches entries based on the presentation mode
-    /// - Parameters:
-    ///   - mode: The watchlist presentation mode
-    ///   - watchlistId: The current watchlist ID (for single watchlist modes)
-    /// - Returns: A result containing observed, to-observe entries, and metadata
     func fetchEntriesForMode(
         mode: WatchlistPresentationMode,
         watchlistId: UUID?
     ) throws -> ModeBasedEntriesResult {
-        guard let manager = manager else {
-            return ModeBasedEntriesResult(
-                observed: [],
-                toObserve: [],
-                title: "Watchlist",
-                shouldShowRecommendations: false,
-                recommendedBirds: []
-            )
-        }
-        
         switch mode {
         case .myWatchlist:
-            return try fetchForMyWatchlist(manager: manager)
+            return try fetchForMyWatchlist()
             
         case .custom, .shared:
-            return try fetchForSingleWatchlist(manager: manager, watchlistId: watchlistId)
+            return try fetchForSingleWatchlist(watchlistId: watchlistId)
             
         case .allSpecies:
-            return try fetchForAllSpecies(manager: manager)
+            return try fetchForAllSpecies()
         }
     }
     
     // MARK: - Private Helpers
     
-    private func fetchForMyWatchlist(manager: WatchlistManager) throws -> ModeBasedEntriesResult {
-        let allWatchlists = try manager.fetchWatchlists()
+    private func fetchForMyWatchlist() throws -> ModeBasedEntriesResult {
+        let allWatchlists = try query.fetchWatchlists(type: nil)
         
         let uniqueObserved = try fetchUniqueEntries(from: allWatchlists, status: .observed)
         let uniqueToObserve = try fetchUniqueEntries(from: allWatchlists, status: .to_observe)
         
-        // Show recommendations if both lists are empty
         let shouldShowRecommendations = uniqueObserved.isEmpty && uniqueToObserve.isEmpty
-        let recommendedBirds = shouldShowRecommendations ? Array(manager.fetchAllBirds().prefix(10)) : []
+        let recommendedBirds = shouldShowRecommendations ? Array(query.fetchAllBirds().prefix(10)) : []
         
         return ModeBasedEntriesResult(
             observed: uniqueObserved,
@@ -201,10 +156,7 @@ final class WatchlistFilteringService {
         )
     }
     
-    private func fetchForSingleWatchlist(
-        manager: WatchlistManager,
-        watchlistId: UUID?
-    ) throws -> ModeBasedEntriesResult {
+    private func fetchForSingleWatchlist(watchlistId: UUID?) throws -> ModeBasedEntriesResult {
         guard let id = watchlistId else {
             return ModeBasedEntriesResult(
                 observed: [],
@@ -215,9 +167,9 @@ final class WatchlistFilteringService {
             )
         }
         
-        let observed = try manager.fetchEntries(watchlistID: id, status: .observed)
-        let toObserve = try manager.fetchEntries(watchlistID: id, status: .to_observe)
-        let title = (try? manager.getWatchlist(by: id))??.title ?? "Watchlist"
+        let observed = try query.fetchEntries(watchlistID: id, status: .observed)
+        let toObserve = try query.fetchEntries(watchlistID: id, status: .to_observe)
+        let title = (try? query.getWatchlist(by: id))?.title ?? "Watchlist"
         
         return ModeBasedEntriesResult(
             observed: observed,
@@ -228,8 +180,8 @@ final class WatchlistFilteringService {
         )
     }
     
-    private func fetchForAllSpecies(manager: WatchlistManager) throws -> ModeBasedEntriesResult {
-        let allWatchlists = try manager.fetchWatchlists()
+    private func fetchForAllSpecies() throws -> ModeBasedEntriesResult {
+        let allWatchlists = try query.fetchWatchlists(type: nil)
         
         let uniqueObserved = try fetchUniqueEntries(from: allWatchlists, status: .observed)
         let uniqueToObserve = try fetchUniqueEntries(from: allWatchlists, status: .to_observe)
@@ -243,3 +195,7 @@ final class WatchlistFilteringService {
         )
     }
 }
+
+// MARK: - WatchlistManager conformance to WatchlistQuerying
+
+extension WatchlistManager: WatchlistQuerying {}

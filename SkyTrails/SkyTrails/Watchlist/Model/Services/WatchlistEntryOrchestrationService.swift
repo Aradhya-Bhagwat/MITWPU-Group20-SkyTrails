@@ -1,18 +1,26 @@
 import Foundation
 import CoreLocation
 
+/// Protocol for mutating watchlist entries - enables unit testing of orchestration logic
+protocol WatchlistEntryMutating {
+    func updateEntry(entryId: UUID, notes: String?, observationDate: Date?, lat: Double?, lon: Double?, locationDisplayName: String?) throws
+    func updateEntryDates(entryId: UUID, startDate: Date?, endDate: Date?) throws
+    func attachPhoto(entryId: UUID, imageName: String) throws
+    func findBird(byName name: String) -> Bird?
+    func createBird(name: String) -> Bird
+    func addBirdWithRuleMatching(bird: Bird, location: CLLocationCoordinate2D?, observationDate: Date?, notes: String?, asObserved: Bool) throws -> [UUID]
+    func findEntry(birdId: UUID, watchlistId: UUID) throws -> WatchlistEntry?
+    func addBirds(_ birds: [Bird], to watchlistId: UUID, asObserved: Bool) throws
+}
+
 /// Service responsible for orchestrating the complex logic of saving or updating watchlist entries
 @MainActor
 final class WatchlistEntryOrchestrationService {
     
-    private weak var manager: WatchlistManager?
+    private let mutator: WatchlistEntryMutating
     
-    init(manager: WatchlistManager? = nil) {
-        self.manager = manager
-    }
-    
-    func setManager(_ manager: WatchlistManager) {
-        self.manager = manager
+    init(mutator: WatchlistEntryMutating) {
+        self.mutator = mutator
     }
     
     /// Parameters for saving an entry
@@ -23,8 +31,8 @@ final class WatchlistEntryOrchestrationService {
         let watchlistId: UUID?
         let notes: String?
         let location: LocationService.LocationData?
-        let observationDate: Date? // Used for observed, or as start date for unobserved
-        let endDate: Date? // Only for unobserved
+        let observationDate: Date?
+        let endDate: Date?
         let photoName: String?
         let asObserved: Bool
         let shouldUseRuleMatching: Bool
@@ -40,23 +48,18 @@ final class WatchlistEntryOrchestrationService {
     
     /// Orchestrates saving an entry, handling updates, rule matching, and photo attachment
     func saveEntry(params: SaveParameters) async -> SaveResult {
-        guard let manager = manager else {
-            return SaveResult(success: false, bird: nil, error: NSError(domain: "WatchlistOrchestration", code: 0, userInfo: [NSLocalizedDescriptionKey: "Manager not set"]), noMatchingWatchlists: false)
-        }
-        
         // Handle updating existing entry
         if let existingEntry = params.entry {
             do {
                 if !params.asObserved {
-                    // Unobserved date updates
-                    try manager.updateEntryDates(
+                    try mutator.updateEntryDates(
                         entryId: existingEntry.id,
                         startDate: params.observationDate,
                         endDate: params.endDate
                     )
                 }
                 
-                try manager.updateEntry(
+                try mutator.updateEntry(
                     entryId: existingEntry.id,
                     notes: params.notes,
                     observationDate: params.asObserved ? params.observationDate : nil,
@@ -66,7 +69,7 @@ final class WatchlistEntryOrchestrationService {
                 )
                 
                 if let photoName = params.photoName {
-                    try manager.attachPhoto(entryId: existingEntry.id, imageName: photoName)
+                    try mutator.attachPhoto(entryId: existingEntry.id, imageName: photoName)
                 }
                 
                 return SaveResult(success: true, bird: existingEntry.bird, error: nil, noMatchingWatchlists: false)
@@ -79,10 +82,10 @@ final class WatchlistEntryOrchestrationService {
         let birdToUse: Bird
         if let existingBird = params.bird {
             birdToUse = existingBird
-        } else if let name = params.birdName, !name.isEmpty, let found = manager.findBird(byName: name) {
+        } else if let name = params.birdName, !name.isEmpty, let found = mutator.findBird(byName: name) {
             birdToUse = found
         } else if let name = params.birdName, !name.isEmpty {
-            birdToUse = manager.createBird(name: name)
+            birdToUse = mutator.createBird(name: name)
         } else {
             return SaveResult(success: false, bird: nil, error: NSError(domain: "WatchlistOrchestration", code: 1, userInfo: [NSLocalizedDescriptionKey: "No bird provided"]), noMatchingWatchlists: false)
         }
@@ -91,7 +94,7 @@ final class WatchlistEntryOrchestrationService {
             let clLocation = params.location.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
             
             if params.shouldUseRuleMatching {
-                let matchedWatchlistIds = try manager.addBirdWithRuleMatching(
+                let matchedWatchlistIds = try mutator.addBirdWithRuleMatching(
                     bird: birdToUse,
                     location: clLocation,
                     observationDate: params.observationDate,
@@ -99,19 +102,18 @@ final class WatchlistEntryOrchestrationService {
                     asObserved: params.asObserved
                 )
                 
-                // For unobserved rule matching, update dates
                 if !params.asObserved {
                      for watchlistId in matchedWatchlistIds {
-                         if let entry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: watchlistId) {
-                             try manager.updateEntryDates(entryId: entry.id, startDate: params.observationDate, endDate: params.endDate)
+                         if let entry = try? mutator.findEntry(birdId: birdToUse.bird_id, watchlistId: watchlistId) {
+                             try mutator.updateEntryDates(entryId: entry.id, startDate: params.observationDate, endDate: params.endDate)
                          }
                      }
                 }
                 
                 if let photoName = params.photoName {
                     for watchlistId in matchedWatchlistIds {
-                        if let entry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: watchlistId) {
-                            try manager.attachPhoto(entryId: entry.id, imageName: photoName)
+                        if let entry = try? mutator.findEntry(birdId: birdToUse.bird_id, watchlistId: watchlistId) {
+                            try mutator.attachPhoto(entryId: entry.id, imageName: photoName)
                         }
                     }
                 }
@@ -120,14 +122,14 @@ final class WatchlistEntryOrchestrationService {
                     return SaveResult(success: false, bird: birdToUse, error: NSError(domain: "WatchlistOrchestration", code: 2, userInfo: [NSLocalizedDescriptionKey: "No target watchlist ID"]), noMatchingWatchlists: false)
                 }
                 
-                try manager.addBirds([birdToUse], to: targetWatchlistId, asObserved: params.asObserved)
+                try mutator.addBirds([birdToUse], to: targetWatchlistId, asObserved: params.asObserved)
                 
-                if let newEntry = try? manager.findEntry(birdId: birdToUse.bird_id, watchlistId: targetWatchlistId) {
+                if let newEntry = try? mutator.findEntry(birdId: birdToUse.bird_id, watchlistId: targetWatchlistId) {
                     if !params.asObserved {
-                        try manager.updateEntryDates(entryId: newEntry.id, startDate: params.observationDate, endDate: params.endDate)
+                        try mutator.updateEntryDates(entryId: newEntry.id, startDate: params.observationDate, endDate: params.endDate)
                     }
                     
-                    try manager.updateEntry(
+                    try mutator.updateEntry(
                         entryId: newEntry.id,
                         notes: params.notes,
                         observationDate: params.asObserved ? params.observationDate : nil,
@@ -137,7 +139,7 @@ final class WatchlistEntryOrchestrationService {
                     )
                     
                     if let photoName = params.photoName {
-                        try manager.attachPhoto(entryId: newEntry.id, imageName: photoName)
+                        try mutator.attachPhoto(entryId: newEntry.id, imageName: photoName)
                     }
                 }
             }
@@ -150,3 +152,7 @@ final class WatchlistEntryOrchestrationService {
         }
     }
 }
+
+// MARK: - WatchlistManager conformance to WatchlistEntryMutating
+
+extension WatchlistManager: WatchlistEntryMutating {}
