@@ -5,6 +5,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     private var authObserver: NSObjectProtocol?
     private var sessionValidationTimer: Timer?
+    private var didFinishStartup = false
 
     func scene(
         _ scene: UIScene,
@@ -45,7 +46,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneWillEnterForeground(_ scene: UIScene) {
         Task { @MainActor in
-            await handleForegroundReconnect()
+            if didFinishStartup {
+                await handleForegroundReconnect()
+            }
             startSessionValidationTimer()
         }
     }
@@ -102,11 +105,41 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let callbackURL = connectionOptions.urlContexts.first?.url,
            SupabaseAuthService.shared.isOAuthRedirectURL(callbackURL) {
             await handleOAuthCallback(callbackURL)
-            routeToCurrentSessionRoot()
-            return
+        } else {
+            _ = await UserSession.shared.restoreSessionIfNeeded()
         }
 
-        _ = await UserSession.shared.restoreSessionIfNeeded()
+        // --- Perform data sync while still on launch screen ---
+        if let user = UserSession.shared.currentUser {
+            if let loadingVC = window?.rootViewController as? LaunchLoadingViewController {
+                loadingVC.updateMessage("Syncing your data...")
+            }
+
+            await UserSession.shared.syncProfileWithServer()
+            
+            do {
+                _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
+            } catch {
+                print("DEBUG: Startup initial sync failed: \(error)")
+            }
+
+            do {
+                try await IdentificationSyncService.shared.performSync(userId: user.user_id)
+            } catch {
+                print("DEBUG: Startup identification sync failed: \(error)")
+            }
+            
+            if RealtimeSyncService.shared.connectionState == .disconnected {
+                do {
+                    try await RealtimeSyncService.shared.connect()
+                    try await RealtimeSyncService.shared.subscribeAll()
+                } catch {}
+            }
+            
+            await BackgroundSyncAgent.shared.syncAll()
+        }
+
+        didFinishStartup = true
         routeToCurrentSessionRoot()
     }
 

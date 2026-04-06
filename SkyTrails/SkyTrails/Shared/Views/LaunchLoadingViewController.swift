@@ -22,6 +22,10 @@ final class LaunchLoadingViewController: UIViewController {
         onStart?()
     }
 
+    func updateMessage(_ message: String) {
+        subtitleLabel.text = message
+    }
+
     private func setupUI() {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
