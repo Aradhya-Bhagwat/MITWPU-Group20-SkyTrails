@@ -171,7 +171,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             )
 
             Task {
-                try? await UserSyncService.shared.upsertUser(user)
+                do {
+                    try await UserSyncService.shared.upsertUser(user)
+                } catch {
+                    print("DEBUG: OAuth user sync failed: \(error.localizedDescription)")
+                }
             }
         } catch {
             showAlert(message: error.localizedDescription)

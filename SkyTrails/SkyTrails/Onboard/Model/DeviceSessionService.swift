@@ -30,6 +30,7 @@ final class DeviceSessionService {
     private let activeSessionIdKey = "skytrails_active_device_session_id"
     private let activeSessionUserIdKey = "skytrails_active_device_session_user_id"
     private let maxAllowedDevices = 2
+    private let logger: LoggingServiceProtocol = LoggingService.shared
 
     private init() {}
 
@@ -80,7 +81,7 @@ final class DeviceSessionService {
             return true
         }
 
-        guard let rows = try? JSONDecoder.iso8601.decode([SessionValidationRow].self, from: data) else {
+        guard let rows: [SessionValidationRow] = decode([SessionValidationRow].self, from: data, context: "DeviceSessionService.validateCurrentSession") else {
             return true
         }
 
@@ -133,7 +134,7 @@ final class DeviceSessionService {
             return true
         }
 
-        guard let rows = try? JSONDecoder.iso8601.decode([DeviceLimitRow].self, from: data) else {
+        guard let rows: [DeviceLimitRow] = decode([DeviceLimitRow].self, from: data, context: "DeviceSessionService.enforceDeviceLimit") else {
             return true
         }
 
@@ -241,7 +242,17 @@ final class DeviceSessionService {
             let (_, response) = try await URLSession.shared.data(for: request)
             return (response as? HTTPURLResponse)?.statusCode ?? -1
         } catch {
+            logger.log(error: error, context: "DeviceSessionService.sendJSON")
             return -1
+        }
+    }
+
+    private func decode<T: Decodable>(_ type: T.Type, from data: Data, context: String) -> T? {
+        do {
+            return try JSONDecoder.iso8601.decode(T.self, from: data)
+        } catch {
+            logger.log(error: error, context: context)
+            return nil
         }
     }
 

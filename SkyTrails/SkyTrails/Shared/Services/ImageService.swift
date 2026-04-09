@@ -271,8 +271,8 @@ final class ImageService: ImageProviding {
         let manifestPath = (Bundle.main.object(forInfoDictionaryKey: manifestPathKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let safeBucket = (bucket?.isEmpty == false) ? bucket! : fallbackBucket
-        let safeManifestPath = (manifestPath?.isEmpty == false) ? manifestPath! : fallbackPath
+        let safeBucket = bucket.flatMap { $0.isEmpty ? nil : $0 } ?? fallbackBucket
+        let safeManifestPath = manifestPath.flatMap { $0.isEmpty ? nil : $0 } ?? fallbackPath
 
         return config.projectURL.appendingPathComponent("storage/v1/object/public/\(safeBucket)/\(safeManifestPath)")
     }
@@ -296,9 +296,9 @@ final class ImageService: ImageProviding {
         }
         let configuredBucket = (Bundle.main.object(forInfoDictionaryKey: configuredBucketKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let safeBucket = (bucketOverride?.isEmpty == false)
-            ? bucketOverride!
-            : ((configuredBucket?.isEmpty == false) ? configuredBucket! : fallbackBucket)
+        let safeBucket = bucketOverride.flatMap { $0.isEmpty ? nil : $0 }
+            ?? configuredBucket.flatMap { $0.isEmpty ? nil : $0 }
+            ?? fallbackBucket
         
         var cleanedPath = objectPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard !cleanedPath.isEmpty else { return nil }
@@ -419,7 +419,7 @@ final class ImageService: ImageProviding {
     private func birdBucketName() -> String {
         let bucket = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_BIRD_BUCKET") as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return (bucket?.isEmpty == false) ? bucket! : "bird"
+        return bucket.flatMap { $0.isEmpty ? nil : $0 } ?? "bird"
     }
 
     private func loadFromBirdBucket(

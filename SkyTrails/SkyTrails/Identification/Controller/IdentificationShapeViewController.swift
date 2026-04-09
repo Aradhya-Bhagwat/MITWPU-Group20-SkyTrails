@@ -75,7 +75,10 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as! shapeCollectionViewCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as? shapeCollectionViewCell else {
+            assertionFailure("Failed to dequeue shapeCollectionViewCell")
+            return UICollectionViewCell()
+        }
         
         let shape = filteredShapes[indexPath.item]
         cell.configure(with: shape.name, imageName: shape.icon)

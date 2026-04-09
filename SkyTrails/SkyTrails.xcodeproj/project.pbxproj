@@ -15,7 +15,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		199A10012F50000100ABCD01 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		199A10022F50000200ABCD01 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		199A10062F50000600ABCD01 /* Env.Dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Env.Dev.xcconfig; sourceTree = "<group>"; };
+		199A10072F50000700ABCD01 /* Env.Staging.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Env.Staging.xcconfig; sourceTree = "<group>"; };
+		199A10082F50000800ABCD01 /* Env.Prod.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Env.Prod.xcconfig; sourceTree = "<group>"; };
+		199A10032F50000300ABCD01 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		199A10042F50000400ABCD01 /* Secrets.template.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.template.xcconfig; sourceTree = "<group>"; };
 		195BFE662ED4530C00774A9F /* SkyTrails.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyTrails.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		19BA20012F60000100ABCD01 /* SkyTrailsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyTrailsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		19BA20022F60000200ABCD01 /* SkyTrailsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyTrailsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -37,6 +46,16 @@
 			path = SkyTrails;
 			sourceTree = "<group>";
 		};
+		19BA20032F60000300ABCD01 /* SkyTrailsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SkyTrailsTests;
+			sourceTree = "<group>";
+		};
+		19BA20042F60000400ABCD01 /* SkyTrailsUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SkyTrailsUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,13 +71,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		19BA20052F60000500ABCD01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19BA20062F60000600ABCD01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		195BFE5D2ED4530C00774A9F = {
 			isa = PBXGroup;
 			children = (
+				199A10052F50000500ABCD01 /* Config */,
 				195BFE682ED4530C00774A9F /* SkyTrails */,
+				19BA20032F60000300ABCD01 /* SkyTrailsTests */,
+				19BA20042F60000400ABCD01 /* SkyTrailsUITests */,
 				195BFE672ED4530C00774A9F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -67,11 +103,44 @@
 			isa = PBXGroup;
 			children = (
 				195BFE662ED4530C00774A9F /* SkyTrails.app */,
+				19BA20012F60000100ABCD01 /* SkyTrailsTests.xctest */,
+				19BA20022F60000200ABCD01 /* SkyTrailsUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
+		199A10052F50000500ABCD01 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				199A10012F50000100ABCD01 /* Base.xcconfig */,
+				199A10022F50000200ABCD01 /* Debug.xcconfig */,
+				199A10062F50000600ABCD01 /* Env.Dev.xcconfig */,
+				199A10072F50000700ABCD01 /* Env.Staging.xcconfig */,
+				199A10082F50000800ABCD01 /* Env.Prod.xcconfig */,
+				199A10032F50000300ABCD01 /* Release.xcconfig */,
+				199A10042F50000400ABCD01 /* Secrets.template.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXContainerItemProxy section */
+		19BA20072F60000700ABCD01 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 195BFE5E2ED4530C00774A9F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 195BFE652ED4530C00774A9F;
+			remoteInfo = SkyTrails;
+		};
+		19BA20082F60000800ABCD01 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 195BFE5E2ED4530C00774A9F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 195BFE652ED4530C00774A9F;
+			remoteInfo = SkyTrails;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXNativeTarget section */
 		195BFE652ED4530C00774A9F /* SkyTrails */ = {
@@ -101,6 +170,52 @@
 			productReference = 195BFE662ED4530C00774A9F /* SkyTrails.app */;
 			productType = "com.apple.product-type.application";
 		};
+		19BA20092F60000900ABCD01 /* SkyTrailsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 19BA20172F60001700ABCD01 /* Build configuration list for PBXNativeTarget "SkyTrailsTests" */;
+			buildPhases = (
+				19BA20132F60001300ABCD01 /* Sources */,
+				19BA20052F60000500ABCD01 /* Frameworks */,
+				19BA20112F60001100ABCD01 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				19BA200F2F60000F00ABCD01 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				19BA20032F60000300ABCD01 /* SkyTrailsTests */,
+			);
+			name = SkyTrailsTests;
+			packageProductDependencies = (
+			);
+			productName = SkyTrailsTests;
+			productReference = 19BA20012F60000100ABCD01 /* SkyTrailsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		19BA200A2F60000A00ABCD01 /* SkyTrailsUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 19BA20182F60001800ABCD01 /* Build configuration list for PBXNativeTarget "SkyTrailsUITests" */;
+			buildPhases = (
+				19BA20142F60001400ABCD01 /* Sources */,
+				19BA20062F60000600ABCD01 /* Frameworks */,
+				19BA20122F60001200ABCD01 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				19BA20102F60001000ABCD01 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				19BA20042F60000400ABCD01 /* SkyTrailsUITests */,
+			);
+			name = SkyTrailsUITests;
+			packageProductDependencies = (
+			);
+			productName = SkyTrailsUITests;
+			productReference = 19BA20022F60000200ABCD01 /* SkyTrailsUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -113,6 +228,14 @@
 				TargetAttributes = {
 					195BFE652ED4530C00774A9F = {
 						CreatedOnToolsVersion = 26.1.1;
+					};
+					19BA20092F60000900ABCD01 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 195BFE652ED4530C00774A9F;
+					};
+					19BA200A2F60000A00ABCD01 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 195BFE652ED4530C00774A9F;
 					};
 				};
 			};
@@ -134,12 +257,28 @@
 			projectRoot = "";
 			targets = (
 				195BFE652ED4530C00774A9F /* SkyTrails */,
+				19BA20092F60000900ABCD01 /* SkyTrailsTests */,
+				19BA200A2F60000A00ABCD01 /* SkyTrailsUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		195BFE642ED4530C00774A9F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19BA20112F60001100ABCD01 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19BA20122F60001200ABCD01 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -156,11 +295,39 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		19BA20132F60001300ABCD01 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19BA20142F60001400ABCD01 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		19BA200F2F60000F00ABCD01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 195BFE652ED4530C00774A9F /* SkyTrails */;
+			targetProxy = 19BA20072F60000700ABCD01 /* PBXContainerItemProxy */;
+		};
+		19BA20102F60001000ABCD01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 195BFE652ED4530C00774A9F /* SkyTrails */;
+			targetProxy = 19BA20082F60000800ABCD01 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		195BFE7A2ED4530E00774A9F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 199A10022F50000200ABCD01 /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -201,6 +368,7 @@
 		};
 		195BFE7B2ED4530E00774A9F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 199A10032F50000300ABCD01 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -241,6 +409,7 @@
 		};
 		195BFE7C2ED4530E00774A9F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 199A10022F50000200ABCD01 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -306,6 +475,7 @@
 		};
 		195BFE7D2ED4530E00774A9F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 199A10032F50000300ABCD01 /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -362,6 +532,104 @@
 			};
 			name = Release;
 		};
+		19BA20192F60001900ABCD01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.Disha.SkyTrailsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkyTrails.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkyTrails";
+			};
+			name = Debug;
+		};
+		19BA201A2F60001A00ABCD01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.Disha.SkyTrailsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkyTrails.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkyTrails";
+			};
+			name = Release;
+		};
+		19BA201B2F60001B00ABCD01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.Disha.SkyTrailsUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SkyTrails;
+			};
+			name = Debug;
+		};
+		19BA201C2F60001C00ABCD01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.Disha.SkyTrailsUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SkyTrails;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -379,6 +647,24 @@
 			buildConfigurations = (
 				195BFE7A2ED4530E00774A9F /* Debug */,
 				195BFE7B2ED4530E00774A9F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		19BA20172F60001700ABCD01 /* Build configuration list for PBXNativeTarget "SkyTrailsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				19BA20192F60001900ABCD01 /* Debug */,
+				19BA201A2F60001A00ABCD01 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		19BA20182F60001800ABCD01 /* Build configuration list for PBXNativeTarget "SkyTrailsUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				19BA201B2F60001B00ABCD01 /* Debug */,
+				19BA201C2F60001C00ABCD01 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

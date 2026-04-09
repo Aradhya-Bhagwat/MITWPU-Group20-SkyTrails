@@ -241,52 +241,52 @@ actor InitialSyncService {
             
             // 1. Identify and Merge Parent Objects first
             let shapeCount = try mergeBirdShapes(shapeRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeBirdShapes")
 
             let birdCount = try mergeBirds(birdRows, shapeRows: shapeRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeBirds")
 
             let fieldMarkCount = try mergeBirdFieldMarks(fieldMarkRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeBirdFieldMarks")
 
             let variantCount = try mergeFieldMarkVariants(variantRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeFieldMarkVariants")
 
             let linkCount = try mergeBirdFieldMarkVariantLinks(birdLinkRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeBirdFieldMarkVariantLinks")
 
             let wCount = try mergeWatchlists(watchlistRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeWatchlists")
             
             let sessCount = try mergeIdentificationSessions(sessionRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeIdentificationSessions")
             
             // 2. Merge Child Objects that depend on parents
             let eCount = try mergeEntries(entryRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeEntries")
             
             let rCount = try mergeRules(ruleRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeRules")
             
             let sCount = try mergeShares(shareRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeShares")
             
             let pCount = try mergePhotos(photoRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergePhotos")
             
             let resCount = try mergeIdentificationResults(resultRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeIdentificationResults")
             
             let candCount = try mergeIdentificationCandidates(candidateRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeIdentificationCandidates")
             
             let markCount = try mergeIdentificationSessionMarks(markRows, context: context)
-            try? context.save()
+            try saveContext(context, stage: "mergeIdentificationSessionMarks")
 
             // Refresh derived watchlist fields after children are merged.
             // Custom watchlist cards read observed/species counts and cover image from Watchlist.
             try refreshDerivedWatchlistFields(context: context)
-            try? context.save()
+            try saveContext(context, stage: "refreshDerivedWatchlistFields")
             
             return (shapeCount, birdCount, fieldMarkCount, variantCount, linkCount, wCount, eCount, rCount, sCount, pCount, sessCount, resCount, candCount, markCount)
         }
@@ -347,6 +347,14 @@ actor InitialSyncService {
         }
 
         return result
+    }
+
+    private nonisolated func saveContext(_ context: ModelContext, stage: String) throws {
+        do {
+            try context.save()
+        } catch {
+            throw InitialSyncError.contextError("Failed during \(stage): \(error.localizedDescription)")
+        }
     }
 
     private nonisolated func mergeBirdShapes(_ rows: [BirdShapeRow], context: ModelContext) throws -> Int {

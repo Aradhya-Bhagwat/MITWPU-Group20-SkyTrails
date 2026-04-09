@@ -213,10 +213,13 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let candidate = birdResults[indexPath.item]
-        let cell = collectionView.dequeueReusableCell(
+        guard let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: "ResultCollectionViewCell",
             for: indexPath
-        ) as! ResultCollectionViewCell
+        ) as? ResultCollectionViewCell else {
+            assertionFailure("Failed to dequeue ResultCollectionViewCell")
+            return UICollectionViewCell()
+        }
 
         let confidencePercent = String(Int(candidate.confidence * 100))
 

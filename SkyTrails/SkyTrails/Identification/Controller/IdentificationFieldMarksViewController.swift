@@ -177,7 +177,10 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as? CategoryCell else {
+            assertionFailure("Failed to dequeue CategoryCell")
+            return UICollectionViewCell()
+        }
         let item = availableMarks[indexPath.row]
         
         let isSelected = selectedFieldMarks.contains(indexPath.row)

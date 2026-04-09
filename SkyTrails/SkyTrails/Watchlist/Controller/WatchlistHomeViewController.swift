@@ -544,7 +544,9 @@ extension WatchlistHomeViewController {
 	}
 	
 	private func loadImage(_ imagePath: String) -> UIImage? {
-		let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+		guard let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+			return UIImage(named: imagePath)
+		}
 		let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 		let fileURL = photoDir.appendingPathComponent(imagePath)
 		if let diskImage = UIImage(contentsOfFile: fileURL.path) {

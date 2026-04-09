@@ -42,17 +42,25 @@ final class WatchlistPresentationService {
     func loadCustomWatchlistViewModels(from dtos: [WatchlistSummaryDTO]) async -> [CustomWatchlistCellViewModel] {
         await withTaskGroup(of: (Int, CustomWatchlistCellViewModel).self) { group in
             for (index, dto) in dtos.enumerated() {
+                let watchlistId = dto.legacyUUID
+                let title = dto.title
+                let subtitle = dto.subtitle
+                let dateText = dto.dateText
+                let imagePath = dto.image
+                let totalCount = dto.stats.totalCount
+                let observedCount = dto.stats.observedCount
+                let type = dto.type
                 group.addTask {
-                    let coverImage = await self.loadImage(path: dto.image)
+                    let coverImage = await self.loadImage(path: imagePath)
                     return (index, CustomWatchlistCellViewModel(
-                        watchlistId: dto.legacyUUID,
-                        title: dto.title,
-                        subtitle: dto.subtitle,
-                        dateText: dto.dateText,
+                        watchlistId: watchlistId,
+                        title: title,
+                        subtitle: subtitle,
+                        dateText: dateText,
                         coverImage: coverImage,
-                        totalCount: dto.stats.totalCount,
-                        observedCount: dto.stats.observedCount,
-                        type: dto.type
+                        totalCount: totalCount,
+                        observedCount: observedCount,
+                        type: type
                     ))
                 }
             }
@@ -77,7 +85,7 @@ final class WatchlistPresentationService {
                         observationDate: Self.formatObservationDate(entry.observationDate),
                         location: Self.determineLocation(for: entry),
                         shouldShowAvatars: shouldShowAvatars,
-                        avatarNames: entry.observedBy != nil ? [entry.observedBy!] : [],
+                        avatarNames: entry.observedBy.map { [$0] } ?? [],
                         status: entry.status
                     ))
                 }

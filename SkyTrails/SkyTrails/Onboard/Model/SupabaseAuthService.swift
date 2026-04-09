@@ -6,18 +6,24 @@ enum SupabaseAuthError: Error, LocalizedError {
     case invalidRequest
     case invalidResponse
     case invalidUserID
+    case unauthorized
+    case decodingFailed(String)
     case requestFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "Supabase config is missing. Add SUPABASE_URL and SUPABASE_ANON_KEY in Info.plist."
+            return "Supabase config is missing. Add the environment values in your xcconfig secrets file."
         case .invalidRequest:
             return "Unable to prepare auth request."
         case .invalidResponse:
             return "Unexpected response from auth server."
         case .invalidUserID:
             return "Supabase returned an invalid user ID."
+        case .unauthorized:
+            return "Your session is no longer authorized. Please sign in again."
+        case .decodingFailed(let details):
+            return "The auth response format changed unexpectedly. \(details)"
         case .requestFailed(let message):
             return message
         }
@@ -47,11 +53,11 @@ final class SupabaseAuthService {
     static let shared = SupabaseAuthService()
     private let oauthStateKey = "supabase_oauth_state"
     var otpLength: Int {
-        let value = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_OTP_LENGTH") as? NSNumber)?.intValue ?? 8
+        let value = Self.intValue(forInfoDictionaryKey: "SUPABASE_OTP_LENGTH") ?? 8
         return max(4, min(10, value))
     }
     var otpResendCooldownSeconds: Int {
-        let value = (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_OTP_RESEND_SECONDS") as? NSNumber)?.intValue ?? 60
+        let value = Self.intValue(forInfoDictionaryKey: "SUPABASE_OTP_RESEND_SECONDS") ?? 60
         return max(15, min(300, value))
     }
 
@@ -343,6 +349,9 @@ final class SupabaseAuthService {
 
         guard (200...299).contains(httpResponse.statusCode) else {
             let message = parseErrorMessage(from: data) ?? "Auth failed with status \(httpResponse.statusCode)."
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                throw SupabaseAuthError.unauthorized
+            }
             throw SupabaseAuthError.requestFailed(message)
         }
 
@@ -352,12 +361,37 @@ final class SupabaseAuthService {
 
         do {
             return try JSONDecoder().decode(Response.self, from: data)
-        } catch {
+        } catch let error as DecodingError {
             if Response.self == EmptyResponse.self, let emptyResponse = EmptyResponse() as? Response {
                 return emptyResponse
             }
-            throw SupabaseAuthError.invalidResponse
+            throw SupabaseAuthError.decodingFailed(Self.describeDecodingError(error))
+        } catch {
+            throw SupabaseAuthError.decodingFailed(error.localizedDescription)
         }
+    }
+
+    private static func describeDecodingError(_ error: DecodingError) -> String {
+        switch error {
+        case .typeMismatch(_, let context),
+             .valueNotFound(_, let context),
+             .keyNotFound(_, let context),
+             .dataCorrupted(let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return path.isEmpty ? context.debugDescription : "\(context.debugDescription) at \(path)"
+        @unknown default:
+            return error.localizedDescription
+        }
+    }
+
+    private static func intValue(forInfoDictionaryKey key: String) -> Int? {
+        if let number = Bundle.main.object(forInfoDictionaryKey: key) as? NSNumber {
+            return number.intValue
+        }
+        if let string = Bundle.main.object(forInfoDictionaryKey: key) as? String {
+            return Int(string)
+        }
+        return nil
     }
 
     private func parseErrorMessage(from data: Data) -> String? {

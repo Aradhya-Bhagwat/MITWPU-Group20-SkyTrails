@@ -154,13 +154,17 @@ class LoginViewController: UIViewController {
             }
 
             Task {
-                try? await UserSyncService.shared.upsertUser(user)
+                do {
+                    try await UserSyncService.shared.upsertUser(user)
+                } catch {
+                    print("DEBUG: Login user upsert failed: \(error.localizedDescription)")
+                }
             }
 
             await WatchlistManager.shared.bindCurrentUserOwnership()
             goToMain()
         } catch {
-            showAlert(error.localizedDescription)
+            showAlert(mappedLoginErrorMessage(error))
         }
 
         setLoading(false, button: button)

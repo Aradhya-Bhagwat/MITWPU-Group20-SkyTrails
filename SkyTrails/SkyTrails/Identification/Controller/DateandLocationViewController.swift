@@ -139,12 +139,19 @@ class DateandLocationViewController: UIViewController {
                 let message: String
                 if let locError = error as? LocationService.LocationError,
                    locError == .locationAccessDenied {
-                    message = "Location access is denied. Please allow location access in Settings."
+                    message = "Location access is denied. You can enable it in Settings or continue by searching for a place manually."
                 } else {
                     message = "Could not fetch current location right now. Please try again."
                 }
 
                 let alert = UIAlertController(title: "Location Error", message: message, preferredStyle: .alert)
+                if let locError = error as? LocationService.LocationError,
+                   locError == .locationAccessDenied {
+                    alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                        UIApplication.shared.open(url)
+                    })
+                }
                 alert.addAction(UIAlertAction(title: "OK", style: .default))
                 await MainActor.run { self.present(alert, animated: true) }
             }
@@ -169,7 +176,10 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         let rowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
 
         if indexPath.section == 0 {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as! DateInputCell
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "DateInputCell", for: indexPath) as? DateInputCell else {
+                assertionFailure("Failed to dequeue DateInputCell")
+                return UITableViewCell()
+            }
             cell.delegate = self
             cell.datePicker.date = selectedDate
             let dateRowColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
@@ -186,7 +196,10 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
         
         if indexPath.section == 1 {
             if indexPath.row == 0 {
-                let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as! SearchCell
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: "SearchCell", for: indexPath) as? SearchCell else {
+                    assertionFailure("Failed to dequeue SearchCell")
+                    return UITableViewCell()
+                }
                 cell.searchBar.delegate = self
                 cell.searchBar.text = searchQuery
                 cell.selectionStyle = .none

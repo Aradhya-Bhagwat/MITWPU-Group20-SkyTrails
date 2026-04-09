@@ -93,7 +93,7 @@ class NewsCollectionViewCell: UICollectionViewCell {
     }
 
     private func makeSourceText(news: NewsItem) -> String {
-        let source = (news.sourceName?.isEmpty == false) ? news.sourceName! : "SkyTrails"
+        let source = news.sourceName.flatMap { $0.isEmpty ? nil : $0 } ?? "SkyTrails"
 
         guard let publishedAt = news.publishedAt,
               let date = isoDate(from: publishedAt) else {

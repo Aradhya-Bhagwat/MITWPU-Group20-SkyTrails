@@ -442,8 +442,15 @@ class PredictMapViewController: UIViewController {
         outputVC.inputData = inputs
 
         addChild(outputNavVC)
-            
-        transition(from: self.currentChildVC!, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+        guard let currentChildVC else {
+            outputNavVC.didMove(toParent: self)
+            self.currentChildVC = outputNavVC
+            pinModalChildView(outputNavVC.view)
+            notifyVisibleSheetHeightChanged()
+            return
+        }
+
+        transition(from: currentChildVC, to: outputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
             if let originalNavVC = self?.currentChildVC as? UINavigationController,
                let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
                 originalNavVC.navigationBar.removeGestureRecognizer(panGesture)
@@ -452,10 +459,7 @@ class PredictMapViewController: UIViewController {
             self?.currentChildVC?.removeFromParent()
             outputNavVC.didMove(toParent: self)
             self?.currentChildVC = outputNavVC
-            outputNavVC.view.leadingAnchor.constraint(equalTo: (self?.modalContainerView.leadingAnchor)!).isActive = true
-            outputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!).isActive = true
-            outputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!).isActive = true
-            outputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!).isActive = true
+            self?.pinModalChildView(outputNavVC.view)
             self?.notifyVisibleSheetHeightChanged()
         }
     }
@@ -478,8 +482,15 @@ class PredictMapViewController: UIViewController {
             CACornerMask.layerMaxXMinYCorner
         ]
         addChild(inputNavVC)
-        
-        transition(from: self.currentChildVC!, to: inputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
+        guard let currentChildVC else {
+            inputNavVC.didMove(toParent: self)
+            self.currentChildVC = inputNavVC
+            pinModalChildView(inputNavVC.view)
+            notifyVisibleSheetHeightChanged()
+            return
+        }
+
+        transition(from: currentChildVC, to: inputNavVC, duration: 0.3, options: .transitionCrossDissolve, animations: nil) { [weak self] success in
             
             if let originalNavVC = self?.currentChildVC as? UINavigationController,
                let panGesture = originalNavVC.navigationBar.gestureRecognizers?.first(where: { $0 is UIPanGestureRecognizer }) {
@@ -491,12 +502,19 @@ class PredictMapViewController: UIViewController {
             self?.currentChildVC?.removeFromParent()
             inputNavVC.didMove(toParent: self)
             self?.currentChildVC = inputNavVC
-            inputNavVC.view.leadingAnchor.constraint(equalTo: (self?.modalContainerView.leadingAnchor)!).isActive = true
-            inputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!).isActive = true
-            inputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!).isActive = true
-            inputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!).isActive = true
+            self?.pinModalChildView(inputNavVC.view)
             self?.notifyVisibleSheetHeightChanged()
         }
+    }
+
+    private func pinModalChildView(_ childView: UIView) {
+        childView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            childView.leadingAnchor.constraint(equalTo: modalContainerView.leadingAnchor),
+            childView.trailingAnchor.constraint(equalTo: modalContainerView.trailingAnchor),
+            childView.topAnchor.constraint(equalTo: modalContainerView.topAnchor),
+            childView.bottomAnchor.constraint(equalTo: modalContainerView.bottomAnchor)
+        ])
     }
 
     private func notifyVisibleSheetHeightChanged() {

@@ -21,6 +21,34 @@
                ReferencedContainer = "container:SkyTrails.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "19BA20092F60000900ABCD01"
+               BuildableName = "SkyTrailsTests.xctest"
+               BlueprintName = "SkyTrailsTests"
+               ReferencedContainer = "container:SkyTrails.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "19BA200A2F60000A00ABCD01"
+               BuildableName = "SkyTrailsUITests.xctest"
+               BlueprintName = "SkyTrailsUITests"
+               ReferencedContainer = "container:SkyTrails.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -29,6 +57,28 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "19BA20092F60000900ABCD01"
+               BuildableName = "SkyTrailsTests.xctest"
+               BlueprintName = "SkyTrailsTests"
+               ReferencedContainer = "container:SkyTrails.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "19BA200A2F60000A00ABCD01"
+               BuildableName = "SkyTrailsUITests.xctest"
+               BlueprintName = "SkyTrailsUITests"
+               ReferencedContainer = "container:SkyTrails.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

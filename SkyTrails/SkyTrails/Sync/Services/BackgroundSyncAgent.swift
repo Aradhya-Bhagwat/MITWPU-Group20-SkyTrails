@@ -44,43 +44,91 @@ actor BackgroundSyncAgent {
     
     private var config: SupabaseConfig?
     
-    private static let queueFileURL: URL = FileManager.default
-        .urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
-        .appendingPathComponent("sync_queue.json")
-    
-    private static let deadLetterFileURL: URL = FileManager.default
-        .urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
-        .appendingPathComponent("dead_letter_queue.json")
+    private static let queueFileName = "sync_queue.json"
+    private static let deadLetterFileName = "dead_letter_queue.json"
     
     private init() {
         self.queue = Self.loadQueueFromDisk()
         self.deadLetterQueue = Self.loadDeadLetterFromDisk()
     }
+
+    private static func storageURL(for fileName: String) -> URL? {
+        FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent(fileName)
+    }
+
+    private static func iso8601String(from date: Date?) -> String? {
+        guard let date else { return nil }
+        return ISO8601DateFormatter().string(from: date)
+    }
+
+    private static func serializePayload(_ payload: [String: Any], context: String) -> Data? {
+        do {
+            return try JSONSerialization.data(withJSONObject: payload)
+        } catch {
+            print("BackgroundSyncAgent failed to serialize \(context): \(error.localizedDescription)")
+            return nil
+        }
+    }
     
     private static func loadQueueFromDisk() -> [SyncOperation] {
-        guard let data = try? Data(contentsOf: queueFileURL),
-              let ops = try? JSONDecoder().decode([SyncOperation].self, from: data)
-        else { return [] }
-        return ops
+        guard let queueFileURL = storageURL(for: queueFileName) else {
+            print("BackgroundSyncAgent could not resolve queue file URL.")
+            return []
+        }
+
+        do {
+            let data = try Data(contentsOf: queueFileURL)
+            return try JSONDecoder().decode([SyncOperation].self, from: data)
+        } catch {
+            print("BackgroundSyncAgent failed to load queue from disk: \(error.localizedDescription)")
+            return []
+        }
     }
     
     private static func loadDeadLetterFromDisk() -> [SyncOperation] {
-        guard let data = try? Data(contentsOf: deadLetterFileURL),
-              let ops = try? JSONDecoder().decode([SyncOperation].self, from: data)
-        else { return [] }
-        return ops
+        guard let deadLetterFileURL = storageURL(for: deadLetterFileName) else {
+            print("BackgroundSyncAgent could not resolve dead-letter file URL.")
+            return []
+        }
+
+        do {
+            let data = try Data(contentsOf: deadLetterFileURL)
+            return try JSONDecoder().decode([SyncOperation].self, from: data)
+        } catch {
+            print("BackgroundSyncAgent failed to load dead-letter queue from disk: \(error.localizedDescription)")
+            return []
+        }
     }
     
     private static func saveQueueToDisk(_ ops: [SyncOperation]) {
-        guard let data = try? JSONEncoder().encode(ops) else { return }
-        try? data.write(to: queueFileURL)
+        guard let queueFileURL = storageURL(for: queueFileName) else {
+            print("BackgroundSyncAgent could not resolve queue file URL for saving.")
+            return
+        }
+
+        do {
+            let data = try JSONEncoder().encode(ops)
+            try data.write(to: queueFileURL, options: .atomic)
+        } catch {
+            print("BackgroundSyncAgent failed to save queue: \(error.localizedDescription)")
+        }
     }
     
     private static func saveDeadLetterToDisk(_ ops: [SyncOperation]) {
-        guard let data = try? JSONEncoder().encode(ops) else { return }
-        try? data.write(to: deadLetterFileURL)
+        guard let deadLetterFileURL = storageURL(for: deadLetterFileName) else {
+            print("BackgroundSyncAgent could not resolve dead-letter file URL for saving.")
+            return
+        }
+
+        do {
+            let data = try JSONEncoder().encode(ops)
+            try data.write(to: deadLetterFileURL, options: .atomic)
+        } catch {
+            print("BackgroundSyncAgent failed to save dead-letter queue: \(error.localizedDescription)")
+        }
     }
 
     // --- Queue Methods ---
@@ -154,6 +202,9 @@ actor BackgroundSyncAgent {
     // --- Sync All & Scanning ---
 
     func syncAll() async {
+        await MainActor.run {
+            WatchlistManager.shared.repairInconsistentSyncState()
+        }
         await scanForPendingChanges()
         await processQueue()
     }
@@ -331,13 +382,13 @@ actor BackgroundSyncAgent {
             "title": item.title as Any,
             "location": item.location as Any,
             "location_display_name": item.locationDisplayName as Any,
-            "start_date": item.startDate != nil ? ISO8601DateFormatter().string(from: item.startDate!) : NSNull(),
-            "end_date": item.endDate != nil ? ISO8601DateFormatter().string(from: item.endDate!) : NSNull(),
+            "start_date": Self.iso8601String(from: item.startDate) as Any,
+            "end_date": Self.iso8601String(from: item.endDate) as Any,
             "cover_image_path": item.coverImagePath as Any,
             "updated_at": ISO8601DateFormatter().string(from: Date()),
-            "deleted_at": item.deleted_at != nil ? ISO8601DateFormatter().string(from: item.deleted_at!) : NSNull()
+            "deleted_at": Self.iso8601String(from: item.deleted_at) as Any
         ]
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return Self.serializePayload(payload, context: "watchlist payload")
     }
 
     @MainActor
@@ -349,9 +400,9 @@ actor BackgroundSyncAgent {
             "nickname": item.nickname as Any,
             "status": item.status.rawValue,
             "notes": item.notes as Any,
-            "observation_date": item.observationDate != nil ? ISO8601DateFormatter().string(from: item.observationDate!) : NSNull(),
-            "to_observe_start_date": item.toObserveStartDate != nil ? ISO8601DateFormatter().string(from: item.toObserveStartDate!) : NSNull(),
-            "to_observe_end_date": item.toObserveEndDate != nil ? ISO8601DateFormatter().string(from: item.toObserveEndDate!) : NSNull(),
+            "observation_date": Self.iso8601String(from: item.observationDate) as Any,
+            "to_observe_start_date": Self.iso8601String(from: item.toObserveStartDate) as Any,
+            "to_observe_end_date": Self.iso8601String(from: item.toObserveEndDate) as Any,
             "observed_by": item.observedBy as Any,
             "observed_by_user_id": observedByUserId as Any,
             "lat": item.lat as Any,
@@ -362,7 +413,7 @@ actor BackgroundSyncAgent {
             "added_date": ISO8601DateFormatter().string(from: item.addedDate),
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return Self.serializePayload(payload, context: "entry payload")
     }
 
     @MainActor
@@ -374,16 +425,16 @@ actor BackgroundSyncAgent {
             "lat": item.lat as Any,
             "lon": item.lon as Any,
             "radius_km": item.radius_km as Any,
-            "start_date": item.start_date != nil ? ISO8601DateFormatter().string(from: item.start_date!) : NSNull(),
-            "end_date": item.end_date != nil ? ISO8601DateFormatter().string(from: item.end_date!) : NSNull(),
+            "start_date": Self.iso8601String(from: item.start_date) as Any,
+            "end_date": Self.iso8601String(from: item.end_date) as Any,
             "shape_id": item.shape_id as Any,
             "pattern_key": item.pattern_key as Any,
             "is_active": item.is_active,
             "priority": item.priority,
             "updated_at": ISO8601DateFormatter().string(from: Date()),
-            "deleted_at": item.deleted_at != nil ? ISO8601DateFormatter().string(from: item.deleted_at!) : NSNull()
+            "deleted_at": Self.iso8601String(from: item.deleted_at) as Any
         ]
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return Self.serializePayload(payload, context: "rule payload")
     }
 
     @MainActor
@@ -395,9 +446,9 @@ actor BackgroundSyncAgent {
             "permission": item.permission.rawValue,
             "shared_at": ISO8601DateFormatter().string(from: item.shared_at),
             "shared_by_user_id": item.shared_by_user_id?.uuidString as Any,
-            "deleted_at": item.deleted_at != nil ? ISO8601DateFormatter().string(from: item.deleted_at!) : NSNull()
+            "deleted_at": Self.iso8601String(from: item.deleted_at) as Any
         ]
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return Self.serializePayload(payload, context: "share payload")
     }
 
     @MainActor
@@ -407,11 +458,11 @@ actor BackgroundSyncAgent {
             "watchlist_entry_id": item.watchlistEntry?.id.uuidString as Any,
             "image_path": item.imagePath,
             "storage_url": item.storageUrl as Any,
-            "captured_at": item.captured_at != nil ? ISO8601DateFormatter().string(from: item.captured_at!) : NSNull(),
+            "captured_at": Self.iso8601String(from: item.captured_at) as Any,
             "uploaded_at": ISO8601DateFormatter().string(from: item.uploaded_at),
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return Self.serializePayload(payload, context: "photo payload")
     }
 
     @MainActor
@@ -586,64 +637,8 @@ actor BackgroundSyncAgent {
                     try await processOperation(operation, config: config)
                     
                     // MARK: - Update Local Sync Status
-                    await MainActor.run {
-                        let context = WatchlistManager.shared.context
-                        let recordId = operation.recordId
-
-                        switch operation.table {
-                        case "watchlists":
-                            if let item = try? context.fetch(FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "watchlist_entries":
-                            if let item = try? context.fetch(FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "watchlist_rules":
-                            if let item = try? context.fetch(FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "watchlist_shares":
-                            if let item = try? context.fetch(FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "observed_bird_photos":
-                            if let item = try? context.fetch(FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "identification_sessions":
-                            if let item = try? context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "identification_results":
-                            if let item = try? context.fetch(FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "identification_candidates":
-                            if let item = try? context.fetch(FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        case "identification_session_marks":
-                            if let item = try? context.fetch(FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == recordId })).first {
-                                item.syncStatus = .synced
-                                item.lastSyncedAt = Date()
-                            }
-                        default: break
-                        }
-                        
-                        if operation.type == .delete {
-                            self.hardDeleteLocalRecord(table: operation.table, recordId: operation.recordId)
-                        }
-                        
-                        try? context.save()
+                    try await MainActor.run {
+                        try self.persistSuccessfulLocalSync(for: operation)
                     }
                 }
                 
@@ -670,6 +665,7 @@ actor BackgroundSyncAgent {
                 failedOp.lastError = error.localizedDescription
                 
                 if failedOp.attempts >= maxRetries {
+                    await markOperationFailedLocally(failedOp)
                     let lastError = failedOp.lastError ?? "none"
                     print("DEBUG: BackgroundSyncAgent moving to dead-letter - table: \(failedOp.table), op: \(failedOp.type.rawValue), recordId: \(failedOp.recordId), attempts: \(failedOp.attempts), lastError: \(lastError)")
                     deadLetterQueue.append(failedOp)
@@ -691,6 +687,123 @@ actor BackgroundSyncAgent {
         guard let index = queue.firstIndex(where: { $0.id == operation.id }) else { return false }
         queue[index] = operation
         return true
+    }
+
+    @MainActor
+    private func persistSuccessfulLocalSync(for operation: SyncOperation) throws {
+        let context = WatchlistManager.shared.context
+        let recordId = operation.recordId
+
+        switch operation.table {
+        case "watchlists":
+            if let item = try context.fetch(FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "watchlist_entries":
+            if let item = try context.fetch(FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "watchlist_rules":
+            if let item = try context.fetch(FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "watchlist_shares":
+            if let item = try context.fetch(FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "observed_bird_photos":
+            if let item = try context.fetch(FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "identification_sessions":
+            if let item = try context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "identification_results":
+            if let item = try context.fetch(FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "identification_candidates":
+            if let item = try context.fetch(FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        case "identification_session_marks":
+            if let item = try context.fetch(FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == recordId })).first {
+                item.syncStatus = .synced
+                item.lastSyncedAt = Date()
+            }
+        default:
+            break
+        }
+
+        if operation.type == .delete {
+            hardDeleteLocalRecord(table: operation.table, recordId: operation.recordId)
+        }
+
+        do {
+            try context.save()
+        } catch {
+            throw WatchlistError.persistenceFailed(underlying: error)
+        }
+    }
+
+    private func markOperationFailedLocally(_ operation: SyncOperation) async {
+        await MainActor.run {
+            let context = WatchlistManager.shared.context
+            do {
+                switch operation.table {
+                case "watchlists":
+                    if let item = try context.fetch(FetchDescriptor<Watchlist>(predicate: #Predicate { $0.watchlist_id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "watchlist_entries":
+                    if let item = try context.fetch(FetchDescriptor<WatchlistEntry>(predicate: #Predicate { $0.id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "watchlist_rules":
+                    if let item = try context.fetch(FetchDescriptor<WatchlistRule>(predicate: #Predicate { $0.id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "watchlist_shares":
+                    if let item = try context.fetch(FetchDescriptor<WatchlistShare>(predicate: #Predicate { $0.id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "observed_bird_photos":
+                    if let item = try context.fetch(FetchDescriptor<ObservedBirdPhoto>(predicate: #Predicate { $0.id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "identification_sessions":
+                    if let item = try context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "identification_results":
+                    if let item = try context.fetch(FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "identification_candidates":
+                    if let item = try context.fetch(FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                case "identification_session_marks":
+                    if let item = try context.fetch(FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == operation.recordId })).first {
+                        item.syncStatus = .failed
+                    }
+                default:
+                    break
+                }
+                try context.save()
+            } catch {
+                print("DEBUG: BackgroundSyncAgent failed to mark local record as failed: \(error.localizedDescription)")
+            }
+        }
     }
     
     private func checkServerConflict(_ operation: SyncOperation, config: SupabaseConfig) async throws -> Bool {

@@ -539,13 +539,19 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == categoriesCollectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath) as? CategoryCell else {
+                assertionFailure("Failed to dequeue CategoryCell")
+                return UICollectionViewCell()
+            }
             let mark = categories[indexPath.row]
             let isSelected = indexPath.row == currentCategoryIndex
             cell.configure(name: mark.area, iconName: mark.iconName, isSelected: isSelected)
             return cell
         } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as? VariationCell else {
+                assertionFailure("Failed to dequeue VariationCell")
+                return UICollectionViewCell()
+            }
             let variants = getOrderedVariantsForCurrentCategory()
             let categoryName = categories[currentCategoryIndex].area
             let variant = variants[indexPath.row + 1]

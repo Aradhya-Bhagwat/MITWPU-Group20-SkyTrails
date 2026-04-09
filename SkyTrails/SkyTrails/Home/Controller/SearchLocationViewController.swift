@@ -140,13 +140,27 @@ class SearchLocationViewController: UIViewController {
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
             isRequestingCurrentLocation = false
-            break
+            showLocationPermissionFallback()
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
             isRequestingCurrentLocation = false
-            break
+            showLocationPermissionFallback()
         }
+    }
+
+    private func showLocationPermissionFallback() {
+        let alert = UIAlertController(
+            title: "Location Unavailable",
+            message: "Current location is unavailable. You can enable location access in Settings or search manually.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Search Manually", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            UIApplication.shared.open(url)
+        })
+        present(alert, animated: true)
     }
 }
 
@@ -295,10 +309,12 @@ extension SearchLocationViewController: CLLocationManagerDelegate {
             manager.requestLocation()
         } else if manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted {
             isRequestingCurrentLocation = false
+            showLocationPermissionFallback()
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         isRequestingCurrentLocation = false
+        showLocationPermissionFallback()
     }
 }

@@ -15,6 +15,10 @@ class BirdSmartCell: UITableViewCell {
 	@IBOutlet weak var overflowBadgeView: UIView!
 	@IBOutlet weak var overflowLabel: UILabel!
 	@IBOutlet weak var avatarStackView: UIStackView!
+
+    private var documentsDirectoryURL: URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+    }
 	
 	var shouldShowAvatars: Bool = true {
 		didSet {
@@ -105,8 +109,8 @@ class BirdSmartCell: UITableViewCell {
         
 		titleLabel.text = bird.name
 
-		if let photoPath = entry.photos?.first?.imagePath {
-			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+		if let photoPath = entry.photos?.first?.imagePath,
+           let documentsDir = documentsDirectoryURL {
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 			let fileURL = photoDir.appendingPathComponent(photoPath)
 			if let diskImage = UIImage(contentsOfFile: fileURL.path) {
@@ -122,8 +126,8 @@ class BirdSmartCell: UITableViewCell {
                 birdImageView.image = assetImage
             } else {
                 // Try documents directory (similar to UnobservedDetailViewController)
-                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(bird.staticImageName)
-                if let docImage = UIImage(contentsOfFile: fileURL.path) {
+                if let fileURL = documentsDirectoryURL?.appendingPathComponent(bird.staticImageName),
+                   let docImage = UIImage(contentsOfFile: fileURL.path) {
                     birdImageView.image = docImage
                 } else {
                     birdImageView.image = UIImage(systemName: "photo")
@@ -155,7 +159,7 @@ class BirdSmartCell: UITableViewCell {
 			locationLabel.isHidden = true
 		}
 		if shouldShowAvatars {
-			let avatarImages: [String] = entry.observedBy != nil ? [entry.observedBy!] : []
+			let avatarImages: [String] = entry.observedBy.map { [$0] } ?? []
 			setupAvatars(images: avatarImages)
 		} else {
 			avatarStackView.isHidden = true
@@ -187,8 +191,8 @@ class BirdSmartCell: UITableViewCell {
 		overflowBadgeView.isHidden = true
 	}
 	private func loadImage(for entry: WatchlistEntry) async -> UIImage {
-		if let photoPath = entry.photos?.first?.imagePath {
-			let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+		if let photoPath = entry.photos?.first?.imagePath,
+           let documentsDir = documentsDirectoryURL {
 			let photoDir = documentsDir.appendingPathComponent("ObservedBirdPhotos", isDirectory: true)
 			let fileURL = photoDir.appendingPathComponent(photoPath)
 			if let image = UIImage(contentsOfFile: fileURL.path) {
@@ -201,7 +205,7 @@ class BirdSmartCell: UITableViewCell {
 		if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
 			return asset
 		}
-		return UIImage(systemName: "photo")!
+		return UIImage(systemName: "photo") ?? UIImage()
 	}
 	
 	private func setupAvatars(images: [String]) {

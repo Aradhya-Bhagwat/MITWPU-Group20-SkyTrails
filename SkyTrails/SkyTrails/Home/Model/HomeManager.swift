@@ -596,6 +596,7 @@ class HomeManager {
             hotspotCoordinate: topHotspotLoc,
             fallbackRadiusKm: 2.0
         )
+        let weekLabel = formattedWeekRange(weekRange)
 
         let migrationPrediction = MigrationPrediction(
             birdName: primaryBird.commonName,
@@ -607,7 +608,7 @@ class HomeManager {
                 "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))"
             } ?? "North",
             currentProgress: primaryMigration?.progress ?? 0.5,
-            dateRange: "Weeks \(weekRange.first!)-\(weekRange.last!)",
+            dateRange: weekLabel,
             pathCoordinates: primaryMigration?.paths.map {
                 CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
             } ?? []
@@ -639,7 +640,7 @@ class HomeManager {
             weekNumber: formatWeekRangeDescription(startWeek: currentWeek, endWeek: weekRange.last ?? currentWeek),
             speciesCount: top.migratingBirds.count,
             distanceString: distanceString,
-            dateRange: "Weeks \(weekRange.first!)-\(weekRange.last!)",
+            dateRange: weekLabel,
             placeImageName: top.hotspot.imageName ?? "placeholder_image",
             terrainTag: "Nature",
             seasonTag: seasonTag(for: weekRange),
@@ -650,6 +651,17 @@ class HomeManager {
             birdSpecies: displayBirds
         )
         return [DynamicMapCard.combined(migration: migrationPrediction, hotspot: hotspotPrediction)]
+    }
+
+    private func formattedWeekRange<T: Collection>(_ weekRange: T) -> String where T.Element == Int {
+        let values = Array(weekRange)
+        guard let lowerBound = values.min(), let upperBound = values.max() else {
+            return "Week unavailable"
+        }
+        if lowerBound == upperBound {
+            return "Week \(lowerBound)"
+        }
+        return "Weeks \(lowerBound)-\(upperBound)"
     }
 
     private func edgeDisplaySpecies(

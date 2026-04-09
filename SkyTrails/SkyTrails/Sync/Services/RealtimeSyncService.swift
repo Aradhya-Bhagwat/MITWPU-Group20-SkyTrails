@@ -40,6 +40,7 @@ final class RealtimeSyncService: NSObject {
     private var webSocket: URLSessionWebSocketTask?
     private var session: URLSession?
     private var config: SupabaseConfig?
+    private let logger: LoggingServiceProtocol
     
     private(set) var connectionState: RealtimeConnectionState = .disconnected
     private var isConnected: Bool { connectionState == .connected }
@@ -59,11 +60,58 @@ final class RealtimeSyncService: NSObject {
     var onSyncEvent: ((RealtimePayload) -> Void)?
     
     private override init() {
+        self.logger = LoggingService.shared
         super.init()
     }
 
     private func notifyWatchlistDataChanged() {
         WatchlistManager.shared.notifyDataDidChange()
+    }
+
+    private func saveContext(_ context: ModelContext, operation: String) throws {
+        do {
+            try context.save()
+        } catch {
+            logger.log(error: error, context: "RealtimeSyncService.\(operation)")
+            throw RealtimeSyncError.subscriptionFailed("Failed to persist realtime update for \(operation).")
+        }
+    }
+
+    private func fetchFirst<T: PersistentModel>(
+        _ descriptor: FetchDescriptor<T>,
+        in context: ModelContext,
+        operation: String
+    ) throws -> T? {
+        do {
+            return try context.fetch(descriptor).first
+        } catch {
+            logger.log(error: error, context: "RealtimeSyncService.\(operation)")
+            throw RealtimeSyncError.subscriptionFailed("Failed to load local data for \(operation).")
+        }
+    }
+
+    private func fetchAll<T: PersistentModel>(
+        _ descriptor: FetchDescriptor<T>,
+        in context: ModelContext,
+        operation: String
+    ) throws -> [T] {
+        do {
+            return try context.fetch(descriptor)
+        } catch {
+            logger.log(error: error, context: "RealtimeSyncService.\(operation)")
+            throw RealtimeSyncError.subscriptionFailed("Failed to load local data for \(operation).")
+        }
+    }
+
+    private func fetchBirdIfAvailable(_ birdId: UUID?, operation: String) throws -> Bird? {
+        guard let birdId else { return nil }
+
+        do {
+            return try WatchlistManager.shared.fetchBird(bird_id: birdId)
+        } catch {
+            logger.log(error: error, context: "RealtimeSyncService.\(operation)")
+            throw RealtimeSyncError.subscriptionFailed("Failed to resolve bird dependency for \(operation).")
+        }
     }
 
     func connect() async throws {
@@ -532,7 +580,7 @@ final class RealtimeSyncService: NSObject {
             watchlist.serverRowVersion = record.int(for: "row_version") ?? watchlist.serverRowVersion
             watchlist.updated_at = record.date(for: "updated_at")
             
-            try? context.save()
+            try saveContext(context, operation: "upsertWatchlist.update")
             notifyWatchlistDataChanged()
         } else {
             let watchlist = Watchlist(
@@ -555,7 +603,7 @@ final class RealtimeSyncService: NSObject {
             watchlist.updated_at = record.date(for: "updated_at")
             
             context.insert(watchlist)
-            try? context.save()
+            try saveContext(context, operation: "upsertWatchlist.insert")
             notifyWatchlistDataChanged()
         }
     }
@@ -564,7 +612,7 @@ final class RealtimeSyncService: NSObject {
         guard let watchlist = try WatchlistManager.shared.getWatchlist(by: id) else { return }
         watchlist.syncStatus = .synced
         watchlist.deleted_at = Date()
-        try? WatchlistManager.shared.context.save()
+        try saveContext(WatchlistManager.shared.context, operation: "deleteWatchlist")
         notifyWatchlistDataChanged()
     }
     
@@ -578,7 +626,7 @@ final class RealtimeSyncService: NSObject {
         
         if let entry = existingEntry {
             if let birdId = record.uuid(for: "bird_id") {
-                entry.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
+                entry.bird = try fetchBirdIfAvailable(birdId, operation: "upsertEntry.update")
             }
             entry.status = record.string(for: "status") == "observed" ? .observed : .to_observe
             entry.nickname = record.string(for: "nickname")
@@ -598,10 +646,10 @@ final class RealtimeSyncService: NSObject {
             entry.syncStatus = .synced
             entry.lastSyncedAt = Date()
             
-            try? WatchlistManager.shared.context.save()
+            try saveContext(WatchlistManager.shared.context, operation: "upsertEntry.update")
             notifyWatchlistDataChanged()
         } else {
-            let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(bird_id: $0) }
+            let bird = try fetchBirdIfAvailable(record.uuid(for: "bird_id"), operation: "upsertEntry.insert")
             let entry = WatchlistEntry(
                 id: id,
                 watchlist: watchlist,
@@ -626,7 +674,7 @@ final class RealtimeSyncService: NSObject {
             entry.lastSyncedAt = Date()
             
             WatchlistManager.shared.context.insert(entry)
-            try? WatchlistManager.shared.context.save()
+            try saveContext(WatchlistManager.shared.context, operation: "upsertEntry.insert")
             notifyWatchlistDataChanged()
         }
     }
@@ -637,7 +685,7 @@ final class RealtimeSyncService: NSObject {
             if let entries = watchlist.entries {
                 for entry in entries where entry.id == id {
                     WatchlistManager.shared.context.delete(entry)
-                    try? WatchlistManager.shared.context.save()
+                    try saveContext(WatchlistManager.shared.context, operation: "deleteEntry")
                     notifyWatchlistDataChanged()
                     return
                 }
@@ -668,7 +716,7 @@ final class RealtimeSyncService: NSObject {
             rule.syncStatus = .synced
             rule.lastSyncedAt = Date()
             
-            try? WatchlistManager.shared.context.save()
+            try saveContext(WatchlistManager.shared.context, operation: "upsertRule.update")
             notifyWatchlistDataChanged()
         } else {
             let ruleTypeString = record.string(for: "rule_type") ?? "location"
@@ -694,7 +742,7 @@ final class RealtimeSyncService: NSObject {
             rule.lastSyncedAt = Date()
             
             WatchlistManager.shared.context.insert(rule)
-            try? WatchlistManager.shared.context.save()
+            try saveContext(WatchlistManager.shared.context, operation: "upsertRule.insert")
             notifyWatchlistDataChanged()
         }
     }
@@ -705,7 +753,7 @@ final class RealtimeSyncService: NSObject {
             if let rules = watchlist.rules {
                 for rule in rules where rule.id == id {
                     WatchlistManager.shared.context.delete(rule)
-                    try? WatchlistManager.shared.context.save()
+                    try saveContext(WatchlistManager.shared.context, operation: "deleteRule")
                     notifyWatchlistDataChanged()
                     return
                 }
@@ -729,7 +777,7 @@ final class RealtimeSyncService: NSObject {
             share.deleted_at = record.date(for: "deleted_at")
             share.syncStatus = .synced
             share.lastSyncedAt = Date()
-            try? WatchlistManager.shared.context.save()
+            try saveContext(WatchlistManager.shared.context, operation: "upsertShare.update")
             notifyWatchlistDataChanged()
         } else {
             let share = WatchlistShare(
@@ -745,7 +793,7 @@ final class RealtimeSyncService: NSObject {
             share.syncStatus = .synced
             share.lastSyncedAt = Date()
             WatchlistManager.shared.context.insert(share)
-            try? WatchlistManager.shared.context.save()
+            try saveContext(WatchlistManager.shared.context, operation: "upsertShare.insert")
             notifyWatchlistDataChanged()
         }
     }
@@ -756,7 +804,7 @@ final class RealtimeSyncService: NSObject {
             if let shares = watchlist.shares {
                 for share in shares where share.id == id {
                     WatchlistManager.shared.context.delete(share)
-                    try? WatchlistManager.shared.context.save()
+                    try saveContext(WatchlistManager.shared.context, operation: "deleteShare")
                     notifyWatchlistDataChanged()
                     return
                 }
@@ -783,7 +831,7 @@ final class RealtimeSyncService: NSObject {
                         photo.syncStatus = .synced
                         photo.lastSyncedAt = Date()
                         
-                        try? WatchlistManager.shared.context.save()
+                        try saveContext(WatchlistManager.shared.context, operation: "upsertPhoto.update")
                     } else {
                         let photo = ObservedBirdPhoto(
                             id: id,
@@ -797,7 +845,7 @@ final class RealtimeSyncService: NSObject {
                         photo.lastSyncedAt = Date()
                         
                         WatchlistManager.shared.context.insert(photo)
-                        try? WatchlistManager.shared.context.save()
+                        try saveContext(WatchlistManager.shared.context, operation: "upsertPhoto.insert")
                     }
                     return
                 }
@@ -813,7 +861,7 @@ final class RealtimeSyncService: NSObject {
                     if let photos = entry.photos {
                         for photo in photos where photo.id == id {
                             WatchlistManager.shared.context.delete(photo)
-                            try? WatchlistManager.shared.context.save()
+                            try saveContext(WatchlistManager.shared.context, operation: "deletePhoto")
                             return
                         }
                     }
@@ -825,11 +873,11 @@ final class RealtimeSyncService: NSObject {
     private func upsertIdentificationSession(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertIdentificationSession.loadExisting")
 
         if let session = existing {
             updateSessionFromRecord(session, record: record)
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationSession.update")
         } else {
             let session = IdentificationSession(
                 identification_session_id: id,
@@ -840,7 +888,7 @@ final class RealtimeSyncService: NSObject {
             )
             updateSessionFromRecord(session, record: record)
             context.insert(session)
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationSession.insert")
         }
     }
 
@@ -869,7 +917,7 @@ final class RealtimeSyncService: NSObject {
             
             if let shapeId = stringDict["shapeId"] {
                 let shapeDescriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
-                session.shape = try? WatchlistManager.shared.context.fetch(shapeDescriptor).first
+                session.shape = try? fetchFirst(shapeDescriptor, in: WatchlistManager.shared.context, operation: "updateSessionFromRecord.shapeLookup")
             }
             session.locationDisplayName = stringDict["locationDisplayName"]
             if let sizeStr = stringDict["sizeCategory"], let size = Int(sizeStr) {
@@ -884,36 +932,32 @@ final class RealtimeSyncService: NSObject {
     private func deleteIdentificationSession(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == id })
-        if let session = try? context.fetch(descriptor).first {
+        if let session = try fetchFirst(descriptor, in: context, operation: "deleteIdentificationSession.loadExisting") {
             session.deletedAt = Date()
             session.syncStatus = .synced
-            try? context.save()
+            try saveContext(context, operation: "deleteIdentificationSession")
         }
     }
 
     private func upsertIdentificationResult(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertIdentificationResult.loadExisting")
 
         guard let sessionId = record.uuid(for: "identification_session_id") else { return }
         let sessionDescriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == sessionId })
-        let session = try? context.fetch(sessionDescriptor).first
+        let session = try fetchFirst(sessionDescriptor, in: context, operation: "upsertIdentificationResult.loadSession")
 
         if let result = existing {
             result.session = session
             result.user_id = record.uuid(for: "owner_id")
-            if let birdId = record.uuid(for: "bird_id") {
-                result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
-            } else {
-                result.bird = nil
-            }
+            result.bird = try fetchBirdIfAvailable(record.uuid(for: "bird_id"), operation: "upsertIdentificationResult.update")
             result.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             result.updated_at = record.date(for: "updated_at")
             result.deletedAt = record.date(for: "deleted_at")
             result.syncStatus = .synced
             result.lastSyncedAt = Date()
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationResult.update")
         } else {
             let result = IdentificationResult(
                 identification_result_id: id,
@@ -921,42 +965,37 @@ final class RealtimeSyncService: NSObject {
                 user_id: record.uuid(for: "owner_id"),
                 createdAt: record.date(for: "created_at") ?? Date()
             )
-            if let birdId = record.uuid(for: "bird_id") {
-                result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
-            } else {
-                result.bird = nil
-            }
+            result.bird = try fetchBirdIfAvailable(record.uuid(for: "bird_id"), operation: "upsertIdentificationResult.insert")
             result.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
             result.updated_at = record.date(for: "updated_at")
             result.deletedAt = record.date(for: "deleted_at")
             result.syncStatus = .synced
             result.lastSyncedAt = Date()
             context.insert(result)
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationResult.insert")
         }
     }
 
     private func deleteIdentificationResult(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == id })
-        if let result = try? context.fetch(descriptor).first {
+        if let result = try fetchFirst(descriptor, in: context, operation: "deleteIdentificationResult.loadExisting") {
             result.deletedAt = Date()
             result.syncStatus = .synced
-            try? context.save()
+            try saveContext(context, operation: "deleteIdentificationResult")
         }
     }
 
     private func upsertIdentificationCandidate(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertIdentificationCandidate.loadExisting")
 
         guard let resultId = record.uuid(for: "identification_result_id") else { return }
         let resultDescriptor = FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == resultId })
-        let result = try? context.fetch(resultDescriptor).first
+        let result = try fetchFirst(resultDescriptor, in: context, operation: "upsertIdentificationCandidate.loadResult")
 
-        let birdId = record.uuid(for: "bird_id")
-        let bird = birdId.flatMap { try? WatchlistManager.shared.fetchBird(bird_id: $0) }
+        let bird = try fetchBirdIfAvailable(record.uuid(for: "bird_id"), operation: "upsertIdentificationCandidate.resolveBird")
 
         if let candidate = existing {
             candidate.result = result
@@ -968,7 +1007,7 @@ final class RealtimeSyncService: NSObject {
             candidate.deletedAt = record.date(for: "deleted_at")
             candidate.syncStatus = .synced
             candidate.lastSyncedAt = Date()
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationCandidate.update")
         } else {
             let candidate = IdentificationCandidate(
                 identification_candidate_id: id,
@@ -983,28 +1022,28 @@ final class RealtimeSyncService: NSObject {
             candidate.syncStatus = .synced
             candidate.lastSyncedAt = Date()
             context.insert(candidate)
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationCandidate.insert")
         }
     }
 
     private func deleteIdentificationCandidate(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == id })
-        if let candidate = try? context.fetch(descriptor).first {
+        if let candidate = try fetchFirst(descriptor, in: context, operation: "deleteIdentificationCandidate.loadExisting") {
             candidate.deletedAt = Date()
             candidate.syncStatus = .synced
-            try? context.save()
+            try saveContext(context, operation: "deleteIdentificationCandidate")
         }
     }
 
     private func upsertIdentificationSessionMark(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertIdentificationSessionMark.loadExisting")
 
         guard let sessionId = record.uuid(for: "identification_session_id") else { return }
         let sessionDescriptor = FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == sessionId })
-        let session = try? context.fetch(sessionDescriptor).first
+        let session = try fetchFirst(sessionDescriptor, in: context, operation: "upsertIdentificationSessionMark.loadSession")
 
         if let mark = existing {
             mark.session = session
@@ -1012,14 +1051,14 @@ final class RealtimeSyncService: NSObject {
             if let markId = record.uuid(for: "field_mark_id") {
                 mark.field_mark_id = markId
                 let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })
-                mark.fieldMark = try? context.fetch(fieldMarkDescriptor).first
+                mark.fieldMark = try fetchFirst(fieldMarkDescriptor, in: context, operation: "upsertIdentificationSessionMark.resolveFieldMark")
             } else {
                 mark.fieldMark = nil
             }
             if let varId = record.uuid(for: "variant_id") {
                 mark.variant_id = varId
                 let variantDescriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == varId })
-                mark.variant = try? context.fetch(variantDescriptor).first
+                mark.variant = try fetchFirst(variantDescriptor, in: context, operation: "upsertIdentificationSessionMark.resolveVariant")
             } else {
                 mark.variant = nil
             }
@@ -1028,7 +1067,7 @@ final class RealtimeSyncService: NSObject {
             mark.deletedAt = record.date(for: "deleted_at")
             mark.syncStatus = .synced
             mark.lastSyncedAt = Date()
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationSessionMark.update")
         } else {
             let mark = IdentificationSessionFieldMark(
                 identification_session_mark_id: id,
@@ -1039,12 +1078,12 @@ final class RealtimeSyncService: NSObject {
             if let markId = record.uuid(for: "field_mark_id") {
                 mark.field_mark_id = markId
                 let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })
-                mark.fieldMark = try? context.fetch(fieldMarkDescriptor).first
+                mark.fieldMark = try fetchFirst(fieldMarkDescriptor, in: context, operation: "upsertIdentificationSessionMark.insertFieldMark")
             }
             if let varId = record.uuid(for: "variant_id") {
                 mark.variant_id = varId
                 let variantDescriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == varId })
-                mark.variant = try? context.fetch(variantDescriptor).first
+                mark.variant = try fetchFirst(variantDescriptor, in: context, operation: "upsertIdentificationSessionMark.insertVariant")
             }
             
             mark.serverRowVersion = Int64(record.int(for: "row_version") ?? 0)
@@ -1053,24 +1092,24 @@ final class RealtimeSyncService: NSObject {
             mark.syncStatus = .synced
             mark.lastSyncedAt = Date()
             context.insert(mark)
-            try? context.save()
+            try saveContext(context, operation: "upsertIdentificationSessionMark.insert")
         }
     }
 
     private func deleteIdentificationSessionMark(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == id })
-        if let mark = try? context.fetch(descriptor).first {
+        if let mark = try fetchFirst(descriptor, in: context, operation: "deleteIdentificationSessionMark.loadExisting") {
             mark.deletedAt = Date()
             mark.syncStatus = .synced
-            try? context.save()
+            try saveContext(context, operation: "deleteIdentificationSessionMark")
         }
     }
 
     private func upsertBirdShape(from record: [String: JSONValue], shapeId: String) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertBirdShape.loadExisting")
 
         let name = record.string(for: "name") ?? shapeId
         let icon = record.string(for: "icon") ?? record.string(for: "icon_url") ?? ""
@@ -1085,34 +1124,32 @@ final class RealtimeSyncService: NSObject {
             context.insert(shape)
         }
 
-        let birds = try? context.fetch(FetchDescriptor<Bird>(predicate: #Predicate { $0.shape_id == shapeId }))
-        if let targetShape = try? context.fetch(descriptor).first {
-            birds?.forEach { $0.shape = targetShape }
+        let birds = try fetchAll(FetchDescriptor<Bird>(predicate: #Predicate { $0.shape_id == shapeId }), in: context, operation: "upsertBirdShape.loadBirds")
+        if let targetShape = try fetchFirst(descriptor, in: context, operation: "upsertBirdShape.loadTargetShape") {
+            birds.forEach { $0.shape = targetShape }
         }
-        try? context.save()
+        try saveContext(context, operation: "upsertBirdShape")
     }
 
     private func deleteBirdShape(shapeId: String) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeId })
-        if let shape = try? context.fetch(descriptor).first {
+        if let shape = try fetchFirst(descriptor, in: context, operation: "deleteBirdShape.loadExisting") {
             context.delete(shape)
-            try? context.save()
+            try saveContext(context, operation: "deleteBirdShape")
         }
     }
 
     private func upsertBird(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.bird_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertBird.loadExisting")
 
         let shapeCode: String?
         if let explicitShapeCode = record.string(for: "bird_shape_id") {
             shapeCode = explicitShapeCode
         } else if let shapeServerId = record.uuid(for: "shape_id") {
             shapeCode = nil
-            let shapeRows = try? context.fetch(FetchDescriptor<BirdShape>())
-            let _ = shapeRows // keep compile-friendly local scope for future server-id mapping
             _ = shapeServerId
         } else {
             shapeCode = record.string(for: "shape_id")
@@ -1121,7 +1158,7 @@ final class RealtimeSyncService: NSObject {
         let resolvedShape: BirdShape?
         if let shapeCode {
             let shapeDescriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == shapeCode })
-            resolvedShape = try? context.fetch(shapeDescriptor).first
+            resolvedShape = try fetchFirst(shapeDescriptor, in: context, operation: "upsertBird.resolveShape")
         } else {
             resolvedShape = nil
         }
@@ -1159,27 +1196,30 @@ final class RealtimeSyncService: NSObject {
             )
             context.insert(bird)
         }
-        try? context.save()
+        try saveContext(context, operation: "upsertBird")
     }
 
     private func deleteBird(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<Bird>(predicate: #Predicate { $0.bird_id == id })
-        if let bird = try? context.fetch(descriptor).first {
+        if let bird = try fetchFirst(descriptor, in: context, operation: "deleteBird.loadExisting") {
             context.delete(bird)
-            try? context.save()
+            try saveContext(context, operation: "deleteBird")
         }
     }
 
     private func upsertBirdFieldMark(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertBirdFieldMark.loadExisting")
 
         let shapeId = record.string(for: "shape_id")
-        let shape = shapeId.flatMap { value in
+        let shape: BirdShape?
+        if let value = shapeId {
             let shapeDescriptor = FetchDescriptor<BirdShape>(predicate: #Predicate { $0.bird_shape_id == value })
-            return try? context.fetch(shapeDescriptor).first
+            shape = try fetchFirst(shapeDescriptor, in: context, operation: "upsertBirdFieldMark.resolveShape")
+        } else {
+            shape = nil
         }
 
         if let mark = existing {
@@ -1191,25 +1231,29 @@ final class RealtimeSyncService: NSObject {
             mark.shape = shape
             context.insert(mark)
         }
-        try? context.save()
+        try saveContext(context, operation: "upsertBirdFieldMark")
     }
 
     private func deleteBirdFieldMark(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == id })
-        if let mark = try? context.fetch(descriptor).first {
+        if let mark = try fetchFirst(descriptor, in: context, operation: "deleteBirdFieldMark.loadExisting") {
             context.delete(mark)
-            try? context.save()
+            try saveContext(context, operation: "deleteBirdFieldMark")
         }
     }
 
     private func upsertFieldMarkVariant(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertFieldMarkVariant.loadExisting")
 
-        let fieldMark = record.uuid(for: "field_mark_id").flatMap { fieldMarkId in
-            try? context.fetch(FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == fieldMarkId })).first
+        let fieldMark: BirdFieldMark?
+        if let fieldMarkId = record.uuid(for: "field_mark_id") {
+            let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == fieldMarkId })
+            fieldMark = try fetchFirst(fieldMarkDescriptor, in: context, operation: "upsertFieldMarkVariant.resolveFieldMark")
+        } else {
+            fieldMark = nil
         }
 
         if let variant = existing {
@@ -1221,38 +1265,46 @@ final class RealtimeSyncService: NSObject {
             variant.fieldMark = fieldMark
             context.insert(variant)
         }
-        try? context.save()
+        try saveContext(context, operation: "upsertFieldMarkVariant")
     }
 
     private func deleteFieldMarkVariant(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == id })
-        if let variant = try? context.fetch(descriptor).first {
+        if let variant = try fetchFirst(descriptor, in: context, operation: "deleteFieldMarkVariant.loadExisting") {
             context.delete(variant)
-            try? context.save()
+            try saveContext(context, operation: "deleteFieldMarkVariant")
         }
     }
 
     private func upsertBirdFieldMarkVariantLink(from record: [String: JSONValue], id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<BirdFieldMarkVariantLink>(predicate: #Predicate { $0.bird_field_mark_variant_link_id == id })
-        let existing = try? context.fetch(descriptor).first
+        let existing = try fetchFirst(descriptor, in: context, operation: "upsertBirdFieldMarkVariantLink.loadExisting")
 
         guard let birdId = record.uuid(for: "bird_id"),
-              let bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId) else { return }
+              let bird = try fetchBirdIfAvailable(birdId, operation: "upsertBirdFieldMarkVariantLink.resolveBird") else { return }
 
         let area = record.string(for: "area") ?? ""
         let variantId = record.uuid(for: "variant_id")
         let fieldMarkId = record.uuid(for: "field_mark_id")
-        let fieldMark = fieldMarkId.flatMap { markId in
-            try? context.fetch(FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })).first
+        let fieldMark: BirdFieldMark?
+        if let markId = fieldMarkId {
+            let fieldMarkDescriptor = FetchDescriptor<BirdFieldMark>(predicate: #Predicate { $0.bird_field_mark_id == markId })
+            fieldMark = try fetchFirst(fieldMarkDescriptor, in: context, operation: "upsertBirdFieldMarkVariantLink.resolveFieldMark")
+        } else {
+            fieldMark = nil
         }
-        let variant = variantId.flatMap { value in
-            try? context.fetch(FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == value })).first
+        let variant: FieldMarkVariant?
+        if let value = variantId {
+            let variantDescriptor = FetchDescriptor<FieldMarkVariant>(predicate: #Predicate { $0.field_mark_variant_id == value })
+            variant = try fetchFirst(variantDescriptor, in: context, operation: "upsertBirdFieldMarkVariantLink.resolveVariant")
+        } else {
+            variant = nil
         }
 
-        let logicalMatches = try? context.fetch(FetchDescriptor<BirdFieldMarkVariantLink>())
-        let logicalExisting = logicalMatches?.first {
+        let logicalMatches = try fetchAll(FetchDescriptor<BirdFieldMarkVariantLink>(), in: context, operation: "upsertBirdFieldMarkVariantLink.loadLogicalMatches")
+        let logicalExisting = logicalMatches.first {
             $0.bird?.bird_id == birdId &&
             $0.area.caseInsensitiveCompare(area) == .orderedSame &&
             $0.variant?.field_mark_variant_id == variantId
@@ -1274,15 +1326,15 @@ final class RealtimeSyncService: NSObject {
             )
             context.insert(link)
         }
-        try? context.save()
+        try saveContext(context, operation: "upsertBirdFieldMarkVariantLink")
     }
 
     private func deleteBirdFieldMarkVariantLink(id: UUID) async throws {
         let context = WatchlistManager.shared.context
         let descriptor = FetchDescriptor<BirdFieldMarkVariantLink>(predicate: #Predicate { $0.bird_field_mark_variant_link_id == id })
-        if let link = try? context.fetch(descriptor).first {
+        if let link = try fetchFirst(descriptor, in: context, operation: "deleteBirdFieldMarkVariantLink.loadExisting") {
             context.delete(link)
-            try? context.save()
+            try saveContext(context, operation: "deleteBirdFieldMarkVariantLink")
         }
     }
     

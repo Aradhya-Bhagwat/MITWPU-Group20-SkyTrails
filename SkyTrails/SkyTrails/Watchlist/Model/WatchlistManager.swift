@@ -198,6 +198,17 @@ final class WatchlistManager: WatchlistRepository {
             WatchlistLog.error("Failed to bind current user ownership", error: error)
         }
     }
+
+    func repairInconsistentSyncState() {
+        do {
+            let repairedCount = try persistence.repairInconsistentSyncState()
+            if repairedCount > 0 {
+                WatchlistLog.warn("Repaired \(repairedCount) inconsistent sync records before sync.")
+            }
+        } catch {
+            WatchlistLog.error("Failed to repair inconsistent sync state", error: error)
+        }
+    }
     
     func deleteWatchlist(id: UUID) async throws {
         try persistence.deleteWatchlist(id: id)

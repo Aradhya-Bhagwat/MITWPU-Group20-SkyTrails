@@ -1,12 +1,27 @@
 import Foundation
 import CoreLocation
 
-enum APIError: Error {
+enum APIError: Error, LocalizedError {
     case invalidURL
     case unauthorized
     case invalidResponse
-    case decodingError
-    case serverError(String)
+    case decodingError(String)
+    case serverError(Int, String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "The prediction service URL is invalid."
+        case .unauthorized:
+            return "The prediction service rejected the request."
+        case .invalidResponse:
+            return "The prediction service returned an invalid response."
+        case .decodingError(let details):
+            return "The prediction response format was unexpected. \(details)"
+        case .serverError(_, let message):
+            return message
+        }
+    }
 }
 
 final class SkyTrailsAPIService {
@@ -30,17 +45,33 @@ final class SkyTrailsAPIService {
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         
         let body: [String: Any] = ["lat": lat, "lng": lng]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            throw APIError.invalidResponse
+        }
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let errorMsg = String(data: data, encoding: .utf8) ?? "Unauthorized or Server Error"
-            print("DEBUG: API Error: \(errorMsg)")
-            throw APIError.serverError(errorMsg)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Prediction service error."
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                throw APIError.unauthorized
+            }
+            throw APIError.serverError(httpResponse.statusCode, errorMsg)
         }
         
-        return try JSONDecoder().decode(HotspotPredictionResponse.self, from: data)
+        do {
+            return try JSONDecoder().decode(HotspotPredictionResponse.self, from: data)
+        } catch let error as DecodingError {
+            throw APIError.decodingError(Self.describeDecodingError(error))
+        } catch {
+            throw APIError.decodingError(error.localizedDescription)
+        }
     }
     
     /// DIRECT FETCH: Gets locations directly from the Supabase 'hotspots_geo' table
@@ -60,8 +91,24 @@ final class SkyTrailsAPIService {
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         
-        let (data, _) = try await URLSession.shared.data(for: request)
-        return try JSONDecoder().decode([HotspotModel].self, from: data)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                throw APIError.unauthorized
+            }
+            throw APIError.serverError(httpResponse.statusCode, String(data: data, encoding: .utf8) ?? "Failed to fetch hotspots.")
+        }
+
+        do {
+            return try JSONDecoder().decode([HotspotModel].self, from: data)
+        } catch let error as DecodingError {
+            throw APIError.decodingError(Self.describeDecodingError(error))
+        } catch {
+            throw APIError.decodingError(error.localizedDescription)
+        }
     }
 
     func fetchGeoJSON(ebirdSpeciesCode: String, weekNumber: Int) async throws -> Data {
@@ -83,19 +130,45 @@ final class SkyTrailsAPIService {
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw APIError.serverError("Failed to fetch range from table")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                throw APIError.unauthorized
+            }
+            throw APIError.serverError(httpResponse.statusCode, "Failed to fetch range from table")
         }
 
         struct RangeRecord: Codable {
             let range_geojson: String
         }
 
-        let records = try JSONDecoder().decode([RangeRecord].self, from: data)
+        let records: [RangeRecord]
+        do {
+            records = try JSONDecoder().decode([RangeRecord].self, from: data)
+        } catch let error as DecodingError {
+            throw APIError.decodingError(Self.describeDecodingError(error))
+        } catch {
+            throw APIError.decodingError(error.localizedDescription)
+        }
         guard let firstRecord = records.first,
               let geoData = firstRecord.range_geojson.data(using: .utf8) else {
-            throw APIError.decodingError
+            throw APIError.decodingError("Missing `range_geojson` in species range record.")
         }
         return geoData
+    }
+
+    private static func describeDecodingError(_ error: DecodingError) -> String {
+        switch error {
+        case .typeMismatch(_, let context),
+             .valueNotFound(_, let context),
+             .keyNotFound(_, let context),
+             .dataCorrupted(let context):
+            let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+            return path.isEmpty ? context.debugDescription : "\(context.debugDescription) at \(path)"
+        @unknown default:
+            return error.localizedDescription
+        }
     }
 }

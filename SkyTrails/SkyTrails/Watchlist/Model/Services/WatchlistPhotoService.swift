@@ -282,7 +282,7 @@ final class WatchlistPhotoService {
             "watchlist_entry_id": photo.watchlistEntry?.id.uuidString as Any,
             "image_path": photo.imagePath,
             "storage_url": photo.storageUrl as Any,
-            "captured_at": photo.captured_at != nil ? ISO8601DateFormatter().string(from: photo.captured_at!) : NSNull(),
+            "captured_at": photo.captured_at.map { ISO8601DateFormatter().string(from: $0) } as Any,
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
         
@@ -290,6 +290,11 @@ final class WatchlistPhotoService {
             payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
         }
         
-        return try? JSONSerialization.data(withJSONObject: payload)
+        do {
+            return try JSONSerialization.data(withJSONObject: payload)
+        } catch {
+            print("WatchlistPhotoService failed to serialize photo payload: \(error.localizedDescription)")
+            return nil
+        }
     }
 }

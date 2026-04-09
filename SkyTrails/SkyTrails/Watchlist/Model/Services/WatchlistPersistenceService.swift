@@ -39,6 +39,20 @@ final class WatchlistPersistenceService {
             await operation()
         }
     }
+
+    private func iso8601String(from date: Date?) -> String? {
+        guard let date else { return nil }
+        return ISO8601DateFormatter().string(from: date)
+    }
+
+    private func serializePayload(_ payload: [String: Any], context: String) -> Data? {
+        do {
+            return try JSONSerialization.data(withJSONObject: payload)
+        } catch {
+            print("WatchlistPersistenceService failed to serialize \(context): \(error.localizedDescription)")
+            return nil
+        }
+    }
     
     func createWatchlist(
         title: String,
@@ -675,6 +689,79 @@ final class WatchlistPersistenceService {
         return adoptedCount
     }
 
+    func repairInconsistentSyncState() throws -> Int {
+        var repairedCount = 0
+
+        let watchlists = try context.fetch(FetchDescriptor<Watchlist>())
+        for watchlist in watchlists {
+            if repairSyncStatus(&watchlist.syncStatus, lastSyncedAt: watchlist.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let entries = try context.fetch(FetchDescriptor<WatchlistEntry>())
+        for entry in entries {
+            if repairSyncStatus(&entry.syncStatus, lastSyncedAt: entry.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let rules = try context.fetch(FetchDescriptor<WatchlistRule>())
+        for rule in rules {
+            if repairSyncStatus(&rule.syncStatus, lastSyncedAt: rule.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let shares = try context.fetch(FetchDescriptor<WatchlistShare>())
+        for share in shares {
+            if repairSyncStatus(&share.syncStatus, lastSyncedAt: share.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let photos = try context.fetch(FetchDescriptor<ObservedBirdPhoto>())
+        for photo in photos {
+            if repairSyncStatus(&photo.syncStatus, lastSyncedAt: photo.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let sessions = try context.fetch(FetchDescriptor<IdentificationSession>())
+        for session in sessions {
+            if repairSyncStatus(&session.syncStatus, lastSyncedAt: session.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let results = try context.fetch(FetchDescriptor<IdentificationResult>())
+        for result in results {
+            if repairSyncStatus(&result.syncStatus, lastSyncedAt: result.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let candidates = try context.fetch(FetchDescriptor<IdentificationCandidate>())
+        for candidate in candidates {
+            if repairSyncStatus(&candidate.syncStatus, lastSyncedAt: candidate.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        let marks = try context.fetch(FetchDescriptor<IdentificationSessionFieldMark>())
+        for mark in marks {
+            if repairSyncStatus(&mark.syncStatus, lastSyncedAt: mark.lastSyncedAt) {
+                repairedCount += 1
+            }
+        }
+
+        if repairedCount > 0 {
+            try saveContext()
+        }
+
+        return repairedCount
+    }
+
     func bindIdentificationToCurrentUser() throws -> Int {
         let userID = activeUserID ?? UserSession.shared.currentUser?.user_id
         guard let userID else { return 0 }
@@ -732,6 +819,12 @@ final class WatchlistPersistenceService {
             throw WatchlistError.persistenceFailed(underlying: error)
         }
     }
+
+    private func repairSyncStatus(_ syncStatus: inout SyncStatus, lastSyncedAt: Date?) -> Bool {
+        guard syncStatus == .failed else { return false }
+        syncStatus = lastSyncedAt == nil ? .pendingCreate : .pendingUpdate
+        return true
+    }
     
     private func recalculateWatchlistStats(watchlistID: UUID) throws {
         guard let watchlist = try fetchWatchlist(id: watchlistID) else { return }
@@ -755,8 +848,8 @@ final class WatchlistPersistenceService {
             "title": watchlist.title as Any,
             "location": watchlist.location as Any,
             "location_display_name": watchlist.locationDisplayName as Any,
-            "start_date": watchlist.startDate != nil ? ISO8601DateFormatter().string(from: watchlist.startDate!) : NSNull(),
-            "end_date": watchlist.endDate != nil ? ISO8601DateFormatter().string(from: watchlist.endDate!) : NSNull(),
+            "start_date": iso8601String(from: watchlist.startDate) as Any,
+            "end_date": iso8601String(from: watchlist.endDate) as Any,
             "cover_image_path": watchlist.coverImagePath as Any,
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
@@ -765,7 +858,7 @@ final class WatchlistPersistenceService {
             payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
         }
         
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return serializePayload(payload, context: "watchlist payload")
     }
     
     private func buildEntryPayloadData(_ entry: WatchlistEntry, for operation: SyncOperationType) -> Data? {
@@ -776,9 +869,9 @@ final class WatchlistPersistenceService {
             "nickname": entry.nickname as Any,
             "status": entry.status.rawValue,
             "notes": entry.notes as Any,
-            "observation_date": entry.observationDate != nil ? ISO8601DateFormatter().string(from: entry.observationDate!) : NSNull(),
-            "to_observe_start_date": entry.toObserveStartDate != nil ? ISO8601DateFormatter().string(from: entry.toObserveStartDate!) : NSNull(),
-            "to_observe_end_date": entry.toObserveEndDate != nil ? ISO8601DateFormatter().string(from: entry.toObserveEndDate!) : NSNull(),
+            "observation_date": iso8601String(from: entry.observationDate) as Any,
+            "to_observe_start_date": iso8601String(from: entry.toObserveStartDate) as Any,
+            "to_observe_end_date": iso8601String(from: entry.toObserveEndDate) as Any,
             "observed_by": entry.observedBy as Any,
             "observed_by_user_id": entry.observedByUserId?.uuidString as Any,
             "lat": entry.lat as Any,
@@ -801,7 +894,7 @@ final class WatchlistPersistenceService {
             payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
         }
         
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return serializePayload(payload, context: "entry payload")
     }
     
     private func buildRulePayloadData(_ rule: WatchlistRule, for operation: SyncOperationType) -> Data? {
@@ -812,8 +905,8 @@ final class WatchlistPersistenceService {
             "lat": rule.lat as Any,
             "lon": rule.lon as Any,
             "radius_km": rule.radius_km as Any,
-            "start_date": rule.start_date != nil ? ISO8601DateFormatter().string(from: rule.start_date!) : NSNull(),
-            "end_date": rule.end_date != nil ? ISO8601DateFormatter().string(from: rule.end_date!) : NSNull(),
+            "start_date": iso8601String(from: rule.start_date) as Any,
+            "end_date": iso8601String(from: rule.end_date) as Any,
             "shape_id": rule.shape_id as Any,
             "pattern_key": rule.pattern_key as Any,
             "is_active": rule.is_active,
@@ -825,6 +918,6 @@ final class WatchlistPersistenceService {
             payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
         }
         
-        return try? JSONSerialization.data(withJSONObject: payload)
+        return serializePayload(payload, context: "rule payload")
     }
 }

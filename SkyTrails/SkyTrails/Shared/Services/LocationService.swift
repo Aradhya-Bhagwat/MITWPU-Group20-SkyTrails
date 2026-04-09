@@ -63,6 +63,17 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         case locationAccessDenied
         case locationNotFound
         case serviceUnavailable
+
+        var recoverySuggestion: String? {
+            switch self {
+            case .locationAccessDenied:
+                return "Enable location access in Settings, or search for a place manually."
+            case .locationNotFound:
+                return "Try searching for a nearby city or landmark."
+            case .geocodingFailed, .serviceUnavailable:
+                return "Check your connection and try again, or enter a location manually."
+            }
+        }
     }
 
     func primeAuthorizationIfNeeded() async {

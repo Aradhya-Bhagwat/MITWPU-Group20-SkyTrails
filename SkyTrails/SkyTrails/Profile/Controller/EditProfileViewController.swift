@@ -223,10 +223,16 @@ final class EditProfileViewController: UIViewController {
         UserSession.shared.saveUser(user)
 
         Task {
-            try? await UserSyncService.shared.upsertUser(user)
-            await MainActor.run {
-                self.onProfileUpdated?()
-                self.navigationController?.popViewController(animated: true)
+            do {
+                try await UserSyncService.shared.upsertUser(user)
+                await MainActor.run {
+                    self.onProfileUpdated?()
+                    self.navigationController?.popViewController(animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    self.showError(error.localizedDescription)
+                }
             }
         }
     }

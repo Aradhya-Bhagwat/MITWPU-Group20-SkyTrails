@@ -510,7 +510,10 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as! subcardViewCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as? subcardViewCell else {
+            assertionFailure("Failed to dequeue subcardViewCell")
+            return UICollectionViewCell()
+        }
         let bird = birdSpecies[indexPath.row]
         cell.configure(with: bird, accentColor: pinColor(for: bird.birdImageName, index: indexPath.row))
         cell.setExpanded(indexPath.row == selectedBirdIndex)

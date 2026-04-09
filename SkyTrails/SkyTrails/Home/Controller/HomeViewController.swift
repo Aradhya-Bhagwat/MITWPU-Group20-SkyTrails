@@ -41,6 +41,12 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         let endWeek: Int
     }
 
+    private enum ReuseIdentifier: String {
+        case upcomingBirds = "UpcomingBirdsCollectionViewCell"
+        case spotsToVisit = "SpotsToVisitCollectionViewCell"
+        case news = "NewsCollectionViewCell"
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTraitChangeHandling()
@@ -393,6 +399,35 @@ extension HomeViewController {
 }
 
 extension HomeViewController: UICollectionViewDataSource {
+    private func dequeueCell<T: UICollectionViewCell>(
+        _ type: T.Type,
+        from collectionView: UICollectionView,
+        reuseIdentifier: String,
+        for indexPath: IndexPath
+    ) -> T? {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
+        guard let typedCell = cell as? T else {
+            assertionFailure("Failed to dequeue \(type) with identifier \(reuseIdentifier)")
+            return nil
+        }
+        return typedCell
+    }
+
+    private func dequeueSupplementaryView<T: UICollectionReusableView>(
+        _ type: T.Type,
+        from collectionView: UICollectionView,
+        kind: String,
+        reuseIdentifier: String,
+        for indexPath: IndexPath
+    ) -> T? {
+        let view = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: reuseIdentifier, for: indexPath)
+        guard let typedView = view as? T else {
+            assertionFailure("Failed to dequeue supplementary view \(type) with identifier \(reuseIdentifier)")
+            return nil
+        }
+        return typedView
+    }
+
     func numberOfSections(in collectionView: UICollectionView) -> Int { return 4 }
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         switch section {
@@ -407,31 +442,43 @@ extension HomeViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == 0 {
             if case .combined(let migration, let hotspot) = migrationCards[indexPath.row] {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewMigrationCollectionViewCell.identifier, for: indexPath) as! NewMigrationCollectionViewCell
+                guard let cell = dequeueCell(NewMigrationCollectionViewCell.self, from: collectionView, reuseIdentifier: NewMigrationCollectionViewCell.identifier, for: indexPath) else {
+                    return UICollectionViewCell()
+                }
                 cell.configure(migration: migration, hotspot: hotspot); return cell
             }
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
+                guard let cell = dequeueCell(PredictionButtonCollectionViewCell.self, from: collectionView, reuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) else {
+                    return UICollectionViewCell()
+                }
                 cell.configure(with: UIImage(named: "custom.curvepath.magnifying"), title: "Predict Migrations")
                 cell.contentView.alpha = 1.0
                 cell.isHidden = false
                 return cell
             }
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "UpcomingBirdsCollectionViewCell", for: indexPath) as! UpcomingBirdsCollectionViewCell
+            guard let cell = dequeueCell(UpcomingBirdsCollectionViewCell.self, from: collectionView, reuseIdentifier: ReuseIdentifier.upcomingBirds.rawValue, for: indexPath) else {
+                return UICollectionViewCell()
+            }
             let item = upcomingBirds[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date); return cell
         } else if indexPath.section == 2 {
             if indexPath.row == 0 {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
+                guard let cell = dequeueCell(PredictionButtonCollectionViewCell.self, from: collectionView, reuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) else {
+                    return UICollectionViewCell()
+                }
                 cell.configure(with: UIImage(named: "upcomingspots"), title: "Find Your Spots")
                 cell.contentView.alpha = 1.0
                 cell.isHidden = false
                 return cell
             }
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SpotsToVisitCollectionViewCell", for: indexPath) as! SpotsToVisitCollectionViewCell
+            guard let cell = dequeueCell(SpotsToVisitCollectionViewCell.self, from: collectionView, reuseIdentifier: ReuseIdentifier.spotsToVisit.rawValue, for: indexPath) else {
+                return UICollectionViewCell()
+            }
             let item = spots[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
         } else if indexPath.section == 3 {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewsCollectionViewCell", for: indexPath) as! NewsCollectionViewCell
+            guard let cell = dequeueCell(NewsCollectionViewCell.self, from: collectionView, reuseIdentifier: ReuseIdentifier.news.rawValue, for: indexPath) else {
+                return UICollectionViewCell()
+            }
             cell.configure(with: newsItem(at: indexPath.row)); return cell
         }
         return UICollectionViewCell()
@@ -439,11 +486,15 @@ extension HomeViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
          if kind == "NewsPageControlFooter" {
-             let footer = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: PageControlReusableViewCollectionReusableView.identifier, for: indexPath) as! PageControlReusableViewCollectionReusableView
+             guard let footer = dequeueSupplementaryView(PageControlReusableViewCollectionReusableView.self, from: collectionView, kind: kind, reuseIdentifier: PageControlReusableViewCollectionReusableView.identifier, for: indexPath) else {
+                 return UICollectionReusableView()
+             }
              let count = news.isEmpty ? 0 : min(news.count, 8)
              footer.configure(numberOfPages: count, currentPage: clampedNewsPage(currentNewsPage)); return footer
          } else if kind == UICollectionView.elementKindSectionHeader {
-            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
+            guard let header = dequeueSupplementaryView(SectionHeaderCollectionReusableView.self, from: collectionView, kind: kind, reuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) else {
+                return UICollectionReusableView()
+            }
             if indexPath.section == 0 { header.configure(title: "Your Area") }
             else if indexPath.section == 1 { header.configure(title: "Migrations Near You", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
 

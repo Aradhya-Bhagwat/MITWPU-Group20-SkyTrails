@@ -49,7 +49,10 @@ final class SpeciesSelectionCoordinator {
         var nextVC: UIViewController?
         
         if mode == .unobserved {
-            let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as! UnobservedDetailViewController
+            guard let vc = storyboard.instantiateViewController(withIdentifier: "UnobservedDetailViewController") as? UnobservedDetailViewController else {
+                assertionFailure("Failed to instantiate UnobservedDetailViewController")
+                return
+            }
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
             vc.shouldUseRuleMatching = shouldUseRuleMatching
@@ -62,7 +65,10 @@ final class SpeciesSelectionCoordinator {
             }
             nextVC = vc
         } else {
-            let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as! ObservedDetailViewController
+            guard let vc = storyboard.instantiateViewController(withIdentifier: "ObservedDetailViewController") as? ObservedDetailViewController else {
+                assertionFailure("Failed to instantiate ObservedDetailViewController")
+                return
+            }
             vc.bird = bird
             vc.watchlistId = targetWatchlistId
             vc.shouldUseRuleMatching = shouldUseRuleMatching

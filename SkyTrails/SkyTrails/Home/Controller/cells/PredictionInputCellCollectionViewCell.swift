@@ -178,12 +178,12 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
             locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
             isRequestingCurrentLocation = false
-            break
+            applyManualLocationFallback(message: "Location access is off. Search for a place manually.")
         case .authorizedAlways, .authorizedWhenInUse:
             locationManager.requestLocation()
         default:
             isRequestingCurrentLocation = false
-            break
+            applyManualLocationFallback(message: "Current location is unavailable. Search for a place manually.")
         }
     }
     
@@ -191,6 +191,11 @@ class PredictionInputCellCollectionViewCell: UICollectionViewCell {
         searchBar.text = name
         searchBar.resignFirstResponder()
         onLocationSelected?(name, lat, lon)
+    }
+
+    private func applyManualLocationFallback(message: String) {
+        searchBar.text = nil
+        searchBar.placeholder = message
     }
 }
 
@@ -230,10 +235,12 @@ extension PredictionInputCellCollectionViewCell: CLLocationManagerDelegate {
             manager.requestLocation()
         } else if manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted {
             isRequestingCurrentLocation = false
+            applyManualLocationFallback(message: "Location permission denied. Search for a place manually.")
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         isRequestingCurrentLocation = false
+        applyManualLocationFallback(message: "Could not get your current location. Search for a place manually.")
     }
 }
