@@ -19,11 +19,13 @@ class HistorySectionHeaderView: UICollectionReusableView {
     
     func configure(date: String) {
         dateLabel.text = date
+        isHidden = false
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
         dateLabel.text = nil
+        isHidden = true
         applyCapsuleAppearance()
     }
 

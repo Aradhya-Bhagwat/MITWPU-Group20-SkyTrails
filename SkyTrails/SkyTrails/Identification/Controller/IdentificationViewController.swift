@@ -265,9 +265,9 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private func groupHistoriesByDate(_ histories: [IdentificationSession]) -> [(date: String, items: [IdentificationSession])] {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd-MM-yyyy"
-        
+
         var grouped: [String: [IdentificationSession]] = [:]
-        
+
         for history in histories {
             let dateKey = dateFormatter.string(from: history.observationDate)
             if grouped[dateKey] != nil {
@@ -276,8 +276,23 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 grouped[dateKey] = [history]
             }
         }
-        
-        return grouped.map { (date: $0.key, items: $0.value) }
+
+        return grouped
+            .map { key, items in
+                (
+                    date: key,
+                    items: items.sorted { $0.observationDate > $1.observationDate }
+                )
+            }
+            .sorted { lhs, rhs in
+                guard
+                    let lhsDate = dateFormatter.date(from: lhs.date),
+                    let rhsDate = dateFormatter.date(from: rhs.date)
+                else {
+                    return lhs.date > rhs.date
+                }
+                return lhsDate > rhsDate
+            }
     }
     
     func updateSelectionState() {
@@ -584,7 +599,7 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
                 elementKind: UICollectionView.elementKindSectionHeader,
                 alignment: .top
             )
-            if ((self?.historySections.isEmpty) != nil) {
+            if self?.historySections.isEmpty == false {
                 section.boundarySupplementaryItems = [header]
             } else {
                 section.boundarySupplementaryItems = []
