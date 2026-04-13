@@ -320,10 +320,9 @@ class IdentificationManager {
                 result = existingResult
             } else {
                 result = IdentificationResult(
-                    session: sessionToUpdate,
                     user_id: sessionToUpdate.user_id
                 )
-                sessionToUpdate.result = result
+                IdentificationRelationshipBinder.bind(result, to: sessionToUpdate)
             }
             result.bird = winningCandidate?.bird
 
@@ -385,7 +384,6 @@ class IdentificationManager {
         tempSelectedAreas = sessionMarks.map { $0.area }
 
         let result = IdentificationResult(
-            session: newSession,
             user_id: newSession.user_id,
             bird: winningCandidate?.bird
         )
@@ -403,7 +401,7 @@ class IdentificationManager {
             finalCandidates.append(newCandidate)
         }
         result.candidates = finalCandidates
-        newSession.result = result
+        IdentificationRelationshipBinder.bind(result, to: newSession)
 
         modelContext.insert(newSession)
         currentSession = newSession

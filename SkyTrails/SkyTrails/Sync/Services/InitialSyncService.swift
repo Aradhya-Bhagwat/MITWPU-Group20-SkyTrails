@@ -1187,7 +1187,6 @@ actor InitialSyncService {
 private nonisolated func createIdentificationResult(from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) -> IdentificationResult {
     let result = IdentificationResult(
         identification_result_id: row.id,
-        session: sessionById[row.sessionId],
         user_id: row.ownerId,
         createdAt: row.created_at
     )
@@ -1196,11 +1195,11 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
     }
 
     private nonisolated func updateIdentificationResult(_ result: IdentificationResult, from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) {
-        if let session = sessionById[row.sessionId] {
-            result.session = session
-        }
+        IdentificationRelationshipBinder.bind(result, to: sessionById[row.sessionId])
         if let birdId = row.birdId {
             result.bird = birdById[birdId]
+        } else {
+            result.bird = nil
         }
         result.user_id = row.ownerId
         result.serverRowVersion = Int64(row.rowVersion)
