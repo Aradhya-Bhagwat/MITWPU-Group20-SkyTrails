@@ -901,7 +901,7 @@ final class RealtimeSyncService: NSObject {
         let session = try? context.fetch(sessionDescriptor).first
 
         if let result = existing {
-            result.session = session
+            IdentificationRelationshipBinder.bind(result, to: session)
             result.user_id = record.uuid(for: "owner_id")
             if let birdId = record.uuid(for: "bird_id") {
                 result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
@@ -917,10 +917,10 @@ final class RealtimeSyncService: NSObject {
         } else {
             let result = IdentificationResult(
                 identification_result_id: id,
-                session: session,
                 user_id: record.uuid(for: "owner_id"),
                 createdAt: record.date(for: "created_at") ?? Date()
             )
+            IdentificationRelationshipBinder.bind(result, to: session)
             if let birdId = record.uuid(for: "bird_id") {
                 result.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
             } else {

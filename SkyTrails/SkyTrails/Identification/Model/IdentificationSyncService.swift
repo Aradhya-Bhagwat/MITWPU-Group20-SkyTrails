@@ -734,7 +734,6 @@ actor IdentificationSyncService {
     ) -> IdentificationResult {
         let result = IdentificationResult(
             identification_result_id: row.id,
-            session: sessionById[row.sessionId],
             user_id: row.ownerId,
             createdAt: row.created_at
         )
@@ -748,7 +747,7 @@ actor IdentificationSyncService {
         sessionById: [UUID: IdentificationSession],
         birdById: [UUID: Bird]
     ) {
-        result.session = sessionById[row.sessionId]
+        IdentificationRelationshipBinder.bind(result, to: sessionById[row.sessionId])
         result.user_id = row.ownerId
         result.bird = row.birdId.flatMap { birdById[$0] }
         result.serverRowVersion = Int64(row.rowVersion)

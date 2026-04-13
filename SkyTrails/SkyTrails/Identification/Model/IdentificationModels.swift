@@ -244,6 +244,29 @@ final class IdentificationResult {
     }
 }
 
+enum IdentificationRelationshipBinder {
+    static func bind(_ result: IdentificationResult, to session: IdentificationSession?) {
+        if let previousSession = result.session,
+           previousSession !== session,
+           previousSession.result === result {
+            previousSession.result = nil
+        }
+
+        if let session,
+           let existingResult = session.result,
+           existingResult !== result {
+            existingResult.session = nil
+            session.result = nil
+        }
+
+        result.session = session
+
+        if session?.result !== result {
+            session?.result = result
+        }
+    }
+}
+
 @Model
 final class IdentificationCandidate {
     @Attribute(.unique)
