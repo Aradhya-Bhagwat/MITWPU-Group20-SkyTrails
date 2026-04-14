@@ -1,5 +1,7 @@
 # 🏗️ SkyTrails System Architecture
 
+![Status](https://img.shields.io/badge/Status-Implemented-brightgreen)
+
 SkyTrails is built on a modern, decoupled architecture designed for scalability, performance, and a seamless native user experience. The system follows a **Clean MVC** pattern enhanced with a **Service-Oriented** persistence layer and a robust **Supabase** backend for cloud synchronization.
 
 ---

@@ -1,9 +1,0 @@
-# Supabase Database Credentials
-SUPABASE_URL=https://qlawahnttgioswfdnzuz.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsYXdhaG50dGdpb3N3ZmRuenV6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTM3ODM5NiwiZXhwIjoyMDg2OTU0Mzk2fQ.rPQJtDOesD0_vdUqd55h0vMVXjr4yZQcUR0hXYPvQTo
-
-# eBird Status and Trends API Key
-EBIRD_STATUS_TRENDS_ACCESS_KEY=fts18n17iar7
-
-# Data directory for eBird models
-EBIRD_STATUS_TRENDS_DATA_DIR=./MachineLearning/ebirdst_data
