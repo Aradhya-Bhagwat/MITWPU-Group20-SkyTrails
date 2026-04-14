@@ -49,14 +49,16 @@ A logic-driven, step-by-step identification engine designed for accuracy in the 
 │   ├── Home/               # Dashboard and highlights logic
 │   ├── Watchlist/          # List management and sighting logic
 │   ├── Identification/     # The guided identification engine
-│   ├── MachineLearning/    # HDF5 models and migration data
-│   └── Shared/             # Common UI components and services
-├── Backend/                # SQL schema and configuration
-├── ERDiagram.md            # Database schema documentation
-├── Architecture.md         # System architectural overview
-├── Home.md                 # Home module technical details
-├── Watchlist.md            # Watchlist module technical details
-├── Identification.md       # Identification module technical details
+│   ├── Shared/             # Common UI components and services
+│   └── Assets.xcassets/    # High-quality assets and icons
+├── MachineLearning/        # HDF5 models and migration data
+├── App Description/        # Feature and technical documentation
+│   ├── Home.md             # Home module technical details
+│   ├── Watchlist.md        # Watchlist module technical details
+│   ├── Identification.md   # Identification module technical details
+│   ├── Architecture.md     # System architectural overview
+│   └── ERDiagram.md        # Database schema documentation
+├── LICENSE.md              # MIT License details
 └── README.md               # Overview documentation
 ```
 

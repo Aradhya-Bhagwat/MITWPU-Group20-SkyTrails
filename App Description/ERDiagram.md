@@ -1,5 +1,7 @@
 # 📊 SkyTrails Entity-Relationship Diagram
 
+![Status](https://img.shields.io/badge/Status-Implemented-brightgreen)
+
 This document defines the data architecture for SkyTrails, covering both the local **SwiftData** persistence layer and the **Supabase** cloud backend. The schema is designed to support offline-first capabilities with robust cloud synchronization.
 
 ---
