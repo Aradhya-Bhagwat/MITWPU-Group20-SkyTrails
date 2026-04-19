@@ -6,6 +6,9 @@ library(sf)
 
 message("Starting species range generation...")
 
+script_start_time <- Sys.time()
+total_rows_written <- 0L
+
 required_env <- c(
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -347,7 +350,29 @@ for (species_idx in seq_len(nrow(status_trends_species))) {
     body_rows = upsert_rows,
     on_conflict = "ebird_species_code,week_number",
     error_context = sprintf("Upserting species_ranges for %s", species_code)
+    total_rows_written <- total_rows_written + length(upsert_rows)
   )
 }
 
 message("Species range generation completed.")
+
+# Log pipeline run to Supabase
+pipeline_log <- list(
+  script_name = "generate_species_ranges",
+  started_at  = format(script_start_time, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+  finished_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+  status      = "success",
+  rows_written = as.integer(total_rows_written)
+)
+
+supabase_upsert(
+  "pipeline_runs",
+  body_rows  = list(pipeline_log),
+  on_conflict = "script_name",
+  error_context = "Logging pipeline run"
+)
+
+message("Pipeline run logged.")
+
+
+
