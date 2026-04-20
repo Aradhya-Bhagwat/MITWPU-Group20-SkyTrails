@@ -34,8 +34,8 @@ GRID_SIZE      <-  0.5
 TOP_N_HOTSPOTS <- 5L
 EBIRD_RADIUS_KM <- 40L    # covers the 0.5 degree cell from its centre
 
-lat_breaks <- seq(INDIA_LAT_MIN, INDIA_LAT_MAX - GRID_SIZE, by = GRID_SIZE)
-lon_breaks <- seq(INDIA_LON_MIN, INDIA_LON_MAX - GRID_SIZE, by = GRID_SIZE)
+lat_breaks <- seq(INDIA_LAT_MIN, INDIA_LAT_MAX, by = GRID_SIZE)
+lon_breaks <- seq(INDIA_LON_MIN, INDIA_LON_MAX, by = GRID_SIZE)
 
 grid_cells <- expand.grid(lat_sw = lat_breaks, lon_sw = lon_breaks) %>%
   tibble::as_tibble() %>%
