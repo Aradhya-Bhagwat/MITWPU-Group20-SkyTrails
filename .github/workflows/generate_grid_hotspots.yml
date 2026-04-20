@@ -21,8 +21,7 @@ jobs:
 
       - name: Install R packages
         run: |
-          install.packages(c("jsonlite", "dplyr", "tibble"))
-          install.packages("httr", repos = "https://cran.r-project.org")
+          install.packages(c("jsonlite", "dplyr", "tibble", "httr"))
         shell: Rscript {0}
 
       - name: Run script
