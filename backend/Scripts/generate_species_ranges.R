@@ -350,8 +350,8 @@ for (species_idx in seq_len(nrow(status_trends_species))) {
     body_rows = upsert_rows,
     on_conflict = "ebird_species_code,week_number",
     error_context = sprintf("Upserting species_ranges for %s", species_code)
-    total_rows_written <- total_rows_written + length(upsert_rows)
   )
+  total_rows_written <- total_rows_written + length(upsert_rows)
 }
 
 message("Species range generation completed.")
