@@ -22,12 +22,19 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgdal-dev libgeos-dev libproj-dev libcurl4-openssl-dev
+          sudo apt-get install -y \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libudunits2-dev
 
       - name: Install R packages
         run: |
           install.packages(c("jsonlite", "dplyr", "tibble"))
           install.packages("terra", repos = "https://cran.r-project.org")
+          install.packages("sf", repos = "https://cran.r-project.org")
           install.packages("ebirdst", repos = "https://cran.r-project.org")
         shell: Rscript {0}
 
