@@ -25,8 +25,7 @@ jobs:
 
       - name: Install R packages
         run: |
-          install.packages(c("jsonlite", "dplyr", "stringr", "tibble"))
-          install.packages("sf", repos = "https://cran.r-project.org")
+          install.packages(c("jsonlite", "dplyr", "stringr", "tibble", "sf"))
           install.packages("ebirdst", repos = "https://cran.r-project.org")
         shell: Rscript {0}
 
