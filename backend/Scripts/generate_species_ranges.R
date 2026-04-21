@@ -249,13 +249,30 @@ weeks_for_season <- function(season_name) {
   integer()
 }
 
+# India bounding box with small buffer
+INDIA_BBOX <- sf::st_bbox(c(
+  xmin = 67.0, ymin = 5.0,
+  xmax = 98.0, ymax = 38.0
+), crs = sf::st_crs(4326)) %>% sf::st_as_sfc()
+
 range_feature_to_geojson <- function(feature_row) {
   tmp_geojson <- tempfile(fileext = ".geojson")
   on.exit(unlink(tmp_geojson), add = TRUE)
 
-  feature_sf <- sf::st_as_sf(feature_row)
-  geometry_only <- sf::st_sf(geometry = sf::st_geometry(feature_sf), crs = sf::st_crs(feature_sf))
-  sf::st_write(geometry_only, tmp_geojson, driver = "GeoJSON", quiet = TRUE, delete_dsn = TRUE)
+  feature_sf    <- sf::st_as_sf(feature_row)
+  geometry_only <- sf::st_sf(
+    geometry = sf::st_geometry(feature_sf),
+    crs      = sf::st_crs(feature_sf)
+  )
+
+  # Clip to India bounding box
+  clipped <- tryCatch({
+    sf::st_intersection(geometry_only, sf::st_transform(INDIA_BBOX, sf::st_crs(feature_sf)))
+  }, error = function(e) geometry_only)
+
+  if (nrow(clipped) == 0 || all(sf::st_is_empty(clipped))) return(NULL)
+
+  sf::st_write(clipped, tmp_geojson, driver = "GeoJSON", quiet = TRUE, delete_dsn = TRUE)
   paste(readLines(tmp_geojson, warn = FALSE), collapse = "\n")
 }
 
@@ -309,6 +326,7 @@ build_range_rows <- function(species_row, ranges_sf, target_weeks) {
     }
 
     geojson_string <- range_feature_to_geojson(feature)
+    if (is.null(geojson_string)) next
 
     for (week_number in matching_weeks) {
       rows[[length(rows) + 1]] <- list(
