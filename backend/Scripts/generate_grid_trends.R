@@ -136,6 +136,24 @@ grid_cells <- expand.grid(lat_sw = lat_breaks, lon_sw = lon_breaks) %>%
 
 message(sprintf("Grid: %d cells at 0.5 degree resolution.", nrow(grid_cells)))
 
+# Fetch grid cells that have hotspot data from Supabase
+message("Fetching grid cells with hotspot data...")
+hotspot_grids <- supabase_get(
+  "grid_hotspots",
+  query = list(select = "grid_id"),
+  error_context = "Fetching hotspot grid IDs"
+)
+
+if (nrow(hotspot_grids) == 0) {
+  stop("No hotspot data found. Run generate_grid_hotspots.R first.")
+}
+
+# Filter grid cells to only those with hotspots
+grid_cells <- grid_cells %>%
+  filter(grid_id %in% hotspot_grids$grid_id)
+
+message(sprintf("Filtered to %d cells that have hotspot data.", nrow(grid_cells)))
+
 # ── Species list — only birds in your master table ─────────────────────────────
 all_birds <- supabase_get(
   "birds",
@@ -241,9 +259,9 @@ for (week_number in target_weeks) {
       grid_scores[[cell$grid_id]][[sp_code]] <- list(
         id    = sp_code,
         name  = sp_name,
-        max   = round(max_abd, 4),
+        max   = round(max_abd, 2),
         hits  = as.integer(hits),
-        score = round(score, 4)
+        score = round(score, 2)
       )
     }
   }
