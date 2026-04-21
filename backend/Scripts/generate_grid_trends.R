@@ -2,6 +2,7 @@ library(jsonlite)
 library(dplyr)
 library(terra)
 library(ebirdst)
+library(parallel)
 
 message("Starting grid trends generation...")
 script_start_time <- Sys.time()
@@ -20,10 +21,10 @@ if (length(missing_env) > 0) {
              paste(missing_env, collapse = ", ")))
 }
 
-supabase_url             <- sub("/$", "", Sys.getenv("SUPABASE_URL"))
+supabase_url              <- sub("/$", "", Sys.getenv("SUPABASE_URL"))
 supabase_service_role_key <- Sys.getenv("SUPABASE_SERVICE_ROLE_KEY")
-ebirdst_key              <- Sys.getenv("EBIRD_STATUS_TRENDS_ACCESS_KEY")
-status_data_dir          <- Sys.getenv(
+ebirdst_key               <- Sys.getenv("EBIRD_STATUS_TRENDS_ACCESS_KEY")
+status_data_dir           <- Sys.getenv(
   "EBIRD_STATUS_TRENDS_DATA_DIR",
   unset = file.path(getwd(), "MachineLearning", "ebirdst_data")
 )
@@ -32,11 +33,24 @@ dir.create(status_data_dir, recursive = TRUE, showWarnings = FALSE)
 ebirdst::set_ebirdst_access_key(ebirdst_key, overwrite = TRUE)
 message("Configuration loaded.")
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
-`%||%` <- function(lhs, rhs) {
-  if (is.null(lhs) || length(lhs) == 0 || is.na(lhs)) rhs else lhs
-}
+# ── Parallelisation setup ──────────────────────────────────────────────────────
+# Use 6 cores locally (8 core Mac), 2 cores on GitHub Actions free runner
+available_cores <- parallel::detectCores(logical = TRUE)
+n_cores <- max(1L, min(6L, available_cores - 2L))
+message(sprintf("Using %d of %d available cores.", n_cores, available_cores))
 
+# ── Constants ──────────────────────────────────────────────────────────────────
+INDIA_LAT_MIN       <-  6.0
+INDIA_LAT_MAX       <- 37.5
+INDIA_LON_MIN       <- 68.0
+INDIA_LON_MAX       <- 97.5
+GRID_SIZE           <-  0.5
+SAMPLE_POINTS       <- 400L
+MAX_SPECIES         <-  60L
+ABUNDANCE_THRESHOLD <-  0.05
+UPSERT_BATCH_SIZE   <-  50L   # rows per Supabase upsert call
+
+# ── Supabase helpers ───────────────────────────────────────────────────────────
 supabase_headers <- function(extra_headers = character()) {
   c(
     "-H", paste0("apikey: ", supabase_service_role_key),
@@ -89,8 +103,11 @@ supabase_get <- function(path, query = list(), error_context = "Supabase GET") {
   tibble::tibble()
 }
 
-supabase_upsert <- function(path, body_rows, on_conflict,
-                            error_context = "Supabase upsert") {
+# Batch upsert — sends multiple rows in one curl call
+supabase_upsert_batch <- function(path, body_rows, on_conflict,
+                                  error_context = "Supabase upsert") {
+  if (length(body_rows) == 0) return(invisible(NULL))
+
   tmp_json <- tempfile(fileext = ".json")
   on.exit(unlink(tmp_json), add = TRUE)
   writeLines(jsonlite::toJSON(body_rows, auto_unbox = TRUE, null = "null"),
@@ -111,20 +128,9 @@ supabase_upsert <- function(path, body_rows, on_conflict,
   )
 }
 
-# ── India bounding box ─────────────────────────────────────────────────────────
-# Covers mainland India + Andaman & Nicobar + Lakshadweep
-INDIA_LAT_MIN <-  6.0
-INDIA_LAT_MAX <- 37.5
-INDIA_LON_MIN <- 68.0
-INDIA_LON_MAX <- 97.5
-GRID_SIZE     <-  0.5   # degrees — ~55km × 55km
-SAMPLE_POINTS <- 400L   # random points per grid cell
-MAX_SPECIES   <-  60L   # top species to store per cell per week
-ABUNDANCE_THRESHOLD <- 0.05  # minimum abundance to count as present
-
-# ── Build grid cell list ───────────────────────────────────────────────────────
-lat_breaks <- seq(INDIA_LAT_MIN, INDIA_LAT_MAX - GRID_SIZE, by = GRID_SIZE)
-lon_breaks <- seq(INDIA_LON_MIN, INDIA_LON_MAX - GRID_SIZE, by = GRID_SIZE)
+# ── Build grid ────────────────────────────────────────────────────────────────
+lat_breaks <- seq(INDIA_LAT_MIN, INDIA_LAT_MAX, by = GRID_SIZE)
+lon_breaks <- seq(INDIA_LON_MIN, INDIA_LON_MAX, by = GRID_SIZE)
 
 grid_cells <- expand.grid(lat_sw = lat_breaks, lon_sw = lon_breaks) %>%
   tibble::as_tibble() %>%
@@ -134,10 +140,10 @@ grid_cells <- expand.grid(lat_sw = lat_breaks, lon_sw = lon_breaks) %>%
     lon_ne  = lon_sw + GRID_SIZE
   )
 
-message(sprintf("Grid: %d cells at 0.5 degree resolution.", nrow(grid_cells)))
+message(sprintf("Grid: %d total cells.", nrow(grid_cells)))
 
-# Fetch grid cells that have hotspot data from Supabase
-message("Fetching grid cells with hotspot data...")
+# ── Filter to cells that have hotspot data ────────────────────────────────────
+message("Fetching grid cells with hotspot data from Supabase...")
 hotspot_grids <- supabase_get(
   "grid_hotspots",
   query = list(select = "grid_id"),
@@ -148,22 +154,19 @@ if (nrow(hotspot_grids) == 0) {
   stop("No hotspot data found. Run generate_grid_hotspots.R first.")
 }
 
-# Filter grid cells to only those with hotspots
 grid_cells <- grid_cells %>%
   filter(grid_id %in% hotspot_grids$grid_id)
 
-message(sprintf("Filtered to %d cells that have hotspot data.", nrow(grid_cells)))
+message(sprintf("Filtered to %d cells with hotspot data.", nrow(grid_cells)))
 
-# ── Species list — only birds in your master table ─────────────────────────────
+# ── Species list ──────────────────────────────────────────────────────────────
 all_birds <- supabase_get(
   "birds",
   query = list(select = "species_code"),
   error_context = "Loading master bird list"
 )
 
-if (nrow(all_birds) == 0) {
-  stop("No birds found in the master table.")
-}
+if (nrow(all_birds) == 0) stop("No birds found in master table.")
 
 candidate_species <- ebirdst::ebirdst_runs %>%
   tibble::as_tibble() %>%
@@ -173,141 +176,218 @@ candidate_species <- ebirdst::ebirdst_runs %>%
 message(sprintf("Processing %d species across %d grid cells.",
                 nrow(candidate_species), nrow(grid_cells)))
 
-# ── Week range — all 52 weeks ──────────────────────────────────────────────────
-target_weeks <- 1:52
+# ── Pre-generate sample points for every cell (fixed per run) ─────────────────
+# Generating random points once avoids repeated runif calls in inner loops
+set.seed(42)
+cell_sample_pts <- lapply(seq_len(nrow(grid_cells)), function(g_idx) {
+  cell <- grid_cells[g_idx, ]
+  cbind(
+    lon = runif(SAMPLE_POINTS, cell$lon_sw, cell$lon_ne),
+    lat = runif(SAMPLE_POINTS, cell$lat_sw, cell$lat_ne)
+  )
+})
+names(cell_sample_pts) <- grid_cells$grid_id
+message("Sample points pre-generated for all cells.")
 
-# ── Per-species abundance download helper ──────────────────────────────────────
-load_abundance_raster <- function(species_code, week_number, data_dir) {
-  tryCatch({
+# ── Process one species across all weeks and all cells ────────────────────────
+# Returns a flat list of Supabase rows ready to upsert
+process_species <- function(sp_code, sp_name, data_dir,
+                            grid_cells, cell_sample_pts,
+                            target_weeks, sample_points,
+                            abundance_threshold, max_species) {
+
+  # Download once — all 52 week layers in one file
+  result <- tryCatch({
     ebirdst::ebirdst_download_status(
-      species          = species_code,
-      path             = data_dir,
-      download_abundance = TRUE,
+      species             = sp_code,
+      path                = data_dir,
+      download_abundance  = TRUE,
       download_occurrence = FALSE,
-      download_count   = FALSE,
-      download_ranges  = FALSE,
-      download_regional = FALSE,
-      download_pis     = FALSE,
-      download_ppms    = FALSE,
-      download_all     = FALSE
+      download_count      = FALSE,
+      download_ranges     = FALSE,
+      download_regional   = FALSE,
+      download_pis        = FALSE,
+      download_ppms       = FALSE,
+      download_all        = FALSE
     )
-    abd <- ebirdst::load_raster(
-      species   = species_code,
-      product   = "abundance",
+    abd_full <- ebirdst::load_raster(
+      species    = sp_code,
+      product    = "abundance",
       resolution = "27km",
-      path      = data_dir
+      path       = data_dir
     )
-    # ebirdst rasters have 52 layers — one per week
-    terra::subset(abd, week_number)
+    abd_full
   }, error = function(e) {
-    message(sprintf("  Skipping %s week %d: %s",
-                    species_code, week_number, conditionMessage(e)))
+    message(sprintf("  Skipping %s: %s", sp_code, conditionMessage(e)))
     NULL
   })
-}
 
-# ── Main loop: week → grid cell → species ─────────────────────────────────────
-# Outer loop is week so we load each species raster once per week
-# and sample all grid cells before moving on.
+  if (is.null(result)) return(list())
 
-for (week_number in target_weeks) {
-  message(sprintf("\n── Week %d/52 ──────────────────────────────", week_number))
+  abd_full <- result
+  sp_rows  <- list()  # accumulate rows across all weeks and cells
 
-  # Collect scores for every grid cell this week
-  # grid_scores[[grid_id]] = named list of species scores
-  grid_scores <- vector("list", nrow(grid_cells))
-  names(grid_scores) <- grid_cells$grid_id
-
-  # Initialise empty score table per grid
-  for (gid in names(grid_scores)) {
-    grid_scores[[gid]] <- list()
-  }
-
-  for (sp_idx in seq_len(nrow(candidate_species))) {
-    sp_code <- candidate_species$species_code[[sp_idx]]
-    sp_name <- candidate_species$common_name[[sp_idx]]
-
-    message(sprintf("  Species %d/%d: %s",
-                    sp_idx, nrow(candidate_species), sp_name))
-
-    raster_layer <- load_abundance_raster(sp_code, week_number, status_data_dir)
+  for (week_number in target_weeks) {
+    # Extract just this week's layer — no re-download
+    raster_layer <- tryCatch(
+      terra::subset(abd_full, week_number),
+      error = function(e) NULL
+    )
     if (is.null(raster_layer)) next
 
-    # Sample each grid cell
     for (g_idx in seq_len(nrow(grid_cells))) {
-      cell <- grid_cells[g_idx, ]
+      cell    <- grid_cells[g_idx, ]
+      pts_mat <- cell_sample_pts[[cell$grid_id]]
 
-      # 400 random points inside this cell
-      sample_lons <- runif(SAMPLE_POINTS, cell$lon_sw, cell$lon_ne)
-      sample_lats <- runif(SAMPLE_POINTS, cell$lat_sw, cell$lat_ne)
-      pts <- terra::vect(
-        cbind(sample_lons, sample_lats),
-        crs = "EPSG:4326"
-      )
-
+      pts  <- terra::vect(pts_mat, crs = "EPSG:4326")
       vals <- terra::extract(raster_layer, pts)[, 2]
       vals <- vals[!is.na(vals)]
 
       if (length(vals) == 0) next
 
-      hits <- sum(vals > ABUNDANCE_THRESHOLD)
+      hits <- sum(vals > abundance_threshold)
       if (hits == 0) next
 
       max_abd <- max(vals)
-      score   <- 0.7 * max_abd + 0.3 * (hits / SAMPLE_POINTS)
+      score   <- 0.7 * max_abd + 0.3 * (hits / sample_points)
 
-      grid_scores[[cell$grid_id]][[sp_code]] <- list(
-        id    = sp_code,
-        name  = sp_name,
-        max   = round(max_abd, 2),
-        hits  = as.integer(hits),
-        score = round(score, 2)
+      sp_rows[[length(sp_rows) + 1]] <- list(
+        grid_id     = cell$grid_id,
+        week_number = as.integer(week_number),
+        sp_code     = sp_code,
+        sp_name     = sp_name,
+        max_abd     = round(max_abd, 2),
+        hits        = as.integer(hits),
+        score       = round(score, 2)
       )
     }
   }
 
-  # ── Write results for this week to Supabase ──────────────────────────────
-  message(sprintf("  Writing week %d results to Supabase...", week_number))
-  now_utc <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
-
-  for (g_idx in seq_len(nrow(grid_cells))) {
-    cell    <- grid_cells[g_idx, ]
-    scores  <- grid_scores[[cell$grid_id]]
-
-    if (length(scores) == 0) next
-
-    # Sort by score descending, cap at top 60
-    scores_sorted <- scores[order(
-      sapply(scores, `[[`, "score"),
-      decreasing = TRUE
-    )]
-    scores_capped <- scores_sorted[seq_len(min(length(scores_sorted), MAX_SPECIES))]
-
-    row <- list(
-      grid_id      = cell$grid_id,
-      week_number  = as.integer(week_number),
-      lat_sw       = cell$lat_sw,
-      lon_sw       = cell$lon_sw,
-      species_data = scores_capped,
-      last_updated = now_utc
-    )
-
-    supabase_upsert(
-      "regional_trends",
-      body_rows   = list(row),
-      on_conflict = "grid_id,week_number",
-      error_context = sprintf("Upserting regional_trends %s week %d",
-                              cell$grid_id, week_number)
-    )
-
-    total_rows_written <- total_rows_written + 1L
-  }
-
-  message(sprintf("  Week %d done. Total rows written so far: %d",
-                  week_number, total_rows_written))
+  sp_rows
 }
 
-# ── Pipeline run log ───────────────────────────────────────────────────────────
+# ── Run species in parallel ───────────────────────────────────────────────────
+message(sprintf("\nProcessing %d species in parallel on %d cores...",
+                nrow(candidate_species), n_cores))
+
+cl <- parallel::makeCluster(n_cores)
+on.exit(parallel::stopCluster(cl), add = TRUE)
+
+# Export everything workers need
+parallel::clusterExport(cl, varlist = c(
+  "status_data_dir", "grid_cells", "cell_sample_pts",
+  "SAMPLE_POINTS", "ABUNDANCE_THRESHOLD", "MAX_SPECIES"
+), envir = environment())
+
+parallel::clusterEvalQ(cl, {
+  library(terra)
+  library(ebirdst)
+})
+
+all_sp_rows <- parallel::parLapply(
+  cl,
+  seq_len(nrow(candidate_species)),
+  function(sp_idx) {
+    sp_code <- candidate_species$species_code[[sp_idx]]
+    sp_name <- candidate_species$common_name[[sp_idx]]
+    message(sprintf("  [core] Species %d/%d: %s",
+                    sp_idx, nrow(candidate_species), sp_name))
+    process_species(
+      sp_code          = sp_code,
+      sp_name          = sp_name,
+      data_dir         = status_data_dir,
+      grid_cells       = grid_cells,
+      cell_sample_pts  = cell_sample_pts,
+      target_weeks     = 1:52,
+      sample_points    = SAMPLE_POINTS,
+      abundance_threshold = ABUNDANCE_THRESHOLD,
+      max_species      = MAX_SPECIES
+    )
+  }
+)
+
+parallel::stopCluster(cl)
+message("Parallel species processing complete. Aggregating results...")
+
+# ── Aggregate scores per grid_id + week_number ────────────────────────────────
+# Flatten all species rows into one list
+flat_rows <- do.call(c, all_sp_rows)
+message(sprintf("Total species-cell-week observations: %d", length(flat_rows)))
+
+# Group by grid_id + week_number
+grouped <- list()
+for (row in flat_rows) {
+  key <- paste0(row$grid_id, "|", row$week_number)
+  if (is.null(grouped[[key]])) {
+    grouped[[key]] <- list(
+      grid_id     = row$grid_id,
+      week_number = row$week_number,
+      species     = list()
+    )
+  }
+  grouped[[key]]$species[[length(grouped[[key]]$species) + 1]] <- list(
+    id    = row$sp_code,
+    name  = row$sp_name,
+    max   = row$max_abd,
+    hits  = row$hits,
+    score = row$score
+  )
+}
+
+message(sprintf("Unique grid+week combinations: %d", length(grouped)))
+
+# ── Write to Supabase in batches ──────────────────────────────────────────────
+message("Writing results to Supabase in batches...")
+now_utc    <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+batch      <- list()
+batch_count <- 0L
+
+flush_batch <- function(batch) {
+  if (length(batch) == 0) return(0L)
+  supabase_upsert_batch(
+    "regional_trends",
+    body_rows   = batch,
+    on_conflict = "grid_id,week_number",
+    error_context = "Batch upserting regional_trends"
+  )
+  length(batch)
+}
+
+for (key in names(grouped)) {
+  grp <- grouped[[key]]
+
+  # Sort species by score, cap at top 60
+  scores_sorted <- grp$species[order(
+    sapply(grp$species, `[[`, "score"),
+    decreasing = TRUE
+  )]
+  scores_capped <- scores_sorted[seq_len(min(length(scores_sorted), MAX_SPECIES))]
+
+  batch[[length(batch) + 1]] <- list(
+    grid_id      = grp$grid_id,
+    week_number  = as.integer(grp$week_number),
+    species_data = scores_capped,
+    last_updated = now_utc
+  )
+
+  if (length(batch) >= UPSERT_BATCH_SIZE) {
+    written      <- flush_batch(batch)
+    total_rows_written <- total_rows_written + written
+    batch_count  <- batch_count + 1L
+    batch        <- list()
+    message(sprintf("  Batch %d written. Total rows: %d",
+                    batch_count, total_rows_written))
+  }
+}
+
+# Flush remaining
+if (length(batch) > 0) {
+  written            <- flush_batch(batch)
+  total_rows_written <- total_rows_written + written
+  message(sprintf("  Final batch written. Total rows: %d", total_rows_written))
+}
+
+# ── Pipeline run log ──────────────────────────────────────────────────────────
 pipeline_log <- list(
   script_name  = "generate_grid_trends",
   started_at   = format(script_start_time, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
@@ -316,11 +396,13 @@ pipeline_log <- list(
   rows_written = as.integer(total_rows_written)
 )
 
-supabase_upsert(
+supabase_upsert_batch(
   "pipeline_runs",
   body_rows   = list(pipeline_log),
   on_conflict = "script_name",
   error_context = "Logging pipeline run"
 )
 
-message(sprintf("\nDone. %d rows written to regional_trends.", total_rows_written))
+message(sprintf("\nDone. %d rows written to regional_trends in %.1f minutes.",
+                total_rows_written,
+                as.numeric(difftime(Sys.time(), script_start_time, units = "mins"))))
