@@ -168,9 +168,11 @@ all_birds <- supabase_get(
 
 if (nrow(all_birds) == 0) stop("No birds found in master table.")
 
+test_species <- c('bladro1', 'blakit1', 'commyn', 'brakit1', 'amufal1')
+
 candidate_species <- ebirdst::ebirdst_runs %>%
   tibble::as_tibble() %>%
-  filter(species_code %in% all_birds$species_code) %>%
+  filter(species_code %in% test_species) %>%
   select(species_code, common_name)
 
 message(sprintf("Processing %d species across %d grid cells.",
