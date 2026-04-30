@@ -220,8 +220,10 @@ if (nzchar(species_code_filter)) {
   }
 
   # Filter status_trends_species to match your database
-  status_trends_species <- status_trends_species %>%
-    filter(ebird_species_code %in% all_birds$species_code)
+  test_species <- c('bladro1', 'blakit1', 'commyn', 'brakit1', 'amufal1')
+   
+   status_trends_species <- status_trends_species %>%
+   filter(ebird_species_code %in% test_species)
 
   # We want maps for ALL weeks for these birds, not just a 3-week window
   target_weeks <- 1:52
