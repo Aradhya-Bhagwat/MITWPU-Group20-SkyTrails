@@ -32,6 +32,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private var birdSpecies: [BirdSpeciesDisplay] = []
     private var currentHotspot: HotspotPrediction?
     private var selectedBirdIndex: Int = 0
+    private var hasInstalledAdaptiveConstraints = false
     private let expandedWidthRatio: CGFloat = 25.0 / 9.0
     private let compactWidthRatio: CGFloat = 5.0 / 6.0
     private let nestedItemHeightRatio: CGFloat = 90.0 / 440.0
@@ -55,6 +56,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
         setupCollectionView()
         setupAppearance()
+        setupTextLayoutBehavior()
     }
     
     override func prepareForReuse() {
@@ -90,14 +92,17 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private func updateNestedLayout() {
         let cardHeight = self.bounds.height
         let currentWidth = self.bounds.width
-        let titleRatio: CGFloat = 17.0 / 200.0
-        let detailRatio: CGFloat = 12.0 / 200.0
-        let titleSize = min(currentWidth * titleRatio, 24)
-        let detailSize = min(currentWidth * detailRatio, 18)
+        installAdaptiveConstraintsIfNeeded()
+
+        let widthScale = currentWidth / 361.0
+        let heightScale = cardHeight / 440.0
+        let contentScale = min(max(min(widthScale, heightScale), 0.9), 1.2)
+        let titleSize = min(max(17.0 * contentScale, 16.0), 21.0)
+        let detailSize = min(max(12.0 * contentScale, 11.0), 14.0)
 
         titleLabel.font = .systemFont(ofSize: titleSize, weight: .semibold)
         subtitleLabel.font = .systemFont(ofSize: detailSize, weight: .regular)
-        subtitleLabel.textColor = .black
+        subtitleLabel.textColor = .secondaryLabel
         
         if #available(iOS 15.0, *) {
             weekButton.configuration?.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
@@ -105,6 +110,13 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
                 outgoing.font = UIFont.systemFont(ofSize: detailSize, weight: .semibold)
                 return outgoing
             }
+            weekButton.configuration?.imagePadding = max(4, detailSize * 0.45)
+            weekButton.configuration?.contentInsets = NSDirectionalEdgeInsets(
+                top: max(4, detailSize * 0.35),
+                leading: max(10, detailSize * 0.85),
+                bottom: max(4, detailSize * 0.35),
+                trailing: max(10, detailSize * 0.85)
+            )
         } else {
             weekButton.titleLabel?.font = .systemFont(ofSize: detailSize, weight: .semibold)
         }
@@ -112,6 +124,10 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         terrainTagLabel.font = .systemFont(ofSize: detailSize, weight: .bold)
         seasonTagLabel.font = .systemFont(ofSize: detailSize, weight: .bold)
         terrainTagIconSizeConstraint.constant = detailSize
+        if let currentHotspot = currentHotspot {
+            applySeasonAppearance(for: currentHotspot.seasonTag)
+        }
+
         if let layout = birdListCollectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             let itemHeight = nestedItemHeight(cardHeight: cardHeight)
             let compactItemWidth = compactItemWidth(itemHeight: itemHeight)
@@ -133,6 +149,46 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     
     private func compactItemWidth(itemHeight: CGFloat) -> CGFloat {
         return itemHeight * compactWidthRatio
+    }
+
+    private func setupTextLayoutBehavior() {
+        titleLabel.numberOfLines = 1
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.minimumScaleFactor = 0.9
+        subtitleLabel.numberOfLines = 1
+        subtitleLabel.lineBreakMode = .byTruncatingTail
+        terrainTagLabel.numberOfLines = 1
+        terrainTagLabel.lineBreakMode = .byTruncatingTail
+        terrainTagLabel.adjustsFontSizeToFitWidth = true
+        terrainTagLabel.minimumScaleFactor = 0.85
+        seasonTagLabel.numberOfLines = 1
+        seasonTagLabel.lineBreakMode = .byTruncatingTail
+        seasonTagLabel.adjustsFontSizeToFitWidth = true
+        seasonTagLabel.minimumScaleFactor = 0.85
+
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        subtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        terrainTagImageView.setContentHuggingPriority(.required, for: .horizontal)
+        terrainTagImageView.setContentCompressionResistancePriority(.required, for: .horizontal)
+        terrainTagLabel.setContentHuggingPriority(.required, for: .horizontal)
+        terrainTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        seasonTagLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        weekButton.setContentHuggingPriority(.required, for: .horizontal)
+        weekButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        weekButton.titleLabel?.adjustsFontSizeToFitWidth = true
+        weekButton.titleLabel?.minimumScaleFactor = 0.85
+    }
+
+    private func installAdaptiveConstraintsIfNeeded() {
+        guard !hasInstalledAdaptiveConstraints else { return }
+        hasInstalledAdaptiveConstraints = true
+
+        NSLayoutConstraint.activate([
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: terrainTagImageView.leadingAnchor, constant: -8),
+            subtitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -12)
+        ])
     }
 
     private func resolvedBirdPins(
