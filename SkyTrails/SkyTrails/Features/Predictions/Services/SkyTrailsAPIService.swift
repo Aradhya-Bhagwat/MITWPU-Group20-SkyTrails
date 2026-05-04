@@ -98,4 +98,49 @@ final class SkyTrailsAPIService {
         }
         return geoData
     }
+
+    func fetchGridHotspots(lat: Double, lon: Double) async throws -> GridHotspotRow? {
+        let config = try SupabaseConfig.load()
+        let gid = gridID(lat: lat, lon: lon)
+
+        var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
+        components?.path = "/rest/v1/grid_hotspots"
+        components?.queryItems = [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "grid_id", value: "eq.\(gid)"),
+            URLQueryItem(name: "limit", value: "1")
+        ]
+
+        guard let url = components?.url else { throw APIError.invalidURL }
+        var request = URLRequest(url: url)
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let rows = try JSONDecoder().decode([GridHotspotRow].self, from: data)
+        return rows.first
+    }
+
+    func fetchRegionalTrends(lat: Double, lon: Double, week: Int) async throws -> [RegionalTrendSpeciesItem] {
+        let config = try SupabaseConfig.load()
+        let gid = gridID(lat: lat, lon: lon)
+
+        var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
+        components?.path = "/rest/v1/regional_trends"
+        components?.queryItems = [
+            URLQueryItem(name: "select", value: "*"),
+            URLQueryItem(name: "grid_id", value: "eq.\(gid)"),
+            URLQueryItem(name: "week_number", value: "eq.\(week)"),
+            URLQueryItem(name: "limit", value: "1")
+        ]
+
+        guard let url = components?.url else { throw APIError.invalidURL }
+        var request = URLRequest(url: url)
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let rows = try JSONDecoder().decode([RegionalTrendsRow].self, from: data)
+        return rows.first?.species_data ?? []
+    }
 }
