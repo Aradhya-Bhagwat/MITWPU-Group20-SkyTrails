@@ -141,24 +141,47 @@ class HomeManager {
         radiusInKm: Double = 50.0,
         limit: Int = 10
     ) async -> [RecommendedBirdResult] {
+        let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
+
+        // Priority 1: regional_trends grid table
+        do {
+            let trendItems = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                lat: userLocation.latitude,
+                lon: userLocation.longitude,
+                week: week
+            )
+            if !trendItems.isEmpty {
+                return trendItems.prefix(limit).compactMap { item in
+                    guard let bird = watchlistManager.findBird(byName: item.name) else { return nil }
+                    return RecommendedBirdResult(
+                        bird: bird,
+                        dateRange: formatWeekDescription(week: week)
+                    )
+                }
+            }
+        } catch {
+            logger.log(error: error, context: "HomeManager.getRecommendedBirds.regionalTrends")
+        }
+
+        // Priority 2: Edge Function
         do {
             let response = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
             let predictions = response.card?.species ?? []
-            
-            if predictions.isEmpty {
-                return await getRecommendedBirdsFromLocal(userLocation: userLocation, currentWeek: currentWeek, radiusInKm: radiusInKm, limit: limit)
-            }
-            
-            return predictions.prefix(limit).compactMap { species in
-                guard let bird = watchlistManager.findBird(byName: species.commonName) else { return nil }
-                return RecommendedBirdResult(
-                    bird: bird,
-                    dateRange: species.weekNumber ?? formatWeekDescription(week: currentWeek ?? Calendar.current.component(.weekOfYear, from: Date()))
-                )
+            if !predictions.isEmpty {
+                return predictions.prefix(limit).compactMap { species in
+                    guard let bird = watchlistManager.findBird(byName: species.commonName) else { return nil }
+                    return RecommendedBirdResult(
+                        bird: bird,
+                        dateRange: species.weekNumber ?? formatWeekDescription(week: week)
+                    )
+                }
             }
         } catch {
-            return await getRecommendedBirdsFromLocal(userLocation: userLocation, currentWeek: currentWeek, radiusInKm: radiusInKm, limit: limit)
+            logger.log(error: error, context: "HomeManager.getRecommendedBirds.edge")
         }
+
+        // Fallback: local SwiftData store
+        return await getRecommendedBirdsFromLocal(userLocation: userLocation, currentWeek: week, radiusInKm: radiusInKm, limit: limit)
     }
 
     private func getRecommendedBirdsFromLocal(
@@ -260,20 +283,91 @@ class HomeManager {
         radiusInKm: Double = 100.0,
         limit: Int = 5
     ) async -> [PopularSpotResult] {
+        // Priority 1: grid_hotspots table (pre-computed, no Edge Function cold-start)
         do {
-            // Priority: Fetch locations from Edge Function to get enriched species data
+            if let gridRow = try await SkyTrailsAPIService.shared.fetchGridHotspots(
+                lat: location.latitude,
+                lon: location.longitude
+            ), !gridRow.hotspots.isEmpty {
+                return gridRow.hotspots.prefix(limit).map { item in
+                    PopularSpotResult(
+                        id: UUID(uuidString: item.hotspot_id) ?? UUID(),
+                        title: item.name,
+                        location: "Nearby",
+                        latitude: item.lat,
+                        longitude: item.lon,
+                        speciesCount: item.checklist_count,
+                        observedCount: 0,
+                        radius: 5.0,
+                        imageName: nil,
+                        edgeSpecies: nil,
+                        distanceKm: nil
+                    )
+                }
+            }
+        } catch {
+            logger.log(error: error, context: "HomeManager.getRecommendedSpots.gridHotspots")
+        }
+
+        // Priority 2: Edge Function (enriched species data)
+        do {
             let response = try await fetchNearbyHotspotCardFromEdge(near: location)
-            
             if !response.nearbyHotspots.isEmpty {
                 return response.nearbyHotspots.map { mapHotspotToPopularSpot($0) }
             }
-
-            // Fallback: Fetch raw locations from Supabase hotspots_geo table if Edge Function returns nothing
+            // Priority 3: hotspots_geo REST table
             let supabaseHotspots = try await SkyTrailsAPIService.shared.fetchLocationsFromSupabase(near: location)
             return supabaseHotspots.map { mapHotspotToPopularSpot($0) }
         } catch {
             logger.log(error: error, context: "HomeManager.getRecommendedSpots.hybrid")
-            return await getRecommendedSpotsFromLocalStore(near: location, radiusInKm: radiusInKm, limit: limit)
+        }
+
+        // Fallback: local SwiftData store
+        return await getRecommendedSpotsFromLocalStore(near: location, radiusInKm: radiusInKm, limit: limit)
+    }
+
+    /// Fetches species for a specific hotspot coordinate from the grid_hotspots table.
+    /// Used by HomeViewController for async spot-tap navigation.
+    func getSpeciesForHotspot(
+        lat: Double,
+        lon: Double
+    ) async -> [FinalPredictionResult] {
+        do {
+            guard let gridRow = try await SkyTrailsAPIService.shared.fetchGridHotspots(
+                lat: lat,
+                lon: lon
+            ) else { return [] }
+
+            // Find the closest hotspot in the grid cell
+            let target = gridRow.hotspots.min(by: {
+                let d0 = abs($0.lat - lat) + abs($0.lon - lon)
+                let d1 = abs($1.lat - lat) + abs($1.lon - lon)
+                return d0 < d1
+            })
+            guard let hotspot = target else { return [] }
+
+            // Re-fetch with the hotspot's own coordinates for a tighter grid match
+            guard let detailRow = try? await SkyTrailsAPIService.shared.fetchGridHotspots(
+                lat: hotspot.lat,
+                lon: hotspot.lon
+            ) else { return [] }
+
+            return detailRow.hotspots.map { item in
+                FinalPredictionResult(
+                    birdName: item.name,
+                    imageName: WatchlistManager.shared.findBird(byName: item.name)?.staticImageName ?? "placeholder_image",
+                    likelySpot: hotspot.name,
+                    matchedInputIndex: 0,
+                    matchedLocation: (lat: item.lat, lon: item.lon),
+                    spottingProbability: min(100, item.checklist_count),
+                    weekNumber: formatWeekDescription(week: Calendar.current.component(.weekOfYear, from: Date())),
+                    residencyStatus: "Recently observed",
+                    ebirdSpeciesCode: nil
+                )
+            }
+        } catch {
+            logger.log(error: error, context: "HomeManager.getSpeciesForHotspot")
+            return []
         }
     }
 

@@ -162,7 +162,8 @@ extension HomeViewController {
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            self.applyMLDataOverride()
+            // applyMLDataOverride() disabled — upcomingBirds now sourced live from Supabase
+            self.upcomingBirds = data.displayableUpcomingBirds
             self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
@@ -178,7 +179,8 @@ extension HomeViewController {
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            self.applyMLDataOverride()
+            // applyMLDataOverride() disabled — upcomingBirds now sourced live from Supabase
+            self.upcomingBirds = data.displayableUpcomingBirds
             self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
@@ -489,15 +491,29 @@ extension HomeViewController {
                 return
             }
             let item = spots[indexPath.row - 1]
-            
-            // Use already-fetched edge species for instant navigation
-            let preds: [FinalPredictionResult] = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
-                homeManager.predictionResults(from: edgeSpecies, lat: item.latitude, lon: item.longitude)
-            } else {
-                []
+
+            // Async tap: fetch live species from grid_hotspots, fall back to cached edgeSpecies
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                var preds = await self.homeManager.getSpeciesForHotspot(
+                    lat: item.latitude,
+                    lon: item.longitude
+                )
+                if preds.isEmpty, let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
+                    preds = self.homeManager.predictionResults(
+                        from: edgeSpecies,
+                        lat: item.latitude,
+                        lon: item.longitude
+                    )
+                }
+                self.navigateToSpotDetails(
+                    name: item.title,
+                    lat: item.latitude,
+                    lon: item.longitude,
+                    radius: item.radius,
+                    predictions: preds
+                )
             }
-            
-            navigateToSpotDetails(name: item.title, lat: item.latitude, lon: item.longitude, radius: item.radius, predictions: preds)
         case 3:
             navigateToNewsArticle(newsItem(at: indexPath.row))
         default: break
