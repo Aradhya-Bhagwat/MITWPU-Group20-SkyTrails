@@ -24,7 +24,6 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
     private var showsWideCard: Bool?
     private var isCardSelected = false
-    private let baseCardHeight: CGFloat = 126.0
     private var currentStatusColor: UIColor = .systemBlue
     private var currentStatusTitle: String = ""
     private var currentStatusSubtitle: String = ""
@@ -32,6 +31,12 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
     private var actionButtonsContainer: UIStackView?
     private var currentPrediction: FinalPredictionResult?
+    private var hasConfiguredLayoutBehavior = false
+    private var hasInstalledCompactTopRowFix = false
+    private var compactBadgeContainerWidthConstraint: NSLayoutConstraint?
+    private var compactBadgeContainerHeightConstraint: NSLayoutConstraint?
+    private var wideBadgeContainerWidthConstraint: NSLayoutConstraint?
+    private var wideBadgeContainerHeightConstraint: NSLayoutConstraint?
     
     var onTapBirdPath: ((FinalPredictionResult) -> Void)?
     var onTapWatchlist: ((FinalPredictionResult) -> Void)?
@@ -40,12 +45,14 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         super.awakeFromNib()
         mainStackView.distribution = .fill
         setupAppearance()
+        setupLayoutBehavior()
         updateCardVariant()
         setupActionButtons()
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        installCompactTopRowFixIfNeeded()
         updateScaledLayout()
         updateCardVariant()
         applyBadgeIconStyle()
@@ -81,6 +88,15 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wideBirdImageView.layer.cornerRadius = 8
         compactBirdImageView.clipsToBounds = true
         wideBirdImageView.clipsToBounds = true
+
+        compactBirdNameLabel.textColor = .label
+        wideBirdNameLabel.textColor = .label
+        compactBadgeTitleLabel.textColor = .label
+        wideBadgeTitleLabel.textColor = .label
+        compactBadgeSubtitleLabel.textColor = .secondaryLabel
+        wideBadgeSubtitleLabel.textColor = .secondaryLabel
+        compactSightabilityLabel.textColor = .secondaryLabel
+        wideSightabilityLabel.textColor = .secondaryLabel
     }
 
     private func setupActionButtons() {
@@ -133,6 +149,8 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
         button.setTitle(title, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
+        button.titleLabel?.minimumScaleFactor = 0.8
         button.semanticContentAttribute = .forceLeftToRight
         button.contentHorizontalAlignment = .center
    
@@ -155,6 +173,111 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         return button
+    }
+
+    private func setupLayoutBehavior() {
+        guard !hasConfiguredLayoutBehavior else { return }
+        hasConfiguredLayoutBehavior = true
+
+        compactBirdNameLabel.numberOfLines = 1
+        compactBirdNameLabel.lineBreakMode = .byTruncatingTail
+        compactBirdNameLabel.adjustsFontSizeToFitWidth = true
+        compactBirdNameLabel.minimumScaleFactor = 0.85
+        compactBirdNameLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        compactBirdNameLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        compactBirdNameLabel.textAlignment = .left
+
+        wideBirdNameLabel.numberOfLines = 1
+        wideBirdNameLabel.lineBreakMode = .byTruncatingTail
+        wideBirdNameLabel.adjustsFontSizeToFitWidth = true
+        wideBirdNameLabel.minimumScaleFactor = 0.9
+        wideBirdNameLabel.textAlignment = .left
+
+        [compactSightabilityLabel, wideSightabilityLabel].forEach { label in
+            label?.numberOfLines = 1
+            label?.lineBreakMode = .byTruncatingTail
+            label?.adjustsFontSizeToFitWidth = true
+            label?.minimumScaleFactor = 0.72
+            label?.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            label?.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        }
+        compactSightabilityLabel.textAlignment = .left
+        wideSightabilityLabel.textAlignment = .right
+
+        [compactBadgeTitleLabel, compactBadgeSubtitleLabel, wideBadgeTitleLabel, wideBadgeSubtitleLabel].forEach { label in
+            label?.numberOfLines = 1
+            label?.lineBreakMode = .byTruncatingTail
+            label?.adjustsFontSizeToFitWidth = true
+            label?.minimumScaleFactor = 0.82
+        }
+
+        compactBadgeTitleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        compactBadgeSubtitleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        wideBadgeTitleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        wideBadgeSubtitleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+
+        if let compactBadgeContainer = compactBadgeIconImageView.superview {
+            compactBadgeContainer.translatesAutoresizingMaskIntoConstraints = false
+            let width = compactBadgeContainer.widthAnchor.constraint(equalToConstant: 42)
+            let height = compactBadgeContainer.heightAnchor.constraint(equalToConstant: 42)
+            width.priority = .required
+            height.priority = .required
+            NSLayoutConstraint.activate([width, height])
+            compactBadgeContainerWidthConstraint = width
+            compactBadgeContainerHeightConstraint = height
+        }
+
+        if let wideBadgeContainer = wideBadgeIconImageView.superview {
+            wideBadgeContainer.translatesAutoresizingMaskIntoConstraints = false
+            let width = wideBadgeContainer.widthAnchor.constraint(equalToConstant: 28)
+            let height = wideBadgeContainer.heightAnchor.constraint(equalToConstant: 28)
+            width.priority = .required
+            height.priority = .required
+            NSLayoutConstraint.activate([width, height])
+            wideBadgeContainerWidthConstraint = width
+            wideBadgeContainerHeightConstraint = height
+        }
+    }
+
+    private func installCompactTopRowFixIfNeeded() {
+        guard !hasInstalledCompactTopRowFix else { return }
+        guard compactBirdNameLabel.superview === compactCardView,
+              compactSightabilityLabel.superview === compactCardView,
+              let compactStatusContainer = compactBadgeIconImageView.superview?.superview else { return }
+
+        hasInstalledCompactTopRowFix = true
+
+        for constraint in compactCardView.constraints {
+            let first = constraint.firstItem as AnyObject?
+            let second = constraint.secondItem as AnyObject?
+            let touchesCompactSightability = first === compactSightabilityLabel || second === compactSightabilityLabel
+            let touchesCompactImage = first === compactBirdImageView || second === compactBirdImageView
+            let touchesCompactBirdName = first === compactBirdNameLabel || second === compactBirdNameLabel
+            let touchesCompactStatusContainer = first === compactStatusContainer || second === compactStatusContainer
+
+            if touchesCompactSightability && touchesCompactImage && constraint.firstAttribute == .leading {
+                constraint.isActive = false
+            }
+
+            if touchesCompactSightability && constraint.firstAttribute == .top {
+                constraint.isActive = false
+            }
+
+            if touchesCompactSightability && touchesCompactBirdName && constraint.firstAttribute == .trailing {
+                constraint.isActive = false
+            }
+
+            if touchesCompactStatusContainer && constraint.firstAttribute == .centerY {
+                constraint.isActive = false
+            }
+        }
+
+        NSLayoutConstraint.activate([
+            compactSightabilityLabel.topAnchor.constraint(equalTo: compactBirdNameLabel.bottomAnchor, constant: 10),
+            compactSightabilityLabel.leadingAnchor.constraint(equalTo: compactBirdNameLabel.leadingAnchor),
+            compactSightabilityLabel.trailingAnchor.constraint(lessThanOrEqualTo: compactCardView.trailingAnchor, constant: -12),
+            compactStatusContainer.topAnchor.constraint(equalTo: compactSightabilityLabel.bottomAnchor, constant: 14)
+        ])
     }
 
     private func updateCardVariant() {
@@ -257,21 +380,34 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     private func updateScaledLayout() {
         let isWide = bounds.width >= 450
         let cardView = isWide ? wideCardView : compactCardView
-        let cardHeight = cardView?.bounds.height ?? bounds.height
-        let maxRatio: CGFloat = isWide ? 1.12 : 1.0
-        let heightRatio = min(maxRatio, max(0.85, cardHeight / baseCardHeight))
-        let titleSize = max(17, 17 * heightRatio)
-        let bodySize = max(15.6, 12 * heightRatio * 1.3)
+        let currentWidth = max(1, cardView?.bounds.width ?? bounds.width)
+        let titleScaleWidth = currentWidth * (18.0 / 200.0)
+        let bodyScaleWidth = currentWidth * (12.0 / 200.0)
+        let sightabilityScaleWidth = currentWidth * (13.5 / 200.0)
+        let titleSize = isWide
+            ? min(max(titleScaleWidth, 17), 24)
+            : min(max(titleScaleWidth, 17), 20)
+        let bodySize = isWide
+            ? min(max(bodyScaleWidth, 12), 15)
+            : min(max(bodyScaleWidth, 11), 13.5)
+        let sightabilitySize = isWide
+            ? min(max(sightabilityScaleWidth, 13), 16)
+            : min(max(sightabilityScaleWidth, 12.5), 15.5)
 
-        compactBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .regular)
-        wideBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .regular)
+        compactBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .semibold)
+        wideBirdNameLabel.font = .systemFont(ofSize: titleSize, weight: .semibold)
 
-        compactBadgeTitleLabel.font = .systemFont(ofSize: bodySize)
-        compactBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
-        wideBadgeTitleLabel.font = .systemFont(ofSize: bodySize)
-        wideBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize)
-        compactSightabilityLabel.font = .systemFont(ofSize: bodySize)
-        wideSightabilityLabel.font = .systemFont(ofSize: bodySize)
+        compactBadgeTitleLabel.font = .systemFont(ofSize: bodySize, weight: .semibold)
+        compactBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize, weight: .regular)
+        wideBadgeTitleLabel.font = .systemFont(ofSize: bodySize, weight: .semibold)
+        wideBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize, weight: .regular)
+        compactSightabilityLabel.font = .systemFont(ofSize: sightabilitySize, weight: .medium)
+        wideSightabilityLabel.font = .systemFont(ofSize: sightabilitySize, weight: .medium)
+
+        compactBadgeContainerWidthConstraint?.constant = min(max(bodySize * 2.9, 36), 44)
+        compactBadgeContainerHeightConstraint?.constant = compactBadgeContainerWidthConstraint?.constant ?? 42
+        wideBadgeContainerWidthConstraint?.constant = min(max(bodySize * 2.1, 24), 30)
+        wideBadgeContainerHeightConstraint?.constant = wideBadgeContainerWidthConstraint?.constant ?? 28
 
         applyScaledTexts()
     }
