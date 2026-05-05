@@ -31,7 +31,7 @@ INDIA_LAT_MAX  <- 37.5
 INDIA_LON_MIN  <- 68.0
 INDIA_LON_MAX  <- 97.5
 GRID_SIZE      <-  0.5
-TOP_N_HOTSPOTS <- 5L
+TOP_N_HOTSPOTS <- 10L
 EBIRD_RADIUS_KM <- 40L    # covers the 0.5 degree cell from its centre
 
 lat_breaks <- seq(INDIA_LAT_MIN, INDIA_LAT_MAX, by = GRID_SIZE)

@@ -24,6 +24,7 @@ final class SkyTrailsAPIService {
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 8
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // Use ONLY the anon key for public predictions to avoid 401 session issues
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
@@ -57,6 +58,7 @@ final class SkyTrailsAPIService {
         guard let url = components?.url else { throw APIError.invalidURL }
         
         var request = URLRequest(url: url)
+        request.timeoutInterval = 8
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         
@@ -79,6 +81,7 @@ final class SkyTrailsAPIService {
         guard let url = components?.url else { throw APIError.invalidURL }
         
         var request = URLRequest(url: url)
+        request.timeoutInterval = 8
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         
@@ -113,6 +116,7 @@ final class SkyTrailsAPIService {
 
         guard let url = components?.url else { throw APIError.invalidURL }
         var request = URLRequest(url: url)
+        request.timeoutInterval = 8
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
 
@@ -136,6 +140,7 @@ final class SkyTrailsAPIService {
 
         guard let url = components?.url else { throw APIError.invalidURL }
         var request = URLRequest(url: url)
+        request.timeoutInterval = 8
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
 
@@ -156,6 +161,7 @@ final class SkyTrailsAPIService {
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 8
         request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
