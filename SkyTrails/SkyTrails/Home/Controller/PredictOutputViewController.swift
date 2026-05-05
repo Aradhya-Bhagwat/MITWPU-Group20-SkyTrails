@@ -505,7 +505,6 @@ class BirdResultCell: UITableViewCell {
     }
 
     func configure(with name: String, imageName: String) {
-        print("DEBUG cell: configure called with name=\(name) imageName=\(imageName)")
         birdNameLabel.text = name
         currentImageTask?.cancel()
         birdImageView.image = UIImage(named: "placeholder_bird") 

@@ -35,7 +35,6 @@ final class WatchlistBootstrapService {
     }
     
     func performGlobalSeeding() async {
-        print("DEBUG performGlobalSeeding: function started")
         do {
             try BirdDatabaseSeeder.shared.seed(modelContext: context)
             await BirdDatabaseSeeder.shared.refreshImageUrls(modelContext: context)
