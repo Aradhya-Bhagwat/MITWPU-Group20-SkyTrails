@@ -330,41 +330,64 @@ class HomeManager {
 
     /// Fetches species for a specific hotspot coordinate from the grid_hotspots table.
     /// Used by HomeViewController for async spot-tap navigation.
-    func getSpeciesForHotspot(
-        lat: Double,
-        lon: Double
-    ) async -> [FinalPredictionResult] {
+    func getSpeciesForHotspot(lat: Double, lon: Double, hotspotId: String?) async -> [FinalPredictionResult] {
         do {
-            guard let gridRow = try await SkyTrailsAPIService.shared.fetchGridHotspots(
-                lat: lat,
-                lon: lon
-            ) else { return [] }
-
-            // Find the closest hotspot in the grid cell
-            let target = gridRow.hotspots.min(by: {
-                let d0 = abs($0.lat - lat) + abs($0.lon - lon)
-                let d1 = abs($1.lat - lat) + abs($1.lon - lon)
-                return d0 < d1
-            })
-            guard let hotspot = target else { return [] }
-
-            // Re-fetch with the hotspot's own coordinates for a tighter grid match
-            guard let detailRow = try? await SkyTrailsAPIService.shared.fetchGridHotspots(
-                lat: hotspot.lat,
-                lon: hotspot.lon
-            ) else { return [] }
-
-            return detailRow.hotspots.map { item in
-                FinalPredictionResult(
-                    birdName: item.name,
-                    imageName: WatchlistManager.shared.findBird(byName: item.name)?.staticImageName ?? "placeholder_image",
-                    likelySpot: hotspot.name,
+            let config = try SupabaseConfig.load()
+            
+            guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
+                return []
+            }
+            components.path = "/functions/v1/get-nearby-birds"
+            
+            guard let url = components.url else { return [] }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            var body: [String: Any] = ["lat": lat, "lng": lon]
+            if let hotspotId = hotspotId {
+                body["hotspotId"] = hotspotId
+            }
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse,
+                  (200...299).contains(http.statusCode) else {
+                return []
+            }
+            
+            struct EdgeResponse: Decodable {
+                struct Hotspot: Decodable {
+                    struct Species: Decodable {
+                        let ebirdSpeciesCode: String?
+                        let commonName: String
+                        let probability: Int
+                        let residencyStatus: String
+                        let weekNumber: String?
+                    }
+                    let species: [Species]
+                }
+                let card: Hotspot?
+            }
+            
+            let decoded = try JSONDecoder().decode(EdgeResponse.self, from: data)
+            let species = decoded.card?.species ?? []
+            
+            return species.map { sp in
+                let bird = watchlistManager.findBird(byName: sp.commonName)
+                return FinalPredictionResult(
+                    birdName: sp.commonName,
+                    imageName: bird?.staticImageName ?? "placeholder_image",
+                    likelySpot: "Nearby hotspot",
                     matchedInputIndex: 0,
-                    matchedLocation: (lat: item.lat, lon: item.lon),
-                    spottingProbability: min(100, item.checklist_count),
-                    weekNumber: formatWeekDescription(week: Calendar.current.component(.weekOfYear, from: Date())),
-                    residencyStatus: "Recently observed",
-                    ebirdSpeciesCode: nil
+                    matchedLocation: (lat: lat, lon: lon),
+                    spottingProbability: sp.probability,
+                    weekNumber: sp.weekNumber ?? "This week",
+                    residencyStatus: sp.residencyStatus,
+                    ebirdSpeciesCode: sp.ebirdSpeciesCode
                 )
             }
         } catch {
