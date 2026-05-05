@@ -1,10 +1,13 @@
 
 import UIKit
+import CoreLocation
 
 class AllSpotsViewController: UIViewController {
     
     var watchlistData: [PopularSpotResult] = []
     var recommendationsData: [PopularSpotResult] = []
+    var userCoordinate: CLLocationCoordinate2D?
+    private var isEBirdLoading = false
     private var cachedItemSize: NSCollectionLayoutSize?
     
     @IBOutlet weak var collectionView: UICollectionView!
@@ -16,6 +19,7 @@ class AllSpotsViewController: UIViewController {
         applySemanticAppearance()
         setupNavigationBar()
         setupCollectionView()
+        fetchLiveHotspots()
     }
 
     private func setupTraitChangeHandling() {
@@ -54,6 +58,8 @@ class AllSpotsViewController: UIViewController {
             withReuseIdentifier: SectionHeaderCollectionReusableView.identifier
         )
         
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "LoadingCell")
+        
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = .clear
@@ -84,32 +90,29 @@ class AllSpotsViewController: UIViewController {
             let containerWidth = layoutEnvironment.container.effectiveContentSize.width
 
             if self.cachedItemSize == nil {
-                guard let windowScene = self.view.window?.windowScene else { return nil }
-                let screenBounds = windowScene.screen.bounds
-                let portraitWidth = min(screenBounds.width, screenBounds.height)
                 let padding: CGFloat = 16.0
                 let spacing: CGFloat = 16.0
                 let maxCardWidth: CGFloat = 300.0
                 let minColumns = 2
 
                 var columnCount = minColumns
-                var calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                var calculatedWidth = (containerWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                 
                 while calculatedWidth > maxCardWidth {
                     columnCount += 1
-                    calculatedWidth = (portraitWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
+                    calculatedWidth = (containerWidth - (spacing * CGFloat(columnCount - 1)) - (2 * padding)) / CGFloat(columnCount)
                 }
                 
                 let heightMultiplier: CGFloat = 195.0 / 176.0
-                let calculatedHeight = calculatedWidth * heightMultiplier
+                let calculatedHeight = max(100, calculatedWidth * heightMultiplier)
     
                 self.cachedItemSize = NSCollectionLayoutSize(
-                    widthDimension: .absolute(calculatedWidth),
+                    widthDimension: .absolute(max(50, calculatedWidth)),
                     heightDimension: .absolute(calculatedHeight)
                 )
             }
             
-            guard let fixedSize = self.cachedItemSize else { return nil }
+            let fixedSize = self.cachedItemSize ?? NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5), heightDimension: .estimated(200))
             
             let itemWidth = fixedSize.widthDimension.dimension
             let interItemSpacing: CGFloat = 8
@@ -139,6 +142,49 @@ class AllSpotsViewController: UIViewController {
             return section
         }
     }
+
+    private func fetchLiveHotspots() {
+        guard let coord = userCoordinate else { return }
+        isEBirdLoading = true
+        collectionView.reloadSections(IndexSet(integer: 1))
+        
+        let existingIds = recommendationsData.compactMap { $0.hotspotId }
+        
+        Task {
+            do {
+                let live = try await SkyTrailsAPIService.shared.fetchLiveHotspots(
+                    lat: coord.latitude,
+                    lon: coord.longitude,
+                    existingIds: existingIds
+                )
+                await MainActor.run {
+                    self.isEBirdLoading = false
+                    let mapped = live.map { h in
+                        PopularSpotResult(
+                            id: UUID(),
+                            title: h.name,
+                            location: h.name,
+                            latitude: h.lat,
+                            longitude: h.lon,
+                            speciesCount: h.checklistCount,
+                            observedCount: 0,
+                            radius: 2.0,
+                            imageName: nil,
+                            edgeSpecies: nil,
+                            hotspotId: h.hotspotId
+                        )
+                    }
+                    self.recommendationsData.append(contentsOf: mapped)
+                    self.collectionView.reloadSections(IndexSet(integer: 1))
+                }
+            } catch {
+                await MainActor.run {
+                    self.isEBirdLoading = false
+                    self.collectionView.reloadSections(IndexSet(integer: 1))
+                }
+            }
+        }
+    }
 }
 
 extension AllSpotsViewController: UICollectionViewDataSource {
@@ -148,7 +194,7 @@ extension AllSpotsViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 { return watchlistData.count + 1 }
-        else { return recommendationsData.count }
+        else { return recommendationsData.count + (isEBirdLoading ? 1 : 0) }
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -161,6 +207,10 @@ extension AllSpotsViewController: UICollectionViewDataSource {
             }
             cell.configure(with: UIImage(systemName: "custom.mappin.and.ellipse.badge.magnifyingglass"), title: "Find Your Spots")
             return cell
+        }
+        
+        if indexPath.section == 1 && indexPath.row == recommendationsData.count && isEBirdLoading {
+            return createLoadingCell(for: indexPath)
         }
 
         guard let cell = collectionView.dequeueReusableCell(
@@ -180,6 +230,21 @@ extension AllSpotsViewController: UICollectionViewDataSource {
             longitude: item.longitude
         )
         
+        return cell
+    }
+    
+    private func createLoadingCell(for indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "LoadingCell", for: indexPath)
+        cell.contentView.subviews.forEach { $0.removeFromSuperview() }
+        
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        cell.contentView.addSubview(spinner)
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: cell.contentView.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor)
+        ])
+        spinner.startAnimating()
         return cell
     }
     

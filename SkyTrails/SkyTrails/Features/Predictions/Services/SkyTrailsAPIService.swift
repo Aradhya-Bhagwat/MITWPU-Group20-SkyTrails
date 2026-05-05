@@ -143,4 +143,51 @@ final class SkyTrailsAPIService {
         let rows = try JSONDecoder().decode([RegionalTrendsRow].self, from: data)
         return rows.first?.species_data ?? []
     }
+
+    func fetchLiveHotspots(lat: Double, lon: Double, existingIds: [String]) async throws -> [LiveHotspotResult] {
+        let config = try SupabaseConfig.load()
+        
+        guard var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false) else {
+            throw APIError.invalidURL
+        }
+        components.path = "/functions/v1/get-nearby-hotspots"
+        
+        guard let url = components.url else { throw APIError.invalidURL }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "lat": lat,
+            "lng": lon,
+            "existingIds": existingIds,
+            "dist": 40
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode) else {
+            throw APIError.serverError("get-nearby-hotspots failed")
+        }
+        
+        let decoded = try JSONDecoder().decode(LiveHotspotsResponse.self, from: data)
+        return decoded.hotspots
+    }
+}
+
+struct LiveHotspotsResponse: Decodable {
+    let hotspots: [LiveHotspotResult]
+}
+
+struct LiveHotspotResult: Decodable {
+    let hotspotId: String
+    let name: String
+    let lat: Double
+    let lon: Double
+    let checklistCount: Int
+    let distanceKm: Double
 }

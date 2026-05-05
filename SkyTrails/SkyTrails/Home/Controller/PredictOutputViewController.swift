@@ -65,35 +65,7 @@ class PredictOutputViewController: UIViewController {
     }
 
     private func prepareData() {
-        var basePredictions = predictions
-        
-        // Force injection for presentation
-        let presentationBirds = [
-            (name: "Ashy Prinia", code: "ashpri1", image: "ashy_prinia"),
-            (name: "Black Drongo", code: "bladro1", image: "black_drongo")
-        ]
-        
-        for bird in presentationBirds {
-            if !basePredictions.contains(where: { $0.ebirdSpeciesCode == bird.code }) {
-                let mockResult = FinalPredictionResult(
-                    birdName: bird.name,
-                    imageName: bird.image,
-                    likelySpot: inputData.first?.locationName ?? "Nearby",
-                    matchedInputIndex: 0,
-                    matchedLocation: (
-                        lat: inputData.first?.latitude ?? 20.0,
-                        lon: inputData.first?.longitude ?? 78.0
-                    ),
-                    spottingProbability: 85,
-                    weekNumber: "Current Week",
-                    residencyStatus: "Present",
-                    ebirdSpeciesCode: bird.code
-                )
-                basePredictions.append(mockResult)
-            }
-        }
-
-        displayedPredictions = basePredictions.sorted { lhs, rhs in
+        displayedPredictions = predictions.sorted { lhs, rhs in
             if lhs.spottingProbability == rhs.spottingProbability {
                 return lhs.birdName < rhs.birdName
             }
