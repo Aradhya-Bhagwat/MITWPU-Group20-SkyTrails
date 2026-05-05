@@ -220,7 +220,8 @@ if (nzchar(species_code_filter)) {
   }
 
   # Filter status_trends_species to match your database
-  test_species <- c('bladro1', 'blakit1', 'commyn', 'brakit1', 'amufal1')
+  test_species <- c('bladro1', 'blakit1', 'commyn', 'brakit1', 'amufal1',
+                    'indrol2', 'houspa', 'shikra1', 'asikoe2', 'spoowl1')
    
    status_trends_species <- status_trends_species %>%
    filter(ebird_species_code %in% test_species)
