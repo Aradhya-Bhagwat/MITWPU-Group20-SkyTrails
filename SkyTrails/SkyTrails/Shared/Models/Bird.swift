@@ -47,6 +47,8 @@ final class Bird {
     var likelySpot: String?
     var shape_id: String?
     var size_category: Int?
+    var imageUrl: String?
+    var ebird_species_code: String?
 
     var shape: BirdShape?
 
@@ -90,6 +92,8 @@ final class Bird {
             self.likelySpot = likelySpot
             self.shape_id = shape_id
             self.size_category = size_category
+            self.imageUrl = nil
+            self.ebird_species_code = nil
             self.shape = shape
         }
 }

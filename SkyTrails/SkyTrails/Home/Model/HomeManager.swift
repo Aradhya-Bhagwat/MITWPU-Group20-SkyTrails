@@ -20,6 +20,7 @@ class HomeManager {
     // Wrapper class because NSCache requires class types
     private final class SpeciesCacheItem {
         let response: HotspotPredictionResponse
+        let cachedAt: Date = Date()
         init(response: HotspotPredictionResponse) { self.response = response }
     }
 
@@ -1255,8 +1256,14 @@ class HomeManager {
         
         // Check Memory Cache first (Session-based "Memory")
         if let cached = speciesMemoryCache.object(forKey: cacheKey) {
-            print("DEBUG: Using App-Side Memory Cache for hotspot at \(cacheKey)")
-            return cached.response
+            // Expire after 30 minutes
+            if Date().timeIntervalSince(cached.cachedAt) < 1800 {
+                print("DEBUG: Using App-Side Memory Cache for hotspot at \(cacheKey)")
+                return cached.response
+            } else {
+                print("DEBUG: Memory Cache EXPIRED for hotspot at \(cacheKey)")
+                speciesMemoryCache.removeObject(forKey: cacheKey)
+            }
         }
 
         // Check Location Cache Metadata (The 5km / 6-Hour Rule)
@@ -1416,10 +1423,18 @@ class HomeManager {
         lat: Double,
         lon: Double
     ) -> [FinalPredictionResult] {
-        edgeSpecies.map { species in
-            FinalPredictionResult(
+        let allBirds = watchlistManager.fetchAllBirds()
+        let birdMap = Dictionary(allBirds.map { ($0.commonName, $0) }, uniquingKeysWith: { first, _ in first })
+
+        return edgeSpecies.map { species in
+            let bird = birdMap[species.commonName]
+            let remoteImage = species.imageName ?? bird?.imageUrl ?? bird?.staticImageName
+
+            print("DEBUG prediction: \(species.commonName) | bird.imageUrl=\(bird?.imageUrl ?? "NIL") | bird.staticImageName=\(bird?.staticImageName ?? "NIL") | finalImage=\(remoteImage ?? "NIL")")
+
+            return FinalPredictionResult(
                 birdName: species.commonName,
-                imageName: species.imageName ?? WatchlistManager.shared.findBird(byName: species.commonName)?.staticImageName ?? "placeholder_image",
+                imageName: remoteImage ?? "placeholder_image",
                 likelySpot: "Nearby hotspot",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
