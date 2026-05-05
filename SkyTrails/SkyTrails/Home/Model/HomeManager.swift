@@ -270,7 +270,8 @@ class HomeManager {
                 observedCount: observedCount,
                 radius: radiusKm,
                 imageName: watchlist.coverImagePath,
-                edgeSpecies: nil
+                edgeSpecies: nil,
+                hotspotId: nil
             )
             results.append(result)
         }
@@ -301,7 +302,8 @@ class HomeManager {
                         radius: 5.0,
                         imageName: nil,
                         edgeSpecies: nil,
-                        distanceKm: nil
+                        distanceKm: nil,
+                        hotspotId: item.hotspot_id
                     )
                 }
             }
@@ -396,7 +398,8 @@ class HomeManager {
                     ebirdSpeciesCode: $0.ebirdSpeciesCode
                 ) 
             },
-            distanceKm: item.distanceKm
+            distanceKm: item.distanceKm,
+            hotspotId: item.hotspotId
         )
     }
 
@@ -1256,7 +1259,8 @@ class HomeManager {
                     radius: cardRadiusKm,
                     imageName: hotspot.imageName,
                     edgeSpecies: nil,
-                    distanceKm: distance / 1000.0
+                    distanceKm: distance / 1000.0,
+                    hotspotId: nil
                 )
             )
         }

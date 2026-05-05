@@ -126,6 +126,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         if segue.identifier == "ShowAllSpots", let dest = segue.destination as? AllSpotsViewController {
             dest.watchlistData = homeScreenData?.watchlistSpots ?? []
             dest.recommendationsData = homeScreenData?.recommendedSpots ?? []
+            dest.userCoordinate = LocationPreferences.shared.homeLocation
         }
         if segue.identifier == "ShowAllBirds", let dest = segue.destination as? AllUpcomingBirdsViewController {
             dest.watchlistData = homeScreenData?.upcomingBirds ?? []

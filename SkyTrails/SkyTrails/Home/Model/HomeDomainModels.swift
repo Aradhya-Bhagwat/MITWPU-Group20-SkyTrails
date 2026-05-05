@@ -110,6 +110,7 @@ struct PopularSpotResult: Identifiable {
     let imageName: String?
     let edgeSpecies: [NearbyHotspotEdgeSpecies]?
     var distanceKm: Double?
+    let hotspotId: String?
     
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
