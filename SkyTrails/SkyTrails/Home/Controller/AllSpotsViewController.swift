@@ -152,11 +152,22 @@ class AllSpotsViewController: UIViewController {
         
         Task {
             do {
-                let live = try await SkyTrailsAPIService.shared.fetchLiveHotspots(
+                let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+                async let liveRequest = SkyTrailsAPIService.shared.fetchLiveHotspots(
                     lat: coord.latitude,
                     lon: coord.longitude,
                     existingIds: existingIds
                 )
+                async let regionalRequest = SkyTrailsAPIService.shared.fetchRegionalTrends(
+                    lat: coord.latitude,
+                    lon: coord.longitude,
+                    week: currentWeek
+                )
+
+                let live = try await liveRequest
+                let regionalSpecies = (try? await regionalRequest) ?? []
+                let preliminarySpecies = Self.edgeSpecies(from: regionalSpecies, week: currentWeek)
+
                 await MainActor.run {
                     self.isEBirdLoading = false
                     let mapped = live.map { h in
@@ -170,7 +181,7 @@ class AllSpotsViewController: UIViewController {
                             observedCount: 0,
                             radius: 2.0,
                             imageName: nil,
-                            edgeSpecies: nil,
+                            edgeSpecies: preliminarySpecies,
                             hotspotId: h.hotspotId
                         )
                     }
@@ -184,6 +195,48 @@ class AllSpotsViewController: UIViewController {
                 }
             }
         }
+    }
+
+    private static func edgeSpecies(from trendItems: [RegionalTrendSpeciesItem], week: Int) -> [NearbyHotspotEdgeSpecies] {
+        let weekText = "Week \(week)"
+        return trendItems.prefix(50).map { item in
+            NearbyHotspotEdgeSpecies(
+                commonName: item.name,
+                scientificName: nil,
+                imageName: WatchlistManager.shared.findBird(byName: item.name)?.staticImageName,
+                probability: max(1, min(100, Int((item.score * 100).rounded()))),
+                weekNumber: weekText,
+                residencyStatus: "Expected",
+                ebirdSpeciesCode: item.id
+            )
+        }
+    }
+
+    @discardableResult
+    private func navigateToSpotDetails(
+        name: String,
+        lat: Double,
+        lon: Double,
+        radius: Double,
+        predictions: [FinalPredictionResult]
+    ) -> PredictMapViewController? {
+        var inputData = PredictionInputData()
+        inputData.locationName = name
+        inputData.latitude = lat
+        inputData.longitude = lon
+        inputData.areaValue = Int(radius)
+        inputData.startDate = Date()
+        inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+
+        let storyboard = UIStoryboard(name: "Home", bundle: nil)
+        guard let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController else {
+            return nil
+        }
+
+        navigationController?.pushViewController(predictMapVC, animated: true)
+        predictMapVC.loadViewIfNeeded()
+        predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+        return predictMapVC
     }
 }
 
@@ -271,35 +324,42 @@ extension AllSpotsViewController: UICollectionViewDelegate {
             didTapPredict()
             return
         }
+        if indexPath.section == 1 && indexPath.row >= recommendationsData.count {
+            return
+        }
 
         let item = (indexPath.section == 0) ? watchlistData[indexPath.row - 1] : recommendationsData[indexPath.row]
 
         let lat = item.latitude
         let lon = item.longitude
 
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            
+        let initialPredictions: [FinalPredictionResult]
+        if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
+            initialPredictions = HomeManager.shared.predictionResults(
+                from: edgeSpecies,
+                lat: lat,
+                lon: lon
+            )
+        } else {
+            initialPredictions = []
+        }
+
+        let mapVC = navigateToSpotDetails(
+            name: item.title,
+            lat: lat,
+            lon: lon,
+            radius: item.radius,
+            predictions: initialPredictions
+        )
+
+        Task { @MainActor [weak mapVC] in
             let predictions = await HomeManager.shared.getSpeciesForHotspot(
                 lat: lat,
                 lon: lon,
                 hotspotId: item.hotspotId
             )
-
-            var inputData = PredictionInputData()
-            inputData.locationName = item.title
-            inputData.latitude = lat
-            inputData.longitude = lon
-            inputData.areaValue = Int(item.radius)
-            inputData.startDate = Date()
-            inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
-
-            let storyboard = UIStoryboard(name: "Home", bundle: nil)
-            if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
-                self.navigationController?.pushViewController(predictMapVC, animated: true)
-                predictMapVC.loadViewIfNeeded()
-                predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
-            }
+            guard !predictions.isEmpty else { return }
+            mapVC?.refreshOutputPredictions(predictions)
         }
     }
 }
