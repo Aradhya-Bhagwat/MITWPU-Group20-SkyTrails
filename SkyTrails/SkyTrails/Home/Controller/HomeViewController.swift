@@ -212,13 +212,16 @@ extension HomeViewController {
         present(alert, animated: true)
     }
 
-	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult]) {
+	@discardableResult
+	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult]) -> PredictMapViewController? {
 		var inputData = PredictionInputData(); inputData.locationName = name; inputData.latitude = lat; inputData.longitude = lon; inputData.areaValue = Int(radius); inputData.startDate = Date(); inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
 		let storyboard = UIStoryboard(name: "Home", bundle: nil)
 		if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
 			navigationController?.pushViewController(predictMapVC, animated: true)
 			predictMapVC.loadViewIfNeeded(); predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
+            return predictMapVC
 		}
+        return nil
 	}
 
     private func navigateToBirdPrediction(bird: Bird, statusText: String) {
@@ -493,28 +496,35 @@ extension HomeViewController {
             }
             let item = spots[indexPath.row - 1]
 
-            // Async tap: fetch live species from grid_hotspots, fall back to cached edgeSpecies
-            Task { @MainActor [weak self] in
+            let initialPredictions: [FinalPredictionResult]
+            if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
+                initialPredictions = homeManager.predictionResults(
+                    from: edgeSpecies,
+                    lat: item.latitude,
+                    lon: item.longitude
+                )
+            } else {
+                initialPredictions = []
+            }
+
+            let mapVC = navigateToSpotDetails(
+                name: item.title,
+                lat: item.latitude,
+                lon: item.longitude,
+                radius: item.radius,
+                predictions: initialPredictions
+            )
+
+            // Refresh the already-visible screen when selected-hotspot data arrives.
+            Task { @MainActor [weak self, weak mapVC] in
                 guard let self = self else { return }
-                var preds = await self.homeManager.getSpeciesForHotspot(
+                let preds = await self.homeManager.getSpeciesForHotspot(
                     lat: item.latitude,
                     lon: item.longitude,
                     hotspotId: item.hotspotId
                 )
-                if preds.isEmpty, let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
-                    preds = self.homeManager.predictionResults(
-                        from: edgeSpecies,
-                        lat: item.latitude,
-                        lon: item.longitude
-                    )
-                }
-                self.navigateToSpotDetails(
-                    name: item.title,
-                    lat: item.latitude,
-                    lon: item.longitude,
-                    radius: item.radius,
-                    predictions: preds
-                )
+                guard !preds.isEmpty else { return }
+                mapVC?.refreshOutputPredictions(preds)
             }
         case 3:
             navigateToNewsArticle(newsItem(at: indexPath.row))

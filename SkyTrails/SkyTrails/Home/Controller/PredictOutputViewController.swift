@@ -65,6 +65,7 @@ class PredictOutputViewController: UIViewController {
     }
 
     private func prepareData() {
+        yearlySeriesByBird.removeAll()
         displayedPredictions = predictions.sorted { lhs, rhs in
             if lhs.spottingProbability == rhs.spottingProbability {
                 return lhs.birdName < rhs.birdName
@@ -75,6 +76,22 @@ class PredictOutputViewController: UIViewController {
         for prediction in displayedPredictions {
             guard yearlySeriesByBird[prediction.birdName] == nil else { continue }
             yearlySeriesByBird[prediction.birdName] = yearlySeries(for: prediction)
+        }
+    }
+
+    func updatePredictions(_ newPredictions: [FinalPredictionResult]) {
+        predictions = newPredictions
+        prepareData()
+        selectedPredictionIndex = displayedPredictions.isEmpty
+            ? 0
+            : min(selectedPredictionIndex, displayedPredictions.count - 1)
+        collectionView?.reloadData()
+        collectionView?.collectionViewLayout.invalidateLayout()
+        updateLocationHeader(forDisplayedPredictionAt: selectedPredictionIndex)
+
+        if let first = displayedPredictions.first,
+           let mapVC = navigationController?.parent as? PredictMapViewController {
+            mapVC.filterMapForBird(first)
         }
     }
 

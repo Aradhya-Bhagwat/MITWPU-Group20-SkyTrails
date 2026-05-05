@@ -29,6 +29,7 @@ class HomeManager {
         cache.countLimit = 50 
         return cache
     }()
+    private var spotPredictionMemoryCache: [String: [FinalPredictionResult]] = [:]
 
     init(
         watchlistManager: WatchlistManager? = nil,
@@ -290,6 +291,14 @@ class HomeManager {
                 lat: location.latitude,
                 lon: location.longitude
             ), !gridRow.hotspots.isEmpty {
+                let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+                let regionalSpecies = (try? await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                    lat: location.latitude,
+                    lon: location.longitude,
+                    week: currentWeek
+                )) ?? []
+                let preliminarySpecies = edgeSpecies(from: regionalSpecies, week: currentWeek)
+
                 return gridRow.hotspots.prefix(limit).map { item in
                     PopularSpotResult(
                         id: UUID(uuidString: item.hotspot_id) ?? UUID(),
@@ -301,7 +310,7 @@ class HomeManager {
                         observedCount: 0,
                         radius: 5.0,
                         imageName: nil,
-                        edgeSpecies: nil,
+                        edgeSpecies: preliminarySpecies,
                         distanceKm: nil,
                         hotspotId: item.hotspot_id
                     )
@@ -331,6 +340,11 @@ class HomeManager {
     /// Fetches species for a specific hotspot coordinate from the grid_hotspots table.
     /// Used by HomeViewController for async spot-tap navigation.
     func getSpeciesForHotspot(lat: Double, lon: Double, hotspotId: String?) async -> [FinalPredictionResult] {
+        let cacheKey = hotspotSpeciesCacheKey(lat: lat, lon: lon, hotspotId: hotspotId)
+        if let cached = spotPredictionMemoryCache[cacheKey] {
+            return cached
+        }
+
         do {
             let config = try SupabaseConfig.load()
             
@@ -343,6 +357,7 @@ class HomeManager {
             
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
+            request.timeoutInterval = 8
             request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
             request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -376,7 +391,7 @@ class HomeManager {
             let decoded = try JSONDecoder().decode(EdgeResponse.self, from: data)
             let species = decoded.card?.species ?? []
             
-            return species.map { sp in
+            let results = species.map { sp in
                 let bird = watchlistManager.findBird(byName: sp.commonName)
                 return FinalPredictionResult(
                     birdName: sp.commonName,
@@ -390,9 +405,35 @@ class HomeManager {
                     ebirdSpeciesCode: sp.ebirdSpeciesCode
                 )
             }
+            if !results.isEmpty {
+                spotPredictionMemoryCache[cacheKey] = results
+            }
+            return results
         } catch {
             logger.log(error: error, context: "HomeManager.getSpeciesForHotspot")
             return []
+        }
+    }
+
+    private func hotspotSpeciesCacheKey(lat: Double, lon: Double, hotspotId: String?) -> String {
+        if let hotspotId, !hotspotId.isEmpty {
+            return "hotspot:\(hotspotId)"
+        }
+        return "coord:\(String(format: "%.4f", lat)),\(String(format: "%.4f", lon))"
+    }
+
+    private func edgeSpecies(from trendItems: [RegionalTrendSpeciesItem], week: Int) -> [NearbyHotspotEdgeSpecies] {
+        let weekText = formatWeekDescription(week: week)
+        return trendItems.prefix(50).map { item in
+            NearbyHotspotEdgeSpecies(
+                commonName: item.name,
+                scientificName: nil,
+                imageName: watchlistManager.findBird(byName: item.name)?.staticImageName,
+                probability: max(1, min(100, Int((item.score * 100).rounded()))),
+                weekNumber: weekText,
+                residencyStatus: "Expected",
+                ebirdSpeciesCode: item.id
+            )
         }
     }
 

@@ -55,6 +55,9 @@ class PredictMapViewController: UIViewController {
     private var predictionProbabilityByBirdName: [String: Int] = [:]
     private var currentGeoJSONOverlays: [MKOverlay] = []
     private var selectedPredictionKey: String?
+    private var currentOutputInputs: [PredictionInputData] = []
+    private var currentOutputUsesInputRadiusOverlay = false
+    private var pendingOutputPredictions: [FinalPredictionResult]?
 
     private enum OverlayMode {
         case mapItemArea
@@ -418,6 +421,8 @@ class PredictMapViewController: UIViewController {
         useInputRadiusOverlay: Bool = false
     ) {
             
+        currentOutputInputs = inputs
+        currentOutputUsesInputRadiusOverlay = useInputRadiusOverlay
         let overlayMode: OverlayMode = useInputRadiusOverlay ? .inputRadius : .mapItemArea
         updateMap(with: inputs, predictions: predictions, overlayMode: overlayMode)
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
@@ -456,7 +461,24 @@ class PredictMapViewController: UIViewController {
             outputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!).isActive = true
             outputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!).isActive = true
             outputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!).isActive = true
+            if let pending = self?.pendingOutputPredictions,
+               let outputVC = outputNavVC.topViewController as? PredictOutputViewController {
+                self?.pendingOutputPredictions = nil
+                outputVC.updatePredictions(pending)
+            }
             self?.notifyVisibleSheetHeightChanged()
+        }
+    }
+
+    func refreshOutputPredictions(_ predictions: [FinalPredictionResult]) {
+        let overlayMode: OverlayMode = currentOutputUsesInputRadiusOverlay ? .inputRadius : .mapItemArea
+        updateMap(with: currentOutputInputs, predictions: predictions, overlayMode: overlayMode)
+
+        if let nav = currentChildVC as? UINavigationController,
+           let outputVC = nav.topViewController as? PredictOutputViewController {
+            outputVC.updatePredictions(predictions)
+        } else {
+            pendingOutputPredictions = predictions
         }
     }
 
