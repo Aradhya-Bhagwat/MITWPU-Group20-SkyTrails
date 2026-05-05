@@ -380,6 +380,7 @@ class HomeManager {
                     struct Species: Decodable {
                         let ebirdSpeciesCode: String?
                         let commonName: String
+                        let imageName: String?
                         let probability: Int
                         let residencyStatus: String
                         let weekNumber: String?
@@ -394,9 +395,18 @@ class HomeManager {
             
             let results = species.map { sp in
                 let bird = watchlistManager.findBird(byName: sp.commonName)
+                
+                let rawImage = sp.imageName
+                let cleanImage = (rawImage == nil || 
+                                  rawImage == "placeholder_bird" || 
+                                  rawImage == "placeholder_image" || 
+                                  rawImage?.isEmpty == true) ? nil : rawImage
+
+                let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+
                 return FinalPredictionResult(
                     birdName: sp.commonName,
-                    imageName: bird?.staticImageName ?? "placeholder_image",
+                    imageName: remoteImage ?? "placeholder_image",
                     likelySpot: "Nearby hotspot",
                     matchedInputIndex: 0,
                     matchedLocation: (lat: lat, lon: lon),
@@ -1258,10 +1268,8 @@ class HomeManager {
         if let cached = speciesMemoryCache.object(forKey: cacheKey) {
             // Expire after 30 minutes
             if Date().timeIntervalSince(cached.cachedAt) < 1800 {
-                print("DEBUG: Using App-Side Memory Cache for hotspot at \(cacheKey)")
                 return cached.response
             } else {
-                print("DEBUG: Memory Cache EXPIRED for hotspot at \(cacheKey)")
                 speciesMemoryCache.removeObject(forKey: cacheKey)
             }
         }
@@ -1406,14 +1414,14 @@ class HomeManager {
 
             return FinalPredictionResult(
                 birdName: bird.commonName,
-                imageName: bird.staticImageName,
+                imageName: bird.imageUrl ?? bird.staticImageName,
                 likelySpot: bird.likelySpot ?? "Sky",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
                 spottingProbability: probability,
                 weekNumber: weekText,
                 residencyStatus: status,
-                ebirdSpeciesCode: nil // Local data might not have the code yet
+                ebirdSpeciesCode: bird.ebird_species_code
             )
         }
     }
@@ -1426,11 +1434,18 @@ class HomeManager {
         let allBirds = watchlistManager.fetchAllBirds()
         let birdMap = Dictionary(allBirds.map { ($0.commonName, $0) }, uniquingKeysWith: { first, _ in first })
 
+
         return edgeSpecies.map { species in
             let bird = birdMap[species.commonName]
-            let remoteImage = species.imageName ?? bird?.imageUrl ?? bird?.staticImageName
+            
+            let rawImage = species.imageName
+            let cleanImage = (rawImage == nil || 
+                              rawImage == "placeholder_bird" || 
+                              rawImage == "placeholder_image" || 
+                              rawImage?.isEmpty == true) ? nil : rawImage
 
-            print("DEBUG prediction: \(species.commonName) | bird.imageUrl=\(bird?.imageUrl ?? "NIL") | bird.staticImageName=\(bird?.staticImageName ?? "NIL") | finalImage=\(remoteImage ?? "NIL")")
+            let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+
 
             return FinalPredictionResult(
                 birdName: species.commonName,
@@ -1479,7 +1494,6 @@ class HomeManager {
                 
                 let _ = try await URLSession.shared.data(for: request)
             } catch {
-                print("DEBUG: Failed to sync manual location to Supabase: \(error)")
             }
         }
 
@@ -1487,9 +1501,19 @@ class HomeManager {
         do {
             let response = try await SkyTrailsAPIService.shared.fetchPredictions(lat: lat, lng: lon)
             let results = (response.card?.species ?? []).map { species in
-                FinalPredictionResult(
+                let bird = watchlistManager.findBird(byName: species.commonName)
+                
+                let rawImage = species.imageName
+                let cleanImage = (rawImage == nil || 
+                                  rawImage == "placeholder_bird" || 
+                                  rawImage == "placeholder_image" || 
+                                  rawImage?.isEmpty == true) ? nil : rawImage
+
+                let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+
+                return FinalPredictionResult(
                     birdName: species.commonName,
-                    imageName: species.imageName ?? "placeholder_image",
+                    imageName: remoteImage ?? "placeholder_image",
                     likelySpot: input.locationName ?? "Nearby",
                     matchedInputIndex: inputIndex,
                     matchedLocation: (lat: lat, lon: lon),
@@ -1501,7 +1525,6 @@ class HomeManager {
             }
             if !results.isEmpty { return results }
         } catch {
-            print("DEBUG: API prediction fetch failed, falling back to local: \(error)")
         }
 
         // Fallback to local live predictions if cache is empty

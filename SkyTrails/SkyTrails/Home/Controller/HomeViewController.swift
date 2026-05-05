@@ -472,7 +472,29 @@ extension HomeViewController {
         switch indexPath.section {
         case 0:
             if case .combined(_, let hotspot) = migrationCards[indexPath.row] {
-                let radius = max(2.0, hotspot.pinRadiusKm); let preds = hotspot.birdSpecies.map { FinalPredictionResult(birdName: $0.birdName, imageName: $0.birdImageName, likelySpot: WatchlistManager.shared.findBird(byName: $0.birdName)?.likelySpot ?? "Sky", matchedInputIndex: 0, matchedLocation: (lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude), spottingProbability: $0.sightabilityPercent, weekNumber: $0.weekNumber, residencyStatus: $0.residencyStatus, ebirdSpeciesCode: $0.ebirdSpeciesCode) }
+                let radius = max(2.0, hotspot.pinRadiusKm)
+                let preds = hotspot.birdSpecies.map { sp in
+                    let bird = WatchlistManager.shared.findBird(byName: sp.birdName)
+                    
+                    let rawImage = sp.birdImageName
+                    let cleanImage = (rawImage == "placeholder_bird" || 
+                                      rawImage == "placeholder_image" || 
+                                      rawImage.isEmpty) ? nil : rawImage
+
+                    let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+
+                    return FinalPredictionResult(
+                        birdName: sp.birdName,
+                        imageName: remoteImage ?? "placeholder_image",
+                        likelySpot: bird?.likelySpot ?? "Sky",
+                        matchedInputIndex: 0,
+                        matchedLocation: (lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude),
+                        spottingProbability: sp.sightabilityPercent,
+                        weekNumber: sp.weekNumber,
+                        residencyStatus: sp.residencyStatus,
+                        ebirdSpeciesCode: sp.ebirdSpeciesCode ?? bird?.ebird_species_code
+                    )
+                }
                 navigateToSpotDetails(name: hotspot.placeName, lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude, radius: radius, predictions: preds)
             }
         case 1:

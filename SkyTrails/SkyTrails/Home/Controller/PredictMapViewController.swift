@@ -570,7 +570,6 @@ class PredictMapViewController: UIViewController {
                         self.applyResultMapViewport(anchorCoordinates: [coord], animated: true)
                     }
                 } catch {
-                    print("DEBUG: Failed to fetch/decode GeoJSON for \(prediction.birdName): \(error)")
                     await MainActor.run {
                         self.applyResultMapViewport(anchorCoordinates: [coord], animated: true)
                     }

@@ -37,7 +37,6 @@ final class SkyTrailsAPIService {
         
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             let errorMsg = String(data: data, encoding: .utf8) ?? "Unauthorized or Server Error"
-            print("DEBUG: API Error: \(errorMsg)")
             throw APIError.serverError(errorMsg)
         }
         
@@ -187,17 +186,18 @@ final class SkyTrailsAPIService {
     func fetchBirdImageUrls() async throws -> (
         speciesCodeMap: [String: String],
         scientificNameMap: [String: String],
-        commonNameMap: [String: (code: String?, sci: String?, url: String)]
+        commonNameMap: [String: String]
     ) {
         let config = try SupabaseConfig.load()
         var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
         components?.path = "/rest/v1/birds"
         components?.queryItems = [
             URLQueryItem(name: "select", value: "species_code,scientific_name,image_url,common_name"),
-            URLQueryItem(name: "image_url", value: "not.is.null")
+            URLQueryItem(name: "limit", value: "1000")
         ]
         
         guard let url = components?.url else { throw APIError.invalidURL }
+        
         
         var request = URLRequest(url: url)
         request.timeoutInterval = 10
@@ -205,6 +205,7 @@ final class SkyTrailsAPIService {
         request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await URLSession.shared.data(for: request)
+
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw APIError.serverError("Failed to fetch bird image mapping")
         }
@@ -220,13 +221,14 @@ final class SkyTrailsAPIService {
         
         var speciesCodeMap: [String: String] = [:]
         var scientificNameMap: [String: String] = [:]
-        var commonNameMap: [String: (code: String?, sci: String?, url: String)] = [:]
+        var commonNameMap: [String: String] = [:]
         
         for row in rows {
-            guard let url = row.image_url, let common = row.common_name else { continue }
+            guard let url = row.image_url else { continue }
             
-            commonNameMap[common] = (row.species_code, row.scientific_name, url)
-            
+            if let common = row.common_name {
+                commonNameMap[common] = url
+            }
             if let code = row.species_code {
                 speciesCodeMap[code] = url
             }
@@ -237,6 +239,7 @@ final class SkyTrailsAPIService {
         
         return (speciesCodeMap, scientificNameMap, commonNameMap)
     }
+
 }
 
 struct LiveHotspotsResponse: Decodable {

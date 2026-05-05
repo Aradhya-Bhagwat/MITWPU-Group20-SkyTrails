@@ -7,7 +7,6 @@ final class BirdDatabaseSeeder {
     static let shared = BirdDatabaseSeeder()
 
     private init() {
-        print("DEBUG BirdDatabaseSeeder: initialized")
     }
 
     private struct BirdDatabasePayload: Codable {
@@ -42,10 +41,8 @@ final class BirdDatabaseSeeder {
     }
 
     func seed(modelContext: ModelContext) throws {
-        print("DEBUG seed: function started")
         let hasSeededKey = "kBirdDatabaseSeeded_v3"
         if UserDefaults.standard.bool(forKey: hasSeededKey) {
-            print("DEBUG seed: already seeded, returning")
             return
         }
 
@@ -232,12 +229,10 @@ final class BirdDatabaseSeeder {
     }
 
     func refreshImageUrls(modelContext: ModelContext) async {
-        print("DEBUG refresh: function started")
         do {
             let (speciesCodeMap, scientificNameMap, commonNameMap) =
                 try await SkyTrailsAPIService.shared.fetchBirdImageUrls()
             
-            print("DEBUG refresh: fetched \(speciesCodeMap.count) codes, \(scientificNameMap.count) sci names, \(commonNameMap.count) common names from Supabase")
 
             let descriptor = FetchDescriptor<Bird>()
             let allBirds = try modelContext.fetch(descriptor)
@@ -246,41 +241,37 @@ final class BirdDatabaseSeeder {
             var updateCount = 0
             var createCount = 0
             
-            // 1. Update existing birds
+            // 1. Update existing birds using the three-tier matching logic
             for bird in allBirds {
                 let url = speciesCodeMap[bird.ebird_species_code ?? ""]
                        ?? scientificNameMap[bird.scientificName]
-                       ?? commonNameMap[bird.commonName]?.url
+                       ?? commonNameMap[bird.commonName]
                 
                 if let url = url, bird.imageUrl != url {
                     bird.imageUrl = url
                     updateCount += 1
-                    print("DEBUG refresh: updated \(bird.commonName) -> \(url)")
                 }
             }
             
             // 2. Create missing birds from Supabase
-            for (commonName, data) in commonNameMap {
+            for (commonName, url) in commonNameMap {
                 if birdMap[commonName] == nil {
                     let newBird = Bird(
                         bird_id: UUID(),
                         commonName: commonName,
-                        scientificName: data.sci ?? "Unknown",
+                        scientificName: "Unknown", // Metadata lost in simplified map
                         staticImageName: "placeholder_bird"
                     )
-                    newBird.imageUrl = data.url
-                    newBird.ebird_species_code = data.code
+                    newBird.imageUrl = url
                     modelContext.insert(newBird)
                     birdMap[commonName] = newBird
                     createCount += 1
-                    print("DEBUG refresh: created \(commonName) -> \(data.url)")
                 }
             }
             
             try modelContext.save()
-            print("DEBUG refresh: completed, updated \(updateCount), created \(createCount)")
         } catch {
-            print("DEBUG refreshImageUrls error: \(error)")
         }
     }
+
 }
