@@ -276,33 +276,29 @@ extension AllSpotsViewController: UICollectionViewDelegate {
 
         let lat = item.latitude
         let lon = item.longitude
-        
-        var inputData = PredictionInputData()
-        inputData.locationName = item.title
-        inputData.latitude = lat
-        inputData.longitude = lon
-        inputData.areaValue = Int(item.radius)
-        inputData.startDate = Date()
-        inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
-        
-        Task {
-            let predictions = if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
-                HomeManager.shared.predictionResults(from: edgeSpecies, lat: lat, lon: lon)
-            } else {
-                await HomeManager.shared.getLivePredictions(
-                    for: lat,
-                    lon: lon,
-                    radiusKm: item.radius
-                )
-            }
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             
-            await MainActor.run {
-                let storyboard = UIStoryboard(name: "Home", bundle: nil)
-                if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
-                    self.navigationController?.pushViewController(predictMapVC, animated: true)
-                    predictMapVC.loadViewIfNeeded()
-                    predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
-                }
+            let predictions = await HomeManager.shared.getSpeciesForHotspot(
+                lat: lat,
+                lon: lon,
+                hotspotId: item.hotspotId
+            )
+
+            var inputData = PredictionInputData()
+            inputData.locationName = item.title
+            inputData.latitude = lat
+            inputData.longitude = lon
+            inputData.areaValue = Int(item.radius)
+            inputData.startDate = Date()
+            inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+
+            let storyboard = UIStoryboard(name: "Home", bundle: nil)
+            if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
+                self.navigationController?.pushViewController(predictMapVC, animated: true)
+                predictMapVC.loadViewIfNeeded()
+                predictMapVC.navigateToOutput(inputs: [inputData], predictions: predictions)
             }
         }
     }
