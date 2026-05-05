@@ -168,7 +168,8 @@ all_birds <- supabase_get(
 
 if (nrow(all_birds) == 0) stop("No birds found in master table.")
 
-test_species <- c('bladro1', 'blakit1', 'commyn', 'brakit1', 'amufal1')
+test_species <- c('bladro1', 'blakit1', 'commyn', 'brakit1', 'amufal1',
+                  'indrol2', 'houspa', 'shikra1', 'asikoe2', 'spoowl1')
 
 candidate_species <- ebirdst::ebirdst_runs %>%
   tibble::as_tibble() %>%
@@ -278,7 +279,8 @@ on.exit(parallel::stopCluster(cl), add = TRUE)
 # Export everything workers need
 parallel::clusterExport(cl, varlist = c(
   "status_data_dir", "grid_cells", "cell_sample_pts",
-  "SAMPLE_POINTS", "ABUNDANCE_THRESHOLD", "MAX_SPECIES"
+  "SAMPLE_POINTS", "ABUNDANCE_THRESHOLD", "MAX_SPECIES",
+  "candidate_species", "process_species"
 ), envir = environment())
 
 parallel::clusterEvalQ(cl, {
