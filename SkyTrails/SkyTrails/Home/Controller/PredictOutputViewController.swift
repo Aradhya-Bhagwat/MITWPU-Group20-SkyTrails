@@ -470,6 +470,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
 class BirdResultCell: UITableViewCell {
     private let birdImageView = UIImageView()
     private let birdNameLabel = UILabel()
+    private var currentImageTask: Task<Void, Never>?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -504,7 +505,18 @@ class BirdResultCell: UITableViewCell {
     }
 
     func configure(with name: String, imageName: String) {
+        print("DEBUG cell: configure called with name=\(name) imageName=\(imageName)")
         birdNameLabel.text = name
-        birdImageView.image = UIImage(named: imageName) ?? UIImage(systemName: "photo")
+        currentImageTask?.cancel()
+        birdImageView.image = UIImage(named: "placeholder_bird") 
+                           ?? UIImage(systemName: "bird.fill")
+        currentImageTask = Task { @MainActor in
+            let image = await ImageService.shared.image(for: imageName)
+            if !Task.isCancelled && birdNameLabel.text == name {
+                if let loaded = image {
+                    self.birdImageView.image = loaded
+                }
+            }
+        }
     }
 }

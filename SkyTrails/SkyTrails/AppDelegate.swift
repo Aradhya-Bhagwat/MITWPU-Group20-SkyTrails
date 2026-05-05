@@ -7,9 +7,12 @@ import UserNotifications
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        print("DEBUG AppDelegate: application didFinishLaunching")
 		ThemeService.applySavedTheme()
 		Task { @MainActor in
+            print("DEBUG AppDelegate: Starting global seeding")
             await WatchlistManager.shared.performGlobalSeeding()
+            print("DEBUG AppDelegate: Global seeding finished")
 		}
 
         BackgroundSyncAgent.shared.registerBackgroundTasks()
