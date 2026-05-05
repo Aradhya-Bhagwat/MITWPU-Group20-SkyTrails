@@ -498,7 +498,8 @@ extension HomeViewController {
                 guard let self = self else { return }
                 var preds = await self.homeManager.getSpeciesForHotspot(
                     lat: item.latitude,
-                    lon: item.longitude
+                    lon: item.longitude,
+                    hotspotId: item.hotspotId
                 )
                 if preds.isEmpty, let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {
                     preds = self.homeManager.predictionResults(

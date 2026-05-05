@@ -86,7 +86,8 @@ struct HomeScreenData {
                 longitude: spot.longitude,
                 speciesCount: spot.speciesCount,
                 radius: spot.radius,
-                edgeSpecies: spot.edgeSpecies
+                edgeSpecies: spot.edgeSpecies,
+                hotspotId: spot.hotspotId
             )
         }
     }
@@ -337,4 +338,5 @@ struct PopularSpotUI {
     let speciesCount: Int
     let radius: Double
     let edgeSpecies: [NearbyHotspotEdgeSpecies]?
+    let hotspotId: String?
 }
