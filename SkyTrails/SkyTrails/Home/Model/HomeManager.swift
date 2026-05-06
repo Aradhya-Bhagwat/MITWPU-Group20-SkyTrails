@@ -523,6 +523,29 @@ class HomeManager {
         guard let userLocation = userLocation ?? locationService.currentLocation else {
             return []
         }
+        
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        
+        // Try regional trends first — shows "Your Area" card
+        do {
+            let trendSpecies = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                lat: userLocation.latitude,
+                lon: userLocation.longitude,
+                week: currentWeek
+            )
+            if !trendSpecies.isEmpty {
+                if let card = await mapRegionalTrendsToDynamicMapCard(
+                    species: trendSpecies,
+                    userLocation: userLocation
+                ) {
+                    return [card]
+                }
+            }
+        } catch {
+            logger.log(error: error, context: "HomeManager.getDynamicMapCards.trends")
+        }
+        
+        // Fallback to edge function card
         do {
             let edgeResponse = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
             if let edgeCard = edgeResponse.card,
@@ -532,7 +555,111 @@ class HomeManager {
         } catch {
             logger.log(error: error, context: "HomeManager.getDynamicMapCards.edge")
         }
+        
         return await getDynamicMapCardsFromLocal(userLocation: userLocation)
+    }
+
+    private func mapRegionalTrendsToDynamicMapCard(
+        species: [RegionalTrendSpeciesItem],
+        userLocation: CLLocationCoordinate2D
+    ) async -> DynamicMapCard? {
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        let coordinate = userLocation
+        
+        let displaySpecies: [BirdSpeciesDisplay] = species.prefix(8).map { sp in
+            let bird = watchlistManager.findBird(byName: sp.name)
+            let rawImage = bird?.imageUrl ?? bird?.staticImageName
+            
+            let normalizedName = sp.name.lowercased()
+                .replacingOccurrences(of: " ", with: "_")
+                .replacingOccurrences(of: "-", with: "_")
+            
+            let finalImageName = rawImage ?? normalizedName
+            
+            return BirdSpeciesDisplay(
+                birdName: sp.name,
+                birdImageName: finalImageName.isEmpty ? "placeholder_image" : finalImageName,
+                statusBadge: BirdSpeciesDisplay.StatusBadge(
+                    title: "Present",
+                    subtitle: "Expected",
+                    iconName: "bird.circle.fill",
+                    backgroundColorName: "systemGreen"
+                ),
+                sightabilityPercent: Int(sp.score * 100),
+                weekNumber: "Week \(currentWeek)",
+                residencyStatus: "Expected",
+                ebirdSpeciesCode: sp.id
+            )
+        }
+        
+        // Reverse geocode to get precise location name
+        var locationTitle = "Your Area"
+        var locationDetail = "Species trending near you"
+        
+        let geocoder = CLGeocoder()
+        let clLocation = CLLocation(
+            latitude: userLocation.latitude, 
+            longitude: userLocation.longitude
+        )
+        if let placemarks = try? await geocoder.reverseGeocodeLocation(clLocation),
+           let placemark = placemarks.first {
+            
+            // 1. Exact place name for the title
+            // name typically contains "123 Main St" or the name of a business/landmark
+            // If that's too specific, thoroughfare (street) + subLocality (neighborhood) works well
+            locationTitle = placemark.name 
+                         ?? placemark.thoroughfare 
+                         ?? placemark.subLocality 
+                         ?? placemark.locality 
+                         ?? "Your Area"
+            
+            // 2. City, State, Country for the subtitle
+            let city = placemark.locality
+            let state = placemark.administrativeArea
+            let country = placemark.country
+            
+            let components = [city, state, country].compactMap { $0 }
+            if !components.isEmpty {
+                locationDetail = components.joined(separator: ", ")
+            }
+        }
+
+        let areaOverlay = await resolveHotspotAreaOverlay(
+            hotspotName: locationTitle,
+            hotspotCoordinate: coordinate,
+            fallbackRadiusKm: 2.0
+        )
+        
+        let migrationPrediction = MigrationPrediction(
+            birdName: displaySpecies.first?.birdName ?? "Local Birds",
+            birdImageName: displaySpecies.first?.birdImageName ?? "placeholder_image",
+            startLocation: "Nearby",
+            endLocation: locationTitle,
+            currentProgress: 1.0,
+            dateRange: "Week \(currentWeek)",
+            pathCoordinates: []
+        )
+        
+        let hotspotPrediction = HotspotPrediction(
+            placeName: locationTitle,
+            locationDetail: locationDetail,
+            weekNumber: "Week \(currentWeek)",
+            speciesCount: displaySpecies.count,
+            distanceString: "Nearby",
+            dateRange: "Week \(currentWeek)",
+            placeImageName: "placeholder_image",
+            terrainTag: "Nature",
+            seasonTag: seasonTag(for: [currentWeek]),
+            centerCoordinate: coordinate,
+            pinRadiusKm: 2.0,
+            areaOverlay: areaOverlay,
+            hotspots: displaySpecies.prefix(5).map {
+                HotspotBirdSpot(coordinate: coordinate, birdImageName: $0.birdImageName)
+            },
+            birdSpecies: displaySpecies
+        )
+        
+        return .combined(migration: migrationPrediction, hotspot: hotspotPrediction)
     }
 
     private func mapEdgeCardToDynamicMapCard(
@@ -544,20 +671,25 @@ class HomeManager {
         
         let displaySpecies: [BirdSpeciesDisplay] = (card.species ?? []).prefix(8).map { species in
             let fallbackBird = watchlistManager.findBird(byName: species.commonName)
+            
+            let rawImage = species.imageName
+            let cleanImage = (rawImage == nil || 
+                              rawImage == "placeholder_bird" || 
+                              rawImage == "placeholder_image" || 
+                              rawImage?.isEmpty == true) ? nil : rawImage
+
+            let remoteImage = cleanImage ?? fallbackBird?.imageUrl ?? fallbackBird?.staticImageName
+
             let normalizedName = species.commonName.lowercased()
                 .replacingOccurrences(of: " ", with: "_")
                 .replacingOccurrences(of: "-", with: "_")
             
-            let imageName = species.imageName
-                ?? fallbackBird?.staticImageName
-                ?? normalizedName
-            
-            let finalImageName = imageName.isEmpty ? "placeholder_image" : imageName
+            let finalImageName = remoteImage ?? normalizedName
             let statusText = species.residencyStatus.rawValue
 
             return BirdSpeciesDisplay(
                 birdName: species.commonName,
-                birdImageName: finalImageName,
+                birdImageName: finalImageName.isEmpty ? "placeholder_image" : finalImageName,
                 statusBadge: BirdSpeciesDisplay.StatusBadge(
                     title: "Present",
                     subtitle: statusText,
