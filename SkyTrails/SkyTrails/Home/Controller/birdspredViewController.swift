@@ -96,7 +96,9 @@ class birdspredViewController: UIViewController {
 		setupUI()
 		setupMap()
 		applySemanticAppearance()
-		
+		print("DEBUG VIEWDIDLOAD: isPredictFlow = \(isPredictFlow)")
+		print("DEBUG VIEWDIDLOAD: predictionInputs count = \(predictionInputs.count)")
+
 		if !predictionInputs.isEmpty {
 			updateCardForCurrentIndex()
 			updateMapForCurrentBird()
@@ -342,7 +344,6 @@ class birdspredViewController: UIViewController {
 		weekSlider.isHidden = !isPredictFlow || weeks.count <= 1
 		weekLabel.isHidden = !isPredictFlow || weeks.count <= 1
 	}
-	
 	private func fetchAndAddBirdRange(speciesCode: String, weekNumber: Int? = nil) {
 		rangeFetchTask?.cancel()
 		rangeFetchTask = Task {
@@ -355,6 +356,13 @@ class birdspredViewController: UIViewController {
 					return weeks.first ?? Calendar.current.component(.weekOfYear, from: Date())
 				}()
 
+				print("DEBUG FETCH: fetchAndAddBirdRange calculated week \(week) for \(speciesCode)")
+				
+				guard week > 0 else {
+					print("DEBUG FETCH: invalid week 0, aborting")
+					return
+				}
+				
 				print("DEBUG RANGE: fetching for \(speciesCode) week \(week)")
 				
 				guard let geoJSONString = try await SkyTrailsAPIService.shared.fetchSpeciesRange(
@@ -378,37 +386,48 @@ class birdspredViewController: UIViewController {
 					print("DEBUG RANGE: MKGeoJSONDecoder failed to parse")
 					return
 				}
-
+				
 				await MainActor.run {
-					// Clear previous range overlays before adding new ones
+					// remove old overlays
 					self.mapView.removeOverlays(self.currentGeoJSONOverlays)
 					self.currentGeoJSONOverlays.removeAll()
-
-					var overlaysAdded = 0
-					for object in geoJSONFeatures {
-						if let feature = object as? MKGeoJSONFeature {
+					
+					// add new overlays
+					for feature in geoJSONFeatures {
+						if let feature = feature as? MKGeoJSONFeature {
 							for geometry in feature.geometry {
 								if let polygon = geometry as? MKPolygon {
-									mapView.addOverlay(polygon)
+									self.mapView.addOverlay(polygon, level: .aboveRoads)
 									self.currentGeoJSONOverlays.append(polygon)
-									overlaysAdded += 1
-								} else if let multiPolygon = geometry as? MKMultiPolygon {
-									mapView.addOverlay(multiPolygon)
-									self.currentGeoJSONOverlays.append(multiPolygon)
-									overlaysAdded += 1
-								} else if let polyline = geometry as? MKPolyline {
-									mapView.addOverlay(polyline)
-									self.currentGeoJSONOverlays.append(polyline)
-									overlaysAdded += 1
-								} else if let multiPolyline = geometry as? MKMultiPolyline {
-									mapView.addOverlay(multiPolyline)
-									self.currentGeoJSONOverlays.append(multiPolyline)
-									overlaysAdded += 1
+								} else if let mp = geometry as? MKMultiPolygon {
+									self.mapView.addOverlay(mp, level: .aboveRoads)
+									self.currentGeoJSONOverlays.append(mp)
+								} else if let pl = geometry as? MKPolyline {
+									self.mapView.addOverlay(pl, level: .aboveRoads)
+									self.currentGeoJSONOverlays.append(pl)
+								} else if let mpl = geometry as? MKMultiPolyline {
+									self.mapView.addOverlay(mpl, level: .aboveRoads)
+									self.currentGeoJSONOverlays.append(mpl)
 								}
 							}
 						}
 					}
-					print("DEBUG RANGE: added \(overlaysAdded) overlays to map")
+					
+					print("DEBUG MAP: overlays on map = \(self.mapView.overlays.count)")
+					print("DEBUG MAP: map center = \(self.mapView.centerCoordinate)")
+					
+					// zoom to overlay bounds
+					let rect = self.mapView.overlays.reduce(MKMapRect.null) {
+						$0.union($1.boundingMapRect)
+					}
+					if !rect.isNull {
+						self.mapView.setVisibleMapRect(
+							rect,
+							edgePadding: UIEdgeInsets(top: 50, left: 50, bottom: 100, right: 50),
+							animated: true
+						)
+						print("DEBUG MAP: zoomed to overlay bounds")
+					}
 				}
 			} catch {
 				if !(error is CancellationError) {
@@ -678,28 +697,28 @@ extension birdspredViewController: MKMapViewDelegate {
 		
 		if let polygon = overlay as? MKPolygon {
 			let renderer = MKPolygonRenderer(polygon: polygon)
-			renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.2)
+			renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
 			renderer.strokeColor = UIColor.systemGreen
-			renderer.lineWidth = 1.5
+			renderer.lineWidth = 2.0
 			return renderer
 		}
 		if let multiPolygon = overlay as? MKMultiPolygon {
 			let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
-			renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.2)
+			renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
 			renderer.strokeColor = UIColor.systemGreen
-			renderer.lineWidth = 1.5
+			renderer.lineWidth = 2.0
 			return renderer
 		}
 		if let polyline = overlay as? MKPolyline {
 			let renderer = MKPolylineRenderer(polyline: polyline)
 			renderer.strokeColor = UIColor.systemGreen
-			renderer.lineWidth = 1.5
+			renderer.lineWidth = 2.0
 			return renderer
 		}
 		if let multiPolyline = overlay as? MKMultiPolyline {
 			let renderer = MKMultiPolylineRenderer(multiPolyline: multiPolyline)
 			renderer.strokeColor = UIColor.systemGreen
-			renderer.lineWidth = 1.5
+			renderer.lineWidth = 2.0
 			return renderer
 		}
 		return MKOverlayRenderer(overlay: overlay)
