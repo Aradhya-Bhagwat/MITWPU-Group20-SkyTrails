@@ -120,14 +120,17 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
        func configure(image: UIImage?, title: String, date: String) {
            birdImageView.image = image
            titleLabel.text = title
-           let dateColor = dateLabel.textColor ?? .secondaryLabel
-                   let dateFontSize = dateLabel.font.pointSize
-           dateLabel.attributedText = createIconString(
-                       text: date,
-                       iconName: "calendar", 
-                       color: dateColor,
-                       fontSize: dateFontSize
-                       )
+           
+           let tagColor: UIColor
+           switch date {
+           case "Common Here": tagColor = .systemBlue
+           case "Look Out For": tagColor = .systemOrange
+           case "Rare Find": tagColor = .systemPink
+           default: tagColor = .systemGray
+           }
+           dateLabel.textColor = tagColor
+           dateLabel.attributedText = nil
+           dateLabel.text = date
        }
     
 }

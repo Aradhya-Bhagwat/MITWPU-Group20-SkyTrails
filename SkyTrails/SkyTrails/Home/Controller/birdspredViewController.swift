@@ -46,6 +46,28 @@ class birdspredViewController: UIViewController {
 	private var previousPillBounds: CGRect = .zero
 	private var previousCardBounds: CGRect = .zero
 	private var locationLookupToken: UUID?
+	private var currentGeoJSONOverlays: [MKOverlay] = []
+	private var rangeFetchTask: Task<Void, Never>?
+	private var selectedWeekIndex: Int = 0
+	private var currentWeeks: [Int] = []
+
+	private lazy var weekSlider: UISlider = {
+		let slider = UISlider()
+		slider.minimumValue = 0
+		slider.tintColor = .systemGreen
+		slider.translatesAutoresizingMaskIntoConstraints = false
+		slider.addTarget(self, action: #selector(weekSliderChanged), for: .valueChanged)
+		return slider
+	}()
+
+	private lazy var weekLabel: UILabel = {
+		let label = UILabel()
+		label.textAlignment = .center
+		label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+		label.textColor = .secondaryLabel
+		label.translatesAutoresizingMaskIntoConstraints = false
+		return label
+	}()
 	
 	private struct MLDataSnapshot: Decodable {
 		let birdId: String
@@ -82,6 +104,16 @@ class birdspredViewController: UIViewController {
 			pillView.isHidden = true
 			infoCardView.isHidden = true
 		}
+
+		view.addSubview(weekSlider)
+		view.addSubview(weekLabel)
+		NSLayoutConstraint.activate([
+			weekSlider.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+			weekSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+			weekSlider.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+			weekLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+			weekLabel.bottomAnchor.constraint(equalTo: weekSlider.topAnchor, constant: -4)
+		])
 	}
 	
 	override func viewDidLayoutSubviews() {
@@ -256,6 +288,7 @@ class birdspredViewController: UIViewController {
 	private func updateMapForCurrentBird() {
 		mapView.removeAnnotations(mapView.annotations)
 		mapView.removeOverlays(mapView.overlays)
+		currentGeoJSONOverlays.removeAll()
 		
 		guard !predictionInputs.isEmpty, currentSpeciesIndex < predictionInputs.count else { return }
 		
@@ -293,31 +326,102 @@ class birdspredViewController: UIViewController {
 			let polylineRect = polyline.boundingMapRect
 			mapView.setVisibleMapRect(polylineRect, edgePadding: UIEdgeInsets(top: 50, left: 50, bottom: 250, right: 50), animated: true)
 		}
+		
+		if let speciesCode = input.species.ebirdSpeciesCode {
+			fetchAndAddBirdRange(speciesCode: speciesCode)
+		}
+
+		let weeks = weekNumbers(from: input.startDate, to: input.endDate)
+		currentWeeks = weeks
+		weekSlider.minimumValue = 0
+		weekSlider.maximumValue = Float(max(0, weeks.count - 1))
+		weekSlider.value = 0
+		weekLabel.text = "Week \(weeks.first ?? 0)"
+
+		weekSlider.isHidden = weeks.count <= 1
+		weekLabel.isHidden = weeks.count <= 1
+	}
+	
+	private func fetchAndAddBirdRange(speciesCode: String, weekNumber: Int? = nil) {
+		rangeFetchTask?.cancel()
+		rangeFetchTask = Task {
+			do {
+				let week = weekNumber ?? {
+					let currentInput = predictionInputs.first(where: { 
+						$0.species.ebirdSpeciesCode == speciesCode 
+					})
+					let weeks = weekNumbers(from: currentInput?.startDate, to: currentInput?.endDate)
+					return weeks.first ?? Calendar.current.component(.weekOfYear, from: Date())
+				}()
+
+				print("DEBUG range: fetching for \(speciesCode) week \(week)")
+				let geoJSONData = try await SkyTrailsAPIService.shared.fetchGeoJSON(ebirdSpeciesCode: speciesCode, weekNumber: week)
+				print("DEBUG range: got \(geoJSONData.count) bytes")
+				
+				let decoder = MKGeoJSONDecoder()
+				let objects = try decoder.decode(geoJSONData)
+				
+				await MainActor.run {
+					// Clear previous range overlays before adding new ones
+					self.mapView.removeOverlays(self.currentGeoJSONOverlays)
+					self.currentGeoJSONOverlays.removeAll()
+
+					for object in objects {
+						if let feature = object as? MKGeoJSONFeature {
+							for geometry in feature.geometry {
+								if let overlay = geometry as? MKOverlay {
+									self.addGeometryToMap(overlay)
+								}
+							}
+						} else if let geometry = object as? MKOverlay {
+							self.addGeometryToMap(geometry)
+						}
+					}
+				}
+			} catch {
+				if !(error is CancellationError) {
+					print("DEBUG: Failed to fetch range for \(speciesCode): \(error)")
+				}
+			}
+		}
+	}
+
+	private func addGeometryToMap(_ geometry: MKOverlay) {
+		if let polygon = geometry as? MKPolygon {
+			self.mapView.addOverlay(polygon)
+			self.currentGeoJSONOverlays.append(polygon)
+			print("DEBUG range: added overlay to map (Polygon)")
+		} else if let multiPolygon = geometry as? MKMultiPolygon {
+			self.mapView.addOverlay(multiPolygon)
+			self.currentGeoJSONOverlays.append(multiPolygon)
+			print("DEBUG range: added overlay to map (MultiPolygon)")
+		}
 	}
 	
 	private func loadMLSightingsIfNeeded(for input: BirdDateInput) -> [RelevantSighting] {
-		guard let url = Bundle.main.url(forResource: "MLdata", withExtension: "json"),
-			  let data = try? Data(contentsOf: url),
-			  let snapshots = try? JSONDecoder().decode([MLDataSnapshot].self, from: data) else {
-			return []
-		}
+		guard let speciesCode = input.species.ebirdSpeciesCode else { return [] }
 
-		let normalizedSpeciesName = input.species.name
-			.trimmingCharacters(in: .whitespacesAndNewlines)
-			.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+		let weeks = weekNumbers(from: input.startDate, to: input.endDate)
 
-		guard let snapshot = snapshots.first(where: {
-			$0.birdId.caseInsensitiveCompare(input.species.id) == .orderedSame ||
-			$0.commonName
-				.trimmingCharacters(in: .whitespacesAndNewlines)
-				.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current) == normalizedSpeciesName
-		}) else {
-			return []
+		Task {
+			do {
+				for week in weeks {
+					let trends = try await SkyTrailsAPIService.shared
+						.fetchRegionalTrends(
+							lat: mapView.centerCoordinate.latitude,
+							lon: mapView.centerCoordinate.longitude,
+							week: week
+						)
+					let match = trends.first(where: { $0.id == speciesCode })
+					if let match = match {
+						print("Found \(match.name) in week \(week) with score \(match.score)")
+					}
+				}
+			} catch {
+				print("Error loading regional trends: \(error)")
+			}
 		}
-		
-		return snapshot.trajectoryPaths
-			.map { RelevantSighting(lat: $0.lat, lon: $0.lon, week: $0.week) }
-			.sorted { $0.week < $1.week }
+		return []
 	}
 	
 	private func updateCardForCurrentIndex() {
@@ -504,10 +608,43 @@ class birdspredViewController: UIViewController {
 			self.infoCardView.isHidden = true
 		}
 	}
+
+	@objc private func weekSliderChanged() {
+		let index = Int(weekSlider.value)
+		guard index < currentWeeks.count else { return }
+		selectedWeekIndex = index
+		let week = currentWeeks[index]
+		weekLabel.text = "Week \(week)"
+		
+		// Fetch new range for this week
+		guard let speciesCode = predictionInputs[currentSpeciesIndex].species.ebirdSpeciesCode 
+		else { return }
+		
+		fetchAndAddBirdRange(speciesCode: speciesCode, weekNumber: week)
+	}
+
+	private func weekNumbers(from startDate: Date?, to endDate: Date?) -> [Int] {
+		guard let start = startDate, let end = endDate else {
+			let current = Calendar.current.component(.weekOfYear, from: Date())
+			return [current]
+		}
+		var weeks: [Int] = []
+		var current = start
+		let calendar = Calendar.current
+		while current <= end {
+			let week = calendar.component(.weekOfYear, from: current)
+			if !weeks.contains(week) { weeks.append(week) }
+			current = calendar.date(byAdding: .day, value: 7, to: current) ?? end
+		}
+		return weeks.sorted()
+	}
 }
 
 extension birdspredViewController: MKMapViewDelegate {
 	func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+		print("DEBUG renderer: called for \(type(of: overlay))")
+		let isBirdRange = currentGeoJSONOverlays.contains { $0 === overlay }
+
 		if let polyline = overlay as? PredictedPathPolyline {
 			return ArrowPolylineRenderer(overlay: polyline)
 		}
@@ -520,6 +657,35 @@ extension birdspredViewController: MKMapViewDelegate {
 			renderer.strokeColor = .systemBlue
 			return renderer
 		}
+
+		if let polygon = overlay as? MKPolygon {
+			let renderer = MKPolygonRenderer(polygon: polygon)
+			if isBirdRange {
+				renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
+				renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+				renderer.lineWidth = 2.0
+			} else {
+				renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+				renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
+				renderer.lineWidth = 1.6
+			}
+			return renderer
+		}
+		
+		if let multiPolygon = overlay as? MKMultiPolygon {
+			let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
+			if isBirdRange {
+				renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
+				renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+				renderer.lineWidth = 2.0
+			} else {
+				renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+				renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
+				renderer.lineWidth = 1.6
+			}
+			return renderer
+		}
+
 		return MKOverlayRenderer(overlay: overlay)
 	}
 	

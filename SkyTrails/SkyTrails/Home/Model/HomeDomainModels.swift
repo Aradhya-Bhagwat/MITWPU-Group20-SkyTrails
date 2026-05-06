@@ -35,7 +35,7 @@ struct PopularSpot: Codable, Hashable {
 }
 
 struct HomeScreenData {
-    let upcomingBirds: [UpcomingBirdResult]
+    let upcomingBirds: [UpcomingBirdUI]
     let myWatchlistBirds: [UpcomingBirdResult]
     let recommendedBirds: [RecommendedBirdResult]
     let watchlistSpots: [PopularSpotResult]
@@ -47,31 +47,7 @@ struct HomeScreenData {
     let errorMessage: String?
     
     var displayableUpcomingBirds: [UpcomingBirdUI] {
-        let watchlistUI = myWatchlistBirds.map { result in
-            UpcomingBirdUI(
-                imageName: result.bird.staticImageName,
-                title: result.bird.commonName,
-                date: result.statusText
-            )
-        }
-        let recommendedUI = recommendedBirds.map { result in
-            UpcomingBirdUI(
-                imageName: result.bird.staticImageName,
-                title: result.bird.commonName,
-                date: result.dateRange
-            )
-        }
-        var combinedBirds: [UpcomingBirdUI] = []
-        combinedBirds.append(contentsOf: watchlistUI.prefix(6))
-        
-        let remainingSlots = 6 - combinedBirds.count
-        if remainingSlots > 0 {
-            let watchlistBirdNames = Set(watchlistUI.map { $0.title })
-            let uniqueRecommended = recommendedUI.filter { !watchlistBirdNames.contains($0.title) }
-            combinedBirds.append(contentsOf: uniqueRecommended.prefix(remainingSlots))
-        }
-        
-        return combinedBirds
+        return upcomingBirds
     }
     
     var displayableSpots: [PopularSpotUI] {
@@ -326,6 +302,7 @@ struct UpcomingBirdUI {
     let imageName: String
     let title: String
     let date: String
+    let ebirdSpeciesCode: String?
 }
 
 struct PopularSpotUI {

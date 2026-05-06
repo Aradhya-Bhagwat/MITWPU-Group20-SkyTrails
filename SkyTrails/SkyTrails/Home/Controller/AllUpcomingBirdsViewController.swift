@@ -3,7 +3,7 @@ import UIKit
 
 class AllUpcomingBirdsViewController: UIViewController {
     
-    var watchlistData: [UpcomingBirdResult] = []
+    var watchlistData: [UpcomingBirdUI] = []
     var recommendationsData: [RecommendedBirdResult] = []
     
     private var cachedItemSize: NSCollectionLayoutSize?
@@ -12,7 +12,7 @@ class AllUpcomingBirdsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Bird Sightings"
+        self.title = "This Week's Species"
         setupTraitChangeHandling()
         applySemanticAppearance()
         setupNavigationBar()
@@ -74,9 +74,14 @@ class AllUpcomingBirdsViewController: UIViewController {
         
         let allSpeciesData = WatchlistManager.shared.fetchAllBirds()
         selectionVC.allSpecies = allSpeciesData.map {
-            SpeciesData(id: $0.bird_id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+            SpeciesData(
+                id: $0.bird_id.uuidString, 
+                name: $0.commonName, 
+                imageName: $0.staticImageName,
+                ebirdSpeciesCode: $0.ebird_species_code
+            )
         }
-        let watchlistTitles = watchlistData.map { $0.bird.commonName }
+        let watchlistTitles = watchlistData.map { $0.title }
         let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.commonName) }.map { $0.bird_id.uuidString }
         selectionVC.selectedSpecies = Set(preSelectedIDs)
         navigationController?.pushViewController(selectionVC, animated: true)
@@ -178,9 +183,9 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
         if indexPath.section == 0 {
             let item = watchlistData[indexPath.row - 1]
             let upcomingBird = UpcomingBird(
-                imageName: item.bird.staticImageName,
-                title: item.bird.commonName,
-                date: item.statusText
+                imageName: item.imageName,
+                title: item.title,
+                date: item.date
             )
             cell.configure(with: upcomingBird)
         } else {
@@ -204,7 +209,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
         
         if indexPath.section == 0 {
             header.isHidden = watchlistData.isEmpty
-            header.configure(title: "From Your Watchlist")
+            header.configure(title: "This Week's Species")
         } else {
             header.isHidden = false
             header.configure(title: "Discover New Birds")
@@ -226,8 +231,8 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
 
         if indexPath.section == 0 {
             let item = watchlistData[indexPath.row - 1]
-            bird = item.bird
-            dateString = item.statusText
+            bird = WatchlistManager.shared.findBird(byName: item.title) ?? WatchlistManager.shared.fetchAllBirds().first!
+            dateString = item.date
         } else {
             let result = recommendationsData[indexPath.row]
             bird = result.bird
@@ -239,7 +244,12 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
         let finalEnd = parsedEnd ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: finalStart) ?? finalStart
 
         let input = BirdDateInput(
-            species: SpeciesData(id: bird.bird_id.uuidString, name: bird.commonName, imageName: bird.staticImageName),
+            species: SpeciesData(
+                id: bird.bird_id.uuidString, 
+                name: bird.commonName, 
+                imageName: bird.staticImageName,
+                ebirdSpeciesCode: bird.ebird_species_code
+            ),
             startDate: finalStart,
             endDate: finalEnd
         )
