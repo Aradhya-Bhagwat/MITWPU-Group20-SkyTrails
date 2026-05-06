@@ -63,18 +63,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func routeToCurrentSessionRoot() {
-        guard let window else { return }
+        guard let window = window else { return }
 
-        let storyboardName = UserSession.shared.isAuthenticatedWithSupabase() ? "Main" : "Onboard"
-        let identifier = UserSession.shared.isAuthenticatedWithSupabase()
-            ? "RootTabBarController"
-            : "StartViewController"
+        let isAuthenticated = UserSession.shared.isAuthenticatedWithSupabase()
+        let storyboardName = isAuthenticated ? "Main" : "Onboard"
+        let identifier = isAuthenticated ? "RootTabBarController" : "StartViewController"
+        
+        // --- Fix: Prevent "Double Load" ---
+        // If we already have the correct root controller, don't reset it.
+        // Resetting window.rootViewController causes the existing view hierarchy 
+        // to be destroyed and recreated, triggering redundant data fetches.
+        if let currentRoot = window.rootViewController {
+            let isAlreadyRoot = (isAuthenticated && currentRoot is RootTabBarController) ||
+                                (!isAuthenticated && currentRoot.restorationIdentifier == "StartViewController")
+            
+            if isAlreadyRoot {
+                return
+            }
+        }
 
         let storyboard = UIStoryboard(name: storyboardName, bundle: nil)
         let rootVC = storyboard.instantiateViewController(withIdentifier: identifier)
 
         window.rootViewController = rootVC
     }
+
 
     private func makeLaunchPlaceholder(connectionOptions: UIScene.ConnectionOptions) -> UIViewController {
         let controller = LaunchLoadingViewController()
