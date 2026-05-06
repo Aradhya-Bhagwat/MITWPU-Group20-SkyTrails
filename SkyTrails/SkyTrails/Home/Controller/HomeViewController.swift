@@ -20,6 +20,8 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var cachedUpcomingBirdCardWidth: CGFloat?
     private var cachedSpotsCardWidth: CGFloat?
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
+    private var isDataLoading = false
+
 
     private let emptyNewsItem = NewsItem(
         title: "The Birds are Resting",
@@ -54,8 +56,9 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         setupLoadingIndicator()
         applySemanticAppearance()
         setupCollectionView()
-        loadHomeData()
+        // Removed loadHomeData() from here to prevent double-loading with viewWillAppear
     }
+
 
     private func setupLoadingIndicator() {
         loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
@@ -157,40 +160,47 @@ extension HomeViewController {
 
     // Fetches comprehensive home screen data asynchronously
     private func loadHomeData() {
-        loadingIndicator.startAnimating()
-        Task { @MainActor [weak self] in
-            guard let self = self else { return }
-            let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
-            self.homeScreenData = data
-            if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            // applyMLDataOverride() disabled — upcomingBirds now sourced live from Supabase
-            self.upcomingBirds = data.displayableUpcomingBirds
-            self.spots = data.displayableSpots
-            self.news = data.news
-            self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
-            self.migrationCards = data.migrationCards; self.loadingIndicator.stopAnimating()
-            self.animatedIndexPaths.removeAll()
-            UIView.transition(with: self.homeCollectionView, duration: 0.4, options: .transitionCrossDissolve, animations: { self.homeCollectionView.reloadData() })
-        }
+        fetchHomeData(isInitialLoad: true)
     }
 
     private func refreshHomeData() {
+        fetchHomeData(isInitialLoad: false)
+    }
+
+    private func fetchHomeData(isInitialLoad: Bool) {
+        guard !isDataLoading else { return }
+        isDataLoading = true
+        
+        if isInitialLoad {
+            loadingIndicator.startAnimating()
+        }
+
         Task { @MainActor [weak self] in
+            defer { 
+                self?.isDataLoading = false
+                self?.loadingIndicator.stopAnimating()
+            }
             guard let self = self else { return }
+            
             let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
-            // applyMLDataOverride() disabled — upcomingBirds now sourced live from Supabase
+            
             self.upcomingBirds = data.displayableUpcomingBirds
             self.spots = data.displayableSpots
             self.news = data.news
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
-            self.migrationCards = data.migrationCards; self.animatedIndexPaths.removeAll()
-            UIView.transition(with: self.homeCollectionView, duration: 0.3, options: .transitionCrossDissolve, animations: { self.homeCollectionView.reloadData() })
+            self.migrationCards = data.migrationCards
+            self.animatedIndexPaths.removeAll()
+            
+            UIView.transition(with: self.homeCollectionView, duration: isInitialLoad ? 0.4 : 0.3, options: .transitionCrossDissolve, animations: { 
+                self.homeCollectionView.reloadData() 
+            })
         }
     }
 
     // Resolves location using live GPS or fallbacks to preferences
+
     private func resolveQueryLocation() async -> CLLocationCoordinate2D? {
         // 1. If GPS is authorized and available, and user hasn't explicitly locked a manual location
         let isManualOverride = LocationPreferences.shared.isManualOverride

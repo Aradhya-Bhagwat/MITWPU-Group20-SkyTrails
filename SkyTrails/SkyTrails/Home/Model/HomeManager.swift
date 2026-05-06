@@ -61,7 +61,10 @@ class HomeManager {
         speciesMemoryCache.removeAllObjects()
         
         let location = userLocation ?? LocationPreferences.shared.homeLocation
+        
         async let upcoming = getRegionalSpecies(userLocation: location)
+
+
         async let myWatchlist: [UpcomingBirdResult] = {
             if let loc = location { return await getMyWatchlistBirds(userLocation: loc) }
             return []
@@ -121,6 +124,8 @@ class HomeManager {
             errorMessage: nil
         )
     }
+
+
     
     func getUpcomingBirds(
         userLocation: CLLocationCoordinate2D? = nil,
