@@ -212,6 +212,7 @@ class GUIViewController: UIViewController {
         
         let area = categories[index].area
         colorSwatchButton.backgroundColor = selectedColors[area] ?? .systemGray5
+        colorSwatchButton.isHidden = (area.lowercased() == "eye")
     }
 
     func updateCanvas(category: String, variant: String) {
@@ -554,15 +555,19 @@ class GUIViewController: UIViewController {
     }
     
     @IBAction func colorSwatchTapped(_ sender: Any) {
-        let picker = UIColorPickerViewController()
-        picker.title = "Choose overlay colour"
-        picker.supportsAlpha = false
-        if currentCategoryIndex < categories.count {
-            let area = categories[currentCategoryIndex].area
-            picker.selectedColor = selectedColors[area] ?? .systemBlue
+        guard currentCategoryIndex < categories.count else { return }
+        let area = categories[currentCategoryIndex].area
+        let selectedColor = selectedColors[area]
+        
+        let paletteVC = ColorPaletteViewController(selectedColor: selectedColor)
+        paletteVC.delegate = self
+        
+        if let sheet = paletteVC.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
         }
-        picker.delegate = self
-        present(picker, animated: true)
+        
+        present(paletteVC, animated: true)
     }
 
     private func applyColorOverlay(color: UIColor, toArea area: String) {
@@ -683,23 +688,209 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     }
 }
 
-extension GUIViewController: UIColorPickerViewControllerDelegate {
-    func colorPickerViewController(
-        _ viewController: UIColorPickerViewController,
-        didSelect color: UIColor,
-        continuously: Bool
-    ) {
+extension GUIViewController: ColorPaletteDelegate {
+    func colorPalette(_ controller: ColorPaletteViewController, didSelect color: UIColor?) {
         guard currentCategoryIndex < categories.count else { return }
         let area = categories[currentCategoryIndex].area
-        selectedColors[area] = color
-        colorSwatchButton.backgroundColor = color
-        applyColorOverlay(color: color, toArea: area)
+        
+        if let color = color {
+            selectedColors[area] = color
+            colorSwatchButton.backgroundColor = color
+            applyColorOverlay(color: color, toArea: area)
+        } else {
+            removeColorOverlay(forArea: area)
+        }
+        
         variationsCollectionView.reloadData()
         updateVariationHeader()
+        
         if let variantName = selectedVariations[area],
            let mark = categories.first(where: { $0.area == area }),
            let variant = mark.variants?.first(where: { $0.name == variantName }) {
-            viewModel.setColor(color, for: variant, in: mark)
+            if let color = color {
+                viewModel.setColor(color, for: variant, in: mark)
+            } else {
+                viewModel.selectedOverlayColors.removeValue(forKey: mark.bird_field_mark_id)
+            }
+        }
+    }
+}
+
+// MARK: - Color Palette Components
+
+protocol ColorPaletteDelegate: AnyObject {
+    func colorPalette(_ controller: ColorPaletteViewController, didSelect color: UIColor?)
+}
+
+class ColorPaletteViewController: UIViewController {
+    weak var delegate: ColorPaletteDelegate?
+    private var selectedColor: UIColor?
+    
+    struct PresetColor {
+        let name: String
+        let color: UIColor
+    }
+    
+    private let presetPalette: [PresetColor] = [
+        PresetColor(name: "Crimson", color: UIColor.fromHex("#DC143C")!),
+        PresetColor(name: "Tomato", color: UIColor.fromHex("#FF6347")!),
+        PresetColor(name: "Tangerine", color: UIColor.fromHex("#FF8C00")!),
+        PresetColor(name: "Amber", color: UIColor.fromHex("#FFBF00")!),
+        PresetColor(name: "Lemon", color: UIColor.fromHex("#FFF700")!),
+        PresetColor(name: "Lime", color: UIColor.fromHex("#32CD32")!),
+        PresetColor(name: "Forest", color: UIColor.fromHex("#228B22")!),
+        PresetColor(name: "Teal", color: UIColor.fromHex("#008080")!),
+        PresetColor(name: "Sky", color: UIColor.fromHex("#87CEEB")!),
+        PresetColor(name: "Ocean", color: UIColor.fromHex("#0077BE")!),
+        PresetColor(name: "Indigo", color: UIColor.fromHex("#4B0082")!),
+        PresetColor(name: "Violet", color: UIColor.fromHex("#EE82EE")!),
+        PresetColor(name: "Magenta", color: UIColor.fromHex("#FF00FF")!),
+        PresetColor(name: "Rose", color: UIColor.fromHex("#FF007F")!),
+        PresetColor(name: "Chocolate", color: UIColor.fromHex("#7B3F00")!),
+        PresetColor(name: "Tan", color: UIColor.fromHex("#D2B48C")!),
+        PresetColor(name: "Slate", color: UIColor.fromHex("#708090")!),
+        PresetColor(name: "Charcoal", color: UIColor.fromHex("#36454F")!),
+        PresetColor(name: "Snow", color: UIColor.fromHex("#FFFAFA")!),
+        PresetColor(name: "Onyx", color: UIColor.fromHex("#353839")!)
+    ]
+    
+    private var collectionView: UICollectionView!
+    
+    init(selectedColor: UIColor?) {
+        self.selectedColor = selectedColor
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        setupUI()
+    }
+    
+    private func setupUI() {
+        let titleLabel = UILabel()
+        titleLabel.text = "Field Mark Colour"
+        titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleLabel)
+        
+        let clearButton = UIButton(type: .system)
+        clearButton.setTitle("Clear", for: .normal)
+        clearButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        clearButton.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
+        clearButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(clearButton)
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 10
+        layout.minimumLineSpacing = 20
+        
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(ColorSwatchCell.self, forCellWithReuseIdentifier: "ColorSwatchCell")
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(collectionView)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
+            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            clearButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            clearButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20)
+        ])
+    }
+    
+    @objc private func clearTapped() {
+        delegate?.colorPalette(self, didSelect: nil)
+        dismiss(animated: true)
+    }
+}
+
+extension ColorPaletteViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return presetPalette.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorSwatchCell", for: indexPath) as! ColorSwatchCell
+        let preset = presetPalette[indexPath.item]
+        let isSelected = selectedColor?.toHexString() == preset.color.toHexString()
+        cell.configure(with: preset, isSelected: isSelected)
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let selectedPreset = presetPalette[indexPath.item]
+        delegate?.colorPalette(self, didSelect: selectedPreset.color)
+        dismiss(animated: true)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = (collectionView.bounds.width - 40) / 5
+        return CGSize(width: width, height: width + 35)
+    }
+}
+
+class ColorSwatchCell: UICollectionViewCell {
+    private let swatchView = UIView()
+    private let nameLabel = UILabel()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        swatchView.layer.masksToBounds = true
+        swatchView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(swatchView)
+        
+        nameLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        nameLabel.textAlignment = .center
+        nameLabel.textColor = .label
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(nameLabel)
+        
+        NSLayoutConstraint.activate([
+            swatchView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            swatchView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            swatchView.widthAnchor.constraint(equalToConstant: 60),
+            swatchView.heightAnchor.constraint(equalToConstant: 60),
+            
+            nameLabel.topAnchor.constraint(equalTo: swatchView.bottomAnchor, constant: 8),
+            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            nameLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
+        
+        swatchView.layer.cornerRadius = 30
+    }
+    
+    func configure(with preset: ColorPaletteViewController.PresetColor, isSelected: Bool) {
+        swatchView.backgroundColor = preset.color
+        nameLabel.text = preset.name
+        
+        if isSelected {
+            swatchView.layer.borderWidth = 3
+            swatchView.layer.borderColor = UIColor.label.cgColor
+        } else {
+            swatchView.layer.borderWidth = 1
+            swatchView.layer.borderColor = UIColor.separator.cgColor
         }
     }
 }
