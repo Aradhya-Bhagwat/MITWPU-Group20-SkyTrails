@@ -15,9 +15,9 @@ class AllUpcomingBirdsViewController: UIViewController {
         self.title = "This Week's Species"
         setupTraitChangeHandling()
         applySemanticAppearance()
-        setupNavigationBar()
         setupCollectionView()
     }
+
 
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
@@ -59,12 +59,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         collectionView?.backgroundColor = .clear
     }
 
-    private func setupNavigationBar() {
-        let predictImage = UIImage(named: "upcomingBirds")
-        let predictButton = UIBarButtonItem(image: predictImage, style: .plain, target: self, action: #selector(didTapPredict))
-        predictButton.tintColor = .systemBlue
-        self.navigationItem.rightBarButtonItem = predictButton
-    }
+
             
     @objc private func didTapPredict() {
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
@@ -169,7 +164,8 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
             ) as? PredictionButtonCollectionViewCell else {
                 return UICollectionViewCell()
             }
-            cell.configure(with: UIImage(systemName: "custom.point.bottomleft.forward.to.arrow.triangle.scurvepath"), title: "Predict Migrations")
+            cell.configure(with: UIImage(named: "custom.curvepath.magnifying"), title: "Predict Migrations")
+
             return cell
         }
             

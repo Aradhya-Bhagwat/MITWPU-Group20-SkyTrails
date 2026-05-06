@@ -19,6 +19,8 @@ class subcardViewCell: UICollectionViewCell {
     @IBOutlet weak var compactStatusIconLabel: UILabel!
 
     private var accentColor: UIColor = .systemBlue
+    private var currentImageTask: Task<Void, Never>?
+
     
     var isExpanded: Bool = true {
         didSet {
@@ -30,6 +32,15 @@ class subcardViewCell: UICollectionViewCell {
         super.awakeFromNib()
         setupAppearance()
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        currentImageTask?.cancel()
+        currentImageTask = nil
+        birdImageView.image = UIImage(systemName: "bird.fill")
+        compactBirdImageView?.image = UIImage(systemName: "bird.fill")
+    }
+
     
     private func updateViewState() {
         expandedView?.isHidden = !isExpanded
@@ -97,15 +108,20 @@ class subcardViewCell: UICollectionViewCell {
             birdNameLabel.text = birdData.birdName
             compactBirdNameLabel?.text = birdData.statusBadge.title
             
-        if let image = UIImage(named: birdData.birdImageName) {
-            birdImageView.image = image
-            compactBirdImageView?.image = image
-        } else {
-            birdImageView.image = UIImage(systemName: "bird.fill")
-                birdImageView.tintColor = .systemGray4
-                compactBirdImageView?.image = UIImage(systemName: "bird.fill")
-                compactBirdImageView?.tintColor = .systemGray4
+        currentImageTask?.cancel()
+        birdImageView.image = UIImage(systemName: "bird.fill")
+        compactBirdImageView?.image = UIImage(systemName: "bird.fill")
+        
+        currentImageTask = Task { @MainActor in
+            let image = await ImageService.shared.image(for: birdData.birdImageName)
+            if !Task.isCancelled {
+                if let loaded = image {
+                    self.birdImageView.image = loaded
+                    self.compactBirdImageView?.image = loaded
+                }
             }
+        }
+
             badgeSubtitleLabel.text = birdData.residencyStatus ?? birdData.statusBadge.subtitle
             
             let badgeColor: UIColor

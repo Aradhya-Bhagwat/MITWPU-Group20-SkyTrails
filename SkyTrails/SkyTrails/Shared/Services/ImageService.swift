@@ -107,7 +107,24 @@ final class ImageService: ImageProviding {
     }
 
     func image(for key: String, shapeId: String? = nil) async -> UIImage? {
+        if key.hasPrefix("http") {
+            guard let url = URL(string: key) else { return nil }
+            let memKey = key as NSString
+            if let cached = memoryCache.object(forKey: memKey) { return cached }
+            
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                      let image = UIImage(data: data) else { return nil }
+                memoryCache.setObject(image, forKey: memKey)
+                return image
+            } catch {
+                return nil
+            }
+        }
+        
         var normalizedKey = normalizeKey(key)
+
         let targetShape = "Passeridae_Fringillidae"
         if normalizedKey.lowercased().contains(targetShape.lowercased()) {
             if let range = normalizedKey.range(of: targetShape, options: .caseInsensitive) {
@@ -433,8 +450,16 @@ final class ImageService: ImageProviding {
         var objectPaths: [String] = []
         for candidate in keyCandidates {
             let lowered = candidate.lowercased()
+            
+            // 1. Try exactly as passed (handles "bird.jpg" cases)
+            if !objectPaths.contains(lowered) {
+                objectPaths.append(lowered)
+            }
+            
+            // 2. Try with extensions
             for ext in fileExtensions {
                 let directPath = "\(lowered).\(ext)"
+
                 if !objectPaths.contains(directPath) {
                     objectPaths.append(directPath)
                 }

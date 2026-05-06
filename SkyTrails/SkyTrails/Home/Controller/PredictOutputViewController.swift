@@ -15,14 +15,15 @@ class PredictOutputViewController: UIViewController {
     @IBOutlet weak var selectedLocationNameLabel: UILabel!
     @IBOutlet weak var selectedLocationDetailLabel: UILabel!
 
-    private var displayedPredictions: [FinalPredictionResult] = []
+    private var groupedPredictions: [[FinalPredictionResult]] = []
     private var yearlySeriesByBird: [String: [Int]] = [:]
-    private var selectedPredictionIndex: Int = 0
+    private var currentPageIndex: Int = 0
     private var headerLocationRequestID: UUID?
     private var dynamicCollectionHeightConstraint: NSLayoutConstraint?
     private var fixedCollectionHeightConstraint: NSLayoutConstraint?
     private var latestVisibleSheetHeight: CGFloat?
     private let watchlistManager = WatchlistManager.shared
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,7 +33,8 @@ class PredictOutputViewController: UIViewController {
         setupNavigation()
         prepareData()
         setupCollectionView()
-        updateLocationHeader(forDisplayedPredictionAt: selectedPredictionIndex)
+        updateLocationHeader(forPageAt: currentPageIndex)
+
     }
 
     override func viewDidLayoutSubviews() {
@@ -45,11 +47,12 @@ class PredictOutputViewController: UIViewController {
         super.viewDidAppear(animated)
         
         // Auto-select and show the map for the first bird
-        if let first = displayedPredictions.first {
+        if let first = groupedPredictions.first?.first {
             if let mapVC = navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(first)
             }
         }
+
     }
 
     private func setupTraitChangeHandling() {
@@ -66,34 +69,44 @@ class PredictOutputViewController: UIViewController {
 
     private func prepareData() {
         yearlySeriesByBird.removeAll()
-        displayedPredictions = predictions.sorted { lhs, rhs in
-            if lhs.spottingProbability == rhs.spottingProbability {
-                return lhs.birdName < rhs.birdName
-            }
-            return lhs.spottingProbability > rhs.spottingProbability
+        
+        // Group by matchedInputIndex
+        let grouped = Dictionary(grouping: predictions) { $0.matchedInputIndex }
+        
+        // Sort groups by index to match input order
+        let sortedIndices = grouped.keys.sorted()
+        groupedPredictions = sortedIndices.map { index in
+            grouped[index]?.sorted { lhs, rhs in
+                if lhs.spottingProbability == rhs.spottingProbability {
+                    return lhs.birdName < rhs.birdName
+                }
+                return lhs.spottingProbability > rhs.spottingProbability
+            } ?? []
         }
 
-        for prediction in displayedPredictions {
+        for prediction in predictions {
             guard yearlySeriesByBird[prediction.birdName] == nil else { continue }
             yearlySeriesByBird[prediction.birdName] = yearlySeries(for: prediction)
         }
     }
 
+
     func updatePredictions(_ newPredictions: [FinalPredictionResult]) {
         predictions = newPredictions
         prepareData()
-        selectedPredictionIndex = displayedPredictions.isEmpty
+        currentPageIndex = groupedPredictions.isEmpty
             ? 0
-            : min(selectedPredictionIndex, displayedPredictions.count - 1)
+            : min(currentPageIndex, groupedPredictions.count - 1)
         collectionView?.reloadData()
         collectionView?.collectionViewLayout.invalidateLayout()
-        updateLocationHeader(forDisplayedPredictionAt: selectedPredictionIndex)
+        updateLocationHeader(forPageAt: currentPageIndex)
 
-        if let first = displayedPredictions.first,
+        if let first = groupedPredictions.first?.first,
            let mapVC = navigationController?.parent as? PredictMapViewController {
             mapVC.filterMapForBird(first)
         }
     }
+
 
     private func setupNavigation() {
         navigationItem.title = "Prediction Results"
@@ -104,24 +117,24 @@ class PredictOutputViewController: UIViewController {
 
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        layout.minimumLineSpacing = 12
-        layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        layout.sectionInset = .zero
         collectionView.collectionViewLayout = layout
+        collectionView.isPagingEnabled = true
         collectionView.backgroundColor = .clear
-        collectionView.decelerationRate = .normal
-        collectionView.showsVerticalScrollIndicator = true
+        collectionView.decelerationRate = .fast
+        collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(
-            UINib(
-                nibName: spotsToVisitOutputCollectionViewCell.identifier,
-                bundle: Bundle(for: spotsToVisitOutputCollectionViewCell.self)
-            ),
-            forCellWithReuseIdentifier: spotsToVisitOutputCollectionViewCell.identifier
+            PredictLocationResultPageCell.self,
+            forCellWithReuseIdentifier: PredictLocationResultPageCell.identifier
         )
         collectionView.dataSource = self
         collectionView.delegate = self
         configureDynamicCollectionHeightIfNeeded()
     }
+
 
     private func configureDynamicCollectionHeightIfNeeded() {
         guard fixedCollectionHeightConstraint == nil else { return }
@@ -177,15 +190,17 @@ class PredictOutputViewController: UIViewController {
         )
     }
 
-    private func updateLocationHeader(forDisplayedPredictionAt index: Int) {
-        guard displayedPredictions.indices.contains(index) else {
+    private func updateLocationHeader(forPageAt index: Int) {
+        guard groupedPredictions.indices.contains(index) else {
             selectedLocationNameLabel.text = "Search Location"
             selectedLocationDetailLabel.text = nil
             return
         }
 
-        let prediction = displayedPredictions[index]
-        let inputIndex = prediction.matchedInputIndex
+        let results = groupedPredictions[index]
+        guard let first = results.first else { return }
+        
+        let inputIndex = first.matchedInputIndex
         let input = inputData.indices.contains(inputIndex) ? inputData[inputIndex] : nil
         selectedLocationNameLabel.text = input?.locationName ?? "Search Location"
         if let detail = input?.locationDetail, !detail.isEmpty {
@@ -232,6 +247,7 @@ class PredictOutputViewController: UIViewController {
             }
         }
     }
+
 
     private func updateHeaderLabelTypography() {
         let containerHeight = max(1, view.bounds.height)
@@ -400,78 +416,61 @@ extension PredictOutputViewController: ModalSheetHeightAware {
 
 extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        displayedPredictions.count
+        groupedPredictions.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: spotsToVisitOutputCollectionViewCell.identifier,
+            withReuseIdentifier: PredictLocationResultPageCell.identifier,
             for: indexPath
-        ) as? spotsToVisitOutputCollectionViewCell else {
+        ) as? PredictLocationResultPageCell else {
             return UICollectionViewCell()
         }
 
-        let prediction = displayedPredictions[indexPath.item]
-        let yearly = yearlySeriesByBird[prediction.birdName] ?? []
-        cell.configure(prediction: prediction, yearlyProbabilities: yearly)
-        cell.setCardSelected(indexPath.item == selectedPredictionIndex)
+        let results = groupedPredictions[indexPath.item]
+        cell.configure(
+            predictions: results,
+            yearlySeries: yearlySeriesByBird,
+            selectedIndex: nil as Int?
+        )
+
         
-        cell.onTapBirdPath = { [weak self] selectedPrediction in
+        cell.onPredictionSelected = { [weak self] prediction, index in
+            if let mapVC = self?.navigationController?.parent as? PredictMapViewController {
+                mapVC.filterMapForBird(prediction)
+            }
+        }
+
+        
+        cell.onBirdPathTapped = { [weak self] selectedPrediction in
             self?.navigateToBirdPrediction(selectedPrediction)
         }
         
-        cell.onTapWatchlist = { [weak self] selectedPrediction in
+        cell.onWatchlistTapped = { [weak self] selectedPrediction in
             self?.addToWatchlist(selectedPrediction)
         }
         
         return cell
     }
 
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let oldIndex = selectedPredictionIndex
-        selectedPredictionIndex = indexPath.item
-        
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
-            collectionView.performBatchUpdates(nil)
-            
-            if let oldCell = collectionView.cellForItem(at: IndexPath(item: oldIndex, section: 0)) as? spotsToVisitOutputCollectionViewCell {
-                oldCell.setCardSelected(false)
-            }
-            if let newCell = collectionView.cellForItem(at: indexPath) as? spotsToVisitOutputCollectionViewCell {
-                newCell.setCardSelected(true)
-            }
-        }
-
-        let prediction = displayedPredictions[indexPath.item]
-        if let mapVC = navigationController?.parent as? PredictMapViewController {
-            mapVC.filterMapForBird(prediction)
-        }
-        updateLocationHeader(forDisplayedPredictionAt: selectedPredictionIndex)
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return collectionView.bounds.size
     }
 
-    func collectionView(
-        _ collectionView: UICollectionView,
-        layout collectionViewLayout: UICollectionViewLayout,
-        sizeForItemAt indexPath: IndexPath
-    ) -> CGSize {
-        let cardWidth = collectionView.bounds.width - 32
-        let compactAspectRatio: CGFloat = 6.0 / 17.0
-        let calculatedHeight = cardWidth * compactAspectRatio
-        var cardHeight: CGFloat
-
-        if cardWidth > 450 {
-            cardHeight = min(calculatedHeight, 180)
-        } else {
-            cardHeight = max(calculatedHeight, 146)
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        let page = Int(round(scrollView.contentOffset.x / scrollView.bounds.width))
+        if page != currentPageIndex {
+            currentPageIndex = page
+            updateLocationHeader(forPageAt: currentPageIndex)
+            
+            if let first = groupedPredictions[currentPageIndex].first,
+               let mapVC = navigationController?.parent as? PredictMapViewController {
+                mapVC.filterMapForBird(first)
+            }
         }
-
-        if indexPath.item == selectedPredictionIndex {
-            cardHeight += 56
-        }
-
-        return CGSize(width: cardWidth, height: ceil(cardHeight))
     }
 }
+
 
 class BirdResultCell: UITableViewCell {
     private let birdImageView = UIImageView()
@@ -525,3 +524,110 @@ class BirdResultCell: UITableViewCell {
         }
     }
 }
+
+class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    static let identifier = "PredictLocationResultPageCell"
+    
+    private var predictions: [FinalPredictionResult] = []
+    private var yearlySeriesByBird: [String: [Int]] = [:]
+    private var selectedIndex: Int?
+    
+    var onPredictionSelected: ((FinalPredictionResult, Int) -> Void)?
+    var onBirdPathTapped: ((FinalPredictionResult) -> Void)?
+    var onWatchlistTapped: ((FinalPredictionResult) -> Void)?
+
+    private lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 12
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.dataSource = self
+        cv.delegate = self
+        cv.register(UINib(nibName: "spotsToVisitOutputCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "spotsToVisitOutputCollectionViewCell")
+        return cv
+    }()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        contentView.addSubview(collectionView)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func configure(predictions: [FinalPredictionResult], yearlySeries: [String: [Int]], selectedIndex: Int?) {
+        self.predictions = predictions
+        self.yearlySeriesByBird = yearlySeries
+        self.selectedIndex = selectedIndex
+        collectionView.reloadData()
+    }
+
+    // MARK: - UICollectionViewDataSource
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return predictions.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "spotsToVisitOutputCollectionViewCell",
+            for: indexPath
+        ) as? spotsToVisitOutputCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+
+        let prediction = predictions[indexPath.item]
+        let yearly = yearlySeriesByBird[prediction.birdName] ?? []
+        cell.configure(prediction: prediction, yearlyProbabilities: yearly)
+        cell.setCardSelected(indexPath.item == selectedIndex)
+        
+        cell.onTapBirdPath = { [weak self] selectedPrediction in
+            self?.onBirdPathTapped?(selectedPrediction)
+        }
+        
+        cell.onTapWatchlist = { [weak self] selectedPrediction in
+            self?.onWatchlistTapped?(selectedPrediction)
+        }
+        
+        return cell
+    }
+
+    // MARK: - UICollectionViewDelegate
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let prediction = predictions[indexPath.item]
+        selectedIndex = indexPath.item
+        collectionView.reloadData()
+        onPredictionSelected?(prediction, indexPath.item)
+    }
+
+    // MARK: - UICollectionViewDelegateFlowLayout
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let cardWidth = collectionView.bounds.width - 32
+        let compactAspectRatio: CGFloat = 6.0 / 17.0
+        let calculatedHeight = cardWidth * compactAspectRatio
+        var cardHeight: CGFloat
+        
+        if cardWidth > 450 {
+            cardHeight = min(calculatedHeight, 180)
+        } else {
+            cardHeight = max(calculatedHeight, 146)
+        }
+
+        if indexPath.item == selectedIndex {
+            cardHeight += 56
+        }
+
+        return CGSize(width: cardWidth, height: ceil(cardHeight))
+    }
+}
+

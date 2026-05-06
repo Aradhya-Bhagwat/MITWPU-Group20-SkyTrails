@@ -40,6 +40,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     
     var onTapBirdPath: ((FinalPredictionResult) -> Void)?
     var onTapWatchlist: ((FinalPredictionResult) -> Void)?
+    
+    private var currentImageTask: Task<Void, Never>?
+
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -49,6 +52,15 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         updateCardVariant()
         setupActionButtons()
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        currentImageTask?.cancel()
+        currentImageTask = nil
+        compactBirdImageView.image = UIImage(systemName: "bird.fill")
+        wideBirdImageView.image = UIImage(systemName: "bird.fill")
+    }
+
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -295,9 +307,20 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     func configure(prediction: FinalPredictionResult, yearlyProbabilities: [Int]) {
         _ = yearlyProbabilities
         self.currentPrediction = prediction
-        let image = UIImage(named: prediction.imageName) ?? UIImage(systemName: "bird.fill")
-        compactBirdImageView.image = image
-        wideBirdImageView.image = image
+        
+        currentImageTask?.cancel()
+        compactBirdImageView.image = UIImage(systemName: "bird.fill")
+        wideBirdImageView.image = UIImage(systemName: "bird.fill")
+
+        currentImageTask = Task { @MainActor in
+            let image = await ImageService.shared.image(for: prediction.imageName)
+            if !Task.isCancelled {
+                let finalImage = image ?? UIImage(systemName: "bird.fill")
+                self.compactBirdImageView.image = finalImage
+                self.wideBirdImageView.image = finalImage
+            }
+        }
+
 
         compactBirdNameLabel.text = prediction.birdName
         wideBirdNameLabel.text = prediction.birdName

@@ -17,10 +17,10 @@ class AllSpotsViewController: UIViewController {
         self.title = "Explore Hotspots"
         setupTraitChangeHandling()
         applySemanticAppearance()
-        setupNavigationBar()
         setupCollectionView()
         fetchLiveHotspots()
     }
+
 
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
@@ -70,12 +70,7 @@ class AllSpotsViewController: UIViewController {
         collectionView?.backgroundColor = .clear
     }
     
-    private func setupNavigationBar() {
-        let predictSpot = UIImage(named: "upcomingspots")
-        let predictButton = UIBarButtonItem(image: predictSpot, style: .plain, target: self, action: #selector(didTapPredict))
-        predictButton.tintColor = .systemBlue
-        self.navigationItem.rightBarButtonItem = predictButton
-    }
+
         
     @objc private func didTapPredict() {
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
@@ -258,7 +253,8 @@ extension AllSpotsViewController: UICollectionViewDataSource {
             ) as? PredictionButtonCollectionViewCell else {
                 return UICollectionViewCell()
             }
-            cell.configure(with: UIImage(systemName: "custom.mappin.and.ellipse.badge.magnifyingglass"), title: "Find Your Spots")
+            cell.configure(with: UIImage(named: "upcomingspots"), title: "Find Your Spots")
+
             return cell
         }
         
@@ -277,11 +273,13 @@ extension AllSpotsViewController: UICollectionViewDataSource {
         
         cell.configure(
             image: UIImage(named: item.imageName ?? "placeholder_image"),
+            imageName: item.imageName,
             title: item.title,
             speciesCount: item.speciesCount,
             latitude: item.latitude,
             longitude: item.longitude
         )
+
         
         return cell
     }
