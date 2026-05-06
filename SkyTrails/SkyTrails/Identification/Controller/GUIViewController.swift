@@ -116,10 +116,16 @@ class GUIViewController: UIViewController {
         [selectedContainerView, chevronContainerView].forEach { view in
             view?.layer.cornerRadius = 12
             view?.layer.borderWidth = 1.5
-            view?.layer.borderColor = UIColor.systemBlue.cgColor
+            view?.layer.borderColor = UIColor.systemGray.cgColor
             view?.backgroundColor = .systemBackground
             view?.isUserInteractionEnabled = true
         }
+        
+        chevronContainerView.layer.masksToBounds = false
+        chevronContainerView.layer.shadowColor = UIColor.black.cgColor
+        chevronContainerView.layer.shadowOpacity = 0.3
+        chevronContainerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        chevronContainerView.layer.shadowRadius = 4
 
         selectedContainerView.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(selectedTapped))
@@ -389,13 +395,13 @@ class GUIViewController: UIViewController {
         let isHeaderSelected = selectedName == nil || selectedName == firstVariant.name
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         selectedContainerView.layer.borderWidth = isHeaderSelected ? 2 : 1
-        selectedContainerView.layer.borderColor = isHeaderSelected ? UIColor.systemBlue.cgColor : UIColor.systemGray.cgColor
+        selectedContainerView.layer.borderColor = UIColor.systemGray.cgColor
         selectedContainerView.backgroundColor = isHeaderSelected
             ? UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
             : .systemBackground
 
         chevronImageView.image = UIImage(systemName: isVariationsExpanded ? "chevron.up" : "chevron.down")
-        chevronImageView.tintColor = .systemBlue
+        chevronImageView.tintColor = .systemGray
 
         loadHeaderThumbnailRemotely(
             shapeID: shapeID,
