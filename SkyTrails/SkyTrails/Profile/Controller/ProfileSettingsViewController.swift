@@ -54,6 +54,7 @@ final class ProfileSettingsViewController: UIViewController {
         contentStack.addArrangedSubview(clearWatchlistsRow)
         contentStack.addArrangedSubview(deleteWatchlistsRow)
         contentStack.addArrangedSubview(deleteIdentificationHistoryRow)
+        contentStack.addArrangedSubview(makeResetRow(title: "Delete Account", action: #selector(deleteAccountTapped)))
 
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("Save", for: .normal)
@@ -263,6 +264,57 @@ final class ProfileSettingsViewController: UIViewController {
             actionTitle: "Delete History"
         ) { [weak self] in
             self?.deleteAllIdentificationHistory()
+        }
+    }
+
+    @objc private func deleteAccountTapped() {
+        presentDestructiveConfirmation(
+            title: "Delete Account",
+            message: "This will permanently delete your account and all associated data from Supabase. This action cannot be undone.",
+            actionTitle: "Delete Account"
+        ) { [weak self] in
+            self?.deleteAccountFromSupabase()
+        }
+    }
+
+    private func deleteAccountFromSupabase() {
+        Task { @MainActor in
+            do {
+                guard let config = try? SupabaseConfig.load() else {
+                    self.showMessage(title: "Error", message: "Unable to load Supabase configuration.")
+                    return
+                }
+                guard let accessToken = UserSession.shared.getAccessToken() else {
+                    self.showMessage(title: "Error", message: "You are not authenticated.")
+                    return
+                }
+                guard let userId = UserSession.shared.currentUserID else {
+                    self.showMessage(title: "Error", message: "User ID not found.")
+                    return
+                }
+
+                let urlString = "\(config.projectURL.absoluteString)/auth/v1/admin/users/\(userId.uuidString)"
+                guard let url = URL(string: urlString) else {
+                    self.showMessage(title: "Error", message: "Invalid URL.")
+                    return
+                }
+
+                var request = URLRequest(url: url)
+                request.httpMethod = "DELETE"
+                request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+
+                let (_, response) = try await URLSession.shared.data(for: request)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    self.showMessage(title: "Error", message: "Failed to delete account from Supabase.")
+                    return
+                }
+
+                UserSession.shared.logout()
+            } catch {
+                self.showMessage(title: "Error", message: "Failed to delete account: \(error.localizedDescription)")
+            }
         }
     }
 
