@@ -1649,87 +1649,109 @@ class HomeManager {
         }
     }
     
-    func predictBirds(for input: PredictionInputData, inputIndex: Int) async -> [FinalPredictionResult] {
-        guard let lat = input.latitude,
-              let lon = input.longitude else {
-            return []
+    func predictBirds(
+        for input: PredictionInputData, 
+        inputIndex: Int
+    ) async -> [FinalPredictionResult] {
+    
+        guard let lat = input.latitude, 
+              let lon = input.longitude 
+        else { 
+            print("DEBUG PREDICT: no lat/lng, aborting")
+            return [] 
         }
-
-        // 1. Sync this location to Supabase 'hotspots_geo' so the R script can see it
-        // and so we can fetch existing scientific predictions if available.
-        Task {
-            do {
-                let config = try SupabaseConfig.load()
-                let body: [String: Any] = [
-                    "ebird_hotspot_id": "USER_\(lat)_\(lon)", // Tagged as user-selected
-                    "name": input.locationName ?? "User Selected Spot",
-                    "locality": input.locationDetail ?? "Manual selection",
-                    "location": "SRID=4326;POINT(\(lon) \(lat))"
-                ]
-                
-                // Use the anonymous key for simple upsert
-                var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
-                components?.path = "/rest/v1/hotspots_geo"
-                
-                guard let url = components?.url else { return }
-                var request = URLRequest(url: url)
-                request.httpMethod = "POST"
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-                request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
-                request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
-                request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-                
-                let _ = try await URLSession.shared.data(for: request)
-            } catch {
-            }
+    
+        // Extract week numbers from date range
+        // Use weekRange from PredictionInputData
+        var weekNumbers: [Int] = []
+        if let range = input.weekRange {
+            weekNumbers = Array(range.start...range.end)
+                .map { ($0 - 1) % 52 + 1 }
         }
-
-        // 2. Fetch Scientific Predictions from the Supabase/R script Cache
+        // Fallback to current week if no date range
+        if weekNumbers.isEmpty {
+            let current = Calendar.current.component(
+                .weekOfYear, from: Date())
+            weekNumbers = [current]
+        }
+    
+        print("DEBUG PREDICT: fetching for lat=\(lat) lon=\(lon) radius=\(input.areaValue)km weeks=\(weekNumbers)")
+    
         do {
-            let response = try await SkyTrailsAPIService.shared.fetchPredictions(lat: lat, lng: lon)
-            let results = (response.card?.species ?? []).map { species in
-                let bird = watchlistManager.findBird(byName: species.commonName)
-                
-                let rawImage = species.imageName
-                let cleanImage = (rawImage == nil || 
-                                  rawImage == "placeholder_bird" || 
-                                  rawImage == "placeholder_image" || 
-                                  rawImage?.isEmpty == true) ? nil : rawImage
-
-                let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+            let response = try await 
+                SkyTrailsAPIService.shared
+                .fetchLocationPredictions(
+                    lat: lat,
+                    lng: lon,
+                    radiusKm: input.areaValue,
+                    weekNumbers: weekNumbers
+                )
+    
+            // Map PredictedSpecies to FinalPredictionResult
+            let results = response.mergedSpecies.map { species in
+                // Find the hotspot this species was spotted at
+                // Use first spotName if available
+                let likelySpot = species.spotNames.first 
+                    ?? input.locationName 
+                    ?? "Nearby"
+    
+                // Find hotspot coordinates for likelySpot
+                let matchedHotspot = response.hotspots.first {
+                    $0.name == likelySpot || 
+                    $0.locality == likelySpot
+                }
+                let matchLat = matchedHotspot?.lat ?? lat
+                let matchLon = matchedHotspot?.lng ?? lon
+    
+                if matchedHotspot != nil {
+                    print("DEBUG PREDICT: matched \(species.commonName) to hotspot \(likelySpot) at \(matchLat), \(matchLon)")
+                }
 
                 return FinalPredictionResult(
                     birdName: species.commonName,
-                    imageName: remoteImage ?? "placeholder_image",
-                    likelySpot: input.locationName ?? "Nearby",
+                    imageName: species.imageName ?? "",
+                    likelySpot: likelySpot,
                     matchedInputIndex: inputIndex,
-                    matchedLocation: (lat: lat, lon: lon),
-                    spottingProbability: species.likelihood,
-                    weekNumber: species.weekNumber,
-                    residencyStatus: species.residencyStatus.rawValue,
+                    matchedLocation: (
+                        lat: matchLat, 
+                        lon: matchLon
+                    ),
+                    spottingProbability: species.probability,
+                    weekNumber: species.peakWeek.map { 
+                        "Week \($0)" 
+                    },
+                    residencyStatus: species.residencyStatus,
                     ebirdSpeciesCode: species.ebirdSpeciesCode
                 )
             }
-            if !results.isEmpty { return results }
-        } catch {
-        }
-
-        // Fallback to local live predictions if cache is empty
-        return await getLivePredictions(for: lat, lon: lon, radiusKm: Double(input.areaValue))
-            .map { result in
-                FinalPredictionResult(
-                    birdName: result.birdName,
-                    imageName: result.imageName,
-                    likelySpot: result.likelySpot,
-                    matchedInputIndex: inputIndex,
-                    matchedLocation: result.matchedLocation,
-                    spottingProbability: result.spottingProbability,
-                    weekNumber: result.weekNumber,
-                    residencyStatus: result.residencyStatus,
-                    ebirdSpeciesCode: result.ebirdSpeciesCode
-                )
+    
+            if !results.isEmpty {
+                print("DEBUG PREDICT: returning \(results.count) results. Top bird: \(results.first?.birdName ?? "None") (\(results.first?.spottingProbability ?? 0)%)")
+                return results
             }
+        } catch {
+            print("DEBUG PREDICT: edge function failed — \(error.localizedDescription)")
+        }
+    
+        // Fallback to existing getLivePredictions
+        print("DEBUG PREDICT: falling back to getLivePredictions")
+        return await getLivePredictions(
+            for: lat, 
+            lon: lon, 
+            radiusKm: Double(input.areaValue)
+        ).map { result in
+            FinalPredictionResult(
+                birdName: result.birdName,
+                imageName: result.imageName,
+                likelySpot: result.likelySpot,
+                matchedInputIndex: inputIndex,
+                matchedLocation: result.matchedLocation,
+                spottingProbability: result.spottingProbability,
+                weekNumber: result.weekNumber,
+                residencyStatus: result.residencyStatus,
+                ebirdSpeciesCode: result.ebirdSpeciesCode
+            )
+        }
     }
 
     func getRelevantSightings(for input: BirdDateInput) -> [RelevantSighting] {
