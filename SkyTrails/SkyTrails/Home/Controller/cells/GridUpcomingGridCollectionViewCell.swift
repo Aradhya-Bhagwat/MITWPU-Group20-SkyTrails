@@ -9,6 +9,9 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var DateLabel: UILabel!
     @IBOutlet weak var containerView: UIView!
+    
+    private var currentImageTask: Task<Void, Never>?
+
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -19,11 +22,14 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        birImage.image = nil
+        currentImageTask?.cancel()
+        currentImageTask = nil
+        birImage.image = UIImage(systemName: "bird.fill")
         titleLabel.text = nil
         DateLabel.text = nil
         DateLabel.isHidden = false
     }
+
 
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
@@ -104,11 +110,21 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         )
     }
     func configure(with spot: UpcomingBird) {
-        birImage.image = UIImage(named: spot.imageName)
+        currentImageTask?.cancel()
+        birImage.image = UIImage(systemName: "bird.fill")
+        
+        currentImageTask = Task { @MainActor in
+            let image = await ImageService.shared.image(for: spot.imageName)
+            if !Task.isCancelled {
+                self.birImage.image = image ?? UIImage(systemName: "bird.fill")
+            }
+        }
+        
         titleLabel.text = spot.title
         let trimmedDate = spot.date.trimmingCharacters(in: .whitespacesAndNewlines)
         DateLabel.text = trimmedDate
         DateLabel.isHidden = trimmedDate.isEmpty
     }
+
 
 }

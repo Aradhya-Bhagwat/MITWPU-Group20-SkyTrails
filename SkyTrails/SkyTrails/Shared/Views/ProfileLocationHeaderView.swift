@@ -240,15 +240,16 @@ class ProfileLocationHeaderView: UIView {
     }
     
     private func updateLocation() async {
-        // Prefer user's explicitly saved home location over GPS
-        if let savedName = LocationPreferences.shared.homeLocationName {
+        // 1. If manual override is active, use the saved location
+        if LocationPreferences.shared.isManualOverride,
+           let savedName = LocationPreferences.shared.homeLocationName {
             await MainActor.run {
                 self.locationLabel.text = savedName
             }
             return
         }
         
-        // Fall back to GPS location
+        // 2. Otherwise, prefer GPS if available
         if let currentLocation = LocationService.shared.currentLocation {
             let locationName = await LocationService.shared.reverseGeocode(
                 lat: currentLocation.latitude,
@@ -261,11 +262,19 @@ class ProfileLocationHeaderView: UIView {
             return
         }
         
-        // Fallback
+        // 3. Fallback to saved location (even if not manual) or default
+        if let savedName = LocationPreferences.shared.homeLocationName {
+            await MainActor.run {
+                self.locationLabel.text = savedName
+            }
+            return
+        }
+        
         await MainActor.run {
             self.locationLabel.text = "Pune, India"
         }
     }
+
     
     // MARK: - Actions
     @objc private func handleProfileTap() {
@@ -294,12 +303,13 @@ class ProfileLocationHeaderView: UIView {
 extension ProfileLocationHeaderView: LocationPickerDelegate {
     func didSelectLocation(name: String, lat: Double, lon: Double) {
         locationLabel.text = name
-        // Optionally update LocationPreferences here if needed
         Task {
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            await LocationPreferences.shared.setHomeLocation(coordinate, name: name)
+            // Explicit user selection counts as manual override
+            await LocationPreferences.shared.setHomeLocation(coordinate, name: name, isManual: true)
         }
     }
+
 }
 
 extension UIViewController {

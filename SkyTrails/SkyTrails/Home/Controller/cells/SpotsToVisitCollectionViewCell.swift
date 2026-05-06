@@ -5,7 +5,8 @@ import MapKit
 class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var cardContainerView2: UIView!
-    @IBOutlet weak var birdImageView2: UIImageView!
+    @IBOutlet var birdImageView2: UIImageView!
+
     @IBOutlet weak var titleLabel2: UILabel!
     @IBOutlet weak var dateLabel2: UILabel!
     
@@ -13,6 +14,8 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     private var currentSnapshotTask: Task<Void, Never>?
     private var representedSnapshotKey: String?
     private static let snapshotCache = NSCache<NSString, UIImage>()
+    private var currentImageTask: Task<Void, Never>?
+
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -111,13 +114,16 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     
     override func prepareForReuse() {
            super.prepareForReuse()
+           currentImageTask?.cancel()
            currentSnapshotTask?.cancel()
+           currentImageTask = nil
            currentSnapshotTask = nil
            representedSnapshotKey = nil
            birdImageView2.image = nil
            titleLabel2.text = nil
            dateLabel2.text = nil
        }
+
     
     private func createIconString(text: String, iconName: String, color: UIColor, fontSize: CGFloat) -> NSAttributedString {
             let config = UIImage.SymbolConfiguration(pointSize: fontSize * 0.9, weight: .semibold)
@@ -134,47 +140,67 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
     
     func configure(
         image: UIImage?,
+        imageName: String? = nil,
         title: String,
         speciesCount: Int,
         latitude: Double?,
         longitude: Double?
     ) {
+            currentImageTask?.cancel()
             currentSnapshotTask?.cancel()
+            currentImageTask = nil
             currentSnapshotTask = nil
+            
             self.titleLabel2.text = title
             self.currentSpeciesCount = speciesCount
 
-            // Prioritize the bird image if it's not the generic placeholder
-            let hasValidBirdImage = image != nil && image != UIImage(named: "placeholder_image")
+            // Reset image to placeholder or provided image
+            birdImageView2.image = image ?? UIImage(systemName: "photo")
             
-            if !hasValidBirdImage, let latitude, let longitude {
-                let key = Self.snapshotKey(lat: latitude, lon: longitude)
-                representedSnapshotKey = key
-                if let cached = Self.snapshotCache.object(forKey: key as NSString) {
-                    birdImageView2.image = cached
-                } else {
-                    birdImageView2.image = image
-                    currentSnapshotTask = Task { [weak self] in
-                        guard let self else { return }
-                        let size = self.birdImageView2.bounds.size
-                        let targetSize = size.width > 0 ? size : CGSize(width: 200, height: 120)
-                        let rendered = await Self.snapshotImage(
-                            latitude: latitude,
-                            longitude: longitude,
-                            targetSize: targetSize
-                        )
-                        guard !Task.isCancelled, let rendered else { return }
-                        await MainActor.run {
-                            guard self.representedSnapshotKey == key else { return }
-                            Self.snapshotCache.setObject(rendered, forKey: key as NSString)
-                            self.birdImageView2.image = rendered
-                        }
+            currentImageTask = Task { @MainActor in
+                var finalImage = image
+                
+                if let imageName = imageName {
+                    if let fetched = await ImageService.shared.image(for: imageName) {
+                        finalImage = fetched
                     }
                 }
-            } else {
-                birdImageView2.image = image
-                representedSnapshotKey = nil
+                
+                if Task.isCancelled { return }
+                
+                // Prioritize the bird image if it's not the generic placeholder
+                let hasValidBirdImage = finalImage != nil && finalImage != UIImage(named: "placeholder_image")
+                
+                if !hasValidBirdImage, let latitude, let longitude {
+                    let key = Self.snapshotKey(lat: latitude, lon: longitude)
+                    representedSnapshotKey = key
+                    if let cached = Self.snapshotCache.object(forKey: key as NSString) {
+                        birdImageView2.image = cached
+                    } else {
+                        birdImageView2.image = finalImage ?? UIImage(systemName: "photo")
+                        currentSnapshotTask = Task { [weak self] in
+                            guard let self else { return }
+                            let size = self.birdImageView2.bounds.size
+                            let targetSize = size.width > 0 ? size : CGSize(width: 200, height: 120)
+                            let rendered = await Self.snapshotImage(
+                                latitude: latitude,
+                                longitude: longitude,
+                                targetSize: targetSize
+                            )
+                            guard !Task.isCancelled, let rendered else { return }
+                            await MainActor.run {
+                                guard self.representedSnapshotKey == key else { return }
+                                Self.snapshotCache.setObject(rendered, forKey: key as NSString)
+                                self.birdImageView2.image = rendered
+                            }
+                        }
+                    }
+                } else {
+                    birdImageView2.image = finalImage ?? UIImage(systemName: "photo")
+                    representedSnapshotKey = nil
+                }
             }
+
 
             updateSpeciesLabel(count: speciesCount, fontSize: dateLabel2.font.pointSize)
         }

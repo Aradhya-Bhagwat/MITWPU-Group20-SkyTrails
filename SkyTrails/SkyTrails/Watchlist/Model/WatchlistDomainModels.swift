@@ -26,6 +26,8 @@ final class LocationPreferences {
     private let homeLonKey = "kUserHomeLongitude"
     private let homeNameKey = "kUserHomeLocationName"
     private let savedAddressesKey = "kUserSavedAddresses"
+    private let manualOverrideKey = "kUserManualLocationOverride"
+
     
     private init() {}
     
@@ -51,6 +53,12 @@ final class LocationPreferences {
         get { defaults.string(forKey: homeNameKey) }
         set { defaults.set(newValue, forKey: homeNameKey) }
     }
+    
+    var isManualOverride: Bool {
+        get { defaults.bool(forKey: manualOverrideKey) }
+        set { defaults.set(newValue, forKey: manualOverrideKey) }
+    }
+
     
     var savedAddresses: [SavedAddress] {
         get {
@@ -80,8 +88,12 @@ final class LocationPreferences {
         savedAddresses = current
     }
     
-    func setHomeLocation(_ coordinate: CLLocationCoordinate2D, name: String? = nil) async {
+    func setHomeLocation(_ coordinate: CLLocationCoordinate2D, name: String? = nil, isManual: Bool? = nil) async {
         homeLocation = coordinate
+        
+        if let isManual = isManual {
+            isManualOverride = isManual
+        }
         
         if let name = name {
             homeLocationName = name
@@ -92,6 +104,7 @@ final class LocationPreferences {
             )
         }
     }
+
 
     func clear() {
         homeLocation = nil

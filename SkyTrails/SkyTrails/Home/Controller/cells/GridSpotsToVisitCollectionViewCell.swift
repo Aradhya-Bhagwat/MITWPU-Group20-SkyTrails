@@ -14,6 +14,7 @@ import MapKit
         private var currentSnapshotTask: Task<Void, Never>?
         private var representedSnapshotKey: String?
         private static let snapshotCache = NSCache<NSString, UIImage>()
+        private var currentImageTask: Task<Void, Never>?
 
             override func awakeFromNib() {
                 super.awakeFromNib()
@@ -94,43 +95,66 @@ import MapKit
             }
             func configure(
                 image: UIImage?,
+                imageName: String? = nil,
                 title: String,
                 speciesCount: Int,
                 latitude: Double? = nil,
                 longitude: Double? = nil
             ) {
+                currentImageTask?.cancel()
                 currentSnapshotTask?.cancel()
+                currentImageTask = nil
                 currentSnapshotTask = nil
-                locationImage.image = image
-                titleLabel.text = title
+                
+                self.titleLabel.text = title
                 self.currentSpeciesCount = speciesCount
                 
-                if let latitude, let longitude {
-                    let key = Self.snapshotKey(lat: latitude, lon: longitude)
-                    representedSnapshotKey = key
-                    if let cached = Self.snapshotCache.object(forKey: key as NSString) {
-                        locationImage.image = cached
-                    } else {
-                        currentSnapshotTask = Task { [weak self] in
-                            guard let self else { return }
-                            let size = self.locationImage.bounds.size
-                            let targetSize = size.width > 0 ? size : CGSize(width: 200, height: 120)
-                            let rendered = await Self.snapshotImage(
-                                latitude: latitude,
-                                longitude: longitude,
-                                targetSize: targetSize
-                            )
-                            guard !Task.isCancelled, let rendered else { return }
-                            await MainActor.run {
-                                guard self.representedSnapshotKey == key else { return }
-                                Self.snapshotCache.setObject(rendered, forKey: key as NSString)
-                                self.locationImage.image = rendered
-                            }
+                // Reset image to placeholder
+                locationImage.image = UIImage(systemName: "photo")
+                
+                currentImageTask = Task { @MainActor in
+                    var finalImage = image
+                    
+                    if let imageName = imageName {
+                        if let fetched = await ImageService.shared.image(for: imageName) {
+                            finalImage = fetched
                         }
                     }
-                } else {
-                    representedSnapshotKey = nil
+                    
+                    if Task.isCancelled { return }
+                    
+                    let hasValidBirdImage = finalImage != nil && finalImage != UIImage(named: "placeholder_image")
+                    
+                    if !hasValidBirdImage, let latitude, let longitude {
+                        let key = Self.snapshotKey(lat: latitude, lon: longitude)
+                        representedSnapshotKey = key
+                        if let cached = Self.snapshotCache.object(forKey: key as NSString) {
+                            locationImage.image = cached
+                        } else {
+                            locationImage.image = finalImage ?? UIImage(systemName: "photo")
+                            currentSnapshotTask = Task { [weak self] in
+                                guard let self else { return }
+                                let size = self.locationImage.bounds.size
+                                let targetSize = size.width > 0 ? size : CGSize(width: 200, height: 120)
+                                let rendered = await Self.snapshotImage(
+                                    latitude: latitude,
+                                    longitude: longitude,
+                                    targetSize: targetSize
+                                )
+                                guard !Task.isCancelled, let rendered else { return }
+                                await MainActor.run {
+                                    guard self.representedSnapshotKey == key else { return }
+                                    Self.snapshotCache.setObject(rendered, forKey: key as NSString)
+                                    self.locationImage.image = rendered
+                                }
+                            }
+                        }
+                    } else {
+                        locationImage.image = finalImage ?? UIImage(systemName: "photo")
+                        representedSnapshotKey = nil
+                    }
                 }
+
                 
                 updateSpeciesLabel(count: speciesCount, fontSize: locationLabel.font.pointSize)
             }
@@ -199,7 +223,9 @@ import MapKit
             
             override func prepareForReuse() {
                 super.prepareForReuse()
+                currentImageTask?.cancel()
                 currentSnapshotTask?.cancel()
+                currentImageTask = nil
                 currentSnapshotTask = nil
                 representedSnapshotKey = nil
                 locationImage.image = nil
@@ -207,4 +233,5 @@ import MapKit
                 locationLabel.attributedText = nil
                 currentSpeciesCount = 0
             }
+
         }

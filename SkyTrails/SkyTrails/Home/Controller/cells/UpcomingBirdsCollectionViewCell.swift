@@ -4,9 +4,13 @@ import UIKit
 class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var cardContainerView: UIView!
-    @IBOutlet weak var birdImageView: UIImageView!
+    @IBOutlet var birdImageView: UIImageView!
+
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
+    
+    private var currentImageTask: Task<Void, Never>?
+
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -98,11 +102,13 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
     
     override func prepareForReuse() {
            super.prepareForReuse()
-           
-           birdImageView.image = nil
+           currentImageTask?.cancel()
+           currentImageTask = nil
+           birdImageView.image = UIImage(systemName: "bird.fill")
            titleLabel.text = nil
            dateLabel.text = nil
        }
+
     
     private func createIconString(text: String, iconName: String, color: UIColor, fontSize: CGFloat) -> NSAttributedString {
             let config = UIImage.SymbolConfiguration(pointSize: fontSize * 0.9, weight: .semibold)
@@ -117,8 +123,20 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
             return completeString
         }
        
-       func configure(image: UIImage?, title: String, date: String) {
-           birdImageView.image = image
+       func configure(image: UIImage?, imageName: String? = nil, title: String, date: String) {
+           currentImageTask?.cancel()
+           birdImageView.image = image ?? UIImage(systemName: "bird.fill")
+           
+           if let imageName = imageName {
+               currentImageTask = Task { @MainActor in
+                   if let fetched = await ImageService.shared.image(for: imageName) {
+                       if !Task.isCancelled {
+                           self.birdImageView.image = fetched
+                       }
+                   }
+               }
+           }
+           
            titleLabel.text = title
            
            let tagColor: UIColor
@@ -132,5 +150,6 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
            dateLabel.attributedText = nil
            dateLabel.text = date
        }
+
     
 }

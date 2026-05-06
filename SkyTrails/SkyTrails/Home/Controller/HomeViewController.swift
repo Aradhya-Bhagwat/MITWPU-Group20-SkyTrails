@@ -192,29 +192,37 @@ extension HomeViewController {
 
     // Resolves location using live GPS or fallbacks to preferences
     private func resolveQueryLocation() async -> CLLocationCoordinate2D? {
-        // If user manually set a location name, respect it
-        // Only use live GPS if no manual location is set
-        let hasManualLocation = LocationPreferences.shared.homeLocationName != nil
+        // 1. If GPS is authorized and available, and user hasn't explicitly locked a manual location
+        let isManualOverride = LocationPreferences.shared.isManualOverride
         
-        if !hasManualLocation {
-            // No manual location — use live GPS if already available
+        if !isManualOverride {
+            // Check for live GPS
             if let live = LocationService.shared.currentLocation {
-                await LocationPreferences.shared.setHomeLocation(live, name: LocationPreferences.shared.homeLocationName)
+                // Keep it in sync but don't set manual override
+                await LocationPreferences.shared.setHomeLocation(live, isManual: false)
                 return live
             }
             
-            // Try to get fresh GPS fix
-            do {
-                let data = try await LocationService.shared.getCurrentLocation()
-                let coord = CLLocationCoordinate2D(latitude: data.lat, longitude: data.lon)
-                await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName)
-                return coord
-            } catch { }
+            // Try to get fresh GPS fix if authorized
+            if LocationService.shared.isAuthorized {
+                do {
+                    let data = try await LocationService.shared.getCurrentLocation()
+                    let coord = CLLocationCoordinate2D(latitude: data.lat, longitude: data.lon)
+                    await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName, isManual: false)
+                    return coord
+                } catch { }
+            }
         }
         
-        // Use manually set location or fallback to Pune
-        return LocationPreferences.shared.homeLocation ?? CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
+        // 2. If manual override is on, or GPS failed/denied, use the saved home location
+        if let saved = LocationPreferences.shared.homeLocation {
+            return saved
+        }
+        
+        // 3. Absolute fallback (Pune, India)
+        return CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
     }
+
 
     private func showErrorAlert(message: String) {
         let alert = UIAlertController(title: "Sync Issue", message: message, preferredStyle: .alert)
@@ -452,7 +460,11 @@ extension HomeViewController: UICollectionViewDataSource {
                 return cell
             }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "UpcomingBirdsCollectionViewCell", for: indexPath) as! UpcomingBirdsCollectionViewCell
-            let item = upcomingBirds[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, date: item.date); return cell
+            let item = upcomingBirds[indexPath.row - 1]
+            cell.configure(image: nil, imageName: item.imageName, title: item.title, date: item.date)
+            return cell
+
+
         } else if indexPath.section == 2 {
             if indexPath.row == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
@@ -462,7 +474,11 @@ extension HomeViewController: UICollectionViewDataSource {
                 return cell
             }
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "SpotsToVisitCollectionViewCell", for: indexPath) as! SpotsToVisitCollectionViewCell
-            let item = spots[indexPath.row - 1]; cell.configure(image: UIImage(named: item.imageName), title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude); return cell
+            let item = spots[indexPath.row - 1]
+            cell.configure(image: nil, imageName: item.imageName, title: item.title, speciesCount: item.speciesCount, latitude: item.latitude, longitude: item.longitude)
+            return cell
+
+
         } else if indexPath.section == 3 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NewsCollectionViewCell", for: indexPath) as! NewsCollectionViewCell
             cell.configure(with: newsItem(at: indexPath.row)); return cell

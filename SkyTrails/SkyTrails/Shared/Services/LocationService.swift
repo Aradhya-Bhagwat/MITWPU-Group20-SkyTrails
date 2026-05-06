@@ -17,6 +17,12 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
     private let logger: LoggingServiceProtocol
     var currentLocation: CLLocationCoordinate2D?
     
+    var isAuthorized: Bool {
+        let status = locationManager.authorizationStatus
+        return status == .authorizedAlways || status == .authorizedWhenInUse
+    }
+
+    
     init(logger: LoggingServiceProtocol? = nil) {
         self.logger = logger ?? LoggingService.shared
         super.init()
