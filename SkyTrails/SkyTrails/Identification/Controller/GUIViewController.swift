@@ -89,7 +89,7 @@ class GUIViewController: UIViewController {
     }
     
     private func setupUI() {
-        title = "Identify field marks"
+        title = "Choose field marks"
         categoryLabel.isHidden = true
         variationsCollectionView.delegate = self
         variationsCollectionView.dataSource = self
@@ -115,8 +115,8 @@ class GUIViewController: UIViewController {
     private func setupVariationHeader() {
         [selectedContainerView, chevronContainerView].forEach { view in
             view?.layer.cornerRadius = 12
-            view?.layer.borderWidth = 1
-            view?.layer.borderColor = UIColor.systemGray.cgColor
+            view?.layer.borderWidth = 1.5
+            view?.layer.borderColor = UIColor.systemBlue.cgColor
             view?.backgroundColor = .systemBackground
             view?.isUserInteractionEnabled = true
         }
@@ -129,7 +129,7 @@ class GUIViewController: UIViewController {
         )
 
         selectedImageView.contentMode = .scaleAspectFit
-        chevronImageView.contentMode = .center
+        chevronImageView.contentMode = .scaleAspectFit
         updateVariationHeader()
     }
 
@@ -395,7 +395,7 @@ class GUIViewController: UIViewController {
             : .systemBackground
 
         chevronImageView.image = UIImage(systemName: isVariationsExpanded ? "chevron.up" : "chevron.down")
-        chevronImageView.tintColor = .systemGray
+        chevronImageView.tintColor = .systemBlue
 
         loadHeaderThumbnailRemotely(
             shapeID: shapeID,

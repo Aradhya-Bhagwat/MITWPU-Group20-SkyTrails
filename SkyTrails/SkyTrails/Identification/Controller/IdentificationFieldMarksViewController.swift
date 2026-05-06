@@ -26,7 +26,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationItem.title = "Identify Markings"
+        self.navigationItem.title = "Choose Markings"
         self.tabBarItem.title = "Identification"
         setupUI()
         for (index, mark) in availableMarks.enumerated() {
