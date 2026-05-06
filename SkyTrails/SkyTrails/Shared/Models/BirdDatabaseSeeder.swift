@@ -32,6 +32,7 @@ final class BirdDatabaseSeeder {
     private struct BirdFieldMarkDataDTO: Codable {
         let area: String
         let variantId: String
+        let color_hex: String?
     }
 
     enum SeederError: Error {
@@ -209,6 +210,7 @@ final class BirdDatabaseSeeder {
                 variant: variant,
                 area: area
             )
+            link.color_hex = mark.color_hex
             modelContext.insert(link)
             existingKeys.insert(key)
             didChange = true

@@ -62,6 +62,7 @@ class IdentificationManager {
     private var mlPredictedBirdIds: Set<UUID> = []
     private var isFetchingMLData = false
     private let locationService = LocationService.shared
+    private let colorMatchWeight: Double = 1.0
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -233,16 +234,27 @@ class IdentificationManager {
             
             if !selectedFieldMarks.isEmpty {
                 let birdLinks = bird.fieldMarkLinks ?? []
-                for (_, userVariant) in selectedFieldMarks {
+                for (markId, userVariant) in selectedFieldMarks {
                     guard let userFieldMark = userVariant.fieldMark else { continue }
                     let areaName = userFieldMark.area
-                    let matched = birdLinks.contains {
-                        $0.area == areaName && $0.variant?.field_mark_variant_id == userVariant.field_mark_variant_id
+                    
+                    let link = birdLinks.first { 
+                        $0.area == areaName && $0.variant?.field_mark_variant_id == userVariant.field_mark_variant_id 
                     }
-
-                    if matched {
+                    
+                    if link != nil {
                         score += 25
                         matchedFeats.append("\(areaName): \(userVariant.name)")
+                        
+                        // Color bonus
+                        if let userColor = selectedOverlayColors[markId],
+                           let birdColorHex = link?.color_hex {
+                            let points = ColorFamilyMatcher.points(userHex: userColor.toHexString(), birdHex: birdColorHex)
+                            if points > 0 {
+                                score += Double(points) * colorMatchWeight
+                                matchedFeats.append("\(areaName) color match")
+                            }
+                        }
                     } else {
                         score -= 10
                         mismatchedFeats.append(areaName)

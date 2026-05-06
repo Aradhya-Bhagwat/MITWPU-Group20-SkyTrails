@@ -12,6 +12,7 @@ final class BirdFieldMarkVariantLink {
     var fieldMark: BirdFieldMark?
     var variant: FieldMarkVariant?
     var area: String
+    var color_hex: String?
 
     init(
         bird_field_mark_variant_link_id: UUID = UUID(),
