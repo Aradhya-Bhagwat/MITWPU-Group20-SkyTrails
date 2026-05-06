@@ -52,6 +52,7 @@ final class IdentificationSeeder {
     private struct BirdFieldMarkDataDTO: Codable {
         let area: String
         let variantId: String
+        let color_hex: String?
     }
 
     func seed(context: ModelContext) throws {
@@ -305,6 +306,7 @@ final class IdentificationSeeder {
                 variant: variant,
                 area: dto.area
             )
+            link.color_hex = dto.color_hex
             context.insert(link)
             existingKeys.insert(key)
             didChange = true
