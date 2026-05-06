@@ -127,6 +127,7 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
     }
         
     @IBAction func didTapDone(_ sender: Any) {
+        doneButton.isEnabled = false
         Task {
             var allResults: [FinalPredictionResult] = []
             for (index, input) in inputData.enumerated() {
@@ -137,6 +138,7 @@ class PredictInputViewController: UIViewController, SearchLocationDelegate {
             let uniqueResults = Array(Set(allResults))
             
             await MainActor.run {
+                self.doneButton.isEnabled = true
                 if let parentVC = self.navigationController?.parent as? PredictMapViewController {
                     parentVC.navigateToOutput(
                         inputs: inputData,

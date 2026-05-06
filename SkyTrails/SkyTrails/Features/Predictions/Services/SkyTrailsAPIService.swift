@@ -42,6 +42,52 @@ final class SkyTrailsAPIService {
         
         return try JSONDecoder().decode(HotspotPredictionResponse.self, from: data)
     }
+
+    func fetchLocationPredictions(
+        lat: Double,
+        lng: Double,
+        radiusKm: Int,
+        weekNumbers: [Int]
+    ) async throws -> LocationPredictionResponse {
+        let config = try SupabaseConfig.load()
+        let supabaseURL = config.projectURL.absoluteString
+        let supabaseAnonKey = config.anonKey
+
+        guard let url = URL(string: "\(supabaseURL)/functions/v1/fetch-location-predictions")
+        else { throw APIError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(supabaseAnonKey)", forHTTPHeaderField: "Authorization")
+
+        let body: [String: Any] = [
+            "lat": lat,
+            "lng": lng,
+            "radiusKm": radiusKm,
+            "weekNumbers": weekNumbers
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        print("DEBUG LOC: calling fetch-location-predictions")
+        print("DEBUG LOC: lat=\(lat) lng=\(lng) radius=\(radiusKm)km weeks=\(weekNumbers)")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse 
+        else { throw APIError.invalidResponse }
+
+        print("DEBUG LOC: HTTP status \(httpResponse.statusCode)")
+
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.serverError("Status \(httpResponse.statusCode)")
+        }
+
+        let decoded = try JSONDecoder().decode(LocationPredictionResponse.self, from: data)
+        print("DEBUG LOC: got \(decoded.mergedSpecies.count) merged species")
+        print("DEBUG LOC: hotspots found = \(decoded.hotspots.count)")
+        return decoded
+    }
     
     /// DIRECT FETCH: Gets locations directly from the Supabase 'hotspots_geo' table
     func fetchLocationsFromSupabase(near coordinate: CLLocationCoordinate2D) async throws -> [HotspotModel] {

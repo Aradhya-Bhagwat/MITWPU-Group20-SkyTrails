@@ -61,3 +61,59 @@ struct SpeciesModel: Codable, Identifiable {
         case residencyStatus = "residencyStatus"
     }
 }
+
+// MARK: - New Location Prediction Models
+
+struct LocationPredictionResponse: Codable {
+    let found: Bool
+    let lat: Double
+    let lng: Double
+    let radiusKm: Double
+    let gridId: String
+    let weekNumbers: [Int]
+    let hotspots: [PredictedHotspot]
+    let weeklyResults: [String: WeeklyPredictionResult]
+    let mergedSpecies: [PredictedSpecies]
+    let meta: PredictionMeta
+}
+
+struct PredictedHotspot: Codable {
+    let hotspotGeoId: String?
+    let ebirdHotspotId: String?
+    let name: String?
+    let locality: String?
+    let lat: Double
+    let lng: Double
+    let distanceKm: Double
+    let tag: String // "closest", "farthest", "within_radius"
+}
+
+struct WeeklyPredictionResult: Codable {
+    let week: Int
+    let speciesCount: Int
+    let regionalTrendsCount: Int
+    let hotspotSpeciesCount: Int
+    let ebirdRecentCount: Int?
+    let species: [PredictedSpecies]
+}
+
+struct PredictedSpecies: Codable {
+    let ebirdSpeciesCode: String
+    let commonName: String
+    let scientificName: String?
+    let imageName: String?
+    let probability: Int
+    let residencyStatus: String
+    let sources: [String]
+    let spotNames: [String]
+    let peakWeek: Int?
+}
+
+struct PredictionMeta: Codable {
+    let hotspotsFound: Int
+    let hotspotsQueried: Int?
+    let hotspotsFromEbird: Int?
+    let ebirdRecentSpecies: Int?
+    let weeksQueried: Int
+    let totalSpecies: Int
+}
