@@ -251,8 +251,10 @@ process_species <- function(sp_code, sp_name, data_dir,
       hits <- sum(vals > abundance_threshold)
       if (hits == 0) next
 
-      max_abd <- max(vals)
-      score   <- 0.7 * max_abd + 0.3 * (hits / sample_points)
+      max_abd  <- max(vals)
+      norm_abd <- min(1.0, max_abd / 5.0)
+      hit_rate <- hits / sample_points
+      score    <- round(0.6 * hit_rate + 0.4 * norm_abd, 2)
 
       sp_rows[[length(sp_rows) + 1]] <- list(
         grid_id     = cell$grid_id,

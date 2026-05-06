@@ -227,7 +227,16 @@ extension HomeViewController {
     private func navigateToBirdPrediction(bird: Bird, statusText: String) {
         let (start, end) = homeManager.parseDateRange(statusText)
         let sDate = start ?? Date(); let eDate = end ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: sDate) ?? sDate
-        let input = BirdDateInput(species: SpeciesData(id: bird.bird_id.uuidString, name: bird.commonName, imageName: bird.staticImageName), startDate: sDate, endDate: eDate)
+        let input = BirdDateInput(
+            species: SpeciesData(
+                id: bird.bird_id.uuidString, 
+                name: bird.commonName, 
+                imageName: bird.staticImageName,
+                ebirdSpeciesCode: bird.ebird_species_code
+            ), 
+            startDate: sDate, 
+            endDate: eDate
+        )
         navigateToBirdPrediction(input: input)
     }
 
@@ -255,14 +264,20 @@ extension HomeViewController {
                 .replacingOccurrences(of: "'", with: "")
                 .replacingOccurrences(of: "-", with: "_")
                 .replacingOccurrences(of: " ", with: "_")
-            let imageName = WatchlistManager.shared.findBird(byName: snapshot.commonName)?.staticImageName
+            let bird = WatchlistManager.shared.findBird(byName: snapshot.commonName)
+            let imageName = bird?.staticImageName
                 ?? fallbackUpcomingBirds.first(where: { $0.title.caseInsensitiveCompare(snapshot.commonName) == .orderedSame })?.imageName
                 ?? fallbackImageName
             let startDate = weekDate(snapshot.startWeek) ?? Date()
             let endDate = weekDate(snapshot.endWeek) ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
 
             inputsByBirdName[snapshot.commonName.lowercased()] = BirdDateInput(
-                species: SpeciesData(id: snapshot.birdId, name: snapshot.commonName, imageName: imageName),
+                species: SpeciesData(
+                    id: snapshot.birdId, 
+                    name: snapshot.commonName, 
+                    imageName: imageName,
+                    ebirdSpeciesCode: bird?.ebird_species_code
+                ),
                 startDate: startDate,
                 endDate: endDate
             )
@@ -270,7 +285,8 @@ extension HomeViewController {
             return UpcomingBirdUI(
                 imageName: imageName,
                 title: snapshot.commonName,
-                date: formatWeekRange(startWeek: snapshot.startWeek, endWeek: snapshot.endWeek)
+                date: formatWeekRange(startWeek: snapshot.startWeek, endWeek: snapshot.endWeek),
+                ebirdSpeciesCode: bird?.ebird_species_code
             )
         }
 
@@ -451,8 +467,7 @@ extension HomeViewController: UICollectionViewDataSource {
          } else if kind == UICollectionView.elementKindSectionHeader {
             let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as! SectionHeaderCollectionReusableView
             if indexPath.section == 0 { header.configure(title: "Your Area") }
-            else if indexPath.section == 1 { header.configure(title: "Migrations Near You", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
-
+            else if indexPath.section == 1 { header.configure(title: "This Week's Species", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllBirds", sender: nil) }) }
             else if indexPath.section == 2 { header.configure(title: "Top Birding Spots", tapAction: { [weak self] in self?.performSegue(withIdentifier: "ShowAllSpots", sender: nil) }) }
             else if indexPath.section == 3 { header.configure(title: "Birders' Gossip") }
             return header
@@ -503,14 +518,37 @@ extension HomeViewController {
                 return
             }
             let adjustedRow = indexPath.row - 1
-            if upcomingBirds.indices.contains(adjustedRow),
-               let forcedInput = mlPredictionInputsByBirdName[upcomingBirds[adjustedRow].title.lowercased()] {
-                navigateToBirdPrediction(input: forcedInput)
-                return
+            if upcomingBirds.indices.contains(adjustedRow) {
+                let uiBird = upcomingBirds[adjustedRow]
+                
+                // Try to find full Bird object for metadata, or build from UI bird
+                if let forcedInput = mlPredictionInputsByBirdName[uiBird.title.lowercased()] {
+                    navigateToBirdPrediction(input: forcedInput)
+                } else {
+                    let (start, end) = homeManager.parseDateRange(uiBird.date)
+                    let sDate = start ?? Date()
+                    let eDate = end ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: sDate) ?? sDate
+                    
+                    let birdId: String
+                    if let bird = WatchlistManager.shared.findBird(byName: uiBird.title) {
+                        birdId = bird.bird_id.uuidString
+                    } else {
+                        birdId = UUID().uuidString // Fallback for purely regional birds
+                    }
+                    
+                    let input = BirdDateInput(
+                        species: SpeciesData(
+                            id: birdId,
+                            name: uiBird.title,
+                            imageName: uiBird.imageName,
+                            ebirdSpeciesCode: uiBird.ebirdSpeciesCode
+                        ),
+                        startDate: sDate,
+                        endDate: eDate
+                    )
+                    navigateToBirdPrediction(input: input)
+                }
             }
-            let wCount = homeScreenData?.myWatchlistBirds.count ?? 0
-            if adjustedRow < wCount { if let res = homeScreenData?.myWatchlistBirds[safe: adjustedRow] { navigateToBirdPrediction(bird: res.bird, statusText: res.statusText) } }
-            else { if let rec = homeScreenData?.recommendedBirds[safe: adjustedRow - wCount] { navigateToBirdPrediction(bird: rec.bird, statusText: rec.dateRange) } }
         case 2:
             if indexPath.row == 0 {
                 didTapPredictSpot()
@@ -570,7 +608,12 @@ extension HomeViewController {
         
         let allSpeciesData = WatchlistManager.shared.fetchAllBirds()
         selectionVC.allSpecies = allSpeciesData.map {
-            SpeciesData(id: $0.bird_id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+            SpeciesData(
+                id: $0.bird_id.uuidString, 
+                name: $0.commonName, 
+                imageName: $0.staticImageName,
+                ebirdSpeciesCode: $0.ebird_species_code
+            )
         }
         let watchlistTitles = upcomingBirds.map { $0.title }
         let preSelectedIDs = allSpeciesData.filter { watchlistTitles.contains($0.commonName) }.map { $0.bird_id.uuidString }

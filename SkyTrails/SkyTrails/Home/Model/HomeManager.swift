@@ -58,9 +58,10 @@ class HomeManager {
     func getHomeScreenData(
         userLocation: CLLocationCoordinate2D? = nil
     ) async -> HomeScreenData {
+        speciesMemoryCache.removeAllObjects()
         
         let location = userLocation ?? LocationPreferences.shared.homeLocation
-        async let upcoming = getUpcomingBirds(userLocation: location)
+        async let upcoming = getRegionalSpecies(userLocation: location)
         async let myWatchlist: [UpcomingBirdResult] = {
             if let loc = location { return await getMyWatchlistBirds(userLocation: loc) }
             return []
@@ -105,6 +106,8 @@ class HomeManager {
             news
         )
 
+        print("DEBUG upcomingResult count: \(upcomingResult.count)")
+
         return HomeScreenData(
             upcomingBirds: upcomingResult,
             myWatchlistBirds: myWatchlistResult,
@@ -135,6 +138,52 @@ class HomeManager {
             )) ?? []
         }
         return []
+    }
+
+    func getRegionalSpecies(
+        userLocation: CLLocationCoordinate2D? = nil
+    ) async -> [UpcomingBirdUI] {
+        guard let location = userLocation 
+                          ?? locationService.currentLocation 
+                          ?? LocationPreferences.shared.homeLocation 
+        else { return [] }
+        
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        
+        do {
+            let species = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                lat: location.latitude,
+                lon: location.longitude,
+                week: currentWeek
+            )
+            
+            // Already sorted by score descending from the DB, take top 10
+            let results = species.prefix(10).map { sp in
+                let bird = watchlistManager.findBird(byName: sp.name)
+                let imageName = bird?.imageUrl 
+                             ?? bird?.staticImageName 
+                             ?? sp.name.lowercased()
+                                .replacingOccurrences(of: " ", with: "_")
+                                .replacingOccurrences(of: "-", with: "_")
+                
+                let percent = min(100, Int(sp.score * 100))
+                let tag: String
+                if percent >= 70 { tag = "Common Here" }
+                else if percent >= 40 { tag = "Look Out For" }
+                else { tag = "Rare Find" }
+                
+                return UpcomingBirdUI(
+                    imageName: imageName,
+                    title: sp.name,
+                    date: tag,
+                    ebirdSpeciesCode: bird?.ebird_species_code ?? sp.id
+                )
+            }
+            print("DEBUG regionalSpecies returning \(results.count) species")
+            return results
+        } catch {
+            return []
+        }
     }
     
     func getRecommendedBirds(
@@ -583,9 +632,9 @@ class HomeManager {
                     title: "Present",
                     subtitle: "Expected",
                     iconName: "bird.circle.fill",
-                    backgroundColorName: "systemGreen"
+                    backgroundColorName: badgeColor(for: Int(sp.score * 100), residency: "Expected")
                 ),
-                sightabilityPercent: Int(sp.score * 100),
+                sightabilityPercent: max(1, min(100, Int((sp.score * 100).rounded()))),
                 weekNumber: "Week \(currentWeek)",
                 residencyStatus: "Expected",
                 ebirdSpeciesCode: sp.id
@@ -694,7 +743,7 @@ class HomeManager {
                     title: "Present",
                     subtitle: statusText,
                     iconName: "bird.circle.fill",
-                    backgroundColorName: "systemGreen"
+                    backgroundColorName: badgeColor(for: species.likelihood, residency: statusText)
                 ),
                 sightabilityPercent: species.likelihood,
                 weekNumber: species.weekNumber ?? card.weekNumber ?? "Current Week",
@@ -769,6 +818,13 @@ class HomeManager {
         )
 
         return .combined(migration: migrationPrediction, hotspot: hotspotPrediction)
+    }
+
+    private func badgeColor(for percent: Int, residency: String) -> String {
+        if residency == "Recently spotted" { return "systemGreen" }
+        if percent >= 70 { return "systemBlue" }
+        if percent >= 40 { return "systemOrange" }
+        return "systemPink"
     }
 
     private func getDynamicMapCardsFromLocal(userLocation: CLLocationCoordinate2D) async -> [DynamicMapCard] {

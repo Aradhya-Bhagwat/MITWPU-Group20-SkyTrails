@@ -124,7 +124,17 @@ class subcardViewCell: UICollectionViewCell {
             updateExpandedBadgeIcon()
             let sightabilityPointSize = sightabilityTextLabel.font.pointSize
             updateSightabilityIcon(pointSize: sightabilityPointSize, color: effectiveBadgeColor.withAlphaComponent(1.0))
-            sightabilityTextLabel.text = "Sightability \(birdData.sightabilityPercent)%"
+            let tag: String
+            if birdData.residencyStatus == "Recently spotted" {
+                tag = "Recently Spotted"
+            } else if birdData.sightabilityPercent >= 70 {
+                tag = "Common Here"
+            } else if birdData.sightabilityPercent >= 40 {
+                tag = "Look Out For"
+            } else {
+                tag = "Rare Find"
+            }
+            sightabilityTextLabel.text = tag
         }
     
     func setExpanded(_ expanded: Bool) {

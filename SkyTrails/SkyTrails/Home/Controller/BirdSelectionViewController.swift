@@ -32,7 +32,12 @@ class BirdSelectionViewController: UIViewController {
 
         let speciesData = WatchlistManager.shared.fetchAllBirds()
         self.allSpecies = speciesData.map {
-            SpeciesData(id: $0.bird_id.uuidString, name: $0.commonName, imageName: $0.staticImageName)
+            SpeciesData(
+                id: $0.bird_id.uuidString, 
+                name: $0.commonName, 
+                imageName: $0.staticImageName,
+                ebirdSpeciesCode: $0.ebird_species_code
+            )
         }.sorted { $0.name < $1.name }
         self.filteredSpecies = allSpecies
     }
