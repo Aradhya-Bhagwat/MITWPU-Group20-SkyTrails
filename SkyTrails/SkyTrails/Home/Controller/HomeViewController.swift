@@ -192,16 +192,27 @@ extension HomeViewController {
 
     // Resolves location using live GPS or fallbacks to preferences
     private func resolveQueryLocation() async -> CLLocationCoordinate2D? {
-        if let live = LocationService.shared.currentLocation {
-            await LocationPreferences.shared.setHomeLocation(live, name: LocationPreferences.shared.homeLocationName)
-            return live
+        // If user manually set a location name, respect it
+        // Only use live GPS if no manual location is set
+        let hasManualLocation = LocationPreferences.shared.homeLocationName != nil
+        
+        if !hasManualLocation {
+            // No manual location — use live GPS if already available
+            if let live = LocationService.shared.currentLocation {
+                await LocationPreferences.shared.setHomeLocation(live, name: LocationPreferences.shared.homeLocationName)
+                return live
+            }
+            
+            // Try to get fresh GPS fix
+            do {
+                let data = try await LocationService.shared.getCurrentLocation()
+                let coord = CLLocationCoordinate2D(latitude: data.lat, longitude: data.lon)
+                await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName)
+                return coord
+            } catch { }
         }
-        do {
-            let data = try await LocationService.shared.getCurrentLocation()
-            let coord = CLLocationCoordinate2D(latitude: data.lat, longitude: data.lon)
-            await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName)
-            return coord
-        } catch { }
+        
+        // Use manually set location or fallback to Pune
         return LocationPreferences.shared.homeLocation ?? CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
     }
 
