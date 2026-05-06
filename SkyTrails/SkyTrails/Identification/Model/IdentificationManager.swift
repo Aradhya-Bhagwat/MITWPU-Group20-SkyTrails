@@ -41,6 +41,11 @@ class IdentificationManager {
             runFilter()
         }
     var selectedFieldMarks: [UUID: FieldMarkVariant] = [:]
+    var selectedOverlayColors: [UUID: UIColor] = [:]
+    
+    func setColor(_ color: UIColor, for variant: FieldMarkVariant, in mark: BirdFieldMark) {
+        selectedOverlayColors[mark.bird_field_mark_id] = color
+    }
     var selectedSizeCategory: Int?
     var selectedSizeRange: [Int] = []
     var selectedLocation: String?
@@ -309,6 +314,9 @@ class IdentificationManager {
                     variant: variant,
                     area: fieldMark.area
                 )
+                if let color = selectedOverlayColors[fieldMark.bird_field_mark_id] {
+                    sessionMark.overlayColorHex = color.toHexString()
+                }
                 modelContext.insert(sessionMark)
                 updatedMarks.append(sessionMark)
             }
@@ -377,6 +385,9 @@ class IdentificationManager {
                 variant: variant,
                 area: fieldMark.area
             )
+            if let color = selectedOverlayColors[fieldMark.bird_field_mark_id] {
+                sessionMark.overlayColorHex = color.toHexString()
+            }
             modelContext.insert(sessionMark)
             sessionMarks.append(sessionMark)
         }
@@ -462,6 +473,7 @@ class IdentificationManager {
                     "field_mark_id": mark.fieldMark?.bird_field_mark_id.uuidString ?? "",
                     "variant_id": mark.variant?.field_mark_variant_id.uuidString ?? "",
                     "area": mark.area,
+                    "overlay_color_hex": mark.overlayColorHex ?? NSNull(),
                     "created_at": ISO8601DateFormatter().string(from: session.created_at)
                 ]
                 let markData = try? JSONSerialization.data(withJSONObject: markPayload)
@@ -538,15 +550,20 @@ class IdentificationManager {
         self.selectedMenuOptionRawValues = session.selectedFilterCategories ?? []
         
         var newFieldMarks: [UUID: FieldMarkVariant] = [:]
+        var newOverlayColors: [UUID: UIColor] = [:]
         if let sessionMarks = session.selectedMarks {
             for sessionMark in sessionMarks {
                 if let fieldMark = sessionMark.fieldMark, let variant = sessionMark.variant {
                     newFieldMarks[fieldMark.bird_field_mark_id] = variant
+                    if let hex = sessionMark.overlayColorHex, let color = UIColor.fromHex(hex) {
+                        newOverlayColors[fieldMark.bird_field_mark_id] = color
+                    }
                 }
             }
             self.tempSelectedAreas = sessionMarks.map { $0.area }
         }
         self.selectedFieldMarks = newFieldMarks
+        self.selectedOverlayColors = newOverlayColors
         runFilter()
     }
 

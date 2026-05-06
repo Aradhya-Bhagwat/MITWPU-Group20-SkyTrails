@@ -801,9 +801,31 @@
                                                             <constraint firstAttribute="width" secondItem="vAN-kc-T5m" secondAttribute="height" multiplier="1:1" id="mqo-C4-UkU"/>
                                                         </constraints>
                                                     </imageView>
+                                                    <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="color-swatch-id">
+                                                        <rect key="frame" x="48" y="48" width="22" height="22"/>
+                                                        <color key="backgroundColor" systemColor="systemGray5Color"/>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="22" id="color-swatch-height"/>
+                                                            <constraint firstAttribute="width" constant="22" id="color-swatch-width"/>
+                                                        </constraints>
+                                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                        <userDefinedRuntimeAttributes>
+                                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                                <integer key="value" value="11"/>
+                                                            </userDefinedRuntimeAttribute>
+                                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.borderWidth">
+                                                                <real key="value" value="1.5"/>
+                                                            </userDefinedRuntimeAttribute>
+                                                        </userDefinedRuntimeAttributes>
+                                                        <connections>
+                                                            <action selector="colorSwatchTapped:" destination="bmL-6W-mcd" eventType="touchUpInside" id="color-swatch-action-id"/>
+                                                        </connections>
+                                                    </button>
                                                 </subviews>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                 <constraints>
+                                                    <constraint firstAttribute="trailing" secondItem="color-swatch-id" secondAttribute="trailing" constant="6" id="color-swatch-trailing"/>
+                                                    <constraint firstAttribute="bottom" secondItem="color-swatch-id" secondAttribute="bottom" constant="6" id="color-swatch-bottom"/>
                                                     <constraint firstItem="vAN-kc-T5m" firstAttribute="centerY" secondItem="G2Q-Z0-C4t" secondAttribute="centerY" id="6Ov-Sd-Z91"/>
                                                     <constraint firstItem="vAN-kc-T5m" firstAttribute="width" secondItem="G2Q-Z0-C4t" secondAttribute="width" multiplier="0.82" id="V7t-Eg-UyJ"/>
                                                     <constraint firstItem="vAN-kc-T5m" firstAttribute="centerX" secondItem="G2Q-Z0-C4t" secondAttribute="centerX" id="vWv-hy-1n6"/>
@@ -886,6 +908,7 @@
                         <outlet property="selectedImageView" destination="vAN-kc-T5m" id="QXQ-0t-eHc"/>
                         <outlet property="variationHeaderView" destination="P6i-kf-zne" id="Xkf-f2-UQj"/>
                         <outlet property="variationsCollectionView" destination="irx-mu-IBT" id="qCR-mE-OLJ"/>
+                        <outlet property="colorSwatchButton" destination="color-swatch-id" id="color-swatch-outlet-id"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xxl-2T-Hcv" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

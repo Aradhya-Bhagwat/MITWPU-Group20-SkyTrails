@@ -12,6 +12,7 @@ class GUIViewController: UIViewController {
     @IBOutlet weak var chevronImageView: UIImageView!
     @IBOutlet weak var selectedContainerView: UIView!
     @IBOutlet weak var chevronContainerView: UIView!
+    @IBOutlet weak var colorSwatchButton: UIButton!
     
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
@@ -19,6 +20,8 @@ class GUIViewController: UIViewController {
     private var currentCategoryIndex: Int = 0
     private var selectedVariations: [String: String] = [:]
     private var isVariationsExpanded: Bool = false
+    private var selectedColors: [String: UIColor] = [:]
+    private var colorOverlayLayers: [String: UIView] = [:]
     
     private var baseShapeLayer: UIImageView!
     private var partLayers: [String: UIImageView] = [:]
@@ -85,6 +88,9 @@ class GUIViewController: UIViewController {
             if let variant = viewModel.selectedFieldMarks[mark.bird_field_mark_id] {
                 selectedVariations[mark.area] = variant.name
             }
+            if let color = viewModel.selectedOverlayColors[mark.bird_field_mark_id] {
+                selectedColors[mark.area] = color
+            }
         }
     }
     
@@ -136,6 +142,7 @@ class GUIViewController: UIViewController {
 
         selectedImageView.contentMode = .scaleAspectFit
         chevronImageView.contentMode = .scaleAspectFit
+        colorSwatchButton.layer.borderColor = UIColor.systemGray3.cgColor
         updateVariationHeader()
     }
 
@@ -160,6 +167,8 @@ class GUIViewController: UIViewController {
         for catName in layerOrder {
             let imgView = UIImageView(frame: canvasContainerView.bounds)
             imgView.contentMode = .scaleAspectFit
+            imgView.isOpaque = false
+            imgView.clipsToBounds = false
             canvasContainerView.addSubview(imgView)
             partLayers[catName] = imgView
 
@@ -177,6 +186,9 @@ class GUIViewController: UIViewController {
                 let fallback = UIImage(named: name)
                 imgView.image = fallback
                 loadLayerImage(category: catName, key: name, fallback: fallback, shapeId: shapeID)
+            }
+            if let color = selectedColors[catName] {
+                applyColorOverlay(color: color, toArea: catName)
             }
         }
     }
@@ -197,6 +209,9 @@ class GUIViewController: UIViewController {
         variationsCollectionView.reloadData()
         updateVariationHeader()
         categoriesCollectionView.selectItem(at: IndexPath(item: index, section: 0), animated: true, scrollPosition: .centeredHorizontally)
+        
+        let area = categories[index].area
+        colorSwatchButton.backgroundColor = selectedColors[area] ?? .systemGray5
     }
 
     func updateCanvas(category: String, variant: String) {
@@ -208,6 +223,9 @@ class GUIViewController: UIViewController {
             layer.image = fallback
             loadLayerImage(category: category, key: imageName, fallback: fallback, shapeId: shapeID)
         }
+        if let color = self.selectedColors[category] {
+            self.applyColorOverlay(color: color, toArea: category)
+        }
     }
 
     private func loadLayerImage(category: String, key: String, fallback: UIImage?, shapeId: String? = nil) {
@@ -217,6 +235,9 @@ class GUIViewController: UIViewController {
             guard !Task.isCancelled else { return }
             guard let self, let layer = self.partLayers[category] else { return }
             layer.image = loaded ?? fallback
+            if let color = self.selectedColors[category] {
+                self.applyColorOverlay(color: color, toArea: category)
+            }
         }
     }
 
@@ -309,13 +330,15 @@ class GUIViewController: UIViewController {
         let cacheKey = variationThumbnailCacheKey(shapeID: shapeID, categoryName: categoryName, variantName: variantName)
 
         if let cached = variationThumbnailCache[cacheKey] {
-            cell.configure(image: cached, isSelected: isSelected)
+            let overlayColor = selectedColors[categoryName]
+            cell.configure(image: cached, isSelected: isSelected, overlayColor: isSelected ? overlayColor : nil)
             return
         }
 
         if !isKiteShape, let diskCached = IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey) {
             variationThumbnailCache[cacheKey] = diskCached
-            cell.configure(image: diskCached, isSelected: isSelected)
+            let overlayColor = selectedColors[categoryName]
+            cell.configure(image: diskCached, isSelected: isSelected, overlayColor: isSelected ? overlayColor : nil)
             return
         }
 
@@ -361,7 +384,8 @@ class GUIViewController: UIViewController {
             guard let currentIndexPath = self.variationsCollectionView.indexPath(for: cell),
                   currentIndexPath == indexPath else { return }
 
-            cell.configure(image: thumb, isSelected: isSelected)
+            let overlayColor = self.selectedColors[categoryName]
+            cell.configure(image: thumb, isSelected: isSelected, overlayColor: isSelected ? overlayColor : nil)
         }
     }
 
@@ -523,11 +547,50 @@ class GUIViewController: UIViewController {
         variationsCollectionView.reloadData()
         updateNextButtonState()
     }
-
     @objc private func chevronTapped() {
         isVariationsExpanded.toggle()
         updateVariationHeader()
         variationsCollectionView.reloadData()
+    }
+    
+    @IBAction func colorSwatchTapped(_ sender: Any) {
+        let picker = UIColorPickerViewController()
+        picker.title = "Choose overlay colour"
+        picker.supportsAlpha = false
+        if currentCategoryIndex < categories.count {
+            let area = categories[currentCategoryIndex].area
+            picker.selectedColor = selectedColors[area] ?? .systemBlue
+        }
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
+    private func applyColorOverlay(color: UIColor, toArea area: String) {
+        guard let partLayer = partLayers[area],
+              let originalImage = partLayer.image else { return }
+
+        colorOverlayLayers[area]?.removeFromSuperview()
+        colorOverlayLayers.removeValue(forKey: area)
+
+        let tinted = originalImage.withTint(color, alpha: 0.5)
+        partLayer.image = tinted
+    }
+
+    private func removeColorOverlay(forArea area: String) {
+        guard let partLayer = partLayers[area] else { return }
+        let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
+        if let variantName = selectedVariations[area] {
+            let imageName = "id_canvas_\(shapeID)_\(cleanForFilename(area))_\(cleanForFilename(variantName))"
+            partLayer.image = UIImage(named: imageName)
+            loadLayerImage(
+                category: area,
+                key: imageName,
+                fallback: partLayer.image,
+                shapeId: shapeID
+            )
+        }
+        selectedColors.removeValue(forKey: area)
+        colorSwatchButton.backgroundColor = .systemGray5
     }
     
     @IBAction func nextTapped(_ sender: Any) {
@@ -565,7 +628,10 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let thumb = variationThumbnailCache[cacheKey]
                 ?? IdentificationImageService.shared.loadComposedThumbnail(cacheKey: cacheKey)
                 ?? variationThumbnailImage(shapeID: shapeID, categoryName: categoryName, variantName: variant.name)
-            cell.configure(image: thumb, isSelected: isSelected)
+            
+            let overlayColor = selectedColors[categoryName]
+            cell.configure(image: thumb, isSelected: isSelected, overlayColor: isSelected ? overlayColor : nil)
+            
             loadVariationThumbnailRemotely(
                 for: cell,
                 at: indexPath,
@@ -614,5 +680,26 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 8
+    }
+}
+
+extension GUIViewController: UIColorPickerViewControllerDelegate {
+    func colorPickerViewController(
+        _ viewController: UIColorPickerViewController,
+        didSelect color: UIColor,
+        continuously: Bool
+    ) {
+        guard currentCategoryIndex < categories.count else { return }
+        let area = categories[currentCategoryIndex].area
+        selectedColors[area] = color
+        colorSwatchButton.backgroundColor = color
+        applyColorOverlay(color: color, toArea: area)
+        variationsCollectionView.reloadData()
+        updateVariationHeader()
+        if let variantName = selectedVariations[area],
+           let mark = categories.first(where: { $0.area == area }),
+           let variant = mark.variants?.first(where: { $0.name == variantName }) {
+            viewModel.setColor(color, for: variant, in: mark)
+        }
     }
 }
