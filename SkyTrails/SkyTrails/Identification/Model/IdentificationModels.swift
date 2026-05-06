@@ -161,8 +161,8 @@ final class IdentificationSessionFieldMark {
     var fieldMark: BirdFieldMark?
     var variant_id: UUID
     var variant: FieldMarkVariant?
-    
     var area: String
+    var overlayColorHex: String?
 
     var syncStatusRaw: String = SyncStatus.pendingCreate.rawValue
     var syncStatus: SyncStatus {

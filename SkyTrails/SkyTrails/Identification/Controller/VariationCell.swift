@@ -3,6 +3,7 @@ import UIKit
 class VariationCell: UICollectionViewCell {
 	@IBOutlet weak var variationImageView: UIImageView!
     @IBOutlet weak var chevronImageView: UIImageView!
+    @IBOutlet weak var colorOverlayView: UIView!
 
     private var isSelectedCell = false
     private var isChevronCell = false
@@ -18,7 +19,7 @@ class VariationCell: UICollectionViewCell {
         updateAppearance()
     }
 
-    func configure(image: UIImage?, isSelected: Bool) {
+    func configure(image: UIImage?, isSelected: Bool, overlayColor: UIColor? = nil) {
         guard let imageView = variationImageView else {
             return
         }
@@ -30,6 +31,10 @@ class VariationCell: UICollectionViewCell {
         imageView.image = image ?? UIImage(named: "id_icn_field_marks")
         imageView.tintColor = .label
         isSelectedCell = isSelected
+        
+        colorOverlayView.backgroundColor = overlayColor ?? .clear
+        colorOverlayView.isHidden = (overlayColor == nil)
+        
         updateAppearance()
     }
 
