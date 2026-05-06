@@ -35,6 +35,7 @@ class birdspredViewController: UIViewController {
 	@IBOutlet weak var pageControl: UIPageControl!
 	
 	var predictionInputs: [BirdDateInput] = []
+	var isPredictFlow = false
 	private lazy var dateFormatter: DateFormatter = {
 		let formatter = DateFormatter()
 		formatter.dateStyle = .medium
@@ -338,8 +339,8 @@ class birdspredViewController: UIViewController {
 		weekSlider.value = 0
 		weekLabel.text = "Week \(weeks.first ?? 0)"
 
-		weekSlider.isHidden = weeks.count <= 1
-		weekLabel.isHidden = weeks.count <= 1
+		weekSlider.isHidden = !isPredictFlow || weeks.count <= 1
+		weekLabel.isHidden = !isPredictFlow || weeks.count <= 1
 	}
 	
 	private func fetchAndAddBirdRange(speciesCode: String, weekNumber: Int? = nil) {
@@ -354,29 +355,60 @@ class birdspredViewController: UIViewController {
 					return weeks.first ?? Calendar.current.component(.weekOfYear, from: Date())
 				}()
 
-				print("DEBUG range: fetching for \(speciesCode) week \(week)")
-				let geoJSONData = try await SkyTrailsAPIService.shared.fetchGeoJSON(ebirdSpeciesCode: speciesCode, weekNumber: week)
-				print("DEBUG range: got \(geoJSONData.count) bytes")
+				print("DEBUG RANGE: fetching for \(speciesCode) week \(week)")
 				
+				guard let geoJSONString = try await SkyTrailsAPIService.shared.fetchSpeciesRange(
+					ebirdSpeciesCode: speciesCode,
+					weekNumber: week
+				) else {
+					print("DEBUG RANGE: nil returned, no overlay to add")
+					return
+				}
+
+				guard let geoJSONData = geoJSONString.data(using: .utf8) else {
+					print("DEBUG RANGE: string to Data conversion failed")
+					return
+				}
+
+				print("DEBUG RANGE: data bytes = \(geoJSONData.count)")
+				print("DEBUG RANGE: preview = \(String(data: geoJSONData.prefix(200), encoding: .utf8) ?? "nil")")
+
 				let decoder = MKGeoJSONDecoder()
-				let objects = try decoder.decode(geoJSONData)
-				
+				guard let geoJSONFeatures = try? decoder.decode(geoJSONData) else {
+					print("DEBUG RANGE: MKGeoJSONDecoder failed to parse")
+					return
+				}
+
 				await MainActor.run {
 					// Clear previous range overlays before adding new ones
 					self.mapView.removeOverlays(self.currentGeoJSONOverlays)
 					self.currentGeoJSONOverlays.removeAll()
 
-					for object in objects {
+					var overlaysAdded = 0
+					for object in geoJSONFeatures {
 						if let feature = object as? MKGeoJSONFeature {
 							for geometry in feature.geometry {
-								if let overlay = geometry as? MKOverlay {
-									self.addGeometryToMap(overlay)
+								if let polygon = geometry as? MKPolygon {
+									mapView.addOverlay(polygon)
+									self.currentGeoJSONOverlays.append(polygon)
+									overlaysAdded += 1
+								} else if let multiPolygon = geometry as? MKMultiPolygon {
+									mapView.addOverlay(multiPolygon)
+									self.currentGeoJSONOverlays.append(multiPolygon)
+									overlaysAdded += 1
+								} else if let polyline = geometry as? MKPolyline {
+									mapView.addOverlay(polyline)
+									self.currentGeoJSONOverlays.append(polyline)
+									overlaysAdded += 1
+								} else if let multiPolyline = geometry as? MKMultiPolyline {
+									mapView.addOverlay(multiPolyline)
+									self.currentGeoJSONOverlays.append(multiPolyline)
+									overlaysAdded += 1
 								}
 							}
-						} else if let geometry = object as? MKOverlay {
-							self.addGeometryToMap(geometry)
 						}
 					}
+					print("DEBUG RANGE: added \(overlaysAdded) overlays to map")
 				}
 			} catch {
 				if !(error is CancellationError) {
@@ -642,50 +674,34 @@ class birdspredViewController: UIViewController {
 
 extension birdspredViewController: MKMapViewDelegate {
 	func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-		print("DEBUG renderer: called for \(type(of: overlay))")
-		let isBirdRange = currentGeoJSONOverlays.contains { $0 === overlay }
-
-		if let polyline = overlay as? PredictedPathPolyline {
-			return ArrowPolylineRenderer(overlay: polyline)
-		}
+		print("DEBUG RENDERER: overlay type = \(type(of: overlay))")
 		
-		if let polyline = overlay as? MKPolyline {
-			let renderer = MKPolylineRenderer(polyline: polyline)
-			renderer.lineWidth = 4
-			renderer.lineCap = .round
-			renderer.lineJoin = .round
-			renderer.strokeColor = .systemBlue
-			return renderer
-		}
-
 		if let polygon = overlay as? MKPolygon {
 			let renderer = MKPolygonRenderer(polygon: polygon)
-			if isBirdRange {
-				renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
-				renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-				renderer.lineWidth = 2.0
-			} else {
-				renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
-				renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
-				renderer.lineWidth = 1.6
-			}
+			renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.2)
+			renderer.strokeColor = UIColor.systemGreen
+			renderer.lineWidth = 1.5
 			return renderer
 		}
-		
 		if let multiPolygon = overlay as? MKMultiPolygon {
 			let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
-			if isBirdRange {
-				renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
-				renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-				renderer.lineWidth = 2.0
-			} else {
-				renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
-				renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
-				renderer.lineWidth = 1.6
-			}
+			renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.2)
+			renderer.strokeColor = UIColor.systemGreen
+			renderer.lineWidth = 1.5
 			return renderer
 		}
-
+		if let polyline = overlay as? MKPolyline {
+			let renderer = MKPolylineRenderer(polyline: polyline)
+			renderer.strokeColor = UIColor.systemGreen
+			renderer.lineWidth = 1.5
+			return renderer
+		}
+		if let multiPolyline = overlay as? MKMultiPolyline {
+			let renderer = MKMultiPolylineRenderer(multiPolyline: multiPolyline)
+			renderer.strokeColor = UIColor.systemGreen
+			renderer.lineWidth = 1.5
+			return renderer
+		}
 		return MKOverlayRenderer(overlay: overlay)
 	}
 	

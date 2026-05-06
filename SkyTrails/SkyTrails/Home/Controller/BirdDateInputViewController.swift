@@ -144,6 +144,7 @@ class BirdDateInputViewController: UIViewController {
         guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
         
         mapVC.predictionInputs = collectedData
+        mapVC.isPredictFlow = true
         
         navigationController?.pushViewController(mapVC, animated: true)
     }

@@ -547,7 +547,12 @@ class PredictMapViewController: UIViewController {
             Task {
                 do {
                     let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-                    let geoJSONData = try await SkyTrailsAPIService.shared.fetchGeoJSON(ebirdSpeciesCode: speciesCode, weekNumber: currentWeek)
+                    guard let geoJSONString = try await SkyTrailsAPIService.shared.fetchSpeciesRange(
+                        ebirdSpeciesCode: speciesCode,
+                        weekNumber: currentWeek
+                    ) else { return }
+
+                    guard let geoJSONData = geoJSONString.data(using: .utf8) else { return }
                     
                     let decoder = MKGeoJSONDecoder()
                     let objects = try decoder.decode(geoJSONData)

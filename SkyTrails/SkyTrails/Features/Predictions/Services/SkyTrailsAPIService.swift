@@ -65,40 +65,63 @@ final class SkyTrailsAPIService {
         return try JSONDecoder().decode([HotspotModel].self, from: data)
     }
 
-    func fetchGeoJSON(ebirdSpeciesCode: String, weekNumber: Int) async throws -> Data {
+    func fetchSpeciesRange(
+        ebirdSpeciesCode: String,
+        weekNumber: Int
+    ) async throws -> String? {
         let config = try SupabaseConfig.load()
+        let supabaseURL = config.projectURL.absoluteString
+        let supabaseAnonKey = config.anonKey
+
+        guard let url = URL(string: "\(supabaseURL)/functions/v1/fetch-species-range") 
+        else { throw APIError.invalidURL }
         
-        // Direct fetch from REST API for 'local' reliability during presentation
-        var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
-        components?.path = "/rest/v1/species_ranges"
-        components?.queryItems = [
-            URLQueryItem(name: "ebird_species_code", value: "eq.\(ebirdSpeciesCode)"),
-            URLQueryItem(name: "week_number", value: "eq.\(weekNumber)"),
-            URLQueryItem(name: "select", value: "range_geojson")
-        ]
-        
-        guard let url = components?.url else { throw APIError.invalidURL }
-        
+        print("DEBUG RANGE: Full URL = \(url.absoluteString)")
+
         var request = URLRequest(url: url)
-        request.timeoutInterval = 8
-        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
-        
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(supabaseAnonKey)", 
+            forHTTPHeaderField: "Authorization")
+
+        let body: [String: Any] = [
+            "ebirdSpeciesCode": ebirdSpeciesCode,
+            "weekNumber": weekNumber
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw APIError.serverError("Failed to fetch range from table")
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
         }
 
-        struct RangeRecord: Codable {
-            let range_geojson: String
+        print("DEBUG RANGE: HTTP status \(httpResponse.statusCode) for \(ebirdSpeciesCode) week \(weekNumber)")
+
+        // 202 means no data for this week — not an error, just no range
+        if httpResponse.statusCode == 202 {
+            print("DEBUG RANGE: no range data for week \(weekNumber)")
+            return nil
         }
 
-        let records = try JSONDecoder().decode([RangeRecord].self, from: data)
-        guard let firstRecord = records.first,
-              let geoData = firstRecord.range_geojson.data(using: .utf8) else {
-            throw APIError.decodingError
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.serverError("Status \(httpResponse.statusCode)")
         }
-        return geoData
+
+        struct RangeResponse: Decodable {
+            let found: Bool
+            let rangeGeoJSON: String?
+        }
+
+        let decoded = try JSONDecoder().decode(RangeResponse.self, from: data)
+
+        guard decoded.found, let geoJSONString = decoded.rangeGeoJSON else {
+            print("DEBUG RANGE: found=false or rangeGeoJSON nil")
+            return nil
+        }
+
+        print("DEBUG RANGE: got GeoJSON string, length=\(geoJSONString.count)")
+        return geoJSONString
     }
 
     func fetchGridHotspots(lat: Double, lon: Double) async throws -> GridHotspotRow? {
