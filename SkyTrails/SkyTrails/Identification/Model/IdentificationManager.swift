@@ -91,17 +91,34 @@ class IdentificationManager {
     func availableShapesForSelectedSize() -> [BirdShape] {
         do {
             let allBirds = try modelContext.fetch(FetchDescriptor<Bird>())
-            let birdShapeIds = Set(allBirds.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
+            
+            // If we have a selected size, filter birds within that size range (+/- 1)
+            let relevantBirds: [Bird]
+            if let size = selectedSizeCategory {
+                let minSize = max(1, size - 1)
+                let maxSize = min(5, size + 1)
+                let range = minSize...maxSize
+                relevantBirds = allBirds.filter { bird in
+                    if let birdSize = bird.size_category {
+                        return range.contains(birdSize)
+                    }
+                    return false
+                }
+            } else {
+                relevantBirds = allBirds
+            }
+            
+            let birdShapeIds = Set(relevantBirds.compactMap { $0.shape?.bird_shape_id ?? $0.shape_id })
             
             if birdShapeIds.isEmpty {
-                return []
+                return allShapes
             }
             
             let filtered = allShapes.filter { birdShapeIds.contains($0.bird_shape_id) }
-            return filtered.isEmpty ? [] : filtered
+            return filtered.isEmpty ? allShapes : filtered
 
         } catch {
-            return []
+            return allShapes
         }
     }
     
