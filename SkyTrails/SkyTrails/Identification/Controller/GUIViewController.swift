@@ -394,11 +394,15 @@ class GUIViewController: UIViewController {
         let selectedName = selectedVariations[categoryName]
         let isHeaderSelected = selectedName == nil || selectedName == firstVariant.name
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
-        selectedContainerView.layer.borderWidth = isHeaderSelected ? 2 : 1
-        selectedContainerView.layer.borderColor = UIColor.systemGray.cgColor
-        selectedContainerView.backgroundColor = isHeaderSelected
-            ? UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
-            : .systemBackground
+        
+        let unselectedColor: UIColor = isDarkMode ? .secondarySystemBackground : .systemBackground
+        let selectedColor: UIColor = UIColor.systemBlue.withAlphaComponent(isDarkMode ? 0.24 : 0.10)
+        let unselectedBorderColor: UIColor = isDarkMode ? .systemGray3 : .systemGray4
+        
+        selectedContainerView.layer.masksToBounds = true
+        selectedContainerView.backgroundColor = isHeaderSelected ? selectedColor : unselectedColor
+        selectedContainerView.layer.borderWidth = isHeaderSelected ? 3 : 1
+        selectedContainerView.layer.borderColor = isHeaderSelected ? UIColor.systemBlue.cgColor : unselectedBorderColor.cgColor
 
         chevronImageView.image = UIImage(systemName: isVariationsExpanded ? "chevron.up" : "chevron.down")
         chevronImageView.tintColor = .systemGray
