@@ -18,13 +18,16 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         self.navigationItem.title = "Select Shape"
         self.tabBarItem.title = "Identification"
         
+        // Ensure shapes are fetched and filtered
         viewModel.fetchShapes()
         filteredShapes = viewModel.availableShapesForSelectedSize()
+        
         selectedShapeId = viewModel.selectedShapeId
         
         setupCollectionView()
         setupCollectionViewLayout()
         updateNextButtonState()
+        shapeCollectionView.reloadData()
     }
 
     private func updateNextButtonState() {
