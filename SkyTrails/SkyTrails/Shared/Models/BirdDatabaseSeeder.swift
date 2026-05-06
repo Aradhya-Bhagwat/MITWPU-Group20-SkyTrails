@@ -230,7 +230,7 @@ final class BirdDatabaseSeeder {
 
     func refreshImageUrls(modelContext: ModelContext) async {
         do {
-            let (speciesCodeMap, scientificNameMap, commonNameMap) =
+            let (speciesCodeMap, scientificNameMap, commonNameMap, nameToSpeciesCodeMap) =
                 try await SkyTrailsAPIService.shared.fetchBirdImageUrls()
             
 
@@ -251,6 +251,14 @@ final class BirdDatabaseSeeder {
                     bird.imageUrl = url
                     updateCount += 1
                 }
+                
+                // Also sync ebird_species_code if missing
+                if bird.ebird_species_code == nil || bird.ebird_species_code?.isEmpty == true {
+                    if let code = nameToSpeciesCodeMap[bird.commonName] {
+                        bird.ebird_species_code = code
+                        updateCount += 1
+                    }
+                }
             }
             
             // 2. Create missing birds from Supabase
@@ -260,7 +268,8 @@ final class BirdDatabaseSeeder {
                         bird_id: UUID(),
                         commonName: commonName,
                         scientificName: "Unknown", // Metadata lost in simplified map
-                        staticImageName: "placeholder_bird"
+                        staticImageName: "placeholder_bird",
+                        ebird_species_code: nameToSpeciesCodeMap[commonName]
                     )
                     newBird.imageUrl = url
                     modelContext.insert(newBird)

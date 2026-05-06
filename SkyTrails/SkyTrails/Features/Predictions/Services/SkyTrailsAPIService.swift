@@ -90,7 +90,9 @@ final class SkyTrailsAPIService {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        print("DEBUG API: about to call URLSession for \(ebirdSpeciesCode) week \(weekNumber)")
         let (data, response) = try await URLSession.shared.data(for: request)
+        print("DEBUG API: URLSession returned, processing response")
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -209,7 +211,8 @@ final class SkyTrailsAPIService {
     func fetchBirdImageUrls() async throws -> (
         speciesCodeMap: [String: String],
         scientificNameMap: [String: String],
-        commonNameMap: [String: String]
+        commonNameMap: [String: String],
+        nameToSpeciesCodeMap: [String: String]
     ) {
         let config = try SupabaseConfig.load()
         var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
@@ -245,12 +248,16 @@ final class SkyTrailsAPIService {
         var speciesCodeMap: [String: String] = [:]
         var scientificNameMap: [String: String] = [:]
         var commonNameMap: [String: String] = [:]
+        var nameToSpeciesCodeMap: [String: String] = [:]
         
         for row in rows {
             guard let url = row.image_url else { continue }
             
             if let common = row.common_name {
                 commonNameMap[common] = url
+                if let code = row.species_code {
+                    nameToSpeciesCodeMap[common] = code
+                }
             }
             if let code = row.species_code {
                 speciesCodeMap[code] = url
@@ -260,7 +267,7 @@ final class SkyTrailsAPIService {
             }
         }
         
-        return (speciesCodeMap, scientificNameMap, commonNameMap)
+        return (speciesCodeMap, scientificNameMap, commonNameMap, nameToSpeciesCodeMap)
     }
 
 }
