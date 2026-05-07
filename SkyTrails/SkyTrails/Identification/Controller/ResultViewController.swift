@@ -218,7 +218,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
             for: indexPath
         ) as! ResultCollectionViewCell
 
-        let confidencePercent = String(Int(candidate.confidence * 100))
+        let confidencePercent = String(format: "%.1f", candidate.confidence * 100)
 
         if let bird = candidate.bird {
             cell.configure(

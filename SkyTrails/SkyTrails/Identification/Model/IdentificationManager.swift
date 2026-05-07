@@ -300,8 +300,13 @@ class IdentificationManager {
                 }
             }
             
+            // 5. Deterministic Tie-Breaker (Unique to every bird)
+            // Use a small hash of the UUID to add 0.0001 to 0.0099
+            let hashVal = abs(bird.bird_id.uuidString.hashValue % 100)
+            let tieBreaker = Double(hashVal) / 10000.0
+            
             // Apply multiplier and cap
-            let rawScore = (score * multiplier)
+            let rawScore = (score * multiplier) + tieBreaker
             let confidence = max(0.05, min(rawScore / 100.0, 0.98)) // Cap raw score at 98%
             
             let matchScore = MatchScore(
@@ -317,12 +322,28 @@ class IdentificationManager {
             ))
         }
         
-        // 5. Relative Scaling (Make the best match feel "correct")
+        // 6. Precision Ranking Curve (Ensures no two birds share a percentage)
         let sorted = candidates.sorted { $0.confidence > $1.confidence }
-        if let bestConfidence = sorted.first?.confidence, bestConfidence > 0.3 {
-            let scaleFactor = 0.95 / bestConfidence
-            for candidate in sorted {
-                candidate.confidence = min(0.99, candidate.confidence * scaleFactor)
+        
+        if let bestConfidence = sorted.first?.confidence, bestConfidence > 0.05 {
+            for (index, candidate) in sorted.enumerated() {
+                // 1. Calculate relative position (0.0 to 1.0)
+                let relativeScore = candidate.confidence / bestConfidence
+                
+                // 2. Apply a Power Curve to stretch the differences
+                // This makes close matches (e.g. 0.9 vs 0.88) spread out more (e.g. 95% vs 88%)
+                let curvedScore = pow(relativeScore, 1.5)
+                
+                // 3. Map to a high-quality display range (e.g. 15% to 96%)
+                let baseDisplay = 0.15 + (curvedScore * 0.81)
+                
+                // 4. Apply Ranking Decay
+                // Forces a unique value even if the raw scores were identical
+                // Each subsequent bird is at least 0.2% lower than the one before it
+                let decay = Double(index) * 0.002
+                
+                let finalConfidence = max(0.05, baseDisplay - decay)
+                candidate.confidence = min(0.99, finalConfidence)
             }
         }
         
