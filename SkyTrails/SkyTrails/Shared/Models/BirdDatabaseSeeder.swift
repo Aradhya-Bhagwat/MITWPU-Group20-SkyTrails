@@ -116,11 +116,11 @@ final class BirdDatabaseSeeder {
                     existing.likelySpot = likelySpot
                     didUpdate = true
                 }
-                if existing.shape_id == nil, let shapeId = birdDTO.shape_id {
-                    existing.shape_id = shapeId
+                if existing.shape_id != birdDTO.shape_id {
+                    existing.shape_id = birdDTO.shape_id
                     didUpdate = true
                 }
-                if existing.shape == nil,
+                if existing.shape == nil || existing.shape?.bird_shape_id != birdDTO.shape_id,
                    let shapeId = birdDTO.shape_id,
                    let shape = shapeById[shapeId] {
                     existing.shape = shape
@@ -263,22 +263,9 @@ final class BirdDatabaseSeeder {
                 }
             }
             
-            // 2. Create missing birds from Supabase
-            for (commonName, url) in commonNameMap {
-                if birdMap[commonName] == nil {
-                    let newBird = Bird(
-                        bird_id: UUID(),
-                        commonName: commonName,
-                        scientificName: "Unknown", // Metadata lost in simplified map
-                        staticImageName: "placeholder_bird",
-                        ebird_species_code: nameToSpeciesCodeMap[commonName]
-                    )
-                    newBird.imageUrl = url
-                    modelContext.insert(newBird)
-                    birdMap[commonName] = newBird
-                    createCount += 1
-                }
-            }
+            // 2. DO NOT create missing birds here as they lack critical metadata (shape, size, etc.)
+            // Metadata for identification should only come from the JSON seeder.
+            print("🔍 BirdDatabaseSeeder: Sync completed. Updated \(updateCount) birds.")
             
             try modelContext.save()
         } catch {

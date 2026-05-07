@@ -76,11 +76,17 @@ final class IdentificationSeeder {
             })
         )
         
+        let birdsMissingShape = try context.fetchCount(
+            FetchDescriptor<Bird>(predicate: #Predicate<Bird> { bird in
+                bird.shape == nil && bird.shape_id == nil
+            })
+        )
+
         let needsSeeding =
             shapeCount == 0 ||
             fieldMarkCount == 0 ||
             variantCount == 0 ||
-            identificationBirdCount == 0 ||
+            birdsMissingShape > 0 ||
             linkedFieldMarkCount < fieldMarkCount ||
             linkedVariantCount < variantCount
         
@@ -203,11 +209,11 @@ final class IdentificationSeeder {
 
             if let existing = existingBirdMap[birdDTO.bird_id] {
                 var didUpdate = false
-                if existing.shape_id == nil, let shapeId = birdDTO.shape_id {
-                    existing.shape_id = shapeId
+                if existing.shape_id != birdDTO.shape_id {
+                    existing.shape_id = birdDTO.shape_id
                     didUpdate = true
                 }
-                if existing.shape == nil,
+                if existing.shape == nil || existing.shape?.bird_shape_id != birdDTO.shape_id,
                    let shapeId = birdDTO.shape_id,
                    let shape = shapeMap[shapeId] {
                     existing.shape = shape
@@ -264,6 +270,13 @@ final class IdentificationSeeder {
             )
 
             context.insert(bird)
+        }
+        // 5. Cleanup Orphans (Birds not in JSON)
+        let jsonBirdIds = Set(db.birds.map { $0.bird_id })
+        for bird in existingBirds {
+            if !jsonBirdIds.contains(bird.bird_id) {
+                context.delete(bird)
+            }
         }
 
         try context.save()

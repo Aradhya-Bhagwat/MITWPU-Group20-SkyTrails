@@ -39,6 +39,9 @@ final class BirdShape {
     @Relationship(deleteRule: .cascade, inverse: \BirdFieldMark.shape)
     var fieldMarks: [BirdFieldMark]?
 
+    @Relationship(deleteRule: .nullify, inverse: \Bird.shape)
+    var birds: [Bird]?
+
     init(bird_shape_id: String, name: String, icon: String) {
         self.bird_shape_id = bird_shape_id
         self.name = name
