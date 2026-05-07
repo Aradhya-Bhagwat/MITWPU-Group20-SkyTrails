@@ -227,14 +227,18 @@ class IdentificationManager {
             var score = 0.0
             var matchedFeats: [String] = []
             var mismatchedFeats: [String] = []
+            
+            // 1. Shape Match (The Entry Ticket)
             if let userShapeId = selectedShape?.bird_shape_id {
                 if (bird.shape?.bird_shape_id ?? bird.shape_id) == userShapeId {
-                    score += 30
+                    score += 40
                     matchedFeats.append("Shape")
                 } else {
-                    continue
+                    continue // Only show shape-matched birds if a shape is selected
                 }
             }
+            
+            // 2. Size Match
             if let birdSize = bird.size_category, !selectedSizeRange.isEmpty {
                 if birdSize == selectedSizeCategory {
                     score += 20
@@ -242,25 +246,10 @@ class IdentificationManager {
                 } else if selectedSizeRange.contains(birdSize) {
                     score += 10
                     matchedFeats.append("Approx. Size")
-                } else {
-                    score -= 20
-                    mismatchedFeats.append("Size")
                 }
             }
             
-            let mlScore = getMLLocationScore(for: bird)
-            if mlScore > 0 {
-                score += mlScore
-                matchedFeats.append("Location")
-            }
-            
-            if let birdMonths = bird.validMonths {
-                if !birdMonths.contains(searchMonth) {
-                    score -= 50
-                    mismatchedFeats.append("Season")
-                }
-            }
-            
+            // 3. Field Marks & Colors (High Granularity)
             if !selectedFieldMarks.isEmpty {
                 let birdLinks = bird.fieldMarkLinks ?? []
                 for (markId, userVariant) in selectedFieldMarks {
@@ -272,51 +261,72 @@ class IdentificationManager {
                     }
                     
                     if link != nil {
-                        score += 25
+                        score += 20 // Base mark match
                         matchedFeats.append("\(areaName): \(userVariant.name)")
                         
-                        // Color bonus
+                        // Color Match Bonus (0 to 15 points)
                         if let userColor = selectedOverlayColors[markId],
                            let birdColorHex = link?.color_hex {
                             let points = ColorFamilyMatcher.points(userHex: userColor.toHexString(), birdHex: birdColorHex)
                             if points > 0 {
-                                score += Double(points) * colorMatchWeight
+                                let colorBonus = Double(points) * 1.5 // Max 15 points
+                                score += colorBonus
                                 matchedFeats.append("\(areaName) color match")
                             }
                         }
                     } else {
-                        score -= 10
                         mismatchedFeats.append(areaName)
                     }
                 }
             }
             
-            let shapeMatched = selectedShape != nil && matchedFeats.contains("Shape")
-            let rawScore = max(0.0, min(score / 100.0, 1.0))
+            // 4. Probability Multipliers (Location & Season)
+            var multiplier = 1.0
             
-            let finalScore: Double
-            if shapeMatched {
-                finalScore = max(rawScore, 0.05) // Ensure shape matches always show up
-            } else {
-                guard rawScore > 0.1 else { continue }
-                finalScore = rawScore
+            // ML/Location Bonus
+            let mlScore = getMLLocationScore(for: bird)
+            if mlScore > 0 {
+                multiplier += 0.2 // 20% boost for likely location
+                matchedFeats.append("Likely Location")
             }
+            
+            // Seasonal Penalty (Multiplier instead of flat deduction)
+            if let birdMonths = bird.validMonths {
+                if !birdMonths.contains(searchMonth) {
+                    multiplier *= 0.5 // 50% penalty for out-of-season
+                    mismatchedFeats.append("Out of Season")
+                } else {
+                    multiplier += 0.1 // 10% boost for in-season
+                }
+            }
+            
+            // Apply multiplier and cap
+            let rawScore = (score * multiplier)
+            let confidence = max(0.05, min(rawScore / 100.0, 0.98)) // Cap raw score at 98%
             
             let matchScore = MatchScore(
                 matchedFeatures: matchedFeats,
                 mismatchedFeatures: mismatchedFeats,
-                score: finalScore
+                score: confidence
             )
             
-            let candidate = IdentificationCandidate(
+            candidates.append(IdentificationCandidate(
                 bird: bird,
-                confidence: finalScore,
+                confidence: confidence,
                 matchScore: matchScore
-            )
-            candidates.append(candidate)
+            ))
         }
         
-        self.results = candidates.sorted { $0.confidence > $1.confidence }
+        // 5. Relative Scaling (Make the best match feel "correct")
+        let sorted = candidates.sorted { $0.confidence > $1.confidence }
+        if let bestConfidence = sorted.first?.confidence, bestConfidence > 0.3 {
+            let scaleFactor = 0.95 / bestConfidence
+            for candidate in sorted {
+                candidate.confidence = min(0.99, candidate.confidence * scaleFactor)
+            }
+        }
+        
+        self.results = sorted
     }
     
     private func tokenSet(from raw: String?) -> Set<String> {
