@@ -20,7 +20,16 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         
         // Ensure shapes are fetched and filtered
         viewModel.fetchShapes()
-        filteredShapes = viewModel.availableShapesForSelectedSize()
+        let sizeFilteredShapes = viewModel.availableShapesForSelectedSize()
+        
+        // Filter: only keep shapes that have field marks with variants (and thus have area data)
+        filteredShapes = sizeFilteredShapes.filter { shape in
+            guard let fieldMarks = shape.fieldMarks, !fieldMarks.isEmpty else { return false }
+            return fieldMarks.contains { fieldMark in
+                guard let variants = fieldMark.variants else { return false }
+                return !variants.isEmpty
+            }
+        }
         
         selectedShapeId = viewModel.selectedShapeId
         
