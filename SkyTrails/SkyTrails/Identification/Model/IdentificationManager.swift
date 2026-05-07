@@ -8,6 +8,7 @@ class IdentificationManager {
     var modelContext: ModelContext
     var currentSession: IdentificationSession?
     var isReloadFlowActive: Bool = false
+    private let seeder = IdentificationSeeder()
     private var locationNameById: [UUID: String] = [:]
     var tempSelectedAreas: [String] = []
     var allShapes: [BirdShape] = []
@@ -81,9 +82,11 @@ class IdentificationManager {
     
     func fetchShapes() {
         do {
+            try seeder.seed(context: modelContext)
             let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
             self.allShapes = try modelContext.fetch(descriptor)
         } catch {
+            print("🔍 IdentificationManager: fetchShapes error: \(error)")
         }
     }
 
@@ -207,6 +210,16 @@ class IdentificationManager {
     func runFilter() {
         guard let allBirds = try? modelContext.fetch(FetchDescriptor<Bird>()) else { return }
         
+        let selectedId = selectedShape?.bird_shape_id ?? "NIL"
+        
+        // SELF-HEALING: If we see NIL for birds, trigger a repair
+        let needsRepair = allBirds.contains { $0.shape == nil && $0.shape_id == nil }
+        if needsRepair && !allBirds.isEmpty {
+             try? seeder.seed(context: modelContext)
+        }
+
+        let matchingBirds = allBirds.filter { ($0.shape?.bird_shape_id ?? $0.shape_id) == selectedId }
+
         var candidates: [IdentificationCandidate] = []
         let searchMonth = Calendar.current.component(.month, from: selectedDate)
         
@@ -248,7 +261,6 @@ class IdentificationManager {
                 }
             }
             
-            
             if !selectedFieldMarks.isEmpty {
                 let birdLinks = bird.fieldMarkLinks ?? []
                 for (markId, userVariant) in selectedFieldMarks {
@@ -278,22 +290,30 @@ class IdentificationManager {
                     }
                 }
             }
-            let finalScore = max(0.0, min(score / 100.0, 1.0))
             
-            if finalScore > 0.1 {
-                let matchScore = MatchScore(
-                    matchedFeatures: matchedFeats,
-                    mismatchedFeatures: mismatchedFeats,
-                    score: finalScore
-                )
-                
-                let candidate = IdentificationCandidate(
-                    bird: bird,
-                    confidence: finalScore,
-                    matchScore: matchScore
-                )
-                candidates.append(candidate)
+            let shapeMatched = selectedShape != nil && matchedFeats.contains("Shape")
+            let rawScore = max(0.0, min(score / 100.0, 1.0))
+            
+            let finalScore: Double
+            if shapeMatched {
+                finalScore = max(rawScore, 0.05) // Ensure shape matches always show up
+            } else {
+                guard rawScore > 0.1 else { continue }
+                finalScore = rawScore
             }
+            
+            let matchScore = MatchScore(
+                matchedFeatures: matchedFeats,
+                mismatchedFeatures: mismatchedFeats,
+                score: finalScore
+            )
+            
+            let candidate = IdentificationCandidate(
+                bird: bird,
+                confidence: finalScore,
+                matchScore: matchScore
+            )
+            candidates.append(candidate)
         }
         
         self.results = candidates.sorted { $0.confidence > $1.confidence }
@@ -502,7 +522,7 @@ class IdentificationManager {
                     "field_mark_id": mark.fieldMark?.bird_field_mark_id.uuidString ?? "",
                     "variant_id": mark.variant?.field_mark_variant_id.uuidString ?? "",
                     "area": mark.area,
-                    "overlay_color_hex": mark.overlayColorHex ?? NSNull(),
+                    "color_hex": mark.overlayColorHex ?? NSNull(),
                     "created_at": ISO8601DateFormatter().string(from: session.created_at)
                 ]
                 let markData = try? JSONSerialization.data(withJSONObject: markPayload)
