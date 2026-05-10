@@ -595,6 +595,11 @@ actor InitialSyncService {
         
         for row in rows {
             let entry: WatchlistEntry
+            if let birdId = row.birdId, birdById[birdId] == nil, let birdName = row.nickname, !birdName.isEmpty {
+                let placeholder = Bird(bird_id: birdId, commonName: birdName, scientificName: "", staticImageName: "photo")
+                context.insert(placeholder)
+                birdById[birdId] = placeholder
+            }
             if let existing = existingById[row.id] {
                 updateEntry(existing, from: row, watchlistById: watchlistById, birdById: birdById)
                 entry = existing

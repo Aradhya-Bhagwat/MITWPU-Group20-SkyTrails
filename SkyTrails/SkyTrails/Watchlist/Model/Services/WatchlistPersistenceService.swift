@@ -423,6 +423,8 @@ final class WatchlistPersistenceService {
                 observedByUserId: (status == .observed) ? userID : nil
             )
             
+            entry.nickname = bird.commonName
+            
             if status == .observed {
                 entry.observationDate = Date()
             }

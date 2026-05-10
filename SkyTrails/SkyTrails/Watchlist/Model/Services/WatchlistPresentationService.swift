@@ -72,7 +72,7 @@ final class WatchlistPresentationService {
                     let birdImage = await self.loadImageForEntry(entry)
                     return await (index, BirdEntryCellViewModel(
                         entryId: entry.id,
-                        birdName: entry.bird?.name ?? "Unknown",
+                        birdName: entry.bird?.name ?? entry.nickname ?? "Unknown",
                         birdImage: birdImage,
                         observationDate: Self.formatObservationDate(entry.observationDate),
                         location: Self.determineLocation(for: entry),
