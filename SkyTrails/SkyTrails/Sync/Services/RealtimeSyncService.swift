@@ -568,6 +568,16 @@ final class RealtimeSyncService: NSObject {
         notifyWatchlistDataChanged()
     }
     
+    private func resolveBird(from record: [String: JSONValue]) -> Bird? {
+        guard let birdId = record.uuid(for: "bird_id") else { return nil }
+        if let existing = try? WatchlistManager.shared.fetchBird(bird_id: birdId) { return existing }
+        guard let birdName = record.string(for: "nickname"), !birdName.isEmpty else { return nil }
+        let placeholder = Bird(bird_id: birdId, commonName: birdName, scientificName: "", staticImageName: "photo")
+        WatchlistManager.shared.context.insert(placeholder)
+        try? WatchlistManager.shared.context.save()
+        return placeholder
+    }
+
     private func upsertEntry(from record: [String: JSONValue], id: UUID) async throws {
         guard let watchlistId = record.uuid(for: "watchlist_id"),
               let watchlist = try WatchlistManager.shared.getWatchlist(by: watchlistId) else { return }
@@ -576,10 +586,10 @@ final class RealtimeSyncService: NSObject {
             existingEntry = entries.first { $0.id == id }
         }
         
+        let bird = resolveBird(from: record)
+        
         if let entry = existingEntry {
-            if let birdId = record.uuid(for: "bird_id") {
-                entry.bird = try? WatchlistManager.shared.fetchBird(bird_id: birdId)
-            }
+            entry.bird = bird
             entry.status = record.string(for: "status") == "observed" ? .observed : .to_observe
             entry.nickname = record.string(for: "nickname")
             entry.notes = record.string(for: "notes")
@@ -601,7 +611,6 @@ final class RealtimeSyncService: NSObject {
             try? WatchlistManager.shared.context.save()
             notifyWatchlistDataChanged()
         } else {
-            let bird = record.uuid(for: "bird_id").flatMap { try? WatchlistManager.shared.fetchBird(bird_id: $0) }
             let entry = WatchlistEntry(
                 id: id,
                 watchlist: watchlist,
