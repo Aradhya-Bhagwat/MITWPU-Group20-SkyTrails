@@ -480,7 +480,12 @@ class birdspredViewController: UIViewController {
 		
 		let input = predictionInputs[currentSpeciesIndex]
 		
-		birdImageView.image = UIImage(named: input.species.imageName)
+		birdImageView.image = UIImage(systemName: "bird.fill")
+		Task { @MainActor in
+			if let fetched = await ImageService.shared.image(for: input.species.imageName) {
+				birdImageView.image = fetched
+			}
+		}
 		titleLabel.text = input.species.name
 		
 		let dateRangeText: String

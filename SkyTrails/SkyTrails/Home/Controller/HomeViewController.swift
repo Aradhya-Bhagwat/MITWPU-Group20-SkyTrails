@@ -297,6 +297,7 @@ extension HomeViewController {
             let imageName = bird?.staticImageName
                 ?? fallbackUpcomingBirds.first(where: { $0.title.caseInsensitiveCompare(snapshot.commonName) == .orderedSame })?.imageName
                 ?? fallbackImageName
+            print("[DEBUG] applyMLDataOverride - bird=\(snapshot.commonName) imageName=\(imageName) bird.imageUrl=\(bird?.imageUrl ?? "nil") bird.staticImageName=\(bird?.staticImageName ?? "nil")")
             let startDate = weekDate(snapshot.startWeek) ?? Date()
             let endDate = weekDate(snapshot.endWeek) ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
 

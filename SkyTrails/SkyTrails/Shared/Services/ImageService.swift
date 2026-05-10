@@ -108,19 +108,20 @@ final class ImageService: ImageProviding {
 
     func image(for key: String, shapeId: String? = nil) async -> UIImage? {
         if key.hasPrefix("http") {
-            guard let url = URL(string: key) else { return nil }
-            let memKey = key as NSString
-            if let cached = memoryCache.object(forKey: memKey) { return cached }
-            
-            do {
-                let (data, response) = try await URLSession.shared.data(from: url)
-                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
-                      let image = UIImage(data: data) else { return nil }
-                memoryCache.setObject(image, forKey: memKey)
-                return image
-            } catch {
-                return nil
+            if let url = URL(string: key) {
+                let memKey = key as NSString
+                if let cached = memoryCache.object(forKey: memKey) { return cached }
+                do {
+                    let (data, response) = try await URLSession.shared.data(from: url)
+                    if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                       let image = UIImage(data: data) {
+                        memoryCache.setObject(image, forKey: memKey)
+                        return image
+                    }
+                } catch {
+                }
             }
+            // URL download failed — fall through to key-based lookup
         }
         
         var normalizedKey = normalizeKey(key)
