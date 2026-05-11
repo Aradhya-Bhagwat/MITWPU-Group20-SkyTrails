@@ -13,6 +13,8 @@ class GUIViewController: UIViewController {
     @IBOutlet weak var selectedContainerView: UIView!
     @IBOutlet weak var chevronContainerView: UIView!
     @IBOutlet weak var colorSwatchButton: UIButton!
+    @IBOutlet weak var colorPaletteCollectionView: UICollectionView!
+    @IBOutlet weak var clearColorButton: UIButton!
     
     var viewModel: IdentificationManager!
     weak var delegate: IdentificationFlowStepDelegate?
@@ -128,8 +130,24 @@ class GUIViewController: UIViewController {
         }
 
         setupVariationHeader()
+        colorPaletteCollectionView.delegate = self
+        colorPaletteCollectionView.dataSource = self
+        colorPaletteCollectionView.backgroundColor = .systemBackground
+        colorPaletteCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "BottomColorCell")
+        colorPaletteCollectionView.showsHorizontalScrollIndicator = false
     }
 
+    @IBAction private func clearColorTapped(_ sender: Any) {
+        guard currentCategoryIndex < categories.count else { return }
+        let area = categories[currentCategoryIndex].area
+        if selectedColors[area] != nil {
+            removeColorOverlay(forArea: area)
+            variationsCollectionView.reloadData()
+            updateVariationHeader()
+            colorPaletteCollectionView.reloadData()
+        }
+    }
+    
     private func setupVariationHeader() {
         [selectedContainerView, chevronContainerView].forEach { view in
             view?.layer.cornerRadius = 12
@@ -225,6 +243,18 @@ class GUIViewController: UIViewController {
         let area = categories[index].area
         colorSwatchButton.backgroundColor = selectedColors[area] ?? .systemGray5
         colorSwatchButton.isHidden = (area.lowercased() == "eye")
+        clearColorButton.isEnabled = selectedColors[area] != nil
+        colorPaletteCollectionView.reloadData()
+        
+        if selectedVariations[area] == nil {
+            let shapeID = cleanForFilename(viewModel.selectedShapeId ?? "finch")
+            let defaultName = "id_canvas_\(shapeID)_\(cleanForFilename(area))_default"
+            if let layer = partLayers[area] {
+                let fallback = UIImage(named: defaultName)
+                layer.image = fallback
+                loadLayerImage(category: area, key: defaultName, fallback: fallback, shapeId: shapeID)
+            }
+        }
     }
 
     func updateCanvas(category: String, variant: String) {
@@ -571,18 +601,7 @@ class GUIViewController: UIViewController {
     @IBAction func colorSwatchTapped(_ sender: Any) {
         IdentificationTooltipManager.shared.cancelTooltip()
         guard currentCategoryIndex < categories.count else { return }
-        let area = categories[currentCategoryIndex].area
-        let selectedColor = selectedColors[area]
-        
-        let paletteVC = ColorPaletteViewController(selectedColor: selectedColor)
-        paletteVC.delegate = self
-        
-        if let sheet = paletteVC.sheetPresentationController {
-            sheet.detents = [.medium()]
-            sheet.prefersGrabberVisible = true
-        }
-        
-        present(paletteVC, animated: true)
+        colorPaletteCollectionView.flashScrollIndicators()
     }
 
     private func applyColorOverlay(color: UIColor, toArea area: String) {
@@ -594,6 +613,7 @@ class GUIViewController: UIViewController {
 
         let tinted = originalImage.withTint(color, alpha: 0.5)
         partLayer.image = tinted
+        clearColorButton.isEnabled = true
     }
 
     private func removeColorOverlay(forArea area: String) {
@@ -611,6 +631,7 @@ class GUIViewController: UIViewController {
         }
         selectedColors.removeValue(forKey: area)
         colorSwatchButton.backgroundColor = .systemGray5
+        colorPaletteCollectionView.reloadData()
     }
     
     @IBAction func nextTapped(_ sender: Any) {
@@ -625,6 +646,8 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == categoriesCollectionView {
             return categories.count
+        } else if collectionView == colorPaletteCollectionView {
+            return presetPalette.count
         } else {
             let variants = getOrderedVariantsForCurrentCategory()
             return isVariationsExpanded ? max(0, variants.count - 1) : 0
@@ -637,6 +660,17 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
             let mark = categories[indexPath.row]
             let isSelected = indexPath.row == currentCategoryIndex
             cell.configure(name: mark.area, iconName: mark.iconName, isSelected: isSelected)
+            return cell
+        } else if collectionView == colorPaletteCollectionView {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "BottomColorCell", for: indexPath)
+            let preset = presetPalette[indexPath.item]
+            let area = currentCategoryIndex < categories.count ? categories[currentCategoryIndex].area : ""
+            let isSelected = selectedColors[area]?.toHexString() == preset.color.toHexString()
+            cell.contentView.backgroundColor = preset.color
+            cell.contentView.layer.cornerRadius = 8
+            cell.contentView.layer.masksToBounds = true
+            cell.contentView.layer.borderWidth = isSelected ? 3 : 1
+            cell.contentView.layer.borderColor = isSelected ? UIColor.label.cgColor : UIColor.separator.cgColor
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "VariationCell", for: indexPath) as! VariationCell
@@ -669,6 +703,21 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
         IdentificationTooltipManager.shared.cancelTooltip()
         if collectionView == categoriesCollectionView {
             selectCategory(at: indexPath.row)
+        } else if collectionView == colorPaletteCollectionView {
+            guard currentCategoryIndex < categories.count else { return }
+            let preset = presetPalette[indexPath.item]
+            let area = categories[currentCategoryIndex].area
+            selectedColors[area] = preset.color
+            colorSwatchButton.backgroundColor = preset.color
+            applyColorOverlay(color: preset.color, toArea: area)
+            if let variantName = selectedVariations[area],
+               let mark = categories.first(where: { $0.area == area }),
+               let variant = mark.variants?.first(where: { $0.name == variantName }) {
+                viewModel.setColor(preset.color, for: variant, in: mark)
+            }
+            variationsCollectionView.reloadData()
+            updateVariationHeader()
+            colorPaletteCollectionView.reloadData()
         } else {
             let variants = getOrderedVariantsForCurrentCategory()
             let variant = variants[indexPath.row + 1]
@@ -694,6 +743,10 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
                          : CGSize(width: 147, height: 100)
         }
 
+        if collectionView == colorPaletteCollectionView {
+            return CGSize(width: 44, height: 44)
+        }
+
         let layout = (collectionViewLayout as? UICollectionViewFlowLayout) ?? UICollectionViewFlowLayout()
         let horizontalInsets = layout.sectionInset.left + layout.sectionInset.right
         let side = max(collectionView.bounds.width - horizontalInsets, 0)
@@ -701,6 +754,9 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        if collectionView == colorPaletteCollectionView {
+            return 4
+        }
         return 8
     }
 }
@@ -721,6 +777,7 @@ extension GUIViewController: ColorPaletteDelegate {
         
         variationsCollectionView.reloadData()
         updateVariationHeader()
+        colorPaletteCollectionView.reloadData()
         
         if let variantName = selectedVariations[area],
            let mark = categories.first(where: { $0.area == area }),
@@ -740,73 +797,73 @@ protocol ColorPaletteDelegate: AnyObject {
     func colorPalette(_ controller: ColorPaletteViewController, didSelect color: UIColor?)
 }
 
+struct PresetColor {
+    let name: String
+    let color: UIColor
+}
+
+let presetPalette: [PresetColor] = [
+    PresetColor(name: "Crimson", color: UIColor.fromHex("#DC143C")!),
+    PresetColor(name: "Tomato", color: UIColor.fromHex("#FF6347")!),
+    PresetColor(name: "Tangerine", color: UIColor.fromHex("#FF8C00")!),
+    PresetColor(name: "Amber", color: UIColor.fromHex("#FFBF00")!),
+    PresetColor(name: "Lemon", color: UIColor.fromHex("#FFF700")!),
+    PresetColor(name: "Lime", color: UIColor.fromHex("#32CD32")!),
+    PresetColor(name: "Forest", color: UIColor.fromHex("#228B22")!),
+    PresetColor(name: "Teal", color: UIColor.fromHex("#008080")!),
+    PresetColor(name: "Sky", color: UIColor.fromHex("#87CEEB")!),
+    PresetColor(name: "Ocean", color: UIColor.fromHex("#0077BE")!),
+    PresetColor(name: "Indigo", color: UIColor.fromHex("#4B0082")!),
+    PresetColor(name: "Violet", color: UIColor.fromHex("#EE82EE")!),
+    PresetColor(name: "Magenta", color: UIColor.fromHex("#FF00FF")!),
+    PresetColor(name: "Rose", color: UIColor.fromHex("#FF007F")!),
+    PresetColor(name: "Chocolate", color: UIColor.fromHex("#7B3F00")!),
+    PresetColor(name: "Tan", color: UIColor.fromHex("#D2B48C")!),
+    PresetColor(name: "Slate", color: UIColor.fromHex("#708090")!),
+    PresetColor(name: "Charcoal", color: UIColor.fromHex("#36454F")!),
+    PresetColor(name: "Snow", color: UIColor.fromHex("#FFFAFA")!),
+    PresetColor(name: "Onyx", color: UIColor.fromHex("#353839")!),
+    PresetColor(name: "Grey", color: UIColor.fromHex("#808080")!)
+]
+
 class ColorPaletteViewController: UIViewController {
     weak var delegate: ColorPaletteDelegate?
     private var selectedColor: UIColor?
-    
-    struct PresetColor {
-        let name: String
-        let color: UIColor
-    }
-    
-    private let presetPalette: [PresetColor] = [
-        PresetColor(name: "Crimson", color: UIColor.fromHex("#DC143C")!),
-        PresetColor(name: "Tomato", color: UIColor.fromHex("#FF6347")!),
-        PresetColor(name: "Tangerine", color: UIColor.fromHex("#FF8C00")!),
-        PresetColor(name: "Amber", color: UIColor.fromHex("#FFBF00")!),
-        PresetColor(name: "Lemon", color: UIColor.fromHex("#FFF700")!),
-        PresetColor(name: "Lime", color: UIColor.fromHex("#32CD32")!),
-        PresetColor(name: "Forest", color: UIColor.fromHex("#228B22")!),
-        PresetColor(name: "Teal", color: UIColor.fromHex("#008080")!),
-        PresetColor(name: "Sky", color: UIColor.fromHex("#87CEEB")!),
-        PresetColor(name: "Ocean", color: UIColor.fromHex("#0077BE")!),
-        PresetColor(name: "Indigo", color: UIColor.fromHex("#4B0082")!),
-        PresetColor(name: "Violet", color: UIColor.fromHex("#EE82EE")!),
-        PresetColor(name: "Magenta", color: UIColor.fromHex("#FF00FF")!),
-        PresetColor(name: "Rose", color: UIColor.fromHex("#FF007F")!),
-        PresetColor(name: "Chocolate", color: UIColor.fromHex("#7B3F00")!),
-        PresetColor(name: "Tan", color: UIColor.fromHex("#D2B48C")!),
-        PresetColor(name: "Slate", color: UIColor.fromHex("#708090")!),
-        PresetColor(name: "Charcoal", color: UIColor.fromHex("#36454F")!),
-        PresetColor(name: "Snow", color: UIColor.fromHex("#FFFAFA")!),
-        PresetColor(name: "Onyx", color: UIColor.fromHex("#353839")!)
-    ]
-    
     private var collectionView: UICollectionView!
-    
+
     init(selectedColor: UIColor?) {
         self.selectedColor = selectedColor
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupUI()
     }
-    
+
     private func setupUI() {
         let titleLabel = UILabel()
         titleLabel.text = "Field Mark Colour"
         titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
-        
+
         let clearButton = UIButton(type: .system)
         clearButton.setTitle("Clear", for: .normal)
         clearButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         clearButton.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
         clearButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(clearButton)
-        
+
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 10
         layout.minimumLineSpacing = 20
-        
+
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
         collectionView.delegate = self
@@ -814,21 +871,21 @@ class ColorPaletteViewController: UIViewController {
         collectionView.register(ColorSwatchCell.self, forCellWithReuseIdentifier: "ColorSwatchCell")
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionView)
-        
+
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
+
             clearButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             clearButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
+
             collectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20)
         ])
     }
-    
+
     @objc private func clearTapped() {
         delegate?.colorPalette(self, didSelect: nil)
         dismiss(animated: true)
@@ -839,7 +896,7 @@ extension ColorPaletteViewController: UICollectionViewDataSource, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return presetPalette.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorSwatchCell", for: indexPath) as! ColorSwatchCell
         let preset = presetPalette[indexPath.item]
@@ -847,13 +904,13 @@ extension ColorPaletteViewController: UICollectionViewDataSource, UICollectionVi
         cell.configure(with: preset, isSelected: isSelected)
         return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let selectedPreset = presetPalette[indexPath.item]
         delegate?.colorPalette(self, didSelect: selectedPreset.color)
         dismiss(animated: true)
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = (collectionView.bounds.width - 40) / 5
         return CGSize(width: width, height: width + 35)
@@ -863,46 +920,46 @@ extension ColorPaletteViewController: UICollectionViewDataSource, UICollectionVi
 class ColorSwatchCell: UICollectionViewCell {
     private let swatchView = UIView()
     private let nameLabel = UILabel()
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func setupUI() {
         swatchView.layer.masksToBounds = true
         swatchView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(swatchView)
-        
+
         nameLabel.font = .systemFont(ofSize: 13, weight: .medium)
         nameLabel.textAlignment = .center
         nameLabel.textColor = .label
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(nameLabel)
-        
+
         NSLayoutConstraint.activate([
             swatchView.topAnchor.constraint(equalTo: contentView.topAnchor),
             swatchView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             swatchView.widthAnchor.constraint(equalToConstant: 60),
             swatchView.heightAnchor.constraint(equalToConstant: 60),
-            
+
             nameLabel.topAnchor.constraint(equalTo: swatchView.bottomAnchor, constant: 8),
             nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             nameLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
-        
-        swatchView.layer.cornerRadius = 30
+
+        swatchView.layer.cornerRadius = 8
     }
-    
-    func configure(with preset: ColorPaletteViewController.PresetColor, isSelected: Bool) {
+
+    func configure(with preset: PresetColor, isSelected: Bool) {
         swatchView.backgroundColor = preset.color
         nameLabel.text = preset.name
-        
+
         if isSelected {
             swatchView.layer.borderWidth = 3
             swatchView.layer.borderColor = UIColor.label.cgColor
