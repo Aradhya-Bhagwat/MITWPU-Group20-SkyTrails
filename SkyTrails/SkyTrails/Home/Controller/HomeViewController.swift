@@ -21,6 +21,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     private var cachedSpotsCardWidth: CGFloat?
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
     private var isDataLoading = false
+    private var hasLoadedOnce = false
 
 
     private let emptyNewsItem = NewsItem(
@@ -84,7 +85,14 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         configureNavigationBar()
-        refreshHomeData()
+        
+        if !hasLoadedOnce {
+            loadHomeData()
+            hasLoadedOnce = true
+        } else {
+            refreshHomeData()
+        }
+        
         profileLocationHeaderView.refreshLocation()
     }
 
@@ -193,9 +201,7 @@ extension HomeViewController {
             self.migrationCards = data.migrationCards
             self.animatedIndexPaths.removeAll()
             
-            UIView.transition(with: self.homeCollectionView, duration: isInitialLoad ? 0.4 : 0.3, options: .transitionCrossDissolve, animations: { 
-                self.homeCollectionView.reloadData() 
-            })
+            self.homeCollectionView.reloadData()
         }
     }
 

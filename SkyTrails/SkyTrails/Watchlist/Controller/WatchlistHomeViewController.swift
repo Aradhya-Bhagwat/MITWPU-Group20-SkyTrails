@@ -14,6 +14,10 @@ class WatchlistHomeViewController: UIViewController {
     private var myWatchlistViewModel: WatchlistCellViewModel?
     private var customWatchlistViewModels: [CustomWatchlistCellViewModel] = []
     
+    // Loading State
+    private var isInitialLoad: Bool = true
+    private var loadDataTask: Task<Void, Never>?
+    
     // Profile Location Header
     private let profileLocationHeaderView = ProfileLocationHeaderView()
 	enum WatchlistSection: Int, CaseIterable {
@@ -44,6 +48,7 @@ class WatchlistHomeViewController: UIViewController {
 	}
 
 	private var isMyWatchlistEmptyState: Bool {
+		if isInitialLoad { return false }
 		guard let watchlist = myWatchlist else { return true }
 		return watchlist.stats.totalCount == 0 && !hasAnyWatchlist
 	}
@@ -76,7 +81,10 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func loadData() {
-		Task {
+		guard loadDataTask == nil else { return }
+		
+		loadDataTask = Task {
+			defer { loadDataTask = nil }
 			do {
 				let wasEmptyState = self.isMyWatchlistEmptyState
 				let data = try await repository.loadDashboardData()
@@ -101,12 +109,16 @@ class WatchlistHomeViewController: UIViewController {
                 
 				self.prefetchBirdImages()
 
+				let wasInitialLoad = self.isInitialLoad
+				self.isInitialLoad = false
 				let isNowEmptyState = self.isMyWatchlistEmptyState
-				if wasEmptyState != isNowEmptyState {
+				
+				if wasEmptyState != isNowEmptyState || wasInitialLoad {
 					self.summaryCardCollectionView.setCollectionViewLayout(self.createCompositionalLayout(), animated: false)
 				}
 				self.summaryCardCollectionView.reloadData()
 			} catch {
+				self.isInitialLoad = false
                 WatchlistLog.error("Failed to load watchlist dashboard data", error: error)
 			}
 		}
@@ -126,24 +138,24 @@ class WatchlistHomeViewController: UIViewController {
 	}
 	
 	private func prefetchBirdImages() {
-		var imageKeys: [String] = []
+		var imageKeys: Set<String> = []
 		
 		if let myWatchlist = myWatchlist {
-			imageKeys.append(contentsOf: myWatchlist.previewImages)
+			imageKeys.formUnion(myWatchlist.previewImages)
 		}
 		
 		for custom in customWatchlists {
 			if let coverImage = custom.image {
-				imageKeys.append(coverImage)
+				imageKeys.insert(coverImage)
 			}
 		}
 		
 		for shared in sharedWatchlists {
 			if let coverImage = shared.image {
-				imageKeys.append(coverImage)
+				imageKeys.insert(coverImage)
 			}
 		}
-		let uniqueKeys = Array(Set(imageKeys))
+		let uniqueKeys = Array(imageKeys)
 		Task {
 			await IdentificationImageService.shared.prefetch(keys: uniqueKeys)
 		}
@@ -208,7 +220,7 @@ class WatchlistHomeViewController: UIViewController {
 			forCellWithReuseIdentifier: WatchlistEmptyCollectionViewCell.identifier
 		)
 		
-		summaryCardCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
+		summaryCardCollectionView.register(SkeletonLoadingCell.self, forCellWithReuseIdentifier: "PlaceholderCell")
 	}
 }
 extension WatchlistHomeViewController {
@@ -379,6 +391,14 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 			return 0
 		}
 		
+		if isInitialLoad {
+			switch sectionType {
+				case .myWatchlist: return 3
+				case .customWatchlist: return 2
+				case .sharedWatchlist: return 2
+			}
+		}
+		
 		let count: Int
 		switch sectionType {
 			case .myWatchlist:
@@ -394,6 +414,12 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else {
 			return collectionView.dequeueReusableCell(withReuseIdentifier: "PlaceholderCell", for: indexPath)
+		}
+		
+		if isInitialLoad {
+			let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PlaceholderCell", for: indexPath) as! SkeletonLoadingCell
+			cell.startAnimating()
+			return cell
 		}
 		
 			switch sectionType {
@@ -883,5 +909,55 @@ extension WatchlistHomeViewController {
 			elementKind: UICollectionView.elementKindSectionHeader,
 			alignment: .top
 		)
+	}
+}
+
+// MARK: - Skeleton Loading
+
+class SkeletonLoadingCell: UICollectionViewCell {
+	private let gradientLayer = CAGradientLayer()
+	
+	override init(frame: CGRect) {
+		super.init(frame: frame)
+		setupLayer()
+	}
+	
+	required init?(coder: NSCoder) {
+		super.init(coder: coder)
+		setupLayer()
+	}
+	
+	private func setupLayer() {
+		contentView.backgroundColor = .systemGray6
+		contentView.layer.cornerRadius = 16
+		contentView.layer.masksToBounds = true
+		
+		gradientLayer.colors = [
+			UIColor.systemGray5.withAlphaComponent(0.6).cgColor,
+			UIColor.systemGray4.withAlphaComponent(0.6).cgColor,
+			UIColor.systemGray5.withAlphaComponent(0.6).cgColor
+		]
+		gradientLayer.locations = [0.0, 0.5, 1.0]
+		gradientLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
+		gradientLayer.endPoint = CGPoint(x: 1.0, y: 0.5)
+		contentView.layer.addSublayer(gradientLayer)
+	}
+	
+	override func layoutSubviews() {
+		super.layoutSubviews()
+		gradientLayer.frame = contentView.bounds
+	}
+	
+	func startAnimating() {
+		let animation = CABasicAnimation(keyPath: "locations")
+		animation.fromValue = [-1.0, -0.5, 0.0]
+		animation.toValue = [1.0, 1.5, 2.0]
+		animation.duration = 1.5
+		animation.repeatCount = .infinity
+		gradientLayer.add(animation, forKey: "skeletonAnimation")
+	}
+	
+	func stopAnimating() {
+		gradientLayer.removeAnimation(forKey: "skeletonAnimation")
 	}
 }
