@@ -89,8 +89,8 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         if !hasLoadedOnce {
             loadHomeData()
             hasLoadedOnce = true
-        } else {
-            refreshHomeData()
+        } else if homeScreenData == nil {
+            loadHomeData()
         }
         
         profileLocationHeaderView.refreshLocation()
@@ -168,14 +168,14 @@ extension HomeViewController {
 
     // Fetches comprehensive home screen data asynchronously
     private func loadHomeData() {
-        fetchHomeData(isInitialLoad: true)
+        fetchHomeData(isInitialLoad: true, forceRefresh: false)
     }
 
     private func refreshHomeData() {
-        fetchHomeData(isInitialLoad: false)
+        fetchHomeData(isInitialLoad: false, forceRefresh: true)
     }
 
-    private func fetchHomeData(isInitialLoad: Bool) {
+    private func fetchHomeData(isInitialLoad: Bool, forceRefresh: Bool) {
         guard !isDataLoading else { return }
         isDataLoading = true
         
@@ -190,7 +190,10 @@ extension HomeViewController {
             }
             guard let self = self else { return }
             
-            let data = await self.homeManager.getHomeScreenData(userLocation: await self.resolveQueryLocation())
+            let data = await self.homeManager.getHomeScreenData(
+                userLocation: await self.resolveQueryLocation(),
+                forceRefresh: forceRefresh
+            )
             self.homeScreenData = data
             if let msg = data.errorMessage { self.showErrorAlert(message: msg) }
             

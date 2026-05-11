@@ -24,12 +24,20 @@ class HomeManager {
         init(response: HotspotPredictionResponse) { self.response = response }
     }
 
+    private final class HomeScreenCacheItem {
+        let data: HomeScreenData
+        let cachedAt: Date = Date()
+        init(data: HomeScreenData) { self.data = data }
+    }
+
     // App-Side Memory Cache: Makes hotspot card clicks instant within one session
     private let speciesMemoryCache: NSCache<NSString, SpeciesCacheItem> = {
         let cache = NSCache<NSString, SpeciesCacheItem>()
         cache.countLimit = 50 
         return cache
     }()
+    private let homeScreenCacheTTL: TimeInterval = 10 * 60
+    private var homeScreenMemoryCache: [String: HomeScreenCacheItem] = [:]
     private var spotPredictionMemoryCache: [String: [FinalPredictionResult]] = [:]
 
     init(
@@ -56,11 +64,22 @@ class HomeManager {
         self.locationService = locationService ?? LocationService.shared
     }
     func getHomeScreenData(
-        userLocation: CLLocationCoordinate2D? = nil
+        userLocation: CLLocationCoordinate2D? = nil,
+        forceRefresh: Bool = false
     ) async -> HomeScreenData {
-        speciesMemoryCache.removeAllObjects()
-        
         let location = userLocation ?? LocationPreferences.shared.homeLocation
+        let cacheKey = homeScreenCacheKey(for: location)
+
+        if !forceRefresh,
+           let cached = homeScreenMemoryCache[cacheKey],
+           Date().timeIntervalSince(cached.cachedAt) < homeScreenCacheTTL {
+            return cached.data
+        }
+
+        if forceRefresh {
+            speciesMemoryCache.removeAllObjects()
+            homeScreenMemoryCache.removeValue(forKey: cacheKey)
+        }
         
         async let upcoming = getRegionalSpecies(userLocation: location)
 
@@ -109,9 +128,7 @@ class HomeManager {
             news
         )
 
-        print("DEBUG upcomingResult count: \(upcomingResult.count)")
-
-        return HomeScreenData(
+        let data = HomeScreenData(
             upcomingBirds: upcomingResult,
             myWatchlistBirds: myWatchlistResult,
             recommendedBirds: recommendedResult,
@@ -123,6 +140,13 @@ class HomeManager {
             news: newsResult,
             errorMessage: nil
         )
+        homeScreenMemoryCache[cacheKey] = HomeScreenCacheItem(data: data)
+        return data
+    }
+
+    private func homeScreenCacheKey(for location: CLLocationCoordinate2D?) -> String {
+        guard let location else { return "none" }
+        return "\(String(format: "%.3f", location.latitude)),\(String(format: "%.3f", location.longitude))"
     }
 
 
