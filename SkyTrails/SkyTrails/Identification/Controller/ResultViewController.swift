@@ -52,6 +52,11 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let preselectedBirdId: UUID?
         if let history = historyItem {
             var candidates = (history.candidates?.isEmpty == false) ? (history.candidates ?? []) : viewModel.results
+            var seen = Set<UUID>()
+            candidates.removeAll { cand in
+                guard let id = cand.bird?.bird_id else { return false }
+                return !seen.insert(id).inserted
+            }
             candidates.sort { ($0.confidence) > ($1.confidence) }
             self.birdResults = candidates
             preselectedBirdId = history.bird?.bird_id
