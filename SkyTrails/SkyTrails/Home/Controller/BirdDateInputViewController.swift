@@ -24,6 +24,7 @@ class BirdDateInputViewController: UIViewController {
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let pageControl = UIPageControl()
     private let containerView = UIView()
+    private var currentImageTask: Task<Void, Never>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -122,7 +123,14 @@ class BirdDateInputViewController: UIViewController {
         let data = collectedData[currentIndex]
         
         self.title = data.species.name
-        imageView.image = UIImage(named: data.species.imageName)
+        currentImageTask?.cancel()
+        imageView.image = UIImage(systemName: "bird.fill")
+        let imageName = data.species.imageName
+        currentImageTask = Task { @MainActor in
+            if let fetched = await ImageService.shared.image(for: imageName), !Task.isCancelled {
+                imageView.image = fetched
+            }
+        }
         
         pageControl.numberOfPages = collectedData.count
         pageControl.currentPage = currentIndex
