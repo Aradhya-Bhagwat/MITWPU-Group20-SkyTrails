@@ -480,6 +480,7 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        collectionView.deselectItem(at: indexPath, animated: false)
         updateSelectedBirdIndex(indexPath.item, animated: true)
     }
     

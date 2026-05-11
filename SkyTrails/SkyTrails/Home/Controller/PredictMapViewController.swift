@@ -52,7 +52,6 @@ class PredictMapViewController: UIViewController {
     private var minBottomY: CGFloat = 0
     private var initialLoadY: CGFloat = 0
     private var mapRenderToken: Int = 0
-    private var predictionProbabilityByBirdName: [String: Int] = [:]
     private var currentGeoJSONOverlays: [MKOverlay] = []
     private var selectedPredictionKey: String?
     private var currentOutputInputs: [PredictionInputData] = []
@@ -95,11 +94,6 @@ class PredictMapViewController: UIViewController {
         mapRenderToken += 1
         let currentToken = mapRenderToken
         selectedPredictionKey = nil
-        predictionProbabilityByBirdName = Dictionary(
-            predictions.map { ($0.birdName, $0.spottingProbability) },
-            uniquingKeysWith: max
-        )
-
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         currentGeoJSONOverlays.removeAll()
@@ -157,7 +151,7 @@ class PredictMapViewController: UIViewController {
             }
         }
         
-        let birdAnnotations = deconflictedBirdAnnotations(from: predictions, inputs: inputs)
+        let birdAnnotations = deconflictedBirdAnnotations(from: predictions)
         annotations.append(contentsOf: birdAnnotations)
         locationCoordinates.append(contentsOf: birdAnnotations.map(\.coordinate))
         
@@ -213,8 +207,7 @@ class PredictMapViewController: UIViewController {
     }
 
     private func deconflictedBirdAnnotations(
-        from predictions: [FinalPredictionResult],
-        inputs: [PredictionInputData]
+        from predictions: [FinalPredictionResult]
     ) -> [PredictionAnnotation] {
         let keyForCoordinate: (CLLocationCoordinate2D) -> String = {
             "\(String(format: "%.5f", $0.latitude)),\(String(format: "%.5f", $0.longitude))"
@@ -235,7 +228,7 @@ class PredictMapViewController: UIViewController {
         }
 
         var seenByCoordinateKey: [String: Int] = [:]
-        return predictions.enumerated().map { index, prediction in
+        return predictions.map { prediction in
             let baseCoordinate = CLLocationCoordinate2D(
                 latitude: prediction.matchedLocation.lat,
                 longitude: prediction.matchedLocation.lon
@@ -258,34 +251,21 @@ class PredictMapViewController: UIViewController {
                 displayCoordinate = baseCoordinate
             }
 
-            let inputName: String
-            if inputs.indices.contains(prediction.matchedInputIndex) {
-                inputName = inputs[prediction.matchedInputIndex].locationName ?? "input"
-            } else {
-                inputName = "input"
-            }
-
             return PredictionAnnotation(
                 kind: .bird,
                 coordinate: displayCoordinate,
-                title: prediction.birdName,
-                subtitle: "Predicted near \(inputName)",
+                title: nil,
+                subtitle: nil,
                 probability: prediction.spottingProbability,
                 birdImageName: prediction.imageName,
                 birdKey: predictionKey(for: prediction),
-                pinColor: pinColor(for: prediction.imageName, index: index)
+                pinColor: .systemBrown
             )
         }
     }
 
     private func predictionKey(for prediction: FinalPredictionResult) -> String {
         "\(prediction.birdName)|\(prediction.imageName)|\(prediction.matchedInputIndex)|\(prediction.matchedLocation.lat)|\(prediction.matchedLocation.lon)"
-    }
-
-    private func pinColor(for birdImageName: String, index: Int) -> UIColor {
-        let hue = (Double(abs(birdImageName.hashValue % 10_000)) / 10_000.0 + (Double(index) * 0.61803398875))
-            .truncatingRemainder(dividingBy: 1.0)
-        return UIColor(hue: CGFloat(hue), saturation: 0.72, brightness: 0.90, alpha: 1.0)
     }
 
     private func refreshBirdSelectionState(animated: Bool) {
@@ -304,11 +284,14 @@ class PredictMapViewController: UIViewController {
         view.markerTintColor = baseColor
         view.glyphTintColor = .white
         view.glyphImage = UIImage(systemName: "bird.fill")
+        view.glyphText = nil
+        view.titleVisibility = .hidden
+        view.subtitleVisibility = .hidden
         view.zPriority = isSelected ? .max : .defaultUnselected
 
         let updates = {
-            view.transform = CGAffineTransform(scaleX: isSelected ? 1.25 : 0.82, y: isSelected ? 1.25 : 0.82)
-            view.alpha = isSelected ? 1.0 : 0.72
+            view.transform = CGAffineTransform(scaleX: isSelected ? 1.15 : 1.0, y: isSelected ? 1.15 : 1.0)
+            view.alpha = 1.0
         }
 
         if animated {
@@ -708,7 +691,6 @@ extension PredictMapViewController: MKMapViewDelegate {
         
         if annotationView == nil {
             annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-            annotationView?.canShowCallout = true
         } else {
             annotationView?.annotation = annotation
         }
@@ -719,10 +701,8 @@ extension PredictMapViewController: MKMapViewDelegate {
             }
 
             if predictedBirdAnnotation.kind == .bird {
-                let birdName = predictedBirdAnnotation.title
-                let probability = predictedBirdAnnotation.probability
-                    ?? predictionProbabilityByBirdName[birdName ?? ""]
-                    ?? 50
+                annotationView?.canShowCallout = false
+                let probability = predictedBirdAnnotation.probability ?? 50
                 let baseColor = predictedBirdAnnotation.pinColor ?? statusColor(for: probability)
                 markerView.glyphText = nil
                 applyPinStyle(
@@ -732,6 +712,7 @@ extension PredictMapViewController: MKMapViewDelegate {
                     animated: false
                 )
             } else {
+                annotationView?.canShowCallout = true
                 markerView.transform = .identity
                 markerView.alpha = 1.0
                 markerView.zPriority = .max
@@ -739,6 +720,8 @@ extension PredictMapViewController: MKMapViewDelegate {
                 markerView.glyphImage = UIImage(systemName: "magnifyingglass")
                 markerView.glyphText = nil
                 markerView.glyphTintColor = .white
+                markerView.titleVisibility = .adaptive
+                markerView.subtitleVisibility = .adaptive
             }
         }
         

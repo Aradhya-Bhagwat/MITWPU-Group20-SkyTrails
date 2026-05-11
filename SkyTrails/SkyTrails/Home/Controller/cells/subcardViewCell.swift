@@ -21,6 +21,18 @@ class subcardViewCell: UICollectionViewCell {
     private var accentColor: UIColor = .systemBlue
     private var currentImageTask: Task<Void, Never>?
 
+    override var isHighlighted: Bool {
+        didSet {
+            resetInteractionState()
+        }
+    }
+
+    override var isSelected: Bool {
+        didSet {
+            resetInteractionState()
+        }
+    }
+
     
     var isExpanded: Bool = true {
         didSet {
@@ -39,6 +51,7 @@ class subcardViewCell: UICollectionViewCell {
         currentImageTask = nil
         birdImageView.image = UIImage(systemName: "bird.fill")
         compactBirdImageView?.image = UIImage(systemName: "bird.fill")
+        resetInteractionState()
     }
 
     
@@ -96,6 +109,7 @@ class subcardViewCell: UICollectionViewCell {
             birdNameLabel.textAlignment = .left
             badgeSubtitleLabel.textAlignment = .left
             sightabilityTextLabel.textAlignment = .left
+            applyStableTextColors()
         
             updateSightabilityIcon(pointSize: 12, color: .systemBlue)
             updateExpandedBadgeIcon()
@@ -151,7 +165,23 @@ class subcardViewCell: UICollectionViewCell {
                 tag = "Rare Find"
             }
             sightabilityTextLabel.text = tag
+            resetInteractionState()
         }
+
+    private func applyStableTextColors() {
+        birdNameLabel.textColor = .label
+        birdNameLabel.highlightedTextColor = .label
+        badgeSubtitleLabel.textColor = .secondaryLabel
+        badgeSubtitleLabel.highlightedTextColor = .secondaryLabel
+        sightabilityTextLabel.textColor = .label
+        sightabilityTextLabel.highlightedTextColor = .label
+        compactBirdNameLabel?.textColor = .label
+        compactBirdNameLabel?.highlightedTextColor = .label
+    }
+
+    private func resetInteractionState() {
+        applyStableTextColors()
+    }
     
     func setExpanded(_ expanded: Bool) {
         isExpanded = expanded

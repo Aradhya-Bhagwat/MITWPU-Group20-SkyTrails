@@ -122,9 +122,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.isHidden = true
 
-        let watchlistBtn = createActionButton(title: "Add to Watchlist", imageName: "SF_addToWatchlist")
+        let watchlistBtn = createActionButton(title: "Add to Watchlist")
         watchlistBtn.addTarget(self, action: #selector(didTapWatchlist), for: .touchUpInside)
-        let pathBtn = createActionButton(title: "Predict Species", imageName: "SF_birdPath")
+        let pathBtn = createActionButton(title: "Predict Species")
         pathBtn.addTarget(self, action: #selector(didTapPath), for: .touchUpInside)
 
         stack.addArrangedSubview(watchlistBtn)
