@@ -1639,10 +1639,6 @@ class HomeManager {
 
             let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
 
-            print("🔍 lookup: '\(species.commonName)' -> bird found: \(bird != nil) -> imageUrl: \(bird?.imageUrl ?? "NIL") -> finalImage: \(remoteImage ?? "NIL")")
-
-
-
             return FinalPredictionResult(
                 birdName: species.commonName,
                 imageName: remoteImage ?? "placeholder_image",

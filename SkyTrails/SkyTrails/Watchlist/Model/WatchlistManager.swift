@@ -108,10 +108,6 @@ final class WatchlistManager: WatchlistRepository {
             name: NSNotification.Name("DidUploadPhoto"),
             object: nil
         )
-        isDataLoaded = true
-        DispatchQueue.main.async { [weak self] in
-            self?.notifyDataLoaded(success: true)
-        }
     }
 
     private static func resetDefaultSwiftDataStoreFiles() {
@@ -169,6 +165,7 @@ final class WatchlistManager: WatchlistRepository {
     @MainActor
     func performGlobalSeeding() async {
         await bootstrap.performGlobalSeeding()
+        notifyDataLoaded(success: true)
     }
     
     func loadDashboardData() async throws -> (

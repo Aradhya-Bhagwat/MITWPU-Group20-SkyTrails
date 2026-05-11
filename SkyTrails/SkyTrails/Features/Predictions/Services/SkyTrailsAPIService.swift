@@ -122,8 +122,6 @@ final class SkyTrailsAPIService {
         guard let url = URL(string: "\(supabaseURL)/functions/v1/fetch-species-range") 
         else { throw APIError.invalidURL }
         
-        print("DEBUG RANGE: Full URL = \(url.absoluteString)")
-
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -136,19 +134,14 @@ final class SkyTrailsAPIService {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        print("DEBUG API: about to call URLSession for \(ebirdSpeciesCode) week \(weekNumber)")
         let (data, response) = try await URLSession.shared.data(for: request)
-        print("DEBUG API: URLSession returned, processing response")
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
 
-        print("DEBUG RANGE: HTTP status \(httpResponse.statusCode) for \(ebirdSpeciesCode) week \(weekNumber)")
-
         // 202 means no data for this week — not an error, just no range
         if httpResponse.statusCode == 202 {
-            print("DEBUG RANGE: no range data for week \(weekNumber)")
             return nil
         }
 
@@ -164,11 +157,9 @@ final class SkyTrailsAPIService {
         let decoded = try JSONDecoder().decode(RangeResponse.self, from: data)
 
         guard decoded.found, let geoJSONString = decoded.rangeGeoJSON else {
-            print("DEBUG RANGE: found=false or rangeGeoJSON nil")
             return nil
         }
 
-        print("DEBUG RANGE: got GeoJSON string, length=\(geoJSONString.count)")
         return geoJSONString
     }
 
@@ -258,62 +249,77 @@ final class SkyTrailsAPIService {
         speciesCodeMap: [String: String],
         scientificNameMap: [String: String],
         commonNameMap: [String: String],
-        nameToSpeciesCodeMap: [String: String]
+        commonNameToCodeMap: [String: String]
     ) {
         let config = try SupabaseConfig.load()
-        var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
-        components?.path = "/rest/v1/birds"
-        components?.queryItems = [
-            URLQueryItem(name: "select", value: "species_code,scientific_name,image_url,common_name"),
-            URLQueryItem(name: "limit", value: "1000")
-        ]
-        
-        guard let url = components?.url else { throw APIError.invalidURL }
-        
-        
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 10
-        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw APIError.serverError("Failed to fetch bird image mapping")
-        }
-        
         struct BirdMapRow: Codable {
             let species_code: String?
             let scientific_name: String?
             let image_url: String?
             let common_name: String?
         }
-        
-        let rows = try JSONDecoder().decode([BirdMapRow].self, from: data)
+
+        let pageSize = 1000
+        var offset = 0
+        var rows: [BirdMapRow] = []
+        let decoder = JSONDecoder()
+
+        while true {
+            var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
+            components?.path = "/rest/v1/birds"
+            components?.queryItems = [
+                URLQueryItem(name: "select", value: "species_code,scientific_name,image_url,common_name"),
+                URLQueryItem(name: "limit", value: "\(pageSize)"),
+                URLQueryItem(name: "offset", value: "\(offset)")
+            ]
+
+            guard let url = components?.url else { throw APIError.invalidURL }
+
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 10
+            request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                throw APIError.serverError("Failed to fetch bird image mapping")
+            }
+
+            let pageRows = try decoder.decode([BirdMapRow].self, from: data)
+            rows.append(contentsOf: pageRows)
+
+            if pageRows.count < pageSize {
+                break
+            }
+
+            offset += pageSize
+        }
         
         var speciesCodeMap: [String: String] = [:]
         var scientificNameMap: [String: String] = [:]
         var commonNameMap: [String: String] = [:]
-        var nameToSpeciesCodeMap: [String: String] = [:]
+        var commonNameToCodeMap: [String: String] = [:]
         
         for row in rows {
-            guard let url = row.image_url else { continue }
-            
             if let common = row.common_name {
-                commonNameMap[common] = url
                 if let code = row.species_code {
-                    nameToSpeciesCodeMap[common] = code
+                    commonNameToCodeMap[common] = code
+                }
+                if let url = row.image_url {
+                    commonNameMap[common] = url
                 }
             }
-            if let code = row.species_code {
+            if let code = row.species_code, let url = row.image_url {
                 speciesCodeMap[code] = url
             }
-            if let sciName = row.scientific_name {
+            if let sciName = row.scientific_name, let url = row.image_url {
                 scientificNameMap[sciName] = url
             }
         }
         
-        return (speciesCodeMap, scientificNameMap, commonNameMap, nameToSpeciesCodeMap)
+        return (speciesCodeMap, scientificNameMap, commonNameMap, commonNameToCodeMap)
     }
 
 }
