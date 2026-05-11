@@ -63,6 +63,18 @@ class GUIViewController: UIViewController {
         navigationItem.rightBarButtonItem?.isEnabled = !selectedVariations.isEmpty
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleAttachedTooltip(in: self.view, message: "Review your selections and tap 'View Results'.") { [weak self] in
+            return self?.categoriesCollectionView.cellForItem(at: IndexPath(item: 0, section: 0)) ?? self?.categoriesCollectionView
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         let bounds = canvasContainerView.bounds
@@ -537,6 +549,7 @@ class GUIViewController: UIViewController {
     }
 
     @objc private func selectedTapped() {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let variants = getOrderedVariantsForCurrentCategory()
         guard let first = variants.first, currentCategoryIndex < categories.count else { return }
 
@@ -549,12 +562,14 @@ class GUIViewController: UIViewController {
         updateNextButtonState()
     }
     @objc private func chevronTapped() {
+        IdentificationTooltipManager.shared.cancelTooltip()
         isVariationsExpanded.toggle()
         updateVariationHeader()
         variationsCollectionView.reloadData()
     }
     
     @IBAction func colorSwatchTapped(_ sender: Any) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard currentCategoryIndex < categories.count else { return }
         let area = categories[currentCategoryIndex].area
         let selectedColor = selectedColors[area]
@@ -599,6 +614,7 @@ class GUIViewController: UIViewController {
     }
     
     @IBAction func nextTapped(_ sender: Any) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard !selectedVariations.isEmpty else { return }
         delegate?.didFinishStep()
     }
@@ -650,6 +666,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         if collectionView == categoriesCollectionView {
             selectCategory(at: indexPath.row)
         } else {
@@ -690,6 +707,7 @@ extension GUIViewController: UICollectionViewDelegate, UICollectionViewDataSourc
 
 extension GUIViewController: ColorPaletteDelegate {
     func colorPalette(_ controller: ColorPaletteViewController, didSelect color: UIColor?) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard currentCategoryIndex < categories.count else { return }
         let area = categories[currentCategoryIndex].area
         

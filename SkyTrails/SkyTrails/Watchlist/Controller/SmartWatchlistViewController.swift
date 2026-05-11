@@ -369,7 +369,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 		alert.addAction(UIAlertAction(title: "Add to Observed", style: .default) { [weak self] _ in
 			self?.showObservedDetail(bird: nil)
 		})
-		alert.addAction(UIAlertAction(title: "Add to Unobserved", style: .default) { [weak self] _ in
+		alert.addAction(UIAlertAction(title: "Add to To observe", style: .default) { [weak self] _ in
 			self?.showSpeciesSelection(mode: .unobserved)
 		})
 		alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))

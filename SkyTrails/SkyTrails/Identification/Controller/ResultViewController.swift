@@ -38,6 +38,18 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         loadData()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleAttachedTooltip(in: self.view, message: "Here are the closest matches for your bird.") { [weak self] in
+            return self?.resultCollectionView.cellForItem(at: IndexPath(item: 0, section: 0)) ?? self?.resultCollectionView
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
             self.handleUserInterfaceStyleChange()
@@ -153,6 +165,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     @IBAction func nextTapped(_ sender: Any) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         if viewModel.isReloadFlowActive, viewModel.currentSession != nil {
             showSaveChoiceDialog()
             return
@@ -209,6 +222,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
   
     @IBAction func restartTapped(_ sender: Any) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         delegate?.didTapLeftButton()
     }
     
@@ -262,6 +276,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let previous = selectedIndexPath
         selectedIndexPath = indexPath
         selectedResult = birdResults[indexPath.item].bird
@@ -283,6 +298,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     func didTapPredict(for cell: ResultCollectionViewCell) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }
         let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
         if let birdSelectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController {
@@ -292,6 +308,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     }
     
     func didTapAddToWatchlist(for cell: ResultCollectionViewCell) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }
 
         let existingWatchlistIds = watchlistIdsContainingBird(birdId: bird.bird_id)

@@ -42,6 +42,18 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
         navigationItem.rightBarButtonItem?.isEnabled = (selectedShapeId != nil)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleAttachedTooltip(in: self.view, message: "Select the shape category of the bird.") { [weak self] in
+            return self?.shapeCollectionView.cellForItem(at: IndexPath(item: 0, section: 0)) ?? self?.shapeCollectionView
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+    
     private func setupCollectionView() {
         shapeCollectionView.delegate = self
         shapeCollectionView.dataSource = self
@@ -135,6 +147,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let selectedShape = filteredShapes[indexPath.item]
         viewModel.selectedShape = selectedShape
         self.selectedShapeId = selectedShape.bird_shape_id
@@ -154,6 +167,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
 
     @IBAction func nextTapped(_ sender: UIBarButtonItem) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard selectedShapeId != nil else { return }
         delegate?.didTapShapes()
     }
