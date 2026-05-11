@@ -96,8 +96,6 @@ class birdspredViewController: UIViewController {
 		setupUI()
 		setupMap()
 		applySemanticAppearance()
-		print("DEBUG VIEWDIDLOAD: isPredictFlow = \(isPredictFlow)")
-		print("DEBUG VIEWDIDLOAD: predictionInputs count = \(predictionInputs.count)")
 
 		if !predictionInputs.isEmpty {
 			updateCardForCurrentIndex()
@@ -363,27 +361,19 @@ class birdspredViewController: UIViewController {
 					return
 				}
 				
-				print("DEBUG RANGE: fetching for \(speciesCode) week \(week)")
-				
 				guard let geoJSONString = try await SkyTrailsAPIService.shared.fetchSpeciesRange(
 					ebirdSpeciesCode: speciesCode,
 					weekNumber: week
 				) else {
-					print("DEBUG RANGE: nil returned, no overlay to add")
 					return
 				}
 
 				guard let geoJSONData = geoJSONString.data(using: .utf8) else {
-					print("DEBUG RANGE: string to Data conversion failed")
 					return
 				}
 
-				print("DEBUG RANGE: data bytes = \(geoJSONData.count)")
-				print("DEBUG RANGE: preview = \(String(data: geoJSONData.prefix(200), encoding: .utf8) ?? "nil")")
-
 				let decoder = MKGeoJSONDecoder()
 				guard let geoJSONFeatures = try? decoder.decode(geoJSONData) else {
-					print("DEBUG RANGE: MKGeoJSONDecoder failed to parse")
 					return
 				}
 				

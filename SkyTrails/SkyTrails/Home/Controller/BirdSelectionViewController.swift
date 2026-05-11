@@ -30,6 +30,12 @@ class BirdSelectionViewController: UIViewController {
         SearchBar.searchBarStyle = .minimal
         SearchBar.backgroundColor = .clear
 
+        WatchlistManager.shared.onDataLoaded { [weak self] _ in
+            self?.loadSpeciesData()
+        }
+    }
+
+    private func loadSpeciesData() {
         let speciesData = WatchlistManager.shared.fetchAllBirds()
         self.allSpecies = speciesData.map {
             SpeciesData(
@@ -40,6 +46,7 @@ class BirdSelectionViewController: UIViewController {
             )
         }.sorted { $0.name < $1.name }
         self.filteredSpecies = allSpecies
+        searchCollection.reloadData()
     }
 
     private func setupTraitChangeHandling() {

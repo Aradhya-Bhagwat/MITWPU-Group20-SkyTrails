@@ -42,7 +42,7 @@ final class BirdDatabaseSeeder {
     }
 
     func seed(modelContext: ModelContext) throws {
-        let hasSeededKey = "kBirdDatabaseSeeded_v3"
+        let hasSeededKey = "kBirdDatabaseSeeded_v4"
         if UserDefaults.standard.bool(forKey: hasSeededKey) {
             return
         }
@@ -79,11 +79,11 @@ final class BirdDatabaseSeeder {
             if let existing = existingBirdMap[birdDTO.bird_id] {
                 var didUpdate = false
 
-                if existing.commonName.isEmpty {
+                if existing.commonName != birdDTO.commonName {
                     existing.commonName = birdDTO.commonName
                     didUpdate = true
                 }
-                if existing.scientificName.isEmpty {
+                if existing.scientificName != birdDTO.scientificName {
                     existing.scientificName = birdDTO.scientificName
                     didUpdate = true
                 }
@@ -230,45 +230,57 @@ final class BirdDatabaseSeeder {
         }
     }
 
+    private func normalizeName(_ name: String) -> String {
+        return name.lowercased()
+                   .replacingOccurrences(of: "-", with: " ")
+                   .replacingOccurrences(of: "  ", with: " ")
+                   .trimmingCharacters(in: .whitespaces)
+    }
+
     func refreshImageUrls(modelContext: ModelContext) async {
         do {
-            let (speciesCodeMap, scientificNameMap, commonNameMap, nameToSpeciesCodeMap) =
+            let (speciesCodeMap, scientificNameMap, commonNameMap, commonNameToCodeMap) =
                 try await SkyTrailsAPIService.shared.fetchBirdImageUrls()
-            
+             
 
             let descriptor = FetchDescriptor<Bird>()
             let allBirds = try modelContext.fetch(descriptor)
-            var birdMap = Dictionary(allBirds.map { ($0.commonName, $0) }, uniquingKeysWith: { first, _ in first })
             
-            var updateCount = 0
-            var createCount = 0
+            // Build normalized maps for better matching
+            var normalizedCodeMap: [String: String] = [:]
+            for (name, code) in commonNameToCodeMap {
+                normalizedCodeMap[normalizeName(name)] = code
+            }
             
-            // 1. Update existing birds using the three-tier matching logic
+            var normalizedImageMap: [String: String] = [:]
+            for (name, url) in commonNameMap {
+                normalizedImageMap[normalizeName(name)] = url
+            }
+            
             for bird in allBirds {
+                let normalizedBirdName = normalizeName(bird.commonName)
+                
+                // 1. Update imageUrl
                 let url = speciesCodeMap[bird.ebird_species_code ?? ""]
                        ?? scientificNameMap[bird.scientificName]
                        ?? commonNameMap[bird.commonName]
+                       ?? normalizedImageMap[normalizedBirdName]
                 
                 if let url = url, bird.imageUrl != url {
                     bird.imageUrl = url
-                    updateCount += 1
                 }
                 
-                // Also sync ebird_species_code if missing
+                // 2. Update ebird_species_code if missing
                 if bird.ebird_species_code == nil || bird.ebird_species_code?.isEmpty == true {
-                    if let code = nameToSpeciesCodeMap[bird.commonName] {
+                    if let code = commonNameToCodeMap[bird.commonName] ?? normalizedCodeMap[normalizedBirdName] {
                         bird.ebird_species_code = code
-                        updateCount += 1
                     }
                 }
             }
             
-            // 2. DO NOT create missing birds here as they lack critical metadata (shape, size, etc.)
-            // Metadata for identification should only come from the JSON seeder.
-            print("🔍 BirdDatabaseSeeder: Sync completed. Updated \(updateCount) birds.")
-            
             try modelContext.save()
         } catch {
+            print("❌ BirdDatabaseSeeder: Failed to sync URLs/Codes: \(error)")
         }
     }
 
