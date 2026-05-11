@@ -655,8 +655,21 @@ actor BackgroundSyncAgent {
                 var failedOp = operation
                 print("DEBUG: BackgroundSyncAgent operation failed - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId), error: \(error.localizedDescription)")
                 
-                // Special handling for 409 (Conflict/Foreign Key violation)
+                // Special handling for 409 (Conflict)
                 if let nsError = error as NSError?, nsError.code == 409 {
+                    let msg = nsError.userInfo["supabase_message"] as? String ?? ""
+                    let isDuplicate = msg.contains("duplicate key value") || msg.contains("unique constraint")
+                    let isIDTable = operation.table.hasPrefix("identification_")
+
+                    if isDuplicate && isIDTable {
+                        print("DEBUG: BackgroundSyncAgent - 409 unique constraint for \(operation.table) recordId=\(operation.recordId). Marking as synced.")
+                        let context = WatchlistManager.shared.context
+                        markRecordSynced(table: operation.table, recordId: operation.recordId, context: context)
+                        queue.remove(at: 0)
+                        Self.saveQueueToDisk(queue)
+                        continue
+                    }
+
                     print("DEBUG: BackgroundSyncAgent - 409 Conflict for \(operation.table). Moving to back of queue.")
                     queue.remove(at: 0)
                     queue.append(failedOp)
@@ -867,6 +880,29 @@ actor BackgroundSyncAgent {
             default: break
             }
         } catch { }
+    }
+
+    private func markRecordSynced(table: String, recordId: UUID, context: ModelContext) {
+        switch table {
+        case "identification_sessions":
+            if let item = try? context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })).first {
+                item.syncStatus = .synced; item.lastSyncedAt = Date()
+            }
+        case "identification_results":
+            if let item = try? context.fetch(FetchDescriptor<IdentificationResult>(predicate: #Predicate { $0.identification_result_id == recordId })).first {
+                item.syncStatus = .synced; item.lastSyncedAt = Date()
+            }
+        case "identification_candidates":
+            if let item = try? context.fetch(FetchDescriptor<IdentificationCandidate>(predicate: #Predicate { $0.identification_candidate_id == recordId })).first {
+                item.syncStatus = .synced; item.lastSyncedAt = Date()
+            }
+        case "identification_session_marks":
+            if let item = try? context.fetch(FetchDescriptor<IdentificationSessionFieldMark>(predicate: #Predicate { $0.identification_session_mark_id == recordId })).first {
+                item.syncStatus = .synced; item.lastSyncedAt = Date()
+            }
+        default: break
+        }
+        try? context.save()
     }
 
     private func executeRequest(_ request: URLRequest) async throws {
