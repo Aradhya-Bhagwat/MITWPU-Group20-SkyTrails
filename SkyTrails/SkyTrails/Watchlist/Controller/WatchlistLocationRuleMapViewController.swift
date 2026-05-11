@@ -43,7 +43,6 @@ class WatchlistLocationRuleMapViewController: UIViewController {
         title = "Region Boundary"
         view.backgroundColor = .systemBackground
         
-        // Search Container
         searchContainerView.translatesAutoresizingMaskIntoConstraints = false
         searchContainerView.backgroundColor = .systemBackground
         searchContainerView.layer.cornerRadius = 14
@@ -58,13 +57,11 @@ class WatchlistLocationRuleMapViewController: UIViewController {
         searchBar.searchBarStyle = .minimal
         searchContainerView.addSubview(searchBar)
         
-        // Map View
         mapView.translatesAutoresizingMaskIntoConstraints = false
         mapView.delegate = self
         mapView.showsUserLocation = true
         view.addSubview(mapView)
         
-        // Results Table
         resultsTableView.translatesAutoresizingMaskIntoConstraints = false
         resultsTableView.delegate = self
         resultsTableView.dataSource = self
@@ -75,7 +72,6 @@ class WatchlistLocationRuleMapViewController: UIViewController {
         resultsTableView.backgroundColor = .systemBackground
         view.addSubview(resultsTableView)
         
-        // Slider Container (Floating Card style)
         sliderContainerView.translatesAutoresizingMaskIntoConstraints = false
         sliderContainerView.backgroundColor = .systemBackground
         sliderContainerView.layer.cornerRadius = 24
@@ -184,7 +180,6 @@ class WatchlistLocationRuleMapViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(mapTapped(_:)))
         mapView.addGestureRecognizer(tapGesture)
         
-        // Initial region - zoom to user or a default
         if let userLocation = mapView.userLocation.location?.coordinate {
             let region = MKCoordinateRegion(center: userLocation, latitudinalMeters: 50000, longitudinalMeters: 50000)
             mapView.setRegion(region, animated: false)
@@ -233,7 +228,6 @@ class WatchlistLocationRuleMapViewController: UIViewController {
         
         updateRadiusCircle()
         
-        // Smoother animated transition
         let region = MKCoordinateRegion(
             center: coordinate,
             latitudinalMeters: currentRadiusKm * 1000 * 2.5,

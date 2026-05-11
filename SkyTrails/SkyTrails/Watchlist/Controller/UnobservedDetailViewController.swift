@@ -130,7 +130,6 @@ class UnobservedDetailViewController: UIViewController {
 		
 		navigationItem.title = "\(bird.name) Details"
 		
-        // Use consistent image loading via WatchlistManager
         Task {
             if let entry = entry {
                 birdImageView.image = await manager.loadImageForEntry(entry)

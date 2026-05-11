@@ -86,7 +86,6 @@ class IdentificationManager {
             let descriptor = FetchDescriptor<BirdShape>(sortBy: [SortDescriptor(\.name)])
             self.allShapes = try modelContext.fetch(descriptor)
         } catch {
-            print("🔍 IdentificationManager: fetchShapes error: \(error)")
         }
     }
 
@@ -95,7 +94,6 @@ class IdentificationManager {
         do {
             let allBirds = try modelContext.fetch(FetchDescriptor<Bird>())
             
-            // If we have a selected size, filter birds within that size range (+/- 1)
             let relevantBirds: [Bird]
             if let size = selectedSizeCategory {
                 let minSize = max(1, size - 1)
@@ -142,7 +140,6 @@ class IdentificationManager {
                 )
                 self.fetchMLPredictedBirds()
             } catch {
-                print("Failed to geocode location: \(error)")
             }
         }
     }
@@ -184,7 +181,6 @@ class IdentificationManager {
                 self.mlPredictedBirdIds = predictedIds
                 self.runFilter()
             } catch {
-                print("Error fetching ML predicted birds: \(error)")
             }
             
             self.isFetchingMLData = false
@@ -264,7 +260,6 @@ class IdentificationManager {
                         score += 20 // Base mark match
                         matchedFeats.append("\(areaName): \(userVariant.name)")
                         
-                        // Color Match Bonus (0 to 15 points)
                         if let userColor = selectedOverlayColors[markId],
                            let birdColorHex = link?.color_hex {
                             let points = ColorFamilyMatcher.points(userHex: userColor.toHexString(), birdHex: birdColorHex)
@@ -283,14 +278,12 @@ class IdentificationManager {
             // 4. Probability Multipliers (Location & Season)
             var multiplier = 1.0
             
-            // ML/Location Bonus
             let mlScore = getMLLocationScore(for: bird)
             if mlScore > 0 {
                 multiplier += 0.2 // 20% boost for likely location
                 matchedFeats.append("Likely Location")
             }
             
-            // Seasonal Penalty (Multiplier instead of flat deduction)
             if let birdMonths = bird.validMonths {
                 if !birdMonths.contains(searchMonth) {
                     multiplier *= 0.5 // 50% penalty for out-of-season
@@ -301,11 +294,9 @@ class IdentificationManager {
             }
             
             // 5. Deterministic Tie-Breaker (Unique to every bird)
-            // Use a small hash of the UUID to add 0.0001 to 0.0099
             let hashVal = abs(bird.bird_id.uuidString.hashValue % 100)
             let tieBreaker = Double(hashVal) / 10000.0
             
-            // Apply multiplier and cap
             let rawScore = (score * multiplier) + tieBreaker
             let confidence = max(0.05, min(rawScore / 100.0, 0.98)) // Cap raw score at 98%
             
@@ -338,8 +329,6 @@ class IdentificationManager {
                 let baseDisplay = 0.15 + (curvedScore * 0.81)
                 
                 // 4. Apply Ranking Decay
-                // Forces a unique value even if the raw scores were identical
-                // Each subsequent bird is at least 0.2% lower than the one before it
                 let decay = Double(index) * 0.002
                 
                 let finalConfidence = max(0.05, baseDisplay - decay)

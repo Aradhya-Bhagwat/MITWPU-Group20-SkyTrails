@@ -117,11 +117,9 @@ class BirdSmartCell: UITableViewCell {
 				birdImageView.image = UIImage(systemName: "photo")
 			}
 		} else {
-            // Try asset catalog first
             if let assetImage = UIImage(named: bird.staticImageName) {
                 birdImageView.image = assetImage
             } else {
-                // Try documents directory (similar to UnobservedDetailViewController)
                 let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(bird.staticImageName)
                 if let docImage = UIImage(contentsOfFile: fileURL.path) {
                     birdImageView.image = docImage
@@ -130,7 +128,6 @@ class BirdSmartCell: UITableViewCell {
                 }
             }
             
-            // Always try fetching remote
             Task { @MainActor in
                 if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
                     self.birdImageView.image = image

@@ -38,7 +38,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
     private var isShowingRecommendations = false
     private var recommendedBirds: [Bird] = []
     
-    // ViewModels for pre-loaded data
     private var birdEntryViewModels: [BirdEntryCellViewModel] = []
     private var groupedEntryViewModels: [[BirdEntryCellViewModel]] = []
 	
@@ -87,13 +86,11 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         do {
             isShowingRecommendations = false
             
-            // Use the filtering service to fetch entries based on mode
             let result = try manager.filteringService.fetchEntriesForMode(
                 mode: watchlistType,
                 watchlistId: currentWatchlistId
             )
             
-            // Update properties from result
             observedEntries = result.observed
             toObserveEntries = result.toObserve
             navigationItem.title = result.title
@@ -175,7 +172,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         }
 
 		if watchlistType == .myWatchlist {
-            // Use enhanced filtering service for grouped results
             do {
                 let status = statusForCurrentFilter()
                 let groupedResults = try manager.filteringService.fetchEntriesGroupedByWatchlist(
@@ -188,7 +184,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 allWatchlists = groupedResults.map { $0.0 }
                 filteredSections = groupedResults.map { $0.1 }
                 
-                // Pre-load ViewModels for all sections
                 Task {
                     var allSectionViewModels: [[BirdEntryCellViewModel]] = []
                     for sectionEntries in filteredSections {
@@ -207,7 +202,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                 groupedEntryViewModels = []
             }
 		} else {
-            // Use enhanced filtering service for single list
             do {
                 let result = try manager.filteringService.fetchFilteredEntries(
                     mode: watchlistType,
@@ -217,7 +211,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                     status: statusForCurrentFilter()
                 )
                 
-                // Update based on current filter
                 switch currentFilter {
                 case .all:
                     currentList = result.observed + result.unobserved
@@ -227,7 +220,6 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
                     currentList = result.unobserved
                 }
                 
-                // Pre-load ViewModels for cells
                 Task {
                     let shouldShowAvatars = (watchlistType == .shared)
                     birdEntryViewModels = await manager.loadBirdEntryViewModels(
@@ -492,13 +484,11 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
             return cell
         }
 
-        // Use ViewModels if available
         if watchlistType == .myWatchlist {
             if indexPath.section < groupedEntryViewModels.count, indexPath.row < groupedEntryViewModels[indexPath.section].count {
                 let viewModel = groupedEntryViewModels[indexPath.section][indexPath.row]
                 cell.configure(with: viewModel)
             } else {
-                // Fallback to legacy configuration
                 let entry = filteredSections[indexPath.section][indexPath.row]
                 cell.shouldShowAvatars = false
                 cell.configure(with: entry)
@@ -508,7 +498,6 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
                 let viewModel = birdEntryViewModels[indexPath.row]
                 cell.configure(with: viewModel)
             } else {
-                // Fallback to legacy configuration
                 let entry = currentList[indexPath.row]
                 cell.shouldShowAvatars = (watchlistType == .shared)
                 cell.configure(with: entry)

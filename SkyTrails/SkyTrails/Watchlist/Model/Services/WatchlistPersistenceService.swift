@@ -171,7 +171,6 @@ final class WatchlistPersistenceService {
             (id: entry.id, payload: self.buildEntryPayloadData(entry, for: .delete))
         }
 
-        // Sync each entry deletion
         queueSync {
             for item in syncItems {
                 let localUpdatedAt = Date()
@@ -792,12 +791,7 @@ final class WatchlistPersistenceService {
             "updated_at": ISO8601DateFormatter().string(from: Date())
         ]
         
-        #if DEBUG
-        print("[WatchlistPersistenceService] buildEntryPayloadData - entry.id: \(entry.id)")
-        print("[WatchlistPersistenceService] buildEntryPayloadData - entry.bird: \(String(describing: entry.bird))")
-        print("[WatchlistPersistenceService] buildEntryPayloadData - entry.bird?.bird_id: \(String(describing: entry.bird?.bird_id))")
-        print("[WatchlistPersistenceService] buildEntryPayloadData - bird_id in payload: \(payload["bird_id"] ?? "nil")")
-        #endif
+
         
         if operation == .delete {
             payload["deleted_at"] = ISO8601DateFormatter().string(from: Date())
