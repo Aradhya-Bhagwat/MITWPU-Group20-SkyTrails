@@ -308,7 +308,7 @@
                                         <segments>
                                             <segment title="All"/>
                                             <segment title="Observed"/>
-                                            <segment title="Unobserved"/>
+                                            <segment title="To observe"/>
                                         </segments>
                                         <connections>
                                             <action selector="segmentChanged:" destination="zap-jy-tCo" eventType="valueChanged" id="seg-action-id"/>

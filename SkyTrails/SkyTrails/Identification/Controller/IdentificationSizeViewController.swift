@@ -28,6 +28,18 @@ class IdentificationSizeViewController: UIViewController {
         updateBirdDisplay(for: initialSize)
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleAttachedTooltip(in: self.view, message: "Choose the size that best matches the bird.") { [weak self] in
+            return self?.birdSlider
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
             self.handleUserInterfaceStyleChange()
@@ -57,6 +69,7 @@ class IdentificationSizeViewController: UIViewController {
     }
  
     @IBAction func sliderChanged(_ sender: UISlider) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let steppedValue = Int(round(sender.value))
         sender.value = Float(steppedValue)
         updateBirdDisplay(for: steppedValue)
@@ -111,6 +124,7 @@ class IdentificationSizeViewController: UIViewController {
     }
 
     @IBAction func checkmarkButtonTapped(_ sender: UIBarButtonItem) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let selectedIndex = Int(round(birdSlider.value))
         
      
@@ -121,10 +135,12 @@ class IdentificationSizeViewController: UIViewController {
     }
     
     @IBAction func backButtonTapped(_ sender: UIBarButtonItem) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         navigationController?.popViewController(animated: true)
     }
 
     @IBAction func infoButtonTapped(_ sender: UIBarButtonItem) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let alert = UIAlertController(
             title: "Bird Size Guide",
             message: """

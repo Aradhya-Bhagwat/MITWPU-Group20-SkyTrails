@@ -430,7 +430,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 						if actionIndex == 0 {
 							return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Log Observation", color: .systemGreen, icon: "custom.bird.fill.badge.plus")
 						} else {
-							return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Find new species", color: .systemOrange, icon: "custom.bird.badge.plus")
+							return configureAddBirdActionCell(in: collectionView, at: indexPath, title: "Species to observe", color: .systemOrange, icon: "custom.bird.badge.plus")
 						}
 					}
 			case .customWatchlist:
@@ -489,7 +489,7 @@ extension WatchlistHomeViewController {
 	private func myWatchlistEmptyStateActions() -> [(title: String, color: UIColor, icon: String, isEnabled: Bool)] {
 		return [
 			(title: "Record Sighting", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
-			(title: "Find Species", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
+			(title: "Species to observe", color: .systemGray, icon: "custom.bird.fill.badge.plus", isEnabled: false),
 			(title: "Start New List", color: .systemBlue, icon: "custom.list.number.badge.plus", isEnabled: true)
 		]
 	}

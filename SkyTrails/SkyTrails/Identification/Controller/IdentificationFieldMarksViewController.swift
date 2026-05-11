@@ -44,6 +44,18 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
         navigationItem.rightBarButtonItem?.isEnabled = !selectedFieldMarks.isEmpty
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleAttachedTooltip(in: self.view, message: "Select any distinct field marks you noticed.") { [weak self] in
+            return self?.Categories.cellForItem(at: IndexPath(item: 0, section: 0)) ?? self?.Categories
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         let bounds = CanvasView.bounds
@@ -200,6 +212,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let index = indexPath.row
         if !selectedFieldMarks.contains(index) {
             selectedFieldMarks.append(index)
@@ -211,6 +224,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let index = indexPath.row
         if let position = selectedFieldMarks.firstIndex(of: index) {
             selectedFieldMarks.remove(at: position)
@@ -238,6 +252,7 @@ class IdentificationFieldMarksViewController: UIViewController, UICollectionView
     }
     
     @IBAction func nextTapped(_ sender: Any) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard !selectedFieldMarks.isEmpty else { return }
         let selectedMarkObjects = selectedFieldMarks.compactMap { index -> BirdFieldMark? in
             availableMarks.indices.contains(index) ? availableMarks[index] : nil

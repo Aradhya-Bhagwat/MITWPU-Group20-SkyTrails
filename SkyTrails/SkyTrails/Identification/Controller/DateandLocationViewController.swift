@@ -42,6 +42,23 @@ class DateandLocationViewController: UIViewController {
         applyContainerAppearance()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleAttachedTooltip(in: self.view, message: "Select a date and location, then tap Next.") { [weak self] in
+            guard let self = self else { return nil }
+            if !self.hasDateSelection {
+                return self.dateandlocationTableView.cellForRow(at: IndexPath(row: 0, section: 0))
+            } else {
+                return self.dateandlocationTableView.cellForRow(at: IndexPath(row: 0, section: 1))
+            }
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+
     private func setupTraitChangeHandling() {
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
             self.handleUserInterfaceStyleChange()
@@ -107,6 +124,7 @@ class DateandLocationViewController: UIViewController {
     }
    
     @IBAction func nextTapped(_ sender: Any) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         guard navigationItem.rightBarButtonItem?.isEnabled == true else { return }
         viewModel.selectedDate = selectedDate
         viewModel.updateSelectedLocation(searchQuery.isEmpty ? nil : searchQuery)
@@ -229,6 +247,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         tableView.deselectRow(at: indexPath, animated: true)
         
         if indexPath.section == 1 && indexPath.row > 0 {
@@ -264,6 +283,7 @@ extension DateandLocationViewController: UITableViewDelegate, UITableViewDataSou
 }
 extension DateandLocationViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         searchQuery = searchText
         if searchText.isEmpty {
             viewModel.selectedLocationId = nil
@@ -297,6 +317,7 @@ extension DateandLocationViewController: UISearchBarDelegate {
 
 extension DateandLocationViewController: DateInputCellDelegate, MapSelectionDelegate {
     func dateInputCell(_ cell: DateInputCell, didPick date: Date) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         selectedDate = date
         hasDateSelection = true
         updateNextButtonState()

@@ -81,7 +81,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
         label.text = text
         label.numberOfLines = 0
         label.textAlignment = .center
-        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
@@ -127,7 +127,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
     /// Configure cell with pre-loaded ViewModel (NO BUSINESS LOGIC)
     func configure(with viewModel: WatchlistCellViewModel) {
         speciesCountLabel.text = "\(viewModel.unobservedCount)"
-        speciesTitleLabel.text = "Unobserved"
+        speciesTitleLabel.text = "To observe"
         observedCountLabel.text = "\(viewModel.observedCount)"
         
         self.unobservedImages = viewModel.unobservedImages
@@ -153,7 +153,7 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
 	func configure(with data: WatchlistData) {
         let unobservedCount = data.totalCount - data.observedCount
 		speciesCountLabel.text = "\(unobservedCount)"
-        speciesTitleLabel.text = "Unobserved"
+        speciesTitleLabel.text = "To observe"
 		observedCountLabel.text = "\(data.observedCount)"
 		
 		self.unobservedImages = data.unobservedImages
