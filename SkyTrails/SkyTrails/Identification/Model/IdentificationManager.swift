@@ -379,8 +379,10 @@ class IdentificationManager {
             sessionToUpdate.selectedFilterCategories = selectedMenuOptionRawValues.isEmpty ? nil : selectedMenuOptionRawValues
             sessionToUpdate.syncStatus = .pendingUpdate
 
+            var marksToDelete: [UUID] = []
             if let oldMarks = sessionToUpdate.selectedMarks {
                 for oldMark in oldMarks {
+                    marksToDelete.append(oldMark.identification_session_mark_id)
                     modelContext.delete(oldMark)
                 }
             }
@@ -414,15 +416,17 @@ class IdentificationManager {
             }
             result.bird = winningCandidate?.bird
 
+            var candidatesToDelete: [UUID] = []
             if let oldCandidates = result.candidates {
                 for oldCandidate in oldCandidates {
+                    candidatesToDelete.append(oldCandidate.identification_candidate_id)
                     modelContext.delete(oldCandidate)
                 }
             }
             result.candidates = []
 
             var updatedCandidates: [IdentificationCandidate] = []
-            for (index, candidate) in self.results.enumerated() {
+            for (index, candidate) in self.results.prefix(50).enumerated() {
                 let newCandidate = IdentificationCandidate(
                     result: result,
                     bird: candidate.bird,
@@ -438,6 +442,22 @@ class IdentificationManager {
             try? modelContext.save()
             
             Task {
+                for markId in marksToDelete {
+                    await BackgroundSyncAgent.shared.queueIdentificationSessionMark(
+                        id: markId,
+                        payloadData: nil,
+                        localUpdatedAt: Date(),
+                        operation: .delete
+                    )
+                }
+                for candidateId in candidatesToDelete {
+                    await BackgroundSyncAgent.shared.queueIdentificationCandidate(
+                        id: candidateId,
+                        payloadData: nil,
+                        localUpdatedAt: Date(),
+                        operation: .delete
+                    )
+                }
                 await queueIdentificationSync(session: sessionToUpdate)
             }
             return
@@ -480,7 +500,7 @@ class IdentificationManager {
         )
 
         var finalCandidates: [IdentificationCandidate] = []
-        for (index, candidate) in self.results.enumerated() {
+        for (index, candidate) in self.results.prefix(50).enumerated() {
             let newCandidate = IdentificationCandidate(
                 result: result,
                 bird: candidate.bird,
@@ -503,6 +523,7 @@ class IdentificationManager {
         }
     }
     
+    @MainActor
     private func queueIdentificationSync(session: IdentificationSession) async {
         guard let userId = currentUserId else {
             return

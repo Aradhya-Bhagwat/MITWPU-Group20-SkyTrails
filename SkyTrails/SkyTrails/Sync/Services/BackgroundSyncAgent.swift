@@ -710,15 +710,15 @@ actor BackgroundSyncAgent {
         if operation.type == .create { return true }
         
         let serverRecord = try await fetchServerRecord(table: operation.table, recordId: operation.recordId, config: config)
-        print("DEBUG: ConflictCheck - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId), hasServerRecord: \(serverRecord != nil)")
+        // print("DEBUG: ConflictCheck - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId), hasServerRecord: \(serverRecord != nil)")
         
         if operation.type == .delete {
             if serverRecord == nil {
-                print("DEBUG: ConflictCheck - delete skipped (server row missing): \(operation.table) \(operation.recordId)")
+                // print("DEBUG: ConflictCheck - delete skipped (server row missing): \(operation.table) \(operation.recordId)")
                 return false
             }
             if let deletedAt = serverRecord?["deleted_at"] as? String, !deletedAt.isEmpty {
-                print("DEBUG: ConflictCheck - delete skipped (already deleted on server): \(operation.table) \(operation.recordId), deleted_at: \(deletedAt)")
+                // print("DEBUG: ConflictCheck - delete skipped (already deleted on server): \(operation.table) \(operation.recordId), deleted_at: \(deletedAt)")
                 return false
             }
             return true
@@ -732,7 +732,7 @@ actor BackgroundSyncAgent {
         }
         
         let shouldProceed = localUpdatedAt >= serverUpdatedAt
-        print("DEBUG: ConflictCheck - update decision table: \(operation.table), recordId: \(operation.recordId), localUpdatedAt: \(String(describing: operation.localUpdatedAt)), serverUpdatedAt: \(String(describing: serverRecord["updated_at"])), shouldProceed: \(shouldProceed)")
+        // print("DEBUG: ConflictCheck - update decision table: \(operation.table), recordId: \(operation.recordId), localUpdatedAt: \(String(describing: operation.localUpdatedAt)), serverUpdatedAt: \(String(describing: serverRecord["updated_at"])), shouldProceed: \(shouldProceed)")
         return shouldProceed
     }
     
