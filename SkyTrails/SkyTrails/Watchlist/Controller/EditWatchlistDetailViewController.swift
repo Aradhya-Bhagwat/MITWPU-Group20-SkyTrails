@@ -474,7 +474,6 @@ class EditWatchlistDetailViewController: UIViewController {
 	}
     
     private func saveRules(for watchlistId: UUID) throws {
-        // Assemble species rule
         let speciesResult = manager.ruleAssemblyService.assembleSpeciesRule(
             selectedShapeId: selectedShapeId,
             existingShapeId: existingSpeciesShapeId,
@@ -487,7 +486,6 @@ class EditWatchlistDetailViewController: UIViewController {
             isActive: speciesResult.isActive
         )
         
-        // Assemble location rule
         let locationResult = manager.ruleAssemblyService.assembleLocationRule(
             selectedLocation: selectedLocation,
             existingData: existingLocationRuleData,
@@ -501,7 +499,6 @@ class EditWatchlistDetailViewController: UIViewController {
             isActive: locationResult.isActive
         )
         
-        // Assemble date rule
         let dateResult = manager.ruleAssemblyService.assembleDateRule(
             startDate: startDatePicker.date,
             endDate: endDatePicker.date,

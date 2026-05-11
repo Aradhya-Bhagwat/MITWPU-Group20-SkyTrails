@@ -36,7 +36,6 @@ final class WatchlistEntryOrchestrationService {
     
     /// Orchestrates saving an entry, handling updates, rule matching, and photo attachment
     func saveEntry(params: SaveParameters) async -> SaveResult {
-        // Handle updating existing entry
         if let existingEntry = params.entry {
             do {
                 if !params.asObserved {
@@ -66,7 +65,6 @@ final class WatchlistEntryOrchestrationService {
             }
         }
         
-        // Handle creating new entry
         let birdToUse: Bird
         if let existingBird = params.bird {
             birdToUse = existingBird

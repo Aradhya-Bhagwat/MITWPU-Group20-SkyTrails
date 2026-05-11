@@ -18,7 +18,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     private var historySections: [(date: String, items: [IdentificationSession])] = []
     private var hasRefreshedManifestThisSession = false
     
-    // Profile Location Header
     private let profileLocationHeaderView = ProfileLocationHeaderView()
     
     @IBOutlet weak var startButton: UIButton!

@@ -10,15 +10,12 @@ class WatchlistHomeViewController: UIViewController {
 	private var sharedWatchlists: [WatchlistSummaryDTO] = []
 	private var globalStats: WatchlistStatsDTO?
     
-    // ViewModels with pre-loaded images
     private var myWatchlistViewModel: WatchlistCellViewModel?
     private var customWatchlistViewModels: [CustomWatchlistCellViewModel] = []
     
-    // Loading State
     private var isInitialLoad: Bool = true
     private var loadDataTask: Task<Void, Never>?
     
-    // Profile Location Header
     private let profileLocationHeaderView = ProfileLocationHeaderView()
 	enum WatchlistSection: Int, CaseIterable {
 		case myWatchlist
@@ -93,7 +90,6 @@ class WatchlistHomeViewController: UIViewController {
 				self.sharedWatchlists = data.shared
 				self.globalStats = data.globalStats
 				
-                // Load ViewModels with pre-loaded images
                 if let manager = repository as? WatchlistManager {
                     async let myVM = manager.loadMyWatchlistViewModel()
                     async let customVMs = manager.loadCustomWatchlistViewModels(from: data.custom)
@@ -563,7 +559,6 @@ extension WatchlistHomeViewController {
 		guard let cell = dequeuedCell as? MyWatchlistCollectionViewCell else { return dequeuedCell }
 		
 		if let viewModel = myWatchlistViewModel {
-            // Use pre-loaded ViewModel with images already loaded
 			cell.configure(with: viewModel)
 		}
 		return cell
@@ -584,11 +579,9 @@ extension WatchlistHomeViewController {
 		guard let cell = dequeuedCell as? CustomWatchlistCollectionViewCell else { return dequeuedCell }
 		
 		if indexPath.item < customWatchlistViewModels.count {
-            // Use pre-loaded ViewModel with cover image already loaded
 			let viewModel = customWatchlistViewModels[indexPath.item]
 			cell.configure(with: viewModel)
 		} else if indexPath.item < customWatchlists.count {
-            // Fallback to DTO-based configuration if ViewModel not yet loaded
 			let dto = customWatchlists[indexPath.item]
 			cell.configure(with: dto)
 		}

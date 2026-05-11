@@ -99,7 +99,6 @@ final class WatchlistManager: WatchlistRepository {
         ruleAssembly = WatchlistRuleAssemblyService()
         bootstrap = WatchlistBootstrapService(context: context)
         
-        // Initialize presentation service first (doesn't depend on self)
         presentation = WatchlistPresentationService(query: query, persistence: persistence, photoService: photos)
         
         NotificationCenter.default.addObserver(

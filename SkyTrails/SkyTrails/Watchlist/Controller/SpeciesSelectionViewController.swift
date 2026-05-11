@@ -89,7 +89,6 @@ extension SpeciesSelectionViewController {
         
         let birdsToProcess = allBirds.filter { selectedBirds.contains($0.bird_id) }
         
-        // Initialize coordinator if needed
         if coordinator == nil {
             coordinator = SpeciesSelectionCoordinator(
                 navigationController: self.navigationController,

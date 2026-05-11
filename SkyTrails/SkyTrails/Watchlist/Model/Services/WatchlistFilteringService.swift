@@ -23,14 +23,11 @@ final class WatchlistFilteringService {
         sortOption: SmartWatchlistSortOption,
         status: WatchlistEntryStatus? = nil
     ) throws -> WatchlistEntriesResult {
-        // Fetch base data
         let baseResult = try fetchEntriesForMode(mode: mode, watchlistId: watchlistId)
         
-        // Apply search filter
         let observed = applySearchFilter(entries: baseResult.observed, searchText: searchText)
         let unobserved = applySearchFilter(entries: baseResult.toObserve, searchText: searchText)
         
-        // Apply sorting
         let sortedObserved = sorting.sort(entries: observed, by: sortOption)
         let sortedUnobserved = sorting.sort(entries: unobserved, by: sortOption)
         

@@ -1,7 +1,6 @@
 
 import UIKit
 
-// Legacy struct kept for backward compatibility
 struct WatchlistData {
 	let title: String
 	let unobservedImages: [UIImage]
@@ -120,7 +119,6 @@ class MyWatchlistCollectionViewCell: UICollectionViewCell {
             emptyMessageLabel.trailingAnchor.constraint(equalTo: emptyStateContainer.trailingAnchor, constant: -32)
         ])
         
-        // Insert into content stack at the top
         contentStackView.insertArrangedSubview(emptyStateContainer, at: 0)
     }
 	

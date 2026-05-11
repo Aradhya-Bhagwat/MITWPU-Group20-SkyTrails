@@ -132,7 +132,6 @@ class CustomWatchlistCollectionViewCell: UICollectionViewCell {
         if hasCoverImage {
             coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : defaultCoverOverImageBackgroundColor
         } else {
-            // When no image, the overlay becomes the visible card background
             coverOverImageView.backgroundColor = isDarkMode ? .secondarySystemBackground : .systemBackground
         }
     }
