@@ -222,10 +222,11 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
 
         if let bird = candidate.bird {
             cell.configure(
-                image: UIImage(named: bird.staticImageName),
+                image: UIImage(named: bird.staticImageName) ?? UIImage(systemName: "bird.fill"),
                 name: bird.commonName,
                 percentage: confidencePercent
             )
+            cell.resultImageView.tintColor = .secondaryLabel
 
             imageLoadTasks[indexPath]?.cancel()
             imageLoadTasks[indexPath] = Task { [weak self, weak collectionView] in
@@ -234,7 +235,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
                 guard self != nil, let collectionView else { return }
                 guard let liveCell = collectionView.cellForItem(at: indexPath) as? ResultCollectionViewCell else { return }
                 guard liveCell.indexPath == indexPath else { return }
-                liveCell.resultImageView.image = loaded ?? UIImage(named: bird.staticImageName)
+                liveCell.resultImageView.image = loaded ?? UIImage(named: bird.staticImageName) ?? UIImage(systemName: "bird.fill")
             }
         } else {
             cell.configure(
