@@ -72,7 +72,7 @@ class AllUpcomingBirdsViewController: UIViewController {
             SpeciesData(
                 id: $0.bird_id.uuidString, 
                 name: $0.commonName, 
-                imageName: $0.staticImageName,
+                imageName: $0.imageUrl ?? $0.staticImageName,
                 ebirdSpeciesCode: $0.ebird_species_code
             )
         }
@@ -243,7 +243,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
             species: SpeciesData(
                 id: bird.bird_id.uuidString, 
                 name: bird.commonName, 
-                imageName: bird.staticImageName,
+                imageName: bird.imageUrl ?? bird.staticImageName,
                 ebirdSpeciesCode: bird.ebird_species_code
             ),
             startDate: finalStart,

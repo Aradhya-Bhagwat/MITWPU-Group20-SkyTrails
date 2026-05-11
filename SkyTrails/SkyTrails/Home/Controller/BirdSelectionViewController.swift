@@ -41,7 +41,7 @@ class BirdSelectionViewController: UIViewController {
             SpeciesData(
                 id: $0.bird_id.uuidString, 
                 name: $0.commonName, 
-                imageName: $0.staticImageName,
+                imageName: $0.imageUrl ?? $0.staticImageName,
                 ebirdSpeciesCode: $0.ebird_species_code
             )
         }.sorted { $0.name < $1.name }
