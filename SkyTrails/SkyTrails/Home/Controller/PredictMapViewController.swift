@@ -8,38 +8,18 @@ class PredictMapViewController: UIViewController {
     @IBOutlet weak var mapView: MKMapView!
 
     private final class PredictionAnnotation: NSObject, MKAnnotation {
-        enum Kind {
-            case location
-            case bird
-        }
-
-        let kind: Kind
         let coordinate: CLLocationCoordinate2D
         let title: String?
         let subtitle: String?
-        let probability: Int?
-        let birdImageName: String?
-        let birdKey: String?
-        let pinColor: UIColor?
 
         init(
-            kind: Kind,
             coordinate: CLLocationCoordinate2D,
-            title: String?,
-            subtitle: String?,
-            probability: Int? = nil,
-            birdImageName: String? = nil,
-            birdKey: String? = nil,
-            pinColor: UIColor? = nil
+            title: String? = nil,
+            subtitle: String? = nil
         ) {
-            self.kind = kind
             self.coordinate = coordinate
             self.title = title
             self.subtitle = subtitle
-            self.probability = probability
-            self.birdImageName = birdImageName
-            self.birdKey = birdKey
-            self.pinColor = pinColor
             super.init()
         }
     }
@@ -53,7 +33,6 @@ class PredictMapViewController: UIViewController {
     private var initialLoadY: CGFloat = 0
     private var mapRenderToken: Int = 0
     private var currentGeoJSONOverlays: [MKOverlay] = []
-    private var selectedPredictionKey: String?
     private var currentOutputInputs: [PredictionInputData] = []
     private var currentOutputUsesInputRadiusOverlay = false
     private var pendingOutputPredictions: [FinalPredictionResult]?
@@ -88,12 +67,11 @@ class PredictMapViewController: UIViewController {
         
     private func updateMap(
         with inputs: [PredictionInputData],
-        predictions: [FinalPredictionResult],
+        predictions _: [FinalPredictionResult],
         overlayMode: OverlayMode = .mapItemArea
     ) {
         mapRenderToken += 1
         let currentToken = mapRenderToken
-        selectedPredictionKey = nil
         mapView.removeAnnotations(mapView.annotations)
         mapView.removeOverlays(mapView.overlays)
         currentGeoJSONOverlays.removeAll()
@@ -112,9 +90,8 @@ class PredictMapViewController: UIViewController {
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             locationCoordinates.append(coordinate)
             let annotation = PredictionAnnotation(
-                kind: .location,
                 coordinate: coordinate,
-                title: input.locationName ?? "Search Location",
+                title: nil,
                 subtitle: nil
             )
             annotations.append(annotation)
@@ -151,12 +128,7 @@ class PredictMapViewController: UIViewController {
             }
         }
         
-        let birdAnnotations = deconflictedBirdAnnotations(from: predictions)
-        annotations.append(contentsOf: birdAnnotations)
-        locationCoordinates.append(contentsOf: birdAnnotations.map(\.coordinate))
-        
         mapView.addAnnotations(annotations)
-        refreshBirdSelectionState(animated: false)
         applyResultMapViewport(anchorCoordinates: areaAnchorCoordinates.isEmpty ? locationCoordinates : areaAnchorCoordinates, animated: true)
         
     }
@@ -206,108 +178,6 @@ class PredictMapViewController: UIViewController {
         }
     }
 
-    private func deconflictedBirdAnnotations(
-        from predictions: [FinalPredictionResult]
-    ) -> [PredictionAnnotation] {
-        let keyForCoordinate: (CLLocationCoordinate2D) -> String = {
-            "\(String(format: "%.5f", $0.latitude)),\(String(format: "%.5f", $0.longitude))"
-        }
-
-        var countByCoordinateKey: [String: Int] = [:]
-        var baseByCoordinateKey: [String: CLLocationCoordinate2D] = [:]
-        let baseCoordinates = predictions.map {
-            CLLocationCoordinate2D(latitude: $0.matchedLocation.lat, longitude: $0.matchedLocation.lon)
-        }
-
-        for coordinate in baseCoordinates {
-            let key = keyForCoordinate(coordinate)
-            countByCoordinateKey[key, default: 0] += 1
-            if baseByCoordinateKey[key] == nil {
-                baseByCoordinateKey[key] = coordinate
-            }
-        }
-
-        var seenByCoordinateKey: [String: Int] = [:]
-        return predictions.map { prediction in
-            let baseCoordinate = CLLocationCoordinate2D(
-                latitude: prediction.matchedLocation.lat,
-                longitude: prediction.matchedLocation.lon
-            )
-            let coordinateKey = keyForCoordinate(baseCoordinate)
-            let totalInGroup = countByCoordinateKey[coordinateKey] ?? 1
-            let seen = seenByCoordinateKey[coordinateKey, default: 0]
-            seenByCoordinateKey[coordinateKey] = seen + 1
-
-            let displayCoordinate: CLLocationCoordinate2D
-            if totalInGroup > 1, let base = baseByCoordinateKey[coordinateKey] {
-                let angle = (2.0 * .pi * Double(seen)) / Double(totalInGroup)
-                let dLat = (60.0 * sin(angle)) / 111_000.0
-                let dLon = (60.0 * cos(angle)) / max(1.0, cos(base.latitude * .pi / 180.0) * 111_000.0)
-                displayCoordinate = CLLocationCoordinate2D(
-                    latitude: base.latitude + dLat,
-                    longitude: base.longitude + dLon
-                )
-            } else {
-                displayCoordinate = baseCoordinate
-            }
-
-            return PredictionAnnotation(
-                kind: .bird,
-                coordinate: displayCoordinate,
-                title: nil,
-                subtitle: nil,
-                probability: prediction.spottingProbability,
-                birdImageName: prediction.imageName,
-                birdKey: predictionKey(for: prediction),
-                pinColor: .systemBrown
-            )
-        }
-    }
-
-    private func predictionKey(for prediction: FinalPredictionResult) -> String {
-        "\(prediction.birdName)|\(prediction.imageName)|\(prediction.matchedInputIndex)|\(prediction.matchedLocation.lat)|\(prediction.matchedLocation.lon)"
-    }
-
-    private func refreshBirdSelectionState(animated: Bool) {
-        for annotation in mapView.annotations {
-            guard let birdAnnotation = annotation as? PredictionAnnotation,
-                  birdAnnotation.kind == .bird,
-                  let view = mapView.view(for: birdAnnotation) as? MKMarkerAnnotationView else { continue }
-
-            let isSelected = birdAnnotation.birdKey == selectedPredictionKey
-            applyPinStyle(view, baseColor: birdAnnotation.pinColor ?? statusColor(for: birdAnnotation.probability ?? 50), isSelected: isSelected, animated: animated)
-            view.layer.zPosition = isSelected ? 1000 : 0
-        }
-    }
-
-    private func applyPinStyle(_ view: MKMarkerAnnotationView, baseColor: UIColor, isSelected: Bool, animated: Bool) {
-        view.markerTintColor = baseColor
-        view.glyphTintColor = .white
-        view.glyphImage = UIImage(systemName: "bird.fill")
-        view.glyphText = nil
-        view.titleVisibility = .hidden
-        view.subtitleVisibility = .hidden
-        view.zPriority = isSelected ? .max : .defaultUnselected
-
-        let updates = {
-            view.transform = CGAffineTransform(scaleX: isSelected ? 1.15 : 1.0, y: isSelected ? 1.15 : 1.0)
-            view.alpha = 1.0
-        }
-
-        if animated {
-            UIView.animate(
-                withDuration: 0.3,
-                delay: 0,
-                usingSpringWithDamping: 0.7,
-                initialSpringVelocity: 0.5,
-                options: [.beginFromCurrentState, .allowUserInteraction],
-                animations: updates
-            )
-        } else {
-            updates()
-        }
-    }
-        
     private func setupMap() {
         let center = CLLocationCoordinate2D(latitude: 20.0, longitude: 78.0)
         let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 90, longitudeDelta: 180))
@@ -515,11 +385,8 @@ class PredictMapViewController: UIViewController {
     }
  
     func filterMapForBird(_ prediction: FinalPredictionResult) {
-        selectedPredictionKey = predictionKey(for: prediction)
-
         mapView.removeOverlays(currentGeoJSONOverlays)
         currentGeoJSONOverlays.removeAll()
-        refreshBirdSelectionState(animated: true)
 
         let coord = CLLocationCoordinate2D(
             latitude: prediction.matchedLocation.lat,
@@ -554,7 +421,6 @@ class PredictMapViewController: UIViewController {
                                 }
                             }
                         }
-                        self.refreshBirdSelectionState(animated: false)
                         self.applyResultMapViewport(anchorCoordinates: [coord], animated: true)
                     }
                 } catch {
@@ -629,16 +495,6 @@ class PredictMapViewController: UIViewController {
         return rect
     }
     
-    private func statusColor(for probability: Int) -> UIColor {
-        switch probability {
-        case 80...100:
-            return .systemGreen
-        case 50...79:
-            return .systemBlue
-        default:
-            return .systemOrange
-        }
-    }
 }
 
 extension PredictMapViewController: MKMapViewDelegate {
@@ -686,45 +542,22 @@ extension PredictMapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         guard !(annotation is MKUserLocation) else { return nil }
         
-        let identifier = "PredictionPin"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-        
-        if annotationView == nil {
-            annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-        } else {
-            annotationView?.annotation = annotation
-        }
-        
-        if let markerView = annotationView as? MKMarkerAnnotationView {
-            guard let predictedBirdAnnotation = annotation as? PredictionAnnotation else {
-                return annotationView
-            }
+        guard annotation is PredictionAnnotation else { return nil }
 
-            if predictedBirdAnnotation.kind == .bird {
-                annotationView?.canShowCallout = false
-                let probability = predictedBirdAnnotation.probability ?? 50
-                let baseColor = predictedBirdAnnotation.pinColor ?? statusColor(for: probability)
-                markerView.glyphText = nil
-                applyPinStyle(
-                    markerView,
-                    baseColor: baseColor,
-                    isSelected: predictedBirdAnnotation.birdKey == selectedPredictionKey,
-                    animated: false
-                )
-            } else {
-                annotationView?.canShowCallout = true
-                markerView.transform = .identity
-                markerView.alpha = 1.0
-                markerView.zPriority = .max
-                markerView.markerTintColor = .systemBlue
-                markerView.glyphImage = UIImage(systemName: "magnifyingglass")
-                markerView.glyphText = nil
-                markerView.glyphTintColor = .white
-                markerView.titleVisibility = .adaptive
-                markerView.subtitleVisibility = .adaptive
-            }
-        }
-        
-        return annotationView
+        let identifier = "CenterPin"
+        let markerView = (mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView)
+            ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+        markerView.annotation = annotation
+        markerView.canShowCallout = false
+        markerView.markerTintColor = .systemTeal
+        markerView.glyphImage = UIImage(systemName: "mappin.and.ellipse")
+        markerView.glyphText = nil
+        markerView.glyphTintColor = .white
+        markerView.titleVisibility = .hidden
+        markerView.subtitleVisibility = .hidden
+        markerView.transform = .identity
+        markerView.alpha = 1.0
+        markerView.zPriority = .max
+        return markerView
     }
 }

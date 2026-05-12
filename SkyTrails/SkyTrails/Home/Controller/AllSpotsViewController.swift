@@ -199,7 +199,7 @@ class AllSpotsViewController: UIViewController {
                 commonName: item.name,
                 scientificName: nil,
                 imageName: WatchlistManager.shared.findBird(byName: item.name)?.staticImageName,
-                probability: max(1, min(100, Int((item.score * 100).rounded()))),
+                probability: max(1, min(99, Int((item.score * 100).rounded()))),
                 weekNumber: weekText,
                 residencyStatus: "Expected",
                 ebirdSpeciesCode: item.id
@@ -351,13 +351,20 @@ extension AllSpotsViewController: UICollectionViewDelegate {
         )
 
         Task { @MainActor [weak mapVC] in
+            let outputVC = mapVC?.children.first?.children.first as? PredictOutputViewController
+            outputVC?.showUpdatingBanner()
+
             let predictions = await HomeManager.shared.getSpeciesForHotspot(
                 lat: lat,
                 lon: lon,
                 hotspotId: item.hotspotId
             )
-            guard !predictions.isEmpty else { return }
-            mapVC?.refreshOutputPredictions(predictions)
+            
+            if !predictions.isEmpty {
+                mapVC?.refreshOutputPredictions(predictions)
+            }
+            
+            outputVC?.hideUpdatingBanner()
         }
     }
 }
