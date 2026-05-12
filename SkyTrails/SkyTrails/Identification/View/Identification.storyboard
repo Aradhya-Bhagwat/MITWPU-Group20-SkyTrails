@@ -66,11 +66,26 @@
                                                 </constraints>
                                             </view>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="753" text="History" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mPg-zb-PDo">
-                                                <rect key="frame" x="16" y="419.66666666666663" width="370" height="24"/>
+                                                <rect key="frame" x="16" y="419.66666666666663" width="326" height="24"/>
                                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="M4q-9L-hLd">
+                                                <rect key="frame" x="350" y="415" width="40" height="34"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="40" id="h-btn-w"/>
+                                                    <constraint firstAttribute="height" constant="34" id="h-btn-h"/>
+                                                </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" image="chevron.right" catalog="system">
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="22" weight="bold"/>
+                                                </state>
+                                                <connections>
+                                                    <action selector="historyChevronTapped:" destination="dwe-Lt-A6a" eventType="touchUpInside" id="h-btn-action"/>
+                                                </connections>
+                                            </button>
                                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="vFz-1I-rOM">
                                                 <rect key="frame" x="8" y="451.66666666666663" width="378" height="220"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -116,7 +131,9 @@
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
-                                            <constraint firstAttribute="trailing" secondItem="mPg-zb-PDo" secondAttribute="trailing" constant="16" id="1kB-lq-OYz"/>
+                                            <constraint firstAttribute="trailing" secondItem="mPg-zb-PDo" secondAttribute="trailing" constant="60" id="1kB-lq-OYz"/>
+                                            <constraint firstItem="M4q-9L-hLd" firstAttribute="centerY" secondItem="mPg-zb-PDo" secondAttribute="centerY" id="h-btn-centery"/>
+                                            <constraint firstAttribute="trailing" secondItem="M4q-9L-hLd" secondAttribute="trailing" constant="12" id="h-btn-trailing"/>
                                             <constraint firstItem="sz8-14-rMC" firstAttribute="top" secondItem="juo-Tr-9OM" secondAttribute="bottom" constant="16" id="6W8-7q-tLy"/>
                                             <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="8" id="7ke-bu-vMc"/>
                                             <constraint firstItem="FQA-lr-sA1" firstAttribute="top" secondItem="sz8-14-rMC" secondAttribute="bottom" constant="8" id="8sD-A8-nod"/>
@@ -951,6 +968,54 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xxl-2T-Hcv" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="7091.0447761194027" y="-241.64759725400455"/>
+        </scene>
+        <!--Identification History List View Controller-->
+        <scene sceneID="hist-fLO">
+            <objects>
+                <viewController storyboardIdentifier="IdentificationHistoryListViewController" id="hist-LlW" customClass="IdentificationHistoryListViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="hist-Hev">
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="hist-search-bar">
+                                <rect key="frame" x="0.0" y="0.0" width="402" height="56"/>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="hist-LlW" id="hist-search-delegate"/>
+                                </connections>
+                            </searchBar>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="hist-8b4">
+                                <rect key="frame" x="0.0" y="56" width="402" height="818"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="hist-bmL">
+                                    <size key="itemSize" width="128" height="128"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells/>
+                            </collectionView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="hist-pK0"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="hist-search-bar" firstAttribute="top" secondItem="hist-pK0" secondAttribute="top" id="hist-search-top"/>
+                            <constraint firstItem="hist-search-bar" firstAttribute="leading" secondItem="hist-pK0" secondAttribute="leading" id="hist-search-leading"/>
+                            <constraint firstItem="hist-search-bar" firstAttribute="trailing" secondItem="hist-pK0" secondAttribute="trailing" id="hist-search-trailing"/>
+                            <constraint firstItem="hist-8b4" firstAttribute="top" secondItem="hist-search-bar" secondAttribute="bottom" id="hist-9Q3"/>
+                            <constraint firstItem="hist-8b4" firstAttribute="leading" secondItem="hist-pK0" secondAttribute="leading" id="hist-VBu"/>
+                            <constraint firstAttribute="bottom" secondItem="hist-8b4" secondAttribute="bottom" id="hist-icp"/>
+                            <constraint firstItem="hist-pK0" firstAttribute="trailing" secondItem="hist-8b4" secondAttribute="trailing" id="hist-Ora"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="collectionView" destination="hist-8b4" id="hist-coll-outlet"/>
+                        <outlet property="searchBar" destination="hist-search-bar" id="hist-search-outlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="hist-xxl" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="7800" y="-241"/>
         </scene>
     </scenes>
     <resources>
