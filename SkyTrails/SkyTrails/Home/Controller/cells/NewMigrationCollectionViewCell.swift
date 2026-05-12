@@ -354,24 +354,33 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         .compactMap { $0?.lowercased() }
         .joined(separator: " ")
         let searchableText = "\(name.lowercased()) \(addressText)"
+        let category = mapItem.pointOfInterestCategory
 
-        let waterKeywords = ["ocean", "sea", "bay", "gulf", "lake", "river", "water", "coast", "beach"]
-        if waterKeywords.contains(where: { searchableText.contains($0) }) {
+        // 1. Water / Marine (Highest priority)
+        let waterKeywords = ["ocean", "sea", "bay", "gulf", "lake", "river", "water", "coast", "beach", "marina", "reservoir"]
+        if waterKeywords.contains(where: { searchableText.contains($0) }) || category == .beach || category == .marina {
             return TerrainInfo(name: "Marine", symbolName: "waves.up.and.down", color: skyBlue, defaultImageName: "Terrain_Marine")
         }
 
-        let forestKeywords = ["park", "forest", "nature", "reserve", "wilderness", "mountain", "wildlife", "rainforest"]
-        if forestKeywords.contains(where: { searchableText.contains($0) }) {
-            return TerrainInfo(name: "Rainforest", symbolName: "tree.fill", color: UIColor(red: 0.0, green: 0.6, blue: 0.45, alpha: 1.0), defaultImageName: "Terrain_Wilderness")
+        // 2. Nature Reserve / Forest
+        let forestKeywords = ["park", "forest", "nature", "reserve", "wilderness", "mountain", "wildlife", "rainforest", "woods", "sanctuary", "national park"]
+        if forestKeywords.contains(where: { searchableText.contains($0) }) || category == .park || category == .nationalPark {
+            return TerrainInfo(name: "Nature Reserve", symbolName: "tree.fill", color: UIColor(red: 0.0, green: 0.6, blue: 0.45, alpha: 1.0), defaultImageName: "Terrain_Wilderness")
         }
 
-        if mapItem.addressRepresentations?.cityName != nil
-            || searchableText.contains(" st")
-            || searchableText.contains(" rd")
-            || searchableText.contains(" ave") {
+        // 3. Grassland / Open Field
+        let grasslandKeywords = ["farm", "field", "meadow", "grass", "plain", "valley", "ranch", "garden", "greenery", "campus", "golf", "open space"]
+        if grasslandKeywords.contains(where: { searchableText.contains($0) }) || category == .university {
+            return TerrainInfo(name: "Grassland", symbolName: "leaf.fill", color: UIColor(red: 0.68, green: 0.84, blue: 0.19, alpha: 1.0), defaultImageName: "Terrain_Land")
+        }
+
+        // 4. Residential / Urban (Lower priority than nature)
+        if category == .hospital || category == .restaurant || category == .hotel || category == .museum || category == .theater ||
+            searchableText.contains(" st") || searchableText.contains(" rd") || searchableText.contains(" ave") || searchableText.contains(" buildings") {
             return TerrainInfo(name: "Residential", symbolName: "building.2.fill", color: skyBlue, defaultImageName: "Terrain_Residential")
         }
         
+        // 5. General Land / Fallback
         return TerrainInfo(name: "General Land", symbolName: "map.fill", color: UIColor(red: 0.68, green: 0.84, blue: 0.19, alpha: 1.0), defaultImageName: "Terrain_Land")
     }
     
@@ -453,16 +462,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
 
 
-    private func pinColor(for birdImageName: String, index: Int) -> UIColor {
-        let hue = (Double(abs(birdImageName.hashValue % 10_000)) / 10_000.0 + (Double(index) * 0.61803398875)).truncatingRemainder(dividingBy: 1.0)
-        return UIColor(hue: CGFloat(hue), saturation: 0.72, brightness: 0.90, alpha: 1.0)
-    }
-
     private func refreshPinSelectionState() {
         // No-op: we only have one center pin now
     }
-
-
 
 }
 
@@ -474,7 +476,7 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as! subcardViewCell
         let bird = birdSpecies[indexPath.row]
-        cell.configure(with: bird, accentColor: pinColor(for: bird.birdImageName, index: indexPath.row))
+        cell.configure(with: bird)
         cell.setExpanded(indexPath.row == selectedBirdIndex)
         return cell
     }

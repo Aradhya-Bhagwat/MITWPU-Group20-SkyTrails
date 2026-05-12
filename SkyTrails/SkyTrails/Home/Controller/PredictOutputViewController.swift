@@ -859,9 +859,27 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
     // MARK: - UICollectionViewDelegate
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let prediction = predictions[indexPath.item]
-        selectedIndex = indexPath.item
-        collectionView.reloadData()
-        onPredictionSelected?(prediction, indexPath.item)
+        let previousIndex = selectedIndex
+        
+        if previousIndex == indexPath.item {
+            selectedIndex = nil
+        } else {
+            selectedIndex = indexPath.item
+        }
+        
+        // 1. Update the state of visible cells directly to avoid 'reloadItems' choppiness
+        if let prev = previousIndex, let prevCell = collectionView.cellForItem(at: IndexPath(item: prev, section: 0)) as? spotsToVisitOutputCollectionViewCell {
+            prevCell.setCardSelected(false, animated: true)
+        }
+        
+        if let currentCell = collectionView.cellForItem(at: indexPath) as? spotsToVisitOutputCollectionViewCell {
+            currentCell.setCardSelected(indexPath.item == selectedIndex, animated: true)
+        }
+
+        // 2. Animate the height changes smoothly
+        collectionView.performBatchUpdates(nil, completion: nil)
+        
+        onPredictionSelected?(prediction, selectedIndex ?? -1)
     }
 
     // MARK: - UICollectionViewDelegateFlowLayout

@@ -18,7 +18,7 @@ class subcardViewCell: UICollectionViewCell {
     @IBOutlet weak var compactBirdNameLabel: UILabel!
     @IBOutlet weak var compactStatusIconLabel: UILabel!
 
-    private var accentColor: UIColor = .systemBlue
+    private var currentAccentColor: UIColor = .systemTeal
     private var currentImageTask: Task<Void, Never>?
 
     override var isHighlighted: Bool {
@@ -83,8 +83,7 @@ class subcardViewCell: UICollectionViewCell {
         
         compactBirdNameLabel.font = .systemFont(ofSize: fontSize, weight: .semibold)
         updateCompactStatusIcon(pointSize: fontSize)
-        let currentBadgeColor = statusBadgeContainer.backgroundColor?.withAlphaComponent(1.0) ?? accentColor
-        updateSightabilityIcon(pointSize: fontSize, color: currentBadgeColor)
+        updateSightabilityIcon(pointSize: fontSize, color: currentAccentColor)
     }
     private func setupAppearance() {
             contentView.backgroundColor = .systemBackground
@@ -111,14 +110,13 @@ class subcardViewCell: UICollectionViewCell {
             sightabilityTextLabel.textAlignment = .left
             applyStableTextColors()
         
-            updateSightabilityIcon(pointSize: 12, color: .systemBlue)
+            updateSightabilityIcon(pointSize: 12, color: .systemTeal)
             updateExpandedBadgeIcon()
             updateCompactStatusIcon(pointSize: 12)
             updateViewState()
         }
         
-        func configure(with birdData: BirdSpeciesDisplay, accentColor: UIColor? = nil) {
-            self.accentColor = accentColor ?? .systemBlue
+        func configure(with birdData: BirdSpeciesDisplay) {
             birdNameLabel.text = birdData.birdName
             compactBirdNameLabel?.text = birdData.statusBadge.title
             
@@ -147,7 +145,8 @@ class subcardViewCell: UICollectionViewCell {
             default:
                 badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
             }
-            let effectiveBadgeColor = accentColor ?? badgeColor
+            let effectiveBadgeColor = badgeColor
+            self.currentAccentColor = effectiveBadgeColor
             statusBadgeContainer.backgroundColor = effectiveBadgeColor.withAlphaComponent(0.2)
             let compactPointSize = compactBirdNameLabel?.font.pointSize ?? 12
             updateCompactStatusIcon(pointSize: compactPointSize)
@@ -190,7 +189,7 @@ class subcardViewCell: UICollectionViewCell {
     private func updateCompactStatusIcon(pointSize: CGFloat) {
         let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
         guard let image = UIImage(systemName: "bird.circle.fill", withConfiguration: config)?
-            .withTintColor(accentColor, renderingMode: .alwaysOriginal) else { return }
+            .withTintColor(currentAccentColor, renderingMode: .alwaysOriginal) else { return }
         
         let attachment = NSTextAttachment()
         attachment.image = image
@@ -208,7 +207,7 @@ class subcardViewCell: UICollectionViewCell {
         let side = max(12, min(badgeIconImageView.bounds.width, badgeIconImageView.bounds.height))
         let config = UIImage.SymbolConfiguration(pointSize: side * 0.8, weight: .regular)
         badgeIconImageView.image = UIImage(systemName: "bird.circle.fill", withConfiguration: config)?
-            .withTintColor(accentColor, renderingMode: .alwaysOriginal)
+            .withTintColor(currentAccentColor, renderingMode: .alwaysOriginal)
     }
 
     private func updateSightabilityIcon(pointSize: CGFloat, color: UIColor) {
