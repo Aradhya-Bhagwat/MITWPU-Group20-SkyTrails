@@ -66,21 +66,21 @@
                                                 </constraints>
                                             </view>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="753" text="History" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mPg-zb-PDo">
-                                                <rect key="frame" x="16" y="419.66666666666663" width="326" height="24"/>
+                                                <rect key="frame" x="16" y="419.66666666666663" width="70" height="24"/>
                                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="M4q-9L-hLd">
-                                                <rect key="frame" x="350" y="415" width="40" height="34"/>
+                                                <rect key="frame" x="90" y="420" width="24" height="24"/>
                                                 <constraints>
-                                                    <constraint firstAttribute="width" constant="40" id="h-btn-w"/>
-                                                    <constraint firstAttribute="height" constant="34" id="h-btn-h"/>
+                                                    <constraint firstAttribute="width" constant="24" id="h-btn-w"/>
+                                                    <constraint firstAttribute="height" constant="24" id="h-btn-h"/>
                                                 </constraints>
                                                 <color key="tintColor" systemColor="labelColor"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
                                                 <state key="normal" image="chevron.right" catalog="system">
-                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="22" weight="bold"/>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" configurationType="pointSize" pointSize="17" weight="regular"/>
                                                 </state>
                                                 <connections>
                                                     <action selector="historyChevronTapped:" destination="dwe-Lt-A6a" eventType="touchUpInside" id="h-btn-action"/>
@@ -131,9 +131,8 @@
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
-                                            <constraint firstAttribute="trailing" secondItem="mPg-zb-PDo" secondAttribute="trailing" constant="60" id="1kB-lq-OYz"/>
-                                            <constraint firstItem="M4q-9L-hLd" firstAttribute="centerY" secondItem="mPg-zb-PDo" secondAttribute="centerY" id="h-btn-centery"/>
-                                            <constraint firstAttribute="trailing" secondItem="M4q-9L-hLd" secondAttribute="trailing" constant="12" id="h-btn-trailing"/>
+                                            <constraint firstItem="M4q-9L-hLd" firstAttribute="leading" secondItem="mPg-zb-PDo" secondAttribute="trailing" constant="4" id="h-btn-leading"/>
+                                            <constraint firstItem="M4q-9L-hLd" firstAttribute="centerY" secondItem="mPg-zb-PDo" secondAttribute="centerY" constant="0.5" id="h-btn-centery"/>
                                             <constraint firstItem="sz8-14-rMC" firstAttribute="top" secondItem="juo-Tr-9OM" secondAttribute="bottom" constant="16" id="6W8-7q-tLy"/>
                                             <constraint firstAttribute="bottom" secondItem="vFz-1I-rOM" secondAttribute="bottom" constant="8" id="7ke-bu-vMc"/>
                                             <constraint firstItem="FQA-lr-sA1" firstAttribute="top" secondItem="sz8-14-rMC" secondAttribute="bottom" constant="8" id="8sD-A8-nod"/>
