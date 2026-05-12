@@ -10,6 +10,7 @@ protocol LocationServiceProtocol: Sendable {
 @MainActor
 final class LocationService: NSObject, LocationServiceProtocol, CLLocationManagerDelegate {
     static let shared = LocationService()
+    static let authorizationDidChangeNotification = Notification.Name("LocationServiceAuthorizationDidChange")
     
     private let locationManager = CLLocationManager()
     private var searchCompleter = MKLocalSearchCompleter()
@@ -129,21 +130,6 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         }
     }
     func getCurrentLocation() async throws -> LocationData {
-        if let savedHomeLocation = LocationPreferences.shared.homeLocation {
-            let savedHomeLocationName = LocationPreferences.shared.homeLocationName
-            let reverseGeocodedName = await reverseGeocode(
-                lat: savedHomeLocation.latitude,
-                lon: savedHomeLocation.longitude
-            )
-            let displayName = savedHomeLocationName ?? reverseGeocodedName ?? "Current Location"
-
-            return LocationData(
-                displayName: displayName,
-                lat: savedHomeLocation.latitude,
-                lon: savedHomeLocation.longitude
-            )
-        }
-
         try await ensureLocationAuthorization()
         
         return try await withCheckedThrowingContinuation { continuation in
@@ -234,6 +220,7 @@ final class LocationService: NSObject, LocationServiceProtocol, CLLocationManage
         if status == .authorizedAlways || status == .authorizedWhenInUse {
             locationManager.startUpdatingLocation()
         }
+        NotificationCenter.default.post(name: Self.authorizationDidChangeNotification, object: nil)
     }
     func getAutocompleteSuggestions(for query: String) async -> [LocationSuggestion] {
         if let existing = autocompleteContinuation {
