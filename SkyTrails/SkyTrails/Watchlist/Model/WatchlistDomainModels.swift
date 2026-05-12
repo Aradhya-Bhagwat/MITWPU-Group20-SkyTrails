@@ -9,6 +9,7 @@ enum WatchlistConstants {
 
 final class LocationPreferences {
     static let shared = LocationPreferences()
+    static let locationDidChangeNotification = Notification.Name("LocationPreferencesLocationDidChange")
     
     struct SavedAddress: Codable, Identifiable {
         let id: UUID
@@ -39,13 +40,19 @@ final class LocationPreferences {
             return CLLocationCoordinate2D(latitude: lat, longitude: lon)
         }
         set {
+            let old = homeLocation
             if let location = newValue {
+                if old?.latitude == location.latitude && old?.longitude == location.longitude { return }
                 defaults.set(location.latitude, forKey: homeLatKey)
                 defaults.set(location.longitude, forKey: homeLonKey)
             } else {
+                if old == nil { return }
                 defaults.removeObject(forKey: homeLatKey)
                 defaults.removeObject(forKey: homeLonKey)
             }
+            // homeLocation is often set via setHomeLocation which posts its own notification,
+            // but for direct setting we should also notify.
+            NotificationCenter.default.post(name: Self.locationDidChangeNotification, object: nil)
         }
     }
     
@@ -56,7 +63,11 @@ final class LocationPreferences {
     
     var isManualOverride: Bool {
         get { defaults.bool(forKey: manualOverrideKey) }
-        set { defaults.set(newValue, forKey: manualOverrideKey) }
+        set { 
+            if defaults.bool(forKey: manualOverrideKey) == newValue { return }
+            defaults.set(newValue, forKey: manualOverrideKey)
+            NotificationCenter.default.post(name: Self.locationDidChangeNotification, object: nil)
+        }
     }
 
     
@@ -89,15 +100,18 @@ final class LocationPreferences {
     }
     
     func setHomeLocation(_ coordinate: CLLocationCoordinate2D, name: String? = nil, isManual: Bool? = nil) async {
-        homeLocation = coordinate
+        let oldLoc = homeLocation
+        let isLocSame = oldLoc?.latitude == coordinate.latitude && oldLoc?.longitude == coordinate.longitude
+        
+        homeLocation = coordinate // This might post if changed
         
         if let isManual = isManual {
-            isManualOverride = isManual
+            isManualOverride = isManual // This might post if changed
         }
         
         if let name = name {
             homeLocationName = name
-        } else {
+        } else if !isLocSame {
             homeLocationName = await LocationService.shared.reverseGeocode(
                 lat: coordinate.latitude,
                 lon: coordinate.longitude

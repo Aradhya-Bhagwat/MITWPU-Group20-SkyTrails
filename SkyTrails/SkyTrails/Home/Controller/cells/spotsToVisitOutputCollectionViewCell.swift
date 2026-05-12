@@ -54,6 +54,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     override func awakeFromNib() {
         setupLayoutBehavior()
         setupGraphView()
+        setupAppearance()
         updateCardVariant()
         setupActionButtons()
     }
@@ -98,33 +99,29 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         updateScaledLayout()
         updateCardVariant()
         applyBadgeIconStyle()
-        let cardView = (bounds.width >= 450) ? wideCardView : compactCardView
-        if let card = cardView {
-            let cardFrame = card.convert(card.bounds, to: self)
-            layer.shadowPath = UIBezierPath(roundedRect: cardFrame, cornerRadius: 12).cgPath
-        } else {
-            layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 12).cgPath
-        }
     }
 
     private func setupAppearance() {
         backgroundColor = .clear
         contentView.backgroundColor = .clear
-        contentView.layer.cornerRadius = 12
-        contentView.layer.masksToBounds = true
+        contentView.layer.cornerRadius = 16
+        contentView.layer.masksToBounds = false // Allow shadows to show
 
-        layer.masksToBounds = false
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.10
-        layer.shadowOffset = CGSize(width: 0, height: 3)
-        layer.shadowRadius = 7
-
-        compactCardView.layer.cornerRadius = 12
-        wideCardView.layer.cornerRadius = 12
-        compactCardView.layer.masksToBounds = true
-        wideCardView.layer.masksToBounds = true
+        compactCardView.layer.cornerRadius = 16
+        wideCardView.layer.cornerRadius = 16
+        compactCardView.layer.masksToBounds = false
+        wideCardView.layer.masksToBounds = false
+        
         compactCardView.backgroundColor = .systemBackground
         wideCardView.backgroundColor = .systemBackground
+
+        // Apply shadow to the cards instead of the cell
+        [compactCardView, wideCardView].forEach { card in
+            card?.layer.shadowColor = UIColor.black.cgColor
+            card?.layer.shadowOpacity = 0.12
+            card?.layer.shadowOffset = CGSize(width: 0, height: 4)
+            card?.layer.shadowRadius = 8
+        }
 
         compactBirdImageView.layer.cornerRadius = 8
         wideBirdImageView.layer.cornerRadius = 8
@@ -164,6 +161,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wrapper.translatesAutoresizingMaskIntoConstraints = false
         wrapper.addSubview(stack)
         wrapper.isHidden = true
+        wrapper.alpha = 0
         
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: wrapper.topAnchor, constant: 8),
@@ -370,7 +368,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         applyScaledTexts()
         applyBadgeIconStyle()
 
-        applySelectionStyle()
+        applySelectionStyle(animated: false)
     }
 
     @objc private func didTapPath() {
@@ -383,9 +381,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         onTapWatchlist?(prediction)
     }
 
-    func setCardSelected(_ selected: Bool) {
+    func setCardSelected(_ selected: Bool, animated: Bool = false) {
         isCardSelected = selected
-        applySelectionStyle()
+        applySelectionStyle(animated: animated)
     }
 
     private func statusText(for probability: Int) -> (title: String, subtitle: String, color: UIColor) {
@@ -399,31 +397,48 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         }
     }
 
-    private func applySelectionStyle() {
+    private func applySelectionStyle(animated: Bool) {
         let borderColor = isCardSelected ? UIColor.systemBlue.cgColor : UIColor.clear.cgColor
         let borderWidth: CGFloat = isCardSelected ? 2 : 0
-        compactCardView.layer.borderColor = borderColor
-        compactCardView.layer.borderWidth = borderWidth
-        wideCardView.layer.borderColor = borderColor
-        wideCardView.layer.borderWidth = borderWidth
         
-        guard let container = actionButtonsContainer?.superview else { return }
-        
-        if isCardSelected {
-            container.isHidden = false
-            actionButtonsContainer?.isHidden = false
-            container.alpha = 0
-            container.transform = CGAffineTransform(translationX: 0, y: -40)
+        let animations = {
+            self.compactCardView.layer.borderColor = borderColor
+            self.compactCardView.layer.borderWidth = borderWidth
+            self.wideCardView.layer.borderColor = borderColor
+            self.wideCardView.layer.borderWidth = borderWidth
             
-            UIView.animate(withDuration: 0.35, delay: 0.05, options: [.curveEaseOut, .allowUserInteraction]) {
-                container.alpha = 1
-                container.transform = .identity
+            if let container = self.actionButtonsContainer?.superview {
+                if self.isCardSelected {
+                    container.alpha = 1
+                    container.transform = .identity
+                    container.isHidden = false
+                    self.actionButtonsContainer?.isHidden = false
+                } else {
+                    container.alpha = 0
+                    container.transform = CGAffineTransform(translationX: 0, y: -10)
+                    container.isHidden = true
+                }
             }
+            self.mainStackView.layoutIfNeeded()
+        }
+
+        if animated {
+            if isCardSelected, let container = actionButtonsContainer?.superview {
+                container.transform = CGAffineTransform(translationX: 0, y: -20)
+                container.alpha = 0
+            }
+            
+            UIView.animate(
+                withDuration: 0.4,
+                delay: 0,
+                usingSpringWithDamping: 0.8,
+                initialSpringVelocity: 0.3,
+                options: [.allowUserInteraction, .beginFromCurrentState],
+                animations: animations,
+                completion: nil
+            )
         } else {
-            container.alpha = 0
-            container.isHidden = true
-            actionButtonsContainer?.isHidden = true
-            container.transform = .identity
+            animations()
         }
     }
 

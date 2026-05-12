@@ -57,7 +57,22 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         setupLoadingIndicator()
         applySemanticAppearance()
         setupCollectionView()
+        setupLocationChangeObserver()
         // Removed loadHomeData() from here to prevent double-loading with viewWillAppear
+    }
+
+    private func setupLocationChangeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLocationChange),
+            name: LocationPreferences.locationDidChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleLocationChange() {
+        print("[DEBUG] HomeVC - Location changed notification received. Refreshing...")
+        refreshHomeData()
     }
 
 
