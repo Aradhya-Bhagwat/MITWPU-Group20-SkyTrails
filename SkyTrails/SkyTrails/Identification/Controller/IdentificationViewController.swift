@@ -27,6 +27,8 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var warningLabel: UILabel!
+    @IBOutlet weak var historyLabel: UILabel!
+    
     var model: IdentificationManager!
     
     override func viewDidLayoutSubviews() {
@@ -80,7 +82,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         historyCollectionView.delegate = self
         historyCollectionView.dataSource = self
         historyCollectionView.isScrollEnabled = false
-        
         applyTableAppearance()
         setupHistoryCompositionalLayout()
         
@@ -105,6 +106,15 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: profileLocationHeaderView)
     }
     
+
+    @IBAction private func historyChevronTapped(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Identification", bundle: nil)
+        if let historyListVC = storyboard.instantiateViewController(withIdentifier: "IdentificationHistoryListViewController") as? IdentificationHistoryListViewController {
+            historyListVC.viewModel = self.model
+            navigationController?.pushViewController(historyListVC, animated: true)
+        }
+    }
+
     private func navigateToProfile() {
         let storyboard = UIStoryboard(name: "Profile", bundle: nil)
         if let profileVC = storyboard.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController {
