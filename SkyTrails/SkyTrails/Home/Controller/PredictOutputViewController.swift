@@ -7,6 +7,17 @@ protocol ModalSheetHeightAware: AnyObject {
     func updateVisibleSheetHeight(_ height: CGFloat)
 }
 
+enum PredictionSortOption: String, CaseIterable {
+    case sightabilityDesc = "Sightability (High to Low)"
+    case sightabilityAsc = "Sightability (Low to High)"
+    case alphaAZ = "Alphabetical (A-Z)"
+    case alphaZA = "Alphabetical (Z-A)"
+}
+
+protocol PredictionFilterDelegate: AnyObject {
+    func didApplyFilters(sort: PredictionSortOption, minRange: Int, maxRange: Int)
+}
+
 class PredictOutputViewController: UIViewController {
     var predictions: [FinalPredictionResult] = []
     var inputData: [PredictionInputData] = []
@@ -23,6 +34,68 @@ class PredictOutputViewController: UIViewController {
     private var fixedCollectionHeightConstraint: NSLayoutConstraint?
     private var latestVisibleSheetHeight: CGFloat?
     private let watchlistManager = WatchlistManager.shared
+    private var searchText: String = ""
+    private var filteredGroupedPredictions: [[FinalPredictionResult]] = []
+    
+    // Filter State
+    private var currentSortOption: PredictionSortOption = .sightabilityDesc
+    private var minSightability: Int = 1
+    private var maxSightability: Int = 99
+
+    private lazy var searchBar: UISearchBar = {
+        let sb = UISearchBar()
+        sb.placeholder = "Search birds..."
+        sb.searchBarStyle = .minimal
+        sb.translatesAutoresizingMaskIntoConstraints = false
+        sb.delegate = self
+        return sb
+    }()
+    
+    private lazy var filterButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+        btn.setImage(UIImage(systemName: "line.3.horizontal.decrease.circle", withConfiguration: config), for: .normal)
+        btn.tintColor = .systemBlue
+        btn.backgroundColor = .white
+        btn.layer.cornerRadius = 22
+        
+        // Apple Native Shadow
+        btn.layer.shadowColor = UIColor.black.cgColor
+        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        btn.layer.shadowOpacity = 0.12
+        btn.layer.shadowRadius = 4
+        
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.addTarget(self, action: #selector(didTapFilter), for: .touchUpInside)
+        return btn
+    }()
+    
+    private lazy var searchStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [searchBar, filterButton])
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+    private lazy var updatingBanner: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.9)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "Updating with live sightings..."
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+        return view
+    }()
+
 
 
     override func viewDidLoad() {
@@ -31,10 +104,55 @@ class PredictOutputViewController: UIViewController {
         applySemanticAppearance()
 
         setupNavigation()
+        setupSearchBar()
         prepareData()
         setupCollectionView()
         updateLocationHeader(forPageAt: currentPageIndex)
+        Task {
+            await loadYearlyTrends()
+        }
+    }
 
+    private func setupSearchBar() {
+        view.addSubview(searchStackView)
+        
+        NSLayoutConstraint.activate([
+            searchStackView.topAnchor.constraint(equalTo: selectedLocationDetailLabel.bottomAnchor, constant: 12),
+            searchStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            searchStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            searchStackView.heightAnchor.constraint(equalToConstant: 44),
+            
+            filterButton.widthAnchor.constraint(equalToConstant: 44),
+            filterButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+        
+        if let collectionView = collectionView {
+            if let superview = collectionView.superview {
+                let existingTop = superview.constraints.filter { 
+                    ($0.firstItem as? UIView == collectionView && $0.firstAttribute == .top) ||
+                    ($0.secondItem as? UIView == collectionView && $0.secondAttribute == .top)
+                }
+                NSLayoutConstraint.deactivate(existingTop)
+            }
+            
+            collectionView.translatesAutoresizingMaskIntoConstraints = false
+            collectionView.topAnchor.constraint(equalTo: searchStackView.bottomAnchor, constant: 8).isActive = true
+        }
+    }
+
+    @objc private func didTapFilter() {
+        let filterVC = PredictionFilterViewController()
+        filterVC.currentSort = currentSortOption
+        filterVC.minRange = Float(minSightability)
+        filterVC.maxRange = Float(maxSightability)
+        filterVC.delegate = self
+        
+        if let sheet = filterVC.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+        
+        present(filterVC, animated: true)
     }
 
     override func viewDidLayoutSubviews() {
@@ -46,8 +164,8 @@ class PredictOutputViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        // Auto-select and show the map for the first bird
-        if let first = groupedPredictions.first?.first {
+        // Auto-select and show the map for the first matching bird
+        if let first = filteredGroupedPredictions.first?.first {
             if let mapVC = navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(first)
             }
@@ -83,28 +201,164 @@ class PredictOutputViewController: UIViewController {
                 return lhs.spottingProbability > rhs.spottingProbability
             } ?? []
         }
+        
+        filterData()
 
-        for prediction in predictions {
-            guard yearlySeriesByBird[prediction.birdName] == nil else { continue }
-            yearlySeriesByBird[prediction.birdName] = yearlySeries(for: prediction)
+        // We now fetch yearly trends asynchronously in loadYearlyTrends()
+    }
+
+    func filterData() {
+        // 1. First filter by search text and sightability range
+        let baseFiltered = groupedPredictions.map { group in
+            group.filter { prediction in
+                let matchesSearch = searchText.isEmpty || prediction.birdName.localizedCaseInsensitiveContains(searchText)
+                let inRange = prediction.spottingProbability >= minSightability && prediction.spottingProbability <= maxSightability
+                return matchesSearch && inRange
+            }
+        }
+        
+        // 2. Then apply sorting to each group
+        filteredGroupedPredictions = baseFiltered.map { group in
+            group.sorted { lhs, rhs in
+                switch currentSortOption {
+                case .sightabilityDesc:
+                    if lhs.spottingProbability == rhs.spottingProbability { return lhs.birdName < rhs.birdName }
+                    return lhs.spottingProbability > rhs.spottingProbability
+                case .sightabilityAsc:
+                    if lhs.spottingProbability == rhs.spottingProbability { return lhs.birdName < rhs.birdName }
+                    return lhs.spottingProbability < rhs.spottingProbability
+                case .alphaAZ:
+                    return lhs.birdName < rhs.birdName
+                case .alphaZA:
+                    return lhs.birdName > rhs.birdName
+                }
+            }
+        }
+        
+        collectionView?.reloadData()
+    }
+
+    private func loadYearlyTrends() async {
+        let uniqueSpecies = predictions.compactMap { p -> (String, Double, Double)? in
+            guard let code = p.ebirdSpeciesCode else { return nil }
+            return (code, p.matchedLocation.lat, p.matchedLocation.lon)
+        }
+        
+        await withTaskGroup(of: (String, [Int]).self) { group in
+            for (code, lat, lon) in uniqueSpecies {
+                group.addTask {
+                    let scores = (try? await SkyTrailsAPIService.shared
+                        .fetchYearlyTrends(lat: lat, lon: lon, speciesCode: code)) ?? []
+                    return (code, scores)
+                }
+            }
+            for await (code, scores) in group {
+                yearlySeriesByBird[code] = scores
+            }
+        }
+        
+        await MainActor.run {
+            collectionView.reloadData()
         }
     }
 
 
     func updatePredictions(_ newPredictions: [FinalPredictionResult]) {
-        predictions = newPredictions
+        // Merge new predictions with existing ones
+        // Unique key = ebirdSpeciesCode + matchedInputIndex
+        // If same key exists — keep higher probability
+        // If new key — append it
+        
+        var mergedMap: [String: FinalPredictionResult] = [:]
+        
+        // First load existing predictions into map
+        for pred in predictions {
+            let key = "\(pred.ebirdSpeciesCode ?? pred.birdName)_\(pred.matchedInputIndex)"
+            mergedMap[key] = pred
+        }
+        
+        // Merge new predictions
+        for pred in newPredictions {
+            let key = "\(pred.ebirdSpeciesCode ?? pred.birdName)_\(pred.matchedInputIndex)"
+            if let existing = mergedMap[key] {
+                // Keep higher probability, prefer new residencyStatus
+                // if it is more specific than existing
+                let higherProb = max(existing.spottingProbability, pred.spottingProbability)
+                let betterStatus = preferredStatus(existing.residencyStatus, pred.residencyStatus)
+                // Rebuild with better values
+                mergedMap[key] = FinalPredictionResult(
+                    birdName: existing.birdName,
+                    imageName: existing.imageName.isEmpty ? pred.imageName : existing.imageName,
+                    likelySpot: existing.likelySpot,
+                    matchedInputIndex: existing.matchedInputIndex,
+                    matchedLocation: existing.matchedLocation,
+                    spottingProbability: min(99, higherProb),
+                    weekNumber: existing.weekNumber ?? pred.weekNumber,
+                    residencyStatus: betterStatus,
+                    ebirdSpeciesCode: existing.ebirdSpeciesCode ?? pred.ebirdSpeciesCode
+                )
+            } else {
+                // New species not in existing set — add it
+                mergedMap[key] = FinalPredictionResult(
+                    birdName: pred.birdName,
+                    imageName: pred.imageName,
+                    likelySpot: pred.likelySpot,
+                    matchedInputIndex: pred.matchedInputIndex,
+                    matchedLocation: pred.matchedLocation,
+                    spottingProbability: min(99, pred.spottingProbability),
+                    weekNumber: pred.weekNumber,
+                    residencyStatus: pred.residencyStatus,
+                    ebirdSpeciesCode: pred.ebirdSpeciesCode
+                )
+            }
+        }
+        
+        predictions = Array(mergedMap.values)
         prepareData()
+        Task {
+            await loadYearlyTrends()
+        }
+        
         currentPageIndex = groupedPredictions.isEmpty
             ? 0
             : min(currentPageIndex, groupedPredictions.count - 1)
-        collectionView?.reloadData()
-        collectionView?.collectionViewLayout.invalidateLayout()
-        updateLocationHeader(forPageAt: currentPageIndex)
-
-        if let first = groupedPredictions.first?.first,
-           let mapVC = navigationController?.parent as? PredictMapViewController {
-            mapVC.filterMapForBird(first)
+            
+        DispatchQueue.main.async {
+            self.collectionView?.reloadData()
+            self.collectionView?.collectionViewLayout.invalidateLayout()
+            self.updateLocationHeader(forPageAt: self.currentPageIndex)
+            
+            if let first = self.groupedPredictions.first?.first,
+               let mapVC = self.navigationController?.parent as? PredictMapViewController {
+                mapVC.filterMapForBird(first)
+            }
         }
+    }
+
+    func showUpdatingBanner() {
+        guard updatingBanner.superview == nil else { return }
+        view.addSubview(updatingBanner)
+        NSLayoutConstraint.activate([
+            updatingBanner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            updatingBanner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            updatingBanner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            updatingBanner.heightAnchor.constraint(equalToConstant: 28),
+        ])
+    }
+
+    func hideUpdatingBanner() {
+        updatingBanner.removeFromSuperview()
+    }
+
+    private func preferredStatus(_ a: String?, _ b: String?) -> String? {
+        let priority: [String: Int] = [
+            "Recently Spotted": 0,
+            "Highly Expected": 1,
+            "Expected": 2
+        ]
+        let aP = priority[a ?? ""] ?? 99
+        let bP = priority[b ?? ""] ?? 99
+        return aP <= bP ? a : b
     }
 
 
@@ -416,7 +670,7 @@ extension PredictOutputViewController: ModalSheetHeightAware {
 
 extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        groupedPredictions.count
+        filteredGroupedPredictions.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -427,7 +681,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
             return UICollectionViewCell()
         }
 
-        let results = groupedPredictions[indexPath.item]
+        let results = filteredGroupedPredictions[indexPath.item]
         cell.configure(
             predictions: results,
             yearlySeries: yearlySeriesByBird,
@@ -463,7 +717,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
             currentPageIndex = page
             updateLocationHeader(forPageAt: currentPageIndex)
             
-            if let first = groupedPredictions[currentPageIndex].first,
+            if let first = filteredGroupedPredictions[currentPageIndex].first,
                let mapVC = navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(first)
             }
@@ -587,7 +841,7 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         }
 
         let prediction = predictions[indexPath.item]
-        let yearly = yearlySeriesByBird[prediction.birdName] ?? []
+        let yearly = yearlySeriesByBird[prediction.ebirdSpeciesCode ?? ""] ?? []
         cell.configure(prediction: prediction, yearlyProbabilities: yearly)
         cell.setCardSelected(indexPath.item == selectedIndex)
         
@@ -628,6 +882,24 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         }
 
         return CGSize(width: cardWidth, height: ceil(cardHeight))
+    }
+}
+
+extension PredictOutputViewController: UISearchBarDelegate, PredictionFilterDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        self.searchText = searchText
+        filterData()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+
+    func didApplyFilters(sort: PredictionSortOption, minRange: Int, maxRange: Int) {
+        self.currentSortOption = sort
+        self.minSightability = minRange
+        self.maxSightability = maxRange
+        filterData()
     }
 }
 

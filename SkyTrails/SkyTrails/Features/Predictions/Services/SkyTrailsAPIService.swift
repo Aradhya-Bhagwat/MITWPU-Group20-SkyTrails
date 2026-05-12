@@ -210,6 +210,56 @@ final class SkyTrailsAPIService {
         return rows.first?.species_data ?? []
     }
 
+    func fetchYearlyTrends(
+        lat: Double,
+        lon: Double,
+        speciesCode: String
+    ) async throws -> [Int] {
+        let config = try SupabaseConfig.load()
+        
+        // Calculate grid_id
+        let latSnap = floor(lat / 0.5) * 0.5
+        let lonSnap = floor(lon / 0.5) * 0.5
+        let gridId = String(format: "%.1f_%.1f", latSnap, lonSnap)
+        
+        var components = URLComponents(url: config.projectURL, 
+                                       resolvingAgainstBaseURL: false)
+        components?.path = "/rest/v1/regional_trends"
+        components?.queryItems = [
+            URLQueryItem(name: "select", value: "week_number,species_data"),
+            URLQueryItem(name: "grid_id", value: "eq.\(gridId)"),
+            URLQueryItem(name: "order", value: "week_number.asc"),
+            URLQueryItem(name: "limit", value: "52")
+        ]
+        
+        guard let url = components?.url else { throw APIError.invalidURL }
+        
+        var request = URLRequest(url: url)
+        request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(config.anonKey)", 
+                         forHTTPHeaderField: "Authorization")
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        
+        struct WeekRow: Decodable {
+            let week_number: Int
+            let species_data: [RegionalTrendSpeciesItem]
+        }
+        
+        let rows = try JSONDecoder().decode([WeekRow].self, from: data)
+        
+        // Build array of 52 scores (index 0 = week 1)
+        var scores = [Int](repeating: 0, count: 52)
+        for row in rows {
+            let weekIndex = row.week_number - 1
+            guard weekIndex >= 0 && weekIndex < 52 else { continue }
+            if let species = row.species_data.first(where: { $0.id == speciesCode }) {
+                scores[weekIndex] = min(99, Int(species.score * 100))
+            }
+        }
+        return scores
+    }
+
     func fetchLiveHotspots(lat: Double, lon: Double, existingIds: [String]) async throws -> [LiveHotspotResult] {
         let config = try SupabaseConfig.load()
         

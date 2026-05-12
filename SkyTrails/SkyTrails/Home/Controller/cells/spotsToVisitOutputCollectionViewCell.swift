@@ -38,6 +38,13 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     private var wideBadgeContainerWidthConstraint: NSLayoutConstraint?
     private var wideBadgeContainerHeightConstraint: NSLayoutConstraint?
     
+    private let graphView: SightabilityGraphView = {
+        let v = SightabilityGraphView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = .clear
+        return v
+    }()
+    
     var onTapBirdPath: ((FinalPredictionResult) -> Void)?
     var onTapWatchlist: ((FinalPredictionResult) -> Void)?
     
@@ -45,12 +52,35 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
 
     override func awakeFromNib() {
-        super.awakeFromNib()
-        mainStackView.distribution = .fill
-        setupAppearance()
         setupLayoutBehavior()
+        setupGraphView()
         updateCardVariant()
         setupActionButtons()
+    }
+
+    private func setupGraphView() {
+        wideCardView.addSubview(graphView)
+        NSLayoutConstraint.activate([
+            graphView.trailingAnchor.constraint(equalTo: wideCardView.trailingAnchor, constant: -16),
+            graphView.bottomAnchor.constraint(equalTo: wideCardView.bottomAnchor, constant: -12),
+            graphView.widthAnchor.constraint(equalTo: wideCardView.widthAnchor, multiplier: 0.35),
+            graphView.heightAnchor.constraint(equalToConstant: 130)
+        ])
+        
+        wideSightabilityLabel.translatesAutoresizingMaskIntoConstraints = false
+        if let superview = wideSightabilityLabel.superview {
+            let constraints = superview.constraints.filter { 
+                $0.firstItem === wideSightabilityLabel || $0.secondItem === wideSightabilityLabel 
+            }
+            NSLayoutConstraint.deactivate(constraints)
+            
+            NSLayoutConstraint.activate([
+                wideSightabilityLabel.topAnchor.constraint(equalTo: wideBadgeSubtitleLabel.bottomAnchor, constant: 8),
+                wideSightabilityLabel.leadingAnchor.constraint(equalTo: wideBadgeSubtitleLabel.leadingAnchor),
+                wideSightabilityLabel.trailingAnchor.constraint(lessThanOrEqualTo: graphView.leadingAnchor, constant: -12)
+            ])
+            wideSightabilityLabel.textAlignment = .left
+        }
     }
 
     override func prepareForReuse() {
@@ -305,7 +335,15 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     func configure(prediction: FinalPredictionResult, yearlyProbabilities: [Int]) {
-        _ = yearlyProbabilities
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        graphView.currentWeek = currentWeek
+        if yearlyProbabilities.isEmpty {
+            graphView.isLoading = true
+            graphView.scores = []
+        } else {
+            graphView.isLoading = false
+            graphView.scores = yearlyProbabilities
+        }
         self.currentPrediction = prediction
         
         currentImageTask?.cancel()
@@ -411,7 +449,7 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
             ? min(max(titleScaleWidth, 17), 24)
             : min(max(titleScaleWidth, 17), 20)
         let bodySize = isWide
-            ? min(max(bodyScaleWidth, 12), 15)
+            ? min(max(bodyScaleWidth, 17), 20)
             : min(max(bodyScaleWidth, 11), 13.5)
         let sightabilitySize = isWide
             ? min(max(sightabilityScaleWidth, 13), 16)
@@ -423,13 +461,13 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         compactBadgeTitleLabel.font = .systemFont(ofSize: bodySize, weight: .semibold)
         compactBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize, weight: .regular)
         wideBadgeTitleLabel.font = .systemFont(ofSize: bodySize, weight: .semibold)
-        wideBadgeSubtitleLabel.font = .systemFont(ofSize: bodySize, weight: .regular)
+        wideBadgeSubtitleLabel.font = .systemFont(ofSize: max(bodySize - 1, 16), weight: .regular)
         compactSightabilityLabel.font = .systemFont(ofSize: sightabilitySize, weight: .medium)
         wideSightabilityLabel.font = .systemFont(ofSize: sightabilitySize, weight: .medium)
 
         compactBadgeContainerWidthConstraint?.constant = min(max(bodySize * 2.9, 36), 44)
         compactBadgeContainerHeightConstraint?.constant = compactBadgeContainerWidthConstraint?.constant ?? 42
-        wideBadgeContainerWidthConstraint?.constant = min(max(bodySize * 2.1, 24), 30)
+        wideBadgeContainerWidthConstraint?.constant = min(max(bodySize * 2.2, 38), 46)
         wideBadgeContainerHeightConstraint?.constant = wideBadgeContainerWidthConstraint?.constant ?? 28
 
         applyScaledTexts()

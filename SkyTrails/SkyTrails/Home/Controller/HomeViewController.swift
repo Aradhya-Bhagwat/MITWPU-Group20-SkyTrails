@@ -625,13 +625,21 @@ extension HomeViewController {
             // Refresh the already-visible screen when selected-hotspot data arrives.
             Task { @MainActor [weak self, weak mapVC] in
                 guard let self = self else { return }
+                
+                let outputVC = mapVC?.children.first?.children.first as? PredictOutputViewController
+                outputVC?.showUpdatingBanner()
+
                 let preds = await self.homeManager.getSpeciesForHotspot(
                     lat: item.latitude,
                     lon: item.longitude,
                     hotspotId: item.hotspotId
                 )
-                guard !preds.isEmpty else { return }
-                mapVC?.refreshOutputPredictions(preds)
+                
+                if !preds.isEmpty {
+                    mapVC?.refreshOutputPredictions(preds)
+                }
+                
+                outputVC?.hideUpdatingBanner()
             }
         case 3:
             navigateToNewsArticle(newsItem(at: indexPath.row))

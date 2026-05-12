@@ -195,7 +195,7 @@ class HomeManager {
                                 .replacingOccurrences(of: " ", with: "_")
                                 .replacingOccurrences(of: "-", with: "_")
                 
-                let percent = min(100, Int(sp.score * 100))
+                let percent = min(99, Int(sp.score * 100))
                 let tag: String
                 if percent >= 70 { tag = "Common Here" }
                 else if percent >= 40 { tag = "Look Out For" }
@@ -488,7 +488,7 @@ class HomeManager {
                     likelySpot: "Nearby hotspot",
                     matchedInputIndex: 0,
                     matchedLocation: (lat: lat, lon: lon),
-                    spottingProbability: sp.probability,
+                    spottingProbability: min(99, max(1, sp.probability)),
                     weekNumber: sp.weekNumber ?? "This week",
                     residencyStatus: sp.residencyStatus,
                     ebirdSpeciesCode: sp.ebirdSpeciesCode
@@ -518,7 +518,7 @@ class HomeManager {
                 commonName: item.name,
                 scientificName: nil,
                 imageName: watchlistManager.findBird(byName: item.name)?.staticImageName,
-                probability: max(1, min(100, Int((item.score * 100).rounded()))),
+                probability: max(1, min(99, Int((item.score * 100).rounded()))),
                 weekNumber: weekText,
                 residencyStatus: "Expected",
                 ebirdSpeciesCode: item.id
@@ -663,7 +663,7 @@ class HomeManager {
                     iconName: "bird.circle.fill",
                     backgroundColorName: badgeColor(for: Int(sp.score * 100), residency: "Expected")
                 ),
-                sightabilityPercent: max(1, min(100, Int((sp.score * 100).rounded()))),
+                sightabilityPercent: max(1, min(99, Int((sp.score * 100).rounded()))),
                 weekNumber: "Week \(currentWeek)",
                 residencyStatus: "Expected",
                 ebirdSpeciesCode: sp.id
@@ -1434,14 +1434,14 @@ class HomeManager {
            let weeklyProbabilities = presence.weeklyProbabilities,
            validWeeks.count == weeklyProbabilities.count {
             for (week, value) in zip(validWeeks, weeklyProbabilities) where (1...52).contains(week) {
-                result[week - 1] = min(100, max(0, value))
+                result[week - 1] = min(99, max(0, value))
             }
             return result
         }
 
         if let validWeeks = presence.validWeeks,
            let probability = presence.probability {
-            let clamped = min(100, max(0, probability))
+            let clamped = min(99, max(0, probability))
             for week in validWeeks where (1...52).contains(week) {
                 result[week - 1] = clamped
             }
@@ -1635,7 +1635,7 @@ class HomeManager {
                 likelySpot: bird.likelySpot ?? "Sky",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
-                spottingProbability: probability,
+                spottingProbability: min(99, max(1, probability)),
                 weekNumber: weekText,
                 residencyStatus: status,
                 ebirdSpeciesCode: bird.ebird_species_code
@@ -1744,7 +1744,7 @@ class HomeManager {
                         lat: matchLat, 
                         lon: matchLon
                     ),
-                    spottingProbability: species.probability,
+                    spottingProbability: min(99, max(1, species.probability)),
                     weekNumber: species.peakWeek.map { 
                         "Week \($0)" 
                     },
