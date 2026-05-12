@@ -54,8 +54,32 @@ class EditWatchlistDetailViewController: UIViewController {
 		configureRulesSection()
 		populateRuleDataForEdit()
 	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+			(message: "Enter a name for your watchlist.",
+			 targetProvider: { [weak self] in self?.titleTextField }),
+			(message: "Set date range.",
+			 targetProvider: { [weak self] in self?.startDatePicker }),
+			(message: "Set a location filter (optional).",
+			 targetProvider: { [weak self] in self?.locationSearchBar }),
+			(message: "Filter by bird shape (optional).",
+			 targetProvider: { [weak self] in self?.speciesRuleToggle }),
+			(message: "Tap Save when you're done.",
+			 targetProvider: { [weak self] in
+				 self?.navigationItem.rightBarButtonItems?.first?.value(forKey: "view") as? UIView
+			 })
+		])
+	}
+
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		IdentificationTooltipManager.shared.cancelTooltip()
+	}
     
     @IBAction private func dateInputToggled() {
+		IdentificationTooltipManager.shared.cancelTooltip()
         UIView.animate(withDuration: 0.3) {
             self.dateCardView.isHidden = false
             self.dateCardView.alpha = 1.0
@@ -63,6 +87,7 @@ class EditWatchlistDetailViewController: UIViewController {
     }
     
     @IBAction private func locationInputToggled() {
+		IdentificationTooltipManager.shared.cancelTooltip()
         UIView.animate(withDuration: 0.3) {
             self.locationSearchBar.isHidden = false
             self.locationOptionsContainer.isHidden = false
@@ -432,6 +457,7 @@ class EditWatchlistDetailViewController: UIViewController {
 		locationSearchBar.resignFirstResponder()
 	}
 	@objc private func didTapSave() {
+		IdentificationTooltipManager.shared.cancelTooltip()
 		guard let title = titleTextField.text, !title.isEmpty else {
 			presentAlert(title: "Missing Info", message: "Please enter a title.")
 			return
@@ -647,6 +673,7 @@ extension EditWatchlistDetailViewController: UICollectionViewDelegate, UICollect
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         let shape = availableShapes[indexPath.item]
         selectedShapeId = shape.bird_shape_id
         collectionView.reloadData()

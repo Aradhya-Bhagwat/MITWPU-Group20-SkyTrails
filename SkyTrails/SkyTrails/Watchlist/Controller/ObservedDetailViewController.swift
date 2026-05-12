@@ -19,7 +19,11 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     private var selectedImageName: String?
     private var selectedLocation: LocationService.LocationData?
     private var locationSuggestions: [LocationService.LocationSuggestion] = []
-    
+
+    // One-shot guards: prevents repeatedly advancing the step on every keystroke / picker scroll
+    private var hasAdvancedFromDatePicker = false
+    private var hasAdvancedFromNotes = false
+
     @IBOutlet weak var suggestionsTableView: UITableView!
     @IBOutlet weak var birdImageContainerView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!
@@ -69,6 +73,38 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         setupLocationServices()
         setupLocationOptionsInteractions()
         updateGlassVisibility()
+        // Date picker: advancing step when user changes the date
+        dateTimePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
+        // Notes text view delegate for step advance
+        notesTextView.delegate = self
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Reset one-shot guards for a fresh tooltip sequence
+        hasAdvancedFromDatePicker = false
+        hasAdvancedFromNotes = false
+        IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+            (message: "Tap the bird image to add a photo of your sighting.",
+             targetProvider: { [weak self] in self?.birdImageView }),
+            (message: "Enter or confirm the bird's name.",
+             targetProvider: { [weak self] in self?.nameTextField }),
+            (message: "Set when you observed the bird.",
+             targetProvider: { [weak self] in self?.dateTimePicker }),
+            (message: "Search for where you spotted it.",
+             targetProvider: { [weak self] in self?.locationSearchBar }),
+            (message: "Add any notes about your observation.",
+             targetProvider: { [weak self] in self?.notesTextView }),
+            (message: "Tap Save to record your sighting.",
+             targetProvider: { [weak self] in
+                 (self?.navigationItem.rightBarButtonItems?.first ?? self?.navigationItem.rightBarButtonItem)?.value(forKey: "view") as? UIView
+             })
+        ])
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
     }
     
     private func setupLocationServices() {
@@ -128,6 +164,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         selectedLocation = location
         suggestionsTableView.isHidden = true
         locationSearchBar.resignFirstResponder()
+        IdentificationTooltipManager.shared.advanceToNextStep()
     }
     
     private func updateLocationSelection(_ name: String, lat: Double? = nil, lon: Double? = nil) {
@@ -139,6 +176,7 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         }
         suggestionsTableView.isHidden = true
         locationSearchBar.resignFirstResponder()
+        IdentificationTooltipManager.shared.advanceToNextStep()
     }
     private func setupKeyboardHandling() {
         nameTextField.delegate = self
@@ -154,8 +192,15 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
         suggestionsTableView.isHidden = true
     }
 
+    @objc private func datePickerChanged() {
+        guard !hasAdvancedFromDatePicker else { return }
+        hasAdvancedFromDatePicker = true
+        IdentificationTooltipManager.shared.advanceToNextStep()
+    }
+
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        IdentificationTooltipManager.shared.advanceToNextStep()
         return true
     }
     
@@ -191,6 +236,8 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     }
     
     @objc func didTapImage() {
+        // Don't cancel — tapping the image advances to next step (name field)
+        // The advance will happen when the image is actually picked (imagePickerController delegate)
         let picker = UIImagePickerController()
         picker.sourceType = .photoLibrary
         picker.delegate = self
@@ -199,9 +246,8 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
     }
     
     @objc func didTapSave() {
-        guard let name = nameTextField.text, !name.isEmpty else {
-            return
-        }
+        IdentificationTooltipManager.shared.cancelTooltip()
+        guard let name = nameTextField.text, !name.isEmpty else { return }
         
         Task {
             let params = WatchlistEntryOrchestrationService.SaveParameters(
@@ -444,6 +490,8 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             
             birdImageView.image = image
             updateGlassVisibility()
+            // Image picked — advance to the name field step
+            IdentificationTooltipManager.shared.advanceToNextStep()
             let filename = "bird_photo_\(UUID().uuidString).png"
             if let data = image.jpegData(compressionQuality: 0.8) {
                 let fileManager = FileManager.default
@@ -467,3 +515,12 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             }
         }
     }
+
+extension ObservedDetailViewController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        if textView == notesTextView, !hasAdvancedFromNotes {
+            hasAdvancedFromNotes = true
+            IdentificationTooltipManager.shared.advanceToNextStep()
+        }
+    }
+}

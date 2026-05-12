@@ -81,6 +81,23 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 			}
 		}
 	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+			(message: "Search for a bird by name.",
+			 targetProvider: { [weak self] in self?.searchBar }),
+			(message: "Filter by All, Observed, or To Observe.",
+			 targetProvider: { [weak self] in self?.segmentedControl }),
+			(message: "Tap a bird to view its details.",
+			 targetProvider: { [weak self] in self?.tableView.cellForRow(at: IndexPath(row: 0, section: 0)) })
+		])
+	}
+
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		IdentificationTooltipManager.shared.cancelTooltip()
+	}
 	
 	private func refreshData() {
         do {
@@ -159,6 +176,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 
 	@IBAction func segmentChanged(_ sender: UISegmentedControl) {
+		IdentificationTooltipManager.shared.cancelTooltip()
 		currentFilter = SmartWatchlistFilterOption(rawValue: sender.selectedSegmentIndex) ?? .all
 		applyFilters()
 	}
@@ -237,6 +255,7 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
         tableView.reloadData()
 	}
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		IdentificationTooltipManager.shared.cancelTooltip()
 		applyFilters()
 	}
 	
@@ -245,9 +264,8 @@ class SmartWatchlistViewController: UIViewController, UISearchBarDelegate {
 	}
 	
 	@IBAction func didTapAdd(_ sender: Any) {
-		guard currentWatchlistId != nil else {
-			return
-		}
+		IdentificationTooltipManager.shared.cancelTooltip()
+		guard currentWatchlistId != nil else { return }
 		
 		switch currentFilter {
 		case .all:
@@ -517,6 +535,7 @@ extension SmartWatchlistViewController: UITableViewDelegate, UITableViewDataSour
 	}
 	
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+		IdentificationTooltipManager.shared.cancelTooltip()
 		tableView.deselectRow(at: indexPath, animated: true)
 		
         if isShowingRecommendations {

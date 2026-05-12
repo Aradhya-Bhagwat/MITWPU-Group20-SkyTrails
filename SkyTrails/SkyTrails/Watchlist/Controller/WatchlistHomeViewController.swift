@@ -72,9 +72,28 @@ class WatchlistHomeViewController: UIViewController {
 		profileLocationHeaderView.refreshLocation()
 		loadData()
 	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+			(message: "Tap here to view your personal watchlist summary.",
+			 targetProvider: { [weak self] in
+				 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 0, section: 0))
+			 }),
+			(message: "Tap 'Log Observation' to record a bird sighting.",
+			 targetProvider: { [weak self] in
+				 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 1, section: 0))
+			 }),
+			(message: "Tap '+' in Curated Watchlists to create a new list.",
+			 targetProvider: { [weak self] in
+				 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 0, section: 1))
+			 })
+		])
+	}
 	
 	override func viewWillDisappear(_ animated: Bool) {
 		super.viewWillDisappear(animated)
+		IdentificationTooltipManager.shared.cancelTooltip()
 	}
 	
 	private func loadData() {
@@ -449,6 +468,7 @@ extension WatchlistHomeViewController: UICollectionViewDataSource, UICollectionV
 	}
 	
 	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+		IdentificationTooltipManager.shared.cancelTooltip()
 		guard let sectionType = WatchlistSection(rawValue: indexPath.section) else { return }
 		
 		switch sectionType {
