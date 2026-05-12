@@ -42,6 +42,32 @@ class PredictOutputViewController: UIViewController {
     private var minSightability: Int = 1
     private var maxSightability: Int = 99
 
+    // Navigation Controls
+    private lazy var pageControl: UIPageControl = {
+        let pc = UIPageControl()
+        pc.currentPageIndicatorTintColor = .systemBlue
+        pc.pageIndicatorTintColor = .systemGray4
+        pc.hidesForSinglePage = true
+        pc.addTarget(self, action: #selector(pageControlValueChanged), for: .valueChanged)
+        return pc
+    }()
+    
+    private lazy var leftChevronButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        btn.tintColor = .systemBlue
+        btn.addTarget(self, action: #selector(didTapPrev), for: .touchUpInside)
+        return btn
+    }()
+    
+    private lazy var rightChevronButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setImage(UIImage(systemName: "chevron.right"), for: .normal)
+        btn.tintColor = .systemBlue
+        btn.addTarget(self, action: #selector(didTapNext), for: .touchUpInside)
+        return btn
+    }()
+
     private lazy var searchBar: UISearchBar = {
         let sb = UISearchBar()
         sb.placeholder = "Search birds..."
@@ -104,6 +130,7 @@ class PredictOutputViewController: UIViewController {
         applySemanticAppearance()
 
         setupNavigation()
+        setupNavigationControls()
         setupSearchBar()
         prepareData()
         setupCollectionView()
@@ -203,8 +230,11 @@ class PredictOutputViewController: UIViewController {
         }
         
         filterData()
-
-        // We now fetch yearly trends asynchronously in loadYearlyTrends()
+        
+        // Update page control
+        pageControl.numberOfPages = filteredGroupedPredictions.count
+        pageControl.currentPage = currentPageIndex
+        updateNavigationButtonsState()
     }
 
     func filterData() {
@@ -363,10 +393,55 @@ class PredictOutputViewController: UIViewController {
 
 
     private func setupNavigation() {
-        navigationItem.title = "Prediction Results"
+        navigationItem.title = nil // We'll use titleView for controls
         let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedo))
         navigationItem.rightBarButtonItem = redoButton
         navigationItem.leftBarButtonItem = nil
+    }
+
+    private func setupNavigationControls() {
+        let stack = UIStackView(arrangedSubviews: [leftChevronButton, pageControl, rightChevronButton])
+        stack.axis = .horizontal
+        stack.spacing = 16
+        stack.alignment = .center
+        
+        navigationItem.titleView = stack
+    }
+
+    @objc private func pageControlValueChanged() {
+        scrollToPage(pageControl.currentPage)
+    }
+
+    @objc private func didTapPrev() {
+        let target = max(0, currentPageIndex - 1)
+        scrollToPage(target)
+    }
+
+    @objc private func didTapNext() {
+        let target = min(filteredGroupedPredictions.count - 1, currentPageIndex + 1)
+        scrollToPage(target)
+    }
+
+    private func scrollToPage(_ page: Int) {
+        guard page != currentPageIndex, filteredGroupedPredictions.indices.contains(page) else { return }
+        let offset = CGPoint(x: CGFloat(page) * collectionView.bounds.width, y: 0)
+        collectionView.setContentOffset(offset, animated: true)
+        
+        // Note: scrollViewDidEndScrollingAnimation or scrollViewDidScroll will update headers
+        currentPageIndex = page
+        updateLocationHeader(forPageAt: page)
+        pageControl.currentPage = page
+        updateNavigationButtonsState()
+    }
+
+    private func updateNavigationButtonsState() {
+        let total = filteredGroupedPredictions.count
+        leftChevronButton.isEnabled = currentPageIndex > 0
+        rightChevronButton.isEnabled = currentPageIndex < total - 1
+        
+        // Hide buttons if only 1 page
+        leftChevronButton.isHidden = total <= 1
+        rightChevronButton.isHidden = total <= 1
     }
 
     private func setupCollectionView() {
@@ -712,10 +787,20 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        updatePageIndexFromScroll(scrollView)
+    }
+
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        updatePageIndexFromScroll(scrollView)
+    }
+
+    private func updatePageIndexFromScroll(_ scrollView: UIScrollView) {
         let page = Int(round(scrollView.contentOffset.x / scrollView.bounds.width))
         if page != currentPageIndex {
             currentPageIndex = page
+            pageControl.currentPage = page
             updateLocationHeader(forPageAt: currentPageIndex)
+            updateNavigationButtonsState()
             
             if let first = filteredGroupedPredictions[currentPageIndex].first,
                let mapVC = navigationController?.parent as? PredictMapViewController {

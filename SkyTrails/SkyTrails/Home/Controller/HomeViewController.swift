@@ -58,6 +58,13 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         applySemanticAppearance()
         setupCollectionView()
         setupLocationChangeObserver()
+        
+        // Reset to GPS mode on launch if authorized, fulfilling the requirement 
+        // to start with current location if permission is available.
+        if LocationService.shared.isAuthorized {
+            LocationPreferences.shared.isManualOverride = false
+        }
+        
         // Removed loadHomeData() from here to prevent double-loading with viewWillAppear
     }
 
@@ -68,10 +75,24 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
             name: LocationPreferences.locationDidChangeNotification,
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLocationChange),
+            name: LocationService.authorizationDidChangeNotification,
+            object: nil
+        )
     }
 
-    @objc private func handleLocationChange() {
-        print("[DEBUG] HomeVC - Location changed notification received. Refreshing...")
+    @objc private func handleLocationChange(notification: Notification) {
+        if notification.name == LocationService.authorizationDidChangeNotification {
+            if LocationService.shared.isAuthorized {
+                print("[DEBUG] HomeVC - Authorization granted. Switching to GPS mode.")
+                LocationPreferences.shared.isManualOverride = false
+            }
+        }
+        
+        print("[DEBUG] HomeVC - Location/Auth changed. Refreshing...")
         refreshHomeData()
     }
 
@@ -226,34 +247,42 @@ extension HomeViewController {
     // Resolves location using live GPS or fallbacks to preferences
 
     private func resolveQueryLocation() async -> CLLocationCoordinate2D? {
-        // 1. If GPS is authorized and available, and user hasn't explicitly locked a manual location
         let isManualOverride = LocationPreferences.shared.isManualOverride
         
-        if !isManualOverride {
-            // Check for live GPS
+        // 1. If user explicitly set a location IN THIS SESSION (or explicitly locked it), use it.
+        // This ensures the Manual Picker works immediately after selection.
+        if isManualOverride, let saved = LocationPreferences.shared.homeLocation {
+            return saved
+        }
+
+        // 2. Prime authorization (this triggers the system prompt if needed)
+        await LocationService.shared.primeAuthorizationIfNeeded()
+        
+        // 3. If GPS is authorized, prioritize live current location
+        if LocationService.shared.isAuthorized {
+            // Check for immediate cached location
             if let live = LocationService.shared.currentLocation {
-                // Keep it in sync but don't set manual override
                 await LocationPreferences.shared.setHomeLocation(live, isManual: false)
                 return live
             }
             
-            // Try to get fresh GPS fix if authorized
-            if LocationService.shared.isAuthorized {
-                do {
-                    let data = try await LocationService.shared.getCurrentLocation()
-                    let coord = CLLocationCoordinate2D(latitude: data.lat, longitude: data.lon)
-                    await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName, isManual: false)
-                    return coord
-                } catch { }
+            // Try to fetch fresh fix
+            do {
+                let data = try await LocationService.shared.getCurrentLocation()
+                let coord = CLLocationCoordinate2D(latitude: data.lat, longitude: data.lon)
+                await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName, isManual: false)
+                return coord
+            } catch {
+                print("[DEBUG] GPS Fetch failed: \(error.localizedDescription)")
             }
         }
         
-        // 2. If manual override is on, or GPS failed/denied, use the saved home location
+        // 4. Fallback to any saved location or last known spot (Manual or previous GPS)
         if let saved = LocationPreferences.shared.homeLocation {
             return saved
         }
         
-        // 3. Absolute fallback (Pune, India)
+        // 5. Absolute fallback (Pune, India)
         return CLLocationCoordinate2D(latitude: 18.5204, longitude: 73.8567)
     }
 
