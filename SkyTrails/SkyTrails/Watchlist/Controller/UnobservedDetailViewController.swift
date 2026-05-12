@@ -15,6 +15,12 @@ class UnobservedDetailViewController: UIViewController {
     var onWatchlistCreated: ((UUID) -> Void)?
 	private var locationSuggestions: [LocationService.LocationSuggestion] = []
 	private var selectedLocation: LocationService.LocationData?
+
+	// One-shot guards: prevents repeatedly advancing the step on every picker scroll / keystroke
+	private var hasAdvancedFromStartDate = false
+	private var hasAdvancedFromEndDate = false
+	private var hasAdvancedFromNotes = false
+
 	@IBOutlet weak var suggestionsTableView: UITableView!
 	@IBOutlet weak var birdImageView: UIImageView!
 	@IBOutlet weak var startLabel: UILabel!
@@ -33,6 +39,38 @@ class UnobservedDetailViewController: UIViewController {
 		setupSearch()
 		setupKeyboardHandling()
 		configureView()
+		// Date pickers: advancing tooltip step when user changes dates
+		startDatePicker.addTarget(self, action: #selector(startDatePickerChanged), for: .valueChanged)
+		endDatePicker.addTarget(self, action: #selector(endDatePickerChanged), for: .valueChanged)
+		// Notes text view delegate for step advance
+		notesTextView.delegate = self
+	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		// Reset one-shot guards for a fresh tooltip sequence
+		hasAdvancedFromStartDate = false
+		hasAdvancedFromEndDate = false
+		hasAdvancedFromNotes = false
+		IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+			(message: "Set when you plan to look for this bird (start date).",
+			 targetProvider: { [weak self] in self?.startDatePicker }),
+			(message: "Set the end of your planned observation window.",
+			 targetProvider: { [weak self] in self?.endDatePicker }),
+			(message: "Search for where you plan to spot it.",
+			 targetProvider: { [weak self] in self?.locationSearchBar }),
+			(message: "Add any notes or preparation tips.",
+			 targetProvider: { [weak self] in self?.notesTextView }),
+			(message: "Tap Save to plan your sighting.",
+			 targetProvider: { [weak self] in
+				 (self?.navigationItem.rightBarButtonItems?.first ?? self?.navigationItem.rightBarButtonItem)?.value(forKey: "view") as? UIView
+			 })
+		])
+	}
+
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		IdentificationTooltipManager.shared.cancelTooltip()
 	}
 	private func setupUI() {
 		title = bird?.name ?? "Plan Sighting"
@@ -166,6 +204,18 @@ class UnobservedDetailViewController: UIViewController {
 		view.endEditing(true)
 		suggestionsTableView.isHidden = true
 	}
+
+	@objc private func startDatePickerChanged() {
+		guard !hasAdvancedFromStartDate else { return }
+		hasAdvancedFromStartDate = true
+		IdentificationTooltipManager.shared.advanceToNextStep()
+	}
+
+	@objc private func endDatePickerChanged() {
+		guard !hasAdvancedFromEndDate else { return }
+		hasAdvancedFromEndDate = true
+		IdentificationTooltipManager.shared.advanceToNextStep()
+	}
 	
 	@objc private func didTapCurrentLocation() {
 		Task {
@@ -203,6 +253,7 @@ class UnobservedDetailViewController: UIViewController {
 	}
 	
 	@objc private func didTapSave() {
+		IdentificationTooltipManager.shared.cancelTooltip()
         Task {
             let params = WatchlistEntryOrchestrationService.SaveParameters(
                 entry: entry,
@@ -324,6 +375,7 @@ class UnobservedDetailViewController: UIViewController {
 		selectedLocation = location
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
+		IdentificationTooltipManager.shared.advanceToNextStep()
 	}
 	
 	private func updateLocationSelection(_ name: String, lat: Double? = nil, lon: Double? = nil) {
@@ -335,6 +387,7 @@ class UnobservedDetailViewController: UIViewController {
 		}
 		suggestionsTableView.isHidden = true
 		locationSearchBar.resignFirstResponder()
+		IdentificationTooltipManager.shared.advanceToNextStep()
 	}
 }
 extension UnobservedDetailViewController: CLLocationManagerDelegate {
@@ -411,5 +464,14 @@ extension UnobservedDetailViewController: MKLocalSearchCompleterDelegate {
 extension UnobservedDetailViewController: MapSelectionDelegate {
 	func didSelectMapLocation(name: String, lat: Double, lon: Double) {
 		updateLocationSelection(name, lat: lat, lon: lon)
+	}
+}
+
+extension UnobservedDetailViewController: UITextViewDelegate {
+	func textViewDidChange(_ textView: UITextView) {
+		if textView == notesTextView, !hasAdvancedFromNotes {
+			hasAdvancedFromNotes = true
+			IdentificationTooltipManager.shared.advanceToNextStep()
+		}
 	}
 }

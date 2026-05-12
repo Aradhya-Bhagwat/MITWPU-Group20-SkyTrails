@@ -36,6 +36,21 @@ class SpeciesSelectionViewController: UIViewController {
         loadData()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+            (message: "Search for a bird species to add.",
+             targetProvider: { [weak self] in self?.searchBar }),
+            (message: "Tap a bird to select it, then tap ✓ to confirm.",
+             targetProvider: { [weak self] in self?.tableView.cellForRow(at: IndexPath(row: 0, section: 0)) })
+        ])
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        IdentificationTooltipManager.shared.cancelTooltip()
+    }
+
     private func setupDataObservers() {
         NotificationCenter.default.addObserver(
             self,
@@ -128,6 +143,7 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         tableView.deselectRow(at: indexPath, animated: true)
         
         let bird = filteredBirds[indexPath.row]
@@ -147,6 +163,7 @@ extension SpeciesSelectionViewController: UITableViewDelegate, UITableViewDataSo
 extension SpeciesSelectionViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        IdentificationTooltipManager.shared.cancelTooltip()
         if searchText.isEmpty {
             filteredBirds = allBirds
         } else {
