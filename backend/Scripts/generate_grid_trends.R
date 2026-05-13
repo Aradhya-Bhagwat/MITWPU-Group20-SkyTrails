@@ -47,7 +47,7 @@ INDIA_LON_MAX       <- 97.5
 GRID_SIZE           <-  0.5
 SAMPLE_POINTS       <- 400L
 MAX_SPECIES         <-  60L
-ABUNDANCE_THRESHOLD <-  0.05
+ABUNDANCE_THRESHOLD <-  0.01
 UPSERT_BATCH_SIZE   <-  50L   # rows per Supabase upsert call
 
 # ── Supabase helpers ───────────────────────────────────────────────────────────
