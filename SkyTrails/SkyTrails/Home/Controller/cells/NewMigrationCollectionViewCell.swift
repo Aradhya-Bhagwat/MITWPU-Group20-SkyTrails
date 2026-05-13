@@ -32,6 +32,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private var birdSpecies: [BirdSpeciesDisplay] = []
     private var currentHotspot: HotspotPrediction?
     private var selectedBirdIndex: Int = 0
+    var selectedWeek: Int?
     private var hasInstalledAdaptiveConstraints = false
     private let expandedWidthRatio: CGFloat = 25.0 / 9.0
     private let compactWidthRatio: CGFloat = 5.0 / 6.0
@@ -214,15 +215,15 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         subtitleLabel.text = hotspot.locationDetail
         
         self.fullBirdSpecies = hotspot.birdSpecies
-        setupWeekButton(currentWeek: hotspot.weekNumber)
+        setupWeekButton(weeks: hotspot.allWeeks)
         
         terrainTagLabel.text = hotspot.terrainTag
         
         seasonTagLabel.text = "\(hotspot.seasonTag) Migration"
         applySeasonAppearance(for: hotspot.seasonTag)
         
-        // Initial filter: All 3 weeks
-        filterBirds(for: nil)
+        // Initial filter: All weeks
+        filterBirds(for: hotspot.allWeeks.first)
         
         birdListCollectionView.reloadData()
         birdListCollectionView.layoutIfNeeded()
@@ -239,32 +240,30 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         fetchTerrain(for: hotspot.centerCoordinate)
     }
 
-    private func setupWeekButton(currentWeek: String) {
-        let weekNumber = Int(currentWeek.replacingOccurrences(of: "Week ", with: "")) ?? 0
+    private func setupWeekButton(weeks: [Int]) {
+        guard !weeks.isEmpty else { return }
         
         let allWeeksAction = UIAction(title: "All Weeks") { [weak self] _ in
             self?.filterBirds(for: nil)
             self?.weekButton.setTitle("All Weeks", for: .normal)
         }
         
-        let currentWeekAction = UIAction(title: "Week \(weekNumber)") { [weak self] _ in
-            self?.filterBirds(for: weekNumber)
-            self?.weekButton.setTitle("Week \(weekNumber)", for: .normal)
+        var weekActions: [UIAction] = []
+        for week in weeks {
+            let action = UIAction(title: "Week \(week)") { [weak self] _ in
+                self?.filterBirds(for: week)
+                self?.weekButton.setTitle("Week \(week)", for: .normal)
+            }
+            weekActions.append(action)
         }
         
-        let nextWeekAction = UIAction(title: "Week \(weekNumber + 1)") { [weak self] _ in
-            self?.filterBirds(for: weekNumber + 1)
-            self?.weekButton.setTitle("Week \(weekNumber + 1)", for: .normal)
-        }
-        
-        let thirdWeekAction = UIAction(title: "Week \(weekNumber + 2)") { [weak self] _ in
-            self?.filterBirds(for: weekNumber + 2)
-            self?.weekButton.setTitle("Week \(weekNumber + 2)", for: .normal)
-        }
-        
-        weekButton.menu = UIMenu(title: "Select Week", children: [allWeeksAction, currentWeekAction, nextWeekAction, thirdWeekAction])
+        let menu = UIMenu(
+            title: "Filter by Week",
+            children: [allWeeksAction] + weekActions
+        )
+        weekButton.menu = menu
         weekButton.showsMenuAsPrimaryAction = true
-        weekButton.setTitle("All Weeks", for: .normal)
+        weekButton.setTitle("Week \(weeks.first ?? 0)", for: .normal)
         
         // Style the button to look more like a dropdown
         if #available(iOS 15.0, *) {
@@ -284,17 +283,37 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
 
     private func filterBirds(for week: Int?) {
+        self.selectedWeek = week
         if let week = week {
-            let weekString = "Week \(week)"
-            birdSpecies = fullBirdSpecies.filter { $0.weekNumber == weekString }
+            // Filter to only birds present in this week
+            // Use that week's specific sightability score
+            birdSpecies = fullBirdSpecies.compactMap { bird in
+                let weekKey = "\(week)"
+                guard let weekScore = bird.weekScores?[weekKey],
+                      weekScore > 0
+                else { return nil }
+                
+                // Return bird with this week's specific score
+                // not the peak score
+                return BirdSpeciesDisplay(
+                    birdName: bird.birdName,
+                    birdImageName: bird.birdImageName,
+                    statusBadge: bird.statusBadge,
+                    sightabilityPercent: weekScore,
+                    weekNumber: "Week \(week)",
+                    residencyStatus: bird.residencyStatus,
+                    ebirdSpeciesCode: bird.ebirdSpeciesCode,
+                    peakWeek: bird.peakWeek,
+                    weekScores: bird.weekScores,
+                    allWeekNumbers: bird.allWeekNumbers
+                )
+            }
         } else {
+            // All weeks — show peak sightability
             birdSpecies = fullBirdSpecies
         }
         selectedBirdIndex = 0
         birdListCollectionView.reloadData()
-        
-        // No pin update needed for central pin
-
     }
     
     // Background task to resolve terrain information and scene snapshots

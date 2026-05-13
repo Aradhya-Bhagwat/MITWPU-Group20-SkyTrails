@@ -167,6 +167,8 @@ struct FinalPredictionResult: Hashable {
     let weekNumber: String?
     let residencyStatus: String?
     let ebirdSpeciesCode: String?
+    var weekScores: [String: Int]?  // "20" -> 79, "21" -> 80
+    var peakWeek: Int?               // week with highest score
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(birdName)
@@ -185,8 +187,10 @@ struct FinalPredictionResult: Hashable {
     }
 }
 
-enum DynamicMapCard {
-    case combined(migration: MigrationPrediction, hotspot: HotspotPrediction)
+struct DynamicMapCard {
+    let migration: MigrationPrediction
+    let hotspot: HotspotPrediction
+    var allWeeks: [Int] = []
 }
 
 struct MigrationPrediction {
@@ -214,6 +218,7 @@ struct HotspotPrediction {
     let areaOverlay: HotspotAreaOverlay
     let hotspots: [HotspotBirdSpot]
     let birdSpecies: [BirdSpeciesDisplay]
+    var allWeeks: [Int] = []
 }
 
 enum HotspotAreaOverlay {
@@ -229,6 +234,9 @@ struct BirdSpeciesDisplay: Hashable {
     let weekNumber: String?
     let residencyStatus: String?
     let ebirdSpeciesCode: String?
+    var peakWeek: Int?
+    var weekScores: [String: Int]?
+    var allWeekNumbers: [Int]?
     
     struct StatusBadge: Hashable {
         let title: String

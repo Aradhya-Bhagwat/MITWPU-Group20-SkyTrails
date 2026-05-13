@@ -295,8 +295,8 @@ extension HomeViewController {
     }
 
 	@discardableResult
-	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult]) -> PredictMapViewController? {
-		var inputData = PredictionInputData(); inputData.locationName = name; inputData.latitude = lat; inputData.longitude = lon; inputData.areaValue = Int(radius); inputData.startDate = Date(); inputData.endDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+	private func navigateToSpotDetails(name: String, lat: Double, lon: Double, radius: Double, predictions: [FinalPredictionResult], startDate: Date? = nil, endDate: Date? = nil) -> PredictMapViewController? {
+		var inputData = PredictionInputData(); inputData.locationName = name; inputData.latitude = lat; inputData.longitude = lon; inputData.areaValue = Int(radius); inputData.startDate = startDate ?? Date(); inputData.endDate = endDate ?? Calendar.current.date(byAdding: .day, value: 7, to: Date())
 		let storyboard = UIStoryboard(name: "Home", bundle: nil)
 		if let predictMapVC = storyboard.instantiateViewController(withIdentifier: "PredictMapViewController") as? PredictMapViewController {
 			navigationController?.pushViewController(predictMapVC, animated: true)
@@ -511,10 +511,9 @@ extension HomeViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == 0 {
-            if case .combined(let migration, let hotspot) = migrationCards[indexPath.row] {
-                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewMigrationCollectionViewCell.identifier, for: indexPath) as! NewMigrationCollectionViewCell
-                cell.configure(migration: migration, hotspot: hotspot); return cell
-            }
+            let card = migrationCards[indexPath.row]
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewMigrationCollectionViewCell.identifier, for: indexPath) as! NewMigrationCollectionViewCell
+            cell.configure(migration: card.migration, hotspot: card.hotspot); return cell
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
@@ -577,32 +576,54 @@ extension HomeViewController {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         switch indexPath.section {
         case 0:
-            if case .combined(_, let hotspot) = migrationCards[indexPath.row] {
-                let radius = max(2.0, hotspot.pinRadiusKm)
-                let preds = hotspot.birdSpecies.map { sp in
-                    let bird = WatchlistManager.shared.findBird(byName: sp.birdName)
-                    
-                    let rawImage = sp.birdImageName
-                    let cleanImage = (rawImage == "placeholder_bird" || 
-                                      rawImage == "placeholder_image" || 
-                                      rawImage.isEmpty) ? nil : rawImage
+            let card = migrationCards[indexPath.row]
+            let hotspot = card.hotspot
+            let radius = max(2.0, hotspot.pinRadiusKm)
+            
+            let preds = hotspot.birdSpecies.map { sp in
+                let bird = WatchlistManager.shared.findBird(byName: sp.birdName)
+                
+                let rawImage = sp.birdImageName
+                let cleanImage = (rawImage == "placeholder_bird" || 
+                                  rawImage == "placeholder_image" || 
+                                  rawImage.isEmpty) ? nil : rawImage
 
-                    let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+                let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
 
-                    return FinalPredictionResult(
-                        birdName: sp.birdName,
-                        imageName: remoteImage ?? "placeholder_image",
-                        likelySpot: bird?.likelySpot ?? "Sky",
-                        matchedInputIndex: 0,
-                        matchedLocation: (lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude),
-                        spottingProbability: sp.sightabilityPercent,
-                        weekNumber: sp.weekNumber,
-                        residencyStatus: sp.residencyStatus,
-                        ebirdSpeciesCode: sp.ebirdSpeciesCode ?? bird?.ebird_species_code
-                    )
-                }
-                navigateToSpotDetails(name: hotspot.placeName, lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude, radius: radius, predictions: preds)
+                return FinalPredictionResult(
+                    birdName: sp.birdName,
+                    imageName: remoteImage ?? "placeholder_image",
+                    likelySpot: bird?.likelySpot ?? "Sky",
+                    matchedInputIndex: 0,
+                    matchedLocation: (lat: hotspot.centerCoordinate.latitude, lon: hotspot.centerCoordinate.longitude),
+                    spottingProbability: sp.sightabilityPercent,
+                    weekNumber: sp.weekNumber,
+                    residencyStatus: sp.residencyStatus,
+                    ebirdSpeciesCode: sp.ebirdSpeciesCode ?? bird?.ebird_species_code,
+                    weekScores: sp.weekScores,
+                    peakWeek: sp.peakWeek
+                )
             }
+            
+            // Get selected week from the cell
+            let cell = collectionView.cellForItem(at: indexPath) as? NewMigrationCollectionViewCell
+            let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+            let selectedWeek = cell?.selectedWeek ?? currentWeek
+            let calendar = Calendar.current
+            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+            components.weekOfYear = selectedWeek
+            let weekStart = calendar.date(from: components) ?? Date()
+            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? Date()
+
+            let mapVC = navigateToSpotDetails(
+                name: hotspot.placeName, 
+                lat: hotspot.centerCoordinate.latitude, 
+                lon: hotspot.centerCoordinate.longitude, 
+                radius: radius, 
+                predictions: preds,
+                startDate: weekStart,
+                endDate: weekEnd
+            )
         case 1:
             if indexPath.row == 0 {
                 didTapPredictBird()

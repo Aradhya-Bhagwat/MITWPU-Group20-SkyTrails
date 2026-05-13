@@ -15,7 +15,12 @@ enum PredictionSortOption: String, CaseIterable {
 }
 
 protocol PredictionFilterDelegate: AnyObject {
-    func didApplyFilters(sort: PredictionSortOption, minRange: Int, maxRange: Int)
+    func didApplyFilters(
+        sort: PredictionSortOption,
+        minRange: Int,
+        maxRange: Int,
+        selectedWeek: Int?
+    )
 }
 
 class PredictOutputViewController: UIViewController {
@@ -41,6 +46,8 @@ class PredictOutputViewController: UIViewController {
     private var currentSortOption: PredictionSortOption = .sightabilityDesc
     private var minSightability: Int = 1
     private var maxSightability: Int = 99
+    private var selectedWeek: Int? = nil
+    private var allWeeks: [Int] = []
 
     // Navigation Controls
     private lazy var pageControl: UIPageControl = {
@@ -172,10 +179,12 @@ class PredictOutputViewController: UIViewController {
         filterVC.currentSort = currentSortOption
         filterVC.minRange = Float(minSightability)
         filterVC.maxRange = Float(maxSightability)
+        filterVC.allWeeks = allWeeks
+        filterVC.selectedWeek = selectedWeek
         filterVC.delegate = self
         
         if let sheet = filterVC.sheetPresentationController {
-            sheet.detents = [.medium()]
+            sheet.detents = [.medium(), .large()]
             sheet.prefersGrabberVisible = true
         }
         
@@ -229,6 +238,12 @@ class PredictOutputViewController: UIViewController {
             } ?? []
         }
         
+        // Extract all unique weeks from predictions
+        let allWeekNumbers = Set(predictions.compactMap { 
+            $0.peakWeek 
+        }).sorted()
+        allWeeks = allWeekNumbers
+
         filterData()
         
         // Update page control
@@ -238,14 +253,92 @@ class PredictOutputViewController: UIViewController {
     }
 
     func filterData() {
-        // 1. First filter by search text and sightability range
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+        
         let baseFiltered = groupedPredictions.map { group in
-            group.filter { prediction in
-                let matchesSearch = searchText.isEmpty || prediction.birdName.localizedCaseInsensitiveContains(searchText)
-                let inRange = prediction.spottingProbability >= minSightability && prediction.spottingProbability <= maxSightability
-                return matchesSearch && inRange
+            group.compactMap { prediction -> FinalPredictionResult? in
+                
+                // WEEK FILTER
+                if let week = selectedWeek {
+                    // Must have a score for this week
+                    let weekKey = "\(week)"
+                    guard let weekScore = prediction.weekScores?[weekKey],
+                          weekScore > 0
+                    else { return nil }
+                    
+                    // Return prediction with this week's score
+                    // replacing the default spottingProbability
+                    let weekFiltered = FinalPredictionResult(
+                        birdName: prediction.birdName,
+                        imageName: prediction.imageName,
+                        likelySpot: prediction.likelySpot,
+                        matchedInputIndex: prediction.matchedInputIndex,
+                        matchedLocation: prediction.matchedLocation,
+                        spottingProbability: weekScore,
+                        weekNumber: "Week \(week)",
+                        residencyStatus: prediction.residencyStatus,
+                        ebirdSpeciesCode: prediction.ebirdSpeciesCode,
+                        weekScores: prediction.weekScores,
+                        peakWeek: prediction.peakWeek
+                    )
+                    
+                    // Apply search and range to week-adjusted result
+                    let matchesSearch = searchText.isEmpty || 
+                        weekFiltered.birdName.localizedCaseInsensitiveContains(searchText)
+                    let inRange = weekScore >= minSightability && 
+                        weekScore <= maxSightability
+                    return (matchesSearch && inRange) ? weekFiltered : nil
+                    
+                } else {
+                    // NO WEEK FILTER — show peak sightability
+                    // Calculate peak: highest score, tie broken by closest week to current
+                    var displayProbability = prediction.spottingProbability
+                    var displayWeekLabel = prediction.weekNumber
+                    
+                    if let weekScores = prediction.weekScores, !weekScores.isEmpty {
+                        // Find peak score
+                        let maxScore = weekScores.values.max() ?? 0
+                        
+                        // Find all weeks with that peak score
+                        let peakWeeks = weekScores
+                            .filter { $0.value == maxScore }
+                            .keys
+                            .compactMap { Int($0) }
+                            .sorted()
+                        
+                        // Pick closest week to current week
+                        let closestPeakWeek = peakWeeks.min(by: {
+                            abs($0 - currentWeek) < abs($1 - currentWeek)
+                        }) ?? peakWeeks.first ?? currentWeek
+                        
+                        displayProbability = maxScore
+                        displayWeekLabel = "Peak: Week \(closestPeakWeek)"
+                    }
+                    
+                    let matchesSearch = searchText.isEmpty || 
+                        prediction.birdName.localizedCaseInsensitiveContains(searchText)
+                    let inRange = displayProbability >= minSightability && 
+                        displayProbability <= maxSightability
+                    
+                    if matchesSearch && inRange {
+                        return FinalPredictionResult(
+                            birdName: prediction.birdName,
+                            imageName: prediction.imageName,
+                            likelySpot: prediction.likelySpot,
+                            matchedInputIndex: prediction.matchedInputIndex,
+                            matchedLocation: prediction.matchedLocation,
+                            spottingProbability: displayProbability,
+                            weekNumber: displayWeekLabel,
+                            residencyStatus: prediction.residencyStatus,
+                            ebirdSpeciesCode: prediction.ebirdSpeciesCode,
+                            weekScores: prediction.weekScores,
+                            peakWeek: prediction.peakWeek
+                        )
+                    }
+                    return nil
+                }
             }
-        }
+        }.filter { !$0.isEmpty }
         
         // 2. Then apply sorting to each group
         filteredGroupedPredictions = baseFiltered.map { group in
@@ -998,10 +1091,16 @@ extension PredictOutputViewController: UISearchBarDelegate, PredictionFilterDele
         searchBar.resignFirstResponder()
     }
 
-    func didApplyFilters(sort: PredictionSortOption, minRange: Int, maxRange: Int) {
+    func didApplyFilters(
+        sort: PredictionSortOption,
+        minRange: Int,
+        maxRange: Int,
+        selectedWeek: Int?
+    ) {
         self.currentSortOption = sort
         self.minSightability = minRange
         self.maxSightability = maxRange
+        self.selectedWeek = selectedWeek
         filterData()
     }
 }
