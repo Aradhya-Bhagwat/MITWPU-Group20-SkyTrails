@@ -210,6 +210,50 @@ final class SkyTrailsAPIService {
         return rows.first?.species_data ?? []
     }
 
+    func fetchWeeklyTrends(
+        lat: Double,
+        lng: Double,
+        weekNumbers: [Int]
+    ) async throws -> WeeklyTrendsResponse {
+        let config = try SupabaseConfig.load()
+        let supabaseURL = config.projectURL.absoluteString
+        let supabaseAnonKey = config.anonKey
+
+        guard let url = URL(string: "\(supabaseURL)/functions/v1/fetch-weekly-trends")
+        else { throw APIError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(supabaseAnonKey)", forHTTPHeaderField: "Authorization")
+
+        let body: [String: Any] = [
+            "lat": lat,
+            "lng": lng,
+            "weekNumbers": weekNumbers
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        print("🌍 fetchWeeklyTrends body: lat=\(lat) lng=\(lng) weeks=\(weekNumbers)")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        print("🌍 fetchWeeklyTrends response: \(String(data: data, encoding: .utf8)?.prefix(200) ?? "nil")")
+
+        guard let httpResponse = response as? HTTPURLResponse
+        else { throw APIError.invalidResponse }
+
+        print("DEBUG WEEKLY: HTTP status \(httpResponse.statusCode)")
+
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.serverError("Status \(httpResponse.statusCode)")
+        }
+
+        let decoded = try JSONDecoder().decode(WeeklyTrendsResponse.self, from: data)
+        print("DEBUG WEEKLY: got \(decoded.unifiedSpecies.count) unified species across \(weekNumbers.count) weeks")
+        return decoded
+    }
+
     func fetchYearlyTrends(
         lat: Double,
         lon: Double,

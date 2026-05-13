@@ -107,6 +107,7 @@ struct PredictedSpecies: Codable {
     let sources: [String]
     let spotNames: [String]
     let peakWeek: Int?
+    let weekScores: [String: Int]?
 }
 
 struct PredictionMeta: Codable {
@@ -116,4 +117,46 @@ struct PredictionMeta: Codable {
     let ebirdRecentSpecies: Int?
     let weeksQueried: Int
     let totalSpecies: Int
+}
+
+// MARK: - Weekly Trends Models
+
+struct WeeklyTrendsResponse: Codable {
+    let found: Bool
+    let lat: Double
+    let lng: Double
+    let gridId: String
+    let weekNumbers: [Int]
+    let weeklyBreakdown: [String: WeeklyBreakdownEntry]
+    let unifiedSpecies: [UnifiedSpeciesEntry]
+    let meta: WeeklyTrendsMeta
+}
+
+struct WeeklyBreakdownEntry: Codable {
+    let week: Int
+    let speciesCount: Int
+    let species: [WeeklySpeciesEntry]
+}
+
+struct WeeklySpeciesEntry: Codable {
+    let ebirdSpeciesCode: String
+    let commonName: String
+    let score: Double
+    let sightabilityPercent: Int
+    let hits: Int
+    let max: Double
+}
+
+struct UnifiedSpeciesEntry: Codable {
+    let ebirdSpeciesCode: String
+    let commonName: String
+    let weekScores: [String: Int]
+    let peakPercent: Int
+    let peakWeek: Int
+}
+
+struct WeeklyTrendsMeta: Codable {
+    let weeksQueried: Int
+    let weeksWithData: Int
+    let totalUniqueSpecies: Int
 }

@@ -7,6 +7,9 @@ class PredictionFilterViewController: UIViewController {
     var minRange: Float = 1
     var maxRange: Float = 99
     
+    var selectedWeek: Int? = nil  // nil means "All Weeks / Peak"
+    var allWeeks: [Int] = []
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Filter & Sort"
@@ -69,6 +72,31 @@ class PredictionFilterViewController: UIViewController {
         return btn
     }()
 
+    private var weekPills: [UIButton] = []
+    private lazy var weekSectionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Filter by Week"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.textColor = .label
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private lazy var weekPillsScrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsHorizontalScrollIndicator = false
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+
+    private lazy var weekPillsStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 8
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -81,6 +109,8 @@ class PredictionFilterViewController: UIViewController {
         
         rangeSlider.addTarget(self, action: #selector(sliderValueChanged(_:)), for: .valueChanged)
         applyButton.addTarget(self, action: #selector(didTapApply), for: .touchUpInside)
+        
+        buildWeekPills()
     }
 
     override func viewDidLayoutSubviews() {
@@ -97,6 +127,11 @@ class PredictionFilterViewController: UIViewController {
         view.addSubview(rangeLabel)
         view.addSubview(rangeValueLabel)
         view.addSubview(rangeSlider)
+        
+        view.addSubview(weekSectionLabel)
+        view.addSubview(weekPillsScrollView)
+        weekPillsScrollView.addSubview(weekPillsStack)
+        
         view.addSubview(applyButton)
         
         NSLayoutConstraint.activate([
@@ -121,6 +156,20 @@ class PredictionFilterViewController: UIViewController {
             rangeSlider.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             rangeSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             rangeSlider.heightAnchor.constraint(equalToConstant: 32),
+            
+            weekSectionLabel.topAnchor.constraint(equalTo: rangeSlider.bottomAnchor, constant: 32),
+            weekSectionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            
+            weekPillsScrollView.topAnchor.constraint(equalTo: weekSectionLabel.bottomAnchor, constant: 16),
+            weekPillsScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            weekPillsScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            weekPillsScrollView.heightAnchor.constraint(equalToConstant: 40),
+            
+            weekPillsStack.topAnchor.constraint(equalTo: weekPillsScrollView.topAnchor),
+            weekPillsStack.leadingAnchor.constraint(equalTo: weekPillsScrollView.leadingAnchor),
+            weekPillsStack.trailingAnchor.constraint(equalTo: weekPillsScrollView.trailingAnchor),
+            weekPillsStack.bottomAnchor.constraint(equalTo: weekPillsScrollView.bottomAnchor),
+            weekPillsStack.heightAnchor.constraint(equalTo: weekPillsScrollView.heightAnchor),
             
             applyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             applyButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -152,9 +201,68 @@ class PredictionFilterViewController: UIViewController {
         delegate?.didApplyFilters(
             sort: currentSort,
             minRange: Int(rangeSlider.lowerValue),
-            maxRange: Int(rangeSlider.upperValue)
+            maxRange: Int(rangeSlider.upperValue),
+            selectedWeek: selectedWeek
         )
         dismiss(animated: true)
+    }
+
+    private func buildWeekPills() {
+        // Clear existing pills
+        weekPillsStack.arrangedSubviews.forEach { 
+            $0.removeFromSuperview() 
+        }
+        weekPills.removeAll()
+
+        // Add "All" pill first
+        let allPill = makePill(title: "All", week: nil)
+        weekPillsStack.addArrangedSubview(allPill)
+        weekPills.append(allPill)
+
+        // Add one pill per week
+        for week in allWeeks {
+            let pill = makePill(title: "Week \(week)", week: week)
+            weekPillsStack.addArrangedSubview(pill)
+            weekPills.append(pill)
+        }
+
+        // Select current state
+        updatePillSelection()
+    }
+
+    private func makePill(title: String, week: Int?) -> UIButton {
+        let btn = UIButton(type: .system)
+        btn.setTitle(title, for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(
+            ofSize: 13, weight: .medium)
+        btn.layer.cornerRadius = 16
+        btn.layer.borderWidth = 1.5
+        btn.contentEdgeInsets = UIEdgeInsets(
+            top: 6, left: 14, bottom: 6, right: 14)
+        btn.tag = week ?? -1  // -1 = All
+        btn.addTarget(self, action: #selector(pillTapped(_:)), 
+            for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.heightAnchor.constraint(
+            equalToConstant: 32).isActive = true
+        return btn
+    }
+
+    @objc private func pillTapped(_ sender: UIButton) {
+        selectedWeek = sender.tag == -1 ? nil : sender.tag
+        updatePillSelection()
+    }
+
+    private func updatePillSelection() {
+        for pill in weekPills {
+            let isSelected = (pill.tag == -1 && selectedWeek == nil)
+                || (pill.tag != -1 && pill.tag == selectedWeek)
+            pill.backgroundColor = isSelected 
+                ? .systemBlue : .clear
+            pill.tintColor = isSelected 
+                ? .white : .systemBlue
+            pill.layer.borderColor = isSelected ? UIColor.systemBlue.cgColor : UIColor.systemGray4.cgColor
+        }
     }
 }
 
