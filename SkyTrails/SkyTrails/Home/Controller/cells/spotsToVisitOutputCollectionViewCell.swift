@@ -111,6 +111,8 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         wideCardView.layer.cornerRadius = 16
         compactCardView.layer.masksToBounds = false
         wideCardView.layer.masksToBounds = false
+        contentView.clipsToBounds = false
+        clipsToBounds = false
         
         compactCardView.backgroundColor = .systemBackground
         wideCardView.backgroundColor = .systemBackground
@@ -118,9 +120,9 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         // Apply shadow to the cards instead of the cell
         [compactCardView, wideCardView].forEach { card in
             card?.layer.shadowColor = UIColor.black.cgColor
-            card?.layer.shadowOpacity = 0.12
+            card?.layer.shadowOpacity = 0.18 // Increased for prominence
             card?.layer.shadowOffset = CGSize(width: 0, height: 4)
-            card?.layer.shadowRadius = 8
+            card?.layer.shadowRadius = 10 // Increased for better spread
         }
 
         compactBirdImageView.layer.cornerRadius = 8
@@ -387,13 +389,16 @@ final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     private func statusText(for probability: Int) -> (title: String, subtitle: String, color: UIColor) {
+        let color = colorForSightability(probability)
         switch probability {
-        case 80...100:
-            return ("High", "Likely Today", .systemGreen)
-        case 50...79:
-            return ("Moderate", "Watch Nearby", .systemBlue)
+        case 75...100:
+            return ("High", "Likely Today", color)
+        case 50..<75:
+            return ("Moderate", "Watch Nearby", color)
+        case 25..<50:
+            return ("Fair", "Occasional", color)
         default:
-            return ("Low", "Rare Chance", .systemOrange)
+            return ("Low", "Rare Chance", color)
         }
     }
 

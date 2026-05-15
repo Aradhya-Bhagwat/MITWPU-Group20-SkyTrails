@@ -39,15 +39,10 @@ class PredictOutputViewController: UIViewController {
     private var fixedCollectionHeightConstraint: NSLayoutConstraint?
     private var latestVisibleSheetHeight: CGFloat?
     private let watchlistManager = WatchlistManager.shared
-    private var searchText: String = ""
-    private var filteredGroupedPredictions: [[FinalPredictionResult]] = []
     
-    // Filter State
-    private var currentSortOption: PredictionSortOption = .sightabilityDesc
-    private var minSightability: Int = 1
-    private var maxSightability: Int = 99
-    private var selectedWeek: Int? = nil
-    private var allWeeks: [Int] = []
+    var onPageChanged: ((Int, Int) -> Void)?
+    
+    private var allWeeksPerSpot: [Int: [Int]] = [:]
 
     // Navigation Controls
     private lazy var pageControl: UIPageControl = {
@@ -75,42 +70,6 @@ class PredictOutputViewController: UIViewController {
         return btn
     }()
 
-    private lazy var searchBar: UISearchBar = {
-        let sb = UISearchBar()
-        sb.placeholder = "Search birds..."
-        sb.searchBarStyle = .minimal
-        sb.translatesAutoresizingMaskIntoConstraints = false
-        sb.delegate = self
-        return sb
-    }()
-    
-    private lazy var filterButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
-        btn.setImage(UIImage(systemName: "line.3.horizontal.decrease.circle", withConfiguration: config), for: .normal)
-        btn.tintColor = .systemBlue
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = 22
-        
-        // Apple Native Shadow
-        btn.layer.shadowColor = UIColor.black.cgColor
-        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
-        btn.layer.shadowOpacity = 0.12
-        btn.layer.shadowRadius = 4
-        
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.addTarget(self, action: #selector(didTapFilter), for: .touchUpInside)
-        return btn
-    }()
-    
-    private lazy var searchStackView: UIStackView = {
-        let stack = UIStackView(arrangedSubviews: [searchBar, filterButton])
-        stack.axis = .horizontal
-        stack.spacing = 8
-        stack.alignment = .center
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
     private lazy var updatingBanner: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.9)
@@ -138,7 +97,6 @@ class PredictOutputViewController: UIViewController {
 
         setupNavigation()
         setupNavigationControls()
-        setupSearchBar()
         prepareData()
         setupCollectionView()
         updateLocationHeader(forPageAt: currentPageIndex)
@@ -147,48 +105,9 @@ class PredictOutputViewController: UIViewController {
         }
     }
 
-    private func setupSearchBar() {
-        view.addSubview(searchStackView)
-        
-        NSLayoutConstraint.activate([
-            searchStackView.topAnchor.constraint(equalTo: selectedLocationDetailLabel.bottomAnchor, constant: 12),
-            searchStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            searchStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            searchStackView.heightAnchor.constraint(equalToConstant: 44),
-            
-            filterButton.widthAnchor.constraint(equalToConstant: 44),
-            filterButton.heightAnchor.constraint(equalToConstant: 44)
-        ])
-        
-        if let collectionView = collectionView {
-            if let superview = collectionView.superview {
-                let existingTop = superview.constraints.filter { 
-                    ($0.firstItem as? UIView == collectionView && $0.firstAttribute == .top) ||
-                    ($0.secondItem as? UIView == collectionView && $0.secondAttribute == .top)
-                }
-                NSLayoutConstraint.deactivate(existingTop)
-            }
-            
-            collectionView.translatesAutoresizingMaskIntoConstraints = false
-            collectionView.topAnchor.constraint(equalTo: searchStackView.bottomAnchor, constant: 8).isActive = true
-        }
-    }
-
-    @objc private func didTapFilter() {
-        let filterVC = PredictionFilterViewController()
-        filterVC.currentSort = currentSortOption
-        filterVC.minRange = Float(minSightability)
-        filterVC.maxRange = Float(maxSightability)
-        filterVC.allWeeks = allWeeks
-        filterVC.selectedWeek = selectedWeek
-        filterVC.delegate = self
-        
-        if let sheet = filterVC.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.prefersGrabberVisible = true
-        }
-        
-        present(filterVC, animated: true)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        onPageChanged?(currentPageIndex, groupedPredictions.count)
     }
 
     override func viewDidLayoutSubviews() {
@@ -201,7 +120,7 @@ class PredictOutputViewController: UIViewController {
         super.viewDidAppear(animated)
         
         // Auto-select and show the map for the first matching bird
-        if let first = filteredGroupedPredictions.first?.first {
+        if let first = groupedPredictions.first?.first {
             if let mapVC = navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(first)
             }
@@ -238,127 +157,36 @@ class PredictOutputViewController: UIViewController {
             } ?? []
         }
         
-        // Extract all unique weeks from predictions
-        let allWeekNumbers = Set(predictions.compactMap { 
-            $0.peakWeek 
-        }).sorted()
-        allWeeks = allWeekNumbers
+        // Calculate weeks for each spot independently
+        allWeeksPerSpot.removeAll()
+        for (index, input) in inputData.enumerated() {
+            var weeks: [Int] = []
+            if let start = input.startDate,
+               let end = input.endDate {
+                var current = start
+                let calendar = Calendar.current
+                while current <= end {
+                    let week = calendar.component(.weekOfYear, from: current)
+                    if !weeks.contains(week) {
+                        weeks.append(week)
+                    }
+                    current = calendar.date(byAdding: .day, value: 7, to: current) ?? end
+                }
+                allWeeksPerSpot[index] = weeks.sorted()
+            } else {
+                // Fallback to current + next 2
+                let current = Calendar.current.component(.weekOfYear, from: Date())
+                allWeeksPerSpot[index] = [current, (current % 52) + 1, ((current + 1) % 52) + 1]
+            }
+            print("DEBUG WEEKS: spot \(index) weeks = \(allWeeksPerSpot[index] ?? [])")
+        }
 
-        filterData()
         
         // Update page control
-        pageControl.numberOfPages = filteredGroupedPredictions.count
+        pageControl.numberOfPages = groupedPredictions.count
         pageControl.currentPage = currentPageIndex
         updateNavigationButtonsState()
-    }
-
-    func filterData() {
-        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-        
-        let baseFiltered = groupedPredictions.map { group in
-            group.compactMap { prediction -> FinalPredictionResult? in
-                
-                // WEEK FILTER
-                if let week = selectedWeek {
-                    // Must have a score for this week
-                    let weekKey = "\(week)"
-                    guard let weekScore = prediction.weekScores?[weekKey],
-                          weekScore > 0
-                    else { return nil }
-                    
-                    // Return prediction with this week's score
-                    // replacing the default spottingProbability
-                    let weekFiltered = FinalPredictionResult(
-                        birdName: prediction.birdName,
-                        imageName: prediction.imageName,
-                        likelySpot: prediction.likelySpot,
-                        matchedInputIndex: prediction.matchedInputIndex,
-                        matchedLocation: prediction.matchedLocation,
-                        spottingProbability: weekScore,
-                        weekNumber: "Week \(week)",
-                        residencyStatus: prediction.residencyStatus,
-                        ebirdSpeciesCode: prediction.ebirdSpeciesCode,
-                        weekScores: prediction.weekScores,
-                        peakWeek: prediction.peakWeek
-                    )
-                    
-                    // Apply search and range to week-adjusted result
-                    let matchesSearch = searchText.isEmpty || 
-                        weekFiltered.birdName.localizedCaseInsensitiveContains(searchText)
-                    let inRange = weekScore >= minSightability && 
-                        weekScore <= maxSightability
-                    return (matchesSearch && inRange) ? weekFiltered : nil
-                    
-                } else {
-                    // NO WEEK FILTER — show peak sightability
-                    // Calculate peak: highest score, tie broken by closest week to current
-                    var displayProbability = prediction.spottingProbability
-                    var displayWeekLabel = prediction.weekNumber
-                    
-                    if let weekScores = prediction.weekScores, !weekScores.isEmpty {
-                        // Find peak score
-                        let maxScore = weekScores.values.max() ?? 0
-                        
-                        // Find all weeks with that peak score
-                        let peakWeeks = weekScores
-                            .filter { $0.value == maxScore }
-                            .keys
-                            .compactMap { Int($0) }
-                            .sorted()
-                        
-                        // Pick closest week to current week
-                        let closestPeakWeek = peakWeeks.min(by: {
-                            abs($0 - currentWeek) < abs($1 - currentWeek)
-                        }) ?? peakWeeks.first ?? currentWeek
-                        
-                        displayProbability = maxScore
-                        displayWeekLabel = "Peak: Week \(closestPeakWeek)"
-                    }
-                    
-                    let matchesSearch = searchText.isEmpty || 
-                        prediction.birdName.localizedCaseInsensitiveContains(searchText)
-                    let inRange = displayProbability >= minSightability && 
-                        displayProbability <= maxSightability
-                    
-                    if matchesSearch && inRange {
-                        return FinalPredictionResult(
-                            birdName: prediction.birdName,
-                            imageName: prediction.imageName,
-                            likelySpot: prediction.likelySpot,
-                            matchedInputIndex: prediction.matchedInputIndex,
-                            matchedLocation: prediction.matchedLocation,
-                            spottingProbability: displayProbability,
-                            weekNumber: displayWeekLabel,
-                            residencyStatus: prediction.residencyStatus,
-                            ebirdSpeciesCode: prediction.ebirdSpeciesCode,
-                            weekScores: prediction.weekScores,
-                            peakWeek: prediction.peakWeek
-                        )
-                    }
-                    return nil
-                }
-            }
-        }.filter { !$0.isEmpty }
-        
-        // 2. Then apply sorting to each group
-        filteredGroupedPredictions = baseFiltered.map { group in
-            group.sorted { lhs, rhs in
-                switch currentSortOption {
-                case .sightabilityDesc:
-                    if lhs.spottingProbability == rhs.spottingProbability { return lhs.birdName < rhs.birdName }
-                    return lhs.spottingProbability > rhs.spottingProbability
-                case .sightabilityAsc:
-                    if lhs.spottingProbability == rhs.spottingProbability { return lhs.birdName < rhs.birdName }
-                    return lhs.spottingProbability < rhs.spottingProbability
-                case .alphaAZ:
-                    return lhs.birdName < rhs.birdName
-                case .alphaZA:
-                    return lhs.birdName > rhs.birdName
-                }
-            }
-        }
-        
-        collectionView?.reloadData()
+        onPageChanged?(currentPageIndex, groupedPredictions.count)
     }
 
     private func loadYearlyTrends() async {
@@ -455,6 +283,15 @@ class PredictOutputViewController: UIViewController {
                let mapVC = self.navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(first)
             }
+            
+            // Forward update to each visible page cell
+            for cell in self.collectionView?.visibleCells ?? [] {
+                if let pageCell = cell as? PredictLocationResultPageCell,
+                   let indexPath = self.collectionView?.indexPath(for: pageCell) {
+                    let spotWeeks = self.allWeeksPerSpot[indexPath.item] ?? []
+                    pageCell.updatePredictions(newPredictions, allWeeks: spotWeeks)
+                }
+            }
         }
     }
 
@@ -493,12 +330,8 @@ class PredictOutputViewController: UIViewController {
     }
 
     private func setupNavigationControls() {
-        let stack = UIStackView(arrangedSubviews: [leftChevronButton, pageControl, rightChevronButton])
-        stack.axis = .horizontal
-        stack.spacing = 16
-        stack.alignment = .center
-        
-        navigationItem.titleView = stack
+        // Floating controls are now in PredictMapViewController
+        navigationItem.titleView = nil
     }
 
     @objc private func pageControlValueChanged() {
@@ -511,12 +344,12 @@ class PredictOutputViewController: UIViewController {
     }
 
     @objc private func didTapNext() {
-        let target = min(filteredGroupedPredictions.count - 1, currentPageIndex + 1)
+        let target = min(groupedPredictions.count - 1, currentPageIndex + 1)
         scrollToPage(target)
     }
 
     private func scrollToPage(_ page: Int) {
-        guard page != currentPageIndex, filteredGroupedPredictions.indices.contains(page) else { return }
+        guard page != currentPageIndex, groupedPredictions.indices.contains(page) else { return }
         let offset = CGPoint(x: CGFloat(page) * collectionView.bounds.width, y: 0)
         collectionView.setContentOffset(offset, animated: true)
         
@@ -525,10 +358,21 @@ class PredictOutputViewController: UIViewController {
         updateLocationHeader(forPageAt: page)
         pageControl.currentPage = page
         updateNavigationButtonsState()
+        onPageChanged?(currentPageIndex, groupedPredictions.count)
+    }
+
+    func navigateToPreviousPage() {
+        guard currentPageIndex > 0 else { return }
+        scrollToPage(currentPageIndex - 1)
+    }
+
+    func navigateToNextPage() {
+        guard currentPageIndex < groupedPredictions.count - 1 else { return }
+        scrollToPage(currentPageIndex + 1)
     }
 
     private func updateNavigationButtonsState() {
-        let total = filteredGroupedPredictions.count
+        let total = groupedPredictions.count
         leftChevronButton.isEnabled = currentPageIndex > 0
         rightChevronButton.isEnabled = currentPageIndex < total - 1
         
@@ -548,6 +392,7 @@ class PredictOutputViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.decelerationRate = .fast
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.clipsToBounds = true
         collectionView.register(
             PredictLocationResultPageCell.self,
             forCellWithReuseIdentifier: PredictLocationResultPageCell.identifier
@@ -838,7 +683,7 @@ extension PredictOutputViewController: ModalSheetHeightAware {
 
 extension PredictOutputViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        filteredGroupedPredictions.count
+        groupedPredictions.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -849,11 +694,14 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
             return UICollectionViewCell()
         }
 
-        let results = filteredGroupedPredictions[indexPath.item]
+        let results = groupedPredictions[indexPath.item]
+        let spotWeeks = allWeeksPerSpot[indexPath.item] ?? []
         cell.configure(
             predictions: results,
             yearlySeries: yearlySeriesByBird,
-            selectedIndex: nil as Int?
+            selectedIndex: nil,
+            allWeeks: spotWeeks,
+            presentingVC: self
         )
 
         
@@ -872,6 +720,7 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
             self?.addToWatchlist(selectedPrediction)
         }
         
+        print("DEBUG PARENT: cellForItemAt index=\(indexPath.item) spot=\(groupedPredictions[indexPath.item].first?.likelySpot ?? "unknown")")
         return cell
     }
 
@@ -895,10 +744,11 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
             updateLocationHeader(forPageAt: currentPageIndex)
             updateNavigationButtonsState()
             
-            if let first = filteredGroupedPredictions[currentPageIndex].first,
+            if let first = groupedPredictions[currentPageIndex].first,
                let mapVC = navigationController?.parent as? PredictMapViewController {
                 mapVC.filterMapForBird(first)
             }
+            onPageChanged?(currentPageIndex, groupedPredictions.count)
         }
     }
 }
@@ -960,13 +810,101 @@ class BirdResultCell: UITableViewCell {
 class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     static let identifier = "PredictLocationResultPageCell"
     
-    private var predictions: [FinalPredictionResult] = []
+    struct SpotFilterState {
+        var searchText: String = ""
+        var sortOption: PredictionSortOption = .sightabilityDesc
+        var minSightability: Int = 1
+        var maxSightability: Int = 99
+        var selectedWeek: Int? = nil
+    }
+
+    private var allPredictions: [FinalPredictionResult] = []
+    private var filteredPredictions: [FinalPredictionResult] = []
+    private var filterState = SpotFilterState()
+    private var allWeeks: [Int] = []
     private var yearlySeriesByBird: [String: [Int]] = [:]
     private var selectedIndex: Int?
+    weak var presentingViewController: UIViewController?
     
     var onPredictionSelected: ((FinalPredictionResult, Int) -> Void)?
     var onBirdPathTapped: ((FinalPredictionResult) -> Void)?
     var onWatchlistTapped: ((FinalPredictionResult) -> Void)?
+
+    private lazy var emptyStateView: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let imageView = UIImageView(image: UIImage(systemName: "magnifyingglass"))
+        imageView.tintColor = .systemGray3
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "No birds match your filter"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        let subLabel = UILabel()
+        subLabel.text = "Try adjusting your search or filters"
+        subLabel.font = UIFont.systemFont(ofSize: 13)
+        subLabel.textColor = .tertiaryLabel
+        subLabel.textAlignment = .center
+        subLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        let stack = UIStackView(arrangedSubviews: [imageView, label, subLabel])
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            imageView.heightAnchor.constraint(equalToConstant: 48),
+            imageView.widthAnchor.constraint(equalToConstant: 48),
+            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40),
+        ])
+        return view
+    }()
+
+    private lazy var searchBar: UISearchBar = {
+        let bar = UISearchBar()
+        bar.placeholder = "Search birds..."
+        bar.searchBarStyle = .minimal
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.delegate = self
+        return bar
+    }()
+
+    private lazy var filterButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+        btn.setImage(UIImage(systemName: "line.3.horizontal.decrease.circle", withConfiguration: config), for: .normal)
+        btn.tintColor = .systemBlue
+        btn.backgroundColor = .white
+        btn.layer.cornerRadius = 20
+        btn.layer.shadowColor = UIColor.black.cgColor
+        btn.layer.shadowOpacity = 0.1
+        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
+        btn.layer.shadowRadius = 4
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        btn.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        btn.addTarget(self, action: #selector(didTapFilter), for: .touchUpInside)
+        return btn
+    }()
+
+    private lazy var searchStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [searchBar, filterButton])
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -979,35 +917,240 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         cv.dataSource = self
         cv.delegate = self
         cv.register(UINib(nibName: "spotsToVisitOutputCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "spotsToVisitOutputCollectionViewCell")
+        cv.clipsToBounds = true
         return cv
     }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        contentView.addSubview(searchStack)
         contentView.addSubview(collectionView)
+        contentView.addSubview(emptyStateView)
+        
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            searchStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            searchStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            searchStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            searchStack.heightAnchor.constraint(equalToConstant: 40),
+
+            collectionView.topAnchor.constraint(equalTo: searchStack.bottomAnchor, constant: 8),
             collectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            collectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            
+            emptyStateView.topAnchor.constraint(equalTo: collectionView.topAnchor),
+            emptyStateView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
+            emptyStateView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
+            emptyStateView.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor),
         ])
+        contentView.clipsToBounds = true
+        clipsToBounds = true
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        // Reset ALL state so reused cell starts clean
+        allPredictions = []
+        filteredPredictions = []
+        filterState = SpotFilterState()
+        allWeeks = []
+        presentingViewController = nil
+        
+        // Clear search bar UI
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        
+        // Reset collection view
+        collectionView.reloadData()
+        
+        // Hide empty state
+        emptyStateView.isHidden = true
+        collectionView.isHidden = false
+        
+        print("DEBUG REUSE: cell \(ObjectIdentifier(self)) reused — state cleared")
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(predictions: [FinalPredictionResult], yearlySeries: [String: [Int]], selectedIndex: Int?) {
-        self.predictions = predictions
+    func configure(
+        predictions: [FinalPredictionResult],
+        yearlySeries: [String: [Int]],
+        selectedIndex: Int?,
+        allWeeks: [Int],
+        presentingVC: UIViewController?
+    ) {
+        // Always reset filter state on new configure
+        // This ensures a clean slate whether the cell
+        // is newly created or reused
+        filterState = SpotFilterState()
+        searchBar.text = ""
+        
+        // Now set new data
+        self.allPredictions = predictions
+        self.filteredPredictions = predictions
         self.yearlySeriesByBird = yearlySeries
         self.selectedIndex = selectedIndex
+        self.allWeeks = allWeeks
+        self.presentingViewController = presentingVC
+        
+        print("DEBUG CONFIGURE: cell \(ObjectIdentifier(self)) spot=\(predictions.first?.likelySpot ?? "?") weeks=\(allWeeks)")
+        
+        applyFilter()
+    }
+
+    func updatePredictions(_ newPredictions: [FinalPredictionResult], allWeeks: [Int]) {
+        self.allWeeks = allWeeks
+        var mergedMap: [String: FinalPredictionResult] = [:]
+        for pred in allPredictions {
+            let key = "\(pred.ebirdSpeciesCode ?? pred.birdName)_\(pred.matchedInputIndex)"
+            mergedMap[key] = pred
+        }
+        for pred in newPredictions {
+            let key = "\(pred.ebirdSpeciesCode ?? pred.birdName)_\(pred.matchedInputIndex)"
+            if let existing = mergedMap[key] {
+                let higherProb = max(existing.spottingProbability, pred.spottingProbability)
+                mergedMap[key] = FinalPredictionResult(
+                    birdName: existing.birdName,
+                    imageName: existing.imageName.isEmpty ? pred.imageName : existing.imageName,
+                    likelySpot: existing.likelySpot,
+                    matchedInputIndex: existing.matchedInputIndex,
+                    matchedLocation: existing.matchedLocation,
+                    spottingProbability: min(99, higherProb),
+                    weekNumber: existing.weekNumber ?? pred.weekNumber,
+                    residencyStatus: existing.residencyStatus,
+                    ebirdSpeciesCode: existing.ebirdSpeciesCode ?? pred.ebirdSpeciesCode,
+                    weekScores: existing.weekScores,
+                    peakWeek: existing.peakWeek
+                )
+            } else {
+                mergedMap[key] = pred
+            }
+        }
+        allPredictions = Array(mergedMap.values)
+        applyFilter()
+    }
+
+    private func applyFilter() {
+        var result = allPredictions
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+
+        // Search filter
+        if !filterState.searchText.isEmpty {
+            result = result.filter { 
+                $0.birdName.localizedCaseInsensitiveContains(filterState.searchText)
+            }
+        }
+        
+        // Week filter
+        if let week = filterState.selectedWeek {
+            result = result.compactMap { prediction in
+                let weekKey = "\(week)"
+                guard let weekScore = prediction.weekScores?[weekKey],
+                      weekScore > 0
+                else { return nil }
+                
+                return FinalPredictionResult(
+                    birdName: prediction.birdName,
+                    imageName: prediction.imageName,
+                    likelySpot: prediction.likelySpot,
+                    matchedInputIndex: prediction.matchedInputIndex,
+                    matchedLocation: prediction.matchedLocation,
+                    spottingProbability: weekScore,
+                    weekNumber: "Week \(week)",
+                    residencyStatus: prediction.residencyStatus,
+                    ebirdSpeciesCode: prediction.ebirdSpeciesCode,
+                    weekScores: prediction.weekScores,
+                    peakWeek: prediction.peakWeek
+                )
+            }
+        } else {
+            // No week filter — show peak sightability
+            result = result.map { prediction in
+                var displayProb = prediction.spottingProbability
+                var displayWeek = prediction.weekNumber
+                
+                if let weekScores = prediction.weekScores, !weekScores.isEmpty {
+                    let maxScore = weekScores.values.max() ?? 0
+                    let peakWeeks = weekScores.filter { $0.value == maxScore }.keys.compactMap { Int($0) }.sorted()
+                    let closest = peakWeeks.min(by: { abs($0 - currentWeek) < abs($1 - currentWeek) }) ?? peakWeeks.first ?? currentWeek
+                    displayProb = maxScore
+                    displayWeek = "Week \(closest)"
+                }
+                
+                return FinalPredictionResult(
+                    birdName: prediction.birdName,
+                    imageName: prediction.imageName,
+                    likelySpot: prediction.likelySpot,
+                    matchedInputIndex: prediction.matchedInputIndex,
+                    matchedLocation: prediction.matchedLocation,
+                    spottingProbability: displayProb,
+                    weekNumber: displayWeek,
+                    residencyStatus: prediction.residencyStatus,
+                    ebirdSpeciesCode: prediction.ebirdSpeciesCode,
+                    weekScores: prediction.weekScores,
+                    peakWeek: prediction.peakWeek
+                )
+            }
+        }
+        
+        // Range filter
+        result = result.filter {
+            $0.spottingProbability >= filterState.minSightability &&
+            $0.spottingProbability <= filterState.maxSightability
+        }
+        
+        // Sort
+        result = result.sorted { lhs, rhs in
+            switch filterState.sortOption {
+            case .sightabilityDesc:
+                if lhs.spottingProbability == rhs.spottingProbability { return lhs.birdName < rhs.birdName }
+                return lhs.spottingProbability > rhs.spottingProbability
+            case .sightabilityAsc:
+                if lhs.spottingProbability == rhs.spottingProbability { return lhs.birdName < rhs.birdName }
+                return lhs.spottingProbability < rhs.spottingProbability
+            case .alphaAZ:
+                return lhs.birdName < rhs.birdName
+            case .alphaZA:
+                return lhs.birdName > rhs.birdName
+            }
+        }
+        
+        filteredPredictions = result
+        
+        let isEmpty = filteredPredictions.isEmpty
+        collectionView.isHidden = isEmpty
+        emptyStateView.isHidden = !isEmpty
         collectionView.reloadData()
+        
+        print("DEBUG FILTER APPLY: cell \(ObjectIdentifier(self)) spot=\(allPredictions.first?.likelySpot ?? "?") results=\(filteredPredictions.count)")
+    }
+
+    @objc private func didTapFilter() {
+        guard let presenter = presentingViewController else { return }
+        
+        let filterVC = PredictionFilterViewController()
+        filterVC.currentSort = filterState.sortOption
+        filterVC.minRange = Float(filterState.minSightability)
+        filterVC.maxRange = Float(filterState.maxSightability)
+        filterVC.allWeeks = allWeeks
+        filterVC.selectedWeek = filterState.selectedWeek
+        filterVC.delegate = self
+        
+        if let sheet = filterVC.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+        print("DEBUG FILTER TAP: cell \(ObjectIdentifier(self)) spot=\(allPredictions.first?.likelySpot ?? "?") currentFilter=\(filterState.searchText)")
+        presenter.present(filterVC, animated: true)
     }
 
     // MARK: - UICollectionViewDataSource
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return predictions.count
+        return filteredPredictions.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -1018,7 +1161,7 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
             return UICollectionViewCell()
         }
 
-        let prediction = predictions[indexPath.item]
+        let prediction = filteredPredictions[indexPath.item]
         let yearly = yearlySeriesByBird[prediction.ebirdSpeciesCode ?? ""] ?? []
         cell.configure(prediction: prediction, yearlyProbabilities: yearly)
         cell.setCardSelected(indexPath.item == selectedIndex)
@@ -1036,7 +1179,7 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
 
     // MARK: - UICollectionViewDelegate
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let prediction = predictions[indexPath.item]
+        let prediction = filteredPredictions[indexPath.item]
         let previousIndex = selectedIndex
         
         if previousIndex == indexPath.item {
@@ -1081,27 +1224,31 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
     }
 }
 
-extension PredictOutputViewController: UISearchBarDelegate, PredictionFilterDelegate {
+extension PredictLocationResultPageCell: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        self.searchText = searchText
-        filterData()
+        filterState.searchText = searchText
+        applyFilter()
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
     }
+}
 
+extension PredictLocationResultPageCell: PredictionFilterDelegate {
     func didApplyFilters(
         sort: PredictionSortOption,
         minRange: Int,
         maxRange: Int,
         selectedWeek: Int?
     ) {
-        self.currentSortOption = sort
-        self.minSightability = minRange
-        self.maxSightability = maxRange
-        self.selectedWeek = selectedWeek
-        filterData()
+        filterState.sortOption = sort
+        filterState.minSightability = minRange
+        filterState.maxSightability = maxRange
+        filterState.selectedWeek = selectedWeek
+        applyFilter()
     }
 }
+
+
 
