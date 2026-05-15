@@ -208,6 +208,20 @@ class PredictionFilterViewController: UIViewController {
     }
 
     private func buildWeekPills() {
+        // Never fall back to hardcoded weeks
+        // If allWeeks is empty show nothing
+        // The parent controller is responsible for always passing valid weeks
+        guard !allWeeks.isEmpty else {
+            print("DEBUG FILTER: allWeeks is empty, hiding week section")
+            weekSectionLabel.isHidden = true
+            weekPillsScrollView.isHidden = true
+            return
+        }
+        
+        weekSectionLabel.isHidden = false
+        weekPillsScrollView.isHidden = false
+        let weeksToShow = allWeeks
+
         // Clear existing pills
         weekPillsStack.arrangedSubviews.forEach { 
             $0.removeFromSuperview() 
@@ -220,7 +234,7 @@ class PredictionFilterViewController: UIViewController {
         weekPills.append(allPill)
 
         // Add one pill per week
-        for week in allWeeks {
+        for week in weeksToShow {
             let pill = makePill(title: "Week \(week)", week: week)
             weekPillsStack.addArrangedSubview(pill)
             weekPills.append(pill)
