@@ -289,24 +289,37 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             // Use that week's specific sightability score
             birdSpecies = fullBirdSpecies.compactMap { bird in
                 let weekKey = "\(week)"
-                guard let weekScore = bird.weekScores?[weekKey],
-                      weekScore > 0
-                else { return nil }
                 
-                // Return bird with this week's specific score
-                // not the peak score
-                return BirdSpeciesDisplay(
-                    birdName: bird.birdName,
-                    birdImageName: bird.birdImageName,
-                    statusBadge: bird.statusBadge,
-                    sightabilityPercent: weekScore,
-                    weekNumber: "Week \(week)",
-                    residencyStatus: bird.residencyStatus,
-                    ebirdSpeciesCode: bird.ebirdSpeciesCode,
-                    peakWeek: bird.peakWeek,
-                    weekScores: bird.weekScores,
-                    allWeekNumbers: bird.allWeekNumbers
-                )
+                if let weekScores = bird.weekScores, !weekScores.isEmpty {
+                    guard let weekScore = weekScores[weekKey],
+                          weekScore > 0
+                    else { return nil }
+                    
+                    return BirdSpeciesDisplay(
+                        birdName: bird.birdName,
+                        birdImageName: bird.birdImageName,
+                        statusBadge: bird.statusBadge,
+                        sightabilityPercent: weekScore,
+                        weekNumber: "Week \(week)",
+                        residencyStatus: bird.residencyStatus,
+                        ebirdSpeciesCode: bird.ebirdSpeciesCode,
+                        peakWeek: bird.peakWeek,
+                        weekScores: bird.weekScores,
+                        allWeekNumbers: bird.allWeekNumbers
+                    )
+                } else {
+                    // Fallback: Check if bird has this week in its allWeekNumbers, or if peakWeek == week,
+                    // or if weekNumber string contains the week number.
+                    let matchesWeekString = bird.weekNumber?.localizedCaseInsensitiveContains("\(week)") ?? false
+                    let matchesPeakWeek = bird.peakWeek == week
+                    let matchesAllWeeks = bird.allWeekNumbers?.contains(week) ?? false
+                    
+                    guard matchesWeekString || matchesPeakWeek || matchesAllWeeks else {
+                        return nil
+                    }
+                    
+                    return bird
+                }
             }
         } else {
             // All weeks — show peak sightability

@@ -37,71 +37,6 @@ class PredictMapViewController: UIViewController {
     private var currentOutputUsesInputRadiusOverlay = false
     private var pendingOutputPredictions: [FinalPredictionResult]?
     
-    private var predictOutputVC: PredictOutputViewController? {
-        if let nav = currentChildVC as? UINavigationController {
-            return nav.viewControllers.first as? PredictOutputViewController
-        }
-        return currentChildVC as? PredictOutputViewController
-    }
-
-    private lazy var leftFloatButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .bold)
-        btn.setImage(UIImage(systemName: "chevron.left", withConfiguration: config), for: .normal)
-        btn.tintColor = .systemBlue
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = 22
-        
-        // Apple Native Shadow
-        btn.layer.shadowColor = UIColor.black.cgColor
-        btn.layer.shadowOffset = CGSize(width: 0, height: 4)
-        btn.layer.shadowOpacity = 0.15
-        btn.layer.shadowRadius = 8
-        
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.addTarget(self, action: #selector(floatLeftTapped), for: .touchUpInside)
-        btn.isHidden = true
-        return btn
-    }()
-
-    private lazy var rightFloatButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .bold)
-        btn.setImage(UIImage(systemName: "chevron.right", withConfiguration: config), for: .normal)
-        btn.tintColor = .systemBlue
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = 22
-        
-        // Apple Native Shadow
-        btn.layer.shadowColor = UIColor.black.cgColor
-        btn.layer.shadowOffset = CGSize(width: 0, height: 4)
-        btn.layer.shadowOpacity = 0.15
-        btn.layer.shadowRadius = 8
-        
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.addTarget(self, action: #selector(floatRightTapped), for: .touchUpInside)
-        btn.isHidden = true
-        return btn
-    }()
-
-    private lazy var floatPageControl: UIPageControl = {
-        let pc = UIPageControl()
-        pc.currentPageIndicatorTintColor = .white
-        pc.pageIndicatorTintColor = UIColor.white.withAlphaComponent(0.4)
-        pc.translatesAutoresizingMaskIntoConstraints = false
-        pc.isHidden = true
-        return pc
-    }()
-    
-    private lazy var pageControlBackground: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.25)
-        view.layer.cornerRadius = 14
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.isHidden = true
-        return view
-    }()
-
     private enum OverlayMode {
         case mapItemArea
         case inputRadius
@@ -112,38 +47,7 @@ class PredictMapViewController: UIViewController {
         super.viewDidLoad()
         setupMap()
         setupCustomModal()
-        setupFloatingControls()
         mapView.delegate = self
-    }
-
-    private func setupFloatingControls() {
-        view.addSubview(leftFloatButton)
-        view.addSubview(pageControlBackground)
-        view.addSubview(floatPageControl)
-        view.addSubview(rightFloatButton)
-
-        NSLayoutConstraint.activate([
-            leftFloatButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            leftFloatButton.bottomAnchor.constraint(equalTo: modalContainerView.topAnchor, constant: -16),
-            leftFloatButton.widthAnchor.constraint(equalToConstant: 44),
-            leftFloatButton.heightAnchor.constraint(equalToConstant: 44),
-
-            floatPageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            floatPageControl.bottomAnchor.constraint(equalTo: modalContainerView.topAnchor, constant: -16),
-            floatPageControl.heightAnchor.constraint(equalToConstant: 44),
-            
-            pageControlBackground.centerXAnchor.constraint(equalTo: floatPageControl.centerXAnchor),
-            pageControlBackground.centerYAnchor.constraint(equalTo: floatPageControl.centerYAnchor),
-            pageControlBackground.heightAnchor.constraint(equalToConstant: 28),
-            // Width will be dynamic based on page control content if we use intrinsic size, 
-            // but for UIPageControl we can just pad it.
-            pageControlBackground.widthAnchor.constraint(equalTo: floatPageControl.widthAnchor, constant: 8),
-
-            rightFloatButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-            rightFloatButton.bottomAnchor.constraint(equalTo: modalContainerView.topAnchor, constant: -16),
-            rightFloatButton.widthAnchor.constraint(equalToConstant: 44),
-            rightFloatButton.heightAnchor.constraint(equalToConstant: 44)
-        ])
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -360,12 +264,8 @@ class PredictMapViewController: UIViewController {
             }
         }
     
-    @objc private func floatLeftTapped() {
-        predictOutputVC?.navigateToPreviousPage()
-    }
-
-    @objc private func floatRightTapped() {
-        predictOutputVC?.navigateToNextPage()
+    @objc private func didTapRedoFromNavBar() {
+        revertToInputScreen(with: currentOutputInputs)
     }
     
     func updateMapWithCurrentInputs(inputs: [PredictionInputData]) {
@@ -382,9 +282,14 @@ class PredictMapViewController: UIViewController {
         currentOutputUsesInputRadiusOverlay = useInputRadiusOverlay
         let overlayMode: OverlayMode = useInputRadiusOverlay ? .inputRadius : .mapItemArea
         updateMap(with: inputs, predictions: predictions, overlayMode: overlayMode)
+        
+        // Add "Redo" button on the map view's navigation bar
+        let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedoFromNavBar))
+        navigationItem.leftBarButtonItem = redoButton
+        navigationItem.hidesBackButton = true
+        
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
-
             return
         }
         
@@ -403,20 +308,7 @@ class PredictMapViewController: UIViewController {
         outputVC.predictions = predictions
         outputVC.inputData = inputs
         
-        outputVC.onPageChanged = { [weak self] current, total in
-            self?.floatPageControl.numberOfPages = total
-            self?.floatPageControl.currentPage = current
-            self?.leftFloatButton.isEnabled = current > 0
-            self?.rightFloatButton.isEnabled = current < total - 1
-            self?.leftFloatButton.alpha = current > 0 ? 1.0 : 0.4
-            self?.rightFloatButton.alpha = current < total - 1 ? 1.0 : 0.4
-            
-            let isHidden = total <= 1
-            self?.floatPageControl.isHidden = isHidden
-            self?.pageControlBackground.isHidden = isHidden
-            self?.leftFloatButton.isHidden = isHidden
-            self?.rightFloatButton.isHidden = isHidden
-        }
+        outputVC.onPageChanged = nil
 
         addChild(outputNavVC)
             
@@ -456,6 +348,9 @@ class PredictMapViewController: UIViewController {
     }
 
     func revertToInputScreen(with inputs: [PredictionInputData]) {
+        // Restore standard back button
+        navigationItem.leftBarButtonItem = nil
+        navigationItem.hidesBackButton = false
         
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let inputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictInputNavigationController") as? UINavigationController,
@@ -482,7 +377,7 @@ class PredictMapViewController: UIViewController {
                 originalNavVC.navigationBar.removeGestureRecognizer(panGesture)
                 inputNavVC.navigationBar.addGestureRecognizer(panGesture)
             }
-    
+     
             self?.currentChildVC?.removeFromParent()
             inputNavVC.didMove(toParent: self)
             self?.currentChildVC = inputNavVC
@@ -490,11 +385,6 @@ class PredictMapViewController: UIViewController {
             inputNavVC.view.trailingAnchor.constraint(equalTo: (self?.modalContainerView.trailingAnchor)!).isActive = true
             inputNavVC.view.topAnchor.constraint(equalTo: (self?.modalContainerView.topAnchor)!).isActive = true
             inputNavVC.view.bottomAnchor.constraint(equalTo: (self?.modalContainerView.bottomAnchor)!).isActive = true
-            
-            self?.floatPageControl.isHidden = true
-            self?.pageControlBackground.isHidden = true
-            self?.leftFloatButton.isHidden = true
-            self?.rightFloatButton.isHidden = true
             
             self?.notifyVisibleSheetHeightChanged()
         }
