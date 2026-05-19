@@ -54,20 +54,26 @@ class PredictOutputViewController: UIViewController {
         return pc
     }()
     
-    private lazy var leftChevronButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
-        btn.tintColor = .systemBlue
-        btn.addTarget(self, action: #selector(didTapPrev), for: .touchUpInside)
-        return btn
+    private lazy var leftChevronItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(didTapPrev)
+        )
+        item.tintColor = .systemBlue
+        return item
     }()
     
-    private lazy var rightChevronButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "chevron.right"), for: .normal)
-        btn.tintColor = .systemBlue
-        btn.addTarget(self, action: #selector(didTapNext), for: .touchUpInside)
-        return btn
+    private lazy var rightChevronItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.right"),
+            style: .plain,
+            target: self,
+            action: #selector(didTapNext)
+        )
+        item.tintColor = .systemBlue
+        return item
     }()
 
     private lazy var updatingBanner: UIView = {
@@ -323,15 +329,13 @@ class PredictOutputViewController: UIViewController {
 
 
     private func setupNavigation() {
-        navigationItem.title = nil // We'll use titleView for controls
-        let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedo))
-        navigationItem.rightBarButtonItem = redoButton
-        navigationItem.leftBarButtonItem = nil
+        navigationItem.title = nil
+        navigationItem.leftBarButtonItem = leftChevronItem
+        navigationItem.rightBarButtonItem = rightChevronItem
     }
 
     private func setupNavigationControls() {
-        // Floating controls are now in PredictMapViewController
-        navigationItem.titleView = nil
+        navigationItem.titleView = pageControl
     }
 
     @objc private func pageControlValueChanged() {
@@ -373,12 +377,17 @@ class PredictOutputViewController: UIViewController {
 
     private func updateNavigationButtonsState() {
         let total = groupedPredictions.count
-        leftChevronButton.isEnabled = currentPageIndex > 0
-        rightChevronButton.isEnabled = currentPageIndex < total - 1
+        leftChevronItem.isEnabled = currentPageIndex > 0
+        rightChevronItem.isEnabled = currentPageIndex < total - 1
         
         // Hide buttons if only 1 page
-        leftChevronButton.isHidden = total <= 1
-        rightChevronButton.isHidden = total <= 1
+        if total <= 1 {
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.rightBarButtonItem = nil
+        } else {
+            navigationItem.leftBarButtonItem = leftChevronItem
+            navigationItem.rightBarButtonItem = rightChevronItem
+        }
     }
 
     private func setupCollectionView() {
@@ -856,7 +865,9 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         
         let stack = UIStackView(arrangedSubviews: [imageView, label, subLabel])
         stack.axis = .vertical
+
         stack.spacing = 8
+        
         stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         
@@ -1049,23 +1060,36 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         if let week = filterState.selectedWeek {
             result = result.compactMap { prediction in
                 let weekKey = "\(week)"
-                guard let weekScore = prediction.weekScores?[weekKey],
-                      weekScore > 0
-                else { return nil }
                 
-                return FinalPredictionResult(
-                    birdName: prediction.birdName,
-                    imageName: prediction.imageName,
-                    likelySpot: prediction.likelySpot,
-                    matchedInputIndex: prediction.matchedInputIndex,
-                    matchedLocation: prediction.matchedLocation,
-                    spottingProbability: weekScore,
-                    weekNumber: "Week \(week)",
-                    residencyStatus: prediction.residencyStatus,
-                    ebirdSpeciesCode: prediction.ebirdSpeciesCode,
-                    weekScores: prediction.weekScores,
-                    peakWeek: prediction.peakWeek
-                )
+                if let weekScores = prediction.weekScores, !weekScores.isEmpty {
+                    guard let weekScore = weekScores[weekKey],
+                          weekScore > 0
+                    else { return nil }
+                    
+                    return FinalPredictionResult(
+                        birdName: prediction.birdName,
+                        imageName: prediction.imageName,
+                        likelySpot: prediction.likelySpot,
+                        matchedInputIndex: prediction.matchedInputIndex,
+                        matchedLocation: prediction.matchedLocation,
+                        spottingProbability: weekScore,
+                        weekNumber: "Week \(week)",
+                        residencyStatus: prediction.residencyStatus,
+                        ebirdSpeciesCode: prediction.ebirdSpeciesCode,
+                        weekScores: prediction.weekScores,
+                        peakWeek: prediction.peakWeek
+                    )
+                } else {
+                    // Fallback: Check if prediction.weekNumber contains this week number, or if peakWeek == week.
+                    let matchesWeekString = prediction.weekNumber?.localizedCaseInsensitiveContains("\(week)") ?? false
+                    let matchesPeakWeek = prediction.peakWeek == week
+                    
+                    guard matchesWeekString || matchesPeakWeek else {
+                        return nil
+                    }
+                    
+                    return prediction
+                }
             }
         } else {
             // No week filter — show peak sightability

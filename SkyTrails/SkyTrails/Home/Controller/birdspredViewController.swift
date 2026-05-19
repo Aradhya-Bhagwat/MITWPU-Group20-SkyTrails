@@ -53,11 +53,9 @@ class birdspredViewController: UIViewController {
 	private var currentWeeks: [Int] = []
 
 	private lazy var birdInfoButton: UIButton = {
-		var configuration = UIButton.Configuration.filled()
-		configuration.image = UIImage(systemName: "info")
-		configuration.baseBackgroundColor = UIColor.systemBackground.withAlphaComponent(0.72)
-		configuration.baseForegroundColor = .label
-		configuration.cornerStyle = .capsule
+		var configuration = UIButton.Configuration.plain()
+		configuration.image = UIImage(systemName: "info.circle")
+		configuration.baseForegroundColor = .systemBlue
 		let button = UIButton(configuration: configuration)
 		button.translatesAutoresizingMaskIntoConstraints = false
 		button.accessibilityLabel = "Bird information"
@@ -119,14 +117,15 @@ class birdspredViewController: UIViewController {
 			infoCardView.isHidden = true
 		}
 
-		view.addSubview(weekSlider)
-		view.addSubview(weekLabel)
+		infoCardView.addSubview(weekSlider)
+		infoCardView.addSubview(weekLabel)
 		NSLayoutConstraint.activate([
-			weekSlider.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-			weekSlider.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
-			weekSlider.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-			weekLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-			weekLabel.bottomAnchor.constraint(equalTo: weekSlider.topAnchor, constant: -4)
+			weekLabel.centerXAnchor.constraint(equalTo: infoCardView.centerXAnchor),
+			weekLabel.topAnchor.constraint(equalTo: birdImageView.bottomAnchor, constant: 8),
+			
+			weekSlider.leadingAnchor.constraint(equalTo: infoCardView.leadingAnchor, constant: 16),
+			weekSlider.trailingAnchor.constraint(equalTo: infoCardView.trailingAnchor, constant: -16),
+			weekSlider.topAnchor.constraint(equalTo: weekLabel.bottomAnchor, constant: 4)
 		])
 	}
 	
@@ -359,8 +358,16 @@ class birdspredViewController: UIViewController {
 		weekSlider.value = 0
 		weekLabel.text = "Week \(weeks.first ?? 0)"
 
-		weekSlider.isHidden = !isPredictFlow || weeks.count <= 1
-		weekLabel.isHidden = !isPredictFlow || weeks.count <= 1
+		let showSlider = isPredictFlow && weeks.count > 1
+		weekSlider.isHidden = !showSlider
+		weekLabel.isHidden = !showSlider
+
+		if let heightConstraint = infoCardView.constraints.first(where: { $0.firstAttribute == .height }) {
+			heightConstraint.constant = showSlider ? 180 : 120
+			UIView.animate(withDuration: 0.25) {
+				self.view.layoutIfNeeded()
+			}
+		}
 	}
 	private func fetchAndAddBirdRange(speciesCode: String, weekNumber: Int? = nil) {
 		rangeFetchTask?.cancel()
@@ -508,6 +515,7 @@ class birdspredViewController: UIViewController {
 		
 		pageControl.numberOfPages = predictionInputs.count
 		pageControl.currentPage = currentSpeciesIndex
+		pageControl.isHidden = predictionInputs.count <= 1
 		
 		pillLabel.text = "\(predictionInputs.count) Species"
 	}

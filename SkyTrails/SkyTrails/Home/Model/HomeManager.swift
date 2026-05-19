@@ -1622,6 +1622,11 @@ class HomeManager {
                 status = "Migrating"
             }
 
+            var weekScores: [String: Int] = [:]
+            for w in matchingWeeks {
+                weekScores["\(w)"] = min(99, max(1, probability))
+            }
+
             return FinalPredictionResult(
                 birdName: bird.commonName,
                 imageName: bird.imageUrl ?? bird.staticImageName,
@@ -1631,7 +1636,9 @@ class HomeManager {
                 spottingProbability: min(99, max(1, probability)),
                 weekNumber: weekText,
                 residencyStatus: status,
-                ebirdSpeciesCode: bird.ebird_species_code
+                ebirdSpeciesCode: bird.ebird_species_code,
+                weekScores: weekScores.isEmpty ? nil : weekScores,
+                peakWeek: matchingWeeks.first
             )
         }
     }
@@ -1772,7 +1779,9 @@ class HomeManager {
                 spottingProbability: result.spottingProbability,
                 weekNumber: result.weekNumber,
                 residencyStatus: result.residencyStatus,
-                ebirdSpeciesCode: result.ebirdSpeciesCode
+                ebirdSpeciesCode: result.ebirdSpeciesCode,
+                weekScores: result.weekScores,
+                peakWeek: result.peakWeek
             )
         }
     }
