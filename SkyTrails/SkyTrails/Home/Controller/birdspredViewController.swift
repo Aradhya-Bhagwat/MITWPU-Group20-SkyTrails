@@ -52,6 +52,19 @@ class birdspredViewController: UIViewController {
 	private var selectedWeekIndex: Int = 0
 	private var currentWeeks: [Int] = []
 
+	private lazy var birdInfoButton: UIButton = {
+		var configuration = UIButton.Configuration.filled()
+		configuration.image = UIImage(systemName: "info")
+		configuration.baseBackgroundColor = UIColor.systemBackground.withAlphaComponent(0.72)
+		configuration.baseForegroundColor = .label
+		configuration.cornerStyle = .capsule
+		let button = UIButton(configuration: configuration)
+		button.translatesAutoresizingMaskIntoConstraints = false
+		button.accessibilityLabel = "Bird information"
+		button.addTarget(self, action: #selector(didTapBirdInfo), for: .touchUpInside)
+		return button
+	}()
+
 	private lazy var weekSlider: UISlider = {
 		let slider = UISlider()
 		slider.minimumValue = 0
@@ -174,6 +187,13 @@ class birdspredViewController: UIViewController {
 		infoCardView.insertSubview(cardBlur, at: 0)
 		infoCardView.layer.cornerRadius = 24
 		infoCardView.layer.masksToBounds = false
+		infoCardView.addSubview(birdInfoButton)
+		NSLayoutConstraint.activate([
+			birdInfoButton.topAnchor.constraint(equalTo: infoCardView.topAnchor, constant: 12),
+			birdInfoButton.trailingAnchor.constraint(equalTo: infoCardView.trailingAnchor, constant: -12),
+			birdInfoButton.widthAnchor.constraint(equalToConstant: 36),
+			birdInfoButton.heightAnchor.constraint(equalToConstant: 36)
+		])
 		
 		birdImageView.layer.cornerRadius = 16
 		birdImageView.clipsToBounds = true
@@ -588,6 +608,28 @@ class birdspredViewController: UIViewController {
 		if predictionInputs.count > 1 {
 			showPillState()
 		}
+	}
+
+	@objc private func didTapBirdInfo() {
+		guard predictionInputs.indices.contains(currentSpeciesIndex) else { return }
+		let input = predictionInputs[currentSpeciesIndex]
+		let infoVC = BirdInformationViewController()
+		infoVC.speciesCode = input.species.ebirdSpeciesCode
+		infoVC.commonName = input.species.name
+		infoVC.imageName = input.species.imageName
+
+		if let birdID = UUID(uuidString: input.species.id),
+		   let bird = try? WatchlistManager.shared.fetchBird(bird_id: birdID) {
+			infoVC.scientificName = bird.scientificName
+		}
+
+		let nav = UINavigationController(rootViewController: infoVC)
+		nav.modalPresentationStyle = .pageSheet
+		if let sheet = nav.sheetPresentationController {
+			sheet.detents = [.large()]
+			sheet.prefersGrabberVisible = true
+		}
+		present(nav, animated: true)
 	}
 	
 	@objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {

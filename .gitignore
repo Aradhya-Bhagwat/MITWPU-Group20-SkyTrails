@@ -81,9 +81,21 @@ docs/html
 .idea/
 .vscode/
 
+## Python
+__pycache__/
+*.py[cod]
+
 ## Credentials & Keys (Safety)
 .netrc
 local.properties
+.env
+*.env
+.env.*
+*_api_key*
+secrets/
+
+## Bird reference pipeline local outputs
+tools/bird_reference_pipeline/output/
 SkyTrails/SkyTrails.xcodeproj/project.pbxproj
 SkyTrails/SkyTrails/Watchlist/watchlist_summary.md
 

@@ -54,6 +54,7 @@ final class WatchlistManager: WatchlistRepository {
             WatchlistShare.self,
             ObservedBirdPhoto.self,
             Bird.self,
+            BirdReferenceInfo.self,
             BirdFieldMarkVariantLink.self,
             BirdShape.self,
             BirdFieldMark.self,
