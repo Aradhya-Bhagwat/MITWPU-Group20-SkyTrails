@@ -172,7 +172,8 @@ class UnobservedDetailViewController: UIViewController {
             if let entry = entry {
                 birdImageView.image = await manager.loadImageForEntry(entry)
             } else {
-                birdImageView.image = await manager.loadImage(path: bird.staticImageName)
+                let imagePath = bird.imageUrl ?? bird.staticImageName
+                birdImageView.image = await manager.loadImage(path: imagePath)
             }
         }
 		

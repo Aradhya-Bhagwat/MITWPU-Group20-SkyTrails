@@ -10,28 +10,44 @@ class AttachedTooltipView: UIView {
 
     private var topConstraint: NSLayoutConstraint?
     private var bottomConstraint: NSLayoutConstraint?
+    private let stackView = UIStackView()
+    private let iconView = UIImageView()
 
     init(text: String) {
         super.init(frame: .zero)
         backgroundColor = .clear
 
+        iconView.image = UIImage(systemName: "sparkles")
+        iconView.tintColor = .systemYellow
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 18).isActive = true
+
         label.text = text
         label.textColor = .white
-        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.numberOfLines = 0
-        label.textAlignment = .center
+        label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(label)
+
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .center
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(iconView)
+        stackView.addArrangedSubview(label)
+        addSubview(stackView)
 
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 14),
+            stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -14),
         ])
 
         layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.2
-        layer.shadowOffset = CGSize(width: 0, height: 4)
-        layer.shadowRadius = 8
+        layer.shadowOpacity = 0.25
+        layer.shadowOffset = CGSize(width: 0, height: 5)
+        layer.shadowRadius = 10
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -44,11 +60,11 @@ class AttachedTooltipView: UIView {
         bottomConstraint?.isActive = false
 
         if isUp {
-            topConstraint = label.topAnchor.constraint(equalTo: topAnchor, constant: arrowSize.height + 8)
-            bottomConstraint = label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            topConstraint = stackView.topAnchor.constraint(equalTo: topAnchor, constant: arrowSize.height + 10)
+            bottomConstraint = stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10)
         } else {
-            topConstraint = label.topAnchor.constraint(equalTo: topAnchor, constant: 8)
-            bottomConstraint = label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -(arrowSize.height + 8))
+            topConstraint = stackView.topAnchor.constraint(equalTo: topAnchor, constant: 10)
+            bottomConstraint = stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -(arrowSize.height + 10))
         }
         topConstraint?.isActive = true
         bottomConstraint?.isActive = true
@@ -61,7 +77,7 @@ class AttachedTooltipView: UIView {
     }
 
     override func draw(_ rect: CGRect) {
-        let cornerRadius: CGFloat = 8
+        let cornerRadius: CGFloat = 14
         let arrowW = arrowSize.width
         let arrowH = arrowSize.height
 
@@ -87,8 +103,17 @@ class AttachedTooltipView: UIView {
         arrowPath.close()
         path.append(arrowPath)
 
-        UIColor.systemBlue.withAlphaComponent(0.95).setFill()
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let fillColor = isDarkMode 
+            ? UIColor(white: 0.16, alpha: 0.94) 
+            : UIColor(white: 0.08, alpha: 0.92)
+        fillColor.setFill()
         path.fill()
+
+        let strokeColor = UIColor.white.withAlphaComponent(0.12)
+        strokeColor.setStroke()
+        path.lineWidth = 0.5
+        path.stroke()
     }
 }
 
@@ -97,7 +122,7 @@ class AttachedTooltipView: UIView {
 class IdentificationTooltipManager {
     static let shared = IdentificationTooltipManager()
 
-    private var tooltipView: AttachedTooltipView?
+    private var tooltipView: UIView?
     private var timer: Timer?
 
     // Step-by-step state
@@ -199,7 +224,7 @@ class IdentificationTooltipManager {
             return
         }
 
-        if let existing = tooltipView {
+        if let existing = tooltipView as? AttachedTooltipView {
             // Animate reposition to new target
             animateReposition(existing, to: targetView, in: parentView, message: step.message)
         } else {
@@ -300,42 +325,71 @@ class IdentificationTooltipManager {
     private func showFloatingTooltip(in parentView: UIView, message: String, bottomOffset: CGFloat) {
         guard tooltipView == nil else { return }
 
-        let container = UIView()
-        container.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.95)
-        container.layer.cornerRadius = 12
-        container.layer.shadowColor = UIColor.black.cgColor
-        container.layer.shadowOpacity = 0.2
-        container.layer.shadowOffset = CGSize(width: 0, height: 4)
-        container.layer.shadowRadius = 8
+        let shadowContainer = UIView()
+        shadowContainer.layer.shadowColor = UIColor.black.cgColor
+        shadowContainer.layer.shadowOpacity = 0.25
+        shadowContainer.layer.shadowOffset = CGSize(width: 0, height: 6)
+        shadowContainer.layer.shadowRadius = 12
+        shadowContainer.translatesAutoresizingMaskIntoConstraints = false
+        shadowContainer.alpha = 0
+        parentView.addSubview(shadowContainer)
+
+        let blurEffect = UIBlurEffect(style: .systemMaterialDark)
+        let container = UIVisualEffectView(effect: blurEffect)
+        container.layer.cornerRadius = 16
+        container.layer.masksToBounds = true
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.alpha = 0
+        shadowContainer.addSubview(container)
+
+        let iconView = UIImageView(image: UIImage(systemName: "sparkles"))
+        iconView.tintColor = .systemYellow
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 18).isActive = true
 
         let label = UILabel()
         label.text = message
         label.textColor = .white
-        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.numberOfLines = 0
-        label.textAlignment = .center
+        label.textAlignment = .left
         label.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(label)
-        parentView.addSubview(container)
+
+        let stackView = UIStackView(arrangedSubviews: [iconView, label])
+        stackView.axis = .horizontal
+        stackView.spacing = 10
+        stackView.alignment = .center
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        container.contentView.addSubview(stackView)
 
         NSLayoutConstraint.activate([
-            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
-            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
-            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
-            container.centerXAnchor.constraint(equalTo: parentView.centerXAnchor),
-            container.leadingAnchor.constraint(greaterThanOrEqualTo: parentView.leadingAnchor, constant: 20),
-            container.trailingAnchor.constraint(lessThanOrEqualTo: parentView.trailingAnchor, constant: -20),
-            container.bottomAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.bottomAnchor, constant: bottomOffset)
+            // Pin container to shadowContainer
+            container.topAnchor.constraint(equalTo: shadowContainer.topAnchor),
+            container.bottomAnchor.constraint(equalTo: shadowContainer.bottomAnchor),
+            container.leadingAnchor.constraint(equalTo: shadowContainer.leadingAnchor),
+            container.trailingAnchor.constraint(equalTo: shadowContainer.trailingAnchor),
+
+            // Pin stackView to container.contentView
+            stackView.topAnchor.constraint(equalTo: container.contentView.topAnchor, constant: 12),
+            stackView.bottomAnchor.constraint(equalTo: container.contentView.bottomAnchor, constant: -12),
+            stackView.leadingAnchor.constraint(equalTo: container.contentView.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: container.contentView.trailingAnchor, constant: -16),
+
+            // Layout shadowContainer in parentView
+            shadowContainer.centerXAnchor.constraint(equalTo: parentView.centerXAnchor),
+            shadowContainer.leadingAnchor.constraint(greaterThanOrEqualTo: parentView.leadingAnchor, constant: 20),
+            shadowContainer.trailingAnchor.constraint(lessThanOrEqualTo: parentView.trailingAnchor, constant: -20),
+            shadowContainer.bottomAnchor.constraint(equalTo: parentView.safeAreaLayoutGuide.bottomAnchor, constant: bottomOffset)
         ])
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        container.addGestureRecognizer(tap)
-        container.isUserInteractionEnabled = true
+        shadowContainer.addGestureRecognizer(tap)
+        shadowContainer.isUserInteractionEnabled = true
 
-        UIView.animate(withDuration: 0.3) { container.alpha = 1 }
+        self.tooltipView = shadowContainer
+
+        UIView.animate(withDuration: 0.3) { shadowContainer.alpha = 1 }
     }
 
     private func hideTooltip() {

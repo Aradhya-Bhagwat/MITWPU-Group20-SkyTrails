@@ -240,8 +240,9 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
         let confidencePercent = String(format: "%.1f", candidate.confidence * 100)
 
         if let bird = candidate.bird {
+            let imagePath = bird.imageUrl ?? bird.staticImageName
             cell.configure(
-                image: UIImage(named: bird.staticImageName) ?? UIImage(systemName: "bird.fill"),
+                image: UIImage(named: imagePath) ?? UIImage(systemName: "bird.fill"),
                 name: bird.commonName,
                 percentage: confidencePercent
             )
@@ -249,12 +250,12 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
 
             imageLoadTasks[indexPath]?.cancel()
             imageLoadTasks[indexPath] = Task { [weak self, weak collectionView] in
-                let loaded = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil)
+                let loaded = await IdentificationImageService.shared.image(for: imagePath, shapeId: nil)
                 guard !Task.isCancelled else { return }
                 guard self != nil, let collectionView else { return }
                 guard let liveCell = collectionView.cellForItem(at: indexPath) as? ResultCollectionViewCell else { return }
                 guard liveCell.indexPath == indexPath else { return }
-                liveCell.resultImageView.image = loaded ?? UIImage(named: bird.staticImageName) ?? UIImage(systemName: "bird.fill")
+                liveCell.resultImageView.image = loaded ?? UIImage(named: imagePath) ?? UIImage(systemName: "bird.fill")
             }
         } else {
             cell.configure(

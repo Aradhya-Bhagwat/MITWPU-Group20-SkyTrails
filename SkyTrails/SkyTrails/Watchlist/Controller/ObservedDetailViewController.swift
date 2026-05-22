@@ -57,7 +57,13 @@ class ObservedDetailViewController: UIViewController, UISearchBarDelegate, UITab
             setupRightBarButtons()
         } else if let birdData = bird {
             nameTextField.text = birdData.commonName
-            birdImageView.image = UIImage(named: birdData.staticImageName) ?? UIImage(systemName: "photo")
+            let imagePath = birdData.imageUrl ?? birdData.staticImageName
+            birdImageView.image = UIImage(named: imagePath) ?? UIImage(systemName: "photo")
+            Task { @MainActor in
+                if let image = await IdentificationImageService.shared.image(for: imagePath, shapeId: nil) {
+                    self.birdImageView.image = image
+                }
+            }
             setupRightBarButtons()
         } else {
             self.navigationItem.title = "Log Sighting"

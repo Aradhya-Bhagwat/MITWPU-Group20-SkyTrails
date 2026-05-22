@@ -81,6 +81,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         super.layoutSubviews()
         updateNestedLayout()
         terrainTagImageView.layer.cornerRadius = terrainTagImageView.bounds.height / 2
+        contentView.layer.borderColor = UIColor.label.withAlphaComponent(0.06).cgColor
     }
     
     // Updates font sizes and item dimensions based on card height
@@ -190,10 +191,13 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
     private func setupAppearance() {
         contentView.backgroundColor = .systemBackground
-        contentView.layer.cornerRadius = 16
+        contentView.layer.cornerRadius = 24
         contentView.layer.masksToBounds = true
+        contentView.layer.borderWidth = 1.0
+        contentView.layer.borderColor = UIColor.label.withAlphaComponent(0.06).cgColor
         
-        mapView.layer.cornerRadius = 12
+        mapView.layer.cornerRadius = 18
+        mapView.clipsToBounds = true
         mapView.delegate = self
         
         terrainTagImageView.contentMode = .scaleAspectFit
@@ -202,9 +206,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         seasonTagImageView.layer.masksToBounds = true
         
         layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.08
-        layer.shadowOffset = CGSize(width: 0, height: 4)
-        layer.shadowRadius = 8
+        layer.shadowOpacity = 0.06
+        layer.shadowOffset = CGSize(width: 0, height: 6)
+        layer.shadowRadius = 12
         layer.masksToBounds = false
     }
     
@@ -267,18 +271,19 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         
         // Style the button to look more like a dropdown
         if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.gray()
+            var config = UIButton.Configuration.filled()
             config.image = UIImage(systemName: "chevron.down")
             config.imagePlacement = .trailing
-            config.imagePadding = 8
-            config.baseForegroundColor = .black
+            config.imagePadding = 6
+            config.baseBackgroundColor = .secondarySystemBackground
+            config.baseForegroundColor = .label
             config.cornerStyle = .capsule
-            config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12)
+            config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
             weekButton.configuration = config
         } else {
-            weekButton.setTitleColor(.black, for: .normal)
-            weekButton.backgroundColor = .systemGray6
-            weekButton.layer.cornerRadius = 12
+            weekButton.setTitleColor(.label, for: .normal)
+            weekButton.backgroundColor = .secondarySystemBackground
+            weekButton.layer.cornerRadius = 14
         }
     }
 

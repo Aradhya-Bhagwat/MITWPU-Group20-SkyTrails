@@ -107,7 +107,7 @@ actor IdentificationSyncService {
         }
     }
 
-    private nonisolated func mergeIdentificationGraph(
+    @MainActor private func mergeIdentificationGraph(
         userId: UUID,
         sessionRows: [IdentificationSessionRow],
         resultRows: [PulledIdentificationResultRow],
@@ -129,7 +129,7 @@ actor IdentificationSyncService {
         )
     }
 
-    private nonisolated func mergeIdentificationSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<IdentificationSession>()
         let existingSessions = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationSession] = [:]
@@ -163,7 +163,7 @@ actor IdentificationSyncService {
         return syncedCount
     }
     
-    private nonisolated func createSession(from row: IdentificationSessionRow, shapeById: [String: BirdShape]) -> IdentificationSession {
+    @MainActor private func createSession(from row: IdentificationSessionRow, shapeById: [String: BirdShape]) -> IdentificationSession {
         let shapeId = row.metadata?["shapeId"]
         let shape = shapeId.flatMap { shapeById[$0] }
         let locationDisplayName = row.metadata?["locationDisplayName"]
@@ -194,7 +194,7 @@ actor IdentificationSyncService {
         return session
     }
     
-    private nonisolated func updateSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
+    @MainActor private func updateSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
         session.user_id = row.userId
         
         if let shapeId = row.metadata?["shapeId"] {
@@ -230,7 +230,7 @@ actor IdentificationSyncService {
         session.updated_at = row.updated_at
     }
 
-    private nonisolated func mergeIdentificationResults(_ rows: [PulledIdentificationResultRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationResults(_ rows: [PulledIdentificationResultRow], context: ModelContext) throws -> Int {
         let existingResults = try context.fetch(FetchDescriptor<IdentificationResult>())
         var existingById = Dictionary(uniqueKeysWithValues: existingResults.map { ($0.identification_result_id, $0) })
 
@@ -260,7 +260,7 @@ actor IdentificationSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeIdentificationCandidates(_ rows: [PulledIdentificationCandidateRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationCandidates(_ rows: [PulledIdentificationCandidateRow], context: ModelContext) throws -> Int {
         let existingCandidates = try context.fetch(FetchDescriptor<IdentificationCandidate>())
         var existingById = Dictionary(uniqueKeysWithValues: existingCandidates.map { ($0.identification_candidate_id, $0) })
 
@@ -290,7 +290,7 @@ actor IdentificationSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeIdentificationSessionMarks(_ rows: [PulledIdentificationSessionMarkRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationSessionMarks(_ rows: [PulledIdentificationSessionMarkRow], context: ModelContext) throws -> Int {
         let existingMarks = try context.fetch(FetchDescriptor<IdentificationSessionFieldMark>())
         var existingById = Dictionary(uniqueKeysWithValues: existingMarks.map { ($0.identification_session_mark_id, $0) })
 
@@ -323,7 +323,7 @@ actor IdentificationSyncService {
         return syncedCount
     }
 
-    private nonisolated func reconcileIdentificationOrphans(
+    @MainActor private func reconcileIdentificationOrphans(
         userId: UUID,
         sessionIDs: Set<UUID>,
         resultIDs: Set<UUID>,
@@ -727,7 +727,7 @@ actor IdentificationSyncService {
         }
     }
 
-    private nonisolated func createIdentificationResult(
+    @MainActor private func createIdentificationResult(
         from row: PulledIdentificationResultRow,
         sessionById: [UUID: IdentificationSession],
         birdById: [UUID: Bird]
@@ -741,7 +741,7 @@ actor IdentificationSyncService {
         return result
     }
 
-    private nonisolated func updateIdentificationResult(
+    @MainActor private func updateIdentificationResult(
         _ result: IdentificationResult,
         from row: PulledIdentificationResultRow,
         sessionById: [UUID: IdentificationSession],
@@ -756,7 +756,7 @@ actor IdentificationSyncService {
         result.updated_at = row.updated_at
     }
 
-    private nonisolated func createIdentificationCandidate(
+    @MainActor private func createIdentificationCandidate(
         from row: PulledIdentificationCandidateRow,
         resultById: [UUID: IdentificationResult],
         birdById: [UUID: Bird]
@@ -777,7 +777,7 @@ actor IdentificationSyncService {
         return candidate
     }
 
-    private nonisolated func updateIdentificationCandidate(
+    @MainActor private func updateIdentificationCandidate(
         _ candidate: IdentificationCandidate,
         from row: PulledIdentificationCandidateRow,
         resultById: [UUID: IdentificationResult],
@@ -798,7 +798,7 @@ actor IdentificationSyncService {
         candidate.updated_at = row.updated_at
     }
 
-    private nonisolated func createIdentificationSessionMark(
+    @MainActor private func createIdentificationSessionMark(
         from row: PulledIdentificationSessionMarkRow,
         sessionById: [UUID: IdentificationSession],
         fieldMarkById: [UUID: BirdFieldMark],
@@ -815,7 +815,7 @@ actor IdentificationSyncService {
         return mark
     }
 
-    private nonisolated func updateIdentificationSessionMark(
+    @MainActor private func updateIdentificationSessionMark(
         _ mark: IdentificationSessionFieldMark,
         from row: PulledIdentificationSessionMarkRow,
         sessionById: [UUID: IdentificationSession],

@@ -132,6 +132,7 @@ class PredictOutputViewController: UIViewController {
             }
         }
 
+        AppTourManager.shared.trackViewControllerAppeared(self)
     }
 
     private func setupTraitChangeHandling() {

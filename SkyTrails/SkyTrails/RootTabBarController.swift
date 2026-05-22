@@ -1,10 +1,10 @@
 import UIKit
 
-class RootTabBarController: UITabBarController {
+class RootTabBarController: UITabBarController, UITabBarControllerDelegate {
 
-	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		self.delegate = self
 		
 		viewControllers = [
 			loadFeature(storyboard: "Home",
@@ -19,6 +19,20 @@ class RootTabBarController: UITabBarController {
 						title: "Identification",
 						systemImage: "sparkle.magnifyingglass")
 		]
+	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		
+		// Bypass the static full-screen onboarding view controller so the
+		// interactive guided onboarding tour starts naturally from the Home Screen tab.
+		/*
+		if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+			let onboardingVC = OnboardingViewController()
+			onboardingVC.modalPresentationStyle = .fullScreen
+			self.present(onboardingVC, animated: true, completion: nil)
+		}
+		*/
 	}
 
 	private func loadFeature(storyboard: String,
@@ -44,4 +58,31 @@ class RootTabBarController: UITabBarController {
 		nav.navigationBar.prefersLargeTitles = true
 		return nav
 	}
+
+    // MARK: - UITabBarControllerDelegate
+
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        guard let viewControllers = tabBarController.viewControllers,
+              let index = viewControllers.firstIndex(of: viewController) else {
+            return true
+        }
+        
+        // Index 0: Home (accessible to guests). Index 1: Watchlist, Index 2: Identification (requires login)
+        if index > 0 && !UserSession.shared.isAuthenticatedWithSupabase() {
+            presentAuthenticationFlow()
+            return false
+        }
+        
+        return true
+    }
+
+    func presentAuthenticationFlow() {
+        let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
+        guard let startVC = storyboard.instantiateViewController(withIdentifier: "StartViewController") as? StartViewController else {
+            return
+        }
+        
+        startVC.modalPresentationStyle = .pageSheet
+        self.present(startVC, animated: true, completion: nil)
+    }
 }

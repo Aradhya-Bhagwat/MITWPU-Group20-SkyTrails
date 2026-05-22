@@ -56,7 +56,7 @@
                             <constraint firstItem="TY3-4C-qqx" firstAttribute="top" secondItem="WYq-28-ygp" secondAttribute="top" constant="8" id="dtZ-JL-THh"/>
                             <constraint firstAttribute="trailing" secondItem="o3N-Gw-90K" secondAttribute="trailing" constant="8" id="gEF-dp-S6s"/>
                             <constraint firstAttribute="trailing" secondItem="TsQ-3Q-w1s" secondAttribute="trailing" constant="8" id="ok9-50-McT"/>
-                            <constraint firstAttribute="width" secondItem="WYq-28-ygp" secondAttribute="height" multiplier="88:91" id="wMc-cO-wae"/>
+                            <constraint firstAttribute="width" secondItem="WYq-28-ygp" secondAttribute="height" multiplier="88:91" priority="750" id="wMc-cO-wae"/>
                         </constraints>
                     </view>
                 </subviews>

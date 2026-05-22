@@ -25,6 +25,7 @@ class ProfileLocationHeaderView: UIView {
         observeUserSessionChanges()
         loadUserProfileImage()
         startLocationUpdates()
+        setupLocationChangeObserver()
     }
     
     required init?(coder: NSCoder) {
@@ -33,6 +34,7 @@ class ProfileLocationHeaderView: UIView {
         observeUserSessionChanges()
         loadUserProfileImage()
         startLocationUpdates()
+        setupLocationChangeObserver()
     }
     
     deinit {
@@ -93,7 +95,11 @@ class ProfileLocationHeaderView: UIView {
             locationContainer.topAnchor.constraint(equalTo: topAnchor),
             locationContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
             locationContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
-            locationContainer.heightAnchor.constraint(equalToConstant: 44),
+            {
+                let c = locationContainer.heightAnchor.constraint(equalToConstant: 44)
+                c.priority = .init(999)
+                return c
+            }(),
             
             // Location icon
             locationIconView.leadingAnchor.constraint(equalTo: locationContainer.leadingAnchor, constant: 12),
@@ -112,7 +118,11 @@ class ProfileLocationHeaderView: UIView {
             profileContainer.trailingAnchor.constraint(equalTo: trailingAnchor),
             profileContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
             profileContainer.widthAnchor.constraint(equalToConstant: 44),
-            profileContainer.heightAnchor.constraint(equalToConstant: 44),
+            {
+                let c = profileContainer.heightAnchor.constraint(equalToConstant: 44)
+                c.priority = .init(999)
+                return c
+            }(),
 
             // Profile image
             profileImageView.centerXAnchor.constraint(equalTo: profileContainer.centerXAnchor),
@@ -227,6 +237,21 @@ class ProfileLocationHeaderView: UIView {
     }
     
     // MARK: - Location Updates
+    private func setupLocationChangeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLocationPreferenceChange),
+            name: LocationPreferences.locationDidChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleLocationPreferenceChange() {
+        Task { [weak self] in
+            await self?.updateLocation()
+        }
+    }
+
     private func startLocationUpdates() {
         locationUpdateTask = Task { [weak self] in
             await self?.updateLocation()

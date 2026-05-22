@@ -111,16 +111,23 @@ class BirdSmartCell: UITableViewCell {
 			let fileURL = photoDir.appendingPathComponent(photoPath)
 			if let diskImage = UIImage(contentsOfFile: fileURL.path) {
 				birdImageView.image = diskImage
-			} else if let assetImage = UIImage(named: bird.staticImageName) {
+			} else if let imageUrl = bird.imageUrl {
+                Task { @MainActor in
+                    if let image = await IdentificationImageService.shared.image(for: imageUrl, shapeId: nil) {
+                        self.birdImageView.image = image
+                    }
+                }
+            } else if let assetImage = UIImage(named: bird.staticImageName) {
 				birdImageView.image = assetImage
 			} else {
 				birdImageView.image = UIImage(systemName: "photo")
 			}
 		} else {
-            if let assetImage = UIImage(named: bird.staticImageName) {
+            let imagePath = bird.imageUrl ?? bird.staticImageName
+            if let assetImage = UIImage(named: imagePath) {
                 birdImageView.image = assetImage
             } else {
-                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(bird.staticImageName)
+                let fileURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(imagePath)
                 if let docImage = UIImage(contentsOfFile: fileURL.path) {
                     birdImageView.image = docImage
                 } else {
@@ -129,7 +136,7 @@ class BirdSmartCell: UITableViewCell {
             }
             
             Task { @MainActor in
-                if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
+                if let image = await IdentificationImageService.shared.image(for: imagePath, shapeId: nil) {
                     self.birdImageView.image = image
                 }
             }
@@ -163,9 +170,10 @@ class BirdSmartCell: UITableViewCell {
 	
 	func configure(with bird: Bird) {
 		titleLabel.text = bird.name
-		birdImageView.image = UIImage(named: bird.staticImageName) ?? UIImage(systemName: "photo")
+        let imagePath = bird.imageUrl ?? bird.staticImageName
+		birdImageView.image = UIImage(named: imagePath) ?? UIImage(systemName: "photo")
 		Task { @MainActor in
-			if let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
+			if let image = await IdentificationImageService.shared.image(for: imagePath, shapeId: nil) {
 				self.birdImageView.image = image
 			}
 		}
@@ -192,12 +200,15 @@ class BirdSmartCell: UITableViewCell {
 				return image
 			}
 		}
-		if let bird = entry.bird, let image = await IdentificationImageService.shared.image(for: bird.staticImageName, shapeId: nil) {
-			return image
-		}
-		if let bird = entry.bird, let asset = UIImage(named: bird.staticImageName) {
-			return asset
-		}
+		if let bird = entry.bird {
+            let imagePath = bird.imageUrl ?? bird.staticImageName
+            if let image = await IdentificationImageService.shared.image(for: imagePath, shapeId: nil) {
+                return image
+            }
+            if let asset = UIImage(named: imagePath) {
+                return asset
+            }
+        }
 		return UIImage(systemName: "photo")!
 	}
 	

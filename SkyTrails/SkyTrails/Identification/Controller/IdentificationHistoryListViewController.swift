@@ -31,35 +31,43 @@ class IdentificationHistoryListViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
-        let filterButton = UIBarButtonItem(image: UIImage(systemName: "line.3.horizontal.decrease.circle"), style: .plain, target: self, action: #selector(filterButtonTapped))
-        navigationItem.rightBarButtonItem = filterButton
+        updateFilterMenu()
     }
 
-    @objc private func filterButtonTapped() {
-        let alert = UIAlertController(title: "Sort By", message: nil, preferredStyle: .actionSheet)
-        
-        alert.addAction(UIAlertAction(title: "Most Recent", style: .default) { [weak self] _ in
+    private func updateFilterMenu() {
+        let recentAction = UIAction(title: "Most Recent", image: nil, state: currentSortOption == .recent ? .on : .off) { [weak self] _ in
             self?.currentSortOption = .recent
             self?.updateData()
-        })
-        alert.addAction(UIAlertAction(title: "Name (A-Z)", style: .default) { [weak self] _ in
+            self?.updateFilterMenu()
+        }
+        
+        let azAction = UIAction(title: "Name (A-Z)", image: nil, state: currentSortOption == .nameAZ ? .on : .off) { [weak self] _ in
             self?.currentSortOption = .nameAZ
             self?.updateData()
-        })
-        alert.addAction(UIAlertAction(title: "Name (Z-A)", style: .default) { [weak self] _ in
+            self?.updateFilterMenu()
+        }
+        
+        let zaAction = UIAction(title: "Name (Z-A)", image: nil, state: currentSortOption == .nameZA ? .on : .off) { [weak self] _ in
             self?.currentSortOption = .nameZA
             self?.updateData()
-        })
+            self?.updateFilterMenu()
+        }
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
+        let menu = UIMenu(title: "Sort History", children: [recentAction, azAction, zaAction])
+        
+        if let existingItem = navigationItem.rightBarButtonItem {
+            existingItem.menu = menu
+        } else {
+            let filterButton = UIBarButtonItem(image: UIImage(systemName: "line.3.horizontal.decrease.circle"), menu: menu)
+            navigationItem.rightBarButtonItem = filterButton
+        }
     }
 
     private func setupUI() {
         title = "History"
         view.backgroundColor = .systemBackground
         
-        searchBar.searchBarStyle = .minimal
+        searchBar.isHidden = false
         searchBar.delegate = self
         searchBar.placeholder = "Search species..."
         
@@ -223,3 +231,5 @@ extension IdentificationHistoryListViewController: UISearchBarDelegate {
         searchBar.resignFirstResponder()
     }
 }
+
+// UISearchResultsUpdating removed since storyboard searchBar is restored
