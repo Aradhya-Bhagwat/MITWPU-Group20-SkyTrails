@@ -349,7 +349,7 @@ actor InitialSyncService {
         return result
     }
 
-    private nonisolated func mergeBirdShapes(_ rows: [BirdShapeRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeBirdShapes(_ rows: [BirdShapeRow], context: ModelContext) throws -> Int {
         let existingShapes = try context.fetch(FetchDescriptor<BirdShape>())
         var shapeById = Dictionary(uniqueKeysWithValues: existingShapes.map { ($0.bird_shape_id, $0) })
 
@@ -388,7 +388,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeBirds(_ rows: [BirdRow], shapeRows: [BirdShapeRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeBirds(_ rows: [BirdRow], shapeRows: [BirdShapeRow], context: ModelContext) throws -> Int {
         let existingBirds = try context.fetch(FetchDescriptor<Bird>())
         var birdById = Dictionary(uniqueKeysWithValues: existingBirds.map { ($0.bird_id, $0) })
 
@@ -441,7 +441,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeBirdFieldMarks(_ rows: [BirdFieldMarkRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeBirdFieldMarks(_ rows: [BirdFieldMarkRow], context: ModelContext) throws -> Int {
         let existingMarks = try context.fetch(FetchDescriptor<BirdFieldMark>())
         var markById = Dictionary(uniqueKeysWithValues: existingMarks.map { ($0.bird_field_mark_id, $0) })
 
@@ -467,7 +467,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeFieldMarkVariants(_ rows: [FieldMarkVariantRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeFieldMarkVariants(_ rows: [FieldMarkVariantRow], context: ModelContext) throws -> Int {
         let existingVariants = try context.fetch(FetchDescriptor<FieldMarkVariant>())
         var variantById = Dictionary(uniqueKeysWithValues: existingVariants.map { ($0.field_mark_variant_id, $0) })
 
@@ -493,7 +493,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeBirdFieldMarkVariantLinks(_ rows: [BirdFieldMarkVariantLinkRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeBirdFieldMarkVariantLinks(_ rows: [BirdFieldMarkVariantLinkRow], context: ModelContext) throws -> Int {
         let existingLinks = try context.fetch(FetchDescriptor<BirdFieldMarkVariantLink>())
         var linkById = Dictionary(uniqueKeysWithValues: existingLinks.map { ($0.bird_field_mark_variant_link_id, $0) })
         var linkByLogicalKey: [String: BirdFieldMarkVariantLink] = [:]
@@ -542,7 +542,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeWatchlists(_ rows: [WatchlistRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeWatchlists(_ rows: [WatchlistRow], context: ModelContext) throws -> Int {
         let existingWatchlists = try context.fetch(FetchDescriptor<Watchlist>())
         var existingById: [UUID: Watchlist] = [:]
         for watchlist in existingWatchlists {
@@ -569,7 +569,7 @@ actor InitialSyncService {
         return syncedCount
     }
     
-    private nonisolated func mergeEntries(_ rows: [WatchlistEntryRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeEntries(_ rows: [WatchlistEntryRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<WatchlistEntry>()
         let existingEntries = try context.fetch(descriptor)
         var existingById: [UUID: WatchlistEntry] = [:]
@@ -614,7 +614,7 @@ actor InitialSyncService {
         return syncedCount
     }
     
-    private nonisolated func mergeRules(_ rows: [WatchlistRuleRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeRules(_ rows: [WatchlistRuleRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<WatchlistRule>()
         let existingRules = try context.fetch(descriptor)
         var existingById: [UUID: WatchlistRule] = [:]
@@ -647,7 +647,7 @@ actor InitialSyncService {
         return syncedCount
     }
     
-    private nonisolated func mergeShares(_ rows: [WatchlistShareRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeShares(_ rows: [WatchlistShareRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<WatchlistShare>()
         let existingShares = try context.fetch(descriptor)
         var existingById: [UUID: WatchlistShare] = [:]
@@ -679,7 +679,7 @@ actor InitialSyncService {
         return syncedCount
     }
     
-    private nonisolated func mergePhotos(_ rows: [ObservedBirdPhotoRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergePhotos(_ rows: [ObservedBirdPhotoRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<ObservedBirdPhoto>()
         let existingPhotos = try context.fetch(descriptor)
         var existingById: [UUID: ObservedBirdPhoto] = [:]
@@ -712,7 +712,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func refreshDerivedWatchlistFields(context: ModelContext) throws {
+    @MainActor private func refreshDerivedWatchlistFields(context: ModelContext) throws {
         let descriptor = FetchDescriptor<Watchlist>()
         let watchlists = try context.fetch(descriptor)
 
@@ -724,7 +724,7 @@ actor InitialSyncService {
         }
     }
 
-    private nonisolated func mergeIdentificationSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationSessions(_ rows: [IdentificationSessionRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<IdentificationSession>()
         let existingSessions = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationSession] = [:]
@@ -756,7 +756,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeIdentificationResults(_ rows: [IdentificationResultRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationResults(_ rows: [IdentificationResultRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<IdentificationResult>()
         let existingResults = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationResult] = [:]
@@ -798,7 +798,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeIdentificationCandidates(_ rows: [IdentificationCandidateRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationCandidates(_ rows: [IdentificationCandidateRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<IdentificationCandidate>()
         let existingCandidates = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationCandidate] = [:]
@@ -841,7 +841,7 @@ actor InitialSyncService {
         return syncedCount
     }
 
-    private nonisolated func mergeIdentificationSessionMarks(_ rows: [IdentificationSessionFieldMarkRow], context: ModelContext) throws -> Int {
+    @MainActor private func mergeIdentificationSessionMarks(_ rows: [IdentificationSessionFieldMarkRow], context: ModelContext) throws -> Int {
         let descriptor = FetchDescriptor<IdentificationSessionFieldMark>()
         let existingMarks = try context.fetch(descriptor)
         var existingById: [UUID: IdentificationSessionFieldMark] = [:]
@@ -974,7 +974,7 @@ actor InitialSyncService {
         return nil
     }
     
-    private nonisolated func createWatchlist(from row: WatchlistRow) -> Watchlist {
+    @MainActor private func createWatchlist(from row: WatchlistRow) -> Watchlist {
         let watchlist = Watchlist(
             watchlist_id: row.watchlist_id,
             user_id: row.user_id,
@@ -989,7 +989,7 @@ actor InitialSyncService {
         return watchlist
     }
     
-    private nonisolated func updateWatchlist(_ watchlist: Watchlist, from row: WatchlistRow) {
+    @MainActor private func updateWatchlist(_ watchlist: Watchlist, from row: WatchlistRow) {
         watchlist.user_id = row.user_id
         watchlist.type = WatchlistType(rawValue: row.type) ?? .custom
         watchlist.title = row.title
@@ -1006,7 +1006,7 @@ actor InitialSyncService {
         watchlist.updated_at = row.updated_at
     }
     
-    private nonisolated func createEntry(
+    @MainActor private func createEntry(
         from row: WatchlistEntryRow,
         watchlistById: [UUID: Watchlist],
         birdById: [UUID: Bird]
@@ -1023,7 +1023,7 @@ actor InitialSyncService {
         return entry
     }
     
-    private nonisolated func updateEntry(
+    @MainActor private func updateEntry(
         _ entry: WatchlistEntry,
         from row: WatchlistEntryRow,
         watchlistById: [UUID: Watchlist],
@@ -1052,7 +1052,7 @@ actor InitialSyncService {
         entry.serverRowVersion = row.rowVersion
     }
     
-    private nonisolated func createRule(
+    @MainActor private func createRule(
         from row: WatchlistRuleRow,
         watchlistById: [UUID: Watchlist]
     ) -> WatchlistRule {
@@ -1064,7 +1064,7 @@ actor InitialSyncService {
         return rule
     }
     
-    private nonisolated func updateRule(
+    @MainActor private func updateRule(
         _ rule: WatchlistRule,
         from row: WatchlistRuleRow,
         watchlistById: [UUID: Watchlist]
@@ -1085,7 +1085,7 @@ actor InitialSyncService {
         rule.created_at = row.created_at
     }
     
-    private nonisolated func createShare(
+    @MainActor private func createShare(
         from row: WatchlistShareRow,
         watchlistById: [UUID: Watchlist]
     ) -> WatchlistShare {
@@ -1099,7 +1099,7 @@ actor InitialSyncService {
         return share
     }
     
-    private nonisolated func updateShare(
+    @MainActor private func updateShare(
         _ share: WatchlistShare,
         from row: WatchlistShareRow,
         watchlistById: [UUID: Watchlist]
@@ -1113,7 +1113,7 @@ actor InitialSyncService {
         share.deleted_at = row.deletedAt
     }
     
-    private nonisolated func createPhoto(
+    @MainActor private func createPhoto(
         from row: ObservedBirdPhotoRow,
         entryById: [UUID: WatchlistEntry]
     ) -> ObservedBirdPhoto {
@@ -1125,7 +1125,7 @@ actor InitialSyncService {
         return photo
     }
     
-    private nonisolated func updatePhoto(
+    @MainActor private func updatePhoto(
         _ photo: ObservedBirdPhoto,
         from row: ObservedBirdPhotoRow,
         entryById: [UUID: WatchlistEntry]
@@ -1138,7 +1138,7 @@ actor InitialSyncService {
         photo.uploaded_at = row.uploadedAt ?? Date()
     }
 
-    private nonisolated func createIdentificationSession(from row: IdentificationSessionRow, shapeById: [String: BirdShape]) -> IdentificationSession {
+    @MainActor private func createIdentificationSession(from row: IdentificationSessionRow, shapeById: [String: BirdShape]) -> IdentificationSession {
         let obsDate: Date
         if let obsDateStr = row.metadata?["observationDate"],
            let parsedDate = ISO8601DateFormatter().date(from: obsDateStr) {
@@ -1158,7 +1158,7 @@ actor InitialSyncService {
         return session
     }
 
-    private nonisolated func updateIdentificationSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
+    @MainActor private func updateIdentificationSession(_ session: IdentificationSession, from row: IdentificationSessionRow, shapeById: [String: BirdShape]) {
         session.user_id = row.userId
         session.status = SessionStatus(rawValue: row.status) ?? .completed
         session.locationLat = row.locationLat
@@ -1189,17 +1189,18 @@ actor InitialSyncService {
         session.created_at = row.created_at
         session.updated_at = row.updated_at
     }
-private nonisolated func createIdentificationResult(from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) -> IdentificationResult {
-    let result = IdentificationResult(
-        identification_result_id: row.id,
-        user_id: row.ownerId,
-        createdAt: row.created_at
-    )
+
+    @MainActor private func createIdentificationResult(from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) -> IdentificationResult {
+        let result = IdentificationResult(
+            identification_result_id: row.id,
+            user_id: row.ownerId,
+            createdAt: row.created_at
+        )
         updateIdentificationResult(result, from: row, sessionById: sessionById, birdById: birdById)
         return result
     }
 
-    private nonisolated func updateIdentificationResult(_ result: IdentificationResult, from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) {
+    @MainActor private func updateIdentificationResult(_ result: IdentificationResult, from row: IdentificationResultRow, sessionById: [UUID: IdentificationSession], birdById: [UUID: Bird]) {
         IdentificationRelationshipBinder.bind(result, to: sessionById[row.sessionId])
         if let birdId = row.birdId {
             result.bird = birdById[birdId]
@@ -1214,7 +1215,7 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
         result.updated_at = row.updated_at
     }
 
-    private nonisolated func createIdentificationCandidate(from row: IdentificationCandidateRow, resultById: [UUID: IdentificationResult], birdById: [UUID: Bird]) -> IdentificationCandidate {
+    @MainActor private func createIdentificationCandidate(from row: IdentificationCandidateRow, resultById: [UUID: IdentificationResult], birdById: [UUID: Bird]) -> IdentificationCandidate {
         let candidate = IdentificationCandidate(
             identification_candidate_id: row.id,
             result: resultById[row.resultId],
@@ -1225,7 +1226,7 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
         return candidate
     }
 
-    private nonisolated func updateIdentificationCandidate(_ candidate: IdentificationCandidate, from row: IdentificationCandidateRow, resultById: [UUID: IdentificationResult], birdById: [UUID: Bird]) {
+    @MainActor private func updateIdentificationCandidate(_ candidate: IdentificationCandidate, from row: IdentificationCandidateRow, resultById: [UUID: IdentificationResult], birdById: [UUID: Bird]) {
         if let result = resultById[row.resultId] {
             candidate.result = result
         }
@@ -1240,7 +1241,7 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
         candidate.updated_at = row.updated_at
     }
 
-    private nonisolated func createIdentificationSessionMark(
+    @MainActor private func createIdentificationSessionMark(
         from row: IdentificationSessionFieldMarkRow,
         sessionById: [UUID: IdentificationSession],
         fieldMarkById: [UUID: BirdFieldMark],
@@ -1257,7 +1258,7 @@ private nonisolated func createIdentificationResult(from row: IdentificationResu
         return mark
     }
 
-    private nonisolated func updateIdentificationSessionMark(
+    @MainActor private func updateIdentificationSessionMark(
         _ mark: IdentificationSessionFieldMark,
         from row: IdentificationSessionFieldMarkRow,
         sessionById: [UUID: IdentificationSession],

@@ -175,6 +175,8 @@ class SignUpViewController: UIViewController {
                     print("DEBUG: Error details: \(String(describing: error))")
                     await MainActor.run {
                         self.show("Account created locally, but could not sync details: \(error.localizedDescription)") {
+                            UserDefaults.standard.set(true, forKey: "isNewSignUp")
+                            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
                             self.goToMain()
                         }
                     }
@@ -183,6 +185,8 @@ class SignUpViewController: UIViewController {
 
                 await MainActor.run {
                     self.show("Account created successfully!") {
+                        UserDefaults.standard.set(true, forKey: "isNewSignUp")
+                        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
                         self.goToMain()
                     }
                 }
@@ -266,11 +270,21 @@ class SignUpViewController: UIViewController {
     }
 
     private func goToMain() {
+        // Dismiss the modal auth flow. The existing RootTabBarController remains
+        // as the window root, and its HomeViewController.viewDidAppear will fire
+        // after the dismiss, detecting the isNewSignUp flag to start the tour.
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = scene.windows.first(where: { $0.isKeyWindow }) else {
             return
         }
 
+        // If we are presented modally (typical: StartVC -> SignUpVC), dismiss the whole modal stack.
+        if let root = window.rootViewController, root.presentedViewController != nil {
+            root.dismiss(animated: true)
+            return
+        }
+
+        // Fallback: If somehow there's no modal (shouldn't happen), reset the root.
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let mainVC = storyboard.instantiateViewController(withIdentifier: "RootTabBarController")
         window.rootViewController = mainVC

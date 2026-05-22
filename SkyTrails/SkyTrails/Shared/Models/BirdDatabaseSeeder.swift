@@ -238,6 +238,11 @@ final class BirdDatabaseSeeder {
     }
 
     func refreshImageUrls(modelContext: ModelContext) async {
+        let hasRefreshedKey = "kBirdImageUrlsRefreshed_v4"
+        if UserDefaults.standard.bool(forKey: hasRefreshedKey) {
+            return
+        }
+
         do {
             let (speciesCodeMap, scientificNameMap, commonNameMap, commonNameToCodeMap) =
                 try await SkyTrailsAPIService.shared.fetchBirdImageUrls()
@@ -279,6 +284,7 @@ final class BirdDatabaseSeeder {
             }
             
             try modelContext.save()
+            UserDefaults.standard.set(true, forKey: hasRefreshedKey)
         } catch {
             print("❌ BirdDatabaseSeeder: Failed to sync URLs/Codes: \(error)")
         }

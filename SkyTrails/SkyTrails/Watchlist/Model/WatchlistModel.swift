@@ -321,6 +321,8 @@ extension Watchlist {
         if let entry = mostRecentEntry {
             if let photoPath = entry.photos?.first?.imagePath {
                 self.coverImagePath = photoPath
+            } else if let imageUrl = entry.bird?.imageUrl {
+                self.coverImagePath = imageUrl
             } else if let staticImage = entry.bird?.staticImageName {
                 self.coverImagePath = staticImage
             } else {
@@ -392,6 +394,7 @@ extension Bird {
             commonName: self.commonName,
             scientificName: self.scientificName,
             staticImageName: self.staticImageName,
+            imageUrl: self.imageUrl,
             family: self.family
         )
     }

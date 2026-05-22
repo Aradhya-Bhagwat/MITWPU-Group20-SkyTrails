@@ -53,7 +53,8 @@ final class WatchlistQueryService {
                 if let photoPath = entry.photos?.first?.imagePath {
                     return photoPath
                 }
-                return entry.bird?.staticImageName
+                let bird = entry.bird
+                return bird?.imageUrl ?? bird?.staticImageName
             }
             .prefix(5)
             .map { String($0) }
@@ -64,7 +65,8 @@ final class WatchlistQueryService {
                 if let photoPath = entry.photos?.first?.imagePath {
                     return photoPath
                 }
-                return entry.bird?.staticImageName
+                let bird = entry.bird
+                return bird?.imageUrl ?? bird?.staticImageName
             }
             .prefix(5)
             .map { String($0) }

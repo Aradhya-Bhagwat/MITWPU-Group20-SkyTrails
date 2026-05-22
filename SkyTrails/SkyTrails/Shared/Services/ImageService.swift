@@ -49,6 +49,7 @@ final class ImageService: ImageProviding {
     private let manifestDecoder = JSONDecoder()
 
     private var manifests: [IdentificationManifestSource: IdentificationManifest] = [:]
+    private var manifestTasks: [IdentificationManifestSource: Task<Void, Never>] = [:]
     private var failedRemoteKeys: Set<String> = []
     private let allowedDefaultProfileKeys: Set<String> = [
         "id_canvas_finch_beak_default",
@@ -112,13 +113,18 @@ final class ImageService: ImageProviding {
                 let memKey = key as NSString
                 if let cached = memoryCache.object(forKey: memKey) { return cached }
                 do {
+                    LoggingService.shared.log(message: "Fetching image from URL: \(key)", context: "ImageService")
                     let (data, response) = try await URLSession.shared.data(from: url)
                     if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
                        let image = UIImage(data: data) {
                         memoryCache.setObject(image, forKey: memKey)
                         return image
+                    } else {
+                        let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+                        LoggingService.shared.log(message: "Failed to fetch image from URL: \(key) with status \(status)", context: "ImageService")
                     }
                 } catch {
+                    LoggingService.shared.log(error: error, context: "ImageService")
                 }
             }
             // URL download failed — fall through to key-based lookup
@@ -203,14 +209,23 @@ final class ImageService: ImageProviding {
         }
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: remoteURL)
+            let config = try SupabaseConfig.load()
+            var request = URLRequest(url: remoteURL)
+            request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+            LoggingService.shared.log(message: "Fetching manifest image: \(remoteURL.absoluteString)", context: "ImageService")
+            let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                if let status = (response as? HTTPURLResponse)?.statusCode, status >= 400 {
+                let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+                LoggingService.shared.log(message: "Manifest image fetch failed with status \(status): \(remoteURL.absoluteString)", context: "ImageService")
+                if status >= 400 {
                     failedRemoteKeys.insert(normalizedKey)
                 }
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
             guard let image = UIImage(data: data) else {
+                LoggingService.shared.log(message: "Failed to decode manifest image data: \(remoteURL.absoluteString)", context: "ImageService")
                 failedRemoteKeys.insert(normalizedKey)
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
@@ -219,14 +234,19 @@ final class ImageService: ImageProviding {
             failedRemoteKeys.remove(normalizedKey)
             return image
         } catch {
+            LoggingService.shared.log(error: error, context: "ImageService")
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
     }
 
     func prefetch(keys: [String]) async {
         let uniqueKeys = Array(Set(keys.map(normalizeKey).filter { !$0.isEmpty }))
-        for key in uniqueKeys {
-            _ = await image(for: key, shapeId: nil)
+        await withTaskGroup(of: Void.self) { group in
+            for key in uniqueKeys {
+                group.addTask {
+                    _ = await self.image(for: key, shapeId: nil)
+                }
+            }
         }
     }
 
@@ -244,21 +264,43 @@ final class ImageService: ImageProviding {
             return
         }
 
-        guard let manifestURL = manifestURL(for: source) else {
+        // Check if there is already a refresh task in progress for this source
+        if let existingTask = manifestTasks[source] {
+            await existingTask.value
             return
         }
 
-        do {
-            let (data, response) = try await URLSession.shared.data(from: manifestURL)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        // Create a new refresh task and store it
+        let newTask = Task {
+            guard let manifestURL = manifestURL(for: source) else {
                 return
             }
-            let decoded = try manifestDecoder.decode(IdentificationManifest.self, from: data)
-            manifests[source] = decoded
-            failedRemoteKeys.removeAll()
-            UserDefaults.standard.set(Date(), forKey: source.refreshKey)
-        } catch {
+
+            do {
+                let config = try SupabaseConfig.load()
+                var request = URLRequest(url: manifestURL)
+                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+                LoggingService.shared.log(message: "Refreshing manifest: \(manifestURL.absoluteString)", context: "ImageService")
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                    let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+                    LoggingService.shared.log(message: "Manifest refresh failed with status \(status): \(manifestURL.absoluteString)", context: "ImageService")
+                    return
+                }
+                let decoded = try manifestDecoder.decode(IdentificationManifest.self, from: data)
+                manifests[source] = decoded
+                failedRemoteKeys.removeAll()
+                UserDefaults.standard.set(Date(), forKey: source.refreshKey)
+            } catch {
+                LoggingService.shared.log(error: error, context: "ImageService")
+            }
         }
+
+        manifestTasks[source] = newTask
+        await newTask.value
+        manifestTasks[source] = nil
     }
 
     private func manifestURL(for source: IdentificationManifestSource) -> URL? {
@@ -292,7 +334,10 @@ final class ImageService: ImageProviding {
         let safeBucket = (bucket?.isEmpty == false) ? bucket! : fallbackBucket
         let safeManifestPath = (manifestPath?.isEmpty == false) ? manifestPath! : fallbackPath
 
-        return config.projectURL.appendingPathComponent("storage/v1/object/public/\(safeBucket)/\(safeManifestPath)")
+        return config.projectURL
+            .appendingPathComponent("storage/v1/object/public")
+            .appendingPathComponent(safeBucket)
+            .appendingPathComponent(safeManifestPath)
     }
 
     private func remoteURL(
@@ -328,9 +373,10 @@ final class ImageService: ImageProviding {
             }
         }
 
-        var components = URLComponents(url: config.projectURL, resolvingAgainstBaseURL: false)
-        components?.path = "/storage/v1/object/public/\(safeBucket)/\(cleanedPath)"
-        return components?.url
+        return config.projectURL
+            .appendingPathComponent("storage/v1/object/public")
+            .appendingPathComponent(safeBucket)
+            .appendingPathComponent(cleanedPath)
     }
 
     private func cacheDirectory() -> URL? {
@@ -476,15 +522,24 @@ final class ImageService: ImageProviding {
                 continue
             }
             do {
-                let (data, response) = try await URLSession.shared.data(from: url)
+                let config = try SupabaseConfig.load()
+                var request = URLRequest(url: url)
+                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+                request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+                LoggingService.shared.log(message: "Fetching bird bucket image: \(url.absoluteString)", context: "ImageService")
+                let (data, response) = try await URLSession.shared.data(for: request)
                 guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
                       let image = UIImage(data: data) else {
+                    let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+                    LoggingService.shared.log(message: "Bird bucket image fetch failed with status \(status): \(url.absoluteString)", context: "ImageService")
                     continue
                 }
                 saveToDisk(data: data, cacheKey: diskKey)
                 memoryCache.setObject(image, forKey: normalizedKey as NSString)
                 return image
             } catch {
+                LoggingService.shared.log(error: error, context: "ImageService")
                 continue
             }
         }

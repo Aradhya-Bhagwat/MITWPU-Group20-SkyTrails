@@ -57,20 +57,24 @@ class EditWatchlistDetailViewController: UIViewController {
 
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
-		IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
-			(message: "Enter a name for your watchlist.",
-			 targetProvider: { [weak self] in self?.titleTextField }),
-			(message: "Set date range.",
-			 targetProvider: { [weak self] in self?.startDatePicker }),
-			(message: "Set a location filter (optional).",
-			 targetProvider: { [weak self] in self?.locationSearchBar }),
-			(message: "Filter by bird shape (optional).",
-			 targetProvider: { [weak self] in self?.speciesRuleToggle }),
-			(message: "Tap Save when you're done.",
-			 targetProvider: { [weak self] in
-				 self?.navigationItem.rightBarButtonItems?.first?.value(forKey: "view") as? UIView
-			 })
-		])
+		if AppTourManager.shared.isTourActive {
+			AppTourManager.shared.trackViewControllerAppeared(self)
+		} else {
+			IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+				(message: "Enter a name for your watchlist.",
+				 targetProvider: { [weak self] in self?.titleTextField }),
+				(message: "Set date range.",
+				 targetProvider: { [weak self] in self?.startDatePicker }),
+				(message: "Set a location filter (optional).",
+				 targetProvider: { [weak self] in self?.locationSearchBar }),
+				(message: "Filter by bird shape (optional).",
+				 targetProvider: { [weak self] in self?.speciesRuleToggle }),
+				(message: "Tap Save when you're done.",
+				 targetProvider: { [weak self] in
+					 self?.navigationItem.rightBarButtonItems?.first?.value(forKey: "view") as? UIView
+				 })
+			])
+		}
 	}
 
 	override func viewWillDisappear(_ animated: Bool) {
@@ -493,6 +497,7 @@ class EditWatchlistDetailViewController: UIViewController {
             }
             
             try saveRules(for: watchlistId)
+            
             navigationController?.popViewController(animated: true)
         } catch {
             presentAlert(title: "Save Failed", message: error.localizedDescription)

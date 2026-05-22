@@ -58,6 +58,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         applySemanticAppearance()
         setupCollectionView()
         setupLocationChangeObserver()
+        setupAuthStateObserver()
         
         // Reset to GPS mode on launch if authorized, fulfilling the requirement 
         // to start with current location if permission is available.
@@ -66,6 +67,29 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         }
         
         // Removed loadHomeData() from here to prevent double-loading with viewWillAppear
+    }
+
+    private func setupAuthStateObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAuthStateChange),
+            name: UserSession.authStateDidChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleAuthStateChange() {
+        print("[DEBUG] HomeVC - Auth state changed. Refreshing data and checking tour...")
+        refreshHomeData()
+        
+        // After auth change (like signup), data refresh is triggered.
+        // Once that refresh completes (in loadHomeData/fetchHomeData), 
+        // the checkAndStartTourIfNeeded() already gets called.
+        // However, if the session was restored or changed without a full refresh needed,
+        // we call it here as well after a short delay for safety.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.checkAndStartTourIfNeeded()
+        }
     }
 
     private func setupLocationChangeObserver() {
@@ -136,6 +160,49 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         super.viewWillDisappear(animated)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Only track appearance if tour is already active (helps with auto-navigation awareness)
+        if AppTourManager.shared.isTourActive {
+            AppTourManager.shared.trackViewControllerAppeared(self)
+        } else if homeScreenData != nil && !isDataLoading {
+            // Data is already here (e.g. returning from signup), try starting the tour
+            checkAndStartTourIfNeeded()
+        }
+    }
+    
+    /// Evaluates onboarding tour eligibility and starts it only after the app has "Fully Loaded" (data is ready)
+    private func checkAndStartTourIfNeeded() {
+        guard !AppTourManager.shared.isTourActive else { return }
+        
+        // Delay slightly to ensure any modal dismissals or view transitions are settled
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            guard !AppTourManager.shared.isTourActive else { return }
+            
+            let hasCompletedGuestTour = UserDefaults.standard.bool(forKey: "hasCompletedGuestTour")
+            let isAuthenticated = UserSession.shared.isAuthenticatedWithSupabase()
+            
+            if !isAuthenticated && !hasCompletedGuestTour {
+                // Guest Tour: Data is ready, view is settled
+                if self.isViewLoaded && self.view.window != nil {
+                    AppTourManager.shared.startGuestTour(from: self)
+                }
+            } else {
+                // Member/Signup Tour
+                let isNewSignUp = UserDefaults.standard.bool(forKey: "isNewSignUp")
+                let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+                
+                if isAuthenticated && isNewSignUp && !hasCompletedOnboarding {
+                    if self.isViewLoaded && self.view.window != nil {
+                        AppTourManager.shared.startTour(from: self)
+                    }
+                }
+            }
+        }
+    }
+    
     @IBAction func profileTapped(_ sender: Any) {
         navigateToProfile()
     }
@@ -145,7 +212,9 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         profileLocationHeaderView.onTap = { [weak self] in
             self?.navigateToProfile()
         }
-        profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        let heightConstraint = profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44)
+        heightConstraint.priority = .init(999)
+        heightConstraint.isActive = true
     }
     
     private func configureNavigationBar() {
@@ -154,9 +223,20 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: profileLocationHeaderView)
     }
 
-
-
     private func navigateToProfile() {
+        if !UserSession.shared.isAuthenticatedWithSupabase() {
+            if let rootTabBar = tabBarController as? RootTabBarController {
+                rootTabBar.presentAuthenticationFlow()
+            } else {
+                let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
+                if let startVC = storyboard.instantiateViewController(withIdentifier: "StartViewController") as? StartViewController {
+                    startVC.modalPresentationStyle = .pageSheet
+                    present(startVC, animated: true, completion: nil)
+                }
+            }
+            return
+        }
+        
         let storyboard = UIStoryboard(name: "Profile", bundle: nil)
         if let profileVC = storyboard.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController {
             navigationController?.pushViewController(profileVC, animated: true)
@@ -239,8 +319,29 @@ extension HomeViewController {
             self.currentNewsPage = self.clampedNewsPage(self.currentNewsPage)
             self.migrationCards = data.migrationCards
             self.animatedIndexPaths.removeAll()
+
+            // Prefetch images to improve perceived performance
+            var imageKeys = Set<String>()
+            data.upcomingBirds.forEach { imageKeys.insert($0.imageName) }
+            data.displayableSpots.forEach { imageKeys.insert($0.imageName) }
+            data.news.forEach { imageKeys.insert($0.imageName) }
+            data.migrationCards.forEach { card in
+                imageKeys.insert(card.migration.birdImageName)
+                imageKeys.insert(card.hotspot.placeImageName)
+                card.hotspot.birdSpecies.forEach { imageKeys.insert($0.birdImageName) }
+            }
+
+            let keysArray = Array(imageKeys).filter { !$0.isEmpty }
+            if !keysArray.isEmpty {
+                Task {
+                    await ImageService.shared.prefetch(keys: keysArray)
+                }
+            }
             
             self.homeCollectionView.reloadData()
+            
+            // Start the tour now that data is loaded and UI is ready
+            self.checkAndStartTourIfNeeded()
         }
     }
 
@@ -666,7 +767,9 @@ extension HomeViewController {
                 didTapPredictSpot()
                 return
             }
-            let item = spots[indexPath.row - 1]
+            let adjustedRow = indexPath.row - 1
+            guard spots.indices.contains(adjustedRow) else { return }
+            let item = spots[adjustedRow]
 
             let initialPredictions: [FinalPredictionResult]
             if let edgeSpecies = item.edgeSpecies, !edgeSpecies.isEmpty {

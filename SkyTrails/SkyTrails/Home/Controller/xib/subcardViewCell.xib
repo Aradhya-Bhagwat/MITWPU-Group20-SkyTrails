@@ -92,7 +92,7 @@
                                     <constraint firstItem="pfn-PH-IdR" firstAttribute="height" secondItem="zsg-Av-lc2" secondAttribute="height" multiplier="0.503704" id="2Dm-6j-Hq4"/>
                                     <constraint firstItem="UL4-L4-Tmw" firstAttribute="top" secondItem="5OQ-62-4yx" secondAttribute="bottom" constant="2" id="4ZD-3i-9ys"/>
                                     <constraint firstItem="UL4-L4-Tmw" firstAttribute="leading" secondItem="6qt-Nf-chJ" secondAttribute="trailing" constant="6" id="9Fe-pI-HXf"/>
-                                    <constraint firstAttribute="width" secondItem="zsg-Av-lc2" secondAttribute="height" multiplier="25:9" id="GAU-Rb-FK0"/>
+                                    <constraint firstAttribute="width" secondItem="zsg-Av-lc2" secondAttribute="height" multiplier="25:9" priority="750" id="GAU-Rb-FK0"/>
                                     <constraint firstItem="6qt-Nf-chJ" firstAttribute="leading" secondItem="zsg-Av-lc2" secondAttribute="leading" constant="6" id="RZP-96-wBv"/>
                                     <constraint firstItem="ref-nX-bs2" firstAttribute="leading" secondItem="6qt-Nf-chJ" secondAttribute="trailing" constant="6" id="XXi-Qg-2EB"/>
                                     <constraint firstItem="zsg-Av-lc2" firstAttribute="bottom" secondItem="UL4-L4-Tmw" secondAttribute="bottom" constant="4" id="bvV-qT-U6o"/>
@@ -138,7 +138,7 @@
                                     <constraint firstItem="DJ5-ty-aRP" firstAttribute="top" secondItem="bpl-KF-Dk0" secondAttribute="bottom" constant="6" id="R2Z-iq-c7l"/>
                                     <constraint firstItem="HGZ-oA-uYI" firstAttribute="top" secondItem="bpl-KF-Dk0" secondAttribute="bottom" constant="6" id="TEP-gC-Rwa"/>
                                     <constraint firstItem="HGZ-oA-uYI" firstAttribute="leading" secondItem="GIz-kp-Ly8" secondAttribute="leading" constant="6" id="U1f-J2-ZGx"/>
-                                    <constraint firstAttribute="width" secondItem="GIz-kp-Ly8" secondAttribute="height" multiplier="5:6" id="d0y-sj-aNJ"/>
+                                    <constraint firstAttribute="width" secondItem="GIz-kp-Ly8" secondAttribute="height" multiplier="5:6" priority="750" id="d0y-sj-aNJ"/>
                                     <constraint firstAttribute="trailing" secondItem="bpl-KF-Dk0" secondAttribute="trailing" constant="6" id="ibe-kD-ZhK"/>
                                 </constraints>
                             </view>

@@ -80,24 +80,69 @@ class HomeManager {
             speciesMemoryCache.removeAllObjects()
             homeScreenMemoryCache.removeValue(forKey: cacheKey)
         }
-        
-        async let upcoming = getRegionalSpecies(userLocation: location)
 
+        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
+
+        // 1. Pre-fetch Core Shared Data once to avoid race conditions and redundant calls
+        // We do this before the parallel 'async let' section
+        let coreRegionalTrends: [RegionalTrendSpeciesItem]? = await {
+            if let loc = location {
+                return try? await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                    lat: loc.latitude,
+                    lon: loc.longitude,
+                    week: currentWeek
+                )
+            }
+            return nil
+        }()
+
+        let coreEdgeResponse: HotspotPredictionResponse? = await {
+            if let loc = location {
+                return try? await fetchNearbyHotspotCardFromEdge(near: loc)
+            }
+            return nil
+        }()
+
+        // 2. Parallel Fetches using the shared core data
+        async let upcoming = getRegionalSpecies(
+            userLocation: location,
+            prefetchedTrends: coreRegionalTrends
+        )
 
         async let myWatchlist: [UpcomingBirdResult] = {
             if let loc = location { return await getMyWatchlistBirds(userLocation: loc) }
             return []
         }()
+
         async let recommended: [RecommendedBirdResult] = {
-            if let loc = location { return await getRecommendedBirds(userLocation: loc) }
+            if let loc = location { 
+                return await getRecommendedBirds(
+                    userLocation: loc, 
+                    prefetchedTrends: coreRegionalTrends,
+                    prefetchedEdge: coreEdgeResponse
+                ) 
+            }
             return []
         }()
+
         async let watchlistSpots = getWatchlistSpots()
+
         async let recommendedSpots: [PopularSpotResult] = {
-            if let loc = location { return await getRecommendedSpots(near: loc) }
+            if let loc = location { 
+                return await getRecommendedSpots(
+                    near: loc,
+                    prefetchedTrends: coreRegionalTrends,
+                    prefetchedEdge: coreEdgeResponse
+                ) 
+            }
             return []
         }()
-        async let mapCards = getDynamicMapCards(userLocation: location)
+
+        async let mapCards = getDynamicMapCards(
+            userLocation: location,
+            prefetchedEdge: coreEdgeResponse
+        )
+
         async let observations: [CommunityObservation] = {
             do {
                 return try await getRecentObservations(near: location)
@@ -106,6 +151,7 @@ class HomeManager {
                 return []
             }
         }()
+
         async let news = newsService.fetchNews()
 
         let (
@@ -170,7 +216,8 @@ class HomeManager {
     }
 
     func getRegionalSpecies(
-        userLocation: CLLocationCoordinate2D? = nil
+        userLocation: CLLocationCoordinate2D? = nil,
+        prefetchedTrends: [RegionalTrendSpeciesItem]? = nil
     ) async -> [UpcomingBirdUI] {
         guard let location = userLocation 
                           ?? locationService.currentLocation 
@@ -180,11 +227,16 @@ class HomeManager {
         let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
         
         do {
-            let species = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
-                lat: location.latitude,
-                lon: location.longitude,
-                week: currentWeek
-            )
+            let species: [RegionalTrendSpeciesItem]
+            if let prefetched = prefetchedTrends {
+                species = prefetched
+            } else {
+                species = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                    lat: location.latitude,
+                    lon: location.longitude,
+                    week: currentWeek
+                )
+            }
             
             // Already sorted by score descending from the DB, take top 10
             let results = species.prefix(10).map { sp in
@@ -219,17 +271,25 @@ class HomeManager {
         userLocation: CLLocationCoordinate2D,
         currentWeek: Int? = nil,
         radiusInKm: Double = 50.0,
-        limit: Int = 10
+        limit: Int = 10,
+        prefetchedTrends: [RegionalTrendSpeciesItem]? = nil,
+        prefetchedEdge: HotspotPredictionResponse? = nil
     ) async -> [RecommendedBirdResult] {
         let week = currentWeek ?? Calendar.current.component(.weekOfYear, from: Date())
 
         // Priority 1: regional_trends grid table
         do {
-            let trendItems = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
-                lat: userLocation.latitude,
-                lon: userLocation.longitude,
-                week: week
-            )
+            let trendItems: [RegionalTrendSpeciesItem]
+            if let prefetched = prefetchedTrends {
+                trendItems = prefetched
+            } else {
+                trendItems = try await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                    lat: userLocation.latitude,
+                    lon: userLocation.longitude,
+                    week: week
+                )
+            }
+            
             if !trendItems.isEmpty {
                 return trendItems.prefix(limit).compactMap { item in
                     guard let bird = watchlistManager.findBird(byName: item.name) else { return nil }
@@ -245,7 +305,13 @@ class HomeManager {
 
         // Priority 2: Edge Function
         do {
-            let response = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
+            let response: HotspotPredictionResponse
+            if let prefetched = prefetchedEdge {
+                response = prefetched
+            } else {
+                response = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
+            }
+            
             let predictions = response.card?.species ?? []
             if !predictions.isEmpty {
                 return predictions.prefix(limit).compactMap { species in
@@ -362,7 +428,9 @@ class HomeManager {
     func getRecommendedSpots(
         near location: CLLocationCoordinate2D,
         radiusInKm: Double = 100.0,
-        limit: Int = 5
+        limit: Int = 5,
+        prefetchedTrends: [RegionalTrendSpeciesItem]? = nil,
+        prefetchedEdge: HotspotPredictionResponse? = nil
     ) async -> [PopularSpotResult] {
         // Priority 1: grid_hotspots table (pre-computed, no Edge Function cold-start)
         do {
@@ -371,11 +439,17 @@ class HomeManager {
                 lon: location.longitude
             ), !gridRow.hotspots.isEmpty {
                 let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-                let regionalSpecies = (try? await SkyTrailsAPIService.shared.fetchRegionalTrends(
-                    lat: location.latitude,
-                    lon: location.longitude,
-                    week: currentWeek
-                )) ?? []
+                let regionalSpecies: [RegionalTrendSpeciesItem]
+                if let prefetched = prefetchedTrends {
+                    regionalSpecies = prefetched
+                } else {
+                    regionalSpecies = (try? await SkyTrailsAPIService.shared.fetchRegionalTrends(
+                        lat: location.latitude,
+                        lon: location.longitude,
+                        week: currentWeek
+                    )) ?? []
+                }
+                
                 let preliminarySpecies = edgeSpecies(from: regionalSpecies, week: currentWeek)
 
                 return gridRow.hotspots.prefix(limit).map { item in
@@ -401,7 +475,13 @@ class HomeManager {
 
         // Priority 2: Edge Function (enriched species data)
         do {
-            let response = try await fetchNearbyHotspotCardFromEdge(near: location)
+            let response: HotspotPredictionResponse
+            if let prefetched = prefetchedEdge {
+                response = prefetched
+            } else {
+                response = try await fetchNearbyHotspotCardFromEdge(near: location)
+            }
+            
             if !response.nearbyHotspots.isEmpty {
                 return response.nearbyHotspots.map { mapHotspotToPopularSpot($0) }
             }
@@ -597,7 +677,10 @@ class HomeManager {
         }
     }
     
-    func getDynamicMapCards(userLocation: CLLocationCoordinate2D? = nil) async -> [DynamicMapCard] {
+    func getDynamicMapCards(
+        userLocation: CLLocationCoordinate2D? = nil,
+        prefetchedEdge: HotspotPredictionResponse? = nil
+    ) async -> [DynamicMapCard] {
         guard let userLocation = userLocation ?? locationService.currentLocation else {
             return []
         }
@@ -614,7 +697,13 @@ class HomeManager {
         
         // Fallback to edge function card
         do {
-            let edgeResponse = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
+            let edgeResponse: HotspotPredictionResponse
+            if let prefetched = prefetchedEdge {
+                edgeResponse = prefetched
+            } else {
+                edgeResponse = try await fetchNearbyHotspotCardFromEdge(near: userLocation)
+            }
+            
             if let edgeCard = edgeResponse.card,
                let mappedCard = await mapEdgeCardToDynamicMapCard(edgeCard, userLocation: userLocation) {
                 return [mappedCard]
@@ -684,8 +773,35 @@ class HomeManager {
             if displaySpecies.isEmpty { return nil }
             
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+            
+            var locationTitle = "Your Area"
+            var locationDetail = "Species trending near you"
+            
+            if let activeName = LocationPreferences.shared.homeLocationName, !activeName.isEmpty {
+                locationTitle = activeName
+            } else {
+                let geocoder = CLGeocoder()
+                let clLocation = CLLocation(latitude: lat, longitude: lng)
+                if let placemarks = try? await geocoder.reverseGeocodeLocation(clLocation),
+                   let placemark = placemarks.first {
+                    locationTitle = placemark.name
+                                 ?? placemark.thoroughfare
+                                 ?? placemark.subLocality
+                                 ?? placemark.locality
+                                 ?? "Your Area"
+                    
+                    let city = placemark.locality
+                    let state = placemark.administrativeArea
+                    let country = placemark.country
+                    let components = [city, state, country].compactMap { $0 }
+                    if !components.isEmpty {
+                        locationDetail = components.joined(separator: ", ")
+                    }
+                }
+            }
+
             let areaOverlay = await resolveHotspotAreaOverlay(
-                hotspotName: "Your Area",
+                hotspotName: locationTitle,
                 hotspotCoordinate: coordinate,
                 fallbackRadiusKm: 2.0
             )
@@ -694,15 +810,15 @@ class HomeManager {
                 birdName: displaySpecies.first?.birdName ?? "Local Birds",
                 birdImageName: displaySpecies.first?.birdImageName ?? "placeholder_image",
                 startLocation: "Nearby",
-                endLocation: "Your Area",
+                endLocation: locationTitle,
                 currentProgress: 1.0,
                 dateRange: "Week \(currentWeek)",
                 pathCoordinates: []
             )
 
             let hotspotPrediction = HotspotPrediction(
-                placeName: "Your Area",
-                locationDetail: "Species trending near you",
+                placeName: locationTitle,
+                locationDetail: locationDetail,
                 weekNumber: "Week \(currentWeek)",
                 speciesCount: displaySpecies.count,
                 distanceString: "Nearby",

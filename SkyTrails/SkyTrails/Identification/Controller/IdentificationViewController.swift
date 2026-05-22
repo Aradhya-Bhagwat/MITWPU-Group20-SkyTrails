@@ -31,6 +31,10 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     var model: IdentificationManager!
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
@@ -54,6 +58,12 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        AppTourManager.shared.trackViewControllerAppeared(self)
     }
     
     override func viewDidLoad() {
@@ -91,13 +101,33 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         updateSelectionState()
         triggerManifestRefreshIfNeeded()
         prefetchLikelyIdentificationImages()
+        setupLocationChangeObserver()
     }
     
     private func setupProfileLocationHeaderView() {
         profileLocationHeaderView.onTap = { [weak self] in
             self?.navigateToProfile()
         }
-        profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        let heightConstraint = profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44)
+        heightConstraint.priority = .init(999)
+        heightConstraint.isActive = true
+    }
+    
+    private func setupLocationChangeObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLocationChange),
+            name: LocationPreferences.locationDidChangeNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func handleLocationChange() {
+        profileLocationHeaderView.refreshLocation()
+        fetchHistory()
+        tableView.reloadData()
+        historyCollectionView.reloadData()
+        scheduleHistoryCollectionHeightUpdate()
     }
     
     private func configureNavigationBar() {
@@ -416,6 +446,11 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
     }
 
     private func applyHistoryCardAppearance(to cell: UICollectionViewCell) {
+        // Let HistoryCollectionViewCell manage its own premium styling and shadow states
+        if let historyCell = cell as? HistoryCollectionViewCell {
+            return
+        }
+        
         let isDarkMode = traitCollection.userInterfaceStyle == .dark
         let cardSurfaceColor: UIColor = .secondarySystemBackground
         cell.layer.masksToBounds = false
@@ -423,12 +458,6 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         cell.contentView.layer.cornerRadius = 16
         cell.contentView.clipsToBounds = true
         cell.contentView.backgroundColor = cardSurfaceColor
-
-        if let historyCell = cell as? HistoryCollectionViewCell {
-            historyCell.containeView.layer.cornerRadius = 16
-            historyCell.containeView.layer.masksToBounds = true
-            historyCell.containeView.backgroundColor = cardSurfaceColor
-        }
 
         if isDarkMode {
             cell.layer.shadowOpacity = 0
@@ -655,6 +684,14 @@ class IdentificationViewController: UIViewController, UITableViewDelegate, UITab
         model.selectedMenuOptionRawValues = options
             .filter { $0.isSelected }
             .map { $0.category.rawValue }
+        
+        if let locationName = LocationPreferences.shared.homeLocationName {
+            model.selectedLocation = locationName
+            let locID = UUID()
+            model.selectedLocationId = locID
+            model.registerLocationName(locationName, for: locID)
+        }
+        
         startIdentificationFlow(from: self.options)
     }
     

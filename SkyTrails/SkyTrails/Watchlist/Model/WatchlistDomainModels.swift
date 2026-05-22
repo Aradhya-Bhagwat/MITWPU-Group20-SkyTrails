@@ -242,6 +242,7 @@ struct BirdReferenceDTO: Hashable {
     let commonName: String
     let scientificName: String?
     let staticImageName: String
+    let imageUrl: String?
     let family: String?
     
     var displayName: String {

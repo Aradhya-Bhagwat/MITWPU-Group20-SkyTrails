@@ -48,6 +48,11 @@ class ProfileViewController: UIViewController,
         }
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AppTourManager.shared.trackViewControllerAppeared(self)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
@@ -190,14 +195,14 @@ class ProfileViewController: UIViewController,
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = scene.windows.first(where: { $0.isKeyWindow }) else { return }
 
-        let storyboard = UIStoryboard(name: "Onboard", bundle: nil)
-        let startVC = storyboard.instantiateViewController(withIdentifier: "StartViewController")
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let mainVC = storyboard.instantiateViewController(withIdentifier: "RootTabBarController")
 
         UIView.transition(with: window,
                           duration: 0.3,
                           options: .transitionFlipFromLeft,
                           animations: {
-                              window.rootViewController = startVC
+                              window.rootViewController = mainVC
                           })
     }
 

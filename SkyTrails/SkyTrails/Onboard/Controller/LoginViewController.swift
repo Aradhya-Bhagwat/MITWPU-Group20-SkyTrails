@@ -158,6 +158,8 @@ class LoginViewController: UIViewController {
             }
 
             await WatchlistManager.shared.bindCurrentUserOwnership()
+            UserDefaults.standard.set(false, forKey: "isNewSignUp")
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
             goToMain()
         } catch {
             showAlert(error.localizedDescription)
@@ -289,6 +291,14 @@ class LoginViewController: UIViewController {
             return
         }
 
+        // If we are presented modally, dismiss the whole modal stack.
+        // The existing RootTabBarController stays as root.
+        if let root = window.rootViewController, root.presentedViewController != nil {
+            root.dismiss(animated: true)
+            return
+        }
+
+        // Fallback: create a fresh root (shouldn't normally happen).
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let mainVC = storyboard.instantiateViewController(withIdentifier: "RootTabBarController")
         window.rootViewController = mainVC

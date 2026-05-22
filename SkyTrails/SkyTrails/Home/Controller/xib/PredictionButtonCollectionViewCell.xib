@@ -30,7 +30,7 @@
                             <constraint firstItem="Wy6-fb-Sdb" firstAttribute="top" secondItem="cSx-UC-uKI" secondAttribute="top" constant="8" id="NCA-b3-bSV"/>
                             <constraint firstAttribute="bottom" secondItem="Wy6-fb-Sdb" secondAttribute="bottom" constant="8" id="b6u-bC-uMr"/>
                             <constraint firstItem="Wy6-fb-Sdb" firstAttribute="leading" secondItem="cSx-UC-uKI" secondAttribute="leading" constant="8" id="rhU-5W-sCD"/>
-                            <constraint firstAttribute="width" secondItem="cSx-UC-uKI" secondAttribute="height" multiplier="88:91" id="wcJ-D1-klj"/>
+                            <constraint firstAttribute="width" secondItem="cSx-UC-uKI" secondAttribute="height" multiplier="88:91" priority="750" id="wcJ-D1-klj"/>
                         </constraints>
                     </view>
                 </subviews>

@@ -805,17 +805,11 @@ actor BackgroundSyncAgent {
     
     private func deleteRecord(table: String, recordId: UUID, config: SupabaseConfig, token: String?) async throws {
         let pk = primaryKeyColumn(for: table)
-        let method = (table == "observed_bird_photos") ? "DELETE" : "PATCH"
+        // Switch to hard DELETE for all tables to ensure records are actually removed from Supabase
+        let method = "DELETE"
         let path = "/rest/v1/\(table)?\(pk)=eq.\(recordId.uuidString)"
         
-        var request = try buildRequest(path: path, method: method, config: config, token: token)
-        request.setValue("return=representation", forHTTPHeaderField: "Prefer")
-        
-        if method == "PATCH" {
-            let payload: [String: Any] = ["deleted_at": ISO8601DateFormatter().string(from: Date())]
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-        }
-        
+        let request = try buildRequest(path: path, method: method, config: config, token: token)
         try await executeRequest(request)
     }
     

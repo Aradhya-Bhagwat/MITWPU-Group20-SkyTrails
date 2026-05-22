@@ -75,20 +75,24 @@ class WatchlistHomeViewController: UIViewController {
 
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
-		IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
-			(message: "Tap here to view your personal watchlist summary.",
-			 targetProvider: { [weak self] in
-				 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 0, section: 0))
-			 }),
-			(message: "Tap 'Log Observation' to record a bird sighting.",
-			 targetProvider: { [weak self] in
-				 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 1, section: 0))
-			 }),
-			(message: "Tap '+' in Curated Watchlists to create a new list.",
-			 targetProvider: { [weak self] in
-				 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 0, section: 1))
-			 })
-		])
+		if AppTourManager.shared.isTourActive {
+			AppTourManager.shared.trackViewControllerAppeared(self)
+		} else {
+			IdentificationTooltipManager.shared.scheduleStepByStepTooltips(in: self.view, steps: [
+				(message: "Tap here to view your personal watchlist summary.",
+				 targetProvider: { [weak self] in
+					 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 0, section: 0))
+				 }),
+				(message: "Tap 'Log Observation' to record a bird sighting.",
+				 targetProvider: { [weak self] in
+					 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 1, section: 0))
+				 }),
+				(message: "Tap '+' in Curated Watchlists to create a new list.",
+				 targetProvider: { [weak self] in
+					 self?.summaryCardCollectionView.cellForItem(at: IndexPath(item: 0, section: 1))
+				 })
+			])
+		}
 	}
 	
 	override func viewWillDisappear(_ animated: Bool) {
@@ -146,9 +150,20 @@ class WatchlistHomeViewController: UIViewController {
 			name: WatchlistManager.didLoadDataNotification,
 			object: nil
 		)
+		NotificationCenter.default.addObserver(
+			self,
+			selector: #selector(handleLocationChanged(_:)),
+			name: LocationPreferences.locationDidChangeNotification,
+			object: nil
+		)
 	}
 
 	@objc private func handleDataLoaded(_ notification: Notification) {
+		loadData()
+	}
+
+	@objc private func handleLocationChanged(_ notification: Notification) {
+		profileLocationHeaderView.refreshLocation()
 		loadData()
 	}
 	
@@ -184,7 +199,9 @@ class WatchlistHomeViewController: UIViewController {
 		profileLocationHeaderView.onTap = { [weak self] in
 			self?.navigateToProfile()
 		}
-		profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        let heightConstraint = profileLocationHeaderView.heightAnchor.constraint(equalToConstant: 44)
+        heightConstraint.priority = .init(999)
+        heightConstraint.isActive = true
 	}
 	
 	private func configureNavigationBar() {
@@ -357,7 +374,7 @@ extension WatchlistHomeViewController {
 		navigationController?.pushViewController(vc, animated: true)
 	}
 	
-	private func navigateToCreateWatchlist() {
+	func navigateToCreateWatchlist() {
 		let sb = UIStoryboard(name: "Watchlist", bundle: nil)
 		guard let vc = sb.instantiateViewController(withIdentifier: "EditWatchlistDetailViewController") as? EditWatchlistDetailViewController else { return }
 		

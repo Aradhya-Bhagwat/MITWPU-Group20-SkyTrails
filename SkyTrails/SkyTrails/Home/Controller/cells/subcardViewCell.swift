@@ -69,6 +69,7 @@ class subcardViewCell: UICollectionViewCell {
             roundedRect: contentView.bounds,
             cornerRadius: contentView.layer.cornerRadius
         ).cgPath
+        contentView.layer.borderColor = UIColor.label.withAlphaComponent(0.04).cgColor
     }
     
     private func updateFonts() {
@@ -87,23 +88,24 @@ class subcardViewCell: UICollectionViewCell {
     }
     private func setupAppearance() {
             contentView.backgroundColor = .systemBackground
-            contentView.layer.cornerRadius = 12
+            contentView.layer.cornerRadius = 16
             contentView.layer.masksToBounds = true
             layer.masksToBounds = false
             
-            birdImageView.layer.cornerRadius = 8
+            birdImageView.layer.cornerRadius = 12
             birdImageView.contentMode = .scaleAspectFill
+            birdImageView.clipsToBounds = true
             
-            statusBadgeContainer.layer.cornerRadius = 6
-            compactBirdImageView?.layer.cornerRadius = 8
+            statusBadgeContainer.layer.cornerRadius = 8
+            compactBirdImageView?.layer.cornerRadius = 10
             compactBirdImageView?.clipsToBounds = true
             
-            contentView.layer.borderWidth = 0
-            contentView.layer.borderColor = UIColor.clear.cgColor
+            contentView.layer.borderWidth = 1.0
+            contentView.layer.borderColor = UIColor.label.withAlphaComponent(0.04).cgColor
             layer.shadowColor = UIColor.black.cgColor
-            layer.shadowOpacity = 0.12
-            layer.shadowOffset = CGSize(width: 0, height: 3)
-            layer.shadowRadius = 6
+            layer.shadowOpacity = 0.05
+            layer.shadowOffset = CGSize(width: 0, height: 4)
+            layer.shadowRadius = 8
 
             birdNameLabel.textAlignment = .left
             badgeSubtitleLabel.textAlignment = .left

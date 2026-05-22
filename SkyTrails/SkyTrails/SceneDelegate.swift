@@ -65,21 +65,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private func routeToCurrentSessionRoot() {
         guard let window = window else { return }
 
-        let isAuthenticated = UserSession.shared.isAuthenticatedWithSupabase()
-        let storyboardName = isAuthenticated ? "Main" : "Onboard"
-        let identifier = isAuthenticated ? "RootTabBarController" : "StartViewController"
+        // --- Simplified and Native: RootTabBarController is always the root! ---
+        let storyboardName = "Main"
+        let identifier = "RootTabBarController"
         
-        // --- Fix: Prevent "Double Load" ---
         // If we already have the correct root controller, don't reset it.
-        // Resetting window.rootViewController causes the existing view hierarchy 
-        // to be destroyed and recreated, triggering redundant data fetches.
-        if let currentRoot = window.rootViewController {
-            let isAlreadyRoot = (isAuthenticated && currentRoot is RootTabBarController) ||
-                                (!isAuthenticated && currentRoot.restorationIdentifier == "StartViewController")
-            
-            if isAlreadyRoot {
-                return
-            }
+        if let currentRoot = window.rootViewController, currentRoot is RootTabBarController {
+            return
         }
 
         let storyboard = UIStoryboard(name: storyboardName, bundle: nil)
