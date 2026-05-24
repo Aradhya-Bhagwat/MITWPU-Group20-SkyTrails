@@ -402,12 +402,14 @@ actor InitialSyncService {
         for row in rows {
             let resolvedShapeCode = row.shapeCode ?? row.shapeServerId.flatMap { shapeCodeByServerId[$0] }
             let resolvedShape = resolvedShapeCode.flatMap { shapeByCode[$0] }
-            let staticImageName = row.imageURL ?? row.commonName
+            let remoteImageURL = row.imageURL?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let staticImageName = (remoteImageURL?.isEmpty == false ? remoteImageURL : nil) ?? row.commonName
 
             if let existing = birdById[row.id] {
                 existing.commonName = row.commonName
                 existing.scientificName = row.scientificName
                 existing.staticImageName = staticImageName
+                existing.imageUrl = remoteImageURL?.isEmpty == false ? remoteImageURL : nil
                 existing.family = row.family
                 existing.order_name = row.orderName
                 existing.descriptionText = row.description
@@ -433,6 +435,7 @@ actor InitialSyncService {
                     size_category: row.sizeCategory,
                     shape: resolvedShape
                 )
+                bird.imageUrl = remoteImageURL?.isEmpty == false ? remoteImageURL : nil
                 context.insert(bird)
                 birdById[row.id] = bird
             }

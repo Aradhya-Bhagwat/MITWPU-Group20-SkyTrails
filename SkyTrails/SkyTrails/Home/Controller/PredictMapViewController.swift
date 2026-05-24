@@ -285,8 +285,8 @@ class PredictMapViewController: UIViewController {
         
         // Add "Redo" button on the map view's navigation bar
         let redoButton = UIBarButtonItem(title: "Redo", style: .plain, target: self, action: #selector(didTapRedoFromNavBar))
-        navigationItem.leftBarButtonItem = redoButton
-        navigationItem.hidesBackButton = true
+        navigationItem.rightBarButtonItem = redoButton
+        navigationItem.hidesBackButton = false
         
         let storyboard = UIStoryboard(name: "Home", bundle: nil)
         guard let outputNavVC = storyboard.instantiateViewController(withIdentifier: "PredictOutputNavigationController") as? UINavigationController else {
@@ -348,8 +348,8 @@ class PredictMapViewController: UIViewController {
     }
 
     func revertToInputScreen(with inputs: [PredictionInputData]) {
-        // Restore standard back button
-        navigationItem.leftBarButtonItem = nil
+        // Restore standard back button and clear redo
+        navigationItem.rightBarButtonItem = nil
         navigationItem.hidesBackButton = false
         
         let storyboard = UIStoryboard(name: "Home", bundle: nil)

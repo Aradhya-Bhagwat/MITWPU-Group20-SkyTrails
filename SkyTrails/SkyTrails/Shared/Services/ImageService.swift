@@ -18,6 +18,7 @@ private enum IdentificationManifestSource: String {
     case main
     case categories
     case shapes
+    case birds
 
     var refreshKey: String {
         switch self {
@@ -27,6 +28,8 @@ private enum IdentificationManifestSource: String {
             return "identification_categories_manifest_last_refresh"
         case .shapes:
             return "identification_shapes_manifest_last_refresh"
+        case .birds:
+            return "bird_manifest_last_refresh"
         }
     }
 }
@@ -50,7 +53,9 @@ final class ImageService: ImageProviding {
 
     private var manifests: [IdentificationManifestSource: IdentificationManifest] = [:]
     private var manifestTasks: [IdentificationManifestSource: Task<Void, Never>] = [:]
+    private var imageTasks: [String: Task<UIImage?, Never>] = [:]
     private var failedRemoteKeys: Set<String> = []
+    private let prefetchConcurrencyLimit = 6
     private let allowedDefaultProfileKeys: Set<String> = [
         "id_canvas_finch_beak_default",
         "id_canvas_finch_head_default",
@@ -108,6 +113,21 @@ final class ImageService: ImageProviding {
     }
 
     func image(for key: String, shapeId: String? = nil) async -> UIImage? {
+        let requestKey = imageTaskKey(for: key, shapeId: shapeId)
+        if let existingTask = imageTasks[requestKey] {
+            return await existingTask.value
+        }
+
+        let task = Task { @MainActor in
+            await self.loadImage(for: key, shapeId: shapeId)
+        }
+        imageTasks[requestKey] = task
+        let image = await task.value
+        imageTasks[requestKey] = nil
+        return image
+    }
+
+    private func loadImage(for key: String, shapeId: String? = nil) async -> UIImage? {
         if key.hasPrefix("http") {
             if let url = URL(string: key) {
                 let memKey = key as NSString
@@ -164,7 +184,9 @@ final class ImageService: ImageProviding {
             mappedShapeId = "finch"
         }
         let normalizedShapeId = mappedShapeId
-        let manifestSource = manifestSource(for: normalizedKey)
+        let manifestSource = shouldTryBirdBucketFallback(for: normalizedKey)
+            ? .birds
+            : manifestSource(for: normalizedKey)
 
         let memKey = normalizedKey as NSString
         if let cached = memoryCache.object(forKey: memKey) {
@@ -205,6 +227,14 @@ final class ImageService: ImageProviding {
             shapeId: normalizedShapeId
         ) else {
             failedRemoteKeys.insert(normalizedKey)
+            if shouldTryBirdBucketFallback(for: normalizedKey),
+               let birdImage = await loadFromBirdBucket(
+                   keyCandidates: keyCandidates,
+                   normalizedKey: normalizedKey,
+                   diskKey: diskKey
+               ) {
+                return birdImage
+            }
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
@@ -222,11 +252,27 @@ final class ImageService: ImageProviding {
                 if status >= 400 {
                     failedRemoteKeys.insert(normalizedKey)
                 }
+                if shouldTryBirdBucketFallback(for: normalizedKey),
+                   let birdImage = await loadFromBirdBucket(
+                       keyCandidates: keyCandidates,
+                       normalizedKey: normalizedKey,
+                       diskKey: diskKey
+                   ) {
+                    return birdImage
+                }
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
             guard let image = UIImage(data: data) else {
                 LoggingService.shared.log(message: "Failed to decode manifest image data: \(remoteURL.absoluteString)", context: "ImageService")
                 failedRemoteKeys.insert(normalizedKey)
+                if shouldTryBirdBucketFallback(for: normalizedKey),
+                   let birdImage = await loadFromBirdBucket(
+                       keyCandidates: keyCandidates,
+                       normalizedKey: normalizedKey,
+                       diskKey: diskKey
+                   ) {
+                    return birdImage
+                }
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
             saveToDisk(data: data, cacheKey: diskKey)
@@ -235,14 +281,33 @@ final class ImageService: ImageProviding {
             return image
         } catch {
             LoggingService.shared.log(error: error, context: "ImageService")
+            if shouldTryBirdBucketFallback(for: normalizedKey),
+               let birdImage = await loadFromBirdBucket(
+                   keyCandidates: keyCandidates,
+                   normalizedKey: normalizedKey,
+                   diskKey: diskKey
+               ) {
+                return birdImage
+            }
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
     }
 
     func prefetch(keys: [String]) async {
         let uniqueKeys = Array(Set(keys.map(normalizeKey).filter { !$0.isEmpty }))
+        guard !uniqueKeys.isEmpty else { return }
+
+        var iterator = uniqueKeys.makeIterator()
         await withTaskGroup(of: Void.self) { group in
-            for key in uniqueKeys {
+            for _ in 0..<min(prefetchConcurrencyLimit, uniqueKeys.count) {
+                guard let key = iterator.next() else { break }
+                group.addTask {
+                    _ = await self.image(for: key, shapeId: nil)
+                }
+            }
+
+            while await group.next() != nil {
+                guard let key = iterator.next() else { continue }
                 group.addTask {
                     _ = await self.image(for: key, shapeId: nil)
                 }
@@ -254,6 +319,7 @@ final class ImageService: ImageProviding {
         await refreshManifestIfNeeded(force: force, source: .main)
         await refreshManifestIfNeeded(force: force, source: .categories)
         await refreshManifestIfNeeded(force: force, source: .shapes)
+        await refreshManifestIfNeeded(force: force, source: .birds)
     }
 
     private func refreshManifestIfNeeded(force: Bool, source: IdentificationManifestSource) async {
@@ -325,6 +391,11 @@ final class ImageService: ImageProviding {
             manifestPathKey = "SUPABASE_IDENTIFICATION_SHAPES_MANIFEST_PATH"
             fallbackBucket = "identification-shapes"
             fallbackPath = "identification_shapes_manifest.json"
+        case .birds:
+            bucketKey = "SUPABASE_BIRD_BUCKET"
+            manifestPathKey = "SUPABASE_BIRD_MANIFEST_PATH"
+            fallbackBucket = "bird"
+            fallbackPath = "bird_manifest.json"
         }
         let bucket = (Bundle.main.object(forInfoDictionaryKey: bucketKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -356,6 +427,9 @@ final class ImageService: ImageProviding {
         case .shapes:
             configuredBucketKey = "SUPABASE_IDENTIFICATION_SHAPES_BUCKET"
             fallbackBucket = "identification-shapes"
+        case .birds:
+            configuredBucketKey = "SUPABASE_BIRD_BUCKET"
+            fallbackBucket = "bird"
         }
         let configuredBucket = (Bundle.main.object(forInfoDictionaryKey: configuredBucketKey) as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -411,6 +485,10 @@ final class ImageService: ImageProviding {
         key.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private func imageTaskKey(for key: String, shapeId: String?) -> String {
+        "\(normalizeKey(key))|\(shapeId.map { normalizeKey($0) } ?? "")"
+    }
+
     private func keyLookupCandidates(for key: String) -> [String] {
         var candidates: [String] = []
 
@@ -419,11 +497,20 @@ final class ImageService: ImageProviding {
             candidates.append(value)
         }
 
+        // 1. Original
         add(key)
-        add(key.replacingOccurrences(of: "-", with: "_"))
-        add(key.replacingOccurrences(of: "_", with: "-"))
-        add(key.replacingOccurrences(of: " ", with: "_"))
-        add(key.replacingOccurrences(of: " ", with: "-"))
+        
+        // 2. Cleaned (no apostrophes)
+        let cleaned = key.replacingOccurrences(of: "'", with: "")
+        add(cleaned)
+
+        // 3. Various separators
+        let separators = ["-", "_", " "]
+        for s in separators {
+            add(cleaned.replacingOccurrences(of: " ", with: s))
+            add(cleaned.replacingOccurrences(of: "-", with: s))
+            add(cleaned.replacingOccurrences(of: "_", with: s))
+        }
 
         return candidates
     }
@@ -434,7 +521,11 @@ final class ImageService: ImageProviding {
     ) -> (key: String, item: ManifestItem)? {
         guard let items = manifests[source]?.items else { return nil }
         for candidate in candidates {
+            // Check original and lowercased in manifest
             if let item = items[candidate] {
+                return (candidate, item)
+            }
+            if let item = items[candidate.lowercased()] {
                 return (candidate, item)
             }
         }
@@ -455,6 +546,10 @@ final class ImageService: ImageProviding {
     private func fallbackAssetImage(for candidates: [String], originalKey: String) -> UIImage? {
         for candidate in candidates {
             if let image = UIImage(named: candidate) {
+                memoryCache.setObject(image, forKey: originalKey as NSString)
+                return image
+            }
+            if let image = UIImage(named: candidate.lowercased()) {
                 memoryCache.setObject(image, forKey: originalKey as NSString)
                 return image
             }
@@ -491,28 +586,46 @@ final class ImageService: ImageProviding {
         normalizedKey: String,
         diskKey: String
     ) async -> UIImage? {
+        await refreshManifestIfNeeded(force: false, source: .birds)
+
+        let birdDiskKey = diskCacheKey(for: normalizedKey, source: .birds)
+        if let diskImage = loadFromDisk(cacheKey: birdDiskKey) {
+            memoryCache.setObject(diskImage, forKey: normalizedKey as NSString)
+            return diskImage
+        }
+
+        if let manifestImage = await loadFromBirdManifest(
+            keyCandidates: keyCandidates,
+            normalizedKey: normalizedKey,
+            diskKey: birdDiskKey
+        ) {
+            return manifestImage
+        }
+
         let birdBucket = birdBucketName()
         let fileExtensions = ["png", "jpg", "jpeg", "webp"]
+        let folderPrefixes = ["", "bird/", "birds/"]
 
         var objectPaths: [String] = []
         for candidate in keyCandidates {
-            let lowered = candidate.lowercased()
+            // Try both original case and lowercased
+            let variations = [candidate, candidate.lowercased()]
             
-            // 1. Try exactly as passed (handles "bird.jpg" cases)
-            if !objectPaths.contains(lowered) {
-                objectPaths.append(lowered)
-            }
-            
-            // 2. Try with extensions
-            for ext in fileExtensions {
-                let directPath = "\(lowered).\(ext)"
-
-                if !objectPaths.contains(directPath) {
-                    objectPaths.append(directPath)
+            for variation in variations {
+                // 1. Try exactly as variation (handles "bird.jpg" cases)
+                if !objectPaths.contains(variation) {
+                    objectPaths.append(variation)
                 }
-                let nestedPath = "bird/\(lowered).\(ext)"
-                if !objectPaths.contains(nestedPath) {
-                    objectPaths.append(nestedPath)
+                
+                // 2. Try with extensions and folders
+                for ext in fileExtensions {
+                    let filename = "\(variation).\(ext)"
+                    for prefix in folderPrefixes {
+                        let fullPath = "\(prefix)\(filename)"
+                        if !objectPaths.contains(fullPath) {
+                            objectPaths.append(fullPath)
+                        }
+                    }
                 }
             }
         }
@@ -536,6 +649,7 @@ final class ImageService: ImageProviding {
                     continue
                 }
                 saveToDisk(data: data, cacheKey: diskKey)
+                saveToDisk(data: data, cacheKey: birdDiskKey)
                 memoryCache.setObject(image, forKey: normalizedKey as NSString)
                 return image
             } catch {
@@ -545,6 +659,41 @@ final class ImageService: ImageProviding {
         }
 
         return nil
+    }
+
+    private func loadFromBirdManifest(
+        keyCandidates: [String],
+        normalizedKey: String,
+        diskKey: String
+    ) async -> UIImage? {
+        guard let itemLookup = lookupManifestItem(for: keyCandidates, source: .birds),
+              let url = remoteURL(for: itemLookup.item.path, source: .birds) else {
+            return nil
+        }
+
+        do {
+            let config = try SupabaseConfig.load()
+            var request = URLRequest(url: url)
+            request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+
+            LoggingService.shared.log(message: "Fetching bird manifest image: \(url.absoluteString)", context: "ImageService")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                  let image = UIImage(data: data) else {
+                let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+                LoggingService.shared.log(message: "Bird manifest image fetch failed with status \(status): \(url.absoluteString)", context: "ImageService")
+                return nil
+            }
+
+            saveToDisk(data: data, cacheKey: diskKey)
+            memoryCache.setObject(image, forKey: normalizedKey as NSString)
+            failedRemoteKeys.remove(normalizedKey)
+            return image
+        } catch {
+            LoggingService.shared.log(error: error, context: "ImageService")
+            return nil
+        }
     }
 }
 

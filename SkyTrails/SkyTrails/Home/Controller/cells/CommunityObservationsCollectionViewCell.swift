@@ -51,7 +51,8 @@ class CommunityObservationsCollectionViewCell: UICollectionViewCell {
             userNameLabel.font = UIFont.systemFont(ofSize: 20, weight: .medium)
             userNameLabel.textColor = .white
         
-            observationCountLabel.text = "\(displayUser.observations) Observations"
+            let suffix = displayUser.observations == 1 ? "Observation" : "Observations"
+            observationCountLabel.text = "\(displayUser.observations) \(suffix)"
             observationCountLabel.textColor = .white
             observationCountLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         

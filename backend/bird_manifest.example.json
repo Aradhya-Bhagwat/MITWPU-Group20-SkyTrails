@@ -1,0 +1,171 @@
+{
+  "version": "2026-05-24",
+  "updatedAt": "2026-05-24T00:00:00Z",
+  "items": {
+    "baya_weaver": {
+      "path": "baya_weaver.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "black_drongo": {
+      "path": "black_drongo.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "black_eagle": {
+      "path": "black_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "black_headed_greenfinch": {
+      "path": "black_headed_greenfinch.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "black_kite": {
+      "path": "black_kite.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "black_winged_kite": {
+      "path": "black_winged_kite.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "bonellis_eagle": {
+      "path": "bonellis_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "booted_eagle": {
+      "path": "booted_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "brahminy_kite": {
+      "path": "brahminy_kite.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "changeable_hawk_eagle": {
+      "path": "changeable_hawk_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "common_rosefinch": {
+      "path": "common_rosefinch.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "crested_hawk_eagle": {
+      "path": "crested_hawk_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "crested_serpent_eagle": {
+      "path": "crested_serpent_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "eurasian_sparrowhawk": {
+      "path": "eurasian_sparrowhawk.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "european_goldfinch": {
+      "path": "european_goldfinch.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "greater_spotted_eagle": {
+      "path": "greater_spotted_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "house_sparrow": {
+      "path": "house_sparrow.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "indian_silverbill": {
+      "path": "indian_silverbill.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "indian_spotted_eagle": {
+      "path": "indian_spotted_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "long_legged_buzzard": {
+      "path": "long_legged_buzzard.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "oriental_honey_buzzard": {
+      "path": "oriental_honey_buzzard.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "pink_browed_rosefinch": {
+      "path": "pink_browed_rosefinch.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "red_avadavat": {
+      "path": "red_avadavat.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "rufous_bellied_eagle": {
+      "path": "rufous_bellied_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "russet_sparrow": {
+      "path": "russet_sparrow.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "scaly_breasted_munia": {
+      "path": "scaly_breasted_munia.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "shikra": {
+      "path": "shikra.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "short_toed_snake_eagle": {
+      "path": "short_toed_snake_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "spectacled_finch": {
+      "path": "spectacled_finch.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "steppe_eagle": {
+      "path": "steppe_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "tawny_eagle": {
+      "path": "tawny_eagle.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "white_eyed_buzzard": {
+      "path": "white_eyed_buzzard.png",
+      "checksum": null,
+      "contentType": "image/png"
+    },
+    "white_rumped_munia": {
+      "path": "white_rumped_munia.png",
+      "checksum": null,
+      "contentType": "image/png"
+    }
+  }
+}

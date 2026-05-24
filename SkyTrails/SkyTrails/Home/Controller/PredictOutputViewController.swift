@@ -896,18 +896,38 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         btn.setImage(UIImage(systemName: "line.3.horizontal.decrease.circle", withConfiguration: config), for: .normal)
         btn.tintColor = .systemBlue
-        btn.backgroundColor = .white
+        btn.backgroundColor = .secondarySystemBackground
         btn.layer.cornerRadius = 20
-        btn.layer.shadowColor = UIColor.black.cgColor
-        btn.layer.shadowOpacity = 0.1
-        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
-        btn.layer.shadowRadius = 4
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.widthAnchor.constraint(equalToConstant: 40).isActive = true
         btn.heightAnchor.constraint(equalToConstant: 40).isActive = true
-        btn.addTarget(self, action: #selector(didTapFilter), for: .touchUpInside)
+        
+        btn.showsMenuAsPrimaryAction = true
+        btn.menu = createFilterMenu()
         return btn
     }()
+
+    private func createFilterMenu() -> UIMenu {
+        let nameAsc = UIAction(title: "Name (A-Z)", image: UIImage(systemName: "textformat.abc")) { [weak self] _ in
+            self?.updateSort(.alphaAZ)
+        }
+        let nameDesc = UIAction(title: "Name (Z-A)", image: UIImage(systemName: "textformat.abc")) { [weak self] _ in
+            self?.updateSort(.alphaZA)
+        }
+        let probHigh = UIAction(title: "Finding % (High)", image: UIImage(systemName: "arrow.up.circle")) { [weak self] _ in
+            self?.updateSort(.sightabilityDesc)
+        }
+        let probLow = UIAction(title: "Finding % (Low)", image: UIImage(systemName: "arrow.down.circle")) { [weak self] _ in
+            self?.updateSort(.sightabilityAsc)
+        }
+        
+        return UIMenu(title: "Sort Birds", children: [nameAsc, nameDesc, probHigh, probLow])
+    }
+    
+    private func updateSort(_ option: PredictionSortOption) {
+        filterState.sortOption = option
+        applyFilter()
+    }
 
     private lazy var searchStack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [searchBar, filterButton])
@@ -1154,25 +1174,6 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         print("DEBUG FILTER APPLY: cell \(ObjectIdentifier(self)) spot=\(allPredictions.first?.likelySpot ?? "?") results=\(filteredPredictions.count)")
     }
 
-    @objc private func didTapFilter() {
-        guard let presenter = presentingViewController else { return }
-        
-        let filterVC = PredictionFilterViewController()
-        filterVC.currentSort = filterState.sortOption
-        filterVC.minRange = Float(filterState.minSightability)
-        filterVC.maxRange = Float(filterState.maxSightability)
-        filterVC.allWeeks = allWeeks
-        filterVC.selectedWeek = filterState.selectedWeek
-        filterVC.delegate = self
-        
-        if let sheet = filterVC.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.prefersGrabberVisible = true
-        }
-        print("DEBUG FILTER TAP: cell \(ObjectIdentifier(self)) spot=\(allPredictions.first?.likelySpot ?? "?") currentFilter=\(filterState.searchText)")
-        presenter.present(filterVC, animated: true)
-    }
-
     // MARK: - UICollectionViewDataSource
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return filteredPredictions.count
@@ -1257,21 +1258,6 @@ extension PredictLocationResultPageCell: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
-    }
-}
-
-extension PredictLocationResultPageCell: PredictionFilterDelegate {
-    func didApplyFilters(
-        sort: PredictionSortOption,
-        minRange: Int,
-        maxRange: Int,
-        selectedWeek: Int?
-    ) {
-        filterState.sortOption = sort
-        filterState.minSightability = minRange
-        filterState.maxSightability = maxRange
-        filterState.selectedWeek = selectedWeek
-        applyFilter()
     }
 }
 

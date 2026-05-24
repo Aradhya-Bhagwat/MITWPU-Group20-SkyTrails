@@ -443,10 +443,6 @@ extension HomeViewController {
 
         upcomingBirds = snapshots.map { snapshot in
             let fallbackImageName = snapshot.commonName
-                .lowercased()
-                .replacingOccurrences(of: "'", with: "")
-                .replacingOccurrences(of: "-", with: "_")
-                .replacingOccurrences(of: " ", with: "_")
             let bird = WatchlistManager.shared.findBird(byName: snapshot.commonName)
             let imageName = bird?.imageUrl ?? bird?.staticImageName
                 ?? fallbackUpcomingBirds.first(where: { $0.title.caseInsensitiveCompare(snapshot.commonName) == .orderedSame })?.imageName
