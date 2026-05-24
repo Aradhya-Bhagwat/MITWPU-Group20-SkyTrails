@@ -104,7 +104,7 @@ final class ImageService: ImageProviding {
         }
         
         let diskKey = diskCacheKey(for: normalizedKey, source: manifestSource(for: normalizedKey))
-        if let diskImage = loadFromDisk(cacheKey: diskKey) {
+        if let diskImage = loadFromDiskSync(cacheKey: diskKey) {
             memoryCache.setObject(diskImage, forKey: memKey)
             return diskImage
         }
@@ -200,7 +200,7 @@ final class ImageService: ImageProviding {
         await refreshManifestIfNeeded(force: false, source: manifestSource)
 
         let diskKey = diskCacheKey(for: normalizedKey, source: manifestSource)
-        if let diskImage = loadFromDisk(cacheKey: diskKey) {
+        if let diskImage = await loadFromDiskAsync(cacheKey: diskKey) {
             memoryCache.setObject(diskImage, forKey: memKey)
             return diskImage
         }
@@ -275,7 +275,7 @@ final class ImageService: ImageProviding {
                 }
                 return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
             }
-            saveToDisk(data: data, cacheKey: diskKey)
+            saveToDiskAsync(data: data, cacheKey: diskKey)
             memoryCache.setObject(image, forKey: memKey)
             failedRemoteKeys.remove(normalizedKey)
             return image
@@ -323,11 +323,17 @@ final class ImageService: ImageProviding {
     }
 
     private func refreshManifestIfNeeded(force: Bool, source: IdentificationManifestSource) async {
-        if !force,
-           let lastRefresh = UserDefaults.standard.object(forKey: source.refreshKey) as? Date,
-           Date().timeIntervalSince(lastRefresh) < cacheTTL,
-           manifests[source] != nil {
-            return
+        if !force {
+            if let lastFailed = UserDefaults.standard.object(forKey: "\(source.refreshKey)_failed") as? Date,
+               Date().timeIntervalSince(lastFailed) < 30.0 {
+                return
+            }
+
+            if let lastRefresh = UserDefaults.standard.object(forKey: source.refreshKey) as? Date,
+               Date().timeIntervalSince(lastRefresh) < cacheTTL,
+               manifests[source] != nil {
+                return
+            }
         }
 
         // Check if there is already a refresh task in progress for this source
@@ -353,14 +359,17 @@ final class ImageService: ImageProviding {
                 guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                     let status = (response as? HTTPURLResponse)?.statusCode ?? -1
                     LoggingService.shared.log(message: "Manifest refresh failed with status \(status): \(manifestURL.absoluteString)", context: "ImageService")
+                    UserDefaults.standard.set(Date(), forKey: "\(source.refreshKey)_failed")
                     return
                 }
                 let decoded = try manifestDecoder.decode(IdentificationManifest.self, from: data)
                 manifests[source] = decoded
                 failedRemoteKeys.removeAll()
                 UserDefaults.standard.set(Date(), forKey: source.refreshKey)
+                UserDefaults.standard.removeObject(forKey: "\(source.refreshKey)_failed")
             } catch {
                 LoggingService.shared.log(error: error, context: "ImageService")
+                UserDefaults.standard.set(Date(), forKey: "\(source.refreshKey)_failed")
             }
         }
 
@@ -470,15 +479,27 @@ final class ImageService: ImageProviding {
         return hash.map { String(format: "%02x", $0) }.joined()
     }
 
-    private func loadFromDisk(cacheKey: String) -> UIImage? {
+    private func loadFromDiskSync(cacheKey: String) -> UIImage? {
         guard let file = cacheDirectory()?.appendingPathComponent(cacheKey) else { return nil }
         guard let data = try? Data(contentsOf: file) else { return nil }
         return UIImage(data: data)
     }
 
-    private func saveToDisk(data: Data, cacheKey: String) {
-        guard let file = cacheDirectory()?.appendingPathComponent(cacheKey) else { return }
-        try? data.write(to: file, options: .atomic)
+    private func loadFromDiskAsync(cacheKey: String) async -> UIImage? {
+        guard let dir = cacheDirectory() else { return nil }
+        return await Task.detached(priority: .userInitiated) {
+            let file = dir.appendingPathComponent(cacheKey)
+            guard let data = try? Data(contentsOf: file) else { return nil }
+            return UIImage(data: data)
+        }.value
+    }
+
+    private func saveToDiskAsync(data: Data, cacheKey: String) {
+        guard let dir = cacheDirectory() else { return }
+        Task.detached(priority: .background) {
+            let file = dir.appendingPathComponent(cacheKey)
+            try? data.write(to: file, options: .atomic)
+        }
     }
 
     private func normalizeKey(_ key: String) -> String {
@@ -589,7 +610,7 @@ final class ImageService: ImageProviding {
         await refreshManifestIfNeeded(force: false, source: .birds)
 
         let birdDiskKey = diskCacheKey(for: normalizedKey, source: .birds)
-        if let diskImage = loadFromDisk(cacheKey: birdDiskKey) {
+        if let diskImage = await loadFromDiskAsync(cacheKey: birdDiskKey) {
             memoryCache.setObject(diskImage, forKey: normalizedKey as NSString)
             return diskImage
         }
@@ -604,61 +625,134 @@ final class ImageService: ImageProviding {
 
         let birdBucket = birdBucketName()
         let fileExtensions = ["png", "jpg", "jpeg", "webp"]
-        let folderPrefixes = ["", "bird/", "birds/"]
+        let folderPrefixes = ["", "birds/", "bird/"]
 
         var objectPaths: [String] = []
         for candidate in keyCandidates {
-            // Try both original case and lowercased
             let variations = [candidate, candidate.lowercased()]
-            
             for variation in variations {
-                // 1. Try exactly as variation (handles "bird.jpg" cases)
-                if !objectPaths.contains(variation) {
-                    objectPaths.append(variation)
-                }
+                let lowerVariation = variation.lowercased()
+                let hasExtension = fileExtensions.contains { lowerVariation.hasSuffix(".\($0)") }
                 
-                // 2. Try with extensions and folders
-                for ext in fileExtensions {
-                    let filename = "\(variation).\(ext)"
-                    for prefix in folderPrefixes {
-                        let fullPath = "\(prefix)\(filename)"
+                if hasExtension {
+                    // Try exactly the variation
+                    if !objectPaths.contains(variation) {
+                        objectPaths.append(variation)
+                    }
+                    // Try with prefixes
+                    for prefix in folderPrefixes where !prefix.isEmpty {
+                        let fullPath = "\(prefix)\(variation)"
                         if !objectPaths.contains(fullPath) {
                             objectPaths.append(fullPath)
+                        }
+                    }
+                } else {
+                    // 1. Try exactly as variation first
+                    if !objectPaths.contains(variation) {
+                        objectPaths.append(variation)
+                    }
+                    // 2. Try with extensions for each prefix
+                    for prefix in folderPrefixes {
+                        for ext in fileExtensions {
+                            let fullPath = "\(prefix)\(variation).\(ext)"
+                            if !objectPaths.contains(fullPath) {
+                                objectPaths.append(fullPath)
+                            }
                         }
                     }
                 }
             }
         }
 
-        for objectPath in objectPaths {
-            guard let url = remoteURL(for: objectPath, bucketOverride: birdBucket) else {
-                continue
-            }
-            do {
-                let config = try SupabaseConfig.load()
-                var request = URLRequest(url: url)
-                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-                request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+        // Limit the total number of paths to inspect to avoid excessive network overhead.
+        let maxPathsToCheck = 18
+        let pathsToCheck = Array(objectPaths.prefix(maxPathsToCheck))
 
-                LoggingService.shared.log(message: "Fetching bird bucket image: \(url.absoluteString)", context: "ImageService")
-                let (data, response) = try await URLSession.shared.data(for: request)
-                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
-                      let image = UIImage(data: data) else {
-                    let status = (response as? HTTPURLResponse)?.statusCode ?? -1
-                    LoggingService.shared.log(message: "Bird bucket image fetch failed with status \(status): \(url.absoluteString)", context: "ImageService")
-                    continue
+        // We will perform concurrent fetches using a TaskGroup up to a concurrency limit to be super fast and polite!
+        let concurrencyLimit = 4
+        let config = try? SupabaseConfig.load()
+        
+        guard let supabaseConfig = config else { return nil }
+
+        let resultImage = await withTaskGroup(of: (String, UIImage, Data)?.self) { group -> UIImage? in
+            var activeDownloads = 0
+            var pathIterator = pathsToCheck.makeIterator()
+            
+            // Spawn initial batch
+            for _ in 0..<concurrencyLimit {
+                guard let path = pathIterator.next() else { break }
+                if let url = remoteURL(for: path, bucketOverride: birdBucket) {
+                    activeDownloads += 1
+                    group.addTask {
+                        do {
+                            var request = URLRequest(url: url)
+                            request.setValue(supabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+                            request.setValue("Bearer \(supabaseConfig.anonKey)", forHTTPHeaderField: "Authorization")
+                            request.timeoutInterval = 10.0 // Reasonable timeout
+                            
+                            let (data, response) = try await URLSession.shared.data(for: request)
+                            if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                               let image = UIImage(data: data) {
+                                return (path, image, data)
+                            }
+                        } catch {
+                            // Suppress individual errors to proceed with other candidates
+                        }
+                        return nil
+                    }
                 }
-                saveToDisk(data: data, cacheKey: diskKey)
-                saveToDisk(data: data, cacheKey: birdDiskKey)
-                memoryCache.setObject(image, forKey: normalizedKey as NSString)
-                return image
-            } catch {
-                LoggingService.shared.log(error: error, context: "ImageService")
-                continue
             }
+            
+            // Process results as they come in, spawning more tasks if needed
+            while activeDownloads > 0 {
+                guard let result = await group.next() else { break }
+                activeDownloads -= 1
+                
+                if let (path, image, data) = result {
+                    // Success! Cancel remaining tasks in group
+                    group.cancelAll()
+                    
+                    // Save to disk cache under diskKey and birdDiskKey
+                    saveToDiskAsync(data: data, cacheKey: diskKey)
+                    saveToDiskAsync(data: data, cacheKey: birdDiskKey)
+                    memoryCache.setObject(image, forKey: normalizedKey as NSString)
+                    
+                    LoggingService.shared.log(message: "Successfully fetched bird image concurrently at path: \(path)", context: "ImageService")
+                    return image
+                }
+                
+                // If we didn't succeed, and we have more paths, spawn the next task
+                if let nextPath = pathIterator.next() {
+                    if let url = remoteURL(for: nextPath, bucketOverride: birdBucket) {
+                        activeDownloads += 1
+                        group.addTask {
+                            do {
+                                var request = URLRequest(url: url)
+                                request.setValue(supabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+                                request.setValue("Bearer \(supabaseConfig.anonKey)", forHTTPHeaderField: "Authorization")
+                                request.timeoutInterval = 10.0
+                                
+                                let (data, response) = try await URLSession.shared.data(for: request)
+                                if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                                   let image = UIImage(data: data) {
+                                    return (nextPath, image, data)
+                                }
+                            } catch {}
+                            return nil
+                        }
+                    }
+                }
+            }
+            return nil
         }
 
-        return nil
+        if let image = resultImage {
+            return image
+        } else {
+            // Track failure to avoid brute force on subsequent requests!
+            failedRemoteKeys.insert(normalizedKey)
+            return nil
+        }
     }
 
     private func loadFromBirdManifest(
@@ -686,7 +780,7 @@ final class ImageService: ImageProviding {
                 return nil
             }
 
-            saveToDisk(data: data, cacheKey: diskKey)
+            saveToDiskAsync(data: data, cacheKey: diskKey)
             memoryCache.setObject(image, forKey: normalizedKey as NSString)
             failedRemoteKeys.remove(normalizedKey)
             return image
