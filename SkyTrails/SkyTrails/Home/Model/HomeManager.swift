@@ -243,9 +243,7 @@ class HomeManager {
                 let bird = watchlistManager.findBird(byName: sp.name)
                 let imageName = bird?.imageUrl 
                              ?? bird?.staticImageName 
-                             ?? sp.name.lowercased()
-                                .replacingOccurrences(of: " ", with: "_")
-                                .replacingOccurrences(of: "-", with: "_")
+                             ?? sp.name
                 
                 let percent = min(99, Int(sp.score * 100))
                 let tag: String
@@ -561,10 +559,11 @@ class HomeManager {
                                   rawImage?.isEmpty == true) ? nil : rawImage
 
                 let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+                                ?? sp.commonName
 
                 return FinalPredictionResult(
                     birdName: sp.commonName,
-                    imageName: remoteImage ?? "placeholder_image",
+                    imageName: remoteImage,
                     likelySpot: "Nearby hotspot",
                     matchedInputIndex: 0,
                     matchedLocation: (lat: lat, lon: lon),
@@ -749,11 +748,13 @@ class HomeManager {
                 let weekLabel = "Week \(sp.peakWeek)"
                 
                 let bird = watchlistManager.findBird(byName: sp.commonName)
-                let rawImage = bird?.imageUrl ?? bird?.staticImageName
+                let rawImage = bird?.imageUrl 
+                             ?? bird?.staticImageName 
+                             ?? sp.commonName
 
                 return BirdSpeciesDisplay(
                     birdName: sp.commonName,
-                    birdImageName: rawImage ?? "placeholder_image",
+                    birdImageName: rawImage,
                     statusBadge: BirdSpeciesDisplay.StatusBadge(
                         title: "Expected",
                         subtitle: "Expected",
@@ -866,16 +867,12 @@ class HomeManager {
 
             let remoteImage = cleanImage ?? fallbackBird?.imageUrl ?? fallbackBird?.staticImageName
 
-            let normalizedName = species.commonName.lowercased()
-                .replacingOccurrences(of: " ", with: "_")
-                .replacingOccurrences(of: "-", with: "_")
-            
-            let finalImageName = remoteImage ?? normalizedName
+            let finalImageName = remoteImage ?? species.commonName
             let statusText = species.residencyStatus.rawValue
 
             return BirdSpeciesDisplay(
                 birdName: species.commonName,
-                birdImageName: finalImageName.isEmpty ? "placeholder_image" : finalImageName,
+                birdImageName: finalImageName,
                 statusBadge: BirdSpeciesDisplay.StatusBadge(
                     title: "Present",
                     subtitle: statusText,
@@ -1059,7 +1056,7 @@ class HomeManager {
             )
             return BirdSpeciesDisplay(
                 birdName: bird.commonName,
-                birdImageName: bird.staticImageName,
+                birdImageName: bird.imageUrl ?? bird.staticImageName,
                 statusBadge: badge,
                 sightabilityPercent: probability,
                 weekNumber: weekText,
@@ -1097,7 +1094,7 @@ class HomeManager {
 
         let migrationPrediction = MigrationPrediction(
             birdName: primaryBird.commonName,
-            birdImageName: primaryBird.staticImageName,
+            birdImageName: primaryBird.imageUrl ?? primaryBird.staticImageName,
             startLocation: primaryMigration?.paths.first.map {
                 "(\(String(format: "%.2f", $0.lat)), \(String(format: "%.2f", $0.lon)))"
             } ?? "South",
@@ -1127,7 +1124,7 @@ class HomeManager {
 
             return HotspotBirdSpot(
                 coordinate: coordinate,
-                birdImageName: birdData.bird.staticImageName
+                birdImageName: birdData.bird.imageUrl ?? birdData.bird.staticImageName
             )
         }
 
@@ -1165,6 +1162,7 @@ class HomeManager {
                     .replacingOccurrences(of: "-", with: "_")
                 
                 let imageName = species.imageName
+                    ?? fallbackBird?.imageUrl
                     ?? fallbackBird?.staticImageName
                     ?? normalizedName
 
@@ -1194,9 +1192,10 @@ class HomeManager {
         )
 
         return Array(localBirds.prefix(8)).map { bird in
+            let imageName = bird.imageUrl ?? bird.staticImageName
             return BirdSpeciesDisplay(
                 birdName: bird.commonName,
-                birdImageName: bird.staticImageName.isEmpty ? "placeholder_image" : bird.staticImageName,
+                birdImageName: imageName.isEmpty ? "placeholder_image" : imageName,
                 statusBadge: BirdSpeciesDisplay.StatusBadge(
                     title: "Present",
                     subtitle: "Nearby",
@@ -1743,9 +1742,12 @@ class HomeManager {
                 weekScores["\(w)"] = min(99, max(1, probability))
             }
 
+            let rawImage = bird.imageUrl ?? bird.staticImageName
+                         ?? bird.commonName
+
             return FinalPredictionResult(
                 birdName: bird.commonName,
-                imageName: bird.imageUrl ?? bird.staticImageName,
+                imageName: rawImage,
                 likelySpot: bird.likelySpot ?? "Sky",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
@@ -1778,10 +1780,11 @@ class HomeManager {
                               rawImage?.isEmpty == true) ? nil : rawImage
 
             let remoteImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+                            ?? species.commonName
 
             return FinalPredictionResult(
                 birdName: species.commonName,
-                imageName: remoteImage ?? "placeholder_image",
+                imageName: remoteImage,
                 likelySpot: "Nearby hotspot",
                 matchedInputIndex: 0,
                 matchedLocation: (lat: lat, lon: lon),
@@ -1851,9 +1854,18 @@ class HomeManager {
                     print("DEBUG PREDICT: matched \(species.commonName) to hotspot \(likelySpot) at \(matchLat), \(matchLon)")
                 }
 
+                let rawImage = species.imageName ?? ""
+                let cleanImage = (rawImage.isEmpty || 
+                                  rawImage == "placeholder_bird" || 
+                                  rawImage == "placeholder_image") ? nil : rawImage
+                
+                let bird = watchlistManager.findBird(byName: species.commonName)
+                let finalImage = cleanImage ?? bird?.imageUrl ?? bird?.staticImageName
+                                ?? species.commonName
+
                 return FinalPredictionResult(
                     birdName: species.commonName,
-                    imageName: species.imageName ?? "",
+                    imageName: finalImage,
                     likelySpot: likelySpot,
                     matchedInputIndex: inputIndex,
                     matchedLocation: (

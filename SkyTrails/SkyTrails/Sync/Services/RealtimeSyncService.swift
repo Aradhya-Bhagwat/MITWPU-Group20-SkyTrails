@@ -1135,12 +1135,16 @@ final class RealtimeSyncService: NSObject {
             resolvedShape = nil
         }
 
-        let staticImageName = record.string(for: "image_url") ?? record.string(for: "common_name") ?? "bird"
+        let remoteImageURL = record.string(for: "image_url")?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let staticImageName = (remoteImageURL?.isEmpty == false ? remoteImageURL : nil)
+            ?? record.string(for: "common_name")
+            ?? "bird"
 
         if let bird = existing {
             bird.commonName = record.string(for: "common_name") ?? bird.commonName
             bird.scientificName = record.string(for: "scientific_name") ?? bird.scientificName
             bird.staticImageName = staticImageName
+            bird.imageUrl = remoteImageURL?.isEmpty == false ? remoteImageURL : nil
             bird.family = record.string(for: "family")
             bird.order_name = record.string(for: "order_name")
             bird.descriptionText = record.string(for: "description")
@@ -1166,6 +1170,7 @@ final class RealtimeSyncService: NSObject {
                 size_category: record.int(for: "size_category"),
                 shape: resolvedShape
             )
+            bird.imageUrl = remoteImageURL?.isEmpty == false ? remoteImageURL : nil
             context.insert(bird)
         }
         try? context.save()

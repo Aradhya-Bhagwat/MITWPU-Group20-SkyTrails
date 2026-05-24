@@ -103,7 +103,8 @@ class SpotsToVisitCollectionViewCell: UICollectionViewCell {
         
     }
     private func updateSpeciesLabel(count: Int, fontSize: CGFloat) {
-            let text = "\(count) Observations"
+            let suffix = count == 1 ? "Observation" : "Observations"
+            let text = "\(count) Total \(suffix)"
             dateLabel2.attributedText = createIconString(
                 text: text,
                 iconName: "bird.fill",

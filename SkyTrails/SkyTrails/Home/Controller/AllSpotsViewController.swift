@@ -10,6 +10,14 @@ class AllSpotsViewController: UIViewController {
     private var isEBirdLoading = false
     private var cachedItemSize: NSCollectionLayoutSize?
     
+    private enum SortOption {
+        case nameAsc
+        case nameDesc
+        case percentageHigh
+        case percentageLow
+    }
+    private var currentSort: SortOption = .nameAsc
+
     @IBOutlet weak var collectionView: UICollectionView!
     
     override func viewDidLoad() {
@@ -18,6 +26,65 @@ class AllSpotsViewController: UIViewController {
         setupTraitChangeHandling()
         applySemanticAppearance()
         setupCollectionView()
+        setupNavigationBar()
+        fetchLiveHotspots()
+    }
+
+    private func setupNavigationBar() {
+        let redoButton = UIBarButtonItem(
+            image: UIImage(systemName: "arrow.counterclockwise"),
+            style: .plain,
+            target: self,
+            action: #selector(didTapRedo)
+        )
+        
+        let filterButton = UIBarButtonItem(
+            image: UIImage(systemName: "line.3.horizontal.decrease.circle"),
+            menu: createFilterMenu()
+        )
+        
+        // Redo is leftmost in array -> rightmost on screen
+        navigationItem.rightBarButtonItems = [redoButton, filterButton]
+        
+        // Ensure standard back chevron is shown
+        navigationController?.navigationBar.topItem?.backButtonTitle = ""
+    }
+
+    private func createFilterMenu() -> UIMenu {
+        let nameAsc = UIAction(title: "Name (A-Z)", image: UIImage(systemName: "textformat.abc")) { [weak self] _ in
+            self?.sortData(by: .nameAsc)
+        }
+        let nameDesc = UIAction(title: "Name (Z-A)", image: UIImage(systemName: "textformat.abc")) { [weak self] _ in
+            self?.sortData(by: .nameDesc)
+        }
+        let percentageHigh = UIAction(title: "Finding % (High)", image: UIImage(systemName: "arrow.up.circle")) { [weak self] _ in
+            self?.sortData(by: .percentageHigh)
+        }
+        let percentageLow = UIAction(title: "Finding % (Low)", image: UIImage(systemName: "arrow.down.circle")) { [weak self] _ in
+            self?.sortData(by: .percentageLow)
+        }
+        
+        return UIMenu(title: "Sort By", children: [nameAsc, nameDesc, percentageHigh, percentageLow])
+    }
+
+    private func sortData(by option: SortOption) {
+        currentSort = option
+        let sortBlock: (PopularSpotResult, PopularSpotResult) -> Bool = { a, b in
+            switch option {
+            case .nameAsc: return a.title < b.title
+            case .nameDesc: return a.title > b.title
+            case .percentageHigh: return a.speciesCount > b.speciesCount
+            case .percentageLow: return a.speciesCount < b.speciesCount
+            }
+        }
+        
+        watchlistData.sort(by: sortBlock)
+        recommendationsData.sort(by: sortBlock)
+        collectionView.reloadData()
+    }
+
+    @objc private func didTapRedo() {
+        recommendationsData.removeAll()
         fetchLiveHotspots()
     }
 
@@ -181,7 +248,7 @@ class AllSpotsViewController: UIViewController {
                         )
                     }
                     self.recommendationsData.append(contentsOf: mapped)
-                    self.collectionView.reloadSections(IndexSet(integer: 1))
+                    self.sortData(by: self.currentSort)
                 }
             } catch {
                 await MainActor.run {
