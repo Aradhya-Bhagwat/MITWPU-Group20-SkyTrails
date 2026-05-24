@@ -356,28 +356,28 @@ extension BirdInformationViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polygon = overlay as? MKPolygon {
             let renderer = MKPolygonRenderer(polygon: polygon)
-            renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-            renderer.strokeColor = UIColor.systemGreen
-            renderer.lineWidth = 2
+            renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.3)
+            renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
+            renderer.lineWidth = 2.5
             return renderer
         }
         if let multiPolygon = overlay as? MKMultiPolygon {
             let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
-            renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-            renderer.strokeColor = UIColor.systemGreen
-            renderer.lineWidth = 2
+            renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.3)
+            renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
+            renderer.lineWidth = 2.5
             return renderer
         }
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = UIColor.systemGreen
-            renderer.lineWidth = 2
+            renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
+            renderer.lineWidth = 2.5
             return renderer
         }
         if let multiPolyline = overlay as? MKMultiPolyline {
             let renderer = MKMultiPolylineRenderer(multiPolyline: multiPolyline)
-            renderer.strokeColor = UIColor.systemGreen
-            renderer.lineWidth = 2
+            renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
+            renderer.lineWidth = 2.5
             return renderer
         }
         return MKOverlayRenderer(overlay: overlay)
