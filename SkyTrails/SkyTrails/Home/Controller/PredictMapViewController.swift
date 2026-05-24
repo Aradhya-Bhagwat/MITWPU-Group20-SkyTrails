@@ -520,9 +520,10 @@ extension PredictMapViewController: MKMapViewDelegate {
         if let polygon = overlay as? MKPolygon {
             let renderer = MKPolygonRenderer(polygon: polygon)
             if isBirdRange {
-                renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
-                renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-                renderer.lineWidth = 2.0
+                // High contrast Orange/Gold for better visibility in both themes
+                renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
+                renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.3)
+                renderer.lineWidth = 2.5
             } else {
                 renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
                 renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
@@ -534,9 +535,9 @@ extension PredictMapViewController: MKMapViewDelegate {
         if let multiPolygon = overlay as? MKMultiPolygon {
             let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
             if isBirdRange {
-                renderer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8)
-                renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-                renderer.lineWidth = 2.0
+                renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
+                renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.3)
+                renderer.lineWidth = 2.5
             } else {
                 renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
                 renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)

@@ -148,10 +148,9 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     }
 
     private func setupTextLayoutBehavior() {
-        titleLabel.numberOfLines = 1
-        titleLabel.lineBreakMode = .byTruncatingTail
-        titleLabel.adjustsFontSizeToFitWidth = true
-        titleLabel.minimumScaleFactor = 0.9
+        titleLabel.numberOfLines = 0
+        titleLabel.lineBreakMode = .byWordWrapping
+        titleLabel.adjustsFontSizeToFitWidth = false
         subtitleLabel.numberOfLines = 1
         subtitleLabel.lineBreakMode = .byTruncatingTail
         terrainTagLabel.numberOfLines = 1
@@ -163,8 +162,8 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
         seasonTagLabel.adjustsFontSizeToFitWidth = true
         seasonTagLabel.minimumScaleFactor = 0.85
 
-        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        titleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        titleLabel.setContentHuggingPriority(.required, for: .vertical)
         subtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         terrainTagImageView.setContentHuggingPriority(.required, for: .horizontal)
         terrainTagImageView.setContentCompressionResistancePriority(.required, for: .horizontal)

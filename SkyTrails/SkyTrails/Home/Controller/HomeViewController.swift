@@ -567,15 +567,23 @@ extension HomeViewController {
     }
 
     private func createNewsSection() -> NSCollectionLayoutSection {
-        let newsCardHeight: CGFloat = traitCollection.userInterfaceIdiom == .phone ? 230 : 200
+        // Taller cards for vertical blog style
+        let newsCardHeight: CGFloat = traitCollection.userInterfaceIdiom == .phone ? 310 : 280
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(newsCardHeight)), subitems: [item])
-        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        
+        // Use a 0.82 width for a nice "peek" of the next card
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.82), heightDimension: .absolute(newsCardHeight)), subitems: [item])
+        group.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
+        
         let section = NSCollectionLayoutSection(group: group)
-        section.orthogonalScrollingBehavior = .groupPagingCentered; section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 20, trailing: 16)
+        section.orthogonalScrollingBehavior = .groupPaging
+        section.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 10, bottom: 24, trailing: 10)
+        
         section.visibleItemsInvalidationHandler = { [weak self] visibleItems, contentOffset, environment in
             guard let self else { return }
-            let centerX = contentOffset.x + (environment.container.contentSize.width / 2)
+            let containerWidth = environment.container.contentSize.width
+            let centerX = contentOffset.x + (containerWidth / 2)
+            
             let currentPage = visibleItems
                 .filter { $0.representedElementCategory == .cell }
                 .min { abs($0.frame.midX - centerX) < abs($1.frame.midX - centerX) }?
@@ -585,8 +593,10 @@ extension HomeViewController {
                 self?.updateNewsPage(to: currentPage)
             }
         }
+        
         let pageControl = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .absolute(30)), elementKind: "NewsPageControlFooter", alignment: .bottom)
-        section.boundarySupplementaryItems = [createSectionHeaderLayout(), pageControl]; return section
+        section.boundarySupplementaryItems = [createSectionHeaderLayout(), pageControl]
+        return section
     }
     
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
