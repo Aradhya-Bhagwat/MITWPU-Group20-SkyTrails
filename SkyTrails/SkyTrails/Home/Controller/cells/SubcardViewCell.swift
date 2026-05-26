@@ -1,9 +1,9 @@
 
 import UIKit
 
-class subcardViewCell: UICollectionViewCell {
+class SubcardViewCell: UICollectionViewCell {
     
-    static let identifier = "subcardViewCell"
+    static let identifier = "SubcardViewCell"
     
     @IBOutlet weak var expandedView: UIView!
     @IBOutlet weak var birdImageView: UIImageView!

@@ -7,7 +7,7 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var birImage: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
-    @IBOutlet weak var DateLabel: UILabel!
+    @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var containerView: UIView!
     
     private var currentImageTask: Task<Void, Never>?
@@ -26,8 +26,8 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         currentImageTask = nil
         birImage.image = UIImage(systemName: "bird.fill")
         titleLabel.text = nil
-        DateLabel.text = nil
-        DateLabel.isHidden = false
+        dateLabel.text = nil
+        dateLabel.isHidden = false
     }
 
 
@@ -59,7 +59,7 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         
         titleLabel.textColor = .label
         
-        DateLabel.textColor = .secondaryLabel
+        dateLabel.textColor = .secondaryLabel
     }
 
     private func applySemanticAppearance() {
@@ -104,7 +104,7 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
             weight: .semibold
         )
         
-        DateLabel.font = UIFont.systemFont(
+        dateLabel.font = UIFont.systemFont(
             ofSize: min(calculatedDateSize, 18.0),
             weight: .regular
         )
@@ -122,8 +122,8 @@ class GridUpcomingGridCollectionViewCell: UICollectionViewCell {
         
         titleLabel.text = spot.title
         let trimmedDate = spot.date.trimmingCharacters(in: .whitespacesAndNewlines)
-        DateLabel.text = trimmedDate
-        DateLabel.isHidden = trimmedDate.isEmpty
+        dateLabel.text = trimmedDate
+        dateLabel.isHidden = trimmedDate.isEmpty
     }
 
 

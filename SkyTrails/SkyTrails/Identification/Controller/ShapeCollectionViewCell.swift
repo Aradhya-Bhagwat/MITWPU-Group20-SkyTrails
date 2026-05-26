@@ -1,7 +1,7 @@
 
 import UIKit
 
-class shapeCollectionViewCell: UICollectionViewCell {
+class ShapeCollectionViewCell: UICollectionViewCell {
 
     @IBOutlet weak var shapeImageView: UIImageView!
     

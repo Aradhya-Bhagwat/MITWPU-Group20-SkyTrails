@@ -557,8 +557,8 @@ class PredictOutputViewController: UIViewController {
             endDate: endDate
         )
 
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? BirdspredViewController {
             mapVC.predictionInputs = [birdInput]
             if let mainNav = self.navigationController?.parent?.navigationController {
                 mainNav.pushViewController(mapVC, animated: true)
@@ -948,7 +948,7 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         cv.backgroundColor = .clear
         cv.dataSource = self
         cv.delegate = self
-        cv.register(UINib(nibName: "spotsToVisitOutputCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "spotsToVisitOutputCollectionViewCell")
+        cv.register(UINib(nibName: "SpotsToVisitOutputCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "SpotsToVisitOutputCollectionViewCell")
         cv.clipsToBounds = true
         return cv
     }()
@@ -1181,9 +1181,9 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: "spotsToVisitOutputCollectionViewCell",
+            withReuseIdentifier: "SpotsToVisitOutputCollectionViewCell",
             for: indexPath
-        ) as? spotsToVisitOutputCollectionViewCell else {
+        ) as? SpotsToVisitOutputCollectionViewCell else {
             return UICollectionViewCell()
         }
 
@@ -1215,11 +1215,11 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         }
         
         // 1. Update the state of visible cells directly to avoid 'reloadItems' choppiness
-        if let prev = previousIndex, let prevCell = collectionView.cellForItem(at: IndexPath(item: prev, section: 0)) as? spotsToVisitOutputCollectionViewCell {
+        if let prev = previousIndex, let prevCell = collectionView.cellForItem(at: IndexPath(item: prev, section: 0)) as? SpotsToVisitOutputCollectionViewCell {
             prevCell.setCardSelected(false, animated: true)
         }
         
-        if let currentCell = collectionView.cellForItem(at: indexPath) as? spotsToVisitOutputCollectionViewCell {
+        if let currentCell = collectionView.cellForItem(at: indexPath) as? SpotsToVisitOutputCollectionViewCell {
             currentCell.setCardSelected(indexPath.item == selectedIndex, animated: true)
         }
 

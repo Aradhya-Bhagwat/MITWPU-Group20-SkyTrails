@@ -139,7 +139,7 @@ class BirdDateInputViewController: UIViewController {
     }
     
     @objc private func didTapAdd() {
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else { return }
         selectionVC.selectedSpecies = Set(collectedData.map { $0.species.id })
         selectionVC.existingInputs = collectedData
@@ -148,8 +148,8 @@ class BirdDateInputViewController: UIViewController {
     }
     
     @objc private func didTapDone() {
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-        guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController else { return }
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
+        guard let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? BirdspredViewController else { return }
         
         mapVC.predictionInputs = collectedData
         mapVC.isPredictFlow = true

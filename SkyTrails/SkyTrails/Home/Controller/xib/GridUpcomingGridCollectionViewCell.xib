@@ -59,7 +59,7 @@
                 <constraint firstAttribute="trailing" secondItem="4rG-nK-Pnt" secondAttribute="trailing" id="eqx-gU-6iL"/>
             </constraints>
             <connections>
-                <outlet property="DateLabel" destination="Ode-7X-k5r" id="a6G-Oc-i76"/>
+                <outlet property="dateLabel" destination="Ode-7X-k5r" id="a6G-Oc-i76"/>
                 <outlet property="birImage" destination="FFH-mR-4Bq" id="rp2-jt-PFg"/>
                 <outlet property="containerView" destination="4rG-nK-Pnt" id="Zlc-h4-6IJ"/>
                 <outlet property="titleLabel" destination="iHJ-IX-WTJ" id="VTX-SQ-fPR"/>

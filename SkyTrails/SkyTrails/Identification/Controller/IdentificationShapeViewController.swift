@@ -57,7 +57,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     private func setupCollectionView() {
         shapeCollectionView.delegate = self
         shapeCollectionView.dataSource = self
-        let nib = UINib(nibName: "shapeCollectionViewCell", bundle: nil)
+        let nib = UINib(nibName: "ShapeCollectionViewCell", bundle: nil)
         shapeCollectionView.register(nib, forCellWithReuseIdentifier: "shapeCell")
     }
 
@@ -98,7 +98,7 @@ class IdentificationShapeViewController: UIViewController, UICollectionViewDeleg
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as! shapeCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "shapeCell", for: indexPath) as! ShapeCollectionViewCell
         
         let shape = filteredShapes[indexPath.item]
         cell.configure(with: shape.name, imageName: shape.icon)

@@ -23,7 +23,7 @@ private enum MigrationRouteStyle {
 	static let endColor = UIColor.systemRed.withAlphaComponent(0.6)
 }
 
-class birdspredViewController: UIViewController {
+class BirdspredViewController: UIViewController {
 	
 	@IBOutlet weak var mapView: MKMapView!
 	@IBOutlet weak var pillView: UIView!
@@ -736,7 +736,7 @@ class birdspredViewController: UIViewController {
 	}
 }
 
-extension birdspredViewController: MKMapViewDelegate {
+extension BirdspredViewController: MKMapViewDelegate {
 	func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
 		print("DEBUG RENDERER: overlay type = \(type(of: overlay))")
 		

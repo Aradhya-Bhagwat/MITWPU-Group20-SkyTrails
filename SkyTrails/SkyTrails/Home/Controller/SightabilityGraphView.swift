@@ -8,7 +8,6 @@ class SightabilityGraphView: UIView {
     var isLoading: Bool = true {
         didSet { setNeedsDisplay() }
     }
-    
     override func draw(_ rect: CGRect) {
         guard let ctx = UIGraphicsGetCurrentContext() else { return }
         

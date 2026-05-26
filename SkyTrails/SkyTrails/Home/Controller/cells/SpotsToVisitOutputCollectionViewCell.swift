@@ -1,8 +1,8 @@
 
 import UIKit
 
-final class spotsToVisitOutputCollectionViewCell: UICollectionViewCell {
-    static let identifier = "spotsToVisitOutputCollectionViewCell"
+final class SpotsToVisitOutputCollectionViewCell: UICollectionViewCell {
+    static let identifier = "SpotsToVisitOutputCollectionViewCell"
 
     @IBOutlet weak var mainStackView: UIStackView!
     @IBOutlet weak var compactCardView: UIView!

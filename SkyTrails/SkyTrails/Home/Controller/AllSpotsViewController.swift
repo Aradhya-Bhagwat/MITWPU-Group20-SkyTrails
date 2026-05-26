@@ -69,12 +69,12 @@ class AllSpotsViewController: UIViewController {
 
     private func sortData(by option: SortOption) {
         currentSort = option
-        let sortBlock: (PopularSpotResult, PopularSpotResult) -> Bool = { a, b in
+        let sortBlock: (PopularSpotResult, PopularSpotResult) -> Bool = { firstSpot, secondSpot in
             switch option {
-            case .nameAsc: return a.title < b.title
-            case .nameDesc: return a.title > b.title
-            case .percentageHigh: return a.speciesCount > b.speciesCount
-            case .percentageLow: return a.speciesCount < b.speciesCount
+            case .nameAsc: return firstSpot.title < secondSpot.title
+            case .nameDesc: return firstSpot.title > secondSpot.title
+            case .percentageHigh: return firstSpot.speciesCount > secondSpot.speciesCount
+            case .percentageLow: return firstSpot.speciesCount < secondSpot.speciesCount
             }
         }
         
@@ -232,19 +232,19 @@ class AllSpotsViewController: UIViewController {
 
                 await MainActor.run {
                     self.isEBirdLoading = false
-                    let mapped = live.map { h in
+                    let mapped = live.map { hotspot in
                         PopularSpotResult(
                             id: UUID(),
-                            title: h.name,
-                            location: h.name,
-                            latitude: h.lat,
-                            longitude: h.lon,
-                            speciesCount: h.checklistCount,
+                            title: hotspot.name,
+                            location: hotspot.name,
+                            latitude: hotspot.lat,
+                            longitude: hotspot.lon,
+                            speciesCount: hotspot.checklistCount,
                             observedCount: 0,
                             radius: 2.0,
                             imageName: nil,
                             edgeSpecies: preliminarySpecies,
-                            hotspotId: h.hotspotId
+                            hotspotId: hotspot.hotspotId
                         )
                     }
                     self.recommendationsData.append(contentsOf: mapped)
@@ -368,7 +368,11 @@ extension AllSpotsViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         guard kind == UICollectionView.elementKindSectionHeader,
-              let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as? SectionHeaderCollectionReusableView else {
+              let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: SectionHeaderCollectionReusableView.identifier,
+                for: indexPath
+              ) as? SectionHeaderCollectionReusableView else {
             return UICollectionReusableView()
         }
         

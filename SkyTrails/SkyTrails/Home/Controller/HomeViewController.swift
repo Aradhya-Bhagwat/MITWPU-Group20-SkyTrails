@@ -424,8 +424,8 @@ extension HomeViewController {
     }
 
     private func navigateToBirdPrediction(input: BirdDateInput) {
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
-        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? BirdspredViewController {
             mapVC.predictionInputs = [input]
             navigationController?.pushViewController(mapVC, animated: true)
         }
@@ -830,7 +830,7 @@ extension HomeViewController {
     }
 
     private func didTapPredictBird() {
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else {
             return
         }

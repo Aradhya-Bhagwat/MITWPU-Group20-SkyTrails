@@ -29,9 +29,15 @@ final class AppTourManager: NSObject {
     
     private override init() {
         super.init()
+        if ProcessInfo.processInfo.environment["IS_UI_TESTING"] == "YES" {
+            currentStep = .completed
+            UserDefaults.standard.set(true, forKey: "hasCompletedGuestTour")
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+            return
+        }
         let onboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         let guest = UserDefaults.standard.bool(forKey: "hasCompletedGuestTour")
-        print("TOUR: Initialized. Onboarding completed: \(onboarding), Guest tour completed: \(guest)")
+        // print("TOUR: Initialized. Onboarding completed: \(onboarding), Guest tour completed: \(guest)")
         
         if onboarding {
             currentStep = .completed
@@ -46,10 +52,10 @@ final class AppTourManager: NSObject {
     
     func startTour(from vc: UIViewController) {
         guard !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") else { 
-            print("TOUR: Skipping member tour - already completed")
+            // print("TOUR: Skipping member tour - already completed")
             return 
         }
-        print("TOUR: Starting member tour from \(type(of: vc))")
+        // print("TOUR: Starting member tour from \(type(of: vc))")
         currentViewController = vc
         currentStep = .welcome
         showCurrentStep()
@@ -57,17 +63,17 @@ final class AppTourManager: NSObject {
     
     func startGuestTour(from vc: UIViewController) {
         guard !UserDefaults.standard.bool(forKey: "hasCompletedGuestTour") else { 
-            print("TOUR: Skipping guest tour - already completed")
+            // print("TOUR: Skipping guest tour - already completed")
             return 
         }
-        print("TOUR: Starting guest tour from \(type(of: vc))")
+        // print("TOUR: Starting guest tour from \(type(of: vc))")
         currentViewController = vc
         currentStep = .guestWelcome
         showCurrentStep()
     }
     
     func skipTour() {
-        print("TOUR: User skipped tour at step \(currentStep)")
+        // print("TOUR: User skipped tour at step \(currentStep)")
         cleanup()
         if currentStep.rawValue >= 100 {
             UserDefaults.standard.set(true, forKey: "hasCompletedGuestTour")
@@ -79,7 +85,7 @@ final class AppTourManager: NSObject {
     }
     
     func completeTour() {
-        print("TOUR: Tour completed!")
+        // print("TOUR: Tour completed!")
         cleanup()
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         UserDefaults.standard.set(false, forKey: "isNewSignUp")
@@ -98,7 +104,7 @@ final class AppTourManager: NSObject {
     
     func advanceStep(to nextStep: TourStep) {
         guard isTourActive, !isTransitioning else { return }
-        print("TOUR: Advancing from \(currentStep) to \(nextStep)")
+        // print("TOUR: Advancing from \(currentStep) to \(nextStep)")
         currentStep = nextStep
         isTransitioning = true
         retryCount = 0
@@ -112,25 +118,25 @@ final class AppTourManager: NSObject {
     
     private func showCurrentStep() {
         guard isTourActive else { 
-            print("TOUR: showCurrentStep cancelled - tour is inactive (step: \(currentStep))")
+            // print("TOUR: showCurrentStep cancelled - tour is inactive (step: \(currentStep))")
             return 
         }
         
         guard let window = getActiveWindow() else {
             if retryCount < 5 {
                 retryCount += 1
-                print("TOUR: Window not found, retrying in 0.5s... (Attempt \(retryCount))")
+                // print("TOUR: Window not found, retrying in 0.5s... (Attempt \(retryCount))")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                     self?.showCurrentStep()
                 }
             } else {
-                print("TOUR: Error - Could not find active window after retries")
+                // print("TOUR: Error - Could not find active window after retries")
             }
             return
         }
         
         cleanup()
-        print("TOUR: ---> Showing step \(currentStep)")
+        // print("TOUR: ---> Showing step \(currentStep)")
         
         switch currentStep {
         case .welcome: showWelcomeStep()
@@ -211,7 +217,7 @@ final class AppTourManager: NSObject {
             return 
         }
         
-        print("TOUR: Switching to Watchlist tab...")
+        // print("TOUR: Switching to Watchlist tab...")
         tabBarController.selectedIndex = 1
         
         // Wait for tab switch and view layout
@@ -222,7 +228,7 @@ final class AppTourManager: NSObject {
             var targetView: UIView?
             if let nav = tabBarController.viewControllers?[1] as? UINavigationController {
                 if let watchlistVC = nav.topViewController as? WatchlistHomeViewController {
-                    print("TOUR: Found WatchlistHomeViewController")
+                    // print("TOUR: Found WatchlistHomeViewController")
                     self.currentViewController = watchlistVC
                     watchlistVC.loadViewIfNeeded()
                     targetView = watchlistVC.summaryCardCollectionView?.cellForItem(at: IndexPath(item: 0, section: 0))
@@ -251,7 +257,7 @@ final class AppTourManager: NSObject {
             return 
         }
         
-        print("TOUR: Switching to Identification tab...")
+        // print("TOUR: Switching to Identification tab...")
         tabBarController.selectedIndex = 2
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
@@ -261,7 +267,7 @@ final class AppTourManager: NSObject {
             var targetView: UIView?
             if let nav = tabBarController.viewControllers?[2] as? UINavigationController {
                 if let identVC = nav.topViewController as? IdentificationViewController {
-                    print("TOUR: Found IdentificationViewController")
+                    // print("TOUR: Found IdentificationViewController")
                     self.currentViewController = identVC
                     identVC.loadViewIfNeeded()
                     targetView = identVC.startButton
@@ -286,12 +292,12 @@ final class AppTourManager: NSObject {
     
     private func showProfileLocationStep() {
         guard let tabBarController = getTabBarController() else { 
-            print("TOUR: Error - Could not find tab bar controller for profile step")
+            // print("TOUR: Error - Could not find tab bar controller for profile step")
             completeTour()
             return 
         }
         
-        print("TOUR: Switching back to Home for Profile explanation...")
+        // print("TOUR: Switching back to Home for Profile explanation...")
         tabBarController.selectedIndex = 0
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
@@ -498,7 +504,7 @@ final class AppTourManager: NSObject {
     func trackViewControllerAppeared(_ vc: UIViewController) {
         guard isTourActive else { return }
         currentViewController = vc
-        print("TOUR: VC appeared: \(type(of: vc)), current step: \(currentStep)")
+        // print("TOUR: VC appeared: \(type(of: vc)), current step: \(currentStep)")
     }
 }
 

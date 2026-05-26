@@ -94,6 +94,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     @MainActor
     private func runStartupFlow(connectionOptions: UIScene.ConnectionOptions) async {
+        if ProcessInfo.processInfo.environment["IS_UI_TESTING"] == "YES" {
+            didFinishStartup = true
+            routeToCurrentSessionRoot()
+            return
+        }
         let center = UNUserNotificationCenter.current()
         center.delegate = NotificationDelegate.shared
 
@@ -125,13 +130,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             do {
                 _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
             } catch {
-                print("DEBUG: Startup initial sync failed: \(error)")
+                LoggingService.shared.log(error: error, context: "SceneDelegate.runStartupFlow.initialSync")
             }
 
             do {
                 try await IdentificationSyncService.shared.performSync(userId: user.user_id)
             } catch {
-                print("DEBUG: Startup identification sync failed: \(error)")
+                LoggingService.shared.log(error: error, context: "SceneDelegate.runStartupFlow.identificationSync")
             }
             
             if RealtimeSyncService.shared.connectionState == .disconnected {
@@ -219,12 +224,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         do {
             _ = try await InitialSyncService.shared.performInitialSync(userId: user.user_id)
         } catch {
-            print("DEBUG: SceneDelegate initial sync failed: \(error)")
+            LoggingService.shared.log(error: error, context: "SceneDelegate.reconnect.initialSync")
         }
         do {
             try await IdentificationSyncService.shared.performSync(userId: user.user_id)
         } catch {
-            print("DEBUG: SceneDelegate identification sync failed: \(error)")
+            LoggingService.shared.log(error: error, context: "SceneDelegate.reconnect.identificationSync")
         }
 
         if RealtimeSyncService.shared.connectionState == .disconnected {

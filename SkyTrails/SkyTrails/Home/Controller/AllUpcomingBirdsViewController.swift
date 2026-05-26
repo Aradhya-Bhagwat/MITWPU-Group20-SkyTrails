@@ -34,7 +34,7 @@ class AllUpcomingBirdsViewController: UIViewController {
         collectionView.collectionViewLayout = createLayout()
         
         collectionView.register(
-            UINib(nibName: "GridUpcomingBirdCollectionViewCell", bundle: nil),
+            UINib(nibName: "GridUpcomingGridCollectionViewCell", bundle: nil),
             forCellWithReuseIdentifier: GridUpcomingGridCollectionViewCell.identifier
         )
         
@@ -62,7 +62,7 @@ class AllUpcomingBirdsViewController: UIViewController {
 
             
     @objc private func didTapPredict() {
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
         guard let selectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController else {
             return
         }
@@ -199,7 +199,11 @@ extension AllUpcomingBirdsViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         guard kind == UICollectionView.elementKindSectionHeader,
-              let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SectionHeaderCollectionReusableView.identifier, for: indexPath) as? SectionHeaderCollectionReusableView else {
+              let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: SectionHeaderCollectionReusableView.identifier,
+                for: indexPath
+              ) as? SectionHeaderCollectionReusableView else {
             return UICollectionReusableView()
         }
         
@@ -221,7 +225,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
             return
         }
 
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
         let bird: Bird
         let dateString: String
 
@@ -249,7 +253,7 @@ extension AllUpcomingBirdsViewController: UICollectionViewDelegate {
             startDate: finalStart,
             endDate: finalEnd
         )
-        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? birdspredViewController {
+        if let mapVC = storyboard.instantiateViewController(withIdentifier: "BirdMapResultViewController") as? BirdspredViewController {
             mapVC.predictionInputs = [input]
             self.navigationController?.pushViewController(mapVC, animated: true)
         }

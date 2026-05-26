@@ -60,7 +60,7 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="SearchBar" destination="6WZ-z8-39D" id="JC1-OH-XIM"/>
+                        <outlet property="searchBar" destination="6WZ-z8-39D" id="JC1-OH-XIM"/>
                         <outlet property="searchCollection" destination="DYK-5o-6pq" id="gi7-IN-SlT"/>
                     </connections>
                 </viewController>
@@ -86,7 +86,7 @@
         <!--Birdspred View Controller-->
         <scene sceneID="s0d-6b-0kx">
             <objects>
-                <viewController storyboardIdentifier="BirdMapResultViewController" id="Y6W-OH-hqX" customClass="birdspredViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="BirdMapResultViewController" id="Y6W-OH-hqX" customClass="BirdspredViewController" customModule="SkyTrails" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
                         <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

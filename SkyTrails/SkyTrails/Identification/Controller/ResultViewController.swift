@@ -301,7 +301,7 @@ class ResultViewController: UIViewController, UICollectionViewDelegate, UICollec
     func didTapPredict(for cell: ResultCollectionViewCell) {
         IdentificationTooltipManager.shared.cancelTooltip()
         guard let indexPath = cell.indexPath, let bird = birdResults[indexPath.item].bird else { return }
-        let storyboard = UIStoryboard(name: "birdspred", bundle: nil)
+        let storyboard = UIStoryboard(name: "Birdspred", bundle: nil)
         if let birdSelectionVC = storyboard.instantiateViewController(withIdentifier: "BirdSelectionViewController") as? BirdSelectionViewController {
             birdSelectionVC.selectedSpecies = [bird.bird_id.uuidString]
             self.navigationController?.pushViewController(birdSelectionVC, animated: true)

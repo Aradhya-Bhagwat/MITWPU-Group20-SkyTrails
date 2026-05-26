@@ -65,7 +65,7 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
     private func setupCollectionView() {
         birdListCollectionView.delegate = self
         birdListCollectionView.dataSource = self
-        birdListCollectionView.register(UINib(nibName: subcardViewCell.identifier, bundle: Bundle(for: subcardViewCell.self)), forCellWithReuseIdentifier: subcardViewCell.identifier)
+        birdListCollectionView.register(UINib(nibName: SubcardViewCell.identifier, bundle: Bundle(for: SubcardViewCell.self)), forCellWithReuseIdentifier: SubcardViewCell.identifier)
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -510,7 +510,9 @@ extension NewMigrationCollectionViewCell: UICollectionViewDataSource, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: subcardViewCell.identifier, for: indexPath) as! subcardViewCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SubcardViewCell.identifier, for: indexPath) as? SubcardViewCell else {
+            return UICollectionViewCell()
+        }
         let bird = birdSpecies[indexPath.row]
         cell.configure(with: bird)
         cell.setExpanded(indexPath.row == selectedBirdIndex)
@@ -578,19 +580,25 @@ extension NewMigrationCollectionViewCell: MKMapViewDelegate {
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polygon = overlay as? MKPolygon {
-            let r = MKPolygonRenderer(polygon: polygon)
-            r.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75); r.fillColor = UIColor.systemBlue.withAlphaComponent(0.10); r.lineWidth = 1.6
-            return r
+            let renderer = MKPolygonRenderer(polygon: polygon)
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
+            renderer.lineWidth = 1.6
+            return renderer
         }
         if let polyline = overlay as? MKPolyline {
-            let r = MKPolylineRenderer(polyline: polyline)
-            r.strokeColor = .systemBlue; r.lineWidth = 3; r.lineDashPattern = [2, 4]
-            return r
+            let renderer = MKPolylineRenderer(polyline: polyline)
+            renderer.strokeColor = .systemBlue
+            renderer.lineWidth = 3
+            renderer.lineDashPattern = [2, 4]
+            return renderer
         }
         if let circle = overlay as? MKCircle {
-            let r = MKCircleRenderer(circle: circle)
-            r.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7); r.fillColor = UIColor.systemBlue.withAlphaComponent(0.08); r.lineWidth = 1.5
-            return r
+            let renderer = MKCircleRenderer(circle: circle)
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7)
+            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08)
+            renderer.lineWidth = 1.5
+            return renderer
         }
         return MKOverlayRenderer()
     }
