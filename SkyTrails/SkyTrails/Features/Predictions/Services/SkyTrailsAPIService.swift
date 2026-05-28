@@ -13,6 +13,13 @@ final class SkyTrailsAPIService {
     static let shared = SkyTrailsAPIService()
     private init() {}
     
+    private func authorizationHeader(anonKey: String) -> String {
+        if let token = UserSession.shared.getAccessToken() {
+            return "Bearer \(token)"
+        }
+        return "Bearer \(anonKey)"
+    }
+    
     /// Fetches predictions using the hybrid Edge Function (Live + Scientific Cache)
     func fetchPredictions(lat: Double, lng: Double) async throws -> HotspotPredictionResponse {
         let config = try SupabaseConfig.load()
@@ -373,7 +380,7 @@ final class SkyTrailsAPIService {
             var request = URLRequest(url: url)
             request.timeoutInterval = 10
             request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-            request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+            request.setValue(authorizationHeader(anonKey: config.anonKey), forHTTPHeaderField: "Authorization")
 
             let (data, response) = try await URLSession.shared.data(for: request)
 

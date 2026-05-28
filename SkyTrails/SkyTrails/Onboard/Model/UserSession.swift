@@ -41,6 +41,15 @@ class UserSession {
         }
 
         notifyAuthStateChanged()
+        
+        // Immediately fetch and bind bird image URLs now that the user is authenticated.
+        Task {
+            await BirdDatabaseSeeder.shared.refreshImageUrls(modelContext: WatchlistManager.shared.context)
+            NotificationCenter.default.post(name: Self.userProfileDidChangeNotification, object: nil)
+            await MainActor.run {
+                self.notifyAuthStateChanged()
+            }
+        }
         Task {
             await createUserInSupabase(user: user)
         }

@@ -516,7 +516,8 @@ class HomeManager {
             request.httpMethod = "POST"
             request.timeoutInterval = 8
             request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-            request.setValue("Bearer \(config.anonKey)", forHTTPHeaderField: "Authorization")
+            let authHeader = UserSession.shared.getAccessToken().map { "Bearer \($0)" } ?? "Bearer \(config.anonKey)"
+            request.setValue(authHeader, forHTTPHeaderField: "Authorization")
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             
             var body: [String: Any] = ["lat": lat, "lng": lon]
