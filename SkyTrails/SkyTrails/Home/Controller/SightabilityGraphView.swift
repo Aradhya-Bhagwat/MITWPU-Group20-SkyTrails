@@ -20,7 +20,7 @@ class SightabilityGraphView: UIView {
         let graphRect = CGRect(x: yAxisWidth, y: 10, width: rect.width - yAxisWidth - 10, height: rect.height - bottomPadding - 10)
         
         let barCount = 52
-        let pointWidth = barCount > 1 ? graphRect.width / CGFloat(barCount - 1) : graphRect.width
+        let pointWidth = graphRect.width / CGFloat(barCount - 1)
         let maxBarHeight = graphRect.height
         
         let mainColor = lineColor

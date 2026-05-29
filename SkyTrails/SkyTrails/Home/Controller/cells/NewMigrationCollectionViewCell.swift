@@ -1,4 +1,3 @@
-
 import UIKit
 import MapKit
 import CoreLocation
@@ -278,7 +277,8 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
 
     @objc private func didTapViewInMaps() {
         guard let coordinate = currentHotspot?.centerCoordinate else { return }
-        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let mapItem = MKMapItem(location: location, address: nil)
         mapItem.name = currentHotspot?.placeName ?? "Current Location"
         mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
     }
@@ -454,8 +454,8 @@ class NewMigrationCollectionViewCell: UICollectionViewCell {
             return TerrainInfo(name: name.contains("Lake") ? "Wetlands" : "Parkland", symbolName: "tree.fill", color: .systemGreen, defaultImageName: "Terrain_Land")
         }
         
-        if let locality = mapItem.placemark.locality {
-            return TerrainInfo(name: "Urban \(locality)", symbolName: "mappin.and.ellipse", color: .systemTeal, defaultImageName: "Terrain_Residential")
+        if let locality = mapItem.addressRepresentations?.cityName, !locality.isEmpty {
+            return TerrainInfo(name: "Urban", symbolName: "mappin.and.ellipse", color: .systemTeal, defaultImageName: "Terrain_Residential")
         }
 
         return TerrainInfo(name: "Natural Area", symbolName: "map.fill", color: .systemGreen, defaultImageName: "Terrain_Land")

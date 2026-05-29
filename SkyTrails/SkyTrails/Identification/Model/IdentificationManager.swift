@@ -214,7 +214,7 @@ class IdentificationManager {
              try? seeder.seed(context: modelContext)
         }
 
-        let matchingBirds = allBirds.filter { ($0.shape?.bird_shape_id ?? $0.shape_id) == selectedId }
+        _ = allBirds.filter { ($0.shape?.bird_shape_id ?? $0.shape_id) == selectedId }
 
         var candidates: [IdentificationCandidate] = []
         let searchMonth = Calendar.current.component(.month, from: selectedDate)

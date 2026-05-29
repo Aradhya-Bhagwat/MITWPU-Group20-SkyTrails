@@ -181,11 +181,9 @@ class PredictOutputViewController: UIViewController {
                 }
                 allWeeksPerSpot[index] = weeks.sorted()
             } else {
-                // Fallback to current + next 2
                 let current = Calendar.current.component(.weekOfYear, from: Date())
                 allWeeksPerSpot[index] = [current, (current % 52) + 1, ((current + 1) % 52) + 1]
             }
-            print("DEBUG WEEKS: spot \(index) weeks = \(allWeeksPerSpot[index] ?? [])")
         }
 
         
@@ -730,7 +728,6 @@ extension PredictOutputViewController: UICollectionViewDataSource, UICollectionV
             self?.addToWatchlist(selectedPrediction)
         }
         
-        print("DEBUG PARENT: cellForItemAt index=\(indexPath.item) spot=\(groupedPredictions[indexPath.item].first?.likelySpot ?? "unknown")")
         return cell
     }
 
@@ -994,14 +991,10 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         searchBar.text = ""
         searchBar.resignFirstResponder()
         
-        // Reset collection view
+        // Reset collection view and empty states
         collectionView.reloadData()
-        
-        // Hide empty state
         emptyStateView.isHidden = true
         collectionView.isHidden = false
-        
-        print("DEBUG REUSE: cell \(ObjectIdentifier(self)) reused — state cleared")
     }
     
     required init?(coder: NSCoder) {
@@ -1015,21 +1008,16 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         allWeeks: [Int],
         presentingVC: UIViewController?
     ) {
-        // Always reset filter state on new configure
-        // This ensures a clean slate whether the cell
-        // is newly created or reused
+        // Reset filter and config states
         filterState = SpotFilterState()
         searchBar.text = ""
         
-        // Now set new data
         self.allPredictions = predictions
         self.filteredPredictions = predictions
         self.yearlySeriesByBird = yearlySeries
         self.selectedIndex = selectedIndex
         self.allWeeks = allWeeks
         self.presentingViewController = presentingVC
-        
-        print("DEBUG CONFIGURE: cell \(ObjectIdentifier(self)) spot=\(predictions.first?.likelySpot ?? "?") weeks=\(allWeeks)")
         
         applyFilter()
     }
@@ -1170,8 +1158,6 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         collectionView.isHidden = isEmpty
         emptyStateView.isHidden = !isEmpty
         collectionView.reloadData()
-        
-        print("DEBUG FILTER APPLY: cell \(ObjectIdentifier(self)) spot=\(allPredictions.first?.likelySpot ?? "?") results=\(filteredPredictions.count)")
     }
 
     // MARK: - UICollectionViewDataSource
@@ -1239,7 +1225,7 @@ class PredictLocationResultPageCell: UICollectionViewCell, UICollectionViewDataS
         if cardWidth > 450 {
             cardHeight = min(calculatedHeight, 180)
         } else {
-            cardHeight = max(calculatedHeight, 146)
+            cardHeight = 100
         }
 
         if indexPath.item == selectedIndex {

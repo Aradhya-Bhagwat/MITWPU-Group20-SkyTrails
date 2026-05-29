@@ -76,23 +76,17 @@ final class SkyTrailsAPIService {
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        print("DEBUG LOC: calling fetch-location-predictions")
-        print("DEBUG LOC: lat=\(lat) lng=\(lng) radius=\(radiusKm)km weeks=\(weekNumbers)")
-
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse 
-        else { throw APIError.invalidResponse }
-
-        print("DEBUG LOC: HTTP status \(httpResponse.statusCode)")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
 
         guard httpResponse.statusCode == 200 else {
             throw APIError.serverError("Status \(httpResponse.statusCode)")
         }
 
         let decoded = try JSONDecoder().decode(LocationPredictionResponse.self, from: data)
-        print("DEBUG LOC: got \(decoded.mergedSpecies.count) merged species")
-        print("DEBUG LOC: hotspots found = \(decoded.hotspots.count)")
         return decoded
     }
     
@@ -239,25 +233,18 @@ final class SkyTrailsAPIService {
             "lng": lng,
             "weekNumbers": weekNumbers
         ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        print("🌍 fetchWeeklyTrends body: lat=\(lat) lng=\(lng) weeks=\(weekNumbers)")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        print("🌍 fetchWeeklyTrends response: \(String(data: data, encoding: .utf8)?.prefix(200) ?? "nil")")
-
-        guard let httpResponse = response as? HTTPURLResponse
-        else { throw APIError.invalidResponse }
-
-        print("DEBUG WEEKLY: HTTP status \(httpResponse.statusCode)")
-
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
         guard httpResponse.statusCode == 200 else {
             throw APIError.serverError("Status \(httpResponse.statusCode)")
         }
 
         let decoded = try JSONDecoder().decode(WeeklyTrendsResponse.self, from: data)
-        print("DEBUG WEEKLY: got \(decoded.unifiedSpecies.count) unified species across \(weekNumbers.count) weeks")
         return decoded
     }
 

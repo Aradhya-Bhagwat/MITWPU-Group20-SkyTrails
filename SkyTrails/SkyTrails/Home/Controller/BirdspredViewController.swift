@@ -381,10 +381,7 @@ class BirdspredViewController: UIViewController {
 					return weeks.first ?? Calendar.current.component(.weekOfYear, from: Date())
 				}()
 
-				print("DEBUG FETCH: fetchAndAddBirdRange calculated week \(week) for \(speciesCode)")
-				
 				guard week > 0 else {
-					print("DEBUG FETCH: invalid week 0, aborting")
 					return
 				}
 				
@@ -430,9 +427,7 @@ class BirdspredViewController: UIViewController {
 						}
 					}
 					
-					print("DEBUG MAP: overlays on map = \(self.mapView.overlays.count)")
-					print("DEBUG MAP: map center = \(self.mapView.centerCoordinate)")
-					
+
 					// zoom to overlay bounds
 					let rect = self.mapView.overlays.reduce(MKMapRect.null) {
 						$0.union($1.boundingMapRect)
@@ -443,13 +438,9 @@ class BirdspredViewController: UIViewController {
 							edgePadding: UIEdgeInsets(top: 50, left: 50, bottom: 100, right: 50),
 							animated: true
 						)
-						print("DEBUG MAP: zoomed to overlay bounds")
 					}
 				}
 			} catch {
-				if !(error is CancellationError) {
-					print("DEBUG: Failed to fetch range for \(speciesCode): \(error)")
-				}
 			}
 		}
 	}
@@ -458,37 +449,13 @@ class BirdspredViewController: UIViewController {
 		if let polygon = geometry as? MKPolygon {
 			self.mapView.addOverlay(polygon)
 			self.currentGeoJSONOverlays.append(polygon)
-			print("DEBUG range: added overlay to map (Polygon)")
 		} else if let multiPolygon = geometry as? MKMultiPolygon {
 			self.mapView.addOverlay(multiPolygon)
 			self.currentGeoJSONOverlays.append(multiPolygon)
-			print("DEBUG range: added overlay to map (MultiPolygon)")
 		}
 	}
 	
 	private func loadMLSightingsIfNeeded(for input: BirdDateInput) -> [RelevantSighting] {
-		guard let speciesCode = input.species.ebirdSpeciesCode else { return [] }
-
-		let weeks = weekNumbers(from: input.startDate, to: input.endDate)
-
-		Task {
-			do {
-				for week in weeks {
-					let trends = try await SkyTrailsAPIService.shared
-						.fetchRegionalTrends(
-							lat: mapView.centerCoordinate.latitude,
-							lon: mapView.centerCoordinate.longitude,
-							week: week
-						)
-					let match = trends.first(where: { $0.id == speciesCode })
-					if let match = match {
-						print("Found \(match.name) in week \(week) with score \(match.score)")
-					}
-				}
-			} catch {
-				print("Error loading regional trends: \(error)")
-			}
-		}
 		return []
 	}
 	
@@ -586,24 +553,41 @@ class BirdspredViewController: UIViewController {
 	
 	private func reverseGeocodeDisplayName(for coordinate: CLLocationCoordinate2D, completion: @escaping (String) -> Void) {
 		let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-		CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ in
-			let fallback = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
-			guard let placemark = placemarks?.first else {
-				completion(fallback)
-				return
-			}
-			
-			let city = placemark.locality ?? placemark.subLocality ?? placemark.name
-			let region = placemark.administrativeArea ?? placemark.country
-			
-			if let city, let region, !city.isEmpty, !region.isEmpty, city != region {
-				completion("\(city), \(region)")
-			} else if let city, !city.isEmpty {
-				completion(city)
-			} else if let region, !region.isEmpty {
-				completion(region)
-			} else {
-				completion(fallback)
+		let fallback = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
+		
+		guard let request = MKReverseGeocodingRequest(location: location) else {
+			completion(fallback)
+			return
+		}
+		
+		Task {
+			do {
+				let mapItems = try await request.mapItems
+				guard let mapItem = mapItems.first else {
+					await MainActor.run { completion(fallback) }
+					return
+				}
+				
+				let city = mapItem.addressRepresentations?.cityName
+					?? mapItem.name
+					?? mapItem.address?.shortAddress
+				
+				let region = mapItem.addressRepresentations?.regionName
+					?? mapItem.address?.shortAddress
+				
+				await MainActor.run {
+					if let city, let region, !city.isEmpty, !region.isEmpty, city != region {
+						completion("\(city), \(region)")
+					} else if let city, !city.isEmpty {
+						completion(city)
+					} else if let region, !region.isEmpty {
+						completion(region)
+					} else {
+						completion(fallback)
+					}
+				}
+			} catch {
+				await MainActor.run { completion(fallback) }
 			}
 		}
 	}
@@ -738,8 +722,6 @@ class BirdspredViewController: UIViewController {
 
 extension BirdspredViewController: MKMapViewDelegate {
 	func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-		print("DEBUG RENDERER: overlay type = \(type(of: overlay))")
-		
 		if let polygon = overlay as? MKPolygon {
 			let renderer = MKPolygonRenderer(polygon: polygon)
 			renderer.fillColor = UIColor.abundanceMapColor.withAlphaComponent(0.3)

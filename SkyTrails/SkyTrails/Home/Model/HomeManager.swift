@@ -258,7 +258,6 @@ class HomeManager {
                     ebirdSpeciesCode: bird?.ebird_species_code ?? sp.id
                 )
             }
-            print("DEBUG regionalSpecies returning \(results.count) species")
             return results
         } catch {
             return []
@@ -685,8 +684,6 @@ class HomeManager {
             return []
         }
         
-        let currentWeek = Calendar.current.component(.weekOfYear, from: Date())
-        
         // Try regional trends first — shows "Your Area" card
         if let card = await mapRegionalTrendsToDynamicMapCard(
             lat: userLocation.latitude,
@@ -728,8 +725,6 @@ class HomeManager {
         let week2 = (currentWeek % 52) + 1
         let week3 = ((currentWeek + 1) % 52) + 1
         let weekNumbers = [week1, week2, week3]
-
-        print("DEBUG WEEKLY: loading weeks \(weekNumbers)")
 
         do {
             let response = try await
@@ -782,20 +777,18 @@ class HomeManager {
             if let activeName = LocationPreferences.shared.homeLocationName, !activeName.isEmpty {
                 locationTitle = activeName
             } else {
-                let geocoder = CLGeocoder()
                 let clLocation = CLLocation(latitude: lat, longitude: lng)
-                if let placemarks = try? await geocoder.reverseGeocodeLocation(clLocation),
-                   let placemark = placemarks.first {
-                    locationTitle = placemark.name
-                                 ?? placemark.thoroughfare
-                                 ?? placemark.subLocality
-                                 ?? placemark.locality
+                if let request = MKReverseGeocodingRequest(location: clLocation),
+                   let mapItems = try? await request.mapItems,
+                   let mapItem = mapItems.first {
+                    locationTitle = mapItem.name
+                                 ?? mapItem.addressRepresentations?.cityName
                                  ?? "Your Area"
                     
-                    let city = placemark.locality
-                    let state = placemark.administrativeArea
-                    let country = placemark.country
-                    let components = [city, state, country].compactMap { $0 }
+                    let city = mapItem.addressRepresentations?.cityName
+                    let state = mapItem.addressRepresentations?.regionName
+                    let shortAddress = mapItem.address?.shortAddress
+                    let components = [city, state, shortAddress].compactMap { $0 }
                     if !components.isEmpty {
                         locationDetail = components.joined(separator: ", ")
                     }
@@ -845,7 +838,6 @@ class HomeManager {
             )
 
         } catch {
-            print("DEBUG WEEKLY: fetch failed — \(error.localizedDescription)")
             return nil
         }
     }
@@ -1744,7 +1736,6 @@ class HomeManager {
             }
 
             let rawImage = bird.imageUrl ?? bird.staticImageName
-                         ?? bird.commonName
 
             return FinalPredictionResult(
                 birdName: bird.commonName,
@@ -1805,7 +1796,6 @@ class HomeManager {
         guard let lat = input.latitude, 
               let lon = input.longitude 
         else { 
-            print("DEBUG PREDICT: no lat/lng, aborting")
             return [] 
         }
     
@@ -1823,7 +1813,7 @@ class HomeManager {
             weekNumbers = [current]
         }
     
-        print("DEBUG PREDICT: fetching for lat=\(lat) lon=\(lon) radius=\(input.areaValue)km weeks=\(weekNumbers)")
+
     
         do {
             let response = try await 
@@ -1851,9 +1841,7 @@ class HomeManager {
                 let matchLat = matchedHotspot?.lat ?? lat
                 let matchLon = matchedHotspot?.lng ?? lon
     
-                if matchedHotspot != nil {
-                    print("DEBUG PREDICT: matched \(species.commonName) to hotspot \(likelySpot) at \(matchLat), \(matchLon)")
-                }
+
 
                 let rawImage = species.imageName ?? ""
                 let cleanImage = (rawImage.isEmpty || 
@@ -1885,15 +1873,13 @@ class HomeManager {
             }
     
             if !results.isEmpty {
-                print("DEBUG PREDICT: returning \(results.count) results. Top bird: \(results.first?.birdName ?? "None") (\(results.first?.spottingProbability ?? 0)%)")
                 return results
             }
         } catch {
-            print("DEBUG PREDICT: edge function failed — \(error.localizedDescription)")
         }
     
         // Fallback to existing getLivePredictions
-        print("DEBUG PREDICT: falling back to getLivePredictions")
+
         return await getLivePredictions(
             for: lat, 
             lon: lon, 

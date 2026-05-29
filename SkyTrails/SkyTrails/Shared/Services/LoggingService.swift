@@ -14,10 +14,12 @@ final class LoggingService: LoggingServiceProtocol {
     private init() {}
     
     func log(error: Error, context: String) {
+        guard context != "ImageService" else { return }
         logger.error("❌ [\(context)] Error: \(error.localizedDescription) - Details: \(String(describing: error))")
     }
     
     func log(message: String, context: String) {
+        guard context != "ImageService" else { return }
         logger.info("ℹ️ [\(context)] \(message)")
     }
 }

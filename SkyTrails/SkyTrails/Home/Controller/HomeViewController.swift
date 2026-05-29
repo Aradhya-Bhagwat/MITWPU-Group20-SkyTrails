@@ -79,7 +79,6 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     }
 
     @objc private func handleAuthStateChange() {
-        print("[DEBUG] HomeVC - Auth state changed. Refreshing data and checking tour...")
         refreshHomeData()
         
         // After auth change (like signup), data refresh is triggered.
@@ -111,12 +110,10 @@ class HomeViewController: UIViewController, UICollectionViewDelegate {
     @objc private func handleLocationChange(notification: Notification) {
         if notification.name == LocationService.authorizationDidChangeNotification {
             if LocationService.shared.isAuthorized {
-                print("[DEBUG] HomeVC - Authorization granted. Switching to GPS mode.")
                 LocationPreferences.shared.isManualOverride = false
             }
         }
         
-        print("[DEBUG] HomeVC - Location/Auth changed. Refreshing...")
         refreshHomeData()
     }
 
@@ -374,7 +371,6 @@ extension HomeViewController {
                 await LocationPreferences.shared.setHomeLocation(coord, name: data.displayName, isManual: false)
                 return coord
             } catch {
-                print("[DEBUG] GPS Fetch failed: \(error.localizedDescription)")
             }
         }
         
@@ -447,7 +443,7 @@ extension HomeViewController {
             let imageName = bird?.imageUrl ?? bird?.staticImageName
                 ?? fallbackUpcomingBirds.first(where: { $0.title.caseInsensitiveCompare(snapshot.commonName) == .orderedSame })?.imageName
                 ?? fallbackImageName
-            print("[DEBUG] applyMLDataOverride - bird=\(snapshot.commonName) imageName=\(imageName) bird.imageUrl=\(bird?.imageUrl ?? "nil") bird.staticImageName=\(bird?.staticImageName ?? "nil")")
+
             let startDate = weekDate(snapshot.startWeek) ?? Date()
             let endDate = weekDate(snapshot.endWeek) ?? Calendar.current.date(byAdding: .weekOfYear, value: 4, to: startDate) ?? startDate
 

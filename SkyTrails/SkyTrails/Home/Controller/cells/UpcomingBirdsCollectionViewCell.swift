@@ -128,15 +128,11 @@ class UpcomingBirdsCollectionViewCell: UICollectionViewCell {
            birdImageView.image = image ?? UIImage(systemName: "bird.fill")
            
            if let imageName = imageName {
-                print("[DEBUG] UpcomingBirdsCell - loading image for: \(imageName)")
                 currentImageTask = Task { @MainActor in
                     if let fetched = await ImageService.shared.image(for: imageName) {
-                        print("[DEBUG] UpcomingBirdsCell - SUCCESS loaded: \(imageName)")
                         if !Task.isCancelled {
                             self.birdImageView.image = fetched
                         }
-                    } else {
-                        print("[DEBUG] UpcomingBirdsCell - FAILED to load: \(imageName)")
                     }
                 }
             }

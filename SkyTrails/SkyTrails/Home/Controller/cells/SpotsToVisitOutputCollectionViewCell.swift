@@ -136,11 +136,18 @@ final class SpotsToVisitOutputCollectionViewCell: UICollectionViewCell {
 
 
     override func awakeFromNib() {
+        setupTraitChangeHandling()
         setupLayoutBehavior()
         setupPremiumWideLayout()
         setupAppearance()
         updateCardVariant()
         setupActionButtons()
+    }
+
+    private func setupTraitChangeHandling() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: SpotsToVisitOutputCollectionViewCell, _) in
+            self.updateColorsAndShadows()
+        }
     }
 
     private func setupPremiumWideLayout() {
@@ -244,16 +251,7 @@ final class SpotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         contentView.clipsToBounds = false
         clipsToBounds = false
         
-        compactCardView.backgroundColor = .systemBackground
-        wideCardView.backgroundColor = .systemBackground
-
-        // Apply premium shadow to the cards
-        [compactCardView, wideCardView].forEach { card in
-            card?.layer.shadowColor = UIColor.black.cgColor
-            card?.layer.shadowOpacity = 0.08
-            card?.layer.shadowOffset = CGSize(width: 0, height: 8)
-            card?.layer.shadowRadius = 16
-        }
+        updateColorsAndShadows()
 
         compactBirdImageView.layer.cornerRadius = 16
         wideBirdImageView.layer.cornerRadius = 20
@@ -280,71 +278,67 @@ final class SpotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         return v
     }()
 
-    private lazy var compactWeekInfoStack: UIStackView = {
-        let v = UIStackView(arrangedSubviews: [compactBadgeTitleLabel, compactSightabilityLabel])
-        v.axis = .vertical
-        v.spacing = 0
-        v.alignment = .trailing
-        return v
-    }()
-
     private func setupCompactPremiumLayout() {
-        // Clear and rebuild compactCardView to match premium theme
+        // Rebuild compact card layout to center all elements.
         compactCardView.subviews.forEach { $0.removeFromSuperview() }
         
         compactCardView.addSubview(compactBirdImageView)
-        compactCardView.addSubview(compactBirdNameLabel)
-        compactCardView.addSubview(compactBadgeSubtitleLabel)
         compactCardView.addSubview(compactCircularView)
-        compactCardView.addSubview(compactCalendarIcon)
-        compactCardView.addSubview(compactBadgeTitleLabel)
         
         compactBirdImageView.translatesAutoresizingMaskIntoConstraints = false
-        compactBirdNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        compactBadgeSubtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         compactCircularView.translatesAutoresizingMaskIntoConstraints = false
+        compactCalendarIcon.translatesAutoresizingMaskIntoConstraints = false
+        compactBirdNameLabel.translatesAutoresizingMaskIntoConstraints = false
         compactBadgeTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        compactBadgeSubtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Set standard size for calendar icon.
+        NSLayoutConstraint.activate([
+            compactCalendarIcon.widthAnchor.constraint(equalToConstant: 12),
+            compactCalendarIcon.heightAnchor.constraint(equalToConstant: 12)
+        ])
+        
+        // Stack calendar icon and week label horizontally.
+        let calendarRow = UIStackView(arrangedSubviews: [compactCalendarIcon, compactBadgeTitleLabel])
+        calendarRow.axis = .horizontal
+        calendarRow.spacing = 6
+        calendarRow.alignment = .center
+        calendarRow.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Stack bird name, calendar info, and residency status vertically.
+        let textStack = UIStackView(arrangedSubviews: [compactBirdNameLabel, calendarRow, compactBadgeSubtitleLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 4
+        textStack.alignment = .leading
+        textStack.distribution = .fill
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        compactCardView.addSubview(textStack)
         
         NSLayoutConstraint.activate([
-            // Bird Image (Left side, fixed square)
-            compactBirdImageView.leadingAnchor.constraint(equalTo: compactCardView.leadingAnchor, constant: 10),
+            // Center bird image vertically on left.
+            compactBirdImageView.leadingAnchor.constraint(equalTo: compactCardView.leadingAnchor, constant: 14),
             compactBirdImageView.centerYAnchor.constraint(equalTo: compactCardView.centerYAnchor),
             compactBirdImageView.widthAnchor.constraint(equalToConstant: 72),
             compactBirdImageView.heightAnchor.constraint(equalToConstant: 72),
             
-            // Circular Progress (Top Right)
-            compactCircularView.topAnchor.constraint(equalTo: compactCardView.topAnchor, constant: 12),
-            compactCircularView.trailingAnchor.constraint(equalTo: compactCardView.trailingAnchor, constant: -12),
-            compactCircularView.widthAnchor.constraint(equalToConstant: 28),
-            compactCircularView.heightAnchor.constraint(equalToConstant: 28),
+            // Center circular progress badge vertically on right.
+            compactCircularView.trailingAnchor.constraint(equalTo: compactCardView.trailingAnchor, constant: -16),
+            compactCircularView.centerYAnchor.constraint(equalTo: compactCardView.centerYAnchor),
+            compactCircularView.widthAnchor.constraint(equalToConstant: 32),
+            compactCircularView.heightAnchor.constraint(equalToConstant: 32),
             
-            // Bird Name (Top Left of content area)
-            compactBirdNameLabel.topAnchor.constraint(equalTo: compactCardView.topAnchor, constant: 12),
-            compactBirdNameLabel.leadingAnchor.constraint(equalTo: compactBirdImageView.trailingAnchor, constant: 12),
-            compactBirdNameLabel.trailingAnchor.constraint(lessThanOrEqualTo: compactCircularView.leadingAnchor, constant: -8),
-            
-            // Calendar Icon (Below Name)
-            compactCalendarIcon.topAnchor.constraint(equalTo: compactBirdNameLabel.bottomAnchor, constant: 6),
-            compactCalendarIcon.leadingAnchor.constraint(equalTo: compactBirdNameLabel.leadingAnchor),
-            compactCalendarIcon.widthAnchor.constraint(equalToConstant: 12),
-            compactCalendarIcon.heightAnchor.constraint(equalToConstant: 12),
-            
-            // Week Info Title (May 4th week)
-            compactBadgeTitleLabel.centerYAnchor.constraint(equalTo: compactCalendarIcon.centerYAnchor),
-            compactBadgeTitleLabel.leadingAnchor.constraint(equalTo: compactCalendarIcon.trailingAnchor, constant: 4),
-            compactBadgeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: compactCardView.trailingAnchor, constant: -12),
-            
-            // Subtitle (Expected/Recently spotted - Bottom row)
-            compactBadgeSubtitleLabel.topAnchor.constraint(equalTo: compactCalendarIcon.bottomAnchor, constant: 6),
-            compactBadgeSubtitleLabel.leadingAnchor.constraint(equalTo: compactBirdNameLabel.leadingAnchor),
-            compactBadgeSubtitleLabel.trailingAnchor.constraint(equalTo: compactCardView.trailingAnchor, constant: -12)
+            // Center text information stack vertically.
+            textStack.leadingAnchor.constraint(equalTo: compactBirdImageView.trailingAnchor, constant: 14),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: compactCircularView.leadingAnchor, constant: -12),
+            textStack.centerYAnchor.constraint(equalTo: compactCardView.centerYAnchor)
         ])
         
-        // Refine fonts and visibility
+        // Configure fonts and hide redundant views.
         compactBirdNameLabel.font = .systemFont(ofSize: 15, weight: .bold)
         compactBadgeTitleLabel.font = .systemFont(ofSize: 10, weight: .semibold)
         compactBadgeSubtitleLabel.font = .systemFont(ofSize: 11, weight: .regular)
-        compactSightabilityLabel.isHidden = true // Hide date range in compact to prevent crowding
+        compactSightabilityLabel.isHidden = true
     }
 
     private func setupActionButtons() {
@@ -494,51 +488,7 @@ final class SpotsToVisitOutputCollectionViewCell: UICollectionViewCell {
     }
 
     private func installCompactTopRowFixIfNeeded() {
-        guard !hasInstalledCompactTopRowFix else { return }
-        
-        // Safely check all required views exist and have the expected hierarchy
-        guard let nameLabel = compactBirdNameLabel,
-              let sightLabel = compactSightabilityLabel,
-              let badgeIcon = compactBadgeIconImageView,
-              let statusContainer = badgeIcon.superview?.superview,
-              nameLabel.superview === compactCardView,
-              sightLabel.superview === compactCardView else {
-            return
-        }
-
-        hasInstalledCompactTopRowFix = true
-
-        for constraint in compactCardView.constraints {
-            let first = constraint.firstItem as AnyObject?
-            let second = constraint.secondItem as AnyObject?
-            let touchesCompactSightability = first === sightLabel || second === sightLabel
-            let touchesCompactImage = first === compactBirdImageView || second === compactBirdImageView
-            let touchesCompactBirdName = first === nameLabel || second === nameLabel
-            let touchesCompactStatusContainer = first === statusContainer || second === statusContainer
-
-            if touchesCompactSightability && touchesCompactImage && constraint.firstAttribute == .leading {
-                constraint.isActive = false
-            }
-
-            if touchesCompactSightability && constraint.firstAttribute == .top {
-                constraint.isActive = false
-            }
-
-            if touchesCompactSightability && touchesCompactBirdName && constraint.firstAttribute == .trailing {
-                constraint.isActive = false
-            }
-
-            if touchesCompactStatusContainer && constraint.firstAttribute == .centerY {
-                constraint.isActive = false
-            }
-        }
-
-        NSLayoutConstraint.activate([
-            sightLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 10),
-            sightLabel.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
-            sightLabel.trailingAnchor.constraint(lessThanOrEqualTo: compactCardView.trailingAnchor, constant: -12),
-            statusContainer.topAnchor.constraint(equalTo: sightLabel.bottomAnchor, constant: 14)
-        ])
+        // Handled dynamically and beautifully in setupCompactPremiumLayout
     }
 
     private func updateCardVariant() {
@@ -823,5 +773,24 @@ final class SpotsToVisitOutputCollectionViewCell: UICollectionViewCell {
         imageView.image = UIImage(systemName: "bird.circle.fill", withConfiguration: iconConfig)?
             .withTintColor(color, renderingMode: .alwaysOriginal)
         imageView.tintColor = color
+    }
+
+
+    private func updateColorsAndShadows() {
+        let isDark = traitCollection.userInterfaceStyle == .dark
+        
+        let cardBgColor = isDark 
+            ? UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) 
+            : .systemBackground
+            
+        compactCardView.backgroundColor = cardBgColor
+        wideCardView.backgroundColor = cardBgColor
+        
+        [compactCardView, wideCardView].forEach { card in
+            card?.layer.shadowColor = isDark ? UIColor.white.cgColor : UIColor.black.cgColor
+            card?.layer.shadowOpacity = isDark ? 0.05 : 0.08
+            card?.layer.shadowOffset = CGSize(width: 0, height: 4)
+            card?.layer.shadowRadius = isDark ? 12 : 16
+        }
     }
 }

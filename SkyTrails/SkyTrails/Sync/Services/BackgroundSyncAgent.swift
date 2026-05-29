@@ -653,7 +653,6 @@ actor BackgroundSyncAgent {
                 
             } catch {
                 var failedOp = operation
-                print("DEBUG: BackgroundSyncAgent operation failed - table: \(operation.table), op: \(operation.type.rawValue), recordId: \(operation.recordId), error: \(error.localizedDescription)")
                 
                 // Special handling for 409 (Conflict)
                 if let nsError = error as NSError?, nsError.code == 409 {
@@ -662,15 +661,12 @@ actor BackgroundSyncAgent {
                     let isIDTable = operation.table.hasPrefix("identification_")
 
                     if isDuplicate && isIDTable {
-                        print("DEBUG: BackgroundSyncAgent - 409 unique constraint for \(operation.table) recordId=\(operation.recordId). Marking as synced.")
-                        let context = WatchlistManager.shared.context
-                        markRecordSynced(table: operation.table, recordId: operation.recordId, context: context)
+                        await markRecordSynced(table: operation.table, recordId: operation.recordId)
                         queue.remove(at: 0)
                         Self.saveQueueToDisk(queue)
                         continue
                     }
 
-                    print("DEBUG: BackgroundSyncAgent - 409 Conflict for \(operation.table). Moving to back of queue.")
                     queue.remove(at: 0)
                     queue.append(failedOp)
                     Self.saveQueueToDisk(queue)
@@ -683,8 +679,6 @@ actor BackgroundSyncAgent {
                 failedOp.lastError = error.localizedDescription
                 
                 if failedOp.attempts >= maxRetries {
-                    let lastError = failedOp.lastError ?? "none"
-                    print("DEBUG: BackgroundSyncAgent moving to dead-letter - table: \(failedOp.table), op: \(failedOp.type.rawValue), recordId: \(failedOp.recordId), attempts: \(failedOp.attempts), lastError: \(lastError)")
                     deadLetterQueue.append(failedOp)
                     queue.remove(at: 0)
                     Self.saveDeadLetterToDisk(deadLetterQueue)
@@ -876,7 +870,9 @@ actor BackgroundSyncAgent {
         } catch { }
     }
 
-    private func markRecordSynced(table: String, recordId: UUID, context: ModelContext) {
+    @MainActor
+    private func markRecordSynced(table: String, recordId: UUID) {
+        let context = WatchlistManager.shared.context
         switch table {
         case "identification_sessions":
             if let item = try? context.fetch(FetchDescriptor<IdentificationSession>(predicate: #Predicate { $0.identification_session_id == recordId })).first {
