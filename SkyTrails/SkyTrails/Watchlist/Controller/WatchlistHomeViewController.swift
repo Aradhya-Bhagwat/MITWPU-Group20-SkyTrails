@@ -186,7 +186,7 @@ class WatchlistHomeViewController: UIViewController {
 			}
 		}
 		let uniqueKeys = Array(imageKeys)
-		Task {
+		Task.detached(priority: .background) {
 			await IdentificationImageService.shared.prefetch(keys: uniqueKeys)
 		}
 	}

@@ -331,14 +331,14 @@ extension HomeViewController {
                 card.hotspot.birdSpecies.forEach { imageKeys.insert($0.birdImageName) }
             }
 
+            self.homeCollectionView.reloadData()
+
             let keysArray = Array(imageKeys).filter { !$0.isEmpty }
             if !keysArray.isEmpty {
-                Task {
+                Task.detached(priority: .background) {
                     await ImageService.shared.prefetch(keys: keysArray)
                 }
             }
-            
-            self.homeCollectionView.reloadData()
             
             // Start the tour now that data is loaded and UI is ready
             self.checkAndStartTourIfNeeded()

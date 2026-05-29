@@ -54,7 +54,8 @@ final class ImageService: ImageProviding {
     private var manifests: [IdentificationManifestSource: IdentificationManifest] = [:]
     private var manifestTasks: [IdentificationManifestSource: Task<Void, Never>] = [:]
     private var imageTasks: [String: Task<UIImage?, Never>] = [:]
-    private var failedRemoteKeys: Set<String> = []
+    private var failedRemoteKeys: [String: Date] = [:]
+    private let failedRemoteRetryDelay: TimeInterval = 5 * 60
     private let prefetchConcurrencyLimit = 6
     private let allowedDefaultProfileKeys: Set<String> = [
         "id_canvas_finch_beak_default",
@@ -219,7 +220,15 @@ final class ImageService: ImageProviding {
 
         await refreshManifestIfNeeded(force: false, source: manifestSource)
 
-        if failedRemoteKeys.contains(normalizedKey) {
+        if isRecentlyFailedRemoteKey(normalizedKey) {
+            if shouldTryBirdBucketFallback(for: normalizedKey),
+               let birdImage = await loadFromBirdBucket(
+                   keyCandidates: keyCandidates,
+                   normalizedKey: normalizedKey,
+                   diskKey: diskKey
+               ) {
+                return birdImage
+            }
             return fallbackAssetImage(for: keyCandidates, originalKey: normalizedKey)
         }
 
@@ -240,7 +249,7 @@ final class ImageService: ImageProviding {
             source: manifestSource,
             shapeId: normalizedShapeId
         ) else {
-            failedRemoteKeys.insert(normalizedKey)
+            markRemoteKeyFailed(normalizedKey)
             if shouldTryBirdBucketFallback(for: normalizedKey),
                let birdImage = await loadFromBirdBucket(
                    keyCandidates: keyCandidates,
@@ -265,7 +274,7 @@ final class ImageService: ImageProviding {
                 let status = (response as? HTTPURLResponse)?.statusCode ?? -1
                 LoggingService.shared.log(message: "Manifest image fetch failed with status \(status): \(remoteURL.absoluteString)", context: "ImageService")
                 if status >= 400 {
-                    failedRemoteKeys.insert(normalizedKey)
+                    markRemoteKeyFailed(normalizedKey)
                 }
                 if shouldTryBirdBucketFallback(for: normalizedKey),
                    let birdImage = await loadFromBirdBucket(
@@ -279,7 +288,7 @@ final class ImageService: ImageProviding {
             }
             guard let image = UIImage(data: data) else {
                 LoggingService.shared.log(message: "Failed to decode manifest image data: \(remoteURL.absoluteString)", context: "ImageService")
-                failedRemoteKeys.insert(normalizedKey)
+                markRemoteKeyFailed(normalizedKey)
                 if shouldTryBirdBucketFallback(for: normalizedKey),
                    let birdImage = await loadFromBirdBucket(
                        keyCandidates: keyCandidates,
@@ -295,7 +304,7 @@ final class ImageService: ImageProviding {
                 saveCachedChecksum(checksum, for: diskKey)
             }
             memoryCache.setObject(image, forKey: memKey)
-            failedRemoteKeys.remove(normalizedKey)
+            clearFailedRemoteKey(normalizedKey)
             return image
         } catch {
             LoggingService.shared.log(error: error, context: "ImageService")
@@ -686,8 +695,9 @@ final class ImageService: ImageProviding {
         }
 
         let birdBucket = birdBucketName()
-        let fileExtensions = ["jpg", "png", "jpeg", "webp"]
+        let fileExtensions = ["jpg", "jpeg", "png", "webp"]
         let folderPrefixes = ["", "birds/", "bird/"]
+        let imageExtensions = Set(fileExtensions)
 
         var baseNames: [String] = []
         func addBaseName(_ name: String) {
@@ -702,55 +712,71 @@ final class ImageService: ImageProviding {
             addBaseName(candidate)
         }
 
+        var exactPaths: [String] = []
+        func addExactPath(_ name: String) {
+            let trimmed = name.trimmingCharacters(in: CharacterSet(charactersIn: "/").union(.whitespacesAndNewlines))
+            guard !trimmed.isEmpty, !exactPaths.contains(trimmed) else { return }
+            exactPaths.append(trimmed)
+        }
+
+        for candidate in keyCandidates {
+            let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+            let ext = URL(fileURLWithPath: trimmed).pathExtension.lowercased()
+            if imageExtensions.contains(ext) {
+                addExactPath(trimmed)
+                addExactPath(trimmed.lowercased())
+                addBaseName(String(trimmed.dropLast(ext.count + 1)))
+                addBaseName(String(trimmed.lowercased().dropLast(ext.count + 1)))
+            }
+        }
+
         let cleaned = normalizedKey.replacingOccurrences(of: "'", with: "")
         addBaseName(cleaned.lowercased().replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: "-", with: "_"))
         addBaseName(cleaned.lowercased().replacingOccurrences(of: " ", with: "-").replacingOccurrences(of: "_", with: "-"))
         addBaseName(cleaned.lowercased().replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: "-", with: " "))
 
         var objectPaths: [String] = []
+        func addObjectPath(_ path: String) {
+            guard !path.isEmpty, !objectPaths.contains(path) else { return }
+            objectPaths.append(path)
+        }
 
-        // Priority 1: preferred extension (.jpg) in root folder
-        for base in baseNames {
-            let path = "\(base).jpg"
-            if !objectPaths.contains(path) {
-                objectPaths.append(path)
+        // Exact object names from the database win first, especially values like "house_sparrow.jpg".
+        for exactPath in exactPaths {
+            addObjectPath(exactPath)
+        }
+        for prefix in folderPrefixes where !prefix.isEmpty {
+            for exactPath in exactPaths {
+                addObjectPath("\(prefix)\(exactPath)")
             }
         }
 
-        // Priority 2: preferred extension (.jpg) with folder prefixes
+        // Then try generated names in the bucket root. Bird assets are expected to be JPG first.
+        for base in baseNames {
+            for ext in fileExtensions {
+                addObjectPath("\(base).\(ext)")
+            }
+        }
+
+        // Then try common folder layouts.
         for prefix in folderPrefixes where !prefix.isEmpty {
             for base in baseNames {
-                let path = "\(prefix)\(base).jpg"
-                if !objectPaths.contains(path) {
-                    objectPaths.append(path)
+                for ext in fileExtensions {
+                    addObjectPath("\(prefix)\(base).\(ext)")
                 }
             }
         }
 
-        // Priority 3: other extensions with root/folder prefixes
-        for ext in fileExtensions where ext != "jpg" {
-            for prefix in folderPrefixes {
-                for base in baseNames {
-                    let path = ext.isEmpty ? "\(prefix)\(base)" : "\(prefix)\(base).\(ext)"
-                    if !objectPaths.contains(path) {
-                        objectPaths.append(path)
-                    }
-                }
-            }
-        }
-
-        // Priority 4: original candidate variations as-is without extensions
+        // Finally try original candidate variations as-is without extensions.
         for prefix in folderPrefixes {
             for base in baseNames {
                 let path = prefix.isEmpty ? base : "\(prefix)\(base)"
-                if !objectPaths.contains(path) {
-                    objectPaths.append(path)
-                }
+                addObjectPath(path)
             }
         }
 
         // Limit the total number of paths to inspect to avoid excessive network overhead.
-        let maxPathsToCheck = 18
+        let maxPathsToCheck = 32
         let pathsToCheck = Array(objectPaths.prefix(maxPathsToCheck))
 
         // We will perform concurrent fetches using a TaskGroup up to a concurrency limit to be super fast and polite!
@@ -770,10 +796,11 @@ final class ImageService: ImageProviding {
                     activeDownloads += 1
                     group.addTask {
                         do {
-                             var request = URLRequest(url: url)
-                             request.setValue(supabaseConfig.anonKey, forHTTPHeaderField: "apikey")
-                             let authHeader = UserSession.shared.getAccessToken().map { "Bearer \($0)" } ?? "Bearer \(supabaseConfig.anonKey)"
-                             request.setValue(authHeader, forHTTPHeaderField: "Authorization")
+                            var request = URLRequest(url: url)
+                            request.setValue(supabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+                            let accessToken = await UserSession.shared.getAccessToken()
+                            let authHeader = accessToken.map { "Bearer \($0)" } ?? "Bearer \(supabaseConfig.anonKey)"
+                            request.setValue(authHeader, forHTTPHeaderField: "Authorization")
                             request.timeoutInterval = 10.0 // Reasonable timeout
                             
                             let (data, response) = try await URLSession.shared.data(for: request)
@@ -812,10 +839,11 @@ final class ImageService: ImageProviding {
                         activeDownloads += 1
                         group.addTask {
                             do {
-                                 var request = URLRequest(url: url)
-                                 request.setValue(supabaseConfig.anonKey, forHTTPHeaderField: "apikey")
-                                 let authHeader = UserSession.shared.getAccessToken().map { "Bearer \($0)" } ?? "Bearer \(supabaseConfig.anonKey)"
-                                 request.setValue(authHeader, forHTTPHeaderField: "Authorization")
+                                var request = URLRequest(url: url)
+                                request.setValue(supabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+                                let accessToken = await UserSession.shared.getAccessToken()
+                                let authHeader = accessToken.map { "Bearer \($0)" } ?? "Bearer \(supabaseConfig.anonKey)"
+                                request.setValue(authHeader, forHTTPHeaderField: "Authorization")
                                 request.timeoutInterval = 10.0
                                 
                                 let (data, response) = try await URLSession.shared.data(for: request)
@@ -833,11 +861,11 @@ final class ImageService: ImageProviding {
         }
 
         if let image = resultImage {
-            failedRemoteKeys.remove(normalizedKey)
+            clearFailedRemoteKey(normalizedKey)
             return image
         } else {
             // Track failure to avoid brute force on subsequent requests!
-            failedRemoteKeys.insert(normalizedKey)
+            markRemoteKeyFailed(normalizedKey)
             return nil
         }
     }
@@ -873,12 +901,29 @@ final class ImageService: ImageProviding {
                 saveCachedChecksum(checksum, for: diskKey)
             }
             memoryCache.setObject(image, forKey: normalizedKey as NSString)
-            failedRemoteKeys.remove(normalizedKey)
+            clearFailedRemoteKey(normalizedKey)
             return image
         } catch {
             LoggingService.shared.log(error: error, context: "ImageService")
             return nil
         }
+    }
+
+    private func isRecentlyFailedRemoteKey(_ key: String) -> Bool {
+        guard let failedAt = failedRemoteKeys[key] else { return false }
+        if Date().timeIntervalSince(failedAt) < failedRemoteRetryDelay {
+            return true
+        }
+        failedRemoteKeys.removeValue(forKey: key)
+        return false
+    }
+
+    private func markRemoteKeyFailed(_ key: String) {
+        failedRemoteKeys[key] = Date()
+    }
+
+    private func clearFailedRemoteKey(_ key: String) {
+        failedRemoteKeys.removeValue(forKey: key)
     }
 }
 
