@@ -598,7 +598,9 @@ extension HomeViewController {
     private func createMigrationCarouselSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
         let absoluteWidth = view.bounds.width - 32
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(absoluteWidth), heightDimension: .absolute(min(absoluteWidth * (440.0 / 361.0), 550))), subitems: [item])
+        // Increased card height for better fit on all devices
+        let cardHeight: CGFloat = traitCollection.userInterfaceIdiom == .phone ? 480 : 540
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .absolute(absoluteWidth), heightDimension: .absolute(cardHeight)), subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
         section.orthogonalScrollingBehavior = .groupPagingCentered; section.interGroupSpacing = 40; section.boundarySupplementaryItems = [createSectionHeaderLayout()]; section.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 20, trailing: 16); return section
     }
@@ -722,7 +724,7 @@ extension HomeViewController {
             let weekStart = calendar.date(from: components) ?? Date()
             let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? Date()
 
-            let mapVC = navigateToSpotDetails(
+            _ = navigateToSpotDetails(
                 name: hotspot.placeName, 
                 lat: hotspot.centerCoordinate.latitude, 
                 lon: hotspot.centerCoordinate.longitude, 

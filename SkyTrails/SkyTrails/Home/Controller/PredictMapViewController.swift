@@ -519,38 +519,26 @@ extension PredictMapViewController: MKMapViewDelegate {
         
         if let polygon = overlay as? MKPolygon {
             let renderer = MKPolygonRenderer(polygon: polygon)
-            if isBirdRange {
-                // High contrast Orange/Gold for better visibility in both themes
-                renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
-                renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.3)
-                renderer.lineWidth = 2.5
-            } else {
-                renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
-                renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
-                renderer.lineWidth = 1.6
-            }
+            // Use abundanceMapColor for all overlays for consistency
+            renderer.strokeColor = UIColor.abundanceMapColor.withAlphaComponent(0.85)
+            renderer.fillColor = UIColor.abundanceMapColor.withAlphaComponent(isBirdRange ? 0.35 : 0.15)
+            renderer.lineWidth = isBirdRange ? 2.5 : 1.8
             return renderer
         }
         
         if let multiPolygon = overlay as? MKMultiPolygon {
             let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
-            if isBirdRange {
-                renderer.strokeColor = UIColor.systemOrange.withAlphaComponent(0.9)
-                renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.3)
-                renderer.lineWidth = 2.5
-            } else {
-                renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.75)
-                renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.10)
-                renderer.lineWidth = 1.6
-            }
+            renderer.strokeColor = UIColor.abundanceMapColor.withAlphaComponent(0.85)
+            renderer.fillColor = UIColor.abundanceMapColor.withAlphaComponent(isBirdRange ? 0.35 : 0.15)
+            renderer.lineWidth = isBirdRange ? 2.5 : 1.8
             return renderer
         }
         
         if let circle = overlay as? MKCircle {
             let renderer = MKCircleRenderer(circle: circle)
-            renderer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08)
-            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.7)
-            renderer.lineWidth = 1.5
+            renderer.fillColor = UIColor.abundanceMapColor.withAlphaComponent(0.12)
+            renderer.strokeColor = UIColor.abundanceMapColor.withAlphaComponent(0.8)
+            renderer.lineWidth = 2.0
             return renderer
         }
         return MKOverlayRenderer(overlay: overlay)

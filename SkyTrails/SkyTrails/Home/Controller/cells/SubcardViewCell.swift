@@ -5,221 +5,216 @@ class SubcardViewCell: UICollectionViewCell {
     
     static let identifier = "SubcardViewCell"
     
-    @IBOutlet weak var expandedView: UIView!
-    @IBOutlet weak var birdImageView: UIImageView!
-    @IBOutlet weak var birdNameLabel: UILabel!
-    @IBOutlet weak var statusBadgeContainer: UIView!
-    @IBOutlet weak var badgeIconImageView: UIImageView!
-    @IBOutlet weak var badgeSubtitleLabel: UILabel!
-    @IBOutlet weak var sightabilityIconLabel: UILabel!
-    @IBOutlet weak var sightabilityTextLabel: UILabel!
-    @IBOutlet weak var compactView: UIView!
-    @IBOutlet weak var compactBirdImageView: UIImageView!
-    @IBOutlet weak var compactBirdNameLabel: UILabel!
-    @IBOutlet weak var compactStatusIconLabel: UILabel!
+    // MARK: - UI Components
+    
+    private let mainContainer: UIView = {
+        let v = UIView()
+        v.backgroundColor = .secondarySystemBackground
+        v.layer.cornerRadius = 22
+        v.layer.masksToBounds = true
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
+    private let birdImageView: UIImageView = {
+        let v = UIImageView()
+        v.contentMode = .scaleAspectFill
+        v.clipsToBounds = true
+        v.backgroundColor = .systemGray5
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
+    private let gradientLayer: CAGradientLayer = {
+        let l = CAGradientLayer()
+        l.colors = [UIColor.clear.cgColor, UIColor.black.withAlphaComponent(0.85).cgColor]
+        l.locations = [0.35, 1.0]
+        return l
+    }()
+    
+    private let statusBadge: UIView = {
+        let v = UIView()
+        v.backgroundColor = .systemGreen.withAlphaComponent(0.85)
+        v.layer.cornerRadius = 10
+        // Add shadow for elevation
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.25
+        v.layer.shadowOffset = CGSize(width: 0, height: 2)
+        v.layer.shadowRadius = 4
+        v.layer.masksToBounds = false
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
+    private let statusBadgeLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 11, weight: .bold)
+        l.textColor = .white
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    private let heartButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(systemName: "heart"), for: .normal)
+        b.tintColor = .white
+        // Add shadow for elevation
+        b.layer.shadowColor = UIColor.black.cgColor
+        b.layer.shadowOpacity = 0.3
+        b.layer.shadowOffset = CGSize(width: 0, height: 2)
+        b.layer.shadowRadius = 4
+        b.layer.masksToBounds = false
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+    
+    private let nameLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 15, weight: .bold)
+        l.textColor = .white // White text for contrast on dark blur
+        l.numberOfLines = 1
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
 
-    private var currentAccentColor: UIColor = .systemTeal
+    private let nameBlurBackground: UIVisualEffectView = {
+        let v = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterialDark))
+        v.layer.cornerRadius = 14
+        v.clipsToBounds = true
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+
     private var currentImageTask: Task<Void, Never>?
+    private var isFavorite = false
 
-    override var isHighlighted: Bool {
-        didSet {
-            resetInteractionState()
-        }
-    }
-
-    override var isSelected: Bool {
-        didSet {
-            resetInteractionState()
-        }
-    }
-
+    // MARK: - Lifecycle
     
-    var isExpanded: Bool = true {
-        didSet {
-            updateViewState()
-        }
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
     }
     
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        setupAppearance()
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupUI()
+    }
+    
+    private func setupUI() {
+        contentView.addSubview(mainContainer)
+        mainContainer.addSubview(birdImageView)
+        mainContainer.layer.addSublayer(gradientLayer)
+        
+        mainContainer.addSubview(statusBadge)
+        statusBadge.addSubview(statusBadgeLabel)
+        mainContainer.addSubview(heartButton)
+        
+        mainContainer.addSubview(nameBlurBackground)
+        nameBlurBackground.contentView.addSubview(nameLabel)
+        
+        NSLayoutConstraint.activate([
+            mainContainer.topAnchor.constraint(equalTo: contentView.topAnchor),
+            mainContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            mainContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            mainContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            
+            birdImageView.topAnchor.constraint(equalTo: mainContainer.topAnchor),
+            birdImageView.leadingAnchor.constraint(equalTo: mainContainer.leadingAnchor),
+            birdImageView.trailingAnchor.constraint(equalTo: mainContainer.trailingAnchor),
+            birdImageView.bottomAnchor.constraint(equalTo: mainContainer.bottomAnchor),
+            
+            statusBadge.topAnchor.constraint(equalTo: mainContainer.topAnchor, constant: 12),
+            statusBadge.leadingAnchor.constraint(equalTo: mainContainer.leadingAnchor, constant: 12),
+            statusBadge.heightAnchor.constraint(equalToConstant: 24),
+            
+            statusBadgeLabel.leadingAnchor.constraint(equalTo: statusBadge.leadingAnchor, constant: 10),
+            statusBadgeLabel.trailingAnchor.constraint(equalTo: statusBadge.trailingAnchor, constant: -10),
+            statusBadgeLabel.centerYAnchor.constraint(equalTo: statusBadge.centerYAnchor),
+            
+            heartButton.topAnchor.constraint(equalTo: mainContainer.topAnchor, constant: 14),
+            heartButton.trailingAnchor.constraint(equalTo: mainContainer.trailingAnchor, constant: -14),
+            heartButton.widthAnchor.constraint(equalToConstant: 24),
+            heartButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            // Name Blur Background
+            nameBlurBackground.bottomAnchor.constraint(equalTo: mainContainer.bottomAnchor, constant: -12),
+            nameBlurBackground.leadingAnchor.constraint(equalTo: mainContainer.leadingAnchor, constant: 12),
+            nameBlurBackground.trailingAnchor.constraint(lessThanOrEqualTo: mainContainer.trailingAnchor, constant: -12),
+            nameBlurBackground.heightAnchor.constraint(equalToConstant: 28),
+            
+            // Name Label within Blur
+            nameLabel.leadingAnchor.constraint(equalTo: nameBlurBackground.contentView.leadingAnchor, constant: 10),
+            nameLabel.trailingAnchor.constraint(equalTo: nameBlurBackground.contentView.trailingAnchor, constant: -10),
+            nameLabel.centerYAnchor.constraint(equalTo: nameBlurBackground.contentView.centerYAnchor)
+        ])
+        
+        heartButton.addTarget(self, action: #selector(didTapHeart), for: .touchUpInside)
+    }
+    
+    @objc private func didTapHeart() {
+        isFavorite.toggle()
+        let color: UIColor = isFavorite ? .systemPink : .white
+        let iconName = isFavorite ? "heart.fill" : "heart"
+        
+        UIView.animate(withDuration: 0.2, animations: {
+            self.heartButton.tintColor = color
+            self.heartButton.setImage(UIImage(systemName: iconName), for: .normal)
+            self.heartButton.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.heartButton.transform = .identity
+            }
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer.frame = mainContainer.bounds
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
         currentImageTask?.cancel()
         currentImageTask = nil
-        birdImageView.image = UIImage(systemName: "bird.fill")
-        compactBirdImageView?.image = UIImage(systemName: "bird.fill")
-        resetInteractionState()
+        birdImageView.image = nil
+        isFavorite = false
+        heartButton.tintColor = .white
+        heartButton.setImage(UIImage(systemName: "heart"), for: .normal)
     }
 
-    
-    private func updateViewState() {
-        expandedView?.isHidden = !isExpanded
-        compactView?.isHidden = isExpanded
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        updateFonts()
-        updateExpandedBadgeCircle()
-        updateExpandedBadgeIcon()
-        layer.shadowPath = UIBezierPath(
-            roundedRect: contentView.bounds,
-            cornerRadius: contentView.layer.cornerRadius
-        ).cgPath
-        contentView.layer.borderColor = UIColor.label.withAlphaComponent(0.04).cgColor
-    }
-    
-    private func updateFonts() {
-        let currentHeight = self.bounds.height
-        let ratio = currentHeight / 90.0
-        let fontSize = max(12, 12 * ratio)
+    func configure(with birdData: BirdSpeciesDisplay) {
+        nameLabel.text = birdData.birdName
         
-        birdNameLabel.font = .systemFont(ofSize: fontSize, weight: .semibold)
-        badgeSubtitleLabel.font = .systemFont(ofSize: fontSize)
-        sightabilityIconLabel.font = .systemFont(ofSize: fontSize)
-        sightabilityTextLabel.font = .systemFont(ofSize: fontSize)
+        let tag: String
+        let color: UIColor
+        let prob = birdData.sightabilityPercent
         
-        compactBirdNameLabel.font = .systemFont(ofSize: fontSize, weight: .semibold)
-        updateCompactStatusIcon(pointSize: fontSize)
-        updateSightabilityIcon(pointSize: fontSize, color: currentAccentColor)
-    }
-    private func setupAppearance() {
-            contentView.backgroundColor = .systemBackground
-            contentView.layer.cornerRadius = 16
-            contentView.layer.masksToBounds = true
-            layer.masksToBounds = false
-            
-            birdImageView.layer.cornerRadius = 12
-            birdImageView.contentMode = .scaleAspectFill
-            birdImageView.clipsToBounds = true
-            
-            statusBadgeContainer.layer.cornerRadius = 8
-            compactBirdImageView?.layer.cornerRadius = 10
-            compactBirdImageView?.clipsToBounds = true
-            
-            contentView.layer.borderWidth = 1.0
-            contentView.layer.borderColor = UIColor.label.withAlphaComponent(0.04).cgColor
-            layer.shadowColor = UIColor.black.cgColor
-            layer.shadowOpacity = 0.05
-            layer.shadowOffset = CGSize(width: 0, height: 4)
-            layer.shadowRadius = 8
-
-            birdNameLabel.textAlignment = .left
-            badgeSubtitleLabel.textAlignment = .left
-            sightabilityTextLabel.textAlignment = .left
-            applyStableTextColors()
         
-            updateSightabilityIcon(pointSize: 12, color: .systemTeal)
-            updateExpandedBadgeIcon()
-            updateCompactStatusIcon(pointSize: 12)
-            updateViewState()
+        if prob >= 70 {
+            tag = "Common"
+            color = .systemGreen
+        } else if prob >= 40 {
+            tag = "Uncommon"
+            color = .systemBlue
+        } else if prob >= 15 {
+            tag = "Rare"
+            color = .systemOrange
+        } else {
+            tag = "Very Rare"
+            color = .systemRed
         }
         
-        func configure(with birdData: BirdSpeciesDisplay) {
-            birdNameLabel.text = birdData.birdName
-            compactBirdNameLabel?.text = birdData.statusBadge.title
-            
-        currentImageTask?.cancel()
-        birdImageView.image = UIImage(systemName: "bird.fill")
-        compactBirdImageView?.image = UIImage(systemName: "bird.fill")
+        statusBadgeLabel.text = tag
+        statusBadge.backgroundColor = color.withAlphaComponent(0.85)
         
+        currentImageTask?.cancel()
         currentImageTask = Task { @MainActor in
             let image = await ImageService.shared.image(for: birdData.birdImageName)
             if !Task.isCancelled {
-                if let loaded = image {
-                    self.birdImageView.image = loaded
-                    self.compactBirdImageView?.image = loaded
-                }
+                self.birdImageView.image = image
             }
         }
-
-            badgeSubtitleLabel.text = birdData.residencyStatus ?? birdData.statusBadge.subtitle
-            
-            let badgeColor: UIColor
-            switch birdData.statusBadge.backgroundColorName {
-            case "systemGreen":  badgeColor = .systemGreen
-            case "systemBlue":   badgeColor = .systemBlue
-            case "systemOrange": badgeColor = .systemOrange
-            case "systemPink", "BadgePink": badgeColor = .systemPink
-            default:
-                badgeColor = UIColor(named: birdData.statusBadge.backgroundColorName) ?? .systemGray4
-            }
-            let effectiveBadgeColor = badgeColor
-            self.currentAccentColor = effectiveBadgeColor
-            statusBadgeContainer.backgroundColor = effectiveBadgeColor.withAlphaComponent(0.2)
-            let compactPointSize = compactBirdNameLabel?.font.pointSize ?? 12
-            updateCompactStatusIcon(pointSize: compactPointSize)
-            updateExpandedBadgeIcon()
-            let sightabilityPointSize = sightabilityTextLabel.font.pointSize
-            updateSightabilityIcon(pointSize: sightabilityPointSize, color: effectiveBadgeColor.withAlphaComponent(1.0))
-            let tag: String
-            if birdData.residencyStatus == "Recently spotted" {
-                tag = "Recently Spotted"
-            } else if birdData.sightabilityPercent >= 70 {
-                tag = "Common Here"
-            } else if birdData.sightabilityPercent >= 40 {
-                tag = "Look Out For"
-            } else {
-                tag = "Rare Find"
-            }
-            sightabilityTextLabel.text = tag
-            resetInteractionState()
-        }
-
-    private func applyStableTextColors() {
-        birdNameLabel.textColor = .label
-        birdNameLabel.highlightedTextColor = .label
-        badgeSubtitleLabel.textColor = .secondaryLabel
-        badgeSubtitleLabel.highlightedTextColor = .secondaryLabel
-        sightabilityTextLabel.textColor = .label
-        sightabilityTextLabel.highlightedTextColor = .label
-        compactBirdNameLabel?.textColor = .label
-        compactBirdNameLabel?.highlightedTextColor = .label
-    }
-
-    private func resetInteractionState() {
-        applyStableTextColors()
     }
     
-    func setExpanded(_ expanded: Bool) {
-        isExpanded = expanded
-    }
     
-    private func updateCompactStatusIcon(pointSize: CGFloat) {
-        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
-        guard let image = UIImage(systemName: "bird.circle.fill", withConfiguration: config)?
-            .withTintColor(currentAccentColor, renderingMode: .alwaysOriginal) else { return }
-        
-        let attachment = NSTextAttachment()
-        attachment.image = image
-        attachment.bounds = CGRect(x: 0, y: -1, width: image.size.width, height: image.size.height)
-        compactStatusIconLabel?.attributedText = NSAttributedString(attachment: attachment)
-    }
-    
-    private func updateExpandedBadgeCircle() {
-        let circleHost = badgeIconImageView.superview
-        circleHost?.layer.cornerRadius = min(circleHost?.bounds.width ?? 0, circleHost?.bounds.height ?? 0) / 2
-        circleHost?.clipsToBounds = true
-    }
-    
-    private func updateExpandedBadgeIcon() {
-        let side = max(12, min(badgeIconImageView.bounds.width, badgeIconImageView.bounds.height))
-        let config = UIImage.SymbolConfiguration(pointSize: side * 0.8, weight: .regular)
-        badgeIconImageView.image = UIImage(systemName: "bird.circle.fill", withConfiguration: config)?
-            .withTintColor(currentAccentColor, renderingMode: .alwaysOriginal)
-    }
-
-    private func updateSightabilityIcon(pointSize: CGFloat, color: UIColor) {
-        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
-        guard let image = UIImage(systemName: "binoculars.fill", withConfiguration: config)?
-            .withTintColor(color, renderingMode: .alwaysOriginal) else { return }
-
-        let attachment = NSTextAttachment()
-        attachment.image = image
-        attachment.bounds = CGRect(x: 0, y: -1, width: image.size.width, height: image.size.height)
-        sightabilityIconLabel.attributedText = NSAttributedString(attachment: attachment)
-    }
-    }
+}
