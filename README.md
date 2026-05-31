@@ -45,21 +45,31 @@ A logic-driven, step-by-step identification engine designed for accuracy in the 
 
 ```
 .
-├── SkyTrails/              # Primary iOS Application Source
-│   ├── Home/               # Dashboard and highlights logic
-│   ├── Watchlist/          # List management and sighting logic
-│   ├── Identification/     # The guided identification engine
-│   ├── Shared/             # Common UI components and services
-│   └── Assets.xcassets/    # High-quality assets and icons
-├── backend/                # Backend data pipeline scripts (trends, ranges, hotspots)
-├── App Description/        # Feature and technical documentation
-│   ├── Home.md             # Home module technical details
-│   ├── Watchlist.md        # Watchlist module technical details
-│   ├── Identification.md   # Identification module technical details
-│   ├── Architecture.md     # System architectural overview
-│   └── ERDiagram.md        # Database schema documentation
-├── LICENSE.md              # MIT License details
-└── README.md               # Overview documentation
+├── SkyTrails/                  # iOS Project Container Directory
+│   ├── SkyTrails/              # Primary iOS Application Source
+│   │   ├── Onboard/            # Authentication & onboarding logic (Supabase Auth)
+│   │   ├── Home/               # Discovery dashboard and highlight cards
+│   │   ├── Watchlist/          # List management, sighting logs, and offline persistence
+│   │   ├── Identification/     # Step-by-step logic-driven bird identification engine
+│   │   ├── Profile/            # User profile settings & birding gamification
+│   │   ├── Sync/               # Background and real-time data sync with Supabase
+│   │   ├── Shared/             # Common coordinators, UI controls, and core utilities
+│   │   ├── Resources/          # Static reference bundles (bird_reference_info.json)
+│   │   └── Assets.xcassets/    # Theme styling, asset icons, and launch screens
+│   ├── SkyTrails.xcodeproj/    # Xcode project configuration
+│   ├── SkyTrailsUITests/       # UI automation test suite
+│   └── .swiftlint.yml          # Swift code quality linting guidelines
+├── backend/                    # Backend data pipeline (R scripts)
+│   └── Scripts/                # Cloud workflows for hotspots, trends, and ranges
+├── App Description/            # Detailed documentation
+│   ├── Home.md                 # Home module architecture
+│   ├── Watchlist.md            # Watchlist database and rules mapping
+│   ├── Identification.md       # Identification matrix and matcher details
+│   ├── Architecture.md         # System design overview (MVC + Service layers)
+│   └── ERDiagram.md            # Database schema details
+├── .gitignore                  # Git untracked path rules
+├── LICENSE.md                  # MIT License details
+└── README.md                   # Project overview documentation
 ```
 
 ---
