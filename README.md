@@ -51,7 +51,7 @@ A logic-driven, step-by-step identification engine designed for accuracy in the 
 │   ├── Identification/     # The guided identification engine
 │   ├── Shared/             # Common UI components and services
 │   └── Assets.xcassets/    # High-quality assets and icons
-├── MachineLearning/        # HDF5 models and migration data
+├── backend/                # Backend data pipeline scripts (trends, ranges, hotspots)
 ├── App Description/        # Feature and technical documentation
 │   ├── Home.md             # Home module technical details
 │   ├── Watchlist.md        # Watchlist module technical details
