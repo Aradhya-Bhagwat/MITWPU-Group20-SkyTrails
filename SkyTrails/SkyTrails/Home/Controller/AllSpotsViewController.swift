@@ -320,7 +320,7 @@ extension AllSpotsViewController: UICollectionViewDataSource {
             ) as? PredictionButtonCollectionViewCell else {
                 return UICollectionViewCell()
             }
-            cell.configure(with: UIImage(named: "upcomingspots"), title: "Find Your Spots")
+            cell.configure(with: UIImage(systemName: "mappin.and.ellipse"), title: "Find Your Spots")
 
             return cell
         }

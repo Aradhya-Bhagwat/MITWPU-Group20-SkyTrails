@@ -622,7 +622,7 @@ extension HomeViewController: UICollectionViewDataSource {
         } else if indexPath.section == 1 {
             if indexPath.row == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
-                cell.configure(with: UIImage(named: "custom.curvepath.magnifying"), title: "Predict Migrations")
+                cell.configure(with: UIImage(systemName: "point.bottomleft.forward.to.arrow.triangle.scurvepath"), title: "Predict Migrations")
                 cell.contentView.alpha = 1.0
                 cell.isHidden = false
                 return cell
@@ -636,7 +636,7 @@ extension HomeViewController: UICollectionViewDataSource {
         } else if indexPath.section == 2 {
             if indexPath.row == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PredictionButtonCollectionViewCell.identifier, for: indexPath) as! PredictionButtonCollectionViewCell
-                cell.configure(with: UIImage(named: "upcomingspots"), title: "Find Your Spots")
+                cell.configure(with: UIImage(systemName: "mappin.and.ellipse"), title: "Find Your Spots")
                 cell.contentView.alpha = 1.0
                 cell.isHidden = false
                 return cell
