@@ -1,162 +1,118 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialize Lucide Icons
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
+// Replace this value with the public Apple invite once the TestFlight group is live.
+const TESTFLIGHT_URL = "";
 
-    // 2. Sticky Header Navigation
-    const header = document.getElementById('site-header');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
-        }
-    });
+const header = document.querySelector("#site-header");
+const menuButton = document.querySelector("#menu-button");
+const siteNav = document.querySelector("#site-nav");
+const themeToggle = document.querySelector("#theme-toggle");
+const testFlightLinks = document.querySelectorAll(".testflight-link");
+const betaNote = document.querySelector("#beta-note");
+const themeColor = document.querySelector('meta[name="theme-color"]');
 
-    // 3. Mobile Menu Toggle
-    const menuToggle = document.getElementById('mobile-menu-toggle');
-    const navLinks = document.getElementById('navigation-links');
-    
-    menuToggle.addEventListener('click', () => {
-        menuToggle.classList.toggle('open');
-        navLinks.classList.toggle('open');
-    });
+function updateHeader() {
+  header.classList.toggle("scrolled", window.scrollY > 20);
+}
 
-    // Close mobile menu when a link is clicked
-    navLinks.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            menuToggle.classList.remove('open');
-            navLinks.classList.remove('open');
-        });
-    });
+function closeMenu() {
+  menuButton.setAttribute("aria-expanded", "false");
+  menuButton.setAttribute("aria-label", "Open navigation");
+  siteNav.classList.remove("open");
+  document.body.classList.remove("menu-open");
+}
 
-    // 4. FAQ Accordion Handler
-    const faqItems = document.querySelectorAll('.faq-item');
-    faqItems.forEach(item => {
-        const btn = item.querySelector('.faq-question-btn');
-        const panel = item.querySelector('.faq-answer-panel');
-        
-        btn.addEventListener('click', () => {
-            const isActive = item.classList.contains('active');
-            
-            // Close all other accordions
-            faqItems.forEach(otherItem => {
-                if (otherItem !== item) {
-                    otherItem.classList.remove('active');
-                    const otherBtn = otherItem.querySelector('.faq-question-btn');
-                    const otherPanel = otherItem.querySelector('.faq-answer-panel');
-                    if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
-                    if (otherPanel) otherPanel.style.maxHeight = null;
-                }
-            });
-
-            // Toggle active accordion
-            item.classList.toggle('active');
-            btn.setAttribute('aria-expanded', !isActive);
-            
-            if (item.classList.contains('active')) {
-                panel.style.maxHeight = panel.scrollHeight + "px";
-            } else {
-                panel.style.maxHeight = null;
-            }
-        });
-    });
-
-    // 5. Toast Notifications Utility
-    function showToast(message, type = 'success') {
-        const toastContainer = document.getElementById('global-toast-container');
-        if (!toastContainer) return;
-        
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
-        toast.innerHTML = `
-            <i data-lucide="${iconName}"></i>
-            <span>${message}</span>
-        `;
-        
-        toastContainer.appendChild(toast);
-        
-        // Init icon
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons({
-                attrs: { class: 'toast-icon' },
-                nameAttr: 'data-lucide'
-            });
-        }
-        
-        // Auto-remove toast after 4 seconds
-        setTimeout(() => {
-            toast.style.animation = 'slide-in-toast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) reverse forwards';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 4000);
-    }
-
-    // 6. Reachout Support Form Persistence & Flow
-    const supportForm = document.getElementById('help-support-form');
-    const successOverlay = document.getElementById('form-success-view');
-    const btnResetForm = document.getElementById('btn-reset-form');
-
-    if (supportForm) {
-        supportForm.addEventListener('submit', () => {
-            // We allow browser to handle mailto:
-            // Show success overlay after a delay
-            setTimeout(() => {
-                successOverlay.style.display = 'flex';
-                showToast("Opening your email client...");
-            }, 500);
-        });
-    }
-
-    btnResetForm.addEventListener('click', () => {
-        // Reset inputs and fields
-        supportForm.reset();
-        successOverlay.style.display = 'none';
-    });
-
-    function validateEmail(email) {
-        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        return re.test(String(email).toLowerCase());
-    }
-
-    // 8. Download CTA Alerts / Click simulations
-    const downloadCTAs = [
-        document.getElementById('header-btn-download'),
-        document.getElementById('hero-cta-testflight')
-    ];
-
-    downloadCTAs.forEach(btn => {
-        if (btn) {
-            btn.addEventListener('click', () => {
-                showToast("Redirecting to TestFlight...", "success");
-            });
-        }
-    });
-
-    // 9. Intersection Observer scroll-triggered animations
-    const animatedElements = document.querySelectorAll('.feature-card, .team-card, .showcase-item, .contact-form-card');
-    
-    const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-                revealObserver.unobserve(entry.target);
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-
-    animatedElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-        revealObserver.observe(el);
-    });
+menuButton.addEventListener("click", () => {
+  const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+  menuButton.setAttribute("aria-expanded", String(!isOpen));
+  menuButton.setAttribute("aria-label", isOpen ? "Open navigation" : "Close navigation");
+  siteNav.classList.toggle("open", !isOpen);
+  document.body.classList.toggle("menu-open", !isOpen);
 });
+
+siteNav.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", closeMenu);
+});
+
+testFlightLinks.forEach((link) => {
+  if (TESTFLIGHT_URL) {
+    link.href = TESTFLIGHT_URL;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+  } else {
+    link.href = "#beta";
+  }
+});
+
+if (TESTFLIGHT_URL) {
+  betaNote.textContent = "TestFlight will open in a new tab. Apple may ask you to install the free TestFlight app before joining the SkyTrails beta.";
+}
+
+function applyTheme(theme) {
+  const isDark = theme === "dark";
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute("aria-pressed", String(isDark));
+  themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+  themeColor.setAttribute("content", isDark ? "#0b1512" : "#f7faf8");
+}
+
+themeToggle.addEventListener("click", () => {
+  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.setItem("skytrails-theme", nextTheme);
+  applyTheme(nextTheme);
+});
+
+let identifyInterval;
+const screenDots = document.querySelectorAll(".screen-dot");
+
+function switchIdentifyImage(button) {
+  const image = document.querySelector("#identify-image");
+  if (!image || !button) return;
+
+  screenDots.forEach((dot) => dot.classList.remove("active"));
+  button.classList.add("active");
+  image.style.opacity = "0";
+
+  window.setTimeout(() => {
+    image.src = button.dataset.image;
+    image.alt = button.dataset.alt;
+    image.style.opacity = "1";
+  }, 160);
+}
+
+function startIdentifySlideshow() {
+  stopIdentifySlideshow();
+  identifyInterval = window.setInterval(() => {
+    let activeIndex = Array.from(screenDots).findIndex(dot => dot.classList.contains("active"));
+    let nextIndex = (activeIndex + 1) % screenDots.length;
+    switchIdentifyImage(screenDots[nextIndex]);
+  }, 4000);
+}
+
+function stopIdentifySlideshow() {
+  if (identifyInterval) clearInterval(identifyInterval);
+}
+
+screenDots.forEach((button) => {
+  button.addEventListener("click", () => {
+    switchIdentifyImage(button);
+    startIdentifySlideshow();
+  });
+});
+
+startIdentifySlideshow();
+
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add("visible");
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
+window.addEventListener("scroll", updateHeader, { passive: true });
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 760) closeMenu();
+});
+updateHeader();
+applyTheme(document.documentElement.dataset.theme);
