@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyTrails | Your Personal iOS Birding Companion</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="SkyTrails is a professional-grade iOS application for birding enthusiasts. Log sightings with GPS precision, analyze migration forecasts, and identify species using our logic-driven matching engine.">
+    <meta name="keywords" content="SkyTrails, birding app, iOS birdwatching, bird identification, bird migration tracker, SwiftData birding, MIT WPU project">
+    <meta name="author" content="SkyTrails Development Team: Aradhya Bhagwat, Disha Jain, Tanmay Dani, Soumyadeep Guria">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SkyTrails | Your Personal iOS Birding Companion">
+    <meta property="og:description" content="Discover, log, and identify bird species with SkyTrails. A premium iOS application powered by SwiftData and MapKit.">
+    <meta property="og:image" content="assets/logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐦</text></svg>">
+
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Background Glows -->
+    <div class="glow-bg glow-top-left"></div>
+    <div class="glow-bg glow-bottom-right"></div>
+
+    <!-- Header & Navigation -->
+    <header id="site-header">
+        <div class="nav-container">
+            <a href="#" class="logo-wrapper" id="nav-brand-logo">
+                <img src="assets/logo.png" alt="SkyTrails Logo" class="logo-img">
+                <span class="logo-text">Sky<span class="text-gradient">Trails</span></span>
+            </a>
+            
+            <nav>
+                <ul class="nav-links" id="navigation-links">
+                    <li><a href="#" id="link-nav-home">Home</a></li>
+                    <li><a href="#features" id="link-nav-features">Overview</a></li>
+                    <li><a href="#feature-showcase" id="link-nav-deep-dive">Deep Dive</a></li>
+                    <li><a href="#faq" id="link-nav-faq">FAQs</a></li>
+                    <li><a href="#support" id="link-nav-support">Support</a></li>
+                    <li><a href="#team" id="link-nav-team">Team</a></li>
+                </ul>
+            </nav>
+
+            <button class="btn-download-small" id="header-btn-download">
+                <i data-lucide="download"></i> Download App
+            </button>
+
+            <button class="menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" id="hero-section">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <div class="badge-tag">
+                        <i data-lucide="sparkles"></i> Private Beta Phase Now Open
+                    </div>
+                    <h1 class="hero-title">Discover the Skies.<br><span class="text-gradient">Professional Birding.</span></h1>
+                    <p class="hero-desc">SkyTrails is a professional-grade iOS application built with Swift 6.0 and SwiftData. We are currently inviting birding enthusiasts to our private beta on TestFlight.</p>
+                    <div class="hero-actions">
+                        <a href="https://testflight.apple.com/join/YOUR_ACTUAL_CODE" target="_blank" class="btn-primary" id="hero-cta-testflight">
+                            <i data-lucide="external-link"></i> Join Private Beta on TestFlight
+                        </a>
+                        <a href="#support" class="btn-secondary" id="hero-cta-request">
+                            <i data-lucide="mail"></i> Request Access
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <!-- Overlapping iPad screens -->
+                    <div class="device-wrapper ipad-vertical" id="hero-phone-primary">
+                        <div class="device-screen">
+                            <img src="assets/Home.png" alt="SkyTrails Home Tab Screenshot" class="device-img">
+                        </div>
+                    </div>
+                    <div class="device-back-wrapper ipad-vertical" id="hero-phone-secondary">
+                        <div class="device-screen">
+                            <img src="assets/Watchlist.png" alt="SkyTrails Watchlist Screenshot" class="device-img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Showcase Section (Deep Dive) -->
+        <section id="feature-showcase" class="feature-showcase">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-subtitle">Deep Dive</span>
+                    <h2 class="section-title">A Premium Experience for iPad</h2>
+                    <p class="section-desc">SkyTrails is meticulously designed to take full advantage of the larger canvas on iPad, providing a desktop-class birding experience in the field.</p>
+                </div>
+
+                <div class="showcase-item">
+                    <div class="showcase-content">
+                        <h3 class="showcase-item-title">Smart Migration Dashboard</h3>
+                        <p class="showcase-item-text">Experience birding on a grand scale. Our iPad-optimized dashboard provides a comprehensive view of migration patterns, hot-spots, and sightings, all powered by MapKit's high-resolution rendering.</p>
+                        <ul class="showcase-features">
+                            <li><i data-lucide="check-circle-2"></i> Real-time migration overlays</li>
+                            <li><i data-lucide="check-circle-2"></i> Advanced spatial filtering</li>
+                            <li><i data-lucide="check-circle-2"></i> Desktop-class data visualization</li>
+                        </ul>
+                    </div>
+                    <div class="showcase-visual">
+                        <div class="device-wrapper ipad-vertical">
+                            <div class="device-screen">
+                                <img src="assets/Home.png" alt="SkyTrails Home iPad View" class="device-img">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-item reverse">
+                    <div class="showcase-content">
+                        <h3 class="showcase-item-title">Intelligent Identification Engine</h3>
+                        <p class="showcase-item-text">Our logic-driven identification engine is more intuitive than ever. Use the iPad's split-view or full-screen layout to cross-reference morphological markings with stunning accuracy.</p>
+                        <ul class="showcase-features">
+                            <li><i data-lucide="check-circle-2"></i> Multi-step morphological matching</li>
+                            <li><i data-lucide="check-circle-2"></i> High-fidelity species illustrations</li>
+                            <li><i data-lucide="check-circle-2"></i> Confidence ranking algorithm</li>
+                        </ul>
+                    </div>
+                    <div class="showcase-visual">
+                        <div class="device-wrapper ipad-vertical">
+                            <div class="device-screen">
+                                <img src="assets/Identify-1.png" alt="SkyTrails Identify iPad View" class="device-img">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-item">
+                    <div class="showcase-content">
+                        <h3 class="showcase-item-title">Universal Data Persistence</h3>
+                        <p class="showcase-item-text">With SwiftData and Supabase integration, your watchlists and sightings are synchronized across all your devices. Start logging on your iPhone and analyze in detail on your iPad.</p>
+                        <ul class="showcase-features">
+                            <li><i data-lucide="check-circle-2"></i> Seamless cloud synchronization</li>
+                            <li><i data-lucide="check-circle-2"></i> Secure offline storage</li>
+                            <li><i data-lucide="check-circle-2"></i> Shared collaborative watchlists</li>
+                        </ul>
+                    </div>
+                    <div class="showcase-visual">
+                        <div class="device-wrapper ipad-vertical">
+                            <div class="device-screen">
+                                <img src="assets/Watchlist.png" alt="SkyTrails Watchlist iPad View" class="device-img">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQs Section -->
+        <section class="glass" id="faq" style="border-left: none; border-right: none; border-radius: 0;">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-subtitle">FAQ / Help Center</span>
+                    <h2 class="section-title">Common Questions</h2>
+                    <p class="section-desc">Need assistance or curious about how SkyTrails manages sightings? Here is what users frequently ask.</p>
+                </div>
+
+                <div class="faq-grid">
+                    <!-- FAQ 1 -->
+                    <div class="faq-item glass" id="faq-item-1">
+                        <button class="faq-question-btn" aria-expanded="false" id="faq-btn-1">
+                            <span class="faq-question-text">How do I join the SkyTrails Private Beta?</span>
+                            <i data-lucide="chevron-down" class="faq-icon-arrow"></i>
+                        </button>
+                        <div class="faq-answer-panel" id="faq-answer-1">
+                            <div class="faq-answer-content">
+                                Simply click the **"Join Private Beta"** button in the hero section. You will be redirected to Apple's TestFlight page. If you haven't installed TestFlight yet, you'll be prompted to download it from the App Store first.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 2 -->
+                    <div class="faq-item glass" id="faq-item-2">
+                        <button class="faq-question-btn" aria-expanded="false" id="faq-btn-2">
+                            <span class="faq-question-text">What devices are supported during the beta?</span>
+                            <i data-lucide="chevron-down" class="faq-icon-arrow"></i>
+                        </button>
+                        <div class="faq-answer-panel" id="faq-answer-2">
+                            <div class="faq-answer-content">
+                                SkyTrails is optimized for **iPad (including the 13-inch Pro)** and is compatible with iPhones running **iOS 17.0 or later**. We recommend testing on an iPad to experience the full professional dashboard layout.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 3 -->
+                    <div class="faq-item glass" id="faq-item-3">
+                        <button class="faq-question-btn" aria-expanded="false" id="faq-btn-3">
+                            <span class="faq-question-text">How can I provide feedback or report a bug?</span>
+                            <i data-lucide="chevron-down" class="faq-icon-arrow"></i>
+                        </button>
+                        <div class="faq-answer-panel" id="faq-answer-3">
+                            <div class="faq-answer-content">
+                                You can provide feedback directly through the TestFlight app by taking a screenshot or selecting "Send Beta Feedback." Alternatively, you can use the **Support Form** at the bottom of this website to reach our development team.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FAQ 4 -->
+                    <div class="faq-item glass" id="faq-item-4">
+                        <button class="faq-question-btn" aria-expanded="false" id="faq-btn-4">
+                            <span class="faq-question-text">Will my data be saved after the beta ends?</span>
+                            <i data-lucide="chevron-down" class="faq-icon-arrow"></i>
+                        </button>
+                        <div class="faq-answer-panel" id="faq-answer-4">
+                            <div class="faq-answer-content">
+                                Yes, SkyTrails uses secure cloud synchronization. Your sightings and watchlists logged during the beta phase will be preserved and available when the app transitions to the public App Store.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reachout / Help Request Form -->
+        <section id="support">
+            <div class="section-container">
+                <div class="reachout-layout">
+                    <!-- Left Column: Info -->
+                    <div class="reachout-info">
+                        <span class="section-subtitle">Reach Out</span>
+                        <h2 class="reachout-info-title">Need Help? Let's Connect.</h2>
+                        <p class="reachout-info-text">Have a bug to report, questions regarding shared synchronization, or suggestion for a new birding feature? Drop us a message, and our student developers will reach out shortly.</p>
+                        
+                        <div class="contact-channels">
+                            <div class="contact-channel-card">
+                                <div class="channel-icon">
+                                    <i data-lucide="mail"></i>
+                                </div>
+                                <div class="channel-details">
+                                    <span class="channel-label">Support Email</span>
+                                    <span class="channel-value">soumyadeep.guria@mitwpu.edu.in</span>
+                                </div>
+                            </div>
+                            <div class="contact-channel-card">
+                                <div class="channel-icon" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); color: var(--primary);">
+                                    <i data-lucide="navigation"></i>
+                                </div>
+                                <div class="channel-details">
+                                    <span class="channel-label">Location</span>
+                                    <span class="channel-value">MIT World Peace University, Pune</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Form Card -->
+                    <div class="contact-form-card glass" id="support-form-card">
+                        <!-- Success message overlay -->
+                        <div class="form-success-overlay" id="form-success-view">
+                            <div class="success-icon-box">
+                                <i data-lucide="check"></i>
+                            </div>
+                            <h3 class="success-title">Message Received!</h3>
+                            <p class="success-text">Thank you for reaching out. We have logged your request and our development team will respond to your email shortly.</p>
+                            <button class="btn-secondary" id="btn-reset-form">Send another message</button>
+                        </div>
+
+                        <!-- Actual Interactive Form -->
+                        <form id="help-support-form" action="mailto:soumyadeep.guria@mitwpu.edu.in" method="post" enctype="text/plain" novalidate>
+                            <div class="form-group-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="form-user-name">Your Name</label>
+                                    <input type="text" id="form-user-name" name="name" class="form-input" placeholder="John Doe" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="form-user-email">Email Address</label>
+                                    <input type="email" id="form-user-email" name="email" class="form-input" placeholder="example@email.com" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="form-category">What do you need help with?</label>
+                                <select id="form-category" name="category" class="form-select" required>
+                                    <option value="" disabled selected>Select an option</option>
+                                    <option value="testflight">Request TestFlight Access</option>
+                                    <option value="tech-support">App Technical Support</option>
+                                    <option value="bug">Report a Bug / Crash</option>
+                                    <option value="feedback">General Feedback</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 2rem;">
+                                <label class="form-label" for="form-message">Detailed Message</label>
+                                <textarea id="form-message" name="message" class="form-textarea" placeholder="Explain your issue or feedback in detail..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-submit" id="form-submit-btn">
+                                Send Message <i data-lucide="send"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Team Section -->
+        <section class="glass" id="team" style="border-left: none; border-right: none; border-radius: 0; margin-bottom: 0;">
+            <div class="section-container">
+                <div class="team-container">
+                    
+                    <!-- Student Developers -->
+                    <div>
+                        <div class="section-header">
+                            <span class="section-subtitle">The Creators</span>
+                            <h2 class="section-title">Meet the Development Team</h2>
+                            <p class="section-desc">SkyTrails was designed, developed, and deployed by the SkyTrails Development Team at MIT World Peace University, Pune.</p>
+                        </div>
+                        
+                        <div class="team-grid">
+                            <!-- Aradhya -->
+                            <div class="team-card glass" id="team-card-aradhya">
+                                <div class="team-avatar-box">AB</div>
+                                <h3 class="team-name">Aradhya Bhagwat</h3>
+                                <span class="team-role">iOS Developer</span>
+                                <span class="team-email">aradhyabhagwat@mitwpu.edu.in</span>
+                            </div>
+                            <!-- Disha -->
+                            <div class="team-card glass" id="team-card-disha">
+                                <div class="team-avatar-box">DJ</div>
+                                <h3 class="team-name">Disha Jain</h3>
+                                <span class="team-role">iOS Developer</span>
+                                <span class="team-email">disha.jain@mitwpu.edu.in</span>
+                            </div>
+                            <!-- Tanmay -->
+                            <div class="team-card glass" id="team-card-tanmay">
+                                <div class="team-avatar-box">TD</div>
+                                <h3 class="team-name">Tanmay Dani</h3>
+                                <span class="team-role">iOS Developer</span>
+                                <span class="team-email">tanmay.dani@mitwpu.edu.in</span>
+                            </div>
+                            <!-- Soumyadeep -->
+                            <div class="team-card glass" id="team-card-soumyadeep">
+                                <div class="team-avatar-box">SG</div>
+                                <h3 class="team-name">Soumyadeep Guria</h3>
+                                <span class="team-role">iOS Developer</span>
+                                <span class="team-email">soumyadeep.guria@mitwpu.edu.in</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <a href="#" class="logo-wrapper">
+                        <img src="assets/logo.png" alt="SkyTrails Logo" class="logo-img">
+                        <span class="logo-text">Sky<span class="text-gradient">Trails</span></span>
+                    </a>
+                    <p class="footer-brand-desc">A professional-grade iOS application for logging, mapping, and identifying bird species. Conceptualized and created at MIT World Peace University.</p>
+                </div>
+                <div class="footer-nav">
+                    <div class="footer-nav-col">
+                        <span class="footer-nav-heading">Product</span>
+                        <ul class="footer-nav-links">
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#simulator">Interactive Demo</a></li>
+                            <li><a href="#faq">Help Accordion</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-nav-col">
+                        <span class="footer-nav-heading">Team & Legal</span>
+                        <ul class="footer-nav-links">
+                            <li><a href="#team">Our Team</a></li>
+                            <li><a href="#support">Technical Support</a></li>
+                            <li><a href="https://github.com/Aradhya-Bhagwat/MITWPU-Group20-SkyTrails" target="_blank" rel="noopener">GitHub Project</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <span class="footer-copy">&copy; 2026 SkyTrails. Built under MIT License guidelines. All rights reserved.</span>
+                <div class="footer-meta-links">
+                    <span>MIT WPU Development Team</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="global-toast-container"></div>
+
+    <!-- Lucide SVG Icons Loader -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Main JS Application script -->
+    <script src="script.js"></script>
+</body>
+
+</html>                   <!-- Soumyadeep -->
+                            <div class="team-card glass" id="team-card-soumyadeep">
+                                <div class="team-avatar-box">SG</div>
+                                <h3 class="team-name">Soumyadeep Guria</h3>
+                                <span class="team-role">iOS Developer</span>
+                                <span class="team-email">soumyadeep.guria@mitwpu.edu.in</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <a href="#" class="logo-wrapper">
+                        <img src="assets/logo.png" alt="SkyTrails Logo" class="logo-img">
+                        <span class="logo-text">Sky<span class="text-gradient">Trails</span></span>
+                    </a>
+                    <p class="footer-brand-desc">A professional-grade iOS application for logging, mapping, and identifying bird species. Conceptualized and created at MIT World Peace University.</p>
+                </div>
+                <div class="footer-nav">
+                    <div class="footer-nav-col">
+                        <span class="footer-nav-heading">Product</span>
+                        <ul class="footer-nav-links">
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#simulator">Interactive Demo</a></li>
+                            <li><a href="#faq">Help Accordion</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-nav-col">
+                        <span class="footer-nav-heading">Team & Legal</span>
+                        <ul class="footer-nav-links">
+                            <li><a href="#team">Our Team</a></li>
+                            <li><a href="#support">Technical Support</a></li>
+                            <li><a href="https://github.com/Aradhya-Bhagwat/MITWPU-Group20-SkyTrails" target="_blank" rel="noopener">GitHub Project</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <span class="footer-copy">&copy; 2026 SkyTrails. Built under MIT License guidelines. All rights reserved.</span>
+                <div class="footer-meta-links">
+                    <span>MIT WPU Development Team</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="global-toast-container"></div>
+
+    <!-- Lucide SVG Icons Loader -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Main JS Application script -->
+    <script src="script.js"></script>
+</body>
+
+</html>

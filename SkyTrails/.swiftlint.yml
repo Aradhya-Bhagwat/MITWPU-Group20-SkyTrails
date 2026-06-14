@@ -1,0 +1,56 @@
+disabled_rules:
+  - type_body_length
+  - file_length
+  - function_body_length
+  - cyclomatic_complexity
+  - line_length
+
+identifier_name:
+  min_length: 3
+  allowed_symbols: ["_"]
+  valid_regex: "^[a-z][a-zA-Z0-9_]*$"
+  excluded:
+    - i
+    - j
+    - k
+    - x
+    - y
+    - z
+    - v
+    - w
+    - t
+    - r
+    - a
+    - b
+    - h
+    - dx
+    - dy
+    - id
+    - db
+    - vc
+    - pc
+    - sp
+    - created_at
+    - updated_at
+    - deleted_at
+    - watchlist_id
+    - user_id
+    - rule_type
+    - radius_km
+    - start_date
+    - end_date
+    - shape_id
+    - pattern_key
+    - is_active
+    - syncStatusRaw
+    - lastSyncedAt
+    - serverRowVersion
+    - shared_at
+    - shared_by_user_id
+    - imagePath
+    - storageUrl
+    - observed_by
+    - notify_upcoming
+
+force_cast: warning
+force_try: warning
