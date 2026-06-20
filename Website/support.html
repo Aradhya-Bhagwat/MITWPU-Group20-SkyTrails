@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7faf8">
+  <meta name="description" content="SkyTrails Support page. Get help, view FAQs, resolve synchronization issues, and contact our development team.">
+  <title>Support — SkyTrails</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <script>
+    document.documentElement.dataset.theme =
+      localStorage.getItem("skytrails-theme") ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="index.html#top" aria-label="SkyTrails home">
+        <img src="assets/logo.png" alt="" width="44" height="44">
+        <span>SkyTrails</span>
+      </a>
+
+      <button class="menu-button" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="index.html#top">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#developers">Developers</a>
+        <a href="index.html#beta">TestFlight</a>
+      </nav>
+
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">☀</span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">◐</span>
+      </button>
+      <a class="button button-small testflight-link" href="index.html#beta">Try the beta</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="doc-container">
+      <h1>SkyTrails Support</h1>
+      <p class="meta" style="color: var(--muted); font-size: 16px; margin-bottom: 40px; line-height: 1.6;">
+        Welcome to the SkyTrails support center. Whether you are in the field recording bird sightings, tracking migration predictions, or need assistance managing your watchlists, our team is here to help.
+      </p>
+
+      <h2>Get in Touch</h2>
+      <p>If you encounter technical issues, have design feedback, or need account assistance, you can reach out directly to our lead developer:</p>
+      <ul>
+        <li><strong>Contact Developer:</strong> Soumyadeep Guria</li>
+        <li><strong>Email Support:</strong> <a href="mailto:soumyadeep.guria@mitwpu.edu.in?subject=SkyTrails%20Support" style="color: var(--cyan); text-decoration: underline;">soumyadeep.guria@mitwpu.edu.in</a></li>
+        <li><strong>Institution:</strong> MIT World Peace University, Pune</li>
+      </ul>
+      <p><em>When reporting a bug, please include your iOS version, device model, and a description of the steps to reproduce the issue. Screenshots are highly appreciated!</em></p>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <h3 style="margin-top: 30px; margin-bottom: 10px; font-size: 19px; letter-spacing: -0.02em; color: var(--ink);">Q: How does offline mode and data syncing work?</h3>
+      <p>SkyTrails is designed offline-first. Your checklists, photos, and bird sightings are saved on your local device database using Apple's <strong>SwiftData</strong> framework. Once you connect to the internet, the app seamlessly uploads and synchronizes these records to our secure cloud database powered by <strong>Supabase</strong>.</p>
+
+      <h3 style="margin-top: 30px; margin-bottom: 10px; font-size: 19px; letter-spacing: -0.02em; color: var(--ink);">Q: Why can't I see nearby hotspots or my current location?</h3>
+      <p>SkyTrails needs location permissions to search for bird sightings and migration maps around you. Please make sure that:</p>
+      <ul>
+        <li>Location Services are enabled on your device (iOS Settings > Privacy & Security > Location Services).</li>
+        <li>SkyTrails has permission to access your location (iOS Settings > SkyTrails > Location set to "While Using the App" or "Always").</li>
+      </ul>
+
+      <h3 style="margin-top: 30px; margin-bottom: 10px; font-size: 19px; letter-spacing: -0.02em; color: var(--ink);">Q: How do I delete my account and data?</h3>
+      <p>You can delete your account and clear all synced logs directly inside the app. Open the <strong>Profile</strong> tab, navigate to Account Settings, and select "Delete Account". Alternatively, you can email us at the address listed above, and we will purge your user records within 5 business days.</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="index.html#top">
+          <img src="assets/logo.png" alt="" width="40" height="40">
+          <span>SkyTrails</span>
+        </a>
+        <p>A native birding companion created at MIT World Peace University, Pune.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#top">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#developers">Developers</a>
+        <a href="index.html#beta">TestFlight</a>
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+    </div>
+    <div class="shell footer-bottom">
+      <span>© 2026 SkyTrails</span>
+      <span>Made for the field, with care.</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

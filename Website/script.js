@@ -10,27 +10,39 @@ const betaNote = document.querySelector("#beta-note");
 const themeColor = document.querySelector('meta[name="theme-color"]');
 
 function updateHeader() {
-  header.classList.toggle("scrolled", window.scrollY > 20);
+  if (header) {
+    header.classList.toggle("scrolled", window.scrollY > 20);
+  }
 }
 
 function closeMenu() {
-  menuButton.setAttribute("aria-expanded", "false");
-  menuButton.setAttribute("aria-label", "Open navigation");
-  siteNav.classList.remove("open");
+  if (menuButton) {
+    menuButton.setAttribute("aria-expanded", "false");
+    menuButton.setAttribute("aria-label", "Open navigation");
+  }
+  if (siteNav) {
+    siteNav.classList.remove("open");
+  }
   document.body.classList.remove("menu-open");
 }
 
-menuButton.addEventListener("click", () => {
-  const isOpen = menuButton.getAttribute("aria-expanded") === "true";
-  menuButton.setAttribute("aria-expanded", String(!isOpen));
-  menuButton.setAttribute("aria-label", isOpen ? "Open navigation" : "Close navigation");
-  siteNav.classList.toggle("open", !isOpen);
-  document.body.classList.toggle("menu-open", !isOpen);
-});
+if (menuButton) {
+  menuButton.addEventListener("click", () => {
+    const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+    menuButton.setAttribute("aria-expanded", String(!isOpen));
+    menuButton.setAttribute("aria-label", isOpen ? "Open navigation" : "Close navigation");
+    if (siteNav) {
+      siteNav.classList.toggle("open", !isOpen);
+    }
+    document.body.classList.toggle("menu-open", !isOpen);
+  });
+}
 
-siteNav.querySelectorAll("a").forEach((link) => {
-  link.addEventListener("click", closeMenu);
-});
+if (siteNav) {
+  siteNav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
+}
 
 testFlightLinks.forEach((link) => {
   if (TESTFLIGHT_URL) {
@@ -38,27 +50,33 @@ testFlightLinks.forEach((link) => {
     link.target = "_blank";
     link.rel = "noopener noreferrer";
   } else {
-    link.href = "#beta";
+    link.href = "index.html#beta";
   }
 });
 
-if (TESTFLIGHT_URL) {
+if (TESTFLIGHT_URL && betaNote) {
   betaNote.textContent = "TestFlight will open in a new tab. Apple may ask you to install the free TestFlight app before joining the SkyTrails beta.";
 }
 
 function applyTheme(theme) {
   const isDark = theme === "dark";
   document.documentElement.dataset.theme = theme;
-  themeToggle.setAttribute("aria-pressed", String(isDark));
-  themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-  themeColor.setAttribute("content", isDark ? "#0b1512" : "#f7faf8");
+  if (themeToggle) {
+    themeToggle.setAttribute("aria-pressed", String(isDark));
+    themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+  }
+  if (themeColor) {
+    themeColor.setAttribute("content", isDark ? "#0b1512" : "#f7faf8");
+  }
 }
 
-themeToggle.addEventListener("click", () => {
-  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  localStorage.setItem("skytrails-theme", nextTheme);
-  applyTheme(nextTheme);
-});
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem("skytrails-theme", nextTheme);
+    applyTheme(nextTheme);
+  });
+}
 
 let identifyInterval;
 const screenDots = document.querySelectorAll(".screen-dot");
@@ -79,6 +97,7 @@ function switchIdentifyImage(button) {
 }
 
 function startIdentifySlideshow() {
+  if (screenDots.length === 0) return;
   stopIdentifySlideshow();
   identifyInterval = window.setInterval(() => {
     let activeIndex = Array.from(screenDots).findIndex(dot => dot.classList.contains("active"));
@@ -91,14 +110,15 @@ function stopIdentifySlideshow() {
   if (identifyInterval) clearInterval(identifyInterval);
 }
 
-screenDots.forEach((button) => {
-  button.addEventListener("click", () => {
-    switchIdentifyImage(button);
-    startIdentifySlideshow();
+if (screenDots.length > 0) {
+  screenDots.forEach((button) => {
+    button.addEventListener("click", () => {
+      switchIdentifyImage(button);
+      startIdentifySlideshow();
+    });
   });
-});
-
-startIdentifySlideshow();
+  startIdentifySlideshow();
+}
 
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
@@ -110,9 +130,14 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 
 document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
-window.addEventListener("scroll", updateHeader, { passive: true });
+
+if (header) {
+  window.addEventListener("scroll", updateHeader, { passive: true });
+  updateHeader();
+}
+
 window.addEventListener("resize", () => {
   if (window.innerWidth > 760) closeMenu();
 });
-updateHeader();
+
 applyTheme(document.documentElement.dataset.theme);

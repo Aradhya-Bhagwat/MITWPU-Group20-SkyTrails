@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7faf8">
+  <meta name="description" content="SkyTrails Privacy Policy. Learn how we handle your birding sightings, location information, and account details.">
+  <title>Privacy Policy — SkyTrails</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <script>
+    document.documentElement.dataset.theme =
+      localStorage.getItem("skytrails-theme") ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="index.html#top" aria-label="SkyTrails home">
+        <img src="assets/logo.png" alt="" width="44" height="44">
+        <span>SkyTrails</span>
+      </a>
+
+      <button class="menu-button" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="index.html#top">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#developers">Developers</a>
+        <a href="index.html#beta">TestFlight</a>
+      </nav>
+
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">☀</span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">◐</span>
+      </button>
+      <a class="button button-small testflight-link" href="index.html#beta">Try the beta</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <article class="doc-container">
+      <h1>Privacy Policy</h1>
+      <p class="meta" style="color: var(--muted); font-size: 14px; margin-bottom: 30px;">Effective Date: March 4, 2026</p>
+
+      <p>SkyTrails is a native iOS birding companion app built to support your observations in the field. This Privacy Policy describes how we collect, use, and protect your information when you use the SkyTrails mobile application and our website.</p>
+
+      <h2>1. Information We Process</h2>
+      <p>To provide a location-aware, cloud-synced experience, SkyTrails processes the following categories of data:</p>
+      <ul>
+        <li><strong>Location Data:</strong> SkyTrails utilizes location services to show nearby birding hotspots, active migrations, and to tag your bird sightings. This processing is performed on-device. Your coordinates are shared with our backend only when fetching local hotspot updates or when you save location-tagged sightings.</li>
+        <li><strong>Personal Identifiers:</strong> When creating an account or logging in, we collect your email address. This is used solely to authenticate your identity, manage account security, and synchronize your data.</li>
+        <li><strong>Sighting Logs & Media:</strong> Any observations you record (including species details, date, GPS coordinates, notes, and uploaded photo attachments) are stored locally in the app and synchronized with our secure database.</li>
+        <li><strong>Usage Analytics:</strong> We may collect anonymous, aggregated telemetry data to monitor app performance, track bug reports, and improve stability.</li>
+      </ul>
+
+      <h2>2. Data Storage & Security</h2>
+      <p>We implement secure practices to protect your birding records and personal information:</p>
+      <ul>
+        <li><strong>Offline-First Storage:</strong> Your watchlist entries and sightings are stored directly on your device using Apple's <strong>SwiftData</strong> framework, ensuring they are available offline.</li>
+        <li><strong>Cloud Syncing:</strong> When online, your records sync to a secure PostgreSQL database hosted via <strong>Supabase</strong>. All transmissions are encrypted using standard TLS protocols.</li>
+        <li><strong>Account Integrity:</strong> User authentication is managed securely by Supabase Auth, preventing unauthorized access to your account and personal observations.</li>
+      </ul>
+
+      <h2>3. Sharing of Information</h2>
+      <p>We respect your privacy and do not sell, trade, or distribute your personal data. Data is shared only with our infrastructure service providers (such as Supabase) to perform core database hosting, storage, and authentication services on our behalf.</p>
+
+      <h2>4. Your Controls and Rights</h2>
+      <p>You have full control over your birding logs and personal data. Through the app settings, you can:</p>
+      <ul>
+        <li>Modify, export, or delete any of your logged sightings or watchlists at any time.</li>
+        <li>Request permanent deletion of your profile and sync data by contacting us.</li>
+        <li>Disable location permissions in iOS Settings (note that this will disable local hotspot and migration discovery).</li>
+      </ul>
+
+      <h2>5. Changes to This Policy</h2>
+      <p>We may update our Privacy Policy periodically as we introduce new features. We will post any updates here on our website and update the effective date at the top of this page.</p>
+
+      <h2>6. Contact Us</h2>
+      <p>If you have any questions about this Privacy Policy, your data, or if you would like to request account deletion, please contact our team:</p>
+      <ul>
+        <li><strong>Lead Developer:</strong> Soumyadeep Guria</li>
+        <li><strong>Email:</strong> <a href="mailto:soumyadeep.guria@mitwpu.edu.in" style="color: var(--cyan); text-decoration: underline;">soumyadeep.guria@mitwpu.edu.in</a></li>
+        <li><strong>Institution:</strong> MIT World Peace University, Pune</li>
+      </ul>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="index.html#top">
+          <img src="assets/logo.png" alt="" width="40" height="40">
+          <span>SkyTrails</span>
+        </a>
+        <p>A native birding companion created at MIT World Peace University, Pune.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#top">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#developers">Developers</a>
+        <a href="index.html#beta">TestFlight</a>
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+    </div>
+    <div class="shell footer-bottom">
+      <span>© 2026 SkyTrails</span>
+      <span>Made for the field, with care.</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
