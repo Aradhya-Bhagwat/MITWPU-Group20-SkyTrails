@@ -251,7 +251,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = SkyTrails;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "SkyTrails uses the camera so you can set your profile photo.";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "SkyTrails uses your background location to send you real-time notifications when rare birds or migrations are nearby.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SkyTrails uses your location to show trending bird hotspots and active migrations near you.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "SkyTrails may save edited profile photos to your library when requested.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SkyTrails accesses your photo library so you can choose a profile photo.";
@@ -291,7 +290,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = SkyTrails;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "SkyTrails uses the camera so you can set your profile photo.";
-				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "SkyTrails uses your background location to send you real-time notifications when rare birds or migrations are nearby.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SkyTrails uses your location to show trending bird hotspots and active migrations near you.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "SkyTrails may save edited profile photos to your library when requested.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SkyTrails accesses your photo library so you can choose a profile photo.";
