@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7faf8">
+  <meta name="description" content="SkyTrails is a native iOS birding companion for migration forecasts, guided bird identification, and personal watchlists.">
+  <meta property="og:title" content="SkyTrails — Birding, beautifully mapped">
+  <meta property="og:description" content="Discover nearby birds, identify what you saw, and build a richer record of every sighting.">
+  <meta property="og:image" content="assets/logo.png">
+  <title>SkyTrails — Birding, beautifully mapped</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <script>
+    document.documentElement.dataset.theme =
+      localStorage.getItem("skytrails-theme") ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" id="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="index.html#top" aria-label="SkyTrails home">
+        <img src="assets/logo.png" alt="" width="44" height="44">
+        <span>SkyTrails</span>
+      </a>
+
+      <button class="menu-button" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+        <a href="index.html#top">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#developers">Developers</a>
+        <a href="index.html#beta">TestFlight</a>
+      </nav>
+
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">☀</span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">◐</span>
+      </button>
+      <a class="button button-small testflight-link" href="index.html#beta">Try the beta</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-glow hero-glow-one"></div>
+      <div class="hero-glow hero-glow-two"></div>
+      <div class="shell hero-grid">
+        <div class="hero-copy reveal">
+          <p class="eyebrow"><span></span> Built for birders on iPhone and iPad</p>
+          <h1>Follow the birds.<br><em>Find your trail.</em></h1>
+          <p class="hero-lede">SkyTrails brings migration forecasts, nearby birding spots, guided identification, and thoughtful watchlists into one native iOS experience.</p>
+          <div class="hero-actions">
+            <a class="button button-primary testflight-link" href="#beta">
+              Join on TestFlight
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <div class="hero-notes" aria-label="App highlights">
+            <span>Native iOS</span>
+            <span>Location-aware</span>
+            <span>Designed in Pune</span>
+          </div>
+        </div>
+
+        <div class="hero-stage reveal" aria-label="SkyTrails app preview">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="device device-back">
+            <img src="assets/Watchlist.png" alt="SkyTrails watchlist dashboard">
+          </div>
+          <div class="device device-front">
+            <img src="assets/Home.png" alt="SkyTrails home screen showing nearby birds and migration forecasts">
+          </div>
+          <div class="floating-card forecast-card">
+            <span class="floating-icon cyan">⌁</span>
+            <div><strong>Migration outlook</strong><small>Built around your area</small></div>
+          </div>
+          <div class="floating-card species-card">
+            <span class="status-dot"></span>
+            <div><strong>Species nearby</strong><small>Discover what is active now</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-story" id="features">
+      <div class="shell">
+        <article class="feature-row reveal" data-accent="cyan">
+          <div class="feature-copy">
+            <p class="feature-number">01 / Home</p>
+            <h3>Know where to look next.</h3>
+            <p>The home dashboard combines your location with migration activity, upcoming species, nearby birding spots, and fresh stories from the birding world.</p>
+            <ul class="feature-list">
+              <li><span>⌖</span> Location-aware bird and hotspot discovery</li>
+              <li><span>∿</span> Migration forecasts and activity windows</li>
+              <li><span>◎</span> Maps that turn predictions into a route</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <div class="screenshot-frame">
+              <img src="assets/Home.png" alt="Home dashboard with migration map, nearby birds and birding spots" loading="lazy">
+            </div>
+          </div>
+        </article>
+
+        <article class="feature-row feature-row-reverse reveal" data-accent="green">
+          <div class="feature-copy">
+            <p class="feature-number">02 / Watchlist</p>
+            <h3>Build a watchlist that grows with you.</h3>
+            <p>Plan species to discover, log birds you have observed, create focused collections for trips, and keep useful details such as dates, locations, notes, and photos together.</p>
+            <ul class="feature-list">
+              <li><span>＋</span> Curated watchlists</li>
+              <li><span>◉</span> Observed and to-discover tracking</li>
+              <li><span>⌁</span> Smart rules for place, time, and bird traits</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <div class="screenshot-frame">
+              <img src="assets/Watchlist.png" alt="Watchlist dashboard with observed and planned species" loading="lazy">
+            </div>
+          </div>
+        </article>
+
+        <article class="feature-row reveal" data-accent="blue">
+          <div class="feature-copy">
+            <p class="feature-number">03 / Identification</p>
+            <h3>Turn field clues into a confident match.</h3>
+            <p>Choose the clues you remember: location and date, size, shape, and field marks. SkyTrails ranks likely species and keeps completed identifications in your history.</p>
+            <ul class="feature-list">
+              <li><span>◇</span> A guided, multi-step identification flow</li>
+              <li><span>◐</span> Visual size, silhouette, and marking choices</li>
+              <li><span>✓</span> Ranked results with confidence scores</li>
+            </ul>
+          </div>
+          <div class="feature-visual identify-visual">
+            <div class="screenshot-frame" id="identify-frame">
+              <img id="identify-image" src="assets/Identify-1.png" alt="SkyTrails guided bird identification screen" loading="lazy">
+            </div>
+            <div class="screen-picker" aria-label="Identification screenshots">
+              <button class="screen-dot active" type="button" data-image="assets/Identify-1.png" data-alt="Identification criteria and history screen" aria-label="Show identification overview"></button>
+              <button class="screen-dot" type="button" data-image="assets/Identify-2.png" data-alt="Bird identification detail screen" aria-label="Show identification detail"></button>
+              <button class="screen-dot" type="button" data-image="assets/Identify-3.png" data-alt="Bird identification results screen" aria-label="Show identification results"></button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="developers-section" id="developers">
+      <div class="shell">
+        <div class="developers-heading reveal">
+          <div>
+            <p class="section-kicker">The people behind SkyTrails</p>
+            <h2>Designed, built, and tested<br>by a team of four.</h2>
+          </div>
+          <p>SkyTrails is a student-built native iOS project from MIT World Peace University, Pune, bringing together product thinking, interface design, birding research, and Swift engineering.</p>
+        </div>
+
+        <div class="developer-grid">
+          <article class="developer-card reveal">
+            <div class="developer-avatar avatar-cyan">AB</div>
+            <div>
+              <h3>Aradhya Bhagwat</h3>
+              <p>iOS Developer</p>
+            </div>
+            <a href="mailto:aradhyabhagwat@mitwpu.edu.in" aria-label="Email Aradhya Bhagwat">↗</a>
+          </article>
+          <article class="developer-card reveal">
+            <div class="developer-avatar avatar-blue">DJ</div>
+            <div>
+              <h3>Disha Jain</h3>
+              <p>iOS Developer</p>
+            </div>
+            <a href="mailto:disha.jain@mitwpu.edu.in" aria-label="Email Disha Jain">↗</a>
+          </article>
+          <article class="developer-card reveal">
+            <div class="developer-avatar avatar-orange">TD</div>
+            <div>
+              <h3>Tanmay Dani</h3>
+              <p>iOS Developer</p>
+            </div>
+            <a href="mailto:tanmay.dani@mitwpu.edu.in" aria-label="Email Tanmay Dani">↗</a>
+          </article>
+          <article class="developer-card reveal">
+            <div class="developer-avatar avatar-green">SG</div>
+            <div>
+              <h3>Soumyadeep Guria</h3>
+              <p>iOS Developer · Beta support</p>
+            </div>
+            <a href="mailto:soumyadeep.guria@mitwpu.edu.in" aria-label="Email Soumyadeep Guria">↗</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="beta-section" id="beta">
+      <div class="shell">
+        <div class="beta-card reveal">
+          <div class="beta-copy">
+            <p class="section-kicker light">The trail starts here</p>
+            <h2>Help shape SkyTrails<br>before launch.</h2>
+            <p>Join the iOS beta, take SkyTrails into the field, and share feedback directly with the team through TestFlight.</p>
+            <div class="beta-actions">
+              <a class="button button-light" href="mailto:soumyadeep.guria@mitwpu.edu.in?subject=SkyTrails%20Beta%20Access">Request beta access <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <div class="beta-mark" aria-hidden="true">
+            <img src="assets/logo.png" alt="">
+          </div>
+        </div>
+        <p class="beta-note" id="beta-note">A public TestFlight invite is being prepared. Until then, request access and the team will send the current invitation.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="index.html#top">
+          <img src="assets/logo.png" alt="" width="40" height="40">
+          <span>SkyTrails</span>
+        </a>
+        <p>A native birding companion created at MIT World Peace University, Pune.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#top">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#developers">Developers</a>
+        <a href="index.html#beta">TestFlight</a>
+        <a href="support.html">Support</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+    </div>
+    <div class="shell footer-bottom">
+      <span>© 2026 SkyTrails</span>
+      <span>Made for the field, with care.</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
