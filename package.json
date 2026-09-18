@@ -3,6 +3,7 @@
     "gh-pages": "^6.3.0"
   },
   "scripts": {
+    "build": "echo Static site ready",
     "deploy": "gh-pages -d website"
   }
 }
