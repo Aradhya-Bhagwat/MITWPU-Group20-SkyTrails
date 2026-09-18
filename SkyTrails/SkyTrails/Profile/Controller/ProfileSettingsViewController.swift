@@ -28,7 +28,7 @@ final class ProfileSettingsViewController: UIViewController {
 
     private func configureUI() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = "Profile"
+        navigationItem.title = "Settings"
 
         contentStack.axis = .vertical
         contentStack.spacing = 10
@@ -42,6 +42,8 @@ final class ProfileSettingsViewController: UIViewController {
         contentStack.addArrangedSubview(profileRow)
         contentStack.addArrangedSubview(colorModeRow)
         contentStack.addArrangedSubview(makeActionRow(title: "Manage Permissions", systemImage: "lock.shield", action: #selector(managePermissionsTapped)))
+        contentStack.addArrangedSubview(makeActionRow(title: "Privacy Policy", systemImage: "hand.raised.fill", action: #selector(privacyPolicyTapped)))
+        contentStack.addArrangedSubview(makeActionRow(title: "Terms & Conditions", systemImage: "doc.text.fill", action: #selector(termsTapped)))
 
         let clearWatchlistsRow = makeResetRow(title: "Clear All Watchlists", action: #selector(clearAllWatchlistTapped))
         let deleteWatchlistsRow = makeResetRow(title: "Delete All Watchlists", action: #selector(deleteAllWatchlistsTapped))
@@ -237,6 +239,19 @@ final class ProfileSettingsViewController: UIViewController {
         openSystemSettings()
     }
 
+    @objc private func privacyPolicyTapped() {
+        guard let url = URL(string: "https://aradhya-bhagwat.github.io/MITWPU-Group20-SkyTrails/privacy.html") else { return }
+        let browser = InAppBrowserViewController(url: url, title: "Privacy Policy")
+        navigationController?.pushViewController(browser, animated: true)
+    }
+
+    @objc private func termsTapped() {
+        let termsVC = TermsAndConditionsViewController()
+        let nav = UINavigationController(rootViewController: termsVC)
+        nav.modalPresentationStyle = .pageSheet
+        present(nav, animated: true)
+    }
+
     @objc private func clearAllWatchlistTapped() {
         presentDestructiveConfirmation(
             title: "Clear All Watchlists",
@@ -270,7 +285,7 @@ final class ProfileSettingsViewController: UIViewController {
     @objc private func deleteAccountTapped() {
         presentDestructiveConfirmation(
             title: "Delete Account",
-            message: "This will permanently delete your account and all associated data from Supabase. This action cannot be undone.",
+            message: "This will permanently delete your account and all associated data. This action cannot be undone.",
             actionTitle: "Delete Account"
         ) { [weak self] in
             self?.deleteAccountFromSupabase()
@@ -279,43 +294,55 @@ final class ProfileSettingsViewController: UIViewController {
 
     private func deleteAccountFromSupabase() {
         Task { @MainActor in
+            guard let userId = UserSession.shared.currentUserID else {
+                self.showMessage(title: "Error", message: "User ID not found.")
+                return
+            }
+
+            let accessToken = UserSession.shared.getAccessToken()
+
             do {
-                guard let config = try? SupabaseConfig.load() else {
-                    self.showMessage(title: "Error", message: "Unable to load Supabase configuration.")
-                    return
-                }
-                guard let accessToken = UserSession.shared.getAccessToken() else {
-                    self.showMessage(title: "Error", message: "You are not authenticated.")
-                    return
-                }
-                guard let userId = UserSession.shared.currentUserID else {
-                    self.showMessage(title: "Error", message: "User ID not found.")
-                    return
-                }
-
-                let urlString = "\(config.projectURL.absoluteString)/auth/v1/admin/users/\(userId.uuidString)"
-                guard let url = URL(string: urlString) else {
-                    self.showMessage(title: "Error", message: "Invalid URL.")
-                    return
+                // Delete user row and remote records
+                try await UserSyncService.shared.deleteUser(user_id: userId)
+                try? await IdentificationSyncService.shared.deleteAllHistory()
+                
+                // Clear local and remote watchlists
+                if let personal = try? self.personalWatchlistsForClearing() {
+                    for wl in personal {
+                        if let entries = try? WatchlistManager.shared.fetchEntries(watchlistID: wl.watchlist_id) {
+                            for entry in entries {
+                                try? WatchlistManager.shared.deleteEntry(entryId: entry.id)
+                            }
+                        }
+                    }
                 }
 
-                var request = URLRequest(url: url)
-                request.httpMethod = "DELETE"
-                request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-                request.setValue(config.anonKey, forHTTPHeaderField: "apikey")
-
-                let (_, response) = try await URLSession.shared.data(for: request)
-                guard let httpResponse = response as? HTTPURLResponse,
-                      (200...299).contains(httpResponse.statusCode) else {
-                    self.showMessage(title: "Error", message: "Failed to delete account from Supabase.")
-                    return
+                // Sign out of auth session if available
+                if let token = accessToken {
+                    try? await SupabaseAuthService.shared.signOut(accessToken: token)
                 }
 
                 UserSession.shared.logout()
+                self.goToLogin()
             } catch {
                 self.showMessage(title: "Error", message: "Failed to delete account: \(error.localizedDescription)")
             }
         }
+    }
+
+    private func goToLogin() {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) else { return }
+
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let mainVC = storyboard.instantiateViewController(withIdentifier: "RootTabBarController")
+
+        UIView.transition(with: window,
+                          duration: 0.3,
+                          options: .transitionFlipFromLeft,
+                          animations: {
+                              window.rootViewController = mainVC
+                          })
     }
 
     @objc private func saveTapped() {

@@ -17,6 +17,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>SEED_WATCHLISTS</key>
 	<false/>
 	<key>SUPABASE_ANON_KEY</key>
