@@ -253,13 +253,13 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "SkyTrails uses the camera so you can set your profile photo.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SkyTrails uses your location to show trending bird hotspots and active migrations near you.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "SkyTrails may save edited profile photos to your library when requested.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SkyTrails accesses your photo library so you can choose a profile photo.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SkyTrails accesses your photo library so you can choose a profile photo and attach photos to your bird sightings.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -292,19 +292,19 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "SkyTrails uses the camera so you can set your profile photo.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SkyTrails uses your location to show trending bird hotspots and active migrations near you.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "SkyTrails may save edited profile photos to your library when requested.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SkyTrails accesses your photo library so you can choose a profile photo.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SkyTrails accesses your photo library so you can choose a profile photo and attach photos to your bird sightings.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Disha.SkyTrails;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Group20.SkyTrails;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -351,7 +351,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				DEVELOPMENT_TEAM = MV93GV5M6R;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -416,7 +416,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = T5PV8W5D7V;
+				DEVELOPMENT_TEAM = MV93GV5M6R;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -463,7 +463,7 @@
 				DEVELOPMENT_TEAM = MV93GV5M6R;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Disha.SkyTrailsUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Group20.SkyTrailsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

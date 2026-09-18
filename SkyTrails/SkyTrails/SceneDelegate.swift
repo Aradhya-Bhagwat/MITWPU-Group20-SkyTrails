@@ -99,18 +99,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             routeToCurrentSessionRoot()
             return
         }
-        let center = UNUserNotificationCenter.current()
-        center.delegate = NotificationDelegate.shared
-
-        do {
-            let granted = try await NotificationService.shared.requestAuthorization()
-            if granted {
-                await NotificationService.shared.registerCategories()
-            }
-        } catch {
-        }
-
-        await LocationService.shared.primeAuthorizationIfNeeded()
 
         if let callbackURL = connectionOptions.urlContexts.first?.url,
            SupabaseAuthService.shared.isOAuthRedirectURL(callbackURL) {

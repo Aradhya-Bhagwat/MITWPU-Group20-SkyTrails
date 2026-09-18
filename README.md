@@ -1,7 +1,7 @@
 # 🐦 SkyTrails: Your Personal Birding Companion
 
 [![iOS](https://img.shields.io/badge/Platform-iOS%2026.0+-blue.svg)](https://developer.apple.com/ios/)
-[![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org/)
+[![Swift](https://img.shields.io/badge/Swift-5-orange.svg)](https://swift.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
 
 SkyTrails is a professional-grade iOS application designed for birdwatching enthusiasts. It provides a robust suite of tools to help users create and manage watchlists, log sightings with precision, identify birds through an interactive guided process, and visualize complex migration patterns.
@@ -34,7 +34,7 @@ A logic-driven, step-by-step identification engine designed for accuracy in the 
 ## 🛠️ Technology Stack & Architecture
 
 *   **Target OS:** iOS 26.0+
-*   **Language:** Swift 6.0
+*   **Language:** Swift 5
 *   **Architecture:** Clean MVC with Service-Oriented Logic layers.
 *   **Persistence:** **SwiftData** for native object persistence.
 *   **Geospatial:** CoreLocation and MapKit for precise tracking.

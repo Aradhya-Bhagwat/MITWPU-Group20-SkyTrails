@@ -36,6 +36,7 @@ final class WatchlistEntryOrchestrationService {
     
     /// Orchestrates saving an entry, handling updates, rule matching, and photo attachment
     func saveEntry(params: SaveParameters) async -> SaveResult {
+        await requestNotificationAuthorizationIfNeeded()
         if let existingEntry = params.entry {
             do {
                 if !params.asObserved {
@@ -135,6 +136,19 @@ final class WatchlistEntryOrchestrationService {
             return SaveResult(success: false, bird: birdToUse, error: WatchlistError.noMatchingWatchlists, noMatchingWatchlists: true)
         } catch {
             return SaveResult(success: false, bird: birdToUse, error: error, noMatchingWatchlists: false)
+        }
+    }
+
+    private func requestNotificationAuthorizationIfNeeded() async {
+        let key = "notificationsPermissionRequested"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        do {
+            let granted = try await NotificationService.shared.requestAuthorization()
+            if granted {
+                await NotificationService.shared.registerCategories()
+            }
+        } catch {
         }
     }
 }

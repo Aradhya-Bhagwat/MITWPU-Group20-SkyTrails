@@ -86,8 +86,16 @@ final class WatchlistManager: WatchlistRepository {
             do {
                 container = try ModelContainer(for: schema, configurations: [config])
             } catch {
-                WatchlistLog.error("Failed to init ModelContainer after reset", error: error)
-                fatalError("Failed to init SwiftData after reset: \(error)")
+                LoggingService.shared.log(error: error, context: "WatchlistManager.init.afterReset")
+                WatchlistLog.error("Failed to init ModelContainer after reset, falling back to fresh container", error: error)
+                let fallbackConfig = ModelConfiguration(isStoredInMemoryOnly: true)
+                if let fallbackContainer = try? ModelContainer(for: schema, configurations: [fallbackConfig]) {
+                    container = fallbackContainer
+                } else if let fallbackContainer = try? ModelContainer(for: schema) {
+                    container = fallbackContainer
+                } else {
+                    container = (try? ModelContainer(for: schema, configurations: [fallbackConfig])) ?? (try! ModelContainer(for: schema, configurations: [fallbackConfig]))
+                }
             }
         }
 
